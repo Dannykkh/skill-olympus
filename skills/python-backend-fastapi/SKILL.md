@@ -1,5 +1,5 @@
 ---
-name: python-backend
+name: python-backend-fastapi
 description: Python FastAPI 백엔드 개발 모범 사례. 비동기 프로그래밍, Pydantic 스키마, 500줄 제한, 모듈화 원칙을 포함.
 license: MIT
 metadata:
