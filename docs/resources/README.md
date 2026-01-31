@@ -14,6 +14,7 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |--------|------|------|
 | **everything-claude-code** | 해커톤 우승자 종합 설정 (12 에이전트, 16 스킬) | [상세](./everything-claude-code.md) / [단위별 가이드](./everything-claude-code-guide.md) |
 | **oh-my-claudecode** | 32 에이전트, 40+ 스킬 | [상세](./oh-my-claudecode.md) |
+| **softaworks/agent-toolkit** | session-handoff 스킬, 에이전트 패턴 | [상세](./softaworks-agent-toolkit.md) |
 | **Vercel Agent Skills** | React/Next.js 45개 최적화 규칙 | [상세](./vercel-agent-skills.md) |
 | **skills.sh** | 25K+ 스킬 디렉토리 | [상세](./skills-sh.md) |
 | **claude-code-dotnet** | .NET 25개 스킬, 5개 에이전트 | [상세](./claude-code-dotnet.md) |
@@ -26,10 +27,17 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |--------|------|------|
 | **Toss Payments MCP** | PG 결제 연동 (10분) | [상세](./toss-payments-mcp.md) |
 | **Context7 MCP** | 라이브러리 문서 실시간 검색 | [상세](./context7-mcp.md) |
+| **PAL MCP** | Multi-Model 오케스트레이션 (50+ LLM) | [상세](./pal-mcp.md) |
 | **Playwright MCP** | 브라우저 자동화 (Microsoft) | [상세](./playwright-mcp.md) |
 | **GitHub MCP** | GitHub API 통합 (공식) | [상세](./github-mcp.md) |
 | **Office-PowerPoint-MCP** | PPT 자동화 (32 도구, 25 템플릿) | [상세](./office-powerpoint-mcp.md) |
 | **mcp-pandoc** | 문서 변환 (MD→PDF/DOCX) | [상세](./mcp-pandoc.md) |
+
+### Multi-Agent & Orchestration
+
+| 리소스 | 설명 | 문서 |
+|--------|------|------|
+| **claude-flow** | Multi-agent 스웜, LLM 간 자동 전환 | [상세](./claude-flow.md) |
 
 ### Multi-LLM Integration
 
@@ -72,6 +80,9 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **라이브러리 문서** | [Context7 MCP](./context7-mcp.md) |
 | **Multi-LLM 통합** | [Multi-LLM Integration Guide](./multi-llm-integration.md) |
 | **최신 모델 정보** | [Multi-LLM Integration Guide](./multi-llm-integration.md) |
+| **세션 핸드오프** | [softaworks/agent-toolkit](./softaworks-agent-toolkit.md) |
+| **Multi-Agent 스웜** | [claude-flow](./claude-flow.md) |
+| **Multi-Model MCP** | [PAL MCP](./pal-mcp.md) |
 
 ---
 
@@ -95,12 +106,13 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 
 | 분류 | 문서 수 |
 |------|--------|
-| Skills & Plugins | 7 |
-| MCP Servers | 6 |
+| Skills & Plugins | 8 |
+| MCP Servers | 7 |
+| Multi-Agent & Orchestration | 1 |
 | Multi-LLM Integration | 1 |
 | Curation Lists | 2 |
-| **총계** | **16** |
+| **총계** | **19** |
 
 ---
 
-**마지막 업데이트:** 2026-01-31
+**마지막 업데이트:** 2026-02-01
