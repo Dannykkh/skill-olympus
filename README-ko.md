@@ -313,6 +313,18 @@ mkdir skills/my-skill
 
 ---
 
+## 참고 자료
+
+> **[전체 참고 자료 목록](docs/references.md)** - 이 프로젝트 구축에 참고한 모든 GitHub 프로젝트, MCP 서버, 연구, 문서.
+
+**주요 참고:**
+- [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) - session-handoff 스킬
+- [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - React 베스트 프랙티스
+- [Vercel AGENTS.md 연구](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals) - 3-layer 아키텍처 기반
+- [upstash/context7](https://github.com/upstash/context7) - 최신 라이브러리 문서 주입
+
+---
+
 ## 라이선스
 
 MIT License

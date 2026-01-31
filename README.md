@@ -315,6 +315,18 @@ mkdir skills/my-skill
 
 ---
 
+## References
+
+> **[Full References List](docs/references.md)** - All GitHub projects, MCP servers, research, and documentation referenced in building this project.
+
+**Key References:**
+- [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) - session-handoff skill
+- [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - React best practices
+- [Vercel AGENTS.md Research](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals) - 3-layer architecture basis
+- [upstash/context7](https://github.com/upstash/context7) - Latest library docs injection
+
+---
+
 ## License
 
 MIT License
