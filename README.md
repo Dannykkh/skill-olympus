@@ -47,52 +47,60 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (Slash Commands)
+### Custom Skills (48 Skills)
 
-| Skill | Command | Tech/Features | Description |
-|-------|---------|---------------|-------------|
-| **docker-deploy** | `/docker-deploy` | Docker, docker-compose, Cython/PyArmor | Auto-generate Dockerfile (multi-stage), docker-compose.yml, install scripts (bat/sh). Supports source code protection for Python |
-| **code-reviewer** | `/code-reviewer` | Python, TypeScript | Auto code review: 500-line file limit, 50-line function limit, security vulnerabilities (SQL injection, XSS), type hints, SRP/DRY principles |
-| **react-best-practices** | `/react-best-practices` | React, Next.js | Vercel's 45 optimization rules: waterfall elimination, bundle size, server-side performance, re-render optimization |
-| **web-design-guidelines** | `/web-design-guidelines` | Accessibility, UX | UI compliance review against Web Interface Guidelines (a11y, usability) |
-| **python-backend** | `/python-backend` | FastAPI, Pydantic, SQLAlchemy | Python backend best practices: async programming, repository pattern, service layer, dependency injection |
-| **api-tester** | `/api-tester` | CORS, JWT, Proxy | Frontend-backend integration testing: proxy configuration, token validation, error response format |
-| **erd-designer** | `/erd-designer` | Mermaid | Generate ERD diagrams in Mermaid format |
-| **humanizer** | `/humanizer` | Writing | Remove AI writing patterns to make text sound natural and human-written. Based on Wikipedia's "Signs of AI writing" guide (24 patterns) |
-| **ppt-generator** | `/ppt-generator` | python-pptx, PowerPoint | Generate professional PPT from templates. Supports Markdown/JSON input, charts, tables, images |
+| Category | Skills | Description |
+|----------|--------|-------------|
+| 🤖 **AI Tools** | codex, gemini, perplexity | External AI model integration (GPT-5.2, Gemini, web search) |
+| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge | Plugin/skill creation tools |
+| 📝 **Documentation** | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
+| 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
+| 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater | Dev tools & deployment |
+| 🎯 **Planning** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements |
+| 👔 **Professional** | professional-communication, feedback-mastery, difficult-workplace-conversations | Business communication |
+| 🧪 **Testing** | code-reviewer, qa-test-planner | Code review & QA |
+| 📦 **Git** | commit-work | Git workflow |
+| 🔧 **Utilities** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown | Utilities |
 
-### Custom Agents (Subagents)
+> **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-| Agent | Tech Stack | Description |
-|-------|------------|-------------|
-| **frontend-react** | React 18+, TypeScript, TanStack Query, Zustand, Tailwind CSS, Shadcn/UI | React component analysis, state management (Server: React Query / Client: Zustand), Atomic Design patterns |
-| **backend-spring** | Java 21, Spring Boot 3.x, Spring Security, JPA/Hibernate, Redis | Clean Architecture, DDD, RESTful API design with OpenAPI 3.0 |
-| **database-mysql** | MySQL 8.0, Flyway | Schema design, query optimization, indexing strategies, multi-tenant architecture |
-| **ai-ml** | Python 3.11, FastAPI, LangChain, Claude/OpenAI API, Milvus/Qdrant | LLM integration, RAG search systems, document analysis, embedding services |
-| **api-tester** | curl, REST/GraphQL | API endpoint testing, authentication testing, response validation |
-| **code-reviewer** | - | Code quality (SRP, DRY), security vulnerabilities, performance review |
-| **qa-engineer** | JUnit, Jest, pytest, Playwright, Cypress, k6 | Test strategy, quality verification, regression testing |
-| **qa-writer** | - | Test scenario writing (Smoke/Functional/Regression/Edge Case/Performance) |
-| **documentation** | - | PRD, API docs (OpenAPI), IMPLEMENTATION.md, CHANGELOG, ADR templates |
-| **migration-helper** | - | Legacy (Template + jQuery) → Modern (REST API + React SPA) migration patterns |
-| **explore-agent** | - | Legacy code analysis before new feature implementation (Korean) |
-| **feature-tracker** | - | Project feature tracking with progress visualization (Korean) |
-| **api-comparator** | - | Legacy vs New API compatibility verification, migration timeline planning |
+### Custom Agents (19 Agents)
 
-### Commands & Scripts
+| Category | Agents | Description |
+|----------|--------|-------------|
+| **Full Stack** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL specialists |
+| **AI/ML** | ai-ml | LLM integration, RAG systems |
+| **API** | api-tester, api-comparator | API testing & compatibility |
+| **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
+| **Documentation** | documentation, mermaid-diagram-specialist | Docs & diagrams |
+| **Design** | ascii-ui-mockup-generator, ui-ux-designer | UI/UX design feedback |
+| **Migration** | migration-helper, explore-agent | Legacy modernization |
+| **Planning** | feature-tracker | Feature tracking |
+| **Communication** | communication-excellence-coach | Email & presentation coaching |
+| **General** | general-purpose, codebase-pattern-finder | Multi-purpose agents |
+
+> **Full list**: See `agents/` directory or [AGENTS.md](AGENTS.md) for complete agent descriptions.
+
+### Commands (17 Commands)
 
 | Command | Description |
 |---------|-------------|
 | `/check-todos` | Review and prioritize TODO items |
+| `/codex-plan` | Create implementation plan with Codex |
+| `/compose-email` | Draft professional emails |
+| `/daily-sync` | Daily sync and status check |
+| `/explain-pr-changes` | Summarize PR changes |
+| `/generate` | Generate code templates |
+| `/migrate` | Execute migration tasks |
+| `/review` | Perform code review |
+| `/sync-branch` | Sync branch with main |
+| `/test` | Run tests and generate coverage report |
+| `/update-docs` | Update documentation files |
 | `/write-api-docs` | Generate API documentation |
 | `/write-changelog` | Auto-generate changelog from git commits |
 | `/write-prd` | Write Product Requirements Document |
-| `/test` | Run tests and generate coverage report |
-| `/review` | Perform code review |
-| `/migrate` | Execute migration tasks |
-| `/generate` | Generate code templates |
-| `/daily-sync` | Daily sync and status check |
-| `/update-docs` | Update documentation files |
+
+> **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
 ### Hooks
 

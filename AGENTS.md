@@ -8,48 +8,66 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (50개)
+### Skills (48개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 AI Tools | codex, gemini, perplexity | 외부 AI 모델 연동 |
-| 🔮 Meta | plugin-forge, skill-judge, command-creator | 플러그인/스킬 생성 도구 |
-| 📝 Documentation | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw | 문서/다이어그램 |
-| 🎨 Frontend | react-dev, react-best-practices, mui, openapi-to-typescript | React/TypeScript |
-| 🛠️ Development | database-schema-designer, dependency-updater, reducing-entropy | 개발 도구 |
-| 🎯 Planning | gepetto, requirements-clarity, game-changing-features | 계획/요구사항 |
-| 👔 Professional | professional-communication, feedback-mastery | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | qa-test-planner, api-tester, code-reviewer | 테스트/리뷰 |
+| 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge | 플러그인/스킬 생성 도구 |
+| 📝 Documentation | backend-to-frontend-handoff-docs, c4-architecture, crafting-effective-readmes, draw-io, excalidraw, frontend-to-backend-requirements, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
+| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, react-useeffect, vercel-react-best-practices | React/TypeScript/디자인 |
+| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
+| 🎯 Planning | game-changing-features, gepetto, requirements-clarity, ship-learn-next | 계획/요구사항 |
+| 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
+| 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
-| 🔧 Utilities | humanizer, session-handoff, web-to-markdown, jira | 유틸리티 |
+| 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, session-handoff, web-design-guidelines, web-to-markdown | 유틸리티 |
 
 ### Agents (19개)
 
 | 에이전트 | 설명 |
 |----------|------|
+| ai-ml | AI/ML 통합 전문가 |
+| api-comparator | API 호환성 비교 검증 |
+| api-tester | API 엔드포인트 테스트 |
 | ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
+| backend-spring | Spring Boot 백엔드 전문가 |
 | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
+| code-reviewer | 코드 품질/보안/성능 리뷰 |
 | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
+| database-mysql | MySQL 데이터베이스 전문가 |
+| documentation | PRD, API 문서, 변경로그 작성 |
+| explore-agent | 레거시 코드 분석 |
+| feature-tracker | 기능 목록 및 진행 상황 관리 |
+| frontend-react | React/TypeScript 프론트엔드 전문가 |
 | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | mermaid-diagram-specialist | 플로우차트, 시퀀스 다이어그램, ERD 생성 |
+| migration-helper | 레거시→모던 마이그레이션 가이드 |
+| qa-engineer | 테스트 전략 및 품질 검증 |
+| qa-writer | 테스트 시나리오/케이스 작성 |
 | ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
-| ai-ml | AI/ML 통합 전문가 |
-| backend-spring | Spring Boot 백엔드 전문가 |
-| database-mysql | MySQL 데이터베이스 전문가 |
-| frontend-react | React/TypeScript 프론트엔드 전문가 |
-| ... | 기타 다수 |
 
 ### Commands (17개)
 
 | 커맨드 | 설명 |
 |--------|------|
+| `/check-todos` | TODO 항목 검토 |
 | `/codex-plan` | Codex로 구현 계획 생성 |
 | `/compose-email` | 전문적인 이메일 작성 |
+| `/daily-sync` | 일일 동기화 및 상태 확인 |
+| `/explain-changes-mental-model` | 변경사항 멘탈 모델 설명 |
 | `/explain-pr-changes` | PR 변경사항 요약 |
-| `/sync-branch` | 메인 브랜치와 동기화 |
-| `/check-todos` | TODO 항목 검토 |
+| `/generate` | 코드 템플릿 생성 |
+| `/migrate` | 마이그레이션 작업 |
+| `/review` | 코드 리뷰 수행 |
+| `/sync-branch` | 브랜치 동기화 |
+| `/sync-skills-readme` | README 스킬 목록 동기화 |
+| `/test` | 테스트 실행 및 커버리지 |
+| `/update-docs` | 문서 업데이트 |
+| `/viral-tweet` | 바이럴 트윗 생성 |
+| `/write-api-docs` | API 문서 생성 |
+| `/write-changelog` | 변경로그 자동 생성 |
 | `/write-prd` | PRD 문서 작성 |
-| ... | 기타 다수 |
 
 ## Creating a New Skill
 
