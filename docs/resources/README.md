@@ -31,6 +31,12 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **Office-PowerPoint-MCP** | PPT 자동화 (32 도구, 25 템플릿) | [상세](./office-powerpoint-mcp.md) |
 | **mcp-pandoc** | 문서 변환 (MD→PDF/DOCX) | [상세](./mcp-pandoc.md) |
 
+### Multi-LLM Integration
+
+| 리소스 | 설명 | 문서 |
+|--------|------|------|
+| **Multi-LLM Integration Guide** | 최신 LLM 모델/API 정보 활용 가이드 (Context7, PAL MCP, 스킬 컬렉션) | [상세](./multi-llm-integration.md) |
+
 ### Curation Lists
 
 | 리소스 | 설명 | 문서 |
@@ -64,6 +70,8 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **에이전트 컬렉션** | [awesome-claude-code-subagents](./awesome-claude-code-subagents.md) |
 | **GitHub 자동화** | [GitHub MCP](./github-mcp.md) |
 | **라이브러리 문서** | [Context7 MCP](./context7-mcp.md) |
+| **Multi-LLM 통합** | [Multi-LLM Integration Guide](./multi-llm-integration.md) |
+| **최신 모델 정보** | [Multi-LLM Integration Guide](./multi-llm-integration.md) |
 
 ---
 
@@ -89,9 +97,10 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |------|--------|
 | Skills & Plugins | 7 |
 | MCP Servers | 6 |
+| Multi-LLM Integration | 1 |
 | Curation Lists | 2 |
-| **총계** | **15** |
+| **총계** | **16** |
 
 ---
 
-**마지막 업데이트:** 2026-01-28
+**마지막 업데이트:** 2026-01-31

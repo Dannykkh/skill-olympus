@@ -2,6 +2,46 @@
 
 This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, etc.) when working with code in this repository.
 
+---
+
+## [Docs Index]|root: ./
+
+|IMPORTANT: Prefer retrieval-led reasoning over pre-training knowledge
+|skills/:{ai-tools,meta,documentation,frontend,development,planning,professional,testing,git,utilities}
+|agents/:{fullstack,ai-ml,api,qa,docs,design,migration,planning,communication,general}
+|commands/:{todos,codex,email,sync,pr,generate,migrate,review,test,docs,changelog,prd}
+
+### Quick Retrieval Paths
+
+|Task|Read First|
+|---|---|
+|React/Next.js|agents/react-best-practices.md,agents/react-useeffect-guidelines.md|
+|Code Review|agents/code-review-checklist.md,skills/code-reviewer/SKILL.md|
+|Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
+|API Testing|agents/api-tester.md|
+|Documentation|agents/documentation.md,agents/writing-guidelines.md|
+|FastAPI|agents/python-fastapi-guidelines.md|
+|Spring Boot|agents/backend-spring.md|
+|Database|agents/database-mysql.md|
+|Migration|agents/migration-helper.md,agents/explore-agent.md|
+|Naming|agents/naming-conventions.md|
+|Full Workflow|agents/fullstack-development-workflow.md|
+|SPEC Interview|agents/spec-interviewer.md|
+
+---
+
+## Core Rules (Always Apply)
+
+|Rule|Limit|Action|
+|---|---|---|
+|File size|≤500 lines|Split into modules|
+|Function size|≤50 lines|Extract helper functions|
+|Security|OWASP Top 10|Check SQL injection, XSS, CSRF|
+|Type safety|Required|Add type hints (Python) / TypeScript|
+|DRY principle|No duplication|Extract reusable components|
+
+---
+
 ## Repository Overview
 
 A comprehensive collection of skills, agents, and commands for Claude Code and other AI coding agents. Extends agent capabilities across development, documentation, planning, and professional workflows.
@@ -23,29 +63,39 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, session-handoff, web-design-guidelines, web-to-markdown | 유틸리티 |
 
-### Agents (19개)
+### Agents (29개)
 
-| 에이전트 | 설명 |
-|----------|------|
-| ai-ml | AI/ML 통합 전문가 |
-| api-comparator | API 호환성 비교 검증 |
-| api-tester | API 엔드포인트 테스트 |
-| ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
-| backend-spring | Spring Boot 백엔드 전문가 |
-| codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
-| code-reviewer | 코드 품질/보안/성능 리뷰 |
-| communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
-| database-mysql | MySQL 데이터베이스 전문가 |
-| documentation | PRD, API 문서, 변경로그 작성 |
-| explore-agent | 레거시 코드 분석 |
-| feature-tracker | 기능 목록 및 진행 상황 관리 |
-| frontend-react | React/TypeScript 프론트엔드 전문가 |
-| general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
-| mermaid-diagram-specialist | 플로우차트, 시퀀스 다이어그램, ERD 생성 |
-| migration-helper | 레거시→모던 마이그레이션 가이드 |
-| qa-engineer | 테스트 전략 및 품질 검증 |
-| qa-writer | 테스트 시나리오/케이스 작성 |
-| ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
+| 카테고리 | 에이전트 | 설명 |
+|----------|----------|------|
+| **Workflow** | fullstack-development-workflow | 풀스택 개발 종합 워크플로우 |
+| | spec-interviewer | SPEC.md 심층 인터뷰 |
+| **Guidelines (Passive)** | react-best-practices | React/Next.js 최적화 규칙 (항상 적용) |
+| | react-useeffect-guidelines | useEffect 베스트 프랙티스 (항상 적용) |
+| | python-fastapi-guidelines | FastAPI 모범 사례 (항상 적용) |
+| | writing-guidelines | 명확한 글쓰기 규칙 (항상 적용) |
+| | humanizer-guidelines | AI 글쓰기 패턴 제거 (항상 적용) |
+| | code-review-checklist | 코드 리뷰 체크리스트 (항상 적용) |
+| | naming-conventions | 네이밍 컨벤션 (항상 적용) |
+| | reducing-entropy | 코드베이스 최소화 철학 |
+| **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
+| | backend-spring | Spring Boot 백엔드 전문가 |
+| | database-mysql | MySQL 데이터베이스 전문가 |
+| **AI/ML** | ai-ml | AI/ML 통합 전문가 |
+| **API** | api-tester | API 엔드포인트 테스트 |
+| | api-comparator | API 호환성 비교 검증 |
+| **QA** | qa-engineer | 테스트 전략 및 품질 검증 |
+| | qa-writer | 테스트 시나리오/케이스 작성 |
+| | code-reviewer | 코드 품질/보안/성능 리뷰 |
+| **Documentation** | documentation | PRD, API 문서, 변경로그 작성 |
+| | mermaid-diagram-specialist | 플로우차트, 시퀀스 다이어그램, ERD 생성 |
+| **Design** | ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
+| | ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
+| **Migration** | migration-helper | 레거시→모던 마이그레이션 가이드 |
+| | explore-agent | 레거시 코드 분석 |
+| **Planning** | feature-tracker | 기능 목록 및 진행 상황 관리 |
+| **Communication** | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
+| **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
+| | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
 
 ### Commands (17개)
 
@@ -171,3 +221,86 @@ cp -r skills/{skill-name} ~/.claude/skills/
 Add the skill to project knowledge or paste SKILL.md contents into the conversation.
 
 If the skill requires network access, instruct users to add required domains at `claude.ai/settings/capabilities`.
+
+---
+
+## Skills vs Agents: When to Use
+
+Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals):
+
+|Use Case|Recommended|Reason|
+|---|---|---|
+|Framework knowledge|AGENTS.md|Passive context = 100% pass rate|
+|Code generation rules|AGENTS.md|Always available, no decision point|
+|User-triggered workflows|Skills|Explicit invocation (e.g., `/docker-deploy`)|
+|Version migrations|Skills|One-time, explicit action|
+|Architecture changes|Skills|Requires user confirmation|
+
+### Key Insight
+
+> **Retrieval-led reasoning > Pre-training knowledge**
+>
+> When documentation exists in this repo, READ IT before relying on training data.
+> Training data may be outdated; local docs are authoritative.
+
+---
+
+## Hooks (Automatic Enforcement)
+
+훅은 특정 이벤트에서 자동 실행되어 규칙을 강제합니다.
+
+### Available Hooks
+
+|훅|타이밍|트리거|동작|
+|---|---|---|---|
+|validate-code.sh|PostToolUse|*.py, *.ts, *.tsx, *.java 수정|500줄 제한, 함수 크기, 보안 검사|
+|check-new-file.sh|PreToolUse|새 파일 생성|reducing-entropy 확인, 유사 파일 경고|
+|validate-docs.sh|PostToolUse|*.md 작성|AI 글쓰기 패턴 검출|
+|protect-files.sh|PreToolUse|민감 파일 수정|.env, credentials 보호|
+|format-code.sh|PostToolUse|코드 수정|자동 포맷팅|
+|validate-api.sh|PostToolUse|API 파일 수정|구문/타입 검사|
+
+### 3-Layer Architecture
+
+```
+Layer 1: AGENTS.md (Passive Guidelines)
+  → 핵심 규칙이 항상 컨텍스트에 존재
+  → AI가 처음부터 좋은 코드 작성
+
+Layer 2: Hooks (Automatic Enforcement)
+  → 규칙 위반 자동 감지
+  → 즉시 피드백
+
+Layer 3: Skills (On-demand Analysis)
+  → 사용자 요청 시 상세 분석
+  → /review, /naming-analyzer 등
+```
+
+### Hook Configuration (settings.json)
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": ["bash hooks/check-new-file.sh"]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": ["bash hooks/protect-files.sh"]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": ["bash hooks/validate-code.sh"]
+      },
+      {
+        "matcher": "Write",
+        "hooks": ["bash hooks/validate-docs.sh"]
+      }
+    ]
+  }
+}
+```

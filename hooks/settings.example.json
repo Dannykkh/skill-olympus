@@ -1,30 +1,50 @@
 {
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "description": "Claude Code hook configuration example",
+
   "hooks": {
     "PreToolUse": [
       {
+        "description": "새 파일 생성 전 reducing-entropy 확인",
+        "matcher": "Write",
+        "hooks": ["bash hooks/check-new-file.sh $TOOL_INPUT"]
+      },
+      {
+        "description": "민감 파일 보호",
         "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/protect-files.sh '$TOOL_INPUT'"
-          }
-        ]
+        "hooks": ["bash hooks/protect-files.sh $TOOL_INPUT"]
       }
     ],
+
     "PostToolUse": [
       {
+        "description": "코드 파일 검증 (500줄, 함수 크기, 보안)",
         "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/format-code.sh '$TOOL_INPUT'"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/validate-api.sh '$TOOL_INPUT'"
-          }
-        ]
+        "hooks": ["bash hooks/validate-code.sh $TOOL_INPUT"]
+      },
+      {
+        "description": "마크다운 AI 글쓰기 패턴 검출",
+        "matcher": "Write",
+        "hooks": ["bash hooks/validate-docs.sh $TOOL_INPUT"]
+      },
+      {
+        "description": "API 파일 유효성 검사",
+        "matcher": "Edit|Write",
+        "hooks": ["bash hooks/validate-api.sh $TOOL_INPUT"]
       }
+    ]
+  },
+
+  "notes": {
+    "installation": [
+      "1. 이 파일을 ~/.claude/settings.json 또는 .claude/settings.json으로 복사",
+      "2. hooks/ 폴더를 프로젝트 루트 또는 ~/.claude/hooks/로 복사",
+      "3. 스크립트에 실행 권한 부여: chmod +x hooks/*.sh"
+    ],
+    "customization": [
+      "matcher: 정규식으로 도구 이름 매칭",
+      "$TOOL_INPUT: 도구 입력값 (JSON 형태)",
+      "exit 0: 통과, exit 1: 차단"
     ]
   }
 }

@@ -47,57 +47,70 @@ chmod +x install.sh && ./install.sh
 
 ## 포함된 내용
 
-### 커스텀 스킬 (슬래시 명령어)
+### 커스텀 스킬 (48개)
 
-| 스킬 | 명령어 | 기술/기능 | 설명 |
-|------|--------|----------|------|
-| **docker-deploy** | `/docker-deploy` | Docker, docker-compose, Cython/PyArmor | Dockerfile (멀티스테이지), docker-compose.yml, 설치 스크립트(bat/sh) 자동 생성. Python 소스코드 보호 지원 |
-| **code-reviewer** | `/code-reviewer` | Python, TypeScript | 자동 코드 리뷰: 500줄 파일 제한, 50줄 함수 제한, 보안 취약점(SQL Injection, XSS), 타입 힌트, SRP/DRY 원칙 |
-| **react-best-practices** | `/react-best-practices` | React, Next.js | Vercel의 45개 최적화 규칙: 워터폴 제거, 번들 크기, 서버사이드 성능, 리렌더 최적화 |
-| **web-design-guidelines** | `/web-design-guidelines` | 접근성, UX | Web Interface Guidelines 기반 UI 준수 검토 (a11y, 사용성) |
-| **python-backend** | `/python-backend` | FastAPI, Pydantic, SQLAlchemy | Python 백엔드 모범 사례: 비동기 프로그래밍, 리포지토리 패턴, 서비스 레이어, 의존성 주입 |
-| **api-tester** | `/api-tester` | CORS, JWT, Proxy | 프론트엔드-백엔드 통합 테스트: 프록시 설정, 토큰 검증, 에러 응답 포맷 |
-| **erd-designer** | `/erd-designer` | Mermaid | Mermaid 형식 ERD 다이어그램 생성 |
-| **humanizer** | `/humanizer` | Writing | AI가 쓴 티 나는 글을 자연스럽게 수정. Wikipedia "Signs of AI writing" 기반 (24개 패턴) |
-| **ppt-generator** | `/ppt-generator` | python-pptx, PowerPoint | 템플릿 기반 전문 PPT 생성. 마크다운/JSON 입력, 차트/표/이미지 지원 |
+| 카테고리 | 스킬 | 설명 |
+|----------|------|------|
+| 🤖 **AI 도구** | codex, gemini, perplexity | 외부 AI 모델 연동 (GPT-5.2, Gemini, 웹 검색) |
+| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge | 플러그인/스킬 생성 도구 |
+| 📝 **문서화** | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
+| 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
+| 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater | 개발 도구 & 배포 |
+| 🎯 **계획** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 |
+| 👔 **비즈니스** | professional-communication, feedback-mastery, difficult-workplace-conversations | 비즈니스 커뮤니케이션 |
+| 🧪 **테스트** | code-reviewer, qa-test-planner | 코드 리뷰 & QA |
+| 📦 **Git** | commit-work | Git 워크플로우 |
+| 🔧 **유틸리티** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown | 유틸리티 |
 
-### 커스텀 에이전트 (서브에이전트)
+> **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-| 에이전트 | 기술 스택 | 설명 |
-|---------|----------|------|
-| **frontend-react** | React 18+, TypeScript, TanStack Query, Zustand, Tailwind CSS, Shadcn/UI | React 컴포넌트 분석, 상태 관리 (서버: React Query / 클라이언트: Zustand), Atomic Design 패턴 |
-| **backend-spring** | Java 21, Spring Boot 3.x, Spring Security, JPA/Hibernate, Redis | Clean Architecture, DDD, OpenAPI 3.0 기반 RESTful API 설계 |
-| **database-mysql** | MySQL 8.0, Flyway | 스키마 설계, 쿼리 최적화, 인덱싱 전략, 멀티테넌트 아키텍처 |
-| **ai-ml** | Python 3.11, FastAPI, LangChain, Claude/OpenAI API, Milvus/Qdrant | LLM 통합, RAG 검색 시스템, 문서 분석, 임베딩 서비스 |
-| **api-tester** | curl, REST/GraphQL | API 엔드포인트 테스트, 인증 테스트, 응답 검증 |
-| **code-reviewer** | - | 코드 품질(SRP, DRY), 보안 취약점, 성능 검토 |
-| **qa-engineer** | JUnit, Jest, pytest, Playwright, Cypress, k6 | 테스트 전략, 품질 검증, 회귀 테스트 |
-| **qa-writer** | - | 테스트 시나리오 작성 (Smoke/Functional/Regression/Edge Case/Performance) |
-| **documentation** | - | PRD, API 문서(OpenAPI), IMPLEMENTATION.md, CHANGELOG, ADR 템플릿 |
-| **migration-helper** | - | 레거시(Template + jQuery) → 모던(REST API + React SPA) 마이그레이션 패턴 |
-| **explore-agent** | - | 신규 기능 구현 전 레거시 코드 분석 |
-| **feature-tracker** | - | 프로젝트 기능 진행률 추적 및 시각화 |
-| **api-comparator** | - | 레거시 vs 신규 API 호환성 검증, 마이그레이션 타임라인 계획 |
+### 커스텀 에이전트 (29개)
 
-### 명령어 & 스크립트
+| 카테고리 | 에이전트 | 설명 |
+|----------|----------|------|
+| **워크플로우** | fullstack-development-workflow, spec-interviewer | 전체 개발 사이클 관리 |
+| **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy | 패시브 규칙 (항상 적용) |
+| **풀스택** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL 전문가 |
+| **AI/ML** | ai-ml | LLM 통합, RAG 시스템 |
+| **API** | api-tester, api-comparator | API 테스트 & 호환성 |
+| **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
+| **문서화** | documentation, mermaid-diagram-specialist | 문서 & 다이어그램 |
+| **디자인** | ascii-ui-mockup-generator, ui-ux-designer | UI/UX 디자인 피드백 |
+| **마이그레이션** | migration-helper, explore-agent | 레거시 현대화 |
+| **계획** | feature-tracker | 기능 진행률 추적 |
+| **커뮤니케이션** | communication-excellence-coach | 이메일 & 프레젠테이션 코칭 |
+| **범용** | general-purpose, codebase-pattern-finder | 다목적 에이전트 |
+
+> **전체 목록**: `agents/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
+
+### 명령어 (17개)
 
 | 명령어 | 설명 |
 |--------|------|
 | `/check-todos` | TODO 항목 검토 및 우선순위 분류 |
+| `/codex-plan` | Codex로 구현 계획 생성 |
+| `/compose-email` | 전문적인 이메일 작성 |
+| `/daily-sync` | 일일 동기화 및 상태 확인 |
+| `/explain-pr-changes` | PR 변경사항 요약 |
+| `/generate` | 코드 템플릿 생성 |
+| `/migrate` | 마이그레이션 작업 실행 |
+| `/review` | 코드 리뷰 수행 |
+| `/sync-branch` | 브랜치 동기화 |
+| `/test` | 테스트 실행 및 커버리지 보고서 |
+| `/update-docs` | 문서 파일 업데이트 |
 | `/write-api-docs` | API 문서 자동 생성 |
 | `/write-changelog` | Git 커밋 기반 Changelog 자동 생성 |
 | `/write-prd` | PRD (제품 요구사항 문서) 작성 |
-| `/test` | 테스트 실행 및 커버리지 보고서 |
-| `/review` | 코드 리뷰 수행 |
-| `/migrate` | 마이그레이션 작업 실행 |
-| `/generate` | 코드 템플릿 생성 |
-| `/daily-sync` | 일일 동기화 및 상태 확인 |
-| `/update-docs` | 문서 파일 업데이트 |
 
-### 훅
+> **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
+
+### 훅 (6개)
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
+| validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
+| check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
+| validate-docs.sh | PostToolUse | 마크다운 AI 글쓰기 패턴 검출 |
 | protect-files.sh | PreToolUse | 중요 파일 수정 전 보호 검사 |
 | format-code.sh | PostToolUse | 파일 수정 후 코드 포맷팅 |
 | validate-api.sh | PostToolUse | API 파일 수정 후 유효성 검사 |
@@ -119,6 +132,24 @@ chmod +x install.sh && ./install.sh
 | [mastering-typescript-skill](https://github.com/SpillwaveSolutions/mastering-typescript-skill) | 엔터프라이즈 TypeScript (NestJS, React 19) | `npx add-skill SpillwaveSolutions/mastering-typescript-skill -a claude-code` | - |
 | [pg-aiguide](https://github.com/timescale/pg-aiguide) | PostgreSQL 베스트 프랙티스 | `claude plugin install pg-aiguide` | - |
 | [skills.sh](https://skills.sh/) | 25K+ 스킬 디렉토리 (Vercel) | `npx skills add <owner/repo>` | [상세](docs/resources/skills-sh.md) |
+
+### Multi-LLM 통합 (NEW)
+
+> **문제**: LLM은 학습 데이터 이후의 최신 모델/API 정보를 알지 못함
+> **해결**: Context7 (라이브러리 문서) + PAL MCP (멀티 모델) 조합
+
+| 리소스 | 타입 | 설명 | 설치 |
+|--------|------|------|------|
+| **[Context7](https://github.com/upstash/context7)** | MCP | 최신 라이브러리 문서 주입 (Next.js 15, React 19 등) | `claude mcp add context7 -- npx -y @upstash/context7-mcp` |
+| **[PAL MCP](https://github.com/BeehiveInnovations/pal-mcp-server)** | MCP | Multi-Model: Gemini + OpenAI + Claude + 50+ 모델 | [GitHub README](https://github.com/BeehiveInnovations/pal-mcp-server) |
+| [awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | Skills | 200+ 스킬 (Codex, Gemini CLI 호환) | `npx add-skill VoltAgent/awesome-agent-skills` |
+| [antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) | Skills | 625+ 스킬 (Anthropic, OpenAI, Google 공식) | GitHub clone |
+| [AI-research-SKILLs](https://github.com/Orchestra-Research/AI-research-SKILLs) | Skills | AI 연구/엔지니어링 전용 스킬 | GitHub clone |
+| [claude-flow](https://github.com/ruvnet/claude-flow) | Agent | Multi-agent 스웜, LLM 간 자동 전환 | `npm install claude-flow` |
+
+**Skill vs Agent 분류**:
+- **Skills** (on-demand): codex, gemini, perplexity - 사용자 트리거로 외부 LLM 호출
+- **Agents** (passive): 가이드라인, 모범 사례 - 항상 컨텍스트에 존재
 
 ### MCP 서버
 
@@ -148,13 +179,11 @@ claude-code-customizations/
 ├── skills/                    # 커스텀 스킬 (슬래시 명령어)
 │   ├── docker-deploy/         # Docker 배포 (Cython/PyArmor 지원)
 │   ├── code-reviewer/         # 자동 코드 리뷰 (500줄 제한, 보안)
-│   ├── react-best-practices/  # Vercel의 45개 React 최적화 규칙
+│   ├── vercel-react-best-practices/  # Vercel의 45개 React 최적화 규칙
 │   ├── web-design-guidelines/ # UI/UX 접근성 검토
-│   ├── api-tester/            # 프론트-백엔드 통합 테스트
-│   ├── erd-designer/          # Mermaid ERD 생성
 │   ├── humanizer/             # AI 글쓰기 패턴 제거 (24개 패턴)
 │   ├── ppt-generator/         # 템플릿 기반 PPT 생성
-│   └── python-backend/        # FastAPI 모범 사례
+│   └── python-backend-fastapi/  # FastAPI 모범 사례
 ├── agents/                    # 커스텀 서브에이전트
 │   ├── frontend-react.md      # React + Zustand + TanStack Query
 │   ├── backend-spring.md      # Java 21 + Spring Boot 3.x
@@ -166,8 +195,8 @@ claude-code-customizations/
 │   ├── qa-writer.md           # 테스트 케이스 작성
 │   ├── documentation.md       # PRD, API 문서, CHANGELOG
 │   ├── migration-helper.md    # 레거시 → 모던 마이그레이션
-│   ├── explore-agent.md       # 레거시 코드 분석
-│   ├── feature-tracker.md     # 기능 진행률 추적
+│   ├── explore-agent.md       # 레거시 코드 분석 (한국어)
+│   ├── feature-tracker.md     # 기능 진행률 추적 (한국어)
 │   └── api-comparator.md      # API 호환성 검증
 ├── commands/                  # 슬래시 명령어 & 스크립트
 │   ├── check-todos.md
@@ -275,4 +304,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-01-26
+**최종 업데이트:** 2026-01-31

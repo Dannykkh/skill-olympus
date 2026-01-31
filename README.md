@@ -64,10 +64,12 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (19 Agents)
+### Custom Agents (29 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
+| **Workflow** | fullstack-development-workflow, spec-interviewer | Full development cycle management |
+| **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy | Passive rules (always applied) |
 | **Full Stack** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL specialists |
 | **AI/ML** | ai-ml | LLM integration, RAG systems |
 | **API** | api-tester, api-comparator | API testing & compatibility |
@@ -102,10 +104,13 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks
+### Hooks (6 Hooks)
 
 | Hook | Timing | Description |
 |------|--------|-------------|
+| validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
+| check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
+| validate-docs.sh | PostToolUse | AI writing pattern detection in markdown |
 | protect-files.sh | PreToolUse | Protect critical files from modification |
 | format-code.sh | PostToolUse | Auto-format code after changes |
 | validate-api.sh | PostToolUse | Validate API files after modification |
@@ -127,6 +132,24 @@ chmod +x install.sh && ./install.sh
 | [mastering-typescript-skill](https://github.com/SpillwaveSolutions/mastering-typescript-skill) | Enterprise TypeScript (NestJS, React 19) | `npx add-skill SpillwaveSolutions/mastering-typescript-skill -a claude-code` | - |
 | [pg-aiguide](https://github.com/timescale/pg-aiguide) | PostgreSQL best practices | `claude plugin install pg-aiguide` | - |
 | [skills.sh](https://skills.sh/) | 25K+ skills directory by Vercel | `npx skills add <owner/repo>` | [상세](docs/resources/skills-sh.md) |
+
+### Multi-LLM Integration (NEW)
+
+> **문제**: LLM은 학습 데이터 이후의 최신 모델/API 정보를 모릅니다.
+> **해결**: Context7 (라이브러리 문서) + PAL MCP (멀티 모델) 조합 사용
+
+| Resource | Type | Description | Install |
+|----------|------|-------------|---------|
+| **[Context7](https://github.com/upstash/context7)** | MCP | 최신 라이브러리 문서 주입 (Next.js 15, React 19 등) | `claude mcp add context7 -- npx -y @upstash/context7-mcp` |
+| **[PAL MCP](https://github.com/BeehiveInnovations/pal-mcp-server)** | MCP | Multi-Model: Gemini + OpenAI + Claude + 50+ 모델 | [GitHub README](https://github.com/BeehiveInnovations/pal-mcp-server) |
+| [awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | Skills | 200+ 스킬 (Codex, Gemini CLI 호환) | `npx add-skill VoltAgent/awesome-agent-skills` |
+| [antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) | Skills | 625+ 스킬 (Anthropic, OpenAI, Google 공식) | GitHub clone |
+| [AI-research-SKILLs](https://github.com/Orchestra-Research/AI-research-SKILLs) | Skills | AI 연구/엔지니어링 전용 스킬 | GitHub clone |
+| [claude-flow](https://github.com/ruvnet/claude-flow) | Agent | Multi-agent 스웜, LLM 간 자동 전환 | `npm install claude-flow` |
+
+**Skill vs Agent 분류**:
+- **Skills** (on-demand): codex, gemini, perplexity - 사용자 트리거로 외부 LLM 호출
+- **Agents** (passive): 가이드라인, 모범 사례 - 항상 컨텍스트에 존재
 
 ### MCP Servers
 
@@ -283,4 +306,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-01-26
+**Last Updated:** 2026-01-31
