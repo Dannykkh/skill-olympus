@@ -1,4 +1,5 @@
 ---
+name: sync-skills-readme
 description: Sync root README.md with current skills inventory from skills/ directory
 ---
 
