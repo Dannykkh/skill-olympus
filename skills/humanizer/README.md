@@ -1,67 +1,120 @@
-# Humanizer Skill
+# Humanizer
 
-AI가 쓴 티가 나는 글을 사람이 쓴 것처럼 자연스럽게 바꿔주는 Claude Code 스킬입니다.
+A Claude Code skill that removes signs of AI-generated writing from text, making it sound more natural and human.
 
-## 출처
+## Installation
 
-이 스킬은 [blader/humanizer](https://github.com/blader/humanizer)를 기반으로 합니다.
-
-Wikipedia의 [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) 가이드를 참고하여 24가지 AI 글쓰기 패턴을 감지하고 수정합니다.
-
-## 감지하는 패턴들
-
-### Content Patterns
-- 과장된 중요성 강조 (pivotal moment, testament, evolving landscape)
-- 주목받음 과시 (media coverage 나열)
-- 표면적인 -ing 분석 (highlighting, showcasing, reflecting)
-- 광고성 언어 (vibrant, nestled, groundbreaking)
-- 모호한 출처 (Experts argue, Industry reports)
-- "Challenges and Future" 섹션
-
-### Language Patterns
-- AI 특유 어휘 (Additionally, delve, foster, landscape)
-- is/are 회피 (serves as, stands as)
-- 부정 병렬 구조 (It's not just X, it's Y)
-- 3의 법칙 남용
-- 동의어 돌려쓰기
-- 의미없는 범위 표현 (from X to Y)
-
-### Style Patterns
-- Em dash 남용
-- 과도한 굵은 글씨
-- 인라인 헤더 목록
-- 제목 대문자화
-- 이모지 장식
-- 곡선 따옴표
-
-### Communication Patterns
-- 챗봇 흔적 (I hope this helps!, Great question!)
-- 지식 컷오프 면책 조항
-- 아부성 어조
-- 불필요한 완충어
-- 과도한 헤징
-- 뻔한 긍정 결론
-
-## 사용법
-
-Claude Code에서:
-```
-/humanizer [휴머나이즈할 텍스트]
-```
-
-또는:
-```
-이 텍스트 휴머나이즈 해줘: [텍스트]
-```
-
-## 설치
-
-이 저장소의 `skills/humanizer` 폴더를 `~/.claude/skills/` 에 복사하거나 심볼릭 링크를 생성합니다.
+### Recommended (clone directly into Claude Code skills directory)
 
 ```bash
-# Windows
-mklink /D "%USERPROFILE%\.claude\skills\humanizer" "이 저장소 경로\skills\humanizer"
-
-# Linux/Mac
-ln -s "이 저장소 경로/skills/humanizer" ~/.claude/skills/humanizer
+mkdir -p ~/.claude/skills
+git clone https://github.com/blader/humanizer.git ~/.claude/skills/humanizer
 ```
+
+### Manual install/update (only the skill file)
+
+If you already have this repo cloned (or you downloaded `SKILL.md`), copy the skill file into Claude Code’s skills directory:
+
+```bash
+mkdir -p ~/.claude/skills/humanizer
+cp SKILL.md ~/.claude/skills/humanizer/
+```
+
+## Usage
+
+In Claude Code, invoke the skill:
+
+```
+/humanizer
+
+[paste your text here]
+```
+
+Or ask Claude to humanize text directly:
+
+```
+Please humanize this text: [your text]
+```
+
+## Overview
+
+Based on [Wikipedia's "Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) guide, maintained by WikiProject AI Cleanup. This comprehensive guide comes from observations of thousands of instances of AI-generated text.
+
+### Key Insight from Wikipedia
+
+> "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
+
+## 24 Patterns Detected (with Before/After Examples)
+
+### Content Patterns
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 1 | **Significance inflation** | "marking a pivotal moment in the evolution of..." | "was established in 1989 to collect regional statistics" |
+| 2 | **Notability name-dropping** | "cited in NYT, BBC, FT, and The Hindu" | "In a 2024 NYT interview, she argued..." |
+| 3 | **Superficial -ing analyses** | "symbolizing... reflecting... showcasing..." | Remove or expand with actual sources |
+| 4 | **Promotional language** | "nestled within the breathtaking region" | "is a town in the Gonder region" |
+| 5 | **Vague attributions** | "Experts believe it plays a crucial role" | "according to a 2019 survey by..." |
+| 6 | **Formulaic challenges** | "Despite challenges... continues to thrive" | Specific facts about actual challenges |
+
+### Language Patterns
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 7 | **AI vocabulary** | "Additionally... testament... landscape... showcasing" | "also... remain common" |
+| 8 | **Copula avoidance** | "serves as... features... boasts" | "is... has" |
+| 9 | **Negative parallelisms** | "It's not just X, it's Y" | State the point directly |
+| 10 | **Rule of three** | "innovation, inspiration, and insights" | Use natural number of items |
+| 11 | **Synonym cycling** | "protagonist... main character... central figure... hero" | "protagonist" (repeat when clearest) |
+| 12 | **False ranges** | "from the Big Bang to dark matter" | List topics directly |
+
+### Style Patterns
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 13 | **Em dash overuse** | "institutions—not the people—yet this continues—" | Use commas or periods |
+| 14 | **Boldface overuse** | "**OKRs**, **KPIs**, **BMC**" | "OKRs, KPIs, BMC" |
+| 15 | **Inline-header lists** | "**Performance:** Performance improved" | Convert to prose |
+| 16 | **Title Case Headings** | "Strategic Negotiations And Partnerships" | "Strategic negotiations and partnerships" |
+| 17 | **Emojis** | "🚀 Launch Phase: 💡 Key Insight:" | Remove emojis |
+| 18 | **Curly quotes** | `said “the project”` | `said "the project"` |
+
+### Communication Patterns
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 19 | **Chatbot artifacts** | "I hope this helps! Let me know if..." | Remove entirely |
+| 20 | **Cutoff disclaimers** | "While details are limited in available sources..." | Find sources or remove |
+| 21 | **Sycophantic tone** | "Great question! You're absolutely right!" | Respond directly |
+
+### Filler and Hedging
+
+| # | Pattern | Before | After |
+|---|---------|--------|-------|
+| 22 | **Filler phrases** | "In order to", "Due to the fact that" | "To", "Because" |
+| 23 | **Excessive hedging** | "could potentially possibly" | "may" |
+| 24 | **Generic conclusions** | "The future looks bright" | Specific plans or facts |
+
+## Full Example
+
+**Before (AI-sounding):**
+> The new software update serves as a testament to the company's commitment to innovation. Moreover, it provides a seamless, intuitive, and powerful user experience—ensuring that users can accomplish their goals efficiently. It's not just an update, it's a revolution in how we think about productivity. Industry experts believe this will have a lasting impact on the entire sector, highlighting the company's pivotal role in the evolving technological landscape.
+
+**After (Humanized):**
+> The software update adds batch processing, keyboard shortcuts, and offline mode. Early feedback from beta testers has been positive, with most reporting faster task completion.
+
+## References
+
+- [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) - Primary source
+- [WikiProject AI Cleanup](https://en.wikipedia.org/wiki/Wikipedia:WikiProject_AI_Cleanup) - Maintaining organization
+
+## Version History
+
+- **2.1.1** - Fixed pattern #18 example (curly quotes vs straight quotes)
+- **2.1.0** - Added before/after examples for all 24 patterns
+- **2.0.0** - Complete rewrite based on raw Wikipedia article content
+- **1.0.0** - Initial release
+
+## License
+
+MIT

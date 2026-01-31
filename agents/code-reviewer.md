@@ -4,11 +4,15 @@ description: Code review specialist. Reviews code quality, security, performance
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit
 model: sonnet
+references:
+  - skills/code-reviewer/SKILL.md
 ---
 
 # Code Review Specialist
 
 You are a code review specialist. You review code for quality, security, performance, and maintainability.
+
+> **Note**: For detailed Korean guidelines and auto-run logic, see [skills/code-reviewer/SKILL.md](../skills/code-reviewer/SKILL.md)
 
 ## Review Checklist
 

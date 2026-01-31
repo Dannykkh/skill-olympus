@@ -1,0 +1,155 @@
+# AGENTS.md
+
+This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, etc.) when working with code in this repository.
+
+## Repository Overview
+
+A comprehensive collection of skills, agents, and commands for Claude Code and other AI coding agents. Extends agent capabilities across development, documentation, planning, and professional workflows.
+
+## Available Resources
+
+### Skills (50개)
+
+| 카테고리 | 스킬 | 설명 |
+|----------|------|------|
+| 🤖 AI Tools | codex, gemini, perplexity | 외부 AI 모델 연동 |
+| 🔮 Meta | plugin-forge, skill-judge, command-creator | 플러그인/스킬 생성 도구 |
+| 📝 Documentation | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw | 문서/다이어그램 |
+| 🎨 Frontend | react-dev, react-best-practices, mui, openapi-to-typescript | React/TypeScript |
+| 🛠️ Development | database-schema-designer, dependency-updater, reducing-entropy | 개발 도구 |
+| 🎯 Planning | gepetto, requirements-clarity, game-changing-features | 계획/요구사항 |
+| 👔 Professional | professional-communication, feedback-mastery | 비즈니스 커뮤니케이션 |
+| 🧪 Testing | qa-test-planner, api-tester, code-reviewer | 테스트/리뷰 |
+| 📦 Git | commit-work | Git 워크플로우 |
+| 🔧 Utilities | humanizer, session-handoff, web-to-markdown, jira | 유틸리티 |
+
+### Agents (19개)
+
+| 에이전트 | 설명 |
+|----------|------|
+| ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
+| codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
+| communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
+| general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
+| mermaid-diagram-specialist | 플로우차트, 시퀀스 다이어그램, ERD 생성 |
+| ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
+| ai-ml | AI/ML 통합 전문가 |
+| backend-spring | Spring Boot 백엔드 전문가 |
+| database-mysql | MySQL 데이터베이스 전문가 |
+| frontend-react | React/TypeScript 프론트엔드 전문가 |
+| ... | 기타 다수 |
+
+### Commands (17개)
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/codex-plan` | Codex로 구현 계획 생성 |
+| `/compose-email` | 전문적인 이메일 작성 |
+| `/explain-pr-changes` | PR 변경사항 요약 |
+| `/sync-branch` | 메인 브랜치와 동기화 |
+| `/check-todos` | TODO 항목 검토 |
+| `/write-prd` | PRD 문서 작성 |
+| ... | 기타 다수 |
+
+## Creating a New Skill
+
+### Directory Structure
+
+```
+skills/
+  {skill-name}/           # kebab-case directory name
+    SKILL.md              # Required: skill definition
+    scripts/              # Required: executable scripts
+      {script-name}.sh    # Bash scripts (preferred)
+  {skill-name}.zip        # Required: packaged for distribution
+```
+
+### Naming Conventions
+
+- **Skill directory**: `kebab-case` (e.g., `vercel-deploy`, `log-monitor`)
+- **SKILL.md**: Always uppercase, always this exact filename
+- **Scripts**: `kebab-case.sh` (e.g., `deploy.sh`, `fetch-logs.sh`)
+- **Zip file**: Must match directory name exactly: `{skill-name}.zip`
+
+### SKILL.md Format
+
+```markdown
+---
+name: {skill-name}
+description: {One sentence describing when to use this skill. Include trigger phrases like "Deploy my app", "Check logs", etc.}
+---
+
+# {Skill Title}
+
+{Brief description of what the skill does.}
+
+## How It Works
+
+{Numbered list explaining the skill's workflow}
+
+## Usage
+
+```bash
+bash /mnt/skills/user/{skill-name}/scripts/{script}.sh [args]
+```
+
+**Arguments:**
+- `arg1` - Description (defaults to X)
+
+**Examples:**
+{Show 2-3 common usage patterns}
+
+## Output
+
+{Show example output users will see}
+
+## Present Results to User
+
+{Template for how Claude should format results when presenting to users}
+
+## Troubleshooting
+
+{Common issues and solutions, especially network/permissions errors}
+```
+
+### Best Practices for Context Efficiency
+
+Skills are loaded on-demand — only the skill name and description are loaded at startup. The full `SKILL.md` loads into context only when the agent decides the skill is relevant. To minimize context usage:
+
+- **Keep SKILL.md under 500 lines** — put detailed reference material in separate files
+- **Write specific descriptions** — helps the agent know exactly when to activate the skill
+- **Use progressive disclosure** — reference supporting files that get read only when needed
+- **Prefer scripts over inline code** — script execution doesn't consume context (only output does)
+- **File references work one level deep** — link directly from SKILL.md to supporting files
+
+### Script Requirements
+
+- Use `#!/bin/bash` shebang
+- Use `set -e` for fail-fast behavior
+- Write status messages to stderr: `echo "Message" >&2`
+- Write machine-readable output (JSON) to stdout
+- Include a cleanup trap for temp files
+- Reference the script path as `/mnt/skills/user/{skill-name}/scripts/{script}.sh`
+
+### Creating the Zip Package
+
+After creating or updating a skill:
+
+```bash
+cd skills
+zip -r {skill-name}.zip {skill-name}/
+```
+
+### End-User Installation
+
+Document these two installation methods for users:
+
+**Claude Code:**
+```bash
+cp -r skills/{skill-name} ~/.claude/skills/
+```
+
+**claude.ai:**
+Add the skill to project knowledge or paste SKILL.md contents into the conversation.
+
+If the skill requires network access, instruct users to add required domains at `claude.ai/settings/capabilities`.
