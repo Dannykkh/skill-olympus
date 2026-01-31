@@ -9,3 +9,7 @@ Thumbs.db
 # Temp
 *.tmp
 *.bak
+
+# Claude Code
+.claude/conversations/
+.claude/settings.local.json

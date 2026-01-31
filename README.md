@@ -104,10 +104,12 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks (6 Hooks)
+### Hooks (8 Hooks)
 
 | Hook | Timing | Description |
 |------|--------|-------------|
+| save-conversation.sh | UserPromptSubmit | Save all conversations to .md files for session sharing |
+| update-memory.sh | Stop | Auto-update MEMORY.md via memory-writer agent on session end |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
 | check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
 | validate-docs.sh | PostToolUse | AI writing pattern detection in markdown |

@@ -104,10 +104,12 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 훅 (6개)
+### 훅 (8개)
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
+| save-conversation.sh | UserPromptSubmit | 모든 대화를 .md 파일로 저장 (세션 간 공유) |
+| update-memory.sh | Stop | 세션 종료 시 memory-writer 에이전트로 MEMORY.md 자동 업데이트 |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
 | check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
 | validate-docs.sh | PostToolUse | 마크다운 AI 글쓰기 패턴 검출 |

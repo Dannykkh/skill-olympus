@@ -3,6 +3,14 @@
   "description": "Claude Code hook configuration example",
 
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "모든 대화를 .md 파일로 저장 (세션 간 공유)",
+        "matcher": "",
+        "hooks": ["bash hooks/save-conversation.sh \"$PROMPT\""]
+      }
+    ],
+
     "PreToolUse": [
       {
         "description": "새 파일 생성 전 reducing-entropy 확인",
@@ -32,6 +40,14 @@
         "matcher": "Edit|Write",
         "hooks": ["bash hooks/validate-api.sh $TOOL_INPUT"]
       }
+    ],
+
+    "Stop": [
+      {
+        "description": "세션 종료 시 MEMORY.md 자동 업데이트 (memory-writer 에이전트 호출)",
+        "matcher": "",
+        "hooks": ["bash hooks/update-memory.sh"]
+      }
     ]
   },
 
@@ -42,9 +58,14 @@
       "3. 스크립트에 실행 권한 부여: chmod +x hooks/*.sh"
     ],
     "customization": [
-      "matcher: 정규식으로 도구 이름 매칭",
+      "matcher: 정규식으로 도구 이름 매칭 (빈 문자열 = 모든 프롬프트)",
+      "$PROMPT: 사용자 입력 프롬프트",
       "$TOOL_INPUT: 도구 입력값 (JSON 형태)",
       "exit 0: 통과, exit 1: 차단"
+    ],
+    "conversation_logs": [
+      "대화 로그는 .claude/conversations/YYYY-MM-DD.md에 저장됨",
+      "세션 간 대화 내용을 참조할 수 있음"
     ]
   }
 }
