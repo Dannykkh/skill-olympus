@@ -117,6 +117,19 @@ chmod +x install.sh && ./install.sh
 | format-code.sh | PostToolUse | Auto-format code after changes |
 | validate-api.sh | PostToolUse | Validate API files after modification |
 
+### Long-term Memory System
+
+Session context persistence across conversations.
+
+| Component | Role |
+|-----------|------|
+| `MEMORY.md` | Structured long-term memory storage |
+| `save-conversation.sh` | Auto-save all conversations to `.claude/conversations/` |
+| `update-memory.sh` | Stop hook → memory-writer agent → MEMORY.md cleanup |
+| `session-handoff` skill | Structured handoff documents for session transfer |
+
+> **[Detailed Documentation](docs/memory-system.md)** - Full system architecture, hooks setup, and usage guide.
+
 ---
 
 ## External Resources (Recommended)

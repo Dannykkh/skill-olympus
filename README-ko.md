@@ -117,6 +117,19 @@ chmod +x install.sh && ./install.sh
 | format-code.sh | PostToolUse | 파일 수정 후 코드 포맷팅 |
 | validate-api.sh | PostToolUse | API 파일 수정 후 유효성 검사 |
 
+### 장기기억 시스템
+
+세션 간 컨텍스트 유지를 위한 메모리 시스템.
+
+| 구성요소 | 역할 |
+|---------|------|
+| `MEMORY.md` | 구조화된 장기기억 저장소 |
+| `save-conversation.sh` | 모든 대화를 `.claude/conversations/`에 자동 저장 |
+| `update-memory.sh` | Stop 훅 → memory-writer 에이전트 → MEMORY.md 정리 |
+| `session-handoff` 스킬 | 세션 인수인계용 구조화된 핸드오프 문서 |
+
+> **[상세 문서](docs/memory-system.md)** - 시스템 구조, 훅 설정, 사용법 가이드.
+
 ---
 
 ## 외부 리소스 (권장)

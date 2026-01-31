@@ -91,4 +91,21 @@
 
 ---
 
+## 참고 자료
+
+### GitHub 프로젝트
+
+| 프로젝트 | 참고 내용 | 링크 |
+|---------|----------|------|
+| **softaworks/agent-toolkit** | session-handoff 스킬 원본 | [GitHub](https://github.com/softaworks/agent-toolkit) |
+| **anthropics/claude-code** | Claude Code 공식 훅 시스템 | [GitHub](https://github.com/anthropics/claude-code) |
+| **Yeachan-Heo/oh-my-claudecode** | 메모리 관리 패턴 참고 | [GitHub](https://github.com/Yeachan-Heo/oh-my-claudecode) |
+
+### 관련 문서
+
+- [Claude Code Hooks Documentation](https://docs.anthropic.com/claude-code/hooks)
+- [Vercel AGENTS.md Research](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)
+
+---
+
 **최종 업데이트:** 2026-02-01
