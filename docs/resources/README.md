@@ -45,6 +45,12 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |--------|------|------|
 | **Multi-LLM Integration Guide** | 최신 LLM 모델/API 정보 활용 가이드 (Context7, PAL MCP, 스킬 컬렉션) | [상세](./multi-llm-integration.md) |
 
+### OCR & 문서 인식
+
+| 리소스 | 설명 | 문서 |
+|--------|------|------|
+| **OCR & 문서 인식 가이드** | Code From Image, PDF Processing, DeepSeek-OCR, Vision MCP 등 | [상세](./ocr-document-recognition.md) |
+
 ### Curation Lists
 
 | 리소스 | 설명 | 문서 |
@@ -83,6 +89,8 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **세션 핸드오프** | [softaworks/agent-toolkit](./softaworks-agent-toolkit.md) |
 | **Multi-Agent 스웜** | [claude-flow](./claude-flow.md) |
 | **Multi-Model MCP** | [PAL MCP](./pal-mcp.md) |
+| **문서 인식/OCR** | [OCR & 문서 인식 가이드](./ocr-document-recognition.md) |
+| **PDF 처리** | [OCR & 문서 인식 가이드](./ocr-document-recognition.md) |
 
 ---
 
@@ -110,8 +118,9 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | MCP Servers | 7 |
 | Multi-Agent & Orchestration | 1 |
 | Multi-LLM Integration | 1 |
+| OCR & 문서 인식 | 1 |
 | Curation Lists | 2 |
-| **총계** | **19** |
+| **총계** | **20** |
 
 ---
 
