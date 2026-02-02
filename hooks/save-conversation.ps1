@@ -1,5 +1,5 @@
 # Session Conversation Logger Hook (PowerShell)
-# 모든 대화를 날짜별 .md 파일로 저장
+# 모든 대화를 날짜별 .md 파일로 저장 (frontmatter 형식)
 #
 # 사용법: powershell -File hooks/save-conversation.ps1 "$PROMPT"
 # 저장 위치: .claude/conversations/YYYY-MM-DD.md
@@ -20,14 +20,20 @@ if (-not (Test-Path $ConvDir)) {
     New-Item -ItemType Directory -Path $ConvDir -Force | Out-Null
 }
 
-# 파일이 없으면 헤더 추가
+# 파일이 없으면 frontmatter 헤더 추가
 if (-not (Test-Path $ConvFile)) {
     $ProjectName = Split-Path $ProjectDir -Leaf
     $Header = @"
+---
+date: $Today
+project: $ProjectName
+keywords: []
+summary: ""
+---
+
 # Conversation Log - $Today
 
 프로젝트: $ProjectName
-생성일: $Today
 
 ---
 

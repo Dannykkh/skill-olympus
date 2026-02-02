@@ -1,6 +1,6 @@
 ---
 name: long-term-memory
-description: 세션 간 장기기억 관리. MEMORY.md 자동 업데이트 및 조회
+description: 세션 간 장기기억 관리. MEMORY.md 업데이트, 대화 키워드 검색, 수동 태깅
 triggers:
   - "장기기억"
   - "memory"
@@ -12,99 +12,188 @@ auto_apply: false
 
 # Long-Term Memory Management
 
-세션 간 지속되는 장기기억을 관리합니다. MEMORY.md 파일을 통해 중요한 정보를 저장하고 조회합니다.
+세션 간 지속되는 장기기억을 관리합니다.
 
-## 메모리 구조
+## 시스템 구조
 
 ```
-MEMORY.md
-├── 프로젝트 컨텍스트
-├── 중요한 결정사항
-├── 학습된 교훈
-├── 작업 패턴
-├── MCP 서버
-└── 주의사항
+프로젝트/
+├── MEMORY.md                      # 구조화된 장기기억
+└── .claude/
+    └── conversations/
+        ├── 2026-02-02.md          # 대화 로그 (frontmatter + 키워드)
+        ├── 2026-02-01.md
+        └── index.json             # 키워드 인덱스 (검색용)
 ```
 
-## 자동 기록 규칙
+---
 
-다음 내용은 세션 중 자동으로 MEMORY.md에 요약하여 추가합니다:
-
-| 카테고리 | 예시 |
-|---------|------|
-| **아키텍처/설계 결정** | "React Query 대신 SWR 선택" |
-| **버그 원인과 해결** | "CORS 에러 → 프록시 설정으로 해결" |
-| **기술 스택 선택 이유** | "Prisma 선택 (타입 안전성)" |
-| **반복되는 패턴** | "API 엔드포인트 추가 시 3단계" |
-| **주의 함정/이슈** | "Windows에서 symlink 권한 필요" |
-| **성능 개선 방법** | "이미지 lazy loading으로 50% 개선" |
-
-## 사용법
+## 명령어
 
 ### 1. 정보 기억하기
 
 ```
-"이거 기억해: Redis 캐시 TTL은 항상 1시간으로"
-"/memory add Redis 캐시 TTL은 항상 1시간"
+/memory add <내용>
+기억해: <내용>
 ```
 
-### 2. 기억 조회하기
+MEMORY.md의 적절한 섹션에 정보 추가.
+
+### 2. 기억 검색하기
 
 ```
-"Redis 관련해서 뭘 기억하고 있어?"
-"/memory search Redis"
+/memory search <키워드>
+<키워드> 관련 기억 찾아줘
 ```
 
-### 3. 전체 기억 보기
+MEMORY.md + 대화 로그에서 키워드 검색.
+
+### 3. 대화 키워드 검색 (RAG 스타일)
 
 ```
-"장기기억 전체 보여줘"
-"/memory list"
+/memory find <키워드>
+이전에 <키워드> 구현한 적 있어?
 ```
 
-## 기록 형식
+`.claude/conversations/index.json`에서 키워드 매칭 → 관련 대화 파일 찾기.
 
-MEMORY.md에 추가할 때 다음 형식을 따릅니다:
+### 4. 수동 태그 추가
+
+```
+/memory tag <키워드1>, <키워드2>, ...
+```
+
+오늘 대화 파일의 frontmatter에 키워드 추가.
+
+### 5. 전체 기억 보기
+
+```
+/memory list
+장기기억 전체 보여줘
+```
+
+---
+
+## 대화 파일 형식
 
 ```markdown
-### 제목 (YYYY-MM-DD)
+---
+date: 2026-02-02
+project: my-project
+keywords: [orchestrator, multi-ai, react, typescript]
+summary: "Multi-AI 오케스트레이터 구현. React 컴포넌트 리팩토링."
+---
 
-설명 내용
-- 핵심 포인트 1
-- 핵심 포인트 2
+# Conversation Log - 2026-02-02
+
+## [14:30:00] User
+...
 ```
 
-## 중복 방지
+---
 
-- 새 정보 추가 전 기존 내용과 중복 확인
-- 유사한 내용이 있으면 병합하거나 업데이트
-- 날짜 기준으로 최신 정보 우선
+## 인덱스 파일 형식
 
-## 컨텍스트 효율성
+`.claude/conversations/index.json`:
 
-- MEMORY.md는 항상 로드됨 (CLAUDE.md에서 @MEMORY.md 참조)
-- 핵심 정보만 압축하여 포함
-- 상세 내용은 별도 문서로 분리 권장
+```json
+{
+  "lastUpdated": "2026-02-02T15:30:00Z",
+  "conversations": [
+    {
+      "date": "2026-02-02",
+      "file": "2026-02-02.md",
+      "keywords": ["orchestrator", "multi-ai", "workpm"],
+      "summary": "Multi-AI 오케스트레이터 구현..."
+    }
+  ],
+  "keywordIndex": {
+    "orchestrator": ["2026-02-02", "2026-02-01"],
+    "react": ["2026-01-30", "2026-01-29"],
+    "typescript": ["2026-02-02", "2026-01-30"]
+  }
+}
+```
+
+---
+
+## 검색 워크플로우
+
+### /memory find orchestrator
+
+```
+1. index.json 읽기
+2. keywordIndex에서 "orchestrator" 찾기 → ["2026-02-02", "2026-02-01"]
+3. 해당 대화 파일의 summary 표시
+4. 필요 시 상세 내용 조회 제안
+```
+
+### 출력 예시
+
+```
+📂 "orchestrator" 관련 대화 2건 발견:
+
+1. 2026-02-02
+   키워드: orchestrator, multi-ai, workpm, pmworker
+   요약: Multi-AI 오케스트레이터 구현. workpm/pmworker 트리거 설정.
+
+2. 2026-02-01
+   키워드: orchestrator, mcp, file-locking
+   요약: claude-orchestrator-mcp 초기 설정. 파일 락 테스트.
+
+상세 내용을 보려면: "/memory read 2026-02-02"
+```
+
+---
+
+## 자동 기록 규칙
+
+다음 내용은 세션 종료 시 자동으로 기록:
+
+| 대상 | 저장 위치 |
+|------|----------|
+| 아키텍처/설계 결정 | MEMORY.md |
+| 버그 원인과 해결 | MEMORY.md |
+| 기술 스택 선택 이유 | MEMORY.md |
+| 핵심 키워드 | 대화 파일 frontmatter |
+| 대화 요약 | 대화 파일 frontmatter |
+
+---
+
+## 수동 태깅 예시
+
+### 입력
+```
+/memory tag oauth, jwt, authentication, security
+```
+
+### 결과 (오늘 대화 파일 frontmatter 업데이트)
+```yaml
+---
+date: 2026-02-02
+project: my-project
+keywords: [oauth, jwt, authentication, security]  # 업데이트됨
+summary: "..."
+---
+```
+
+---
 
 ## 에이전트 동작
 
 이 스킬이 트리거되면:
 
-1. **기억 추가 요청**: MEMORY.md의 적절한 섹션에 정보 추가
-2. **기억 조회 요청**: MEMORY.md에서 관련 내용 검색하여 응답
-3. **세션 종료 시**: 중요한 학습 내용이 있으면 자동 기록 제안
+1. **`/memory add`**: MEMORY.md 적절한 섹션에 추가
+2. **`/memory search`**: MEMORY.md에서 grep 검색
+3. **`/memory find`**: index.json에서 키워드 검색 → 대화 파일 목록
+4. **`/memory tag`**: 오늘 대화 파일 frontmatter 키워드 추가
+5. **`/memory read <date>`**: 특정 날짜 대화 파일 읽기
+6. **`/memory list`**: MEMORY.md 전체 표시
 
-## 예시
+---
 
-### 입력
-```
-"이거 기억해: Spring Boot에서 @Transactional은 public 메서드에만 적용됨"
-```
+## 컨텍스트 효율성
 
-### 결과 (MEMORY.md에 추가)
-```markdown
-### Spring Boot @Transactional 주의점 (2026-02-02)
-
-- @Transactional은 public 메서드에만 적용됨
-- private/protected 메서드에는 AOP 프록시가 적용되지 않음
-```
+- MEMORY.md는 항상 로드됨 (CLAUDE.md에서 @MEMORY.md 참조)
+- 대화 로그는 필요 시에만 로드 (키워드 검색 후)
+- index.json은 가벼운 메타데이터만 포함
