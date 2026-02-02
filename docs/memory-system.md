@@ -7,13 +7,14 @@
 ## 목차
 
 1. [개요](#개요)
-2. [시스템 구조](#시스템-구조)
-3. [자동 동작](#자동-동작)
-4. [명령어 가이드](#명령어-가이드)
-5. [키워드 검색 시스템](#키워드-검색-시스템)
-6. [훅 설정](#훅-설정)
-7. [실전 예시](#실전-예시)
-8. [트러블슈팅](#트러블슈팅)
+2. [설치](#설치)
+3. [시스템 구조](#시스템-구조)
+4. [자동 동작](#자동-동작)
+5. [명령어 가이드](#명령어-가이드)
+6. [키워드 검색 시스템](#키워드-검색-시스템)
+7. [훅 설정](#훅-설정)
+8. [실전 예시](#실전-예시)
+9. [트러블슈팅](#트러블슈팅)
 
 ---
 
@@ -33,6 +34,91 @@
 | **대화 로그** | 모든 대화 원시 저장 + 키워드 태깅 |
 | **index.json** | 키워드 인덱스 (RAG 스타일 검색용) |
 | **검색 명령어** | `/memory find`, `/memory search` |
+
+---
+
+## 설치
+
+> **상세 설치 가이드**: [skills/long-term-memory/INSTALL.md](../skills/long-term-memory/INSTALL.md)
+
+### 스킬 패키지 구조
+
+```
+skills/long-term-memory/
+├── SKILL.md              # 스킬 정의
+├── INSTALL.md            # 상세 설치 가이드
+├── CLAUDE.md.snippet     # CLAUDE.md에 추가할 규칙
+└── hooks/
+    ├── save-conversation.ps1   # 대화 저장 (Windows)
+    ├── save-conversation.sh    # 대화 저장 (Linux/Mac)
+    ├── update-memory.ps1       # 메모리 업데이트 (Windows)
+    └── update-memory.sh        # 메모리 업데이트 (Linux/Mac)
+```
+
+### 빠른 설치 (3단계)
+
+**1. 파일 복사**
+```bash
+# 스킬 폴더 복사
+cp -r skills/long-term-memory .claude/skills/
+
+# 훅 스크립트 복사
+mkdir -p hooks
+cp .claude/skills/long-term-memory/hooks/* hooks/
+
+# 대화 저장 폴더 생성
+mkdir -p .claude/conversations
+```
+
+**2. CLAUDE.md 설정**
+```bash
+# CLAUDE.md.snippet 내용을 프로젝트 CLAUDE.md에 추가
+cat .claude/skills/long-term-memory/CLAUDE.md.snippet >> CLAUDE.md
+```
+
+**3. 훅 등록** (`.claude/settings.local.json`)
+
+Windows:
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {"hooks": ["powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""]}
+    ],
+    "Stop": [
+      {"hooks": ["powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1"]}
+    ]
+  }
+}
+```
+
+Linux/Mac:
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {"hooks": ["bash hooks/save-conversation.sh \"$PROMPT\""]}
+    ],
+    "Stop": [
+      {"hooks": ["bash hooks/update-memory.sh"]}
+    ]
+  }
+}
+```
+
+**4. MEMORY.md 생성**
+```markdown
+# MEMORY.md - 프로젝트 장기기억
+
+## 프로젝트 컨텍스트
+- 프로젝트: [프로젝트명]
+
+## 중요한 결정사항
+(자동으로 추가됨)
+
+## 학습된 교훈
+(자동으로 추가됨)
+```
 
 ---
 
