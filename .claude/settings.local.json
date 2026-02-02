@@ -1,27 +1,27 @@
-﻿{
+{
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": "(?i)(\uAE30\uC5B5\uD574|remember|\uAE30\uC5B5 ?\uC800\uC7A5|save.*memory)",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \u0027[TermSnap Memory Hook] \uBA54\uBAA8\uB9AC \uC800\uC7A5 \uD328\uD134 \uAC10\uC9C0\uB428\u0027"
+            "command": "bash hooks/save-conversation.sh \"$PROMPT\""
           }
         ]
       }
     ],
     "Notification": [
       {
-        "matcher": "(?i)(task.*complete|\uC791\uC5C5.*\uC644\uB8CC|ULTRAWORK.*complete)",
+        "matcher": "(?i)(task.*complete|작업.*완료|ULTRAWORK.*complete)",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \u0027[TermSnap] \uC791\uC5C5 \uC644\uB8CC \uC54C\uB9BC\u0027"
+            "command": "echo '[Session Logger] 작업 완료 알림'"
           }
         ]
       }
     ]
   },
-  "_termsnap_info": "TermSnap\uC5D0\uC11C \uC790\uB3D9 \uC0DD\uC131\uB41C \uD6C5 \uC124\uC815\uC785\uB2C8\uB2E4. \uC218\uC815\uD574\uB3C4 \uB429\uB2C8\uB2E4."
+  "_info": "Session Conversation Logger - 모든 대화를 .claude/conversations/에 저장"
 }

@@ -551,6 +551,9 @@ pause
 @echo off
 setlocal enabledelayedexpansion
 
+:: Change to script directory (fixes path issues)
+cd /d "%~dp0"
+
 echo ================================================
 echo    {Project} - Docker Install
 echo ================================================
