@@ -75,13 +75,37 @@ echo.
 echo [4/4] Hooks 안내... (프로젝트별 설치 필요)
 if exist "%SCRIPT_DIR%hooks" (
     echo       Hooks는 프로젝트별로 설치해야 합니다.
-    echo       프로젝트 폴더에서 다음 명령 실행:
     echo.
-    echo       mkdir .claude\hooks
-    echo       copy "%SCRIPT_DIR%hooks\*.sh" .claude\hooks\
+    REM Git Bash 체크
+    where bash >nul 2>nul
+    if !errorlevel! equ 0 (
+        echo       [OK] Git Bash 감지됨 - .sh 스크립트 사용 가능
+        echo.
+        echo       프로젝트 폴더에서 다음 명령 실행:
+        echo       mkdir .claude\hooks
+        echo       copy "%SCRIPT_DIR%hooks\*.sh" .claude\hooks\
+        echo.
+        echo       settings.json 훅 설정 예시:
+        echo       { "command": "bash hooks/save-conversation.sh \"$PROMPT\"" }
+    ) else (
+        echo       [주의] Git Bash가 설치되어 있지 않습니다!
+        echo.
+        echo       두 가지 옵션이 있습니다:
+        echo.
+        echo       옵션 1) Git for Windows 설치 (권장)
+        echo              https://git-scm.com/download/win
+        echo              설치 후 .sh 스크립트 사용 가능
+        echo.
+        echo       옵션 2) PowerShell 스크립트 사용
+        echo              프로젝트 폴더에서 다음 명령 실행:
+        echo              mkdir .claude\hooks
+        echo              copy "%SCRIPT_DIR%hooks\*.ps1" .claude\hooks\
+        echo.
+        echo              settings.json 훅 설정 예시:
+        echo              { "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\"" }
+    )
     echo.
-    echo       그리고 hooks\settings.example.json을 참고하여
-    echo       .claude\settings.json에 hooks 설정을 추가하세요.
+    echo       자세한 설정: hooks\README.md 참고
 ) else (
     echo       훅 없음
 )

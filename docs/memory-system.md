@@ -51,24 +51,37 @@
 
 `hooks/settings.example.json` 또는 `.claude/settings.local.json`에 추가:
 
+### Bash 버전 (Git 설치됨 - 권장)
+
 ```json
 {
   "hooks": {
     "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": ["bash hooks/save-conversation.sh \"$PROMPT\""]
-      }
+      { "command": "bash hooks/save-conversation.sh \"$PROMPT\"" }
     ],
     "Stop": [
-      {
-        "matcher": "",
-        "hooks": ["bash hooks/update-memory.sh"]
-      }
+      { "command": "bash hooks/update-memory.sh" }
     ]
   }
 }
 ```
+
+### PowerShell 버전 (Git 없는 Windows)
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\"" }
+    ],
+    "Stop": [
+      { "command": "powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1" }
+    ]
+  }
+}
+```
+
+> **참고**: 환경별 상세 설정은 [SETUP.md](../SETUP.md#7-1-훅-설정-가이드) 참고
 
 ---
 

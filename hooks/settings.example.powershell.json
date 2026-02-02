@@ -1,0 +1,69 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "description": "Claude Code hook configuration - PowerShell version (for Windows without Git Bash)",
+
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "모든 대화를 .md 파일로 저장 (세션 간 공유)",
+        "matcher": "",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "description": "새 파일 생성 전 reducing-entropy 확인",
+        "matcher": "Write",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/check-new-file.ps1 \"$TOOL_INPUT\""
+      },
+      {
+        "description": "민감 파일 보호",
+        "matcher": "Edit|Write",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/protect-files.ps1 \"$TOOL_INPUT\""
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "description": "코드 파일 검증 (500줄, 함수 크기, 보안)",
+        "matcher": "Edit|Write",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-code.ps1 \"$TOOL_INPUT\""
+      },
+      {
+        "description": "마크다운 AI 글쓰기 패턴 검출",
+        "matcher": "Write",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-docs.ps1 \"$TOOL_INPUT\""
+      },
+      {
+        "description": "API 파일 유효성 검사",
+        "matcher": "Edit|Write",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-api.ps1 \"$TOOL_INPUT\""
+      }
+    ],
+
+    "Stop": [
+      {
+        "description": "세션 종료 시 MEMORY.md 자동 업데이트",
+        "matcher": "",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1"
+      }
+    ]
+  },
+
+  "notes": {
+    "when_to_use": [
+      "Git for Windows가 설치되어 있지 않은 Windows 환경",
+      "PowerShell을 선호하는 경우"
+    ],
+    "installation": [
+      "1. 이 파일을 .claude/settings.json으로 복사",
+      "2. hooks/*.ps1 파일을 프로젝트 hooks/ 폴더로 복사",
+      "3. PowerShell 5.1 이상 필요 (Windows 10/11 기본 포함)"
+    ],
+    "bash_alternative": [
+      "Git이 설치되어 있다면 settings.example.json (Bash 버전) 권장",
+      "Bash 버전이 더 많은 기능 지원 (jq 등)"
+    ]
+  }
+}

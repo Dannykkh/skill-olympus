@@ -460,10 +460,110 @@ cp agents/* ~/.claude/agents/
 mkdir -p .claude/commands
 cp commands/* .claude/commands/
 
-# Hooks (프로젝트별)
+# Hooks (프로젝트별) - 아래 "훅 설정 가이드" 참고
+```
+
+---
+
+## 7-1. 훅 설정 가이드
+
+훅 스크립트는 **환경에 따라 다른 설정**이 필요합니다.
+
+### 환경 확인
+
+| 환경 | 사용할 스크립트 | 확인 방법 |
+|------|----------------|----------|
+| Windows + Git 설치됨 | `.sh` (Bash) | `where bash` 실행 시 경로 출력 |
+| Windows + Git 없음 | `.ps1` (PowerShell) | `where bash` 실행 시 오류 |
+| Mac / Linux | `.sh` (Bash) | 기본 지원 |
+
+### Windows (Git Bash 있음) - 권장
+
+```bash
+# 프로젝트 폴더에서
+mkdir .claude\hooks
+copy hooks\*.sh .claude\hooks\
+```
+
+`.claude/settings.json` 또는 `.claude/settings.local.json`:
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "command": "bash hooks/save-conversation.sh \"$PROMPT\"" }
+    ],
+    "PreToolUse": [
+      { "matcher": "Write|Edit", "command": "bash hooks/protect-files.sh \"$TOOL_INPUT\"" },
+      { "matcher": "Write", "command": "bash hooks/check-new-file.sh \"$TOOL_INPUT\"" }
+    ],
+    "PostToolUse": [
+      { "matcher": "Write|Edit", "command": "bash hooks/validate-code.sh \"$TOOL_INPUT\"" },
+      { "matcher": "Write|Edit", "command": "bash hooks/format-code.sh \"$TOOL_INPUT\"" },
+      { "matcher": "Write", "command": "bash hooks/validate-docs.sh \"$TOOL_INPUT\"" }
+    ],
+    "Stop": [
+      { "command": "bash hooks/update-memory.sh" }
+    ]
+  }
+}
+```
+
+### Windows (PowerShell만 사용)
+
+Git이 없거나 PowerShell을 선호하는 경우:
+
+```powershell
+# 프로젝트 폴더에서
+mkdir .claude\hooks
+copy hooks\*.ps1 .claude\hooks\
+```
+
+`.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\"" }
+    ],
+    "PreToolUse": [
+      { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/protect-files.ps1 \"$TOOL_INPUT\"" },
+      { "matcher": "Write", "command": "powershell -ExecutionPolicy Bypass -File hooks/check-new-file.ps1 \"$TOOL_INPUT\"" }
+    ],
+    "PostToolUse": [
+      { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-code.ps1 \"$TOOL_INPUT\"" },
+      { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/format-code.ps1 \"$TOOL_INPUT\"" },
+      { "matcher": "Write", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-docs.ps1 \"$TOOL_INPUT\"" }
+    ],
+    "Stop": [
+      { "command": "powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1" }
+    ]
+  }
+}
+```
+
+### Mac / Linux
+
+```bash
+# 프로젝트 폴더에서
 mkdir -p .claude/hooks
 cp hooks/*.sh .claude/hooks/
+chmod +x .claude/hooks/*.sh
 ```
+
+설정은 Windows (Git Bash) 버전과 동일합니다.
+
+### 주의사항
+
+1. **줄바꿈 문제**: `.sh` 파일은 반드시 LF (Unix) 줄바꿈이어야 합니다
+   - Windows에서 CRLF로 저장하면 `\r': command not found` 오류 발생
+   - `.gitattributes`에서 `*.sh text eol=lf` 설정으로 방지
+
+2. **PowerShell 실행 정책**: `-ExecutionPolicy Bypass` 플래그 필수
+
+3. **jq 의존성**: bash 스크립트 중 일부는 `jq` 필요 (JSON 파싱)
+   - 설치: `choco install jq` 또는 `winget install jqlang.jq`
+
+4. **자세한 훅 목록**: `hooks/README.md` 참고
 
 ---
 
