@@ -116,14 +116,21 @@ jwt 인증도 추가해
 ### 세션 중
 
 ```
-사용자 입력
+사용자 입력 (예: "jwt 인증 구현해줘 #authentication #security")
     ↓
 UserPromptSubmit 훅
     ↓
 save-conversation.sh/ps1
     ↓
-.claude/conversations/2026-02-02.md에 추가
-(frontmatter: keywords=[], summary="")
+1. 해시태그(#keyword) 추출 → ["authentication", "security"]
+2. .claude/conversations/2026-02-02.md에 추가
+3. frontmatter keywords 자동 업데이트
+```
+
+**해시태그 사용법:**
+```
+jwt 인증 구현해줘 #authentication #security #login-bug
+→ keywords: ["authentication", "security", "login-bug"]
 ```
 
 ### 세션 종료 (Stop 훅)
