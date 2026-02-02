@@ -47,11 +47,11 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (48 Skills)
+### Custom Skills (52 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| 🤖 **AI Tools** | codex, gemini, perplexity | External AI model integration (GPT-5.2, Gemini, web search) |
+| 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | External AI model integration + Multi-AI orchestration (PM/Worker mode) |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge | Plugin/skill creation tools |
 | 📝 **Documentation** | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
@@ -61,6 +61,7 @@ chmod +x install.sh && ./install.sh
 | 🧪 **Testing** | code-reviewer, qa-test-planner | Code review & QA |
 | 📦 **Git** | commit-work | Git workflow |
 | 🔧 **Utilities** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown | Utilities |
+| 🧠 **Memory** | long-term-memory | Session memory management (MEMORY.md auto-update) |
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
@@ -104,10 +105,11 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks (8 Hooks)
+### Hooks (9 Hooks)
 
 | Hook | Timing | Description |
 |------|--------|-------------|
+| orchestrator-mode.sh | UserPromptSubmit | PM/Worker mode detection (workpm, pmworker triggers) |
 | save-conversation.sh | UserPromptSubmit | Save all conversations to .md files for session sharing |
 | update-memory.sh | Stop | Auto-update MEMORY.md via memory-writer agent on session end |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
@@ -127,8 +129,30 @@ Session context persistence across conversations.
 | `save-conversation.sh` | Auto-save all conversations to `.claude/conversations/` |
 | `update-memory.sh` | Stop hook → memory-writer agent → MEMORY.md cleanup |
 | `session-handoff` skill | Structured handoff documents for session transfer |
+| `long-term-memory` skill | Manual memory add/search (`/memory add`, `/memory search`) |
 
 > **[Detailed Documentation](docs/memory-system.md)** - Full system architecture, hooks setup, and usage guide.
+
+### MCP Servers (Custom)
+
+| MCP | Description | Location |
+|-----|-------------|----------|
+| **claude-orchestrator-mcp** | PM + Multi-AI Worker orchestration (Claude + Codex + Gemini, file locking, task dependencies) | `mcp-servers/claude-orchestrator-mcp/` |
+
+```powershell
+# Single AI mode (Claude only)
+.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project"
+
+# Multi-AI mode (auto-detect available CLIs)
+.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
+
+# Specify AI per worker
+.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'gemini')
+```
+
+**Orchestrator Skills:**
+- `workpm` - Start PM mode (project analysis, task decomposition, AI assignment)
+- `pmworker` - Start Worker mode (claim tasks, lock files, execute work)
 
 ---
 
@@ -148,7 +172,16 @@ Session context persistence across conversations.
 | [pg-aiguide](https://github.com/timescale/pg-aiguide) | PostgreSQL best practices | `claude plugin install pg-aiguide` | - |
 | [skills.sh](https://skills.sh/) | 25K+ skills directory by Vercel | `npx skills add <owner/repo>` | [상세](docs/resources/skills-sh.md) |
 
-### Multi-LLM Integration (NEW)
+### External AI CLI Integration
+
+| Resource | Description | Docs |
+|----------|-------------|------|
+| **Codex CLI** | OpenAI Codex CLI (GPT-5.2) integration | [상세](docs/resources/codex-cli.md) |
+| **Gemini CLI** | Google Gemini 3 Pro CLI integration | [상세](docs/resources/gemini-cli.md) |
+| **Perplexity Skill** | Perplexity AI web search integration | [상세](docs/resources/perplexity-skill.md) |
+| **Humanizer Skill** | AI writing pattern removal (24 patterns) | [상세](docs/resources/humanizer-skill.md) |
+
+### Multi-LLM Integration
 
 > **문제**: LLM은 학습 데이터 이후의 최신 모델/API 정보를 모릅니다.
 > **해결**: Context7 (라이브러리 문서) + PAL MCP (멀티 모델) 조합 사용
@@ -234,15 +267,15 @@ claude-code-customizations/
 │   ├── README.md
 │   └── claude-orchestrator-mcp/
 ├── docs/                      # Documentation
-│   └── resources/             # External resource docs
+│   └── resources/             # External resource docs (24 docs)
 │       ├── README.md          # Resource index
-│       ├── _template.md       # Template for new docs
-│       ├── everything-claude-code.md
+│       ├── codex-cli.md       # Codex CLI integration
+│       ├── gemini-cli.md      # Gemini CLI integration
+│       ├── perplexity-skill.md # Perplexity search
+│       ├── humanizer-skill.md # AI writing patterns
 │       ├── vercel-agent-skills.md
-│       ├── oh-my-claudecode.md
-│       ├── skills-sh.md
-│       ├── toss-payments-mcp.md
-│       └── context7-mcp.md
+│       ├── context7-mcp.md
+│       └── ... (18 more)
 ├── install.bat                # Windows installer
 ├── install.sh                 # Linux/Mac installer
 ├── SETUP.md                   # Complete setup guide
@@ -333,4 +366,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-01-31
+**Last Updated:** 2026-02-02

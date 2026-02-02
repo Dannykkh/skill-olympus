@@ -1,5 +1,6 @@
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 export type WorkerStatus = 'idle' | 'working' | 'offline';
+export type AIProvider = 'claude' | 'codex' | 'gemini';
 export interface Task {
     id: string;
     prompt: string;
@@ -8,6 +9,7 @@ export interface Task {
     dependsOn: string[];
     scope?: string[];
     priority: number;
+    aiProvider?: AIProvider;
     createdAt: string;
     startedAt?: string;
     completedAt?: string;
@@ -65,6 +67,7 @@ export declare class StateManager {
         dependsOn?: string[];
         scope?: string[];
         priority?: number;
+        aiProvider?: AIProvider;
     }): {
         success: boolean;
         message: string;

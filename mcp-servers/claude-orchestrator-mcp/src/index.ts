@@ -12,6 +12,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { glob } from 'glob';
 import { StateManager } from './services/state-manager.js';
+import {
+  detectAIProviders,
+  getAvailableProviders,
+  getProviderCommand,
+  getProviderStrengths,
+  type AIProvider
+} from './services/ai-detector.js';
 
 // ============================================================================
 // 환경 변수 및 초기화
@@ -37,7 +44,8 @@ const CreateTaskSchema = z.object({
   prompt: z.string().describe('상세 작업 지시문'),
   depends_on: z.array(z.string()).optional().describe('선행 태스크 ID 목록'),
   scope: z.array(z.string()).optional().describe('수정 가능 파일 범위'),
-  priority: z.number().optional().describe('우선순위 (높을수록 먼저, 기본: 1)')
+  priority: z.number().optional().describe('우선순위 (높을수록 먼저, 기본: 1)'),
+  ai_provider: z.enum(['claude', 'codex', 'gemini']).optional().describe('실행할 AI Provider (auto-detect 기반 fallback)')
 });
 
 // Worker 도구 스키마
@@ -78,6 +86,31 @@ const DeleteTaskSchema = z.object({
 // ============================================================================
 
 const TOOLS: Tool[] = [
+  // Multi-AI 관리 도구
+  {
+    name: 'orchestrator_detect_providers',
+    description: '설치된 AI CLI (Claude, Codex, Gemini)를 감지하고 사용 가능한 모드를 반환합니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    }
+  },
+  {
+    name: 'orchestrator_get_provider_info',
+    description: '특정 AI Provider의 강점과 최적 용도를 반환합니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        provider: {
+          type: 'string',
+          enum: ['claude', 'codex', 'gemini'],
+          description: '정보를 조회할 AI Provider'
+        }
+      },
+      required: ['provider']
+    }
+  },
+
   // PM 전용 도구
   {
     name: 'orchestrator_analyze_codebase',
@@ -92,7 +125,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: 'orchestrator_create_task',
-    description: '새로운 태스크를 생성합니다. (PM 전용)',
+    description: '새로운 태스크를 생성합니다. AI Provider를 지정하면 해당 AI로 실행됩니다. (PM 전용)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -108,7 +141,12 @@ const TOOLS: Tool[] = [
           items: { type: 'string' },
           description: '수정 가능 파일 범위'
         },
-        priority: { type: 'number', description: '우선순위 (높을수록 먼저, 기본: 1)' }
+        priority: { type: 'number', description: '우선순위 (높을수록 먼저, 기본: 1)' },
+        ai_provider: {
+          type: 'string',
+          enum: ['claude', 'codex', 'gemini'],
+          description: 'AI Provider (미지정시 사용 가능한 AI 중 자동 선택)'
+        }
       },
       required: ['id', 'prompt']
     }
@@ -351,6 +389,34 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let result: unknown;
 
     switch (name) {
+      // Multi-AI 관리 도구
+      case 'orchestrator_detect_providers': {
+        const detection = detectAIProviders();
+        result = {
+          ...detection,
+          recommendation: detection.availableCount >= 2
+            ? '병렬 처리 가능: 코드 생성은 Codex, 분석은 Claude, 대용량 컨텍스트는 Gemini 권장'
+            : 'Single Mode: Claude만 사용합니다'
+        };
+        break;
+      }
+
+      case 'orchestrator_get_provider_info': {
+        const provider = (args as { provider: AIProvider }).provider;
+        const availableProviders = getAvailableProviders();
+        const isAvailable = availableProviders.includes(provider);
+        result = {
+          provider,
+          available: isAvailable,
+          strengths: getProviderStrengths(provider),
+          command: isAvailable ? getProviderCommand(provider) : null,
+          suggestion: isAvailable
+            ? `${provider}는 현재 사용 가능합니다.`
+            : `${provider}는 설치되어 있지 않습니다. 대안: ${availableProviders.join(', ') || 'claude'}`
+        };
+        break;
+      }
+
       // PM 전용 도구
       case 'orchestrator_analyze_codebase': {
         const parsed = AnalyzeCodebaseSchema.parse(args);
@@ -360,10 +426,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'orchestrator_create_task': {
         const parsed = CreateTaskSchema.parse(args);
+
+        // AI Provider 유효성 검증 및 fallback
+        let aiProvider = parsed.ai_provider as AIProvider | undefined;
+        if (aiProvider) {
+          const availableProviders = getAvailableProviders();
+          if (!availableProviders.includes(aiProvider)) {
+            // 지정한 Provider가 없으면 사용 가능한 것으로 fallback
+            const fallbackProvider = availableProviders[0] || 'claude';
+            console.error(`[WARN] ${aiProvider} not available, falling back to ${fallbackProvider}`);
+            aiProvider = fallbackProvider as AIProvider;
+          }
+        }
+
         result = stateManager.createTask(parsed.id, parsed.prompt, {
           dependsOn: parsed.depends_on,
           scope: parsed.scope,
-          priority: parsed.priority
+          priority: parsed.priority,
+          aiProvider
         });
         break;
       }

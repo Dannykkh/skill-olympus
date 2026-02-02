@@ -47,11 +47,11 @@ chmod +x install.sh && ./install.sh
 
 ## 포함된 내용
 
-### 커스텀 스킬 (48개)
+### 커스텀 스킬 (52개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 **AI 도구** | codex, gemini, perplexity | 외부 AI 모델 연동 (GPT-5.2, Gemini, 웹 검색) |
+| 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 (PM/Worker 모드) |
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge | 플러그인/스킬 생성 도구 |
 | 📝 **문서화** | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
@@ -61,6 +61,7 @@ chmod +x install.sh && ./install.sh
 | 🧪 **테스트** | code-reviewer, qa-test-planner | 코드 리뷰 & QA |
 | 📦 **Git** | commit-work | Git 워크플로우 |
 | 🔧 **유틸리티** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown | 유틸리티 |
+| 🧠 **메모리** | long-term-memory | 세션 메모리 관리 (MEMORY.md 자동 업데이트) |
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
@@ -104,10 +105,11 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 훅 (8개)
+### 훅 (9개)
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
+| orchestrator-mode.sh | UserPromptSubmit | PM/Worker 모드 감지 (workpm, pmworker 트리거) |
 | save-conversation.sh | UserPromptSubmit | 모든 대화를 .md 파일로 저장 (세션 간 공유) |
 | update-memory.sh | Stop | 세션 종료 시 memory-writer 에이전트로 MEMORY.md 자동 업데이트 |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
@@ -127,8 +129,30 @@ chmod +x install.sh && ./install.sh
 | `save-conversation.sh` | 모든 대화를 `.claude/conversations/`에 자동 저장 |
 | `update-memory.sh` | Stop 훅 → memory-writer 에이전트 → MEMORY.md 정리 |
 | `session-handoff` 스킬 | 세션 인수인계용 구조화된 핸드오프 문서 |
+| `long-term-memory` 스킬 | 수동 기억 추가/검색 (`/memory add`, `/memory search`) |
 
 > **[상세 문서](docs/memory-system.md)** - 시스템 구조, 훅 설정, 사용법 가이드.
+
+### 커스텀 MCP 서버
+
+| MCP | 설명 | 위치 |
+|-----|------|------|
+| **claude-orchestrator-mcp** | PM + Multi-AI Worker 오케스트레이션 (Claude + Codex + Gemini, 파일 락킹, 태스크 의존성) | `mcp-servers/claude-orchestrator-mcp/` |
+
+```powershell
+# 싱글 AI 모드 (Claude만)
+.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project"
+
+# Multi-AI 모드 (설치된 CLI 자동 감지)
+.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
+
+# Worker별 AI 직접 지정
+.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'gemini')
+```
+
+**오케스트레이터 스킬:**
+- `workpm` - PM 모드 시작 (프로젝트 분석, 태스크 분해, AI 배정)
+- `pmworker` - Worker 모드 시작 (태스크 담당, 파일 락, 작업 수행)
 
 ---
 
@@ -148,7 +172,16 @@ chmod +x install.sh && ./install.sh
 | [pg-aiguide](https://github.com/timescale/pg-aiguide) | PostgreSQL 베스트 프랙티스 | `claude plugin install pg-aiguide` | - |
 | [skills.sh](https://skills.sh/) | 25K+ 스킬 디렉토리 (Vercel) | `npx skills add <owner/repo>` | [상세](docs/resources/skills-sh.md) |
 
-### Multi-LLM 통합 (NEW)
+### 외부 AI CLI 통합
+
+| 리소스 | 설명 | 문서 |
+|--------|------|------|
+| **Codex CLI** | OpenAI Codex CLI (GPT-5.2) 통합 | [상세](docs/resources/codex-cli.md) |
+| **Gemini CLI** | Google Gemini 3 Pro CLI 통합 | [상세](docs/resources/gemini-cli.md) |
+| **Perplexity 스킬** | Perplexity AI 웹 검색 통합 | [상세](docs/resources/perplexity-skill.md) |
+| **Humanizer 스킬** | AI 글쓰기 패턴 제거 (24개 패턴) | [상세](docs/resources/humanizer-skill.md) |
+
+### Multi-LLM 통합
 
 > **문제**: LLM은 학습 데이터 이후의 최신 모델/API 정보를 알지 못함
 > **해결**: Context7 (라이브러리 문서) + PAL MCP (멀티 모델) 조합
@@ -232,15 +265,15 @@ claude-code-customizations/
 │   ├── README.md
 │   └── claude-orchestrator-mcp/
 ├── docs/                      # 문서
-│   └── resources/             # 외부 리소스 상세 문서
+│   └── resources/             # 외부 리소스 상세 문서 (24개)
 │       ├── README.md          # 리소스 인덱스
-│       ├── _template.md       # 새 문서 템플릿
-│       ├── everything-claude-code.md
+│       ├── codex-cli.md       # Codex CLI 통합
+│       ├── gemini-cli.md      # Gemini CLI 통합
+│       ├── perplexity-skill.md # Perplexity 검색
+│       ├── humanizer-skill.md # AI 글쓰기 패턴
 │       ├── vercel-agent-skills.md
-│       ├── oh-my-claudecode.md
-│       ├── skills-sh.md
-│       ├── toss-payments-mcp.md
-│       └── context7-mcp.md
+│       ├── context7-mcp.md
+│       └── ... (18개 더)
 ├── install.bat                # Windows 설치 스크립트
 ├── install.sh                 # Linux/Mac 설치 스크립트
 ├── SETUP.md                   # 전체 설정 가이드
@@ -331,4 +364,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-01-31
+**최종 업데이트:** 2026-02-02

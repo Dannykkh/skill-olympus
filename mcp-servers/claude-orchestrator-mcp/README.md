@@ -1,6 +1,13 @@
 # Claude Code Orchestrator MCP Server
 
-PM + Worker 병렬 처리를 위한 MCP 서버입니다.
+PM + Multi-AI Worker 병렬 처리를 위한 MCP 서버입니다.
+
+## 주요 기능
+
+- **파일 락킹**: 다중 Worker 간 파일 충돌 방지
+- **태스크 의존성 관리**: 선행 태스크 완료 후 자동 언블록
+- **Multi-AI 지원**: Claude, Codex (GPT-5.2), Gemini 3 Pro 통합
+- **자동 Fallback**: 설치된 AI CLI만 자동 감지하여 사용
 
 ## 설치
 
@@ -15,8 +22,14 @@ npm run build
 ### 1. PowerShell 스크립트 사용 (권장)
 
 ```powershell
-# 기본 실행 (3개 Worker, 자동 모드)
+# 기본 실행 (3개 Worker, Claude 전용)
 .\scripts\launch.ps1 -ProjectPath "C:\your\project"
+
+# Multi-AI 모드 (자동 감지)
+.\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
+
+# Worker 별 AI 직접 지정
+.\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'gemini')
 
 # Worker 수 지정
 .\scripts\launch.ps1 -ProjectPath "C:\your\project" -WorkerCount 5
@@ -32,8 +45,13 @@ npm run build
 ```
 
 **실행 모드:**
-- **자동 모드** (기본): `claude --dangerously-skip-permissions`로 실행, 권한 확인 없이 자동 작업
-- **수동 모드** (`-ManualMode`): 일반 `claude`로 실행, 각 작업마다 권한 확인 필요
+- **자동 모드** (기본): 권한 확인 없이 자동 작업
+- **수동 모드** (`-ManualMode`): 각 작업마다 권한 확인 필요
+
+**Multi-AI 모드:**
+- **Full Mode**: Claude + Codex + Gemini 3개 AI 병렬 처리
+- **Dual Mode**: 사용 가능한 2개 AI 병렬 처리
+- **Single Mode**: Claude만 사용 (기본)
 
 ### 2. 수동 설정
 
@@ -58,12 +76,19 @@ Worker는 `ORCHESTRATOR_WORKER_ID`를 `worker-1`, `worker-2` 등으로 변경하
 
 ## MCP 도구
 
+### Multi-AI 관리 도구
+
+| 도구 | 설명 |
+|------|------|
+| `orchestrator_detect_providers` | 설치된 AI CLI 감지 (Claude/Codex/Gemini) |
+| `orchestrator_get_provider_info` | AI Provider 강점 및 최적 용도 조회 |
+
 ### PM 전용 도구
 
 | 도구 | 설명 |
 |------|------|
 | `orchestrator_analyze_codebase` | 프로젝트 구조 분석 |
-| `orchestrator_create_task` | 태스크 생성 |
+| `orchestrator_create_task` | 태스크 생성 (ai_provider 옵션으로 AI 지정 가능) |
 | `orchestrator_get_progress` | 진행 상황 조회 |
 
 ### Worker 전용 도구
@@ -90,7 +115,28 @@ Worker는 `ORCHESTRATOR_WORKER_ID`를 `worker-1`, `worker-2` 등으로 변경하
 
 ## 워크플로우 예시
 
-### PM
+### PM (Multi-AI 활용)
+
+```
+1. orchestrator_detect_providers() - AI CLI 감지
+   → 결과: { mode: "full", providers: ["claude", "codex", "gemini"] }
+
+2. orchestrator_analyze_codebase() - 프로젝트 분석
+
+3. AI별 최적 태스크 배정:
+   - 코드 생성 → Codex
+     orchestrator_create_task({id: "gen-api", prompt: "API 구현", ai_provider: "codex"})
+
+   - 리팩토링/설계 → Claude
+     orchestrator_create_task({id: "refactor", prompt: "아키텍처 개선", ai_provider: "claude"})
+
+   - 대용량 분석 → Gemini
+     orchestrator_create_task({id: "review", prompt: "전체 코드 리뷰", ai_provider: "gemini"})
+
+4. orchestrator_get_progress() - 진행 상황 모니터링
+```
+
+### PM (기본)
 
 ```
 1. orchestrator_analyze_codebase() - 프로젝트 분석
@@ -108,6 +154,14 @@ Worker는 `ORCHESTRATOR_WORKER_ID`를 `worker-1`, `worker-2` 등으로 변경하
 4. (실제 작업 수행)
 5. orchestrator_complete_task({task_id: "task-1", result: "완료"})
 ```
+
+## AI Provider 별 강점
+
+| Provider | 강점 | 최적 용도 |
+|----------|------|----------|
+| **Claude** | 복잡한 추론, 맥락 이해 | 코드 리팩토링, 문서 작성, 아키텍처 설계 |
+| **Codex** | 빠른 코드 생성 | 테스트 작성, 반복 코드 수정, 프로토타이핑 |
+| **Gemini** | 대용량 컨텍스트 (1M 토큰) | 전체 코드베이스 리뷰, 보안 분석, 멀티파일 이해 |
 
 ## 상태 파일
 

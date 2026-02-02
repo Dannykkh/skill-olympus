@@ -107,6 +107,7 @@ export class StateManager {
             dependsOn,
             scope: options.scope,
             priority: options.priority ?? 1,
+            aiProvider: options.aiProvider,
             createdAt: new Date().toISOString()
         };
         this.state.tasks.push(task);

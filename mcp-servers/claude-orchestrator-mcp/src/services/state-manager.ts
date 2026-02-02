@@ -8,6 +8,8 @@ import * as path from 'path';
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 export type WorkerStatus = 'idle' | 'working' | 'offline';
 
+export type AIProvider = 'claude' | 'codex' | 'gemini';
+
 export interface Task {
   id: string;
   prompt: string;
@@ -16,6 +18,7 @@ export interface Task {
   dependsOn: string[];
   scope?: string[];
   priority: number;
+  aiProvider?: AIProvider;  // 태스크 실행에 사용할 AI Provider
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
@@ -173,6 +176,7 @@ export class StateManager {
       dependsOn?: string[];
       scope?: string[];
       priority?: number;
+      aiProvider?: AIProvider;
     } = {}
   ): { success: boolean; message: string; task?: Task } {
     this.reloadState();
@@ -197,6 +201,7 @@ export class StateManager {
       dependsOn,
       scope: options.scope,
       priority: options.priority ?? 1,
+      aiProvider: options.aiProvider,
       createdAt: new Date().toISOString()
     };
 

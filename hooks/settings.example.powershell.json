@@ -5,6 +5,11 @@
   "hooks": {
     "UserPromptSubmit": [
       {
+        "description": "오케스트레이터 PM/Worker 모드 감지",
+        "matcher": "",
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/orchestrator-mode.ps1 \"$PROMPT\""
+      },
+      {
         "description": "모든 대화를 .md 파일로 저장 (세션 간 공유)",
         "matcher": "",
         "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""

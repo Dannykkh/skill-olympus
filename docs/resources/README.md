@@ -33,6 +33,15 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **Office-PowerPoint-MCP** | PPT 자동화 (32 도구, 25 템플릿) | [상세](./office-powerpoint-mcp.md) |
 | **mcp-pandoc** | 문서 변환 (MD→PDF/DOCX) | [상세](./mcp-pandoc.md) |
 
+### External AI CLI Integration
+
+| 리소스 | 설명 | 문서 |
+|--------|------|------|
+| **Codex CLI** | OpenAI Codex CLI (GPT-5.2) 통합 | [상세](./codex-cli.md) |
+| **Gemini CLI** | Google Gemini 3 Pro CLI 통합 | [상세](./gemini-cli.md) |
+| **Perplexity Skill** | Perplexity AI 웹 검색 통합 | [상세](./perplexity-skill.md) |
+| **Humanizer Skill** | AI 글쓰기 패턴 제거 (24개 패턴) | [상세](./humanizer-skill.md) |
+
 ### Multi-Agent & Orchestration
 
 | 리소스 | 설명 | 문서 |
@@ -115,13 +124,14 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | 분류 | 문서 수 |
 |------|--------|
 | Skills & Plugins | 8 |
+| External AI CLI Integration | 4 |
 | MCP Servers | 7 |
 | Multi-Agent & Orchestration | 1 |
 | Multi-LLM Integration | 1 |
 | OCR & 문서 인식 | 1 |
 | Curation Lists | 2 |
-| **총계** | **20** |
+| **총계** | **24** |
 
 ---
 
-**마지막 업데이트:** 2026-02-01
+**마지막 업데이트:** 2026-02-02

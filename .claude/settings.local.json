@@ -1,27 +1,21 @@
 {
+  "mcpServers": {
+    "orchestrator": {
+      "command": "node",
+      "args": ["D:/git/claude-code-agent-customizations/mcp-servers/claude-orchestrator-mcp/dist/index.js"],
+      "env": {
+        "ORCHESTRATOR_PROJECT_ROOT": "${workspaceFolder}",
+        "ORCHESTRATOR_WORKER_ID": "pm"
+      }
+    }
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
+        "description": "오케스트레이터 PM/Worker 모드 감지",
         "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash hooks/save-conversation.sh \"$PROMPT\""
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "(?i)(task.*complete|작업.*완료|ULTRAWORK.*complete)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '[Session Logger] 작업 완료 알림'"
-          }
-        ]
+        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/orchestrator-mode.ps1 \"$PROMPT\""]
       }
     ]
-  },
-  "_info": "Session Conversation Logger - 모든 대화를 .claude/conversations/에 저장"
+  }
 }

@@ -5,6 +5,11 @@
   "hooks": {
     "UserPromptSubmit": [
       {
+        "description": "오케스트레이터 PM/Worker 모드 감지",
+        "matcher": "",
+        "hooks": ["bash hooks/orchestrator-mode.sh \"$PROMPT\""]
+      },
+      {
         "description": "모든 대화를 .md 파일로 저장 (세션 간 공유)",
         "matcher": "",
         "hooks": ["bash hooks/save-conversation.sh \"$PROMPT\""]
