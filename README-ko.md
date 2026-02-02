@@ -22,6 +22,8 @@ Claude Code를 사용하면서 반복적으로 겪는 문제들이 있었습니�
 
 ## 빠른 시작
 
+> **5분 빠른 시작?** **[빠른 시작 가이드](docs/quickstart.md)**에서 핵심 기능을 빠르게 시작하세요.
+>
 > **새 환경 설정?** [SETUP.md](SETUP.md)에서 프로젝트 유형별 상세 설치 가이드를 확인하세요.
 
 ### 프로젝트 유형별 설치
@@ -121,17 +123,28 @@ chmod +x install.sh && ./install.sh
 
 ### 장기기억 시스템
 
-세션 간 컨텍스트 유지를 위한 메모리 시스템.
+RAG 스타일 키워드 검색을 지원하는 세션 간 컨텍스트 유지 시스템.
 
 | 구성요소 | 역할 |
 |---------|------|
 | `MEMORY.md` | 구조화된 장기기억 저장소 |
-| `save-conversation.sh` | 모든 대화를 `.claude/conversations/`에 자동 저장 |
-| `update-memory.sh` | Stop 훅 → memory-writer 에이전트 → MEMORY.md 정리 |
-| `session-handoff` 스킬 | 세션 인수인계용 구조화된 핸드오프 문서 |
-| `long-term-memory` 스킬 | 수동 기억 추가/검색 (`/memory add`, `/memory search`) |
+| `save-conversation.sh` | 대화 자동 저장 (frontmatter: keywords, summary) |
+| `update-memory.sh` | Stop 훅 → keyword-extractor + memory-writer 에이전트 |
+| `index.json` | RAG 스타일 대화 검색을 위한 키워드 인덱스 |
+| `long-term-memory` 스킬 | 메모리 관리 (`/memory add`, `/memory find`, `/memory tag`) |
 
-> **[상세 문서](docs/memory-system.md)** - 시스템 구조, 훅 설정, 사용법 가이드.
+**메모리 명령어:**
+
+| 명령어 | 설명 |
+|--------|------|
+| `/memory add <내용>` | MEMORY.md에 정보 저장 |
+| `/memory find <키워드>` | RAG 스타일 키워드로 이전 대화 검색 |
+| `/memory search <키워드>` | MEMORY.md 내 검색 |
+| `/memory tag <키워드들>` | 오늘 대화에 키워드 수동 태깅 |
+| `/memory read <날짜>` | 특정 날짜 대화 읽기 |
+| `/memory list` | 전체 기억 보기 |
+
+> **[상세 문서](docs/memory-system.md)** - 시스템 구조, 키워드 검색, 훅 설정, 사용법 가이드.
 
 ### 커스텀 MCP 서버
 
@@ -153,6 +166,8 @@ chmod +x install.sh && ./install.sh
 **오케스트레이터 스킬:**
 - `workpm` - PM 모드 시작 (프로젝트 분석, 태스크 분해, AI 배정)
 - `pmworker` - Worker 모드 시작 (태스크 담당, 파일 락, 작업 수행)
+
+> **[오케스트레이터 가이드](docs/orchestrator-guide.md)** - Multi-AI 오케스트레이션, 태스크 관리, 병렬 터미널 설정 완전 가이드.
 
 ---
 
@@ -265,6 +280,9 @@ claude-code-customizations/
 │   ├── README.md
 │   └── claude-orchestrator-mcp/
 ├── docs/                      # 문서
+│   ├── quickstart.md          # 5분 빠른 시작 가이드
+│   ├── orchestrator-guide.md  # Multi-AI 오케스트레이터 상세 가이드
+│   ├── memory-system.md       # 장기기억 & 키워드 검색 가이드
 │   └── resources/             # 외부 리소스 상세 문서 (24개)
 │       ├── README.md          # 리소스 인덱스
 │       ├── codex-cli.md       # Codex CLI 통합

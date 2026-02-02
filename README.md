@@ -22,6 +22,8 @@ This repository solves these problems by:
 
 ## Quick Start
 
+> **5-minute guide?** See **[Quick Start Guide](docs/quickstart.md)** for getting started with core features fast.
+>
 > **New environment?** See [SETUP.md](SETUP.md) for complete setup guide with project-type specific installations.
 
 ### Install by Project Type
@@ -121,17 +123,28 @@ chmod +x install.sh && ./install.sh
 
 ### Long-term Memory System
 
-Session context persistence across conversations.
+Session context persistence across conversations with RAG-style keyword search.
 
 | Component | Role |
 |-----------|------|
 | `MEMORY.md` | Structured long-term memory storage |
-| `save-conversation.sh` | Auto-save all conversations to `.claude/conversations/` |
-| `update-memory.sh` | Stop hook → memory-writer agent → MEMORY.md cleanup |
-| `session-handoff` skill | Structured handoff documents for session transfer |
-| `long-term-memory` skill | Manual memory add/search (`/memory add`, `/memory search`) |
+| `save-conversation.sh` | Auto-save conversations with frontmatter (keywords, summary) |
+| `update-memory.sh` | Stop hook → keyword-extractor + memory-writer agents |
+| `index.json` | Keyword index for RAG-style conversation search |
+| `long-term-memory` skill | Memory management (`/memory add`, `/memory find`, `/memory tag`) |
 
-> **[Detailed Documentation](docs/memory-system.md)** - Full system architecture, hooks setup, and usage guide.
+**Memory Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/memory add <content>` | Save information to MEMORY.md |
+| `/memory find <keyword>` | RAG-style search past conversations by keyword |
+| `/memory search <keyword>` | Search within MEMORY.md |
+| `/memory tag <keywords>` | Manually tag today's conversation |
+| `/memory read <date>` | Read specific day's conversation |
+| `/memory list` | Show all memories |
+
+> **[Detailed Documentation](docs/memory-system.md)** - Full system architecture, keyword search, hooks setup, and usage guide.
 
 ### MCP Servers (Custom)
 
@@ -153,6 +166,8 @@ Session context persistence across conversations.
 **Orchestrator Skills:**
 - `workpm` - Start PM mode (project analysis, task decomposition, AI assignment)
 - `pmworker` - Start Worker mode (claim tasks, lock files, execute work)
+
+> **[Orchestrator Guide](docs/orchestrator-guide.md)** - Complete guide for Multi-AI orchestration, task management, and parallel terminal setup.
 
 ---
 
@@ -267,6 +282,9 @@ claude-code-customizations/
 │   ├── README.md
 │   └── claude-orchestrator-mcp/
 ├── docs/                      # Documentation
+│   ├── quickstart.md          # 5-minute quick start guide
+│   ├── orchestrator-guide.md  # Multi-AI orchestrator detailed guide
+│   ├── memory-system.md       # Long-term memory & keyword search guide
 │   └── resources/             # External resource docs (24 docs)
 │       ├── README.md          # Resource index
 │       ├── codex-cli.md       # Codex CLI integration
