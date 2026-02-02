@@ -1,6 +1,6 @@
 ---
 name: long-term-memory
-description: 세션 간 장기기억 관리. MEMORY.md 업데이트, 대화 키워드 검색, 수동 태깅
+description: 세션 간 장기기억 관리. MEMORY.md 업데이트, 대화 키워드 검색, 자동 태깅
 triggers:
   - "장기기억"
   - "memory"
@@ -13,6 +13,22 @@ auto_apply: false
 # Long-Term Memory Management
 
 세션 간 지속되는 장기기억을 관리합니다.
+
+> **설치 가이드**: [INSTALL.md](./INSTALL.md)
+
+## 포함 파일
+
+```
+long-term-memory/
+├── SKILL.md              # 스킬 정의 (이 파일)
+├── INSTALL.md            # 설치 가이드
+├── CLAUDE.md.snippet     # CLAUDE.md에 추가할 규칙
+└── hooks/
+    ├── save-conversation.ps1   # 대화 저장 (Windows)
+    ├── save-conversation.sh    # 대화 저장 (Linux/Mac)
+    ├── update-memory.ps1       # 메모리 업데이트 (Windows)
+    └── update-memory.sh        # 메모리 업데이트 (Linux/Mac)
+```
 
 ## 시스템 구조
 
