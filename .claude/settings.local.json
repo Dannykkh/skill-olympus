@@ -15,6 +15,17 @@
         "description": "오케스트레이터 PM/Worker 모드 감지",
         "matcher": "",
         "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/orchestrator-mode.ps1 \"$PROMPT\""]
+      },
+      {
+        "description": "대화 로그 저장 + 해시태그 키워드 추출",
+        "matcher": "",
+        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""]
+      }
+    ],
+    "Stop": [
+      {
+        "description": "키워드 추출 + MEMORY.md 업데이트",
+        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1"]
       }
     ]
   }
