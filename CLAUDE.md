@@ -26,3 +26,27 @@
 
 매 작업 완료 시 중요한 내용이 있으면 MEMORY.md의 적절한 섹션에 추가하세요.
 이미 기록된 내용은 중복 추가하지 마세요.
+
+## 대화 키워드 자동 태깅
+
+매 작업 완료 후, 오늘 대화 파일의 frontmatter keywords를 업데이트하세요:
+
+- 파일 위치: `.claude/conversations/YYYY-MM-DD.md`
+- 파일이 있을 때만 업데이트 (없으면 무시)
+
+**추출 대상:**
+- 기술 스택: react, typescript, spring, docker, mcp 등
+- 작업 내용: authentication, refactoring, bug-fix, api-연동 등
+- 기능/모듈명: login, payment, user-profile 등
+- 주요 파일명: state-manager.ts, launch.ps1 등
+
+**형식:**
+```yaml
+keywords: ["jwt-authentication", "login-bug-fix", "react", "api-연동"]
+```
+
+**규칙:**
+- 기존 키워드에 새 키워드 추가 (중복 제거)
+- 키워드는 소문자, 하이픈(-) 사용
+- 한국어 키워드도 허용
+- 5-15개 범위로 유지
