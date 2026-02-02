@@ -25,6 +25,7 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 
 | 리소스 | 설명 | 문서 |
 |--------|------|------|
+| **Fetch MCP** | 웹페이지 URL 내용 읽기 (Anthropic 공식) | [상세](./fetch-mcp.md) |
 | **Toss Payments MCP** | PG 결제 연동 (10분) | [상세](./toss-payments-mcp.md) |
 | **Context7 MCP** | 라이브러리 문서 실시간 검색 | [상세](./context7-mcp.md) |
 | **PAL MCP** | Multi-Model 오케스트레이션 (50+ LLM) | [상세](./pal-mcp.md) |
@@ -81,6 +82,7 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **PostgreSQL** | [pg-aiguide](./pg-aiguide.md) |
 | **결제 연동** | [Toss Payments MCP](./toss-payments-mcp.md) |
 | **브라우저 자동화** | [Playwright MCP](./playwright-mcp.md) |
+| **웹페이지 읽기** | [Fetch MCP](./fetch-mcp.md) |
 | **문서 변환** | [mcp-pandoc](./mcp-pandoc.md) |
 | **PPT 생성** | [Office-PowerPoint-MCP](./office-powerpoint-mcp.md) |
 
@@ -125,12 +127,12 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |------|--------|
 | Skills & Plugins | 8 |
 | External AI CLI Integration | 4 |
-| MCP Servers | 7 |
+| MCP Servers | 8 |
 | Multi-Agent & Orchestration | 1 |
 | Multi-LLM Integration | 1 |
 | OCR & 문서 인식 | 1 |
 | Curation Lists | 2 |
-| **총계** | **24** |
+| **총계** | **25** |
 
 ---
 
