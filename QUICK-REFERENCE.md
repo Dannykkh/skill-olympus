@@ -11,6 +11,7 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **Vercel Agent Skills** | 45개 최적화 규칙 (번들, 렌더링, SSR) | `npx add-skill vercel-labs/agent-skills -a claude-code` |
+| **fullstack-coding-standards** | 프론트 API 추상화, TanStack Query 3계층, DB 연동 | 이 저장소의 `skills/fullstack-coding-standards/` |
 | **oh-my-claudecode** | React 전문 에이전트 포함 | `/plugin install oh-my-claudecode` |
 
 ### TypeScript / NestJS
@@ -31,10 +32,17 @@
 |--------|------|------|
 | **pg-aiguide** | 스키마/인덱스 베스트 프랙티스, 제약조건 4배↑ | `claude plugin install pg-aiguide` |
 
+### Java / Spring Boot
+
+| 리소스 | 설명 | 설치 |
+|--------|------|------|
+| **fullstack-coding-standards** | 4계층 구조 (Controller→Flow→Service→Repository), @Transactional, DTO 변환, 예외 처리 | 이 저장소의 `skills/fullstack-coding-standards/` |
+
 ### Python / FastAPI
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
+| **fullstack-coding-standards** | 3계층 구조 (Router→Service→Repository), DB 연동 규칙 | 이 저장소의 `skills/fullstack-coding-standards/` |
 | **python-backend (로컬)** | 비동기, Pydantic, 500줄 제한 | 이 저장소의 `skills/python-backend/` |
 
 ---
@@ -221,12 +229,14 @@ claude plugin install voltagent-qa-sec
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
 | `skills/react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
+| `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |
 | `skills/erd-designer/` | Mermaid ERD 생성 |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |
 | `agents/frontend-react.md` | React + Zustand + TanStack |
 | `agents/backend-spring.md` | Java 21 + Spring Boot 3.x |
 | `agents/database-mysql.md` | MySQL 8.0 + Flyway |
+| `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 (패시브 에이전트) |
 | `agents/ai-ml.md` | LLM + RAG + Vector DB |
 
 ---
@@ -249,4 +259,4 @@ https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/mast
 ---
 
 **저장소:** https://github.com/Dannykkh/claude-code-agent-customizations
-**마지막 업데이트:** 2026-01-28
+**마지막 업데이트:** 2026-02-03

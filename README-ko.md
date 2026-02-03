@@ -49,7 +49,7 @@ chmod +x install.sh && ./install.sh
 
 ## 포함된 내용
 
-### 커스텀 스킬 (51개)
+### 커스텀 스킬 (52개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -57,7 +57,7 @@ chmod +x install.sh && ./install.sh
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
-| 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater | 개발 도구 & 배포 |
+| 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
 | 🎯 **계획** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
@@ -67,12 +67,12 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (29개)
+### 커스텀 에이전트 (30개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
 | **워크플로우** | fullstack-development-workflow, spec-interviewer | 전체 개발 사이클 관리 |
-| **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy | 패시브 규칙 (항상 적용) |
+| **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | 패시브 규칙 (항상 적용) |
 | **풀스택** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL 전문가 |
 | **AI/ML** | ai-ml | LLM 통합, RAG 시스템 |
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
@@ -86,7 +86,7 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `agents/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 명령어 (17개)
+### 명령어 (18개)
 
 | 명령어 | 설명 |
 |--------|------|
@@ -104,6 +104,7 @@ chmod +x install.sh && ./install.sh
 | `/write-api-docs` | API 문서 자동 생성 |
 | `/write-changelog` | Git 커밋 기반 Changelog 자동 생성 |
 | `/write-prd` | PRD (제품 요구사항 문서) 작성 |
+| `/smart-setup` | 기술 스택 자동 감지 후 리소스 추천/설치 |
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
@@ -249,6 +250,7 @@ claude-code-customizations/
 │   ├── api-handoff/           # API 핸드오프 문서 (백엔드↔프론트엔드)
 │   ├── humanizer/             # AI 글쓰기 패턴 제거 (24개 패턴)
 │   ├── ppt-generator/         # 템플릿 기반 PPT 생성
+│   ├── fullstack-coding-standards/  # 풀스택 코딩 표준 (templates/)
 │   └── python-backend-fastapi/  # FastAPI 모범 사례
 ├── agents/                    # 커스텀 서브에이전트
 │   ├── frontend-react.md      # React + Zustand + TanStack Query
@@ -263,6 +265,7 @@ claude-code-customizations/
 │   ├── migration-helper.md    # 레거시 → 모던 마이그레이션
 │   ├── explore-agent.md       # 레거시 코드 분석 (한국어)
 │   ├── feature-tracker.md     # 기능 진행률 추적 (한국어)
+│   ├── fullstack-coding-standards.md  # 풀스택 코딩 표준 (패시브)
 │   └── api-comparator.md      # API 호환성 검증
 ├── commands/                  # 슬래시 명령어 & 스크립트
 │   ├── check-todos.md

@@ -49,7 +49,7 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (51 Skills)
+### Custom Skills (52 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -57,7 +57,7 @@ chmod +x install.sh && ./install.sh
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | Plugin/skill creation tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
-| 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater | Dev tools & deployment |
+| 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
 | 🎯 **Planning** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
@@ -67,12 +67,12 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (29 Agents)
+### Custom Agents (30 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
 | **Workflow** | fullstack-development-workflow, spec-interviewer | Full development cycle management |
-| **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy | Passive rules (always applied) |
+| **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | Passive rules (always applied) |
 | **Full Stack** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL specialists |
 | **AI/ML** | ai-ml | LLM integration, RAG systems |
 | **API** | api-tester, api-comparator | API testing & compatibility |
@@ -86,7 +86,7 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `agents/` directory or [AGENTS.md](AGENTS.md) for complete agent descriptions.
 
-### Commands (17 Commands)
+### Commands (18 Commands)
 
 | Command | Description |
 |---------|-------------|
@@ -104,6 +104,7 @@ chmod +x install.sh && ./install.sh
 | `/write-api-docs` | Generate API documentation |
 | `/write-changelog` | Auto-generate changelog from git commits |
 | `/write-prd` | Write Product Requirements Document |
+| `/smart-setup` | Auto-detect tech stack and recommend/install resources |
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
@@ -250,6 +251,7 @@ claude-code-customizations/
 │   ├── api-handoff/           # API handoff docs (backend↔frontend)
 │   ├── humanizer/             # AI writing pattern removal (24 patterns)
 │   ├── ppt-generator/         # PowerPoint generation from templates
+│   ├── fullstack-coding-standards/  # Fullstack coding standards (templates/)
 │   └── python-backend/        # FastAPI best practices
 ├── agents/                    # Custom subagents
 │   ├── frontend-react.md      # React + Zustand + TanStack Query
@@ -264,6 +266,7 @@ claude-code-customizations/
 │   ├── migration-helper.md    # Legacy → Modern migration
 │   ├── explore-agent.md       # Legacy code analysis (Korean)
 │   ├── feature-tracker.md     # Feature progress tracking (Korean)
+│   ├── fullstack-coding-standards.md  # Fullstack coding standards (passive)
 │   └── api-comparator.md      # API compatibility verification
 ├── commands/                  # Slash commands & scripts
 │   ├── check-todos.md
