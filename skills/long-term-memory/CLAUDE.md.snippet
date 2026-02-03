@@ -6,16 +6,34 @@
 
 ## 메모리 자동 기록 규칙
 
-세션 중 다음 내용은 MEMORY.md에 자동으로 요약해서 추가하세요:
-- 아키텍처/설계 결정사항
-- 버그 원인과 해결 방법
-- 기술 스택 선택 이유
-- 반복되는 작업 패턴
-- 주의해야 할 함정/이슈
-- 성능 개선 방법
+MEMORY.md는 **컨텍스트 트리 구조**입니다. 중요한 내용은 적절한 섹션에 추가하세요:
 
-매 작업 완료 시 중요한 내용이 있으면 MEMORY.md의 적절한 섹션에 추가하세요.
-이미 기록된 내용은 중복 추가하지 마세요.
+| 섹션 | 내용 |
+|------|------|
+| `architecture/` | 설계 결정, 아키텍처 선택 |
+| `patterns/` | 작업 패턴, 워크플로우 |
+| `tools/` | MCP 서버, 외부 도구 |
+| `gotchas/` | 주의사항, 함정 |
+
+**항목 형식:**
+```markdown
+### 항목명
+`tags: keyword1, keyword2, keyword3`
+`date: YYYY-MM-DD`
+
+- 핵심 내용 (간결하게)
+- **참조**: [대화 링크](.claude/conversations/YYYY-MM-DD.md)
+```
+
+**규칙:**
+- 새 항목 추가 시 **키워드 인덱스 테이블**도 업데이트
+- 이미 기록된 내용은 중복 추가하지 않음
+- 대화 참조 링크 포함
+
+**결정 변경 시 (Superseded 패턴):**
+- 기존 항목 삭제 금지 (이력 보존)
+- 기존 항목에 `❌ SUPERSEDED` + `superseded-by: #새항목` 추가
+- 새 항목에 `✅ CURRENT` + `supersedes: #기존항목` + 변경 이유 포함
 
 ## 대화 키워드 자동 태깅
 
@@ -26,17 +44,9 @@
 
 **추출 대상:**
 - 기술 스택: react, typescript, spring, docker, mcp 등
-- 작업 내용: authentication, refactoring, bug-fix, api-연동 등
+- 작업 내용: authentication, refactoring, bug-fix 등
 - 기능/모듈명: login, payment, user-profile 등
-- 주요 파일명: state-manager.ts, launch.ps1 등
-
-**형식:**
-```yaml
-keywords: ["jwt-authentication", "login-bug-fix", "react", "api-연동"]
-```
 
 **규칙:**
-- 기존 키워드에 새 키워드 추가 (중복 제거)
 - 키워드는 소문자, 하이픈(-) 사용
-- 한국어 키워드도 허용
 - 5-15개 범위로 유지
