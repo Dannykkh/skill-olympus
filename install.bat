@@ -5,16 +5,28 @@ setlocal enabledelayedexpansion
 REM ============================================
 REM   Claude Code Customizations Installer
 REM   Skills, Agents, Commands, Hooks 설치 스크립트
+REM   사용법: install.bat [--link | --unlink]
 REM ============================================
-
-echo.
-echo ============================================
-echo   Claude Code Customizations Installer
-echo ============================================
-echo.
 
 set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
+
+REM 모드 결정
+set "MODE=copy"
+if "%~1"=="--link" set "MODE=link"
+if "%~1"=="--unlink" set "MODE=unlink"
+
+echo.
+echo ============================================
+if "%MODE%"=="link" (
+    echo   Claude Code Customizations Installer [LINK]
+) else if "%MODE%"=="unlink" (
+    echo   Claude Code Customizations Unlinker
+) else (
+    echo   Claude Code Customizations Installer
+)
+echo ============================================
+echo.
 
 REM Claude 폴더 확인
 if not exist "%CLAUDE_DIR%" (
@@ -23,6 +35,107 @@ if not exist "%CLAUDE_DIR%" (
     pause
     exit /b 1
 )
+
+REM ============================================
+REM   --unlink 모드: Junction 제거
+REM ============================================
+if "%MODE%"=="unlink" (
+    echo [1/2] Skills 링크 제거 중...
+    if exist "%SCRIPT_DIR%skills" (
+        for /d %%D in ("%SCRIPT_DIR%skills\*") do (
+            set "skill_name=%%~nxD"
+            set "target=%CLAUDE_DIR%\skills\!skill_name!"
+            REM Junction인지 확인 (속성에 <JUNCTION> 포함)
+            fsutil reparsepoint query "!target!" >nul 2>nul
+            if !errorlevel! equ 0 (
+                echo       - !skill_name! [링크 제거]
+                rmdir "!target!"
+            ) else (
+                echo       - !skill_name! [링크 아님, 건너뜀]
+            )
+        )
+    )
+    echo       완료!
+
+    echo.
+    echo [2/2] Agents 링크 제거 중...
+    fsutil reparsepoint query "%CLAUDE_DIR%\agents" >nul 2>nul
+    if !errorlevel! equ 0 (
+        echo       - agents [링크 제거]
+        rmdir "%CLAUDE_DIR%\agents"
+    ) else (
+        echo       - agents [링크 아님, 건너뜀]
+    )
+    echo       완료!
+
+    echo.
+    echo ============================================
+    echo   링크 제거 완료!
+    echo ============================================
+    echo.
+    echo   원본 파일은 그대로 유지됩니다.
+    echo   복사 모드로 재설치하려면: install.bat
+    echo   링크 모드로 재설치하려면: install.bat --link
+    echo.
+    endlocal
+    pause
+    exit /b 0
+)
+
+REM ============================================
+REM   --link 모드: Junction 생성
+REM ============================================
+if "%MODE%"=="link" (
+    REM Skills 링크 (개별 폴더)
+    echo [1/4] Skills 링크 중... (글로벌, Junction)
+    if exist "%SCRIPT_DIR%skills" (
+        if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
+        for /d %%D in ("%SCRIPT_DIR%skills\*") do (
+            set "skill_name=%%~nxD"
+            set "target=%CLAUDE_DIR%\skills\!skill_name!"
+            REM 기존 항목이 있으면 제거 (Junction이든 일반 폴더든)
+            if exist "!target!" (
+                fsutil reparsepoint query "!target!" >nul 2>nul
+                if !errorlevel! equ 0 (
+                    rmdir "!target!"
+                ) else (
+                    rmdir /s /q "!target!"
+                )
+            )
+            mklink /J "!target!" "%%D" >nul
+            echo       - !skill_name! [linked]
+        )
+        echo       완료!
+    ) else (
+        echo       스킬 없음
+    )
+
+    REM Agents 링크 (전체 폴더)
+    echo.
+    echo [2/4] Agents 링크 중... (글로벌, Junction)
+    if exist "%SCRIPT_DIR%agents" (
+        set "target=%CLAUDE_DIR%\agents"
+        if exist "!target!" (
+            fsutil reparsepoint query "!target!" >nul 2>nul
+            if !errorlevel! equ 0 (
+                rmdir "!target!"
+            ) else (
+                rmdir /s /q "!target!"
+            )
+        )
+        mklink /J "!target!" "%SCRIPT_DIR%agents" >nul
+        echo       - agents [linked]
+        echo       완료!
+    ) else (
+        echo       에이전트 없음
+    )
+
+    goto :after_install
+)
+
+REM ============================================
+REM   기본 모드: 복사
+REM ============================================
 
 REM Skills 설치 (글로벌)
 echo [1/4] Skills 설치 중... (글로벌)
@@ -51,6 +164,8 @@ if exist "%SCRIPT_DIR%agents" (
 ) else (
     echo       에이전트 없음
 )
+
+:after_install
 
 REM Commands 안내 (프로젝트별)
 echo.
@@ -112,12 +227,25 @@ if exist "%SCRIPT_DIR%hooks" (
 
 echo.
 echo ============================================
-echo   설치 완료!
+if "%MODE%"=="link" (
+    echo   링크 설치 완료!
+) else (
+    echo   설치 완료!
+)
 echo ============================================
 echo.
-echo   글로벌 설치 완료:
-echo   - Skills: %CLAUDE_DIR%\skills\
-echo   - Agents: %CLAUDE_DIR%\agents\
+if "%MODE%"=="link" (
+    echo   글로벌 링크 완료 (Junction):
+    echo   - Skills: %CLAUDE_DIR%\skills\ (개별 링크)
+    echo   - Agents: %CLAUDE_DIR%\agents\ (전체 링크)
+    echo.
+    echo   git pull만으로 업데이트가 자동 반영됩니다.
+    echo   링크 제거: install.bat --unlink
+) else (
+    echo   글로벌 설치 완료:
+    echo   - Skills: %CLAUDE_DIR%\skills\
+    echo   - Agents: %CLAUDE_DIR%\agents\
+)
 echo.
 echo   프로젝트별 설치 필요:
 echo   - Commands: .claude\commands\
