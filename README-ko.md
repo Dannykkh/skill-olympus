@@ -54,6 +54,8 @@ chmod +x install.sh && ./install.sh
 ```
 
 > **링크 모드**는 파일 복사 대신 심볼릭 링크(Windows: Junction, Linux/Mac: symlink)를 생성합니다. `git pull`만 하면 변경사항이 즉시 반영되어 설치 스크립트를 다시 실행할 필요가 없습니다.
+>
+> 설치 스크립트는 **4가지 구성요소를 모두 글로벌로 설치**하고 (Skills, Agents, Commands, Hooks), `~/.claude/settings.json`에 훅 설정을 자동 등록합니다.
 
 ---
 
@@ -312,6 +314,7 @@ claude-code-customizations/
 ├── install-link.bat           # Windows 설치 스크립트 (심볼릭 링크 모드)
 ├── install-unlink.bat         # Windows 심볼릭 링크 제거
 ├── install.sh                 # Linux/Mac 설치 스크립트 (--link/--unlink 지원)
+├── install-hooks-config.js    # 훅 설정 헬퍼 (settings.json 자동 구성)
 ├── SETUP.md                   # 전체 설정 가이드
 ├── README.md                  # 영문 버전
 └── README-ko.md               # 한국어 버전 (이 파일)
@@ -325,10 +328,10 @@ claude-code-customizations/
 |------|------------|--------------|
 | Skills | `~/.claude/skills/` | `.claude/skills/` |
 | Agents | `~/.claude/agents/` | `.claude/agents/` |
-| Commands | - | `.claude/commands/` |
-| Hooks | `~/.claude/settings.json` | `.claude/settings.json` |
+| Commands | `~/.claude/commands/` | `.claude/commands/` |
+| Hooks | `~/.claude/hooks/` + `~/.claude/settings.json` | `.claude/hooks/` + `.claude/settings.json` |
 
-- **글로벌**: 모든 프로젝트에서 사용 가능
+- **글로벌**: 모든 프로젝트에서 사용 가능 (설치 스크립트가 모든 항목을 글로벌로 자동 설정)
 - **프로젝트**: 해당 프로젝트에서만 사용
 
 ---
@@ -400,4 +403,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-02-03
+**최종 업데이트:** 2026-02-04

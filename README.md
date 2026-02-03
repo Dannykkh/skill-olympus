@@ -54,6 +54,8 @@ chmod +x install.sh && ./install.sh
 ```
 
 > **Link mode** creates symlinks (Windows: Junction, Linux/Mac: symlink) instead of copying files. Changes to the repo are reflected immediately after `git pull` — no need to re-run the installer.
+>
+> The installer configures **all 4 components globally** (Skills, Agents, Commands, Hooks) and auto-registers hook settings in `~/.claude/settings.json`.
 
 ---
 
@@ -313,6 +315,7 @@ claude-code-customizations/
 ├── install-link.bat           # Windows installer (symlink/Junction mode)
 ├── install-unlink.bat         # Windows symlink remover
 ├── install.sh                 # Linux/Mac installer (supports --link/--unlink)
+├── install-hooks-config.js    # Hook settings helper (auto-configure settings.json)
 ├── SETUP.md                   # Complete setup guide
 ├── README.md                  # This file (English)
 └── README-ko.md               # Korean version
@@ -326,10 +329,10 @@ claude-code-customizations/
 |------|--------|---------|
 | Skills | `~/.claude/skills/` | `.claude/skills/` |
 | Agents | `~/.claude/agents/` | `.claude/agents/` |
-| Commands | - | `.claude/commands/` |
-| Hooks | `~/.claude/settings.json` | `.claude/settings.json` |
+| Commands | `~/.claude/commands/` | `.claude/commands/` |
+| Hooks | `~/.claude/hooks/` + `~/.claude/settings.json` | `.claude/hooks/` + `.claude/settings.json` |
 
-- **Global**: Available in all projects
+- **Global**: Available in all projects (installer auto-configures all items globally)
 - **Project**: Available only in that project
 
 ---
@@ -401,4 +404,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-03
+**Last Updated:** 2026-02-04
