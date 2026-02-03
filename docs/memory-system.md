@@ -36,15 +36,20 @@
     ↓
 [UserPromptSubmit 훅] save-conversation.ps1
     ↓
-대화 파일에 append (30줄 스크립트, AI 호출 없음)
+대화 파일에 User 입력 append (30줄 스크립트, AI 호출 없음)
     ↓
 Claude 응답
     ↓
+[Claude가 직접] 응답 요약 → 대화 파일 append
 [Claude가 직접] 키워드 추출 → frontmatter 업데이트
 [Claude가 직접] 중요 내용 → MEMORY.md 업데이트
 ```
 
 **Stop 훅 없음** - 추가 AI 호출로 느려지는 것 방지
+
+**대화 저장 내용:**
+- User: 훅에서 자동 저장 (모든 입력)
+- Assistant: Claude가 직접 저장 (실제 작업만, 단순 질문 응답 제외)
 
 ---
 
