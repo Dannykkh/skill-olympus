@@ -49,20 +49,20 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (52 Skills)
+### Custom Skills (51 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
 | 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | External AI model integration + Multi-AI orchestration (PM/Worker mode) |
-| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge | Plugin/skill creation tools |
-| 📝 **Documentation** | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
+| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | Plugin/skill creation tools |
+| 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater | Dev tools & deployment |
 | 🎯 **Planning** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements |
-| 👔 **Professional** | professional-communication, feedback-mastery, difficult-workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, qa-test-planner | Code review & QA |
+| 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
 | 📦 **Git** | commit-work | Git workflow |
-| 🔧 **Utilities** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown | Utilities |
+| 🔧 **Utilities** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | long-term-memory | Session memory management (MEMORY.md auto-update) |
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
@@ -247,7 +247,7 @@ claude-code-customizations/
 │   ├── react-best-practices/  # Vercel's 45 React optimization rules
 │   ├── web-design-guidelines/ # UI/UX accessibility review
 │   ├── api-tester/            # Frontend-backend integration testing
-│   ├── erd-designer/          # Mermaid ERD generation
+│   ├── api-handoff/           # API handoff docs (backend↔frontend)
 │   ├── humanizer/             # AI writing pattern removal (24 patterns)
 │   ├── ppt-generator/         # PowerPoint generation from templates
 │   └── python-backend/        # FastAPI best practices
@@ -386,4 +386,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-02
+**Last Updated:** 2026-02-03

@@ -49,20 +49,20 @@ chmod +x install.sh && ./install.sh
 
 ## 포함된 내용
 
-### 커스텀 스킬 (52개)
+### 커스텀 스킬 (51개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 (PM/Worker 모드) |
-| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge | 플러그인/스킬 생성 도구 |
-| 📝 **문서화** | c4-architecture, mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
+| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성 도구 |
+| 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
 | 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater | 개발 도구 & 배포 |
 | 🎯 **계획** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 |
-| 👔 **비즈니스** | professional-communication, feedback-mastery, difficult-workplace-conversations | 비즈니스 커뮤니케이션 |
-| 🧪 **테스트** | code-reviewer, qa-test-planner | 코드 리뷰 & QA |
+| 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
+| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
 | 📦 **Git** | commit-work | Git 워크플로우 |
-| 🔧 **유틸리티** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown | 유틸리티 |
+| 🔧 **유틸리티** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | 유틸리티 |
 | 🧠 **메모리** | long-term-memory | 세션 메모리 관리 (MEMORY.md 자동 업데이트) |
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
@@ -246,6 +246,7 @@ claude-code-customizations/
 │   ├── code-reviewer/         # 자동 코드 리뷰 (500줄 제한, 보안)
 │   ├── vercel-react-best-practices/  # Vercel의 45개 React 최적화 규칙
 │   ├── web-design-guidelines/ # UI/UX 접근성 검토
+│   ├── api-handoff/           # API 핸드오프 문서 (백엔드↔프론트엔드)
 │   ├── humanizer/             # AI 글쓰기 패턴 제거 (24개 패턴)
 │   ├── ppt-generator/         # 템플릿 기반 PPT 생성
 │   └── python-backend-fastapi/  # FastAPI 모범 사례
@@ -384,4 +385,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-02-02
+**최종 업데이트:** 2026-02-03
