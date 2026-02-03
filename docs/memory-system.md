@@ -151,6 +151,38 @@ Linux/Mac:
 
 ---
 
+## 트러블슈팅
+
+### PowerShell 인코딩 문제 (Windows)
+
+**증상:** 한글이 `▯▯▯▯` 또는 `?????`로 깨져서 표시됨
+
+**원인:** `Invoke-WebRequest`가 UTF-8을 제대로 처리하지 못함
+
+**해결책 1 - curl 사용 (권장):**
+```powershell
+curl -o memory-system.md "https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/master/docs/memory-system.md"
+```
+
+**해결책 2 - UTF-8 강제 지정:**
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$content = Invoke-WebRequest -Uri "URL" -UseBasicParsing
+[System.IO.File]::WriteAllText("파일.md", $content.Content, [System.Text.Encoding]::UTF8)
+```
+
+**해결책 3 - Git clone:**
+```powershell
+git clone https://github.com/Dannykkh/claude-code-agent-customizations.git
+```
+
+**확인 방법:**
+```powershell
+Get-Content -Path "다운받은파일.md" -Encoding UTF8 | Select-Object -First 5
+```
+
+---
+
 ## 관련 파일
 
 | 파일 | 역할 |

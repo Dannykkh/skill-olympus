@@ -147,6 +147,20 @@ chmod +x hooks/*.sh
 mkdir -p .claude/conversations
 ```
 
+### PowerShell 인코딩 문제 (한글 깨짐)
+
+**증상:** 한글이 `▯▯▯▯` 또는 `?????`로 표시됨
+
+**해결책 - curl 사용:**
+```powershell
+curl -o save-conversation.ps1 "https://raw.githubusercontent.com/.../save-conversation.ps1"
+```
+
+또는 **Git clone:**
+```powershell
+git clone https://github.com/Dannykkh/claude-code-agent-customizations.git
+```
+
 ---
 
 **최종 업데이트:** 2026-02-03
