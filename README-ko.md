@@ -38,12 +38,22 @@ Claude Code를 사용하면서 반복적으로 겪는 문제들이 있었습니�
 ### 전체 설치
 
 ```bash
-# Windows
+# Windows (복사 모드)
 install.bat
 
-# Linux/Mac
+# Windows (심볼릭 링크 모드 - git pull로 자동 업데이트)
+install-link.bat          # 또는: install.bat --link
+install-unlink.bat        # 링크 제거: install.bat --unlink
+
+# Linux/Mac (복사 모드)
 chmod +x install.sh && ./install.sh
+
+# Linux/Mac (심볼릭 링크 모드)
+./install.sh --link
+./install.sh --unlink     # 링크 제거
 ```
+
+> **링크 모드**는 파일 복사 대신 심볼릭 링크(Windows: Junction, Linux/Mac: symlink)를 생성합니다. `git pull`만 하면 변경사항이 즉시 반영되어 설치 스크립트를 다시 실행할 필요가 없습니다.
 
 ---
 
@@ -298,8 +308,10 @@ claude-code-customizations/
 │       ├── vercel-agent-skills.md
 │       ├── context7-mcp.md
 │       └── ... (18개 더)
-├── install.bat                # Windows 설치 스크립트
-├── install.sh                 # Linux/Mac 설치 스크립트
+├── install.bat                # Windows 설치 스크립트 (복사 모드)
+├── install-link.bat           # Windows 설치 스크립트 (심볼릭 링크 모드)
+├── install-unlink.bat         # Windows 심볼릭 링크 제거
+├── install.sh                 # Linux/Mac 설치 스크립트 (--link/--unlink 지원)
 ├── SETUP.md                   # 전체 설정 가이드
 ├── README.md                  # 영문 버전
 └── README-ko.md               # 한국어 버전 (이 파일)

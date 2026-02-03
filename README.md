@@ -38,12 +38,22 @@ This repository solves these problems by:
 ### Full Installation
 
 ```bash
-# Windows
+# Windows (copy mode)
 install.bat
 
-# Linux/Mac
+# Windows (symlink mode - auto-update via git pull)
+install-link.bat          # or: install.bat --link
+install-unlink.bat        # remove links: install.bat --unlink
+
+# Linux/Mac (copy mode)
 chmod +x install.sh && ./install.sh
+
+# Linux/Mac (symlink mode)
+./install.sh --link
+./install.sh --unlink     # remove links
 ```
+
+> **Link mode** creates symlinks (Windows: Junction, Linux/Mac: symlink) instead of copying files. Changes to the repo are reflected immediately after `git pull` — no need to re-run the installer.
 
 ---
 
@@ -299,8 +309,10 @@ claude-code-customizations/
 │       ├── vercel-agent-skills.md
 │       ├── context7-mcp.md
 │       └── ... (18 more)
-├── install.bat                # Windows installer
-├── install.sh                 # Linux/Mac installer
+├── install.bat                # Windows installer (copy mode)
+├── install-link.bat           # Windows installer (symlink/Junction mode)
+├── install-unlink.bat         # Windows symlink remover
+├── install.sh                 # Linux/Mac installer (supports --link/--unlink)
 ├── SETUP.md                   # Complete setup guide
 ├── README.md                  # This file (English)
 └── README-ko.md               # Korean version

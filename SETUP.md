@@ -462,15 +462,43 @@ claude mcp add github -- npx -y @modelcontextprotocol/server-github
 ### Windows
 
 ```batch
+REM 복사 모드 (기본)
 install.bat
+
+REM 심볼릭 링크 모드 (git pull로 자동 업데이트)
+install-link.bat
+REM 또는: install.bat --link
+
+REM 링크 제거
+install-unlink.bat
+REM 또는: install.bat --unlink
 ```
 
 ### Linux/Mac
 
 ```bash
+# 복사 모드 (기본)
 chmod +x install.sh
 ./install.sh
+
+# 심볼릭 링크 모드 (git pull로 자동 업데이트)
+./install.sh --link
+
+# 링크 제거
+./install.sh --unlink
 ```
+
+> **복사 vs 링크 모드:**
+> | 모드 | 장점 | 단점 |
+> |------|------|------|
+> | 복사 (기본) | 원본과 독립적, 안전 | 업데이트 시 재설치 필요 |
+> | 링크 (`--link`) | git pull만으로 자동 반영 | 원본 삭제 시 동작 안 함 |
+>
+> **링크 모드 상세:**
+> - Windows: `mklink /J` (Junction) — 관리자 권한 불필요
+> - Linux/Mac: `ln -s` (symlink)
+> - Skills: 개별 폴더 단위로 링크
+> - Agents: 전체 폴더를 한번에 링크
 
 ### 수동 설치
 
@@ -707,7 +735,7 @@ claude plugin install pg-aiguide
 - [ ] **데이터베이스**: pg-aiguide 설치됨 (`claude plugin install pg-aiguide`)
 - [ ] **오케스트레이션**: oh-my-claudecode 플러그인 설치됨 (`/plugin install oh-my-claudecode`)
 - [ ] MCP 서버 설정됨 (`/oh-my-claudecode:mcp-setup` 또는 수동)
-- [ ] install.bat/sh 실행하여 커스텀 스킬/에이전트 설치됨
+- [ ] install.bat/sh 실행하여 커스텀 스킬/에이전트 설치됨 (링크 모드 권장: `install-link.bat`)
 - [ ] 프로젝트에 .claude/commands/ 복사됨
 - [ ] 프로젝트에 .claude/hooks/ 복사됨
 
