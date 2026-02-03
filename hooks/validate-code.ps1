@@ -2,15 +2,10 @@
 # 코드 파일 수정 후 자동 검증 (PostToolUse 훅)
 # 트리거: Edit, Write 도구 사용 후 (*.py, *.ts, *.tsx, *.jsx, *.java)
 
-param(
-    [Parameter(Position=0)]
-    [string]$ToolInput
-)
-
-# JSON에서 파일 경로 추출
+# Claude Code는 stdin으로 JSON을 전달함
 try {
-    $InputObj = $ToolInput | ConvertFrom-Json
-    $FilePath = $InputObj.file_path
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $FilePath = $json.tool_input.file_path
 } catch {
     exit 0
 }

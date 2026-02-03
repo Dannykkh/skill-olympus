@@ -2,15 +2,10 @@
 # 새 파일 생성 전 reducing-entropy 원칙 확인 (PreToolUse 훅)
 # 트리거: Write 도구 사용 전 (새 파일 생성 시)
 
-param(
-    [Parameter(Position=0)]
-    [string]$ToolInput
-)
-
-# JSON에서 파일 경로 추출
+# Claude Code는 stdin으로 JSON을 전달함
 try {
-    $InputObj = $ToolInput | ConvertFrom-Json
-    $FilePath = $InputObj.file_path
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $FilePath = $json.tool_input.file_path
 } catch {
     exit 0
 }

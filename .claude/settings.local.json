@@ -2,15 +2,6 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \u0022$PROMPT\u0022"
-          }
-        ]
-      },
-      {
         "matcher": "(?i)^\\s*workpm",
         "hooks": [
           {

@@ -6,9 +6,9 @@
 
 set -e
 
-# 입력에서 파일 경로 추출
-TOOL_INPUT="$1"
-FILE_PATH=$(echo "$TOOL_INPUT" | jq -r '.file_path // empty' 2>/dev/null)
+# Claude Code는 stdin으로 JSON을 전달함
+INPUT_JSON=$(cat)
+FILE_PATH=$(echo "$INPUT_JSON" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
 # 파일 경로가 없으면 통과
 if [ -z "$FILE_PATH" ] || [ "$FILE_PATH" == "null" ]; then

@@ -1,15 +1,10 @@
 # validate-api.ps1
 # API 엔드포인트 파일 수정 시 유효성 검사
 
-param(
-    [Parameter(Position=0)]
-    [string]$ToolInput
-)
-
-# JSON에서 파일 경로 추출
+# Claude Code는 stdin으로 JSON을 전달함
 try {
-    $InputObj = $ToolInput | ConvertFrom-Json
-    $FilePath = $InputObj.file_path
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $FilePath = $json.tool_input.file_path
 } catch {
     exit 0
 }

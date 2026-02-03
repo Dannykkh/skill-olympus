@@ -2,15 +2,10 @@
 # 마크다운 문서 작성 후 AI 글쓰기 패턴 검출 (PostToolUse 훅)
 # 기반: Wikipedia "Signs of AI writing" + humanizer 스킬
 
-param(
-    [Parameter(Position=0)]
-    [string]$ToolInput
-)
-
-# JSON에서 파일 경로 추출
+# Claude Code는 stdin으로 JSON을 전달함
 try {
-    $InputObj = $ToolInput | ConvertFrom-Json
-    $FilePath = $InputObj.file_path
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $FilePath = $json.tool_input.file_path
 } catch {
     exit 0
 }

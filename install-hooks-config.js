@@ -27,94 +27,55 @@ function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
 
+// 훅 항목 생성 헬퍼 (Claude Code 포맷: matcher + hooks 배열)
+function hookEntry(matcher, command) {
+  return {
+    matcher: matcher,
+    hooks: [{ type: "command", command: command }],
+  };
+}
+
 // 훅 정의 (프로젝트 전용 제외: orchestrator-mode, workpm-hook, pmworker-hook)
+// Claude Code는 stdin으로 JSON을 전달하므로 명령줄 인자 불필요
 function buildHooksConfig(dir, isWindows) {
   const d = normalizePath(dir);
 
   if (isWindows) {
-    // PowerShell 명령어
-    const cmd = (script, arg) =>
-      `powershell -ExecutionPolicy Bypass -File "${d}/${script}" ${arg || ""}`.trim();
+    // PowerShell 명령어 (stdin으로 데이터 수신)
+    const cmd = (script) =>
+      `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`;
 
     return {
       UserPromptSubmit: [
-        {
-          description: "모든 대화를 .md 파일로 저장 (세션 간 공유)",
-          matcher: "",
-          command: cmd("save-conversation.ps1", '"$PROMPT"'),
-        },
+        hookEntry(".*", cmd("save-conversation.ps1")),
       ],
       PreToolUse: [
-        {
-          description: "새 파일 생성 전 reducing-entropy 확인",
-          matcher: "Write",
-          command: cmd("check-new-file.ps1", '"$TOOL_INPUT"'),
-        },
-        {
-          description: "민감 파일 보호",
-          matcher: "Edit|Write",
-          command: cmd("protect-files.ps1", '"$TOOL_INPUT"'),
-        },
+        hookEntry("Write", cmd("check-new-file.ps1")),
+        hookEntry("Edit|Write", cmd("protect-files.ps1")),
       ],
       PostToolUse: [
-        {
-          description: "코드 파일 검증 (500줄, 함수 크기, 보안)",
-          matcher: "Edit|Write",
-          command: cmd("validate-code.ps1", '"$TOOL_INPUT"'),
-        },
-        {
-          description: "마크다운 AI 글쓰기 패턴 검출",
-          matcher: "Write",
-          command: cmd("validate-docs.ps1", '"$TOOL_INPUT"'),
-        },
-        {
-          description: "API 파일 유효성 검사",
-          matcher: "Edit|Write",
-          command: cmd("validate-api.ps1", '"$TOOL_INPUT"'),
-        },
+        hookEntry("Edit|Write", cmd("validate-code.ps1")),
+        hookEntry("Write", cmd("validate-docs.ps1")),
+        hookEntry("Edit|Write", cmd("validate-api.ps1")),
       ],
     };
   } else {
-    // Bash 명령어
-    const cmd = (script, arg) =>
-      `bash "${d}/${script}" ${arg || ""}`.trim();
+    // Bash 명령어 (stdin으로 데이터 수신)
+    const cmd = (script) =>
+      `bash "${d}/${script}"`;
 
     return {
       UserPromptSubmit: [
-        {
-          description: "모든 대화를 .md 파일로 저장 (세션 간 공유)",
-          matcher: "",
-          command: cmd("save-conversation.sh", '"$PROMPT"'),
-        },
+        hookEntry(".*", cmd("save-conversation.sh")),
       ],
       PreToolUse: [
-        {
-          description: "새 파일 생성 전 reducing-entropy 확인",
-          matcher: "Write",
-          command: cmd("check-new-file.sh", "$TOOL_INPUT"),
-        },
-        {
-          description: "민감 파일 보호",
-          matcher: "Edit|Write",
-          command: cmd("protect-files.sh", "$TOOL_INPUT"),
-        },
+        hookEntry("Write", cmd("check-new-file.sh")),
+        hookEntry("Edit|Write", cmd("protect-files.sh")),
       ],
       PostToolUse: [
-        {
-          description: "코드 파일 검증 (500줄, 함수 크기, 보안)",
-          matcher: "Edit|Write",
-          command: cmd("validate-code.sh", "$TOOL_INPUT"),
-        },
-        {
-          description: "마크다운 AI 글쓰기 패턴 검출",
-          matcher: "Write",
-          command: cmd("validate-docs.sh", "$TOOL_INPUT"),
-        },
-        {
-          description: "API 파일 유효성 검사",
-          matcher: "Edit|Write",
-          command: cmd("validate-api.sh", "$TOOL_INPUT"),
-        },
+        hookEntry("Edit|Write", cmd("validate-code.sh")),
+        hookEntry("Write", cmd("validate-docs.sh")),
+        hookEntry("Edit|Write", cmd("validate-api.sh")),
       ],
     };
   }

@@ -2,6 +2,14 @@
 # Worker 모드 시동어 훅 - pmworker 입력 시 Worker 모드 활성화
 # 출력 내용은 Claude의 additional context로 주입됨
 
+# stdin에서 프롬프트 확인 (matcher 백업)
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+try {
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $prompt = $json.prompt
+} catch { exit 0 }
+if ($prompt -notmatch '(?i)^\s*pmworker') { exit 0 }
+
 Write-Host @"
 [WORKER MODE ACTIVATED]
 
