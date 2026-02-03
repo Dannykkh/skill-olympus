@@ -1,0 +1,246 @@
+{
+  "$schema": "smart-setup-registry",
+  "version": "1.0.0",
+  "description": "기술 태그별 리소스 매핑 데이터 (Single Source of Truth). /smart-setup 커맨드에서 사용.",
+  "lastUpdated": "2026-02-03",
+
+  "detection-rules": [
+    { "file": "package.json", "match": "\"react\"", "tags": ["react"] },
+    { "file": "package.json", "match": "\"next\"", "tags": ["nextjs", "react"] },
+    { "file": "package.json", "match": "\"@nestjs/core\"", "tags": ["nestjs", "typescript"] },
+    { "file": "package.json", "match": "\"typescript\"", "tags": ["typescript"] },
+    { "file": "package.json", "match": "\"vue\"", "tags": ["vue"] },
+    { "file": "package.json", "match": "\"angular\"", "tags": ["angular"] },
+    { "file": "package.json", "match": "\"express\"", "tags": ["nodejs", "express"] },
+    { "file": "package.json", "match": "\"fastify\"", "tags": ["nodejs", "fastify"] },
+    { "file": "package.json", "match": "\"prisma\"", "tags": ["prisma"] },
+    { "file": "package.json", "match": "\"@playwright/test\"", "tags": ["playwright"] },
+    { "file": "package.json", "match": "\"playwright\"", "tags": ["playwright"] },
+    { "file": "tsconfig.json", "match": null, "tags": ["typescript"] },
+    { "file": "*.csproj", "match": "<UseWPF>true", "tags": ["dotnet", "wpf"] },
+    { "file": "*.csproj", "match": "<UseMaui>true", "tags": ["dotnet", "maui"] },
+    { "file": "*.csproj", "match": "<Project Sdk=\"Microsoft.NET.Sdk.Web\"", "tags": ["dotnet", "aspnet"] },
+    { "file": "*.csproj", "match": "<Project Sdk=\"Microsoft.NET.Sdk.BlazorWebAssembly\"", "tags": ["dotnet", "blazor"] },
+    { "file": "*.csproj", "match": null, "tags": ["dotnet", "csharp"] },
+    { "file": "*.sln", "match": null, "tags": ["dotnet"] },
+    { "file": "requirements.txt", "match": "fastapi", "tags": ["python", "fastapi"] },
+    { "file": "requirements.txt", "match": "django", "tags": ["python", "django"] },
+    { "file": "requirements.txt", "match": "flask", "tags": ["python", "flask"] },
+    { "file": "requirements.txt", "match": null, "tags": ["python"] },
+    { "file": "pyproject.toml", "match": null, "tags": ["python"] },
+    { "file": "pom.xml", "match": "spring-boot", "tags": ["java", "spring"] },
+    { "file": "pom.xml", "match": null, "tags": ["java"] },
+    { "file": "build.gradle", "match": "spring", "tags": ["java", "spring"] },
+    { "file": "build.gradle", "match": null, "tags": ["java"] },
+    { "file": "go.mod", "match": null, "tags": ["go"] },
+    { "file": "Cargo.toml", "match": null, "tags": ["rust"] },
+    { "file": "docker-compose.yml", "match": null, "tags": ["docker"] },
+    { "file": "docker-compose.yaml", "match": null, "tags": ["docker"] },
+    { "file": "Dockerfile", "match": null, "tags": ["docker"] },
+    { "file": "prisma/schema.prisma", "match": "postgresql", "tags": ["postgresql", "prisma"] },
+    { "file": "prisma/schema.prisma", "match": "mysql", "tags": ["mysql", "prisma"] },
+    { "file": "prisma/schema.prisma", "match": null, "tags": ["prisma"] },
+    { "file": ".github/workflows/*.yml", "match": null, "tags": ["github-actions"] },
+    { "file": "jest.config.*", "match": null, "tags": ["jest"] },
+    { "file": "vitest.config.*", "match": null, "tags": ["vitest"] },
+    { "file": "playwright.config.*", "match": null, "tags": ["playwright"] },
+    { "file": ".eslintrc*", "match": null, "tags": ["eslint"] },
+    { "file": "eslint.config.*", "match": null, "tags": ["eslint"] }
+  ],
+
+  "external-skills": [
+    {
+      "id": "vercel-agent-skills",
+      "name": "Vercel Agent Skills",
+      "description": "React/Next.js 45+ 최적화 규칙, 웹 디자인 가이드라인, Vercel 배포",
+      "installCommand": "npx add-skill vercel-labs/agent-skills -a claude-code",
+      "url": "https://github.com/vercel-labs/agent-skills",
+      "tags": ["react", "nextjs", "vue", "angular"],
+      "priority": "essential"
+    },
+    {
+      "id": "claude-code-dotnet",
+      "name": "claude-code-dotnet",
+      "description": ".NET/C#/WPF/MAUI/EF Core/ASP.NET Core/Blazor 25개 스킬",
+      "installCommand": "npx add-skill Aaronontheweb/claude-code-dotnet -a claude-code",
+      "url": "https://github.com/Aaronontheweb/claude-code-dotnet",
+      "tags": ["dotnet", "csharp", "wpf", "maui", "aspnet", "blazor"],
+      "priority": "essential"
+    },
+    {
+      "id": "dotnet-claude-code-skills",
+      "name": "dotnet-claude-code-skills",
+      "description": "DDD/CQRS/Hexagonal Architecture (.NET 8+, C# 12)",
+      "installCommand": "npx add-skill nesbo/dotnet-claude-code-skills -a claude-code",
+      "url": "https://github.com/nesbo/dotnet-claude-code-skills",
+      "tags": ["dotnet", "aspnet", "blazor"],
+      "priority": "recommended"
+    },
+    {
+      "id": "mastering-typescript-skill",
+      "name": "mastering-typescript-skill",
+      "description": "엔터프라이즈급 TypeScript (NestJS 11, React 19, Vite 7)",
+      "installCommand": "npx add-skill SpillwaveSolutions/mastering-typescript-skill -a claude-code",
+      "url": "https://github.com/SpillwaveSolutions/mastering-typescript-skill",
+      "tags": ["typescript", "nestjs", "react", "nodejs"],
+      "priority": "essential"
+    },
+    {
+      "id": "pg-aiguide",
+      "name": "pg-aiguide",
+      "description": "PostgreSQL 베스트 프랙티스 (공식 매뉴얼 시맨틱 검색, FK 인덱스, 쿼리 최적화)",
+      "installCommand": "claude plugin marketplace add timescale/pg-aiguide && claude plugin install pg-aiguide",
+      "url": "https://github.com/timescale/pg-aiguide",
+      "tags": ["postgresql"],
+      "priority": "essential"
+    },
+    {
+      "id": "dot-claude",
+      "name": "dot-claude",
+      "description": "TypeScript Node.js 템플릿 (Bun, Vitest, Biome)",
+      "installCommand": "npx add-skill PaulRBerg/dot-claude -a claude-code",
+      "url": "https://github.com/PaulRBerg/dot-claude",
+      "tags": ["typescript", "nodejs"],
+      "priority": "optional"
+    },
+    {
+      "id": "oh-my-claudecode",
+      "name": "oh-my-claudecode",
+      "description": "32개 에이전트, 40+ 스킬, 5가지 실행 모드 (Autopilot/Ultrapilot/Swarm/Pipeline/Ecomode)",
+      "installCommand": "/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode && /plugin install oh-my-claudecode",
+      "url": "https://github.com/Yeachan-Heo/oh-my-claudecode",
+      "tags": ["*"],
+      "priority": "recommended"
+    }
+  ],
+
+  "mcp-servers": [
+    {
+      "id": "context7",
+      "name": "Context7 MCP",
+      "description": "라이브러리 문서 실시간 검색 및 코드 컨텍스트 주입",
+      "installCommand": "claude mcp add context7 -- npx -y @upstash/context7-mcp",
+      "url": "https://github.com/upstash/context7",
+      "tags": ["*"],
+      "priority": "recommended"
+    },
+    {
+      "id": "playwright",
+      "name": "Playwright MCP",
+      "description": "브라우저 자동화 (E2E 테스트, 스크린샷, 웹 스크래핑)",
+      "installCommand": "claude mcp add playwright -- npx -y @playwright/mcp@latest",
+      "url": "https://github.com/microsoft/playwright-mcp",
+      "tags": ["playwright", "react", "nextjs", "vue", "angular"],
+      "priority": "recommended"
+    },
+    {
+      "id": "github",
+      "name": "GitHub MCP",
+      "description": "GitHub API 통합 (이슈, PR, 저장소 접근)",
+      "installCommand": "claude mcp add github -- npx -y @modelcontextprotocol/server-github",
+      "url": "https://github.com/modelcontextprotocol/servers",
+      "tags": ["github-actions"],
+      "priority": "optional",
+      "note": "GITHUB_PERSONAL_ACCESS_TOKEN 환경변수 필요"
+    },
+    {
+      "id": "tosspayments",
+      "name": "Toss Payments MCP",
+      "description": "토스페이먼츠 결제 연동 가이드 (10분 완료)",
+      "installCommand": "claude mcp add tosspayments -- npx -y @tosspayments/integration-guide-mcp@latest",
+      "url": "https://github.com/nicepayments/tosspayments-mcp",
+      "tags": ["tosspayments"],
+      "priority": "essential"
+    },
+    {
+      "id": "stitch",
+      "name": "Stitch MCP",
+      "description": "UI 디자인 자동 생성",
+      "installCommand": "npx -p stitch-mcp-auto stitch-mcp-auto-setup",
+      "url": "https://stitch.withclaude.com",
+      "tags": ["react", "nextjs", "vue", "angular"],
+      "priority": "optional"
+    },
+    {
+      "id": "mcp-pandoc",
+      "name": "Pandoc MCP",
+      "description": "문서 변환 (Markdown → PDF/DOCX/HTML 등)",
+      "installCommand": "claude mcp add pandoc -- npx -y mcp-pandoc",
+      "url": "https://github.com/vivekVells/mcp-pandoc",
+      "tags": ["*"],
+      "priority": "optional"
+    },
+    {
+      "id": "office-powerpoint-mcp",
+      "name": "Office PowerPoint MCP",
+      "description": "PPT 자동화 (32 도구, 25 템플릿)",
+      "installCommand": "claude mcp add office-pptx -- npx -y office-powerpoint-mcp",
+      "url": "https://github.com/GongRzhe/Office-PowerPoint-MCP-Server",
+      "tags": ["*"],
+      "priority": "optional"
+    }
+  ],
+
+  "internal-skills": [
+    { "id": "react-dev", "tags": ["react", "nextjs"], "priority": "recommended" },
+    { "id": "vercel-react-best-practices", "tags": ["react", "nextjs"], "priority": "recommended" },
+    { "id": "react-useeffect", "tags": ["react"], "priority": "optional" },
+    { "id": "mui", "tags": ["react"], "priority": "optional" },
+    { "id": "design-system-starter", "tags": ["react", "nextjs", "vue", "angular"], "priority": "optional" },
+    { "id": "openapi-to-typescript", "tags": ["typescript", "nestjs", "nodejs"], "priority": "optional" },
+    { "id": "python-backend-fastapi", "tags": ["python", "fastapi"], "priority": "essential" },
+    { "id": "docker-deploy", "tags": ["docker"], "priority": "essential" },
+    { "id": "database-schema-designer", "tags": ["postgresql", "mysql", "prisma"], "priority": "recommended" },
+    { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
+    { "id": "long-term-memory", "tags": ["*"], "priority": "recommended" },
+    { "id": "commit-work", "tags": ["*"], "priority": "optional" },
+    { "id": "dependency-updater", "tags": ["*"], "priority": "optional" },
+    { "id": "naming-analyzer", "tags": ["*"], "priority": "optional" },
+    { "id": "reducing-entropy", "tags": ["*"], "priority": "optional" },
+    { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "recommended" },
+    { "id": "api-handoff", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
+    { "id": "qa-test-planner", "tags": ["*"], "priority": "optional" },
+    { "id": "mermaid-diagrams", "tags": ["*"], "priority": "optional" },
+    { "id": "crafting-effective-readmes", "tags": ["*"], "priority": "optional" },
+    { "id": "jira", "tags": ["*"], "priority": "optional" },
+    { "id": "fullstack-coding-standards", "tags": ["react", "nextjs", "typescript", "nestjs", "spring", "fastapi", "nodejs", "python", "java"], "priority": "recommended" }
+  ],
+
+  "internal-agents": [
+    { "id": "frontend-react", "tags": ["react", "nextjs", "typescript"], "priority": "essential" },
+    { "id": "react-best-practices", "tags": ["react", "nextjs"], "priority": "recommended" },
+    { "id": "react-useeffect-guidelines", "tags": ["react"], "priority": "optional" },
+    { "id": "backend-spring", "tags": ["java", "spring"], "priority": "essential" },
+    { "id": "database-mysql", "tags": ["mysql"], "priority": "essential" },
+    { "id": "python-fastapi-guidelines", "tags": ["python", "fastapi"], "priority": "essential" },
+    { "id": "ai-ml", "tags": ["python"], "priority": "optional" },
+    { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "recommended" },
+    { "id": "api-comparator", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
+    { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
+    { "id": "code-review-checklist", "tags": ["*"], "priority": "recommended" },
+    { "id": "qa-engineer", "tags": ["*"], "priority": "optional" },
+    { "id": "qa-writer", "tags": ["*"], "priority": "optional" },
+    { "id": "documentation", "tags": ["*"], "priority": "optional" },
+    { "id": "migration-helper", "tags": ["*"], "priority": "optional" },
+    { "id": "explore-agent", "tags": ["*"], "priority": "optional" },
+    { "id": "naming-conventions", "tags": ["*"], "priority": "optional" },
+    { "id": "reducing-entropy", "tags": ["*"], "priority": "optional" },
+    { "id": "writing-guidelines", "tags": ["*"], "priority": "optional" },
+    { "id": "humanizer-guidelines", "tags": ["*"], "priority": "optional" },
+    { "id": "mermaid-diagram-specialist", "tags": ["*"], "priority": "optional" },
+    { "id": "fullstack-development-workflow", "tags": ["react", "nextjs", "nestjs", "spring", "dotnet"], "priority": "recommended" },
+    { "id": "spec-interviewer", "tags": ["*"], "priority": "optional" },
+    { "id": "feature-tracker", "tags": ["*"], "priority": "optional" }
+  ],
+
+  "hooks": [
+    { "id": "save-conversation", "tags": ["*"], "priority": "recommended" },
+    { "id": "protect-files", "tags": ["*"], "priority": "recommended" },
+    { "id": "check-new-file", "tags": ["*"], "priority": "recommended" },
+    { "id": "validate-code", "tags": ["*"], "priority": "recommended" },
+    { "id": "validate-docs", "tags": ["*"], "priority": "optional" },
+    { "id": "format-code", "tags": ["typescript", "react", "nextjs", "nestjs", "nodejs", "vue", "angular"], "priority": "recommended" },
+    { "id": "format-java", "tags": ["java", "spring"], "priority": "recommended" },
+    { "id": "validate-api", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify"], "priority": "optional" }
+  ]
+}

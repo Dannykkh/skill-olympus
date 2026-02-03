@@ -42,11 +42,15 @@ Docker 이미지 기반 배포 파일을 자동 생성하는 스킬입니다.
 먼저 프로젝트 구조를 분석합니다:
 
 ```
-- backend/ 폴더 확인 → Python/FastAPI, Node.js 등
+- backend/ 폴더 확인 → 백엔드 기술 감지
+  - requirements.txt, pyproject.toml → Python/FastAPI
+  - package.json + @nestjs/core → Node.js/NestJS
+  - package.json + express → Node.js/Express
+  - pom.xml, build.gradle → Java/Spring Boot
 - frontend/ 폴더 확인 → React, Vue 등
 - 기존 Dockerfile 확인
 - 기존 docker-compose.yml 확인
-- package.json, requirements.txt 등 의존성 파일 확인
+- 의존성 파일 확인 (package.json, requirements.txt, pom.xml 등)
 ```
 
 ### 2. 프로젝트명 결정
@@ -103,13 +107,23 @@ Docker 이미지 기반 배포 파일을 자동 생성하는 스킬입니다.
 | Custom port | Specify different port |
 ```
 
-**Database 포트:**
+**Database 포트 (PostgreSQL 선택 시):**
 ```
 | Option | Description |
 |--------|-------------|
-| Default ({default_db_port}) (Recommended) | PostgreSQL: 5432, MySQL: 3306 mapped to 5440/3310 |
-| Custom port | Specify different external port |
+| Default (5432) (Recommended) | PostgreSQL 표준 포트 |
+| Custom port | 다른 포트 지정 |
 ```
+
+**Database 포트 (MySQL 선택 시):**
+```
+| Option | Description |
+|--------|-------------|
+| Default (3306) (Recommended) | MySQL 표준 포트 |
+| Custom port | 다른 포트 지정 |
+```
+
+**참고:** DB 종류에 관계없이 반드시 Database 포트를 질문할 것
 
 ### 4. 포트 규칙
 
@@ -119,8 +133,8 @@ Docker 이미지 기반 배포 파일을 자동 생성하는 스킬입니다.
 |---------|---------------|-----------|-------------|
 | Frontend | 80 | {frontend_port} | 80 for web deploy, or dev port |
 | Backend | {backend_port} | {backend_port} | Same as development |
-| PostgreSQL | 5432 | {db_port} | External access port |
-| MySQL | 3306 | {db_port} | External access port |
+| PostgreSQL | 5432 | {db_port} (기본 5432) | External access port |
+| MySQL | 3306 | {db_port} (기본 3306) | External access port |
 | Redis | 6379 | - | Internal only |
 
 **포트 감지 방법:**
@@ -176,6 +190,147 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "{backend_port}", "--workers", "4"]
 ```
 
+#### Backend Dockerfile (Node.js/NestJS)
+
+```dockerfile
+# ============================================
+# Build stage
+# ============================================
+FROM node:20-alpine as builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --silent
+
+COPY . .
+RUN npm run build
+
+# ============================================
+# Production stage
+# ============================================
+FROM node:20-alpine as production
+
+WORKDIR /app
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+RUN apk add --no-cache curl
+
+ENV NODE_ENV=production
+
+USER appuser
+EXPOSE {backend_port}
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:{backend_port}/health || exit 1
+
+CMD ["node", "dist/main.js"]
+```
+
+**Node.js 포트 감지 방법:**
+- NestJS: `src/main.ts`의 `app.listen(port)` 확인, 없으면 3000
+- Express: `app.listen(port)` 또는 `process.env.PORT`, 없으면 3000
+- Fastify: `server.listen({ port })` 확인, 없으면 3000
+
+#### deploy/docker-compose.yml (Node.js + PostgreSQL)
+
+```yaml
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: {project}-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-{project}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-{project}_password}
+      POSTGRES_DB: ${POSTGRES_DB:-{project}_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-{db_port}}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-{project}}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - {project}-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: {project}-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - {project}-network
+
+  # Backend API (Node.js)
+  api:
+    image: {project}-api:latest
+    container_name: {project}-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-{backend_port}}:{backend_port}"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-{project}}:${POSTGRES_PASSWORD:-{project}_password}@postgres:5432/${POSTGRES_DB:-{project}_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-{project}-jwt-secret-change-this}
+      PORT: {backend_port}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    networks:
+      - {project}-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:{backend_port}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend
+  frontend:
+    image: {project}-frontend:latest
+    container_name: {project}-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-{frontend_port}}:80"
+    depends_on:
+      - api
+    networks:
+      - {project}-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+
+networks:
+  {project}-network:
+    driver: bridge
+```
+
 #### Frontend Dockerfile (React/Vite)
 
 ```dockerfile
@@ -215,6 +370,103 @@ EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
 ```
+
+#### Frontend Dockerfile (Next.js SSR)
+
+Next.js는 SSR/SSG를 사용하므로 nginx가 아닌 Node.js 서버로 실행합니다.
+`next.config.js`에 `output: 'standalone'` 설정이 필요합니다.
+
+```dockerfile
+# ============================================
+# Dependencies stage
+# ============================================
+FROM node:20-alpine as deps
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --silent
+
+# ============================================
+# Build stage
+# ============================================
+FROM node:20-alpine as builder
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+ARG NEXT_PUBLIC_API_URL=/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+RUN npm run build
+
+# ============================================
+# Production stage
+# ============================================
+FROM node:20-alpine as production
+
+WORKDIR /app
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+RUN apk add --no-cache curl
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
+COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
+
+ENV NODE_ENV=production
+ENV PORT={frontend_port}
+ENV HOSTNAME="0.0.0.0"
+
+USER appuser
+EXPOSE {frontend_port}
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:{frontend_port}/ || exit 1
+
+CMD ["node", "server.js"]
+```
+
+**Next.js 사용 시 추가 설정:**
+
+`next.config.js` (또는 `next.config.mjs`)에 다음 설정 필요:
+```js
+const nextConfig = {
+  output: 'standalone',
+};
+```
+
+**Next.js docker-compose frontend 서비스 (nginx 대신):**
+
+Next.js를 사용할 경우, docker-compose.yml의 frontend 서비스를 다음으로 교체:
+```yaml
+  # Frontend (Next.js SSR)
+  frontend:
+    image: {project}-frontend:latest
+    container_name: {project}-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-{frontend_port}}:{frontend_port}"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://api:{backend_port}
+    depends_on:
+      - api
+    networks:
+      - {project}-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:{frontend_port}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+**Next.js 감지 방법:**
+- `package.json`에 `"next"` 의존성 존재 → Next.js Dockerfile 사용
+- `next.config.js` 또는 `next.config.mjs` 존재 → Next.js 확정
 
 #### Frontend nginx.conf
 
