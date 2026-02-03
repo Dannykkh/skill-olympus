@@ -107,13 +107,12 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 훅 (9개)
+### 훅 (8개)
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
 | orchestrator-mode.sh | UserPromptSubmit | PM/Worker 모드 감지 (workpm, pmworker 트리거) |
-| save-conversation.sh | UserPromptSubmit | 모든 대화를 .md 파일로 저장 (세션 간 공유) |
-| update-memory.sh | Stop | 세션 종료 시 memory-writer 에이전트로 MEMORY.md 자동 업데이트 |
+| save-conversation.sh | UserPromptSubmit | 대화 저장 (단순 append, AI 호출 없음) |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
 | check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
 | validate-docs.sh | PostToolUse | 마크다운 AI 글쓰기 패턴 검출 |
@@ -123,15 +122,18 @@ chmod +x install.sh && ./install.sh
 
 ### 장기기억 시스템
 
-RAG 스타일 키워드 검색을 지원하는 세션 간 컨텍스트 유지 시스템.
+컨텍스트 트리 구조의 빠른 파일 기반 메모리 시스템.
 
 | 구성요소 | 역할 |
 |---------|------|
-| `MEMORY.md` | 구조화된 장기기억 저장소 |
-| `save-conversation.sh` | 대화 자동 저장 (frontmatter: keywords, summary) |
-| `update-memory.sh` | Stop 훅 → keyword-extractor + memory-writer 에이전트 |
-| `index.json` | RAG 스타일 대화 검색을 위한 키워드 인덱스 |
-| `long-term-memory` 스킬 | 메모리 관리 (`/memory add`, `/memory find`, `/memory tag`) |
+| `MEMORY.md` | 컨텍스트 트리 (architecture/, patterns/, gotchas/) |
+| `save-conversation.sh` | 단순 append (30줄, AI 호출 없음) |
+| `long-term-memory` 스킬 | 메모리 관리 (`/memory add`, `/memory search`) |
+
+**핵심 원칙:**
+- 빠르게: 훅에서 AI 호출 금지
+- 단순하게: 파일 기반, 복잡한 DB 없음
+- 검색 가능하게: 키워드 + 컨텍스트 트리
 
 **메모리 명령어:**
 

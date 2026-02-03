@@ -133,9 +133,6 @@ chmod +x install.sh && ./install.sh
     "UserPromptSubmit": [
       {"hooks": ["powershell -File hooks/orchestrator-mode.ps1 \"$PROMPT\""]},
       {"hooks": ["powershell -File hooks/save-conversation.ps1 \"$PROMPT\""]}
-    ],
-    "Stop": [
-      {"hooks": ["powershell -File hooks/update-memory.ps1"]}
     ]
   }
 }

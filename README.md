@@ -107,13 +107,12 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks (9 Hooks)
+### Hooks (8 Hooks)
 
 | Hook | Timing | Description |
 |------|--------|-------------|
 | orchestrator-mode.sh | UserPromptSubmit | PM/Worker mode detection (workpm, pmworker triggers) |
-| save-conversation.sh | UserPromptSubmit | Save all conversations to .md files for session sharing |
-| update-memory.sh | Stop | Auto-update MEMORY.md via memory-writer agent on session end |
+| save-conversation.sh | UserPromptSubmit | Save conversations to .md files (simple append, no AI call) |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
 | check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
 | validate-docs.sh | PostToolUse | AI writing pattern detection in markdown |
@@ -123,15 +122,18 @@ chmod +x install.sh && ./install.sh
 
 ### Long-term Memory System
 
-Session context persistence across conversations with RAG-style keyword search.
+Fast, file-based memory system with context tree structure.
 
 | Component | Role |
 |-----------|------|
-| `MEMORY.md` | Structured long-term memory storage |
-| `save-conversation.sh` | Auto-save conversations with frontmatter (keywords, summary) |
-| `update-memory.sh` | Stop hook → keyword-extractor + memory-writer agents |
-| `index.json` | Keyword index for RAG-style conversation search |
-| `long-term-memory` skill | Memory management (`/memory add`, `/memory find`, `/memory tag`) |
+| `MEMORY.md` | Context tree (architecture/, patterns/, gotchas/) |
+| `save-conversation.sh` | Simple append (30 lines, no AI call) |
+| `long-term-memory` skill | Memory management (`/memory add`, `/memory search`) |
+
+**Key Principles:**
+- Fast: No AI calls in hooks
+- Simple: File-based, no complex DB
+- Searchable: Keywords + context tree
 
 **Memory Commands:**
 

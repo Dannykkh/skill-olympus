@@ -59,7 +59,6 @@ Claude Code 훅 스크립트 모음입니다.
 | format-code | 자동 코드 포맷팅 | PostToolUse (Write/Edit) |
 | format-java | Java 포맷팅 | PostToolUse (Write/Edit) |
 | format-typescript | TS/JS 포맷팅 | PostToolUse (Write/Edit) |
-| update-memory | MEMORY.md 업데이트 | Stop |
 
 ## 예시 설정 파일
 

@@ -500,9 +500,6 @@ copy hooks\*.sh .claude\hooks\
       { "matcher": "Write|Edit", "command": "bash hooks/validate-code.sh \"$TOOL_INPUT\"" },
       { "matcher": "Write|Edit", "command": "bash hooks/format-code.sh \"$TOOL_INPUT\"" },
       { "matcher": "Write", "command": "bash hooks/validate-docs.sh \"$TOOL_INPUT\"" }
-    ],
-    "Stop": [
-      { "command": "bash hooks/update-memory.sh" }
     ]
   }
 }
@@ -533,9 +530,6 @@ copy hooks\*.ps1 .claude\hooks\
       { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-code.ps1 \"$TOOL_INPUT\"" },
       { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/format-code.ps1 \"$TOOL_INPUT\"" },
       { "matcher": "Write", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-docs.ps1 \"$TOOL_INPUT\"" }
-    ],
-    "Stop": [
-      { "command": "powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1" }
     ]
   }
 }
