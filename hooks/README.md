@@ -50,7 +50,7 @@ Claude Code 훅 스크립트 모음입니다.
 
 | 파일 | 용도 | 이벤트 |
 |------|------|--------|
-| save-conversation | 대화 내용 저장 | UserPromptSubmit |
+| save-conversation | 사용자 입력 저장 (Claude 응답은 CLAUDE.md 규칙으로 저장) | UserPromptSubmit |
 | protect-files | 중요 파일 보호 | PreToolUse (Write/Edit) |
 | check-new-file | 새 파일 생성 검토 | PreToolUse (Write) |
 | validate-code | 코드 품질 검사 | PostToolUse (Write/Edit) |
