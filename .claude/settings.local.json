@@ -31,8 +31,6 @@
     ],
     "Stop": []
   },
-  "_termsnap_memory_system": "v1.0 - Auto-installed by TermSnap",
-  "_termsnap_installed_at": "2026-02-03 07:31:09",
   "mcpServers": {
     "orchestrator": {
       "command": "node",
