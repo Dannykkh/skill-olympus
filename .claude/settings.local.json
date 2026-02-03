@@ -1,32 +1,48 @@
-{
-  "mcpServers": {
-    "orchestrator": {
-      "command": "node",
-      "args": ["D:/git/claude-code-agent-customizations/mcp-servers/claude-orchestrator-mcp/dist/index.js"],
-      "env": {
-        "ORCHESTRATOR_PROJECT_ROOT": "${workspaceFolder}",
-        "ORCHESTRATOR_WORKER_ID": "pm"
-      }
-    }
-  },
+﻿{
   "hooks": {
     "UserPromptSubmit": [
       {
-        "description": "오케스트레이터 PM/Worker 모드 감지",
-        "matcher": "",
-        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/orchestrator-mode.ps1 \"$PROMPT\""]
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \u0022$PROMPT\u0022"
+          }
+        ]
       },
       {
-        "description": "대화 로그 저장 + 해시태그 키워드 추출",
-        "matcher": "",
-        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""]
+        "matcher": "(?i)^\\s*workpm",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File hooks/workpm-hook.ps1"
+          }
+        ]
+      },
+      {
+        "matcher": "(?i)^\\s*pmworker",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File hooks/pmworker-hook.ps1"
+          }
+        ]
       }
     ],
-    "Stop": [
-      {
-        "description": "키워드 추출 + MEMORY.md 업데이트",
-        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1"]
+    "Stop": []
+  },
+  "_termsnap_memory_system": "v1.0 - Auto-installed by TermSnap",
+  "_termsnap_installed_at": "2026-02-03 07:31:09",
+  "mcpServers": {
+    "orchestrator": {
+      "command": "node",
+      "args": [
+        "D:/git/claude-code-agent-customizations/mcp-servers/claude-orchestrator-mcp/dist/index.js"
+      ],
+      "env": {
+        "ORCHESTRATOR_PROJECT_ROOT": "D:/git/claude-code-agent-customizations",
+        "ORCHESTRATOR_WORKER_ID": "pm"
       }
-    ]
+    }
   }
 }
