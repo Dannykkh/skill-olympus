@@ -498,7 +498,8 @@ chmod +x install.sh
 > - Windows: `mklink /J` (Junction) — 관리자 권한 불필요
 > - Linux/Mac: `ln -s` (symlink)
 > - Skills: 개별 폴더 단위로 링크
-> - Agents: 전체 폴더를 한번에 링크
+> - Agents, Commands, Hooks: 전체 폴더를 한번에 링크
+> - settings.json 훅 설정도 자동 등록
 
 ### 수동 설치
 
@@ -509,20 +510,40 @@ cp -r skills/* ~/.claude/skills/
 # Agents (글로벌)
 cp agents/* ~/.claude/agents/
 
-# Commands (프로젝트별)
-mkdir -p .claude/commands
-cp commands/* .claude/commands/
+# Commands (글로벌)
+cp commands/*.md ~/.claude/commands/
 
-# Hooks (프로젝트별) - 아래 "훅 설정 가이드" 참고
+# Hooks (글로벌) + settings.json 자동 설정
+cp hooks/*.sh hooks/*.ps1 ~/.claude/hooks/
+node install-hooks-config.js ~/.claude/hooks ~/.claude/settings.json --bash
+# Windows (PowerShell): node install-hooks-config.js ~/.claude/hooks ~/.claude/settings.json --windows
 ```
 
 ---
 
 ## 7-1. 훅 설정 가이드
 
-훅 스크립트는 **환경에 따라 다른 설정**이 필요합니다.
+> **참고**: `install.bat` / `install.sh` 실행 시 훅 파일 복사와 `settings.json` 설정이 **자동으로 완료**됩니다.
+> 아래는 수동 설정이 필요한 경우(프로젝트별 커스텀 등)를 위한 가이드입니다.
 
-### 환경 확인
+### 자동 설정 (권장)
+
+설치 스크립트가 다음을 자동으로 처리합니다:
+1. 훅 스크립트를 `~/.claude/hooks/`에 복사 (또는 링크)
+2. `~/.claude/settings.json`에 훅 설정 자동 등록
+3. 플랫폼 자동 감지 (bash 있으면 `.sh`, 없으면 `.ps1` 사용)
+
+```bash
+# 이것만 실행하면 훅 설정 완료
+install.bat          # Windows
+./install.sh         # Linux/Mac
+```
+
+### 수동 설정 (프로젝트별 커스텀)
+
+프로젝트별로 훅을 다르게 구성하려면 수동 설정이 필요합니다.
+
+#### 환경 확인
 
 | 환경 | 사용할 스크립트 | 확인 방법 |
 |------|----------------|----------|
@@ -530,13 +551,22 @@ cp commands/* .claude/commands/
 | Windows + Git 없음 | `.ps1` (PowerShell) | `where bash` 실행 시 오류 |
 | Mac / Linux | `.sh` (Bash) | 기본 지원 |
 
-### Windows (Git Bash 있음) - 권장
+#### install-hooks-config.js 헬퍼 사용
 
 ```bash
-# 프로젝트 폴더에서
-mkdir .claude\hooks
-copy hooks\*.sh .claude\hooks\
+# Bash 환경
+node install-hooks-config.js <hooks-dir> <settings-path> --bash
+
+# PowerShell 환경
+node install-hooks-config.js <hooks-dir> <settings-path> --windows
+
+# 훅 설정 제거
+node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 ```
+
+이 헬퍼는 기존 settings.json의 다른 키(enabledPlugins 등)를 보존하면서 `hooks` 키만 교체/삭제합니다.
+
+#### 수동 JSON 설정 (Bash)
 
 `.claude/settings.json` 또는 `.claude/settings.local.json`:
 ```json
@@ -558,17 +588,8 @@ copy hooks\*.sh .claude\hooks\
 }
 ```
 
-### Windows (PowerShell만 사용)
+#### 수동 JSON 설정 (PowerShell)
 
-Git이 없거나 PowerShell을 선호하는 경우:
-
-```powershell
-# 프로젝트 폴더에서
-mkdir .claude\hooks
-copy hooks\*.ps1 .claude\hooks\
-```
-
-`.claude/settings.json`:
 ```json
 {
   "hooks": {
@@ -587,17 +608,6 @@ copy hooks\*.ps1 .claude\hooks\
   }
 }
 ```
-
-### Mac / Linux
-
-```bash
-# 프로젝트 폴더에서
-mkdir -p .claude/hooks
-cp hooks/*.sh .claude/hooks/
-chmod +x .claude/hooks/*.sh
-```
-
-설정은 Windows (Git Bash) 버전과 동일합니다.
 
 ### 주의사항
 
@@ -642,12 +652,10 @@ claude plugin install pg-aiguide
 /oh-my-claudecode:mcp-setup
 # 또는 수동으로 claude mcp add ...
 
-# 7. 커스텀 스킬/에이전트 설치
-# Windows: install.bat
-# Linux/Mac: ./install.sh
-
-# 8. 프로젝트별 설정 (필요시)
-# Commands와 Hooks는 프로젝트 폴더에 수동 복사
+# 7. 커스텀 스킬/에이전트/명령어/훅 설치 (모두 글로벌)
+# Windows: install.bat (또는 install-link.bat)
+# Linux/Mac: ./install.sh (또는 ./install.sh --link)
+# → Skills, Agents, Commands, Hooks 모두 글로벌 설치 + settings.json 자동 설정
 ```
 
 ---
@@ -713,7 +721,7 @@ claude plugin install pg-aiguide
 | documentation | 문서 작성 |
 | migration-helper | 마이그레이션 |
 
-### 프로젝트별 Commands
+### 글로벌 Commands
 
 | 이름 | 용도 |
 |------|------|
@@ -735,9 +743,8 @@ claude plugin install pg-aiguide
 - [ ] **데이터베이스**: pg-aiguide 설치됨 (`claude plugin install pg-aiguide`)
 - [ ] **오케스트레이션**: oh-my-claudecode 플러그인 설치됨 (`/plugin install oh-my-claudecode`)
 - [ ] MCP 서버 설정됨 (`/oh-my-claudecode:mcp-setup` 또는 수동)
-- [ ] install.bat/sh 실행하여 커스텀 스킬/에이전트 설치됨 (링크 모드 권장: `install-link.bat`)
-- [ ] 프로젝트에 .claude/commands/ 복사됨
-- [ ] 프로젝트에 .claude/hooks/ 복사됨
+- [ ] install.bat/sh 실행하여 커스텀 스킬/에이전트/명령어/훅 글로벌 설치됨 (링크 모드 권장: `install-link.bat`)
+- [ ] settings.json에 훅 설정 자동 등록 확인됨
 
 ---
 
@@ -767,4 +774,4 @@ claude plugin install pg-aiguide
 
 ---
 
-**최종 업데이트:** 2026-01-25
+**최종 업데이트:** 2026-02-04
