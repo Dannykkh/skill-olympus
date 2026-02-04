@@ -120,11 +120,13 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 훅 (8개)
+### 훅 (10개)
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
 | orchestrator-mode.sh | UserPromptSubmit | PM/Worker 모드 감지 (workpm, pmworker 트리거) |
+| workpm-hook.sh | UserPromptSubmit | PM 모드 활성화 훅 (프로젝트 전용, install-orchestrator.js로 설치) |
+| pmworker-hook.sh | UserPromptSubmit | Worker 모드 활성화 훅 (프로젝트 전용, install-orchestrator.js로 설치) |
 | save-conversation.sh | UserPromptSubmit | 대화 저장 (단순 append, AI 호출 없음) |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
 | check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
@@ -181,6 +183,15 @@ chmod +x install.sh && ./install.sh
 **오케스트레이터 스킬:**
 - `workpm` - PM 모드 시작 (프로젝트 분석, 태스크 분해, AI 배정)
 - `pmworker` - Worker 모드 시작 (태스크 담당, 파일 락, 작업 수행)
+
+**다른 프로젝트에 Orchestrator 설치:**
+```bash
+# 설치 (훅, 명령어 복사 + MCP/훅 설정 자동 등록)
+node install-orchestrator.js <대상-프로젝트-경로>
+
+# 제거
+node install-orchestrator.js <대상-프로젝트-경로> --uninstall
+```
 
 > **[오케스트레이터 가이드](docs/orchestrator-guide.md)** - Multi-AI 오케스트레이션, 태스크 관리, 병렬 터미널 설정 완전 가이드.
 
@@ -315,6 +326,7 @@ claude-code-customizations/
 ├── install-unlink.bat         # Windows 심볼릭 링크 제거
 ├── install.sh                 # Linux/Mac 설치 스크립트 (--link/--unlink 지원)
 ├── install-hooks-config.js    # 훅 설정 헬퍼 (settings.json 자동 구성)
+├── install-orchestrator.js   # Orchestrator 설치 (프로젝트별 MCP + 훅 + 명령어)
 ├── SETUP.md                   # 전체 설정 가이드
 ├── README.md                  # 영문 버전
 └── README-ko.md               # 한국어 버전 (이 파일)

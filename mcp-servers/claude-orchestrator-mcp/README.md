@@ -19,6 +19,24 @@ npm run build
 
 ## 실행 방법
 
+### 0. 자동 설치 스크립트 사용 (권장)
+
+프로젝트에 Orchestrator를 설치하는 가장 간단한 방법입니다.
+
+```bash
+# 설치 (MCP 빌드 + 훅/명령어 복사 + settings.local.json 자동 설정)
+node install-orchestrator.js <대상-프로젝트-경로>
+
+# 제거
+node install-orchestrator.js <대상-프로젝트-경로> --uninstall
+```
+
+설치 스크립트는 다음을 자동 처리합니다:
+- MCP 서버 빌드 확인 및 실행
+- 플랫폼에 맞는 훅 파일 복사 (Windows: .ps1, Linux/Mac: .sh)
+- 슬래시 명령어 복사 (workpm.md, pmworker.md)
+- `settings.local.json`에 MCP 서버 + 훅 설정 머지 (기존 설정 보존)
+
 ### 1. PowerShell 스크립트 사용 (권장)
 
 ```powershell

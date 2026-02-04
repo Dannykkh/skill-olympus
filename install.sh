@@ -237,15 +237,33 @@ else
         mkdir -p "$CLAUDE_DIR/hooks"
         for hook_file in "$SCRIPT_DIR/hooks"/*.sh; do
             if [ -f "$hook_file" ]; then
-                echo "      - $(basename "$hook_file")"
-                cp "$hook_file" "$CLAUDE_DIR/hooks/"
-                chmod +x "$CLAUDE_DIR/hooks/$(basename "$hook_file")"
+                hook_name=$(basename "$hook_file")
+                # 프로젝트 전용 훅 제외 (orchestrator)
+                case "$hook_name" in
+                    workpm-hook*|pmworker-hook*|orchestrator-mode*)
+                        echo "      - $hook_name [스킵: 프로젝트 전용]"
+                        ;;
+                    *)
+                        echo "      - $hook_name"
+                        cp "$hook_file" "$CLAUDE_DIR/hooks/"
+                        chmod +x "$CLAUDE_DIR/hooks/$hook_name"
+                        ;;
+                esac
             fi
         done
         for hook_file in "$SCRIPT_DIR/hooks"/*.ps1; do
             if [ -f "$hook_file" ]; then
-                echo "      - $(basename "$hook_file")"
-                cp "$hook_file" "$CLAUDE_DIR/hooks/"
+                hook_name=$(basename "$hook_file")
+                # 프로젝트 전용 훅 제외 (orchestrator)
+                case "$hook_name" in
+                    workpm-hook*|pmworker-hook*|orchestrator-mode*)
+                        echo "      - $hook_name [스킵: 프로젝트 전용]"
+                        ;;
+                    *)
+                        echo "      - $hook_name"
+                        cp "$hook_file" "$CLAUDE_DIR/hooks/"
+                        ;;
+                esac
             fi
         done
         echo "      완료!"

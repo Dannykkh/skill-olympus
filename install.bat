@@ -249,12 +249,21 @@ echo [4/5] Hooks 설치 중... (글로벌)
 if exist "%SCRIPT_DIR%hooks" (
     if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
     for %%F in ("%SCRIPT_DIR%hooks\*.ps1") do (
-        echo       - %%~nxF
-        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+        REM 프로젝트 전용 훅 제외 (orchestrator)
+        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode" >nul && (
+            echo       - %%~nxF [스킵: 프로젝트 전용]
+        ) || (
+            echo       - %%~nxF
+            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+        )
     )
     for %%F in ("%SCRIPT_DIR%hooks\*.sh") do (
-        echo       - %%~nxF
-        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode" >nul && (
+            echo       - %%~nxF [스킵: 프로젝트 전용]
+        ) || (
+            echo       - %%~nxF
+            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+        )
     )
     echo       완료!
 ) else (

@@ -120,11 +120,13 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks (8 Hooks)
+### Hooks (10 Hooks)
 
 | Hook | Timing | Description |
 |------|--------|-------------|
 | orchestrator-mode.sh | UserPromptSubmit | PM/Worker mode detection (workpm, pmworker triggers) |
+| workpm-hook.sh | UserPromptSubmit | PM mode activation hook (project-specific, installed via install-orchestrator.js) |
+| pmworker-hook.sh | UserPromptSubmit | Worker mode activation hook (project-specific, installed via install-orchestrator.js) |
 | save-conversation.sh | UserPromptSubmit | Save conversations to .md files (simple append, no AI call) |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
 | check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
@@ -181,6 +183,15 @@ Fast, file-based memory system with context tree structure.
 **Orchestrator Skills:**
 - `workpm` - Start PM mode (project analysis, task decomposition, AI assignment)
 - `pmworker` - Start Worker mode (claim tasks, lock files, execute work)
+
+**Install Orchestrator to another project:**
+```bash
+# Install (copies hooks, commands, registers MCP + hook settings)
+node install-orchestrator.js <target-project-path>
+
+# Uninstall
+node install-orchestrator.js <target-project-path> --uninstall
+```
 
 > **[Orchestrator Guide](docs/orchestrator-guide.md)** - Complete guide for Multi-AI orchestration, task management, and parallel terminal setup.
 
@@ -316,6 +327,7 @@ claude-code-customizations/
 ├── install-unlink.bat         # Windows symlink remover
 ├── install.sh                 # Linux/Mac installer (supports --link/--unlink)
 ├── install-hooks-config.js    # Hook settings helper (auto-configure settings.json)
+├── install-orchestrator.js   # Orchestrator installer (MCP + hooks + commands per project)
 ├── SETUP.md                   # Complete setup guide
 ├── README.md                  # This file (English)
 └── README-ko.md               # Korean version

@@ -624,6 +624,50 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 
 ---
 
+## 7-2. Orchestrator 설치 가이드
+
+> **참고**: Orchestrator(PM-Worker 병렬 처리)는 글로벌 설치가 아닌 **프로젝트별 설치**가 필요합니다.
+> MCP 서버 경로, 훅, 명령어를 대상 프로젝트에 개별 설정합니다.
+
+### 자동 설치 (권장)
+
+```bash
+# 설치
+node install-orchestrator.js <대상-프로젝트-경로>
+
+# 제거
+node install-orchestrator.js <대상-프로젝트-경로> --uninstall
+```
+
+**설치 스크립트가 수행하는 4단계:**
+
+| 단계 | 내용 |
+|------|------|
+| 1. MCP 서버 빌드 | `dist/index.js` 없으면 자동 `npm install && npm run build` |
+| 2. 훅 파일 복사 | 플랫폼 감지 후 `workpm-hook.{ps1\|sh}`, `pmworker-hook.{ps1\|sh}` 복사 |
+| 3. 명령어 복사 | `.claude/commands/`에 `workpm.md`, `pmworker.md` 복사 |
+| 4. settings.local.json 머지 | MCP 서버 + 훅 설정 추가 (기존 설정 보존, 중복 방지) |
+
+**제거 시:**
+- `settings.local.json`에서 orchestrator MCP + 훅 항목만 제거 (다른 설정 보존)
+- 복사된 훅/명령어 파일 삭제
+
+### 수동 설치
+
+수동으로 설정하려면 [mcp-servers/claude-orchestrator-mcp/README.md](mcp-servers/claude-orchestrator-mcp/README.md) 참고.
+
+### 사용법
+
+```bash
+# PM 모드: 프롬프트에 입력
+workpm
+
+# Worker 모드: 다른 터미널에서 입력
+pmworker
+```
+
+---
+
 ## 8. 전체 설치 순서
 
 ### 새 PC에서 환경 구성
