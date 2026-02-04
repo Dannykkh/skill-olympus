@@ -61,7 +61,7 @@ chmod +x install.sh && ./install.sh
 
 ## 포함된 내용
 
-### 커스텀 스킬 (52개)
+### 커스텀 스킬 (53개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -70,7 +70,8 @@ chmod +x install.sh && ./install.sh
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
 | 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
-| 🎯 **계획** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 |
+| 🎯 **계획** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 (gepetto에 스펙 검증 포함) |
+| 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
 | 📦 **Git** | commit-work | Git 워크플로우 |
@@ -148,7 +149,7 @@ chmod +x install.sh && ./install.sh
 **핵심 원칙:**
 - 빠르게: 훅에서 AI 호출 금지
 - 단순하게: 파일 기반, 복잡한 DB 없음
-- 검색 가능하게: 키워드 + 컨텍스트 트리
+- 검색 가능하게: 키워드 + 컨텍스트 트리 + 동의어 확장 (한↔영 양방향)
 
 **메모리 명령어:**
 
@@ -274,6 +275,8 @@ claude-code-customizations/
 │   ├── humanizer/             # AI 글쓰기 패턴 제거 (24개 패턴)
 │   ├── ppt-generator/         # 템플릿 기반 PPT 생성
 │   ├── fullstack-coding-standards/  # 풀스택 코딩 표준 (templates/)
+│   ├── gepetto/                # 구현 계획 + 스펙 검증 (19단계)
+│   ├── explain/                # 비유 기반 코드 설명 + Mermaid 다이어그램
 │   └── python-backend-fastapi/  # FastAPI 모범 사례
 ├── agents/                    # 커스텀 서브에이전트
 │   ├── frontend-react.md      # React + Zustand + TanStack Query

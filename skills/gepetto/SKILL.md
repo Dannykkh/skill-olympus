@@ -1,11 +1,11 @@
 ---
 name: gepetto
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, and multi-LLM review. Use when planning features that need thorough pre-implementation analysis.
+description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis.
 ---
 
 # Gepetto
 
-Orchestrates a multi-step planning process: Research → Interview → Spec Synthesis → Plan → External Review → Sections
+Orchestrates a multi-step planning process: Research → Interview → Spec Synthesis → Plan → External Review → Sections → Verify
 
 ## CRITICAL: First Actions
 
@@ -18,7 +18,7 @@ Print intro banner immediately:
 ═══════════════════════════════════════════════════════════════
 GEPETTO: AI-Assisted Implementation Planning
 ═══════════════════════════════════════════════════════════════
-Research → Interview → Spec Synthesis → Plan → External Review → Sections
+Research → Interview → Spec Synthesis → Plan → External Review → Sections → Verify
 
 Note: GEPETTO will write many .md files to the planning directory you pass it
 ```
@@ -80,7 +80,8 @@ Determine session state by checking existing files:
 | + integration-notes | resume | Step 12 (user review) |
 | + sections/index.md | resume | Step 14 (write sections) |
 | all sections complete | resume | Step 15 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | complete | Done |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 18 (verify) |
+| + claude-verify-report.md | complete | Done |
 
 5. Create TODO list with TodoWrite based on current state
 
@@ -102,7 +103,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/17: {STEP_NAME}
+STEP {N}/19: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
@@ -327,6 +328,7 @@ Generated files:
   - sections/ (implementation units)
   - claude-ralph-loop-prompt.md (for ralph-loop plugin)
   - claude-ralphy-prd.md (for Ralphy CLI)
+  - claude-verify-report.md (implementation verification - after implementation)
 
 How to implement:
 
@@ -341,5 +343,30 @@ Option B - Autonomous with ralph-loop (Claude Code plugin):
 Option C - Autonomous with Ralphy (external CLI):
   ralphy --prd <planning_dir>/claude-ralphy-prd.md
   # Or: cp <planning_dir>/claude-ralphy-prd.md ./PRD.md && ralphy
+
+Option D - Verify after implementation:
+  /gepetto @<planning_dir>/your-spec.md
+  (모든 계획 파일이 있으면 자동으로 verify 모드 진입)
 ═══════════════════════════════════════════════════════════════
 ```
+
+### 18. Verify Implementation
+
+See [verify-protocol.md](references/verify-protocol.md)
+
+구현 완료 후 claude-spec.md 대비 검증.
+사용자가 `/gepetto @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
+
+서브에이전트 2개 병렬 실행:
+1. 기능 검증 (Explore) — 요구사항 vs 실제 코드
+2. 품질 검증 (Explore) — 비기능 요구사항 + 코드 품질
+
+결과 → `<planning_dir>/claude-verify-report.md`
+
+### 19. Verification Report
+
+검증 결과를 사용자에게 표시.
+
+AskUserQuestion으로 다음 선택:
+- "수정 후 재검증" → Step 18 반복
+- "승인" → 완료

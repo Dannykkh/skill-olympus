@@ -45,53 +45,59 @@ MEMORY.md는 **컨텍스트 트리 구조**입니다. 중요한 내용은 적절
 - 기존 항목에 `❌ SUPERSEDED` + `superseded-by: #새항목` 추가
 - 새 항목에 `✅ CURRENT` + `supersedes: #기존항목` + 변경 이유 포함
 
-## 응답 저장 규칙
+## 응답 키워드 규칙
 
-의미있는 응답을 대화 파일에 append하세요:
+의미있는 작업을 수행한 응답의 마지막에 키워드 블록을 포함하세요.
+Stop 훅이 응답 텍스트를 자동 저장하므로, 키워드도 함께 캡처됩니다.
 
-- 파일 위치: `.claude/conversations/YYYY-MM-DD.md`
-- 파일이 있을 때만 저장 (없으면 무시)
-
-**형식:**
-```markdown
-## [HH:mm] Assistant
-
-[응답 요약]
-
-- 주요 내용/결과
+**형식 (응답 끝에 추가):**
+```
+`#tags: keyword1, keyword2, keyword3`
 ```
 
-**저장 대상:**
-- 코드 작성, 파일 수정 결과
-- 설계 토론, 의사결정 과정
-- 문제 해결 논의
+**예시:**
+```
+파일을 수정했습니다. orchestrator 설치 스크립트가 완성되었습니다.
 
-**제외:**
-- 단순 인사 ("안녕", "고마워")
-- 잡담, 주제 외 대화
+`#tags: orchestrator, install-script, mcp, hooks`
+```
 
----
-
-## 대화 키워드 자동 태깅
-
-매 작업 완료 후, 오늘 대화 파일의 frontmatter keywords를 업데이트하세요:
-
-- 파일 위치: `.claude/conversations/YYYY-MM-DD.md`
-- 파일이 있을 때만 업데이트 (없으면 무시)
-
-**추출 대상:**
+**키워드 추출 대상:**
 - 기술 스택: react, typescript, spring, docker, mcp 등
-- 작업 내용: authentication, refactoring, bug-fix, api-연동 등
-- 기능/모듈명: login, payment, user-profile 등
-- 주요 파일명: state-manager.ts, launch.ps1 등
-
-**형식:**
-```yaml
-keywords: ["jwt-authentication", "login-bug-fix", "react", "api-연동"]
-```
+- 작업 유형: refactoring, bug-fix, feature, setup 등
+- 기능/모듈명: orchestrator, hooks, memory, authentication 등
+- 주요 파일명: install-orchestrator.js, save-response.ps1 등
 
 **규칙:**
-- 기존 키워드에 새 키워드 추가 (중복 제거)
-- 키워드는 소문자, 하이픈(-) 사용
+- 소문자, 하이픈(-) 사용
 - 한국어 키워드도 허용
-- 5-15개 범위로 유지
+- 3~7개 범위로 유지
+- 단순 인사/잡담에는 키워드 불필요
+
+## 과거 대화 검색 규칙
+
+사용자가 과거 작업을 언급하면 (예: "이전에 ~했었지?", "그때 ~ 어떻게 했더라?"),
+대화 기록에서 관련 내용을 검색하여 답변에 활용하세요.
+
+**검색 순서:**
+1. MEMORY.md 키워드 인덱스에서 관련 섹션 확인 (이미 로드됨)
+2. 질문에서 핵심 키워드 추출 + **동의어/관련어 확장**
+   - 예: "병렬 작업" → `parallel`, `orchestrator`, `pm-worker`, `병렬`, `concurrent`
+   - 예: "속도 문제" → `performance`, `speed`, `느림`, `최적화`, `optimization`
+   - 한국어 ↔ 영어 양방향 확장 필수
+3. 확장된 키워드로 대화 파일 검색 (여러 번 grep):
+   - `Grep "#tags:.*키워드1" .claude/conversations/`
+   - `Grep "#tags:.*키워드2" .claude/conversations/`
+   - 첫 grep에서 못 찾으면 동의어로 재시도, 최대 3회
+4. 매칭된 대화 파일의 해당 섹션(전후 문맥) 읽기
+5. 관련 키워드가 추가로 발견되면 **하위 탐색** (1회 더 grep)
+
+**검색 트리거 (이런 표현이 나오면 검색):**
+- "이전에", "그때", "전에", "예전에", "저번에"
+- "했었지?", "했었는데", "어떻게 했더라"
+- "다시", "또", "같은 방식으로"
+- 구체적 키워드 언급 (orchestrator, hooks 등)
+
+**응답 방식:**
+- 찾았으면: 관련 대화 날짜와 핵심 내용을 인용하며 답변
+- 못 찾았으면: "관련 기록을 찾지 못했습니다"라고 솔직히 답변

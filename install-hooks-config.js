@@ -58,6 +58,9 @@ function buildHooksConfig(dir, isWindows) {
         hookEntry("Write", cmd("validate-docs.ps1")),
         hookEntry("Edit|Write", cmd("validate-api.ps1")),
       ],
+      Stop: [
+        hookEntry("", cmd("save-response.ps1")),
+      ],
     };
   } else {
     // Bash 명령어 (stdin으로 데이터 수신)
@@ -76,6 +79,9 @@ function buildHooksConfig(dir, isWindows) {
         hookEntry("Edit|Write", cmd("validate-code.sh")),
         hookEntry("Write", cmd("validate-docs.sh")),
         hookEntry("Edit|Write", cmd("validate-api.sh")),
+      ],
+      Stop: [
+        hookEntry("", cmd("save-response.sh")),
       ],
     };
   }

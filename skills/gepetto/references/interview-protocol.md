@@ -40,6 +40,34 @@ If research was done, use it to:
 - "Is that all?"
 - "Do you have any other requirements?"
 
+## Question Categories
+
+인터뷰 시 다음 카테고리를 순서대로 커버합니다. 각 카테고리에서 2-4개 질문.
+
+### A. 기술적 구현 (Technical Implementation)
+- 아키텍처 선택 이유, 대안 고려 여부
+- 확장성/성능 목표치
+- 외부 시스템 연동, 데이터 볼륨
+- 에러 복구 방안
+
+### B. UI/UX 상세
+- 주요 사용자 시나리오
+- 모바일/접근성/다국어
+- 로딩/에러 상태 처리
+
+### C. 우려사항 (Concerns)
+- 기술적 리스크
+- 레거시 호환성
+- 보안 민감 데이터, 규정/컴플라이언스
+
+### D. 트레이드오프 (Trade-offs)
+- 속도 vs 품질, 기능 범위 vs 완성도
+- MVP 범위, 기술 부채 허용
+
+### E. 비기능 요구사항
+- 가용성, 백업/복구
+- 모니터링/알람, 로깅, 감사(Audit)
+
 ## When to Stop
 
 Stop interviewing when you are confident you can:

@@ -61,7 +61,7 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (52 Skills)
+### Custom Skills (53 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -70,7 +70,8 @@ chmod +x install.sh && ./install.sh
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
-| 🎯 **Planning** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements |
+| 🎯 **Planning** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements (gepetto includes spec verification) |
+| 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
 | 📦 **Git** | commit-work | Git workflow |
@@ -148,7 +149,7 @@ Fast, file-based memory system with context tree structure.
 **Key Principles:**
 - Fast: No AI calls in hooks
 - Simple: File-based, no complex DB
-- Searchable: Keywords + context tree
+- Searchable: Keywords + context tree + synonym expansion (Korean↔English bidirectional)
 
 **Memory Commands:**
 
@@ -275,6 +276,8 @@ claude-code-customizations/
 │   ├── humanizer/             # AI writing pattern removal (24 patterns)
 │   ├── ppt-generator/         # PowerPoint generation from templates
 │   ├── fullstack-coding-standards/  # Fullstack coding standards (templates/)
+│   ├── gepetto/                # Implementation planning + spec verification (19 steps)
+│   ├── explain/                # Code explanation with analogies + Mermaid diagrams
 │   └── python-backend/        # FastAPI best practices
 ├── agents/                    # Custom subagents
 │   ├── frontend-react.md      # React + Zustand + TanStack Query
