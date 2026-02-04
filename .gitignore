@@ -13,6 +13,7 @@ Thumbs.db
 # Claude Code
 .claude/conversations/
 .claude/settings.local.json
+MEMORY.md
 
 # Orchestrator state (auto-generated)
 .orchestrator/
