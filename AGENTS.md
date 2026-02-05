@@ -49,13 +49,14 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (48개)
+### Skills (53개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, perplexity | 외부 AI 모델 연동 |
-| 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge | 플러그인/스킬 생성 도구 |
-| 📝 Documentation | backend-to-frontend-handoff-docs, c4-architecture, crafting-effective-readmes, draw-io, excalidraw, frontend-to-backend-requirements, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
+| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 |
+| 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성/검색 도구 |
+| 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
+| 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, react-useeffect, vercel-react-best-practices | React/TypeScript/디자인 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, gepetto, requirements-clarity, ship-learn-next | 계획/요구사항 |
@@ -63,8 +64,9 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, session-handoff, web-design-guidelines, web-to-markdown | 유틸리티 |
+| 🧠 Memory | long-term-memory | 세션 간 장기기억 관리 (MEMORY.md 자동 업데이트) |
 
-### Agents (30개)
+### Agents (31개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -98,6 +100,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | **Communication** | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
 | **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
+| **Memory** | keyword-extractor | 대화 로그 키워드 추출 및 인덱스 업데이트 |
 
 ### Commands (18개)
 
