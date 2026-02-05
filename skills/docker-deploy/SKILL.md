@@ -4,7 +4,7 @@ description: Docker 이미지 기반 배포 환경을 자동으로 구성합니�
 license: MIT
 metadata:
   author: user
-  version: "2.2.0"
+  version: "2.3.0"
 ---
 
 # Docker Deploy Skill
@@ -240,14 +240,24 @@ setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
+REM .env 파일 로드
+if not exist ".env" (
+    echo [오류] .env 파일을 찾을 수 없습니다.
+    pause
+    exit /b 1
+)
+for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
+    set "%%a=%%b"
+)
+
 echo.
 echo ============================================
-echo   ${PROJECT_NAME} Docker 설치
+echo   !PROJECT_NAME! Docker 설치
 echo ============================================
 echo.
 
 REM Docker 실행 확인
-echo [1/5] Docker 실행 상태 확인 중...
+echo [1/4] Docker 실행 상태 확인 중...
 docker info >nul 2>&1
 if errorlevel 1 (
     echo [오류] Docker가 실행되고 있지 않습니다.
@@ -257,26 +267,17 @@ if errorlevel 1 (
 )
 echo       Docker 정상 실행 중
 
-REM .env 파일 확인
-echo.
-echo [2/5] 환경 설정 파일 확인 중...
-if not exist "%SCRIPT_DIR%.env" (
-    echo [오류] .env 파일을 찾을 수 없습니다.
-    pause
-    exit /b 1
-)
-echo       .env 파일 확인 완료
-
 REM 이미지 로드
 echo.
-echo [3/5] Docker 이미지 로드 중...
-if exist "%SCRIPT_DIR%${PROJECT_NAME}-all.tar" (
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-all.tar"
-) else if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
+echo [2/4] Docker 이미지 로드 중...
+if exist "!PROJECT_NAME!-all.tar" (
+    docker load -i "!PROJECT_NAME!-all.tar"
+) else if exist "!PROJECT_NAME!-api.tar" (
+    docker load -i "!PROJECT_NAME!-api.tar"
+    docker load -i "!PROJECT_NAME!-frontend.tar"
 ) else (
     echo [오류] Docker 이미지 파일을 찾을 수 없습니다.
+    echo        !PROJECT_NAME!-all.tar 또는 개별 tar 파일이 필요합니다.
     pause
     exit /b 1
 )
@@ -284,13 +285,13 @@ echo       이미지 로드 완료
 
 REM 베이스 이미지 확인
 echo.
-echo [4/5] 필수 이미지 확인 중...
-docker image inspect ${DB_IMAGE} >nul 2>&1 || docker pull ${DB_IMAGE}
+echo [3/4] 필수 이미지 확인 중...
+docker pull mysql:8.0 >nul 2>&1
 echo       완료
 
 REM 서비스 시작
 echo.
-echo [5/5] 서비스 시작 중...
+echo [4/4] 서비스 시작 중...
 docker-compose up -d
 if errorlevel 1 (
     echo [오류] 서비스 시작 실패
@@ -307,9 +308,9 @@ echo ============================================
 echo   설치 완료!
 echo ============================================
 echo.
-echo   웹:       http://localhost:${FRONTEND_PORT}
-echo   API 문서: http://localhost:${API_PORT}/docs
-echo   DB:       localhost:${DB_PORT}
+echo   웹:       http://localhost:!FRONTEND_PORT!
+echo   API 문서: http://localhost:!API_PORT!/docs
+echo   DB:       localhost:!DB_PORT!
 echo.
 echo   테스트 계정:
 echo     Admin:   admin@example.com / admin1234
@@ -333,9 +334,19 @@ setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
+REM .env 파일 로드
+if not exist ".env" (
+    echo [오류] .env 파일을 찾을 수 없습니다.
+    pause
+    exit /b 1
+)
+for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
+    set "%%a=%%b"
+)
+
 echo.
 echo ============================================
-echo   ${PROJECT_NAME} Docker 업데이트
+echo   !PROJECT_NAME! Docker 업데이트
 echo   (데이터베이스는 유지됩니다)
 echo ============================================
 echo.
@@ -356,12 +367,12 @@ echo [2/4] 기존 서비스 중지 중...
 docker-compose down
 if errorlevel 1 (
     echo [경고] docker-compose down 실패, 강제 중지 시도...
-    docker stop ${PROJECT_NAME}-api ${PROJECT_NAME}-frontend ${PROJECT_NAME}-db >nul 2>&1
-    docker rm ${PROJECT_NAME}-api ${PROJECT_NAME}-frontend >nul 2>&1
+    docker stop !PROJECT_NAME!-api !PROJECT_NAME!-frontend !PROJECT_NAME!-db >nul 2>&1
+    docker rm !PROJECT_NAME!-api !PROJECT_NAME!-frontend >nul 2>&1
 )
 
 REM 컨테이너 중지 확인
-for /f %%i in ('docker ps -q --filter "name=${PROJECT_NAME}"') do (
+for /f %%i in ('docker ps -q --filter "name=!PROJECT_NAME!"') do (
     echo [오류] 컨테이너가 아직 실행 중입니다: %%i
     echo        수동으로 중지해주세요: docker stop %%i
     pause
@@ -370,17 +381,17 @@ for /f %%i in ('docker ps -q --filter "name=${PROJECT_NAME}"') do (
 echo       서비스 중지 완료
 
 REM 기존 이미지 삭제
-docker rmi ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest >nul 2>&1
+docker rmi !PROJECT_NAME!-api:latest !PROJECT_NAME!-frontend:latest >nul 2>&1
 echo       이미지 삭제 완료
 
 REM 새 이미지 로드
 echo.
 echo [3/4] 새 Docker 이미지 로드 중...
-if exist "%SCRIPT_DIR%${PROJECT_NAME}-all.tar" (
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-all.tar"
-) else if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
+if exist "!PROJECT_NAME!-all.tar" (
+    docker load -i "!PROJECT_NAME!-all.tar"
+) else if exist "!PROJECT_NAME!-api.tar" (
+    docker load -i "!PROJECT_NAME!-api.tar"
+    docker load -i "!PROJECT_NAME!-frontend.tar"
 ) else (
     echo [오류] Docker 이미지 파일을 찾을 수 없습니다.
     pause
@@ -403,8 +414,8 @@ echo ============================================
 echo   업데이트 완료!
 echo ============================================
 echo.
-echo   웹:       http://localhost:${FRONTEND_PORT}
-echo   API 문서: http://localhost:${API_PORT}/docs
+echo   웹:       http://localhost:!FRONTEND_PORT!
+echo   API 문서: http://localhost:!API_PORT!/docs
 echo.
 
 endlocal
@@ -423,9 +434,19 @@ setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
+REM .env 파일 로드
+if not exist ".env" (
+    echo [오류] .env 파일을 찾을 수 없습니다.
+    pause
+    exit /b 1
+)
+for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
+    set "%%a=%%b"
+)
+
 echo.
 echo ============================================
-echo   ${PROJECT_NAME} Docker 완전 초기화
+echo   !PROJECT_NAME! Docker 완전 초기화
 echo ============================================
 echo.
 echo   [경고] 모든 데이터베이스 데이터가 삭제됩니다!
@@ -454,13 +475,13 @@ echo [2/4] 기존 서비스 및 데이터 삭제 중...
 docker-compose down -v
 if errorlevel 1 (
     echo [경고] docker-compose down 실패, 강제 중지 시도...
-    docker stop ${PROJECT_NAME}-api ${PROJECT_NAME}-frontend ${PROJECT_NAME}-db >nul 2>&1
-    docker rm ${PROJECT_NAME}-api ${PROJECT_NAME}-frontend ${PROJECT_NAME}-db >nul 2>&1
-    docker volume rm ${PROJECT_NAME}_mysql_data ${PROJECT_NAME}_postgres_data >nul 2>&1
+    docker stop !PROJECT_NAME!-api !PROJECT_NAME!-frontend !PROJECT_NAME!-db >nul 2>&1
+    docker rm !PROJECT_NAME!-api !PROJECT_NAME!-frontend !PROJECT_NAME!-db >nul 2>&1
+    docker volume rm !PROJECT_NAME!_mysql_data !PROJECT_NAME!_postgres_data >nul 2>&1
 )
 
 REM 컨테이너 중지 확인
-for /f %%i in ('docker ps -q --filter "name=${PROJECT_NAME}"') do (
+for /f %%i in ('docker ps -q --filter "name=!PROJECT_NAME!"') do (
     echo [오류] 컨테이너가 아직 실행 중입니다: %%i
     echo        수동으로 중지해주세요: docker stop %%i
     pause
@@ -469,17 +490,17 @@ for /f %%i in ('docker ps -q --filter "name=${PROJECT_NAME}"') do (
 echo       서비스 중지 완료
 
 REM 기존 이미지 삭제
-docker rmi ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest >nul 2>&1
+docker rmi !PROJECT_NAME!-api:latest !PROJECT_NAME!-frontend:latest >nul 2>&1
 echo       이미지 삭제 완료
 
 REM 새 이미지 로드
 echo.
 echo [3/4] Docker 이미지 로드 중...
-if exist "%SCRIPT_DIR%${PROJECT_NAME}-all.tar" (
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-all.tar"
-) else if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
-    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
+if exist "!PROJECT_NAME!-all.tar" (
+    docker load -i "!PROJECT_NAME!-all.tar"
+) else if exist "!PROJECT_NAME!-api.tar" (
+    docker load -i "!PROJECT_NAME!-api.tar"
+    docker load -i "!PROJECT_NAME!-frontend.tar"
 ) else (
     echo [오류] Docker 이미지 파일을 찾을 수 없습니다.
     pause
@@ -490,7 +511,7 @@ echo       이미지 로드 완료
 REM 베이스 이미지 확인 및 서비스 시작
 echo.
 echo [4/4] 서비스 시작 중...
-docker image inspect ${DB_IMAGE} >nul 2>&1 || docker pull ${DB_IMAGE}
+docker pull mysql:8.0 >nul 2>&1
 docker-compose up -d
 if errorlevel 1 (
     echo [오류] 서비스 시작 실패
@@ -507,9 +528,9 @@ echo ============================================
 echo   초기화 완료!
 echo ============================================
 echo.
-echo   웹:       http://localhost:${FRONTEND_PORT}
-echo   API 문서: http://localhost:${API_PORT}/docs
-echo   DB:       localhost:${DB_PORT}
+echo   웹:       http://localhost:!FRONTEND_PORT!
+echo   API 문서: http://localhost:!API_PORT!/docs
+echo   DB:       localhost:!DB_PORT!
 echo.
 echo   테스트 계정:
 echo     Admin:   admin@example.com / admin1234
@@ -530,12 +551,18 @@ pause
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
+REM 프로젝트명 설정 (폴더명 또는 .env에서)
+for %%I in (.) do set "PROJECT_NAME=%%~nxI"
+if exist ".env" (
+    for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
+        if "%%a"=="PROJECT_NAME" set "PROJECT_NAME=%%b"
+    )
+)
+
 echo.
 echo ============================================
-echo   ${PROJECT_NAME} Docker Image Build
+echo   !PROJECT_NAME! Docker Image Build
 echo ============================================
-echo.
-echo   소스코드 보호: Cython (컴파일)
 echo.
 
 REM Docker 실행 확인
@@ -550,9 +577,8 @@ if errorlevel 1 (
 REM 출력 폴더 확인
 if not exist "docker-images" mkdir docker-images
 
-echo [1/5] Building Backend API image (Cython 컴파일)...
-echo       (약 2-3분 소요)
-docker build -t ${PROJECT_NAME}-api:latest -f backend/Dockerfile --target production backend/
+echo [1/5] Building Backend API image...
+docker build -t !PROJECT_NAME!-api:latest -f backend/Dockerfile --target production backend/
 if errorlevel 1 (
     echo [ERROR] Backend build failed.
     pause
@@ -562,7 +588,7 @@ echo       Backend 빌드 완료
 
 echo.
 echo [2/5] Building Frontend image...
-docker build -t ${PROJECT_NAME}-frontend:latest -f frontend/Dockerfile --target production --build-arg VITE_API_URL=/api frontend/
+docker build -t !PROJECT_NAME!-frontend:latest -f frontend/Dockerfile --target production --build-arg VITE_API_URL=/api frontend/
 if errorlevel 1 (
     echo [ERROR] Frontend build failed.
     pause
@@ -572,8 +598,7 @@ echo       Frontend 빌드 완료
 
 echo.
 echo [3/5] Saving images to tar file...
-echo       (약 1분 소요)
-docker save ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest -o docker-images/${PROJECT_NAME}-all.tar
+docker save !PROJECT_NAME!-api:latest !PROJECT_NAME!-frontend:latest -o docker-images/!PROJECT_NAME!-all.tar
 echo       이미지 저장 완료
 
 echo.
@@ -594,18 +619,12 @@ echo.
 echo   Output folder: docker-images\
 echo.
 echo   배포 ZIP 파일 생성:
-echo     powershell Compress-Archive -Path 'docker-images\*' -DestinationPath '${PROJECT_NAME}-docker-deploy.zip' -Force
+echo     powershell Compress-Archive -Path 'docker-images\*' -DestinationPath '!PROJECT_NAME!-docker-deploy.zip' -Force
 echo.
 echo   배포 절차:
-echo     1. ${PROJECT_NAME}-docker-deploy.zip을 배포 PC로 복사
+echo     1. !PROJECT_NAME!-docker-deploy.zip을 배포 PC로 복사
 echo     2. 압축 해제
 echo     3. install.bat 더블클릭
-echo     4. 브라우저에서 http://localhost:${FRONTEND_PORT} 접속
-echo.
-echo   테스트 계정:
-echo     Admin:   admin@example.com / admin1234
-echo     Manager: manager@example.com / manager1234
-echo     Member:  member@example.com / member1234
 echo.
 
 endlocal
@@ -618,8 +637,18 @@ pause
 
 ```batch
 @echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+REM .env 파일 로드
+if exist ".env" (
+    for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
+        set "%%a=%%b"
+    )
+)
+
 echo.
-echo ${PROJECT_NAME} 로그 보기
+echo !PROJECT_NAME! 로그 보기
 echo ========================
 echo.
 echo [1] 전체 로그
