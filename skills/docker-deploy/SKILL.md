@@ -4,7 +4,7 @@ description: Docker 이미지 기반 배포 환경을 자동으로 구성합니�
 license: MIT
 metadata:
   author: user
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # Docker Deploy Skill
@@ -25,7 +25,9 @@ Docker 이미지 기반 배포 파일을 자동 생성하는 스킬입니다.
 - `frontend/Dockerfile` - Frontend 멀티스테이지 빌드
 - `docker-build-images.bat` - 이미지 빌드 + tar 저장 스크립트
 - `docker-images/docker-compose.yml` - 배포용 (pre-built 이미지)
-- `docker-images/install.bat` - 설치/업데이트/초기화 통합
+- `docker-images/install.bat` - 처음 설치
+- `docker-images/update.bat` - 이미지만 업데이트 (DB 유지)
+- `docker-images/reset.bat` - 완전 초기화 (데이터 삭제)
 - `docker-images/.env` - 환경변수 (기본값 포함)
 - `docker-images/logs.bat` - 로그 보기
 - `docker-images/seed-data.sql` - 초기 데이터 (선택)
@@ -228,42 +230,24 @@ volumes:
 
 ---
 
-## 6. install.bat (통합 스크립트) - 핵심
+## 6. install.bat (처음 설치)
 
 ```batch
 @echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 
-REM ============================================
-REM   ${PROJECT_NAME} Docker 설치/업데이트 스크립트
-REM
-REM   사용법:
-REM     install.bat         - 처음 설치
-REM     install.bat update  - 소스코드 업데이트 (DB 유지)
-REM     install.bat reset   - 완전 초기화 (모든 데이터 삭제)
-REM ============================================
-
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
-set "MODE=%~1"
-if "%MODE%"=="" set "MODE=install"
-
 echo.
 echo ============================================
-if "%MODE%"=="update" (
-    echo   ${PROJECT_NAME} Docker 업데이트
-) else if "%MODE%"=="reset" (
-    echo   ${PROJECT_NAME} Docker 완전 초기화
-) else (
-    echo   ${PROJECT_NAME} Docker 설치
-)
+echo   ${PROJECT_NAME} Docker 설치
 echo ============================================
 echo.
 
 REM Docker 실행 확인
-echo [1/6] Docker 실행 상태 확인 중...
+echo [1/5] Docker 실행 상태 확인 중...
 docker info >nul 2>&1
 if errorlevel 1 (
     echo [오류] Docker가 실행되고 있지 않습니다.
@@ -273,37 +257,9 @@ if errorlevel 1 (
 )
 echo       Docker 정상 실행 중
 
-REM reset 모드: 볼륨 삭제
-if "%MODE%"=="reset" (
-    echo.
-    echo [경고] 완전 초기화를 선택하셨습니다.
-    echo        모든 데이터베이스 데이터가 삭제됩니다!
-    echo.
-    set /p "CONFIRM=정말 초기화하시겠습니까? (yes/no): "
-    if /i not "!CONFIRM!"=="yes" (
-        echo 취소되었습니다.
-        pause
-        exit /b 0
-    )
-    echo.
-    echo [2/6] 기존 서비스 및 데이터 삭제 중...
-    docker-compose down -v >nul 2>&1
-    docker rmi ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest >nul 2>&1
-    echo       삭제 완료
-) else if "%MODE%"=="update" (
-    echo.
-    echo [2/6] 기존 서비스 중지 및 이미지 교체 준비 중...
-    docker-compose down >nul 2>&1
-    docker rmi ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest >nul 2>&1
-    echo       준비 완료
-) else (
-    echo.
-    echo [2/6] 기존 설치 확인 중...
-)
-
 REM .env 파일 확인
 echo.
-echo [3/6] 환경 설정 파일 확인 중...
+echo [2/5] 환경 설정 파일 확인 중...
 if not exist "%SCRIPT_DIR%.env" (
     echo [오류] .env 파일을 찾을 수 없습니다.
     pause
@@ -311,48 +267,31 @@ if not exist "%SCRIPT_DIR%.env" (
 )
 echo       .env 파일 확인 완료
 
-REM 이미지 로드 (통합 또는 개별 tar 지원)
+REM 이미지 로드
 echo.
-echo [4/6] Docker 이미지 로드 중...
-set "TAR_FOUND=0"
-
+echo [3/5] Docker 이미지 로드 중...
 if exist "%SCRIPT_DIR%${PROJECT_NAME}-all.tar" (
-    set "TAR_FOUND=1"
-    echo       ${PROJECT_NAME}-all.tar 발견
     docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-all.tar"
-    goto :tar_done
-)
-
-if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
-    if exist "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar" (
-        set "TAR_FOUND=1"
-        echo       개별 tar 파일 발견
-        docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
-        docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
-        goto :tar_done
-    )
-)
-
-if "%TAR_FOUND%"=="0" (
+) else if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
+) else (
     echo [오류] Docker 이미지 파일을 찾을 수 없습니다.
     pause
     exit /b 1
 )
-
-:tar_done
 echo       이미지 로드 완료
 
 REM 베이스 이미지 확인
 echo.
-echo [5/6] 필수 이미지 확인 중...
+echo [4/5] 필수 이미지 확인 중...
 docker image inspect ${DB_IMAGE} >nul 2>&1 || docker pull ${DB_IMAGE}
 echo       완료
 
 REM 서비스 시작
 echo.
-echo [6/6] 서비스 시작 중...
+echo [5/5] 서비스 시작 중...
 docker-compose up -d
-
 if errorlevel 1 (
     echo [오류] 서비스 시작 실패
     pause
@@ -372,13 +311,177 @@ echo   웹:       http://localhost:${FRONTEND_PORT}
 echo   API 문서: http://localhost:${API_PORT}/docs
 echo   DB:       localhost:${DB_PORT}
 echo.
+echo   테스트 계정:
+echo     Admin:   admin@example.com / admin1234
+echo     Manager: manager@example.com / manager1234
+echo     Member:  member@example.com / member1234
+echo.
+
+endlocal
+pause
+```
+
+---
+
+## 6-1. update.bat (이미지만 업데이트, DB 유지)
+
+```batch
+@echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%"
+
+echo.
 echo ============================================
-echo   테스트 계정
+echo   ${PROJECT_NAME} Docker 업데이트
+echo   (데이터베이스는 유지됩니다)
 echo ============================================
 echo.
-echo   Admin:   admin@example.com / admin1234
-echo   Manager: manager@example.com / manager1234
-echo   Member:  member@example.com / member1234
+
+REM Docker 실행 확인
+echo [1/4] Docker 실행 상태 확인 중...
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo [오류] Docker가 실행되고 있지 않습니다.
+    pause
+    exit /b 1
+)
+echo       Docker 정상 실행 중
+
+REM 기존 서비스 중지 (볼륨 유지)
+echo.
+echo [2/4] 기존 서비스 중지 중...
+docker-compose down >nul 2>&1
+docker rmi ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest >nul 2>&1
+echo       완료
+
+REM 새 이미지 로드
+echo.
+echo [3/4] 새 Docker 이미지 로드 중...
+if exist "%SCRIPT_DIR%${PROJECT_NAME}-all.tar" (
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-all.tar"
+) else if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
+) else (
+    echo [오류] Docker 이미지 파일을 찾을 수 없습니다.
+    pause
+    exit /b 1
+)
+echo       이미지 로드 완료
+
+REM 서비스 재시작
+echo.
+echo [4/4] 서비스 시작 중...
+docker-compose up -d
+if errorlevel 1 (
+    echo [오류] 서비스 시작 실패
+    pause
+    exit /b 1
+)
+
+echo.
+echo ============================================
+echo   업데이트 완료!
+echo ============================================
+echo.
+echo   웹:       http://localhost:${FRONTEND_PORT}
+echo   API 문서: http://localhost:${API_PORT}/docs
+echo.
+
+endlocal
+pause
+```
+
+---
+
+## 6-2. reset.bat (완전 초기화)
+
+```batch
+@echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%"
+
+echo.
+echo ============================================
+echo   ${PROJECT_NAME} Docker 완전 초기화
+echo ============================================
+echo.
+echo   [경고] 모든 데이터베이스 데이터가 삭제됩니다!
+echo.
+set /p "CONFIRM=정말 초기화하시겠습니까? (yes/no): "
+if /i not "!CONFIRM!"=="yes" (
+    echo 취소되었습니다.
+    pause
+    exit /b 0
+)
+
+REM Docker 실행 확인
+echo.
+echo [1/4] Docker 실행 상태 확인 중...
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo [오류] Docker가 실행되고 있지 않습니다.
+    pause
+    exit /b 1
+)
+echo       Docker 정상 실행 중
+
+REM 기존 서비스 및 볼륨 삭제
+echo.
+echo [2/4] 기존 서비스 및 데이터 삭제 중...
+docker-compose down -v >nul 2>&1
+docker rmi ${PROJECT_NAME}-api:latest ${PROJECT_NAME}-frontend:latest >nul 2>&1
+echo       삭제 완료
+
+REM 새 이미지 로드
+echo.
+echo [3/4] Docker 이미지 로드 중...
+if exist "%SCRIPT_DIR%${PROJECT_NAME}-all.tar" (
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-all.tar"
+) else if exist "%SCRIPT_DIR%${PROJECT_NAME}-api.tar" (
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-api.tar"
+    docker load -i "%SCRIPT_DIR%${PROJECT_NAME}-frontend.tar"
+) else (
+    echo [오류] Docker 이미지 파일을 찾을 수 없습니다.
+    pause
+    exit /b 1
+)
+echo       이미지 로드 완료
+
+REM 베이스 이미지 확인 및 서비스 시작
+echo.
+echo [4/4] 서비스 시작 중...
+docker image inspect ${DB_IMAGE} >nul 2>&1 || docker pull ${DB_IMAGE}
+docker-compose up -d
+if errorlevel 1 (
+    echo [오류] 서비스 시작 실패
+    pause
+    exit /b 1
+)
+
+echo.
+echo 서비스 초기화 대기 중... (약 30초)
+timeout /t 30 /nobreak >nul
+
+echo.
+echo ============================================
+echo   초기화 완료!
+echo ============================================
+echo.
+echo   웹:       http://localhost:${FRONTEND_PORT}
+echo   API 문서: http://localhost:${API_PORT}/docs
+echo   DB:       localhost:${DB_PORT}
+echo.
+echo   테스트 계정:
+echo     Admin:   admin@example.com / admin1234
+echo     Manager: manager@example.com / manager1234
+echo     Member:  member@example.com / member1234
 echo.
 
 endlocal
@@ -544,7 +647,7 @@ SECRET_KEY=change-this-secret-key-in-production
 ### 5. 한국어 출력
 - `chcp 65001` 로 UTF-8 설정 (배치 파일 첫 줄)
 
-### 6. install/update/reset 통합
-- 하나의 install.bat으로 세 가지 모드 지원
-- update: DB 데이터 유지하며 이미지만 교체
-- reset: 볼륨까지 완전 삭제 후 재설치
+### 6. install/update/reset 분리
+- `install.bat`: 처음 설치 (더블클릭)
+- `update.bat`: DB 유지하며 이미지만 교체 (더블클릭)
+- `reset.bat`: 볼륨까지 완전 삭제 후 재설치 (확인 필요)
