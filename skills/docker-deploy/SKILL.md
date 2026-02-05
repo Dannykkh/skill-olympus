@@ -640,7 +640,8 @@ if "%CHOICE%"=="4" docker-compose logs -f db
 ## 9. .env (환경변수)
 
 ```env
-# ${PROJECT_NAME} Docker 환경 설정
+# 프로젝트명 (폴더명과 무관하게 동작)
+PROJECT_NAME=myapp
 
 # 포트 설정
 FRONTEND_PORT=8001
