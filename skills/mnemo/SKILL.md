@@ -56,6 +56,8 @@ mnemo/
 ├── references/                 # 핸드오프 템플릿
 │   ├── handoff-template.md
 │   └── resume-checklist.md
+├── docs/                       # 상세 문서
+│   └── memory-system.md        # 인지 모델 설명
 └── evals/                      # 평가
 ```
 
