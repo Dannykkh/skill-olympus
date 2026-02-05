@@ -65,7 +65,7 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (51 Skills)
+### Custom Skills (52 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -79,7 +79,7 @@ chmod +x install.sh && ./install.sh
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
 | 📦 **Git** | commit-work | Git workflow |
-| 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | Utilities |
+| 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
