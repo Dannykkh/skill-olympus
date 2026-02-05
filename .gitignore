@@ -11,6 +11,11 @@ Thumbs.db
 *.bak
 nul
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # Claude Code - 프로젝트별 설정 (비공개)
 .claude/
 MEMORY.md
