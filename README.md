@@ -55,20 +55,21 @@ chmod +x install.sh && ./install.sh
 
 > **Link mode** creates symlinks (Windows: Junction, Linux/Mac: symlink) instead of copying files. Changes to the repo are reflected immediately after `git pull` — no need to re-run the installer.
 >
-> The installer configures **all 5 components globally**:
+> The installer configures **all 6 components globally**:
 > - Skills, Agents, Commands, Hooks (files)
+> - Mnemo hooks (`save-conversation`, `save-response`)
 > - `~/.claude/settings.json` (hook settings)
-> - `~/.claude/CLAUDE.md` (long-term memory rules - response tags, conversation search)
+> - `~/.claude/CLAUDE.md` (memory rules - response tags, conversation search)
 
 ---
 
 ## What's Included
 
-### Custom Skills (53 Skills)
+### Custom Skills (51 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | External AI model integration + Multi-AI orchestration (PM/Worker mode) |
+| 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | External AI model integration + Multi-AI orchestration |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | Plugin/skill creation tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
@@ -78,8 +79,8 @@ chmod +x install.sh && ./install.sh
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
 | 📦 **Git** | commit-work | Git workflow |
-| 🔧 **Utilities** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | Utilities |
-| 🧠 **Memory** | long-term-memory | Session memory management (MEMORY.md auto-update) |
+| 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | Utilities |
+| 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
@@ -102,7 +103,7 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `agents/` directory or [AGENTS.md](AGENTS.md) for complete agent descriptions.
 
-### Commands (18 Commands)
+### Commands (17 Commands)
 
 | Command | Description |
 |---------|-------------|
@@ -124,15 +125,14 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks (11 Hooks)
+### Hooks
+
+**Global Hooks (installed via install.bat):**
 
 | Hook | Timing | Description |
 |------|--------|-------------|
-| orchestrator-mode.sh | UserPromptSubmit | PM/Worker mode detection (workpm, pmworker triggers) |
-| workpm-hook.sh | UserPromptSubmit | PM mode activation hook (project-specific, installed via install-orchestrator.js) |
-| pmworker-hook.sh | UserPromptSubmit | Worker mode activation hook (project-specific, installed via install-orchestrator.js) |
-| save-conversation.sh | UserPromptSubmit | Save conversations to .md files (simple append, no AI call) |
-| save-response.sh | Stop | Save assistant responses from transcript (BOM-free UTF-8, no AI call) |
+| save-conversation.sh | UserPromptSubmit | Save user input to conversations (Mnemo) |
+| save-response.sh | Stop | Save assistant responses with #tags (Mnemo) |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
 | check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
 | validate-docs.sh | PostToolUse | AI writing pattern detection in markdown |
@@ -140,65 +140,67 @@ chmod +x install.sh && ./install.sh
 | format-code.sh | PostToolUse | Auto-format code after changes |
 | validate-api.sh | PostToolUse | Validate API files after modification |
 
-### Long-term Memory System
+**Project-specific Hooks (installed via orchestrator/install.js):**
 
-Fast, file-based memory system with context tree structure.
+| Hook | Timing | Description |
+|------|--------|-------------|
+| workpm-hook.sh | UserPromptSubmit | PM mode activation |
+| pmworker-hook.sh | UserPromptSubmit | Worker mode activation |
+
+### Mnemo - Memory System
+
+> Named after Mnemosyne, goddess of memory
+
+Fast, file-based memory system for cross-session context persistence.
 
 | Component | Role |
 |-----------|------|
-| `MEMORY.md` | Context tree (architecture/, patterns/, gotchas/) |
-| `save-conversation.sh` | Simple append (30 lines, no AI call) |
-| `long-term-memory` skill | Memory management (`/memory add`, `/memory search`) |
+| `MEMORY.md` | Semantic memory - context tree (architecture/, patterns/, gotchas/) |
+| `conversations/*.md` | Episodic memory - detailed conversation logs |
+| `save-conversation.sh` | UserPromptSubmit hook - saves user input |
+| `save-response.sh` | Stop hook - saves assistant response with #tags |
 
 **Key Principles:**
 - Fast: No AI calls in hooks
 - Simple: File-based, no complex DB
-- Searchable: Keywords + context tree + synonym expansion (Korean↔English bidirectional)
+- Searchable: Keywords + synonym expansion (Korean↔English bidirectional)
 
-**Memory Commands:**
+**Features:**
+- Automatic conversation saving (hooks)
+- Keyword tagging (`#tags:` in responses)
+- Past conversation search ("이전에 ~했었지?")
+- Session handoff (context transfer between sessions)
 
-| Command | Description |
-|---------|-------------|
-| `/memory add <content>` | Save information to MEMORY.md |
-| `/memory find <keyword>` | RAG-style search past conversations by keyword |
-| `/memory search <keyword>` | Search within MEMORY.md |
-| `/memory tag <keywords>` | Manually tag today's conversation |
-| `/memory read <date>` | Read specific day's conversation |
-| `/memory list` | Show all memories |
+**Installation:** Included in global install (`install.bat`)
 
-> **[Detailed Documentation](docs/memory-system.md)** - Full system architecture, keyword search, hooks setup, and usage guide.
+> **[Detailed Documentation](skills/mnemo/docs/memory-system.md)** - Full system architecture and usage guide.
 
-### MCP Servers (Custom)
+### Orchestrator - Multi-AI Parallel System
 
-| MCP | Description | Location |
-|-----|-------------|----------|
-| **claude-orchestrator-mcp** | PM + Multi-AI Worker orchestration (Claude + Codex + Gemini, file locking, task dependencies) | `mcp-servers/claude-orchestrator-mcp/` |
+PM (Project Manager) distributes tasks, Workers execute in parallel.
 
-```powershell
-# Single AI mode (Claude only)
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project"
+| Component | Location |
+|-----------|----------|
+| MCP Server | `skills/orchestrator/mcp-server/` |
+| Hooks | `skills/orchestrator/hooks/` |
+| Commands | `skills/orchestrator/commands/` |
 
-# Multi-AI mode (auto-detect available CLIs)
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
-
-# Specify AI per worker
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'gemini')
-```
-
-**Orchestrator Skills:**
+**Triggers:**
 - `workpm` - Start PM mode (project analysis, task decomposition, AI assignment)
 - `pmworker` - Start Worker mode (claim tasks, lock files, execute work)
 
-**Install Orchestrator to another project:**
+**Install to a project:**
 ```bash
 # Install (copies hooks, commands, registers MCP + hook settings)
-node install-orchestrator.js <target-project-path>
+node skills/orchestrator/install.js <target-project-path>
 
 # Uninstall
-node install-orchestrator.js <target-project-path> --uninstall
+node skills/orchestrator/install.js <target-project-path> --uninstall
 ```
 
-> **[Orchestrator Guide](docs/orchestrator-guide.md)** - Complete guide for Multi-AI orchestration, task management, and parallel terminal setup.
+> **Note:** Orchestrator requires per-project installation (MCP needs project root path).
+>
+> **[Orchestrator Guide](skills/orchestrator/docs/orchestrator-guide.md)** - Complete guide for Multi-AI orchestration.
 
 ---
 
@@ -270,75 +272,123 @@ node install-orchestrator.js <target-project-path> --uninstall
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (slash commands)
-│   ├── docker-deploy/         # Docker deployment (Cython/PyArmor support)
-│   ├── code-reviewer/         # Auto code review (500-line limit, security)
-│   ├── react-best-practices/  # Vercel's 45 React optimization rules
-│   ├── web-design-guidelines/ # UI/UX accessibility review
-│   ├── api-tester/            # Frontend-backend integration testing
-│   ├── api-handoff/           # API handoff docs (backend↔frontend)
-│   ├── humanizer/             # AI writing pattern removal (24 patterns)
-│   ├── ppt-generator/         # PowerPoint generation from templates
-│   ├── fullstack-coding-standards/  # Fullstack coding standards (templates/)
-│   ├── gepetto/                # Implementation planning + spec verification (19 steps)
-│   ├── explain/                # Code explanation with analogies + Mermaid diagrams
-│   └── python-backend/        # FastAPI best practices
-├── agents/                    # Custom subagents
-│   ├── frontend-react.md      # React + Zustand + TanStack Query
-│   ├── backend-spring.md      # Java 21 + Spring Boot 3.x
-│   ├── database-mysql.md      # MySQL 8.0 + Flyway
-│   ├── ai-ml.md               # LLM + RAG + Vector DB
-│   ├── api-tester.md          # REST/GraphQL API testing
-│   ├── code-reviewer.md       # Code quality & security review
-│   ├── qa-engineer.md         # Test strategy & execution
-│   ├── qa-writer.md           # Test case writing
-│   ├── documentation.md       # PRD, API docs, CHANGELOG
-│   ├── migration-helper.md    # Legacy → Modern migration
-│   ├── explore-agent.md       # Legacy code analysis (Korean)
-│   ├── feature-tracker.md     # Feature progress tracking (Korean)
-│   ├── fullstack-coding-standards.md  # Fullstack coding standards (passive)
-│   └── api-comparator.md      # API compatibility verification
-├── commands/                  # Slash commands & scripts
+├── skills/                    # Custom skills (51 skills)
+│   ├── mnemo/                 # 🧠 Memory system (global install)
+│   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
+│   ├── agent-md-refactor/
+│   ├── api-handoff/
+│   ├── api-tester/
+│   ├── code-reviewer/
+│   ├── codex/
+│   ├── command-creator/
+│   ├── commit-work/
+│   ├── crafting-effective-readmes/
+│   ├── daily-meeting-update/
+│   ├── database-schema-designer/
+│   ├── datadog-cli/
+│   ├── dependency-updater/
+│   ├── design-system-starter/
+│   ├── docker-deploy/
+│   ├── domain-name-brainstormer/
+│   ├── draw-io/
+│   ├── excalidraw/
+│   ├── explain/
+│   ├── find-skills/
+│   ├── fullstack-coding-standards/
+│   ├── game-changing-features/
+│   ├── gemini/
+│   ├── gepetto/
+│   ├── humanizer/
+│   ├── jira/
+│   ├── marp-slide/
+│   ├── meme-factory/
+│   ├── mermaid-diagrams/
+│   ├── mui/
+│   ├── multi-ai-orchestration/
+│   ├── naming-analyzer/
+│   ├── openapi-to-typescript/
+│   ├── perplexity/
+│   ├── plugin-forge/
+│   ├── ppt-generator/
+│   ├── professional-communication/
+│   ├── python-backend-fastapi/
+│   ├── qa-test-planner/
+│   ├── react-dev/
+│   ├── react-useeffect/
+│   ├── reducing-entropy/
+│   ├── requirements-clarity/
+│   ├── ship-learn-next/
+│   ├── skill-judge/
+│   ├── vercel-react-best-practices/
+│   ├── web-design-guidelines/
+│   ├── web-to-markdown/
+│   ├── workplace-conversations/
+│   └── writing-clearly-and-concisely/
+├── agents/                    # Custom subagents (28 + skills/*/agents/ 2 = 30)
+│   ├── ai-ml.md
+│   ├── api-comparator.md
+│   ├── api-tester.md
+│   ├── ascii-ui-mockup-generator.md
+│   ├── backend-spring.md
+│   ├── codebase-pattern-finder.md
+│   ├── code-review-checklist.md
+│   ├── code-reviewer.md
+│   ├── communication-excellence-coach.md
+│   ├── database-mysql.md
+│   ├── documentation.md
+│   ├── explore-agent.md
+│   ├── feature-tracker.md
+│   ├── frontend-react.md
+│   ├── general-purpose.md
+│   ├── humanizer-guidelines.md
+│   ├── mermaid-diagram-specialist.md
+│   ├── migration-helper.md
+│   ├── naming-conventions.md
+│   ├── python-fastapi-guidelines.md
+│   ├── qa-engineer.md
+│   ├── qa-writer.md
+│   ├── react-best-practices.md
+│   ├── react-useeffect-guidelines.md
+│   ├── reducing-entropy.md
+│   ├── spec-interviewer.md
+│   ├── ui-ux-designer.md
+│   └── writing-guidelines.md
+├── commands/                  # Slash commands (17 commands)
 │   ├── check-todos.md
+│   ├── codex-plan.md
+│   ├── compose-email.md
+│   ├── daily-sync.md
+│   ├── explain-changes-mental-model.md
+│   ├── explain-pr-changes.md
+│   ├── generate.md
+│   ├── migrate.md
+│   ├── review.md
+│   ├── sync-branch.md
+│   ├── sync-skills-readme.md
+│   ├── test.md
+│   ├── update-docs.md
+│   ├── viral-tweet.md
 │   ├── write-api-docs.md
 │   ├── write-changelog.md
-│   ├── write-prd.md
-│   ├── test.md
-│   ├── review.md
-│   ├── migrate.md
-│   ├── generate.md
-│   ├── daily-sync.md
-│   └── update-docs.md
-├── hooks/                     # Hook scripts
-│   ├── protect-files.sh
-│   ├── format-code.sh
-│   └── validate-api.sh
+│   └── write-prd.md
+├── hooks/                     # Global hooks
+│   ├── check-new-file.sh/.ps1
+│   ├── format-code.sh/.ps1
+│   ├── protect-files.sh/.ps1
+│   ├── validate-api.sh/.ps1
+│   ├── validate-code.sh/.ps1
+│   └── validate-docs.sh/.ps1
 ├── mcp-servers/               # MCP server guides
-│   ├── README.md
-│   └── claude-orchestrator-mcp/
+│   └── README.md
 ├── docs/                      # Documentation
-│   ├── quickstart.md          # 5-minute quick start guide
-│   ├── orchestrator-guide.md  # Multi-AI orchestrator detailed guide
-│   ├── memory-system.md       # Long-term memory & keyword search guide
-│   └── resources/             # External resource docs (24 docs)
-│       ├── README.md          # Resource index
-│       ├── codex-cli.md       # Codex CLI integration
-│       ├── gemini-cli.md      # Gemini CLI integration
-│       ├── perplexity-skill.md # Perplexity search
-│       ├── humanizer-skill.md # AI writing patterns
-│       ├── vercel-agent-skills.md
-│       ├── context7-mcp.md
-│       └── ... (18 more)
-├── install.bat                # Windows installer (copy mode, 6 steps)
-├── install-link.bat           # Windows installer (symlink/Junction mode)
-├── install-unlink.bat         # Windows symlink remover
-├── install.sh                 # Linux/Mac installer (supports --link/--unlink)
-├── install-hooks-config.js    # Hook settings helper (auto-configure settings.json)
-├── install-claude-md.js       # CLAUDE.md rules merger (auto-configure global CLAUDE.md)
-├── install-orchestrator.js   # Orchestrator installer (MCP + hooks + commands per project)
+│   ├── quickstart.md
+│   └── resources/
+├── install.bat                # Windows installer (6 steps, includes Mnemo)
+├── install.sh                 # Linux/Mac installer (6 steps, includes Mnemo)
+├── install-hooks-config.js    # Hook settings helper
+├── install-claude-md.js       # CLAUDE.md rules merger
 ├── SETUP.md                   # Complete setup guide
-├── README.md                  # This file (English)
-└── README-ko.md               # Korean version
+└── README.md                  # This file
 ```
 
 ---
@@ -411,7 +461,7 @@ mkdir skills/my-skill
 > **[Full References List](docs/references.md)** - All GitHub projects, MCP servers, research, and documentation referenced in building this project.
 
 **Key References:**
-- [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) - session-handoff skill
+- [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) - session handoff pattern (integrated into mnemo)
 - [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - React best practices
 - [Vercel AGENTS.md Research](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals) - 3-layer architecture basis
 - [upstash/context7](https://github.com/upstash/context7) - Latest library docs injection

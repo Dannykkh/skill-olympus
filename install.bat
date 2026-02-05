@@ -139,7 +139,7 @@ if "%MODE%"=="link" (
         echo       스킬 없음
     )
 
-    REM Agents 링크 (전체 폴더)
+    REM Agents 링크 (전체 폴더) + skills/*/agents/ 복사
     echo.
     echo [2/6] Agents 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%agents" (
@@ -154,10 +154,19 @@ if "%MODE%"=="link" (
         )
         mklink /J "!target!" "%SCRIPT_DIR%agents" >nul
         echo       - agents [linked]
-        echo       완료!
     ) else (
-        echo       에이전트 없음
+        if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
     )
+    REM skills/*/agents/ 폴더는 별도 복사 (링크 폴더에 추가)
+    for /d %%D in ("%SCRIPT_DIR%skills\*") do (
+        if exist "%%D\agents" (
+            for %%F in ("%%D\agents\*.md") do (
+                echo       - %%~nxF [%%~nxD, copied]
+                copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
+            )
+        )
+    )
+    echo       완료!
 
     REM Commands 링크 (전체 폴더)
     echo.
@@ -179,7 +188,7 @@ if "%MODE%"=="link" (
         echo       명령어 없음
     )
 
-    REM Hooks 링크 (전체 폴더)
+    REM Hooks 링크 (전체 폴더) + Mnemo 훅 복사
     echo.
     echo [4/6] Hooks 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%hooks" (
@@ -194,10 +203,21 @@ if "%MODE%"=="link" (
         )
         mklink /J "!target!" "%SCRIPT_DIR%hooks" >nul
         echo       - hooks [linked]
-        echo       완료!
     ) else (
-        echo       훅 없음
+        if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
     )
+    REM Mnemo 훅은 별도 폴더에 있어 복사 필요
+    if exist "%SCRIPT_DIR%skills\mnemo\hooks" (
+        for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.ps1") do (
+            echo       - %%~nxF [mnemo, copied]
+            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+        )
+        for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.sh") do (
+            echo       - %%~nxF [mnemo, copied]
+            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+        )
+    )
+    echo       완료!
 
     goto :configure_hooks
 )
@@ -223,16 +243,24 @@ if exist "%SCRIPT_DIR%skills" (
 REM Agents 설치 (글로벌)
 echo.
 echo [2/6] Agents 설치 중... (글로벌)
+if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
+REM 루트 agents/ 폴더
 if exist "%SCRIPT_DIR%agents" (
-    if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
     for %%F in ("%SCRIPT_DIR%agents\*.md") do (
         echo       - %%~nxF
         copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
     )
-    echo       완료!
-) else (
-    echo       에이전트 없음
 )
+REM skills/*/agents/ 폴더 (통합 스킬 내 에이전트)
+for /d %%D in ("%SCRIPT_DIR%skills\*") do (
+    if exist "%%D\agents" (
+        for %%F in ("%%D\agents\*.md") do (
+            echo       - %%~nxF [%%~nxD]
+            copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
+        )
+    )
+)
+echo       완료!
 
 REM Commands 설치 (글로벌)
 echo.
@@ -251,29 +279,39 @@ if exist "%SCRIPT_DIR%commands" (
 REM Hooks 설치 (글로벌)
 echo.
 echo [4/6] Hooks 설치 중... (글로벌)
+if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
+REM 검증/포맷팅 훅 (루트 hooks/)
 if exist "%SCRIPT_DIR%hooks" (
-    if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
     for %%F in ("%SCRIPT_DIR%hooks\*.ps1") do (
         REM 프로젝트 전용 훅 제외 (orchestrator)
-        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode" >nul && (
-            echo       - %%~nxF [스킵: 프로젝트 전용]
+        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode debug" >nul && (
+            echo       - %%~nxF [스킵: 프로젝트 전용/디버그]
         ) || (
             echo       - %%~nxF
             copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
         )
     )
     for %%F in ("%SCRIPT_DIR%hooks\*.sh") do (
-        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode" >nul && (
-            echo       - %%~nxF [스킵: 프로젝트 전용]
+        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode debug" >nul && (
+            echo       - %%~nxF [스킵: 프로젝트 전용/디버그]
         ) || (
             echo       - %%~nxF
             copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
         )
     )
-    echo       완료!
-) else (
-    echo       훅 없음
 )
+REM Mnemo 훅 (skills/mnemo/hooks/)
+if exist "%SCRIPT_DIR%skills\mnemo\hooks" (
+    for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.ps1") do (
+        echo       - %%~nxF [mnemo]
+        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+    )
+    for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.sh") do (
+        echo       - %%~nxF [mnemo]
+        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+    )
+)
+echo       완료!
 
 :configure_hooks
 

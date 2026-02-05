@@ -8,7 +8,7 @@
 
 | 프로젝트 | 참고 내용 | 링크 |
 |---------|----------|------|
-| **softaworks/agent-toolkit** | session-handoff 스킬, 에이전트 패턴 | [GitHub](https://github.com/softaworks/agent-toolkit) |
+| **softaworks/agent-toolkit** | 세션 핸드오프 패턴 (mnemo에 통합됨) | [GitHub](https://github.com/softaworks/agent-toolkit) |
 | **vercel-labs/agent-skills** | React/Next.js 베스트 프랙티스 (45+ 규칙) | [GitHub](https://github.com/vercel-labs/agent-skills) |
 | **Yeachan-Heo/oh-my-claudecode** | 멀티 에이전트 구조, 32 에이전트, 40+ 스킬 | [GitHub](https://github.com/Yeachan-Heo/oh-my-claudecode) |
 | **affaan-m/everything-claude-code** | Anthropic 해커톤 우승자 설정 (12 에이전트, 16 스킬) | [GitHub](https://github.com/affaan-m/everything-claude-code) |

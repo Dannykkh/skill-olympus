@@ -108,7 +108,7 @@ chmod +x install.sh && ./install.sh
 | **code-reviewer** | `/review` | 코드 품질, 보안 검토 |
 | **docker-deploy** | `/docker-deploy` | Docker 배포 환경 생성 |
 | **humanizer** | `/humanizer` | AI 글쓰기 패턴 제거 |
-| **session-handoff** | `/handoff` | 세션 인수인계 |
+| **mnemo** | 자동 | 장기기억 시스템 (대화 저장 + 세션 핸드오프) |
 | **mermaid-diagrams** | `/diagram` | 다이어그램 생성 |
 
 ---
@@ -201,7 +201,7 @@ chmod +x install.sh && ./install.sh
 
 ```powershell
 # MCP 서버 빌드 확인
-cd mcp-servers/claude-orchestrator-mcp
+cd skills/orchestrator/mcp-server
 npm install && npm run build
 ```
 

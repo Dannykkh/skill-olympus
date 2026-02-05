@@ -14,7 +14,7 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |--------|------|------|
 | **everything-claude-code** | 해커톤 우승자 종합 설정 (12 에이전트, 16 스킬) | [상세](./everything-claude-code.md) / [단위별 가이드](./everything-claude-code-guide.md) |
 | **oh-my-claudecode** | 32 에이전트, 40+ 스킬 | [상세](./oh-my-claudecode.md) |
-| **softaworks/agent-toolkit** | session-handoff 스킬, 에이전트 패턴 | [상세](./softaworks-agent-toolkit.md) |
+| **softaworks/agent-toolkit** | 세션 핸드오프 패턴 (mnemo에 통합됨) | [상세](./softaworks-agent-toolkit.md) |
 | **Vercel Agent Skills** | React/Next.js 45개 최적화 규칙 | [상세](./vercel-agent-skills.md) |
 | **skills.sh** | 25K+ 스킬 디렉토리 | [상세](./skills-sh.md) |
 | **claude-code-dotnet** | .NET 25개 스킬, 5개 에이전트 | [상세](./claude-code-dotnet.md) |

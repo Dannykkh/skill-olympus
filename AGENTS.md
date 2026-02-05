@@ -49,11 +49,11 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (53개)
+### Skills (51개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 |
+| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 |
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성/검색 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
@@ -63,8 +63,8 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
-| 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, session-handoff, web-design-guidelines, web-to-markdown | 유틸리티 |
-| 🧠 Memory | mnemo | 장기기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md 자동 업데이트) |
+| 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
+| 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
 ### Agents (30개)
 

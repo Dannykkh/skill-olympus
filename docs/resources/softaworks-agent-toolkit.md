@@ -1,6 +1,6 @@
 # softaworks/agent-toolkit
 
-> Claude Code용 실전 에이전트 스킬 모음 (session-handoff 포함)
+> Claude Code용 실전 에이전트 스킬 모음 (세션 핸드오프 패턴, mnemo에 통합됨)
 
 ## 기본 정보
 
@@ -109,10 +109,10 @@ python scripts/check_staleness.py .claude/handoffs/2026-02-01-auth.md
 
 ## 이 프로젝트에서의 활용
 
-`skills/session-handoff/` 스킬의 원본. 장기기억 시스템의 "구조화된 핸드오프" 부분을 담당.
+`skills/mnemo/` 스킬의 세션 핸드오프 패턴 원본. 장기기억 시스템의 "구조화된 핸드오프" 부분을 담당.
 
 **관련 파일:**
-- [skills/session-handoff/](../../skills/session-handoff/)
+- [skills/mnemo/](../../skills/mnemo/) - 통합 메모리 시스템
 - [docs/memory-system.md](../memory-system.md)
 
 ---

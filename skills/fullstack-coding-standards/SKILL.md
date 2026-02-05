@@ -1,9 +1,22 @@
 ---
 name: fullstack-coding-standards
-description: 풀스택 개발 코딩 표준 상세 가이드. 프론트엔드/백엔드 코드 예시 및 구조 템플릿 제공.
+description: 풀스택 개발 코딩 표준 통합 패키지. 패시브 에이전트(항상 로드) + 상세 코드 예시(on-demand).
 ---
 
-# Fullstack Coding Standards - 상세 가이드
+# Fullstack Coding Standards - 통합 패키지
+
+## 포함 파일
+
+```
+fullstack-coding-standards/
+├── SKILL.md                    # 이 파일 (상세 코드 예시)
+├── agents/                     # 패시브 에이전트 (항상 로드)
+│   ├── fullstack-coding-standards.md   # 코딩 표준 규칙
+│   └── fullstack-development-workflow.md  # 개발 워크플로우
+└── templates/                  # 코드 템플릿
+```
+
+---
 
 패시브 에이전트(`agents/fullstack-coding-standards.md`)의 규칙에 대한 **상세 코드 예시**를 제공합니다.
 

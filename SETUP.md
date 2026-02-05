@@ -634,10 +634,10 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 
 ```bash
 # 설치
-node install-orchestrator.js <대상-프로젝트-경로>
+node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 # 제거
-node install-orchestrator.js <대상-프로젝트-경로> --uninstall
+node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
 ```
 
 **설치 스크립트가 수행하는 4단계:**
@@ -655,7 +655,7 @@ node install-orchestrator.js <대상-프로젝트-경로> --uninstall
 
 ### 수동 설치
 
-수동으로 설정하려면 [mcp-servers/claude-orchestrator-mcp/README.md](mcp-servers/claude-orchestrator-mcp/README.md) 참고.
+수동으로 설정하려면 [skills/orchestrator/docs/orchestrator-guide.md](skills/orchestrator/docs/orchestrator-guide.md) 참고.
 
 ### 사용법
 

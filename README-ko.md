@@ -55,20 +55,21 @@ chmod +x install.sh && ./install.sh
 
 > **링크 모드**는 파일 복사 대신 심볼릭 링크(Windows: Junction, Linux/Mac: symlink)를 생성합니다. `git pull`만 하면 변경사항이 즉시 반영되어 설치 스크립트를 다시 실행할 필요가 없습니다.
 >
-> 설치 스크립트는 **5가지 구성요소를 모두 글로벌로 설치**합니다:
+> 설치 스크립트는 **6가지 구성요소를 모두 글로벌로 설치**합니다:
 > - Skills, Agents, Commands, Hooks (파일)
+> - Mnemo 훅 (`save-conversation`, `save-response`)
 > - `~/.claude/settings.json` (훅 설정)
-> - `~/.claude/CLAUDE.md` (장기기억 규칙 - 응답 태그, 대화 검색)
+> - `~/.claude/CLAUDE.md` (메모리 규칙 - 응답 태그, 대화 검색)
 
 ---
 
 ## 포함된 내용
 
-### 커스텀 스킬 (53개)
+### 커스텀 스킬 (51개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator-pm, orchestrator-worker | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 (PM/Worker 모드) |
+| 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 |
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
@@ -78,8 +79,8 @@ chmod +x install.sh && ./install.sh
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
 | 📦 **Git** | commit-work | Git 워크플로우 |
-| 🔧 **유틸리티** | humanizer, session-handoff, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | 유틸리티 |
-| 🧠 **메모리** | long-term-memory | 세션 메모리 관리 (MEMORY.md 자동 업데이트) |
+| 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, web-to-markdown, api-handoff | 유틸리티 |
+| 🧠 **메모리** | mnemo | 통합 메모리 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
@@ -102,7 +103,7 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `agents/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 명령어 (18개)
+### 명령어 (17개)
 
 | 명령어 | 설명 |
 |--------|------|
@@ -124,15 +125,14 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 훅 (11개)
+### 훅
+
+**글로벌 훅 (install.bat으로 설치):**
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
-| orchestrator-mode.sh | UserPromptSubmit | PM/Worker 모드 감지 (workpm, pmworker 트리거) |
-| workpm-hook.sh | UserPromptSubmit | PM 모드 활성화 훅 (프로젝트 전용, install-orchestrator.js로 설치) |
-| pmworker-hook.sh | UserPromptSubmit | Worker 모드 활성화 훅 (프로젝트 전용, install-orchestrator.js로 설치) |
-| save-conversation.sh | UserPromptSubmit | 대화 저장 (단순 append, AI 호출 없음) |
-| save-response.sh | Stop | Assistant 응답 저장 (BOM 없는 UTF-8, AI 호출 없음) |
+| save-conversation.sh | UserPromptSubmit | 사용자 입력 저장 (Mnemo) |
+| save-response.sh | Stop | Assistant 응답 + #tags 저장 (Mnemo) |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
 | check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
 | validate-docs.sh | PostToolUse | 마크다운 AI 글쓰기 패턴 검출 |
@@ -140,65 +140,67 @@ chmod +x install.sh && ./install.sh
 | format-code.sh | PostToolUse | 파일 수정 후 코드 포맷팅 |
 | validate-api.sh | PostToolUse | API 파일 수정 후 유효성 검사 |
 
-### 장기기억 시스템
+**프로젝트 전용 훅 (orchestrator/install.js로 설치):**
 
-컨텍스트 트리 구조의 빠른 파일 기반 메모리 시스템.
+| 훅 | 타이밍 | 설명 |
+|----|--------|------|
+| workpm-hook.sh | UserPromptSubmit | PM 모드 활성화 |
+| pmworker-hook.sh | UserPromptSubmit | Worker 모드 활성화 |
+
+### Mnemo - 메모리 시스템
+
+> 기억의 여신 Mnemosyne에서 유래
+
+세션 간 컨텍스트 유지를 위한 빠른 파일 기반 메모리 시스템.
 
 | 구성요소 | 역할 |
 |---------|------|
-| `MEMORY.md` | 컨텍스트 트리 (architecture/, patterns/, gotchas/) |
-| `save-conversation.sh` | 단순 append (30줄, AI 호출 없음) |
-| `long-term-memory` 스킬 | 메모리 관리 (`/memory add`, `/memory search`) |
+| `MEMORY.md` | 의미기억 - 컨텍스트 트리 (architecture/, patterns/, gotchas/) |
+| `conversations/*.md` | 일화기억 - 상세 대화 로그 |
+| `save-conversation.sh` | UserPromptSubmit 훅 - 사용자 입력 저장 |
+| `save-response.sh` | Stop 훅 - Assistant 응답 + #tags 저장 |
 
 **핵심 원칙:**
 - 빠르게: 훅에서 AI 호출 금지
 - 단순하게: 파일 기반, 복잡한 DB 없음
-- 검색 가능하게: 키워드 + 컨텍스트 트리 + 동의어 확장 (한↔영 양방향)
+- 검색 가능하게: 키워드 + 동의어 확장 (한↔영 양방향)
 
-**메모리 명령어:**
+**기능:**
+- 대화 자동 저장 (훅)
+- 키워드 태깅 (응답의 `#tags:`)
+- 과거 대화 검색 ("이전에 ~했었지?")
+- 세션 핸드오프 (세션 간 컨텍스트 전달)
 
-| 명령어 | 설명 |
-|--------|------|
-| `/memory add <내용>` | MEMORY.md에 정보 저장 |
-| `/memory find <키워드>` | RAG 스타일 키워드로 이전 대화 검색 |
-| `/memory search <키워드>` | MEMORY.md 내 검색 |
-| `/memory tag <키워드들>` | 오늘 대화에 키워드 수동 태깅 |
-| `/memory read <날짜>` | 특정 날짜 대화 읽기 |
-| `/memory list` | 전체 기억 보기 |
+**설치:** 글로벌 install에 포함 (`install.bat`)
 
-> **[상세 문서](docs/memory-system.md)** - 시스템 구조, 키워드 검색, 훅 설정, 사용법 가이드.
+> **[상세 문서](skills/mnemo/docs/memory-system.md)** - 시스템 구조, 사용법 가이드.
 
-### 커스텀 MCP 서버
+### Orchestrator - Multi-AI 병렬 시스템
 
-| MCP | 설명 | 위치 |
-|-----|------|------|
-| **claude-orchestrator-mcp** | PM + Multi-AI Worker 오케스트레이션 (Claude + Codex + Gemini, 파일 락킹, 태스크 의존성) | `mcp-servers/claude-orchestrator-mcp/` |
+PM (Project Manager)이 태스크를 분배하고, Worker들이 병렬로 수행합니다.
 
-```powershell
-# 싱글 AI 모드 (Claude만)
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project"
+| 구성요소 | 위치 |
+|---------|------|
+| MCP 서버 | `skills/orchestrator/mcp-server/` |
+| 훅 | `skills/orchestrator/hooks/` |
+| 명령어 | `skills/orchestrator/commands/` |
 
-# Multi-AI 모드 (설치된 CLI 자동 감지)
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
-
-# Worker별 AI 직접 지정
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'gemini')
-```
-
-**오케스트레이터 스킬:**
+**트리거:**
 - `workpm` - PM 모드 시작 (프로젝트 분석, 태스크 분해, AI 배정)
 - `pmworker` - Worker 모드 시작 (태스크 담당, 파일 락, 작업 수행)
 
-**다른 프로젝트에 Orchestrator 설치:**
+**프로젝트에 설치:**
 ```bash
 # 설치 (훅, 명령어 복사 + MCP/훅 설정 자동 등록)
-node install-orchestrator.js <대상-프로젝트-경로>
+node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 # 제거
-node install-orchestrator.js <대상-프로젝트-경로> --uninstall
+node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
 ```
 
-> **[오케스트레이터 가이드](docs/orchestrator-guide.md)** - Multi-AI 오케스트레이션, 태스크 관리, 병렬 터미널 설정 완전 가이드.
+> **참고:** Orchestrator는 프로젝트별로 설치 필요 (MCP가 프로젝트 루트 경로 필요)
+>
+> **[오케스트레이터 가이드](skills/orchestrator/docs/orchestrator-guide.md)** - Multi-AI 오케스트레이션 완전 가이드.
 
 ---
 
@@ -270,74 +272,123 @@ node install-orchestrator.js <대상-프로젝트-경로> --uninstall
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (슬래시 명령어)
-│   ├── docker-deploy/         # Docker 배포 (Cython/PyArmor 지원)
-│   ├── code-reviewer/         # 자동 코드 리뷰 (500줄 제한, 보안)
-│   ├── vercel-react-best-practices/  # Vercel의 45개 React 최적화 규칙
-│   ├── web-design-guidelines/ # UI/UX 접근성 검토
-│   ├── api-handoff/           # API 핸드오프 문서 (백엔드↔프론트엔드)
-│   ├── humanizer/             # AI 글쓰기 패턴 제거 (24개 패턴)
-│   ├── ppt-generator/         # 템플릿 기반 PPT 생성
-│   ├── fullstack-coding-standards/  # 풀스택 코딩 표준 (templates/)
-│   ├── gepetto/                # 구현 계획 + 스펙 검증 (19단계)
-│   ├── explain/                # 비유 기반 코드 설명 + Mermaid 다이어그램
-│   └── python-backend-fastapi/  # FastAPI 모범 사례
-├── agents/                    # 커스텀 서브에이전트
-│   ├── frontend-react.md      # React + Zustand + TanStack Query
-│   ├── backend-spring.md      # Java 21 + Spring Boot 3.x
-│   ├── database-mysql.md      # MySQL 8.0 + Flyway
-│   ├── ai-ml.md               # LLM + RAG + Vector DB
-│   ├── api-tester.md          # REST/GraphQL API 테스트
-│   ├── code-reviewer.md       # 코드 품질 및 보안 검토
-│   ├── qa-engineer.md         # 테스트 전략 및 실행
-│   ├── qa-writer.md           # 테스트 케이스 작성
-│   ├── documentation.md       # PRD, API 문서, CHANGELOG
-│   ├── migration-helper.md    # 레거시 → 모던 마이그레이션
-│   ├── explore-agent.md       # 레거시 코드 분석 (한국어)
-│   ├── feature-tracker.md     # 기능 진행률 추적 (한국어)
-│   ├── fullstack-coding-standards.md  # 풀스택 코딩 표준 (패시브)
-│   └── api-comparator.md      # API 호환성 검증
-├── commands/                  # 슬래시 명령어 & 스크립트
+├── skills/                    # 커스텀 스킬 (51개)
+│   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
+│   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
+│   ├── agent-md-refactor/
+│   ├── api-handoff/
+│   ├── api-tester/
+│   ├── code-reviewer/
+│   ├── codex/
+│   ├── command-creator/
+│   ├── commit-work/
+│   ├── crafting-effective-readmes/
+│   ├── daily-meeting-update/
+│   ├── database-schema-designer/
+│   ├── datadog-cli/
+│   ├── dependency-updater/
+│   ├── design-system-starter/
+│   ├── docker-deploy/
+│   ├── domain-name-brainstormer/
+│   ├── draw-io/
+│   ├── excalidraw/
+│   ├── explain/
+│   ├── find-skills/
+│   ├── fullstack-coding-standards/
+│   ├── game-changing-features/
+│   ├── gemini/
+│   ├── gepetto/
+│   ├── humanizer/
+│   ├── jira/
+│   ├── marp-slide/
+│   ├── meme-factory/
+│   ├── mermaid-diagrams/
+│   ├── mui/
+│   ├── multi-ai-orchestration/
+│   ├── naming-analyzer/
+│   ├── openapi-to-typescript/
+│   ├── perplexity/
+│   ├── plugin-forge/
+│   ├── ppt-generator/
+│   ├── professional-communication/
+│   ├── python-backend-fastapi/
+│   ├── qa-test-planner/
+│   ├── react-dev/
+│   ├── react-useeffect/
+│   ├── reducing-entropy/
+│   ├── requirements-clarity/
+│   ├── ship-learn-next/
+│   ├── skill-judge/
+│   ├── vercel-react-best-practices/
+│   ├── web-design-guidelines/
+│   ├── web-to-markdown/
+│   ├── workplace-conversations/
+│   └── writing-clearly-and-concisely/
+├── agents/                    # 커스텀 서브에이전트 (28 + skills/*/agents/ 2 = 30개)
+│   ├── ai-ml.md
+│   ├── api-comparator.md
+│   ├── api-tester.md
+│   ├── ascii-ui-mockup-generator.md
+│   ├── backend-spring.md
+│   ├── codebase-pattern-finder.md
+│   ├── code-review-checklist.md
+│   ├── code-reviewer.md
+│   ├── communication-excellence-coach.md
+│   ├── database-mysql.md
+│   ├── documentation.md
+│   ├── explore-agent.md
+│   ├── feature-tracker.md
+│   ├── frontend-react.md
+│   ├── general-purpose.md
+│   ├── humanizer-guidelines.md
+│   ├── mermaid-diagram-specialist.md
+│   ├── migration-helper.md
+│   ├── naming-conventions.md
+│   ├── python-fastapi-guidelines.md
+│   ├── qa-engineer.md
+│   ├── qa-writer.md
+│   ├── react-best-practices.md
+│   ├── react-useeffect-guidelines.md
+│   ├── reducing-entropy.md
+│   ├── spec-interviewer.md
+│   ├── ui-ux-designer.md
+│   └── writing-guidelines.md
+├── commands/                  # 슬래시 명령어 (17개)
 │   ├── check-todos.md
+│   ├── codex-plan.md
+│   ├── compose-email.md
+│   ├── daily-sync.md
+│   ├── explain-changes-mental-model.md
+│   ├── explain-pr-changes.md
+│   ├── generate.md
+│   ├── migrate.md
+│   ├── review.md
+│   ├── sync-branch.md
+│   ├── sync-skills-readme.md
+│   ├── test.md
+│   ├── update-docs.md
+│   ├── viral-tweet.md
 │   ├── write-api-docs.md
 │   ├── write-changelog.md
-│   ├── write-prd.md
-│   ├── test.md
-│   ├── review.md
-│   ├── migrate.md
-│   ├── generate.md
-│   ├── daily-sync.md
-│   └── update-docs.md
-├── hooks/                     # 훅 스크립트
-│   ├── protect-files.sh
-│   ├── format-code.sh
-│   └── validate-api.sh
+│   └── write-prd.md
+├── hooks/                     # 글로벌 훅
+│   ├── check-new-file.sh/.ps1
+│   ├── format-code.sh/.ps1
+│   ├── protect-files.sh/.ps1
+│   ├── validate-api.sh/.ps1
+│   ├── validate-code.sh/.ps1
+│   └── validate-docs.sh/.ps1
 ├── mcp-servers/               # MCP 서버 가이드
-│   ├── README.md
-│   └── claude-orchestrator-mcp/
+│   └── README.md
 ├── docs/                      # 문서
-│   ├── quickstart.md          # 5분 빠른 시작 가이드
-│   ├── orchestrator-guide.md  # Multi-AI 오케스트레이터 상세 가이드
-│   ├── memory-system.md       # 장기기억 & 키워드 검색 가이드
-│   └── resources/             # 외부 리소스 상세 문서 (24개)
-│       ├── README.md          # 리소스 인덱스
-│       ├── codex-cli.md       # Codex CLI 통합
-│       ├── gemini-cli.md      # Gemini CLI 통합
-│       ├── perplexity-skill.md # Perplexity 검색
-│       ├── humanizer-skill.md # AI 글쓰기 패턴
-│       ├── vercel-agent-skills.md
-│       ├── context7-mcp.md
-│       └── ... (18개 더)
-├── install.bat                # Windows 설치 스크립트 (복사 모드, 6단계)
-├── install-link.bat           # Windows 설치 스크립트 (심볼릭 링크 모드)
-├── install-unlink.bat         # Windows 심볼릭 링크 제거
-├── install.sh                 # Linux/Mac 설치 스크립트 (--link/--unlink 지원)
-├── install-hooks-config.js    # 훅 설정 헬퍼 (settings.json 자동 구성)
-├── install-claude-md.js       # CLAUDE.md 규칙 머지 (글로벌 CLAUDE.md 자동 구성)
-├── install-orchestrator.js   # Orchestrator 설치 (프로젝트별 MCP + 훅 + 명령어)
+│   ├── quickstart.md
+│   └── resources/
+├── install.bat                # Windows 설치 (6단계, Mnemo 포함)
+├── install.sh                 # Linux/Mac 설치 (6단계, Mnemo 포함)
+├── install-hooks-config.js    # 훅 설정 헬퍼
+├── install-claude-md.js       # CLAUDE.md 규칙 머지
 ├── SETUP.md                   # 전체 설정 가이드
-├── README.md                  # 영문 버전
-└── README-ko.md               # 한국어 버전 (이 파일)
+└── README.md                  # 이 파일
 ```
 
 ---
@@ -410,7 +461,7 @@ mkdir skills/my-skill
 > **[전체 참고 자료 목록](docs/references.md)** - 이 프로젝트 구축에 참고한 모든 GitHub 프로젝트, MCP 서버, 연구, 문서.
 
 **주요 참고:**
-- [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) - session-handoff 스킬
+- [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) - 세션 핸드오프 패턴 (mnemo에 통합됨)
 - [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) - React 베스트 프랙티스
 - [Vercel AGENTS.md 연구](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals) - 3-layer 아키텍처 기반
 - [upstash/context7](https://github.com/upstash/context7) - 최신 라이브러리 문서 주입

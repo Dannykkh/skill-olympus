@@ -192,7 +192,7 @@
     { "id": "docker-deploy", "tags": ["docker"], "priority": "essential" },
     { "id": "database-schema-designer", "tags": ["postgresql", "mysql", "prisma"], "priority": "recommended" },
     { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
-    { "id": "long-term-memory", "tags": ["*"], "priority": "recommended" },
+    { "id": "mnemo", "tags": ["*"], "priority": "recommended" },
     { "id": "commit-work", "tags": ["*"], "priority": "optional" },
     { "id": "dependency-updater", "tags": ["*"], "priority": "optional" },
     { "id": "naming-analyzer", "tags": ["*"], "priority": "optional" },
