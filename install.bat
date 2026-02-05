@@ -94,7 +94,7 @@ if "%MODE%"=="unlink" (
 
     echo.
     echo [5/5] CLAUDE.md 장기기억 규칙 제거 중...
-    node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%templates\global-claude-md-rules.md" --uninstall
+    node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
     echo       완료!
 
     echo.
@@ -286,7 +286,7 @@ node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%/hooks" "%CLAUDE_DIR%\se
 REM CLAUDE.md 장기기억 규칙 설치 (글로벌)
 echo.
 echo [6/6] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)
-node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%templates\global-claude-md-rules.md"
+node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
 echo.
 echo ============================================

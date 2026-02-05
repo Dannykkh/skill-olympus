@@ -328,8 +328,6 @@ claude-code-customizations/
 │       ├── vercel-agent-skills.md
 │       ├── context7-mcp.md
 │       └── ... (18개 더)
-├── templates/                 # 설치 템플릿
-│   └── global-claude-md-rules.md  # 장기기억 규칙 템플릿
 ├── install.bat                # Windows 설치 스크립트 (복사 모드, 6단계)
 ├── install-link.bat           # Windows 설치 스크립트 (심볼릭 링크 모드)
 ├── install-unlink.bat         # Windows 심볼릭 링크 제거

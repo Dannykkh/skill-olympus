@@ -270,7 +270,7 @@ mkdir -p .claude/conversations
 | `hooks/save-conversation.ps1/.sh` | User 입력 자동 저장 (BOM-free UTF-8) |
 | `hooks/save-response.ps1/.sh` | Assistant 응답 자동 저장 (Stop 훅, BOM-free UTF-8) |
 | `.claude/conversations/` | 일화기억 (대화 로그) |
-| `templates/global-claude-md-rules.md` | CLAUDE.md 규칙 템플릿 |
+| `skills/mnemo/templates/claude-md-rules.md` | CLAUDE.md 규칙 템플릿 |
 | `install-claude-md.js` | CLAUDE.md 규칙 머지 헬퍼 |
 
 ---

@@ -329,8 +329,6 @@ claude-code-customizations/
 │       ├── vercel-agent-skills.md
 │       ├── context7-mcp.md
 │       └── ... (18 more)
-├── templates/                 # Installation templates
-│   └── global-claude-md-rules.md  # Long-term memory rules template
 ├── install.bat                # Windows installer (copy mode, 6 steps)
 ├── install-link.bat           # Windows installer (symlink/Junction mode)
 ├── install-unlink.bat         # Windows symlink remover

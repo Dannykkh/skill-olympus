@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-// install-mnemo.js
 // Mnemo (장기기억 시스템) 설치/제거 스크립트
 //
 // 사용법:
-//   node install-mnemo.js              # 설치
-//   node install-mnemo.js --uninstall  # 제거
+//   node skills/mnemo/install.js              # 설치
+//   node skills/mnemo/install.js --uninstall  # 제거
 //
 // Mnemo 핵심 구성요소:
 //   - 훅: save-conversation, save-response (대화 자동 저장)
@@ -218,7 +217,7 @@ function install() {
 
   // [3/3] CLAUDE.md 규칙 설치
   console.log("\n[3/3] CLAUDE.md 장기기억 규칙 설치 중...");
-  const templatePath = path.join(sourceDir, "templates", "global-claude-md-rules.md");
+  const templatePath = path.join(sourceDir, "templates", "claude-md-rules.md");
   if (fs.existsSync(templatePath)) {
     installClaudeMdRules(claudeMdPath, templatePath);
     console.log("      완료!");

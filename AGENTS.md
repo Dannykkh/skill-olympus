@@ -64,7 +64,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, session-handoff, web-design-guidelines, web-to-markdown | 유틸리티 |
-| 🧠 Memory | long-term-memory | 세션 간 장기기억 관리 (MEMORY.md 자동 업데이트) |
+| 🧠 Memory | mnemo | 장기기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md 자동 업데이트) |
 
 ### Agents (30개)
 
