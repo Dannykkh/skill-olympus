@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-// install-orchestrator.js
 // Orchestrator(PM-Worker 병렬 처리)를 대상 프로젝트에 설치/제거하는 스크립트
 //
 // 사용법:
-//   node install-orchestrator.js <target-project-path>
-//   node install-orchestrator.js <target-project-path> --uninstall
+//   node skills/orchestrator/install.js <target-project-path>
+//   node skills/orchestrator/install.js <target-project-path> --uninstall
 
 const fs = require("fs");
 const path = require("path");
@@ -26,11 +25,7 @@ const isUninstall = args.includes("--uninstall");
 
 // 소스 레포 경로 (이 스크립트가 위치한 디렉토리)
 const sourceDir = path.resolve(__dirname);
-const mcpServerDir = path.join(
-  sourceDir,
-  "mcp-servers",
-  "claude-orchestrator-mcp"
-);
+const mcpServerDir = path.join(sourceDir, "mcp-server");
 const isWindows = process.platform === "win32";
 
 // 경로를 슬래시로 통일
@@ -125,11 +120,11 @@ function install() {
   console.log("[3/4] 명령어 파일 복사...");
   const commandsDir = path.join(targetDir, ".claude", "commands");
   copyFile(
-    path.join(sourceDir, ".claude", "commands", "workpm.md"),
+    path.join(sourceDir, "commands", "workpm.md"),
     path.join(commandsDir, "workpm.md")
   );
   copyFile(
-    path.join(sourceDir, ".claude", "commands", "pmworker.md"),
+    path.join(sourceDir, "commands", "pmworker.md"),
     path.join(commandsDir, "pmworker.md")
   );
   console.log("      workpm.md, pmworker.md 복사 완료");
