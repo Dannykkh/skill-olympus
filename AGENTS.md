@@ -66,7 +66,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, session-handoff, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | long-term-memory | 세션 간 장기기억 관리 (MEMORY.md 자동 업데이트) |
 
-### Agents (31개)
+### Agents (30개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -100,7 +100,6 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | **Communication** | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
 | **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
-| **Memory** | keyword-extractor | 대화 로그 키워드 추출 및 인덱스 업데이트 |
 
 ### Commands (18개)
 

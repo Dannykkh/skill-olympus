@@ -48,8 +48,6 @@ RAG/벡터DB 없이 키워드 기반 파일 검색으로 동작합니다.
 │   ├── save-conversation.ps1/.sh    # User 입력 자동 저장
 │   └── save-response.ps1/.sh        # Assistant 응답 자동 저장 (Stop 훅)
 └── .claude/
-    ├── commands/
-    │   └── wrap-up.md               # 세션 종료 시 정리 명령
     └── conversations/               # 일화기억: 대화 로그
         ├── 2026-02-03.md
         └── 2026-02-04.md
@@ -121,13 +119,10 @@ Claude: ① MEMORY.md 키워드 인덱스 확인 (이미 로드됨)
 | "기억 시스템" | memory, conversation, hooks, 장기기억, recall |
 | "코드 설명" | explain, learning-harness, 비유, explanation |
 
-### 정리 (/wrap-up)
+### 세션 전환 (session-handoff)
 
-세션 종료 시 `/wrap-up` 명령으로 정리합니다:
-
-1. 키워드 추출 → 대화 파일 frontmatter 업데이트
-2. 세션 요약 작성 (오늘 한 일, 주요 결정, 다음 할 일)
-3. 중요 결정 → MEMORY.md 업데이트
+컨텍스트가 차거나 세션을 전환할 때 `session-handoff` 스킬을 사용합니다.
+MEMORY.md 업데이트는 Claude가 중요한 결정을 할 때 자동으로 진행합니다.
 
 ---
 
@@ -274,7 +269,6 @@ mkdir -p .claude/conversations
 | `~/.claude/CLAUDE.md` | **글로벌** 메모리 규칙 (모든 프로젝트 적용) |
 | `hooks/save-conversation.ps1/.sh` | User 입력 자동 저장 (BOM-free UTF-8) |
 | `hooks/save-response.ps1/.sh` | Assistant 응답 자동 저장 (Stop 훅, BOM-free UTF-8) |
-| `.claude/commands/wrap-up.md` | 세션 종료 정리 명령 |
 | `.claude/conversations/` | 일화기억 (대화 로그) |
 | `templates/global-claude-md-rules.md` | CLAUDE.md 규칙 템플릿 |
 | `install-claude-md.js` | CLAUDE.md 규칙 머지 헬퍼 |

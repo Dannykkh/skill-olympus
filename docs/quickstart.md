@@ -217,10 +217,8 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ### 키워드 검색 안됨
 
-```
-# index.json 수동 생성
-keyword-extractor 에이전트로 .claude/conversations/ 분석해서 index.json 생성해줘
-```
+대화 파일에 `#tags:`가 저장되어 있으면 grep으로 검색됩니다.
+과거 대화에 태그가 없으면 Claude에게 "이전 대화들 읽고 키워드 추가해줘"라고 요청하세요.
 
 ---
 
