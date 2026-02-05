@@ -37,15 +37,14 @@ This skill requires a markdown spec file path (must end with .md).
 The planning directory is inferred from the spec file's parent directory.
 
 To start a NEW plan:
-  1. Create a markdown spec file describing what you want to build
-  2. It can be as detailed or as vague as you like
-  3. Place it in a directory where gepetto can save planning files
-  4. Run: /gepetto @path/to/your-spec.md
+  1. Run: /gepetto @docs/plan/my-feature-spec.md
+  2. Folder and spec file will be auto-created if they don't exist
+  3. Edit the spec file with your requirements, then re-run
 
 To RESUME an existing plan:
   1. Run: /gepetto @path/to/your-spec.md
 
-Example: /gepetto @planning/my-feature-spec.md
+Example: /gepetto @docs/plan/my-feature-spec.md
 ═══════════════════════════════════════════════════════════════
 ```
 **Do not continue. Wait for user to re-invoke with a .md file path.**
@@ -55,8 +54,20 @@ Example: /gepetto @planning/my-feature-spec.md
 Determine session state by checking existing files:
 
 1. Set `planning_dir` = parent directory of the spec file
-2. Set `initial_file` = the spec file path
-3. Scan for existing planning files:
+2. **If `planning_dir` doesn't exist, create it automatically**
+3. Set `initial_file` = the spec file path
+4. If spec file doesn't exist, create an empty template:
+   ```markdown
+   # Feature Spec
+
+   ## Overview
+   [Describe what you want to build]
+
+   ## Requirements
+   - [Requirement 1]
+   - [Requirement 2]
+   ```
+5. Scan for existing planning files:
    - `claude-research.md`
    - `claude-interview.md`
    - `claude-spec.md`
@@ -67,7 +78,7 @@ Determine session state by checking existing files:
    - `reviews/` directory
    - `sections/` directory
 
-4. Determine mode and resume point:
+6. Determine mode and resume point:
 
 | Files Found | Mode | Resume From |
 |-------------|------|-------------|
@@ -83,7 +94,7 @@ Determine session state by checking existing files:
 | + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 18 (verify) |
 | + claude-verify-report.md | complete | Done |
 
-5. Create TODO list with TodoWrite based on current state
+7. Create TODO list with TodoWrite based on current state
 
 Print status:
 ```
