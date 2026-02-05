@@ -73,20 +73,33 @@ function removeFile(filePath) {
 function install() {
   console.log(`\nOrchestrator 설치: ${targetDir}\n`);
 
-  // [1/4] MCP 서버 빌드 확인
-  console.log("[1/4] MCP 서버 빌드 확인...");
+  // [1/4] MCP 서버 의존성 및 빌드 확인
+  console.log("[1/4] MCP 서버 의존성 및 빌드 확인...");
+  const nodeModulesDir = path.join(mcpServerDir, "node_modules");
   const distIndex = path.join(mcpServerDir, "dist", "index.js");
-  if (!fs.existsSync(distIndex)) {
-    console.log("      dist/index.js 없음 → npm install && npm run build");
+
+  // node_modules 없으면 npm install
+  if (!fs.existsSync(nodeModulesDir)) {
+    console.log("      node_modules 없음 → npm install 실행");
     try {
       execSync("npm install", { cwd: mcpServerDir, stdio: "inherit" });
-      execSync("npm run build", { cwd: mcpServerDir, stdio: "inherit" });
     } catch (e) {
-      console.error("      MCP 서버 빌드 실패:", e.message);
+      console.error("      npm install 실패:", e.message);
       process.exit(1);
     }
   }
-  console.log("      빌드 확인 완료");
+
+  // dist/index.js 없으면 빌드
+  if (!fs.existsSync(distIndex)) {
+    console.log("      dist/index.js 없음 → npm run build 실행");
+    try {
+      execSync("npm run build", { cwd: mcpServerDir, stdio: "inherit" });
+    } catch (e) {
+      console.error("      빌드 실패:", e.message);
+      process.exit(1);
+    }
+  }
+  console.log("      의존성 및 빌드 확인 완료");
 
   // [2/4] 훅 파일 복사
   console.log("[2/4] 훅 파일 복사...");
