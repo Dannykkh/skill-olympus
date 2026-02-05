@@ -2,7 +2,12 @@
 # transcript_path에서 마지막 assistant 메시지를 추출하여 append
 # AI 호출 없음 = 빠름
 
+# UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $transcriptPath = $json.transcript_path
 
@@ -58,6 +63,6 @@ if (Test-Path $ConvFile) {
     }
 }
 
-# append
+# append (BOM 없는 UTF-8로 저장)
 $entry = "`n## [$ts] Assistant`n`n$response`n"
-Add-Content -Path $ConvFile -Value $entry -Encoding UTF8
+[System.IO.File]::AppendAllText($ConvFile, $entry, [System.Text.Encoding]::UTF8)

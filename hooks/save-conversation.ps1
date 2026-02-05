@@ -1,6 +1,12 @@
 # 대화 로그 저장 (단순 append)
 # Claude Code는 stdin으로 JSON을 전달함 (UTF-8)
+
+# UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $Prompt = $json.prompt
 
@@ -13,7 +19,7 @@ if (-not (Test-Path $ConvDir)) {
     New-Item -ItemType Directory -Path $ConvDir -Force | Out-Null
 }
 
-# 파일 없으면 헤더
+# 파일 없으면 헤더 (BOM 없는 UTF-8로 저장)
 if (-not (Test-Path $ConvFile)) {
     $Header = @"
 ---
@@ -26,7 +32,7 @@ summary: ""
 # $Today
 
 "@
-    Set-Content -Path $ConvFile -Value $Header -Encoding UTF8
+    [System.IO.File]::WriteAllText($ConvFile, $Header, [System.Text.Encoding]::UTF8)
 }
 
 # 중복 방지: 같은 분(minute)에 동일 프롬프트가 이미 저장되어 있으면 스킵
@@ -40,5 +46,5 @@ if (Test-Path $ConvFile) {
     }
 }
 
-# append
-Add-Content -Path $ConvFile -Value $Entry -Encoding UTF8
+# append (BOM 없는 UTF-8로 저장)
+[System.IO.File]::AppendAllText($ConvFile, $Entry, [System.Text.Encoding]::UTF8)

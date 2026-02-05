@@ -9,10 +9,10 @@ Thumbs.db
 # Temp
 *.tmp
 *.bak
+nul
 
-# Claude Code
-.claude/conversations/
-.claude/settings.local.json
+# Claude Code - 프로젝트별 설정 (비공개)
+.claude/
 MEMORY.md
 CLAUDE.md
 

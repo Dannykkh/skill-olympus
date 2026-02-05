@@ -214,7 +214,16 @@ install.bat
 ./install.sh
 ```
 
-글로벌 설치 스크립트가 훅 복사 + settings.json 등록을 자동 처리합니다.
+글로벌 설치 스크립트가 **6단계**로 자동 처리합니다:
+
+1. Skills 설치
+2. Agents 설치
+3. Commands 설치
+4. Hooks 설치
+5. `settings.json` 훅 등록
+6. **`CLAUDE.md` 장기기억 규칙 등록** (응답 태그, 대화 검색)
+
+> **Windows 참고:** Git Bash가 설치되어 있어도 항상 PowerShell(`.ps1`)을 사용합니다. Claude Code는 `/bin/bash`(WSL)를 호출하므로 Windows 경로와 호환되지 않기 때문입니다.
 
 ### 수동 설치
 
@@ -262,10 +271,13 @@ mkdir -p .claude/conversations
 |------|------|
 | `MEMORY.md` | 의미기억 (컨텍스트 트리) |
 | `CLAUDE.md` | 메모리 규칙 정의 |
-| `hooks/save-conversation.ps1/.sh` | User 입력 자동 저장 |
-| `hooks/save-response.ps1/.sh` | Assistant 응답 자동 저장 (Stop 훅) |
+| `~/.claude/CLAUDE.md` | **글로벌** 메모리 규칙 (모든 프로젝트 적용) |
+| `hooks/save-conversation.ps1/.sh` | User 입력 자동 저장 (BOM-free UTF-8) |
+| `hooks/save-response.ps1/.sh` | Assistant 응답 자동 저장 (Stop 훅, BOM-free UTF-8) |
 | `.claude/commands/wrap-up.md` | 세션 종료 정리 명령 |
 | `.claude/conversations/` | 일화기억 (대화 로그) |
+| `templates/global-claude-md-rules.md` | CLAUDE.md 규칙 템플릿 |
+| `install-claude-md.js` | CLAUDE.md 규칙 머지 헬퍼 |
 
 ---
 

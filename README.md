@@ -55,7 +55,10 @@ chmod +x install.sh && ./install.sh
 
 > **Link mode** creates symlinks (Windows: Junction, Linux/Mac: symlink) instead of copying files. Changes to the repo are reflected immediately after `git pull` — no need to re-run the installer.
 >
-> The installer configures **all 4 components globally** (Skills, Agents, Commands, Hooks) and auto-registers hook settings in `~/.claude/settings.json`.
+> The installer configures **all 5 components globally**:
+> - Skills, Agents, Commands, Hooks (files)
+> - `~/.claude/settings.json` (hook settings)
+> - `~/.claude/CLAUDE.md` (long-term memory rules - response tags, conversation search)
 
 ---
 
@@ -121,7 +124,7 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
-### Hooks (10 Hooks)
+### Hooks (11 Hooks)
 
 | Hook | Timing | Description |
 |------|--------|-------------|
@@ -129,6 +132,7 @@ chmod +x install.sh && ./install.sh
 | workpm-hook.sh | UserPromptSubmit | PM mode activation hook (project-specific, installed via install-orchestrator.js) |
 | pmworker-hook.sh | UserPromptSubmit | Worker mode activation hook (project-specific, installed via install-orchestrator.js) |
 | save-conversation.sh | UserPromptSubmit | Save conversations to .md files (simple append, no AI call) |
+| save-response.sh | Stop | Save assistant responses from transcript (BOM-free UTF-8, no AI call) |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
 | check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
 | validate-docs.sh | PostToolUse | AI writing pattern detection in markdown |
@@ -325,11 +329,14 @@ claude-code-customizations/
 │       ├── vercel-agent-skills.md
 │       ├── context7-mcp.md
 │       └── ... (18 more)
-├── install.bat                # Windows installer (copy mode)
+├── templates/                 # Installation templates
+│   └── global-claude-md-rules.md  # Long-term memory rules template
+├── install.bat                # Windows installer (copy mode, 6 steps)
 ├── install-link.bat           # Windows installer (symlink/Junction mode)
 ├── install-unlink.bat         # Windows symlink remover
 ├── install.sh                 # Linux/Mac installer (supports --link/--unlink)
 ├── install-hooks-config.js    # Hook settings helper (auto-configure settings.json)
+├── install-claude-md.js       # CLAUDE.md rules merger (auto-configure global CLAUDE.md)
 ├── install-orchestrator.js   # Orchestrator installer (MCP + hooks + commands per project)
 ├── SETUP.md                   # Complete setup guide
 ├── README.md                  # This file (English)

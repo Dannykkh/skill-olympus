@@ -55,7 +55,10 @@ chmod +x install.sh && ./install.sh
 
 > **링크 모드**는 파일 복사 대신 심볼릭 링크(Windows: Junction, Linux/Mac: symlink)를 생성합니다. `git pull`만 하면 변경사항이 즉시 반영되어 설치 스크립트를 다시 실행할 필요가 없습니다.
 >
-> 설치 스크립트는 **4가지 구성요소를 모두 글로벌로 설치**하고 (Skills, Agents, Commands, Hooks), `~/.claude/settings.json`에 훅 설정을 자동 등록합니다.
+> 설치 스크립트는 **5가지 구성요소를 모두 글로벌로 설치**합니다:
+> - Skills, Agents, Commands, Hooks (파일)
+> - `~/.claude/settings.json` (훅 설정)
+> - `~/.claude/CLAUDE.md` (장기기억 규칙 - 응답 태그, 대화 검색)
 
 ---
 
@@ -121,7 +124,7 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 훅 (10개)
+### 훅 (11개)
 
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
@@ -129,6 +132,7 @@ chmod +x install.sh && ./install.sh
 | workpm-hook.sh | UserPromptSubmit | PM 모드 활성화 훅 (프로젝트 전용, install-orchestrator.js로 설치) |
 | pmworker-hook.sh | UserPromptSubmit | Worker 모드 활성화 훅 (프로젝트 전용, install-orchestrator.js로 설치) |
 | save-conversation.sh | UserPromptSubmit | 대화 저장 (단순 append, AI 호출 없음) |
+| save-response.sh | Stop | Assistant 응답 저장 (BOM 없는 UTF-8, AI 호출 없음) |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
 | check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
 | validate-docs.sh | PostToolUse | 마크다운 AI 글쓰기 패턴 검출 |
@@ -324,11 +328,14 @@ claude-code-customizations/
 │       ├── vercel-agent-skills.md
 │       ├── context7-mcp.md
 │       └── ... (18개 더)
-├── install.bat                # Windows 설치 스크립트 (복사 모드)
+├── templates/                 # 설치 템플릿
+│   └── global-claude-md-rules.md  # 장기기억 규칙 템플릿
+├── install.bat                # Windows 설치 스크립트 (복사 모드, 6단계)
 ├── install-link.bat           # Windows 설치 스크립트 (심볼릭 링크 모드)
 ├── install-unlink.bat         # Windows 심볼릭 링크 제거
 ├── install.sh                 # Linux/Mac 설치 스크립트 (--link/--unlink 지원)
 ├── install-hooks-config.js    # 훅 설정 헬퍼 (settings.json 자동 구성)
+├── install-claude-md.js       # CLAUDE.md 규칙 머지 (글로벌 CLAUDE.md 자동 구성)
 ├── install-orchestrator.js   # Orchestrator 설치 (프로젝트별 MCP + 훅 + 명령어)
 ├── SETUP.md                   # 전체 설정 가이드
 ├── README.md                  # 영문 버전
