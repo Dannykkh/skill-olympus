@@ -531,7 +531,8 @@ node install-hooks-config.js ~/.claude/hooks ~/.claude/settings.json --bash
 설치 스크립트가 다음을 자동으로 처리합니다:
 1. 훅 스크립트를 `~/.claude/hooks/`에 복사 (또는 링크)
 2. `~/.claude/settings.json`에 훅 설정 자동 등록
-3. 플랫폼 자동 감지 (bash 있으면 `.sh`, 없으면 `.ps1` 사용)
+3. `~/.claude/CLAUDE.md`에 장기기억 규칙 자동 추가 (응답 태그, 대화 검색)
+4. **Windows에서는 항상 PowerShell 사용** (Git Bash가 있어도 Claude Code는 /bin/bash 사용하므로)
 
 ```bash
 # 이것만 실행하면 훅 설정 완료
@@ -699,7 +700,9 @@ claude plugin install pg-aiguide
 # 7. 커스텀 스킬/에이전트/명령어/훅 설치 (모두 글로벌)
 # Windows: install.bat (또는 install-link.bat)
 # Linux/Mac: ./install.sh (또는 ./install.sh --link)
-# → Skills, Agents, Commands, Hooks 모두 글로벌 설치 + settings.json 자동 설정
+# → Skills, Agents, Commands, Hooks 글로벌 설치
+# → settings.json 훅 설정 자동 등록
+# → CLAUDE.md 장기기억 규칙 자동 추가 (응답 태그, 대화 검색)
 ```
 
 ---
@@ -789,6 +792,7 @@ claude plugin install pg-aiguide
 - [ ] MCP 서버 설정됨 (`/oh-my-claudecode:mcp-setup` 또는 수동)
 - [ ] install.bat/sh 실행하여 커스텀 스킬/에이전트/명령어/훅 글로벌 설치됨 (링크 모드 권장: `install-link.bat`)
 - [ ] settings.json에 훅 설정 자동 등록 확인됨
+- [ ] CLAUDE.md에 장기기억 규칙 자동 추가 확인됨 (응답 태그, 대화 검색)
 
 ---
 
@@ -818,4 +822,4 @@ claude plugin install pg-aiguide
 
 ---
 
-**최종 업데이트:** 2026-02-04
+**최종 업데이트:** 2026-02-05

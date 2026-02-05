@@ -259,4 +259,4 @@ https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/mast
 ---
 
 **저장소:** https://github.com/Dannykkh/claude-code-agent-customizations
-**마지막 업데이트:** 2026-02-03
+**마지막 업데이트:** 2026-02-05
