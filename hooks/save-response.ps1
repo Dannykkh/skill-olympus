@@ -1,4 +1,4 @@
-﻿# save-response.ps1 - Stop 훅: Assistant 응답을 대화 파일에 저장
+# save-response.ps1 - Stop 훅: Assistant 응답을 대화 파일에 저장
 # transcript_path에서 마지막 assistant 메시지를 추출하여 append
 # AI 호출 없음 = 빠름
 
