@@ -40,7 +40,7 @@ REM ============================================
 REM   --unlink 모드: Junction 제거 + settings.json 정리
 REM ============================================
 if "%MODE%"=="unlink" (
-    echo [1/5] Skills 링크 제거 중...
+    echo [1/6] Skills 링크 제거 중...
     if exist "%SCRIPT_DIR%skills" (
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
             set "skill_name=%%~nxD"
@@ -58,7 +58,7 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [2/5] Agents 링크 제거 중...
+    echo [2/6] Agents 링크 제거 중...
     fsutil reparsepoint query "%CLAUDE_DIR%\agents" >nul 2>nul
     if !errorlevel! equ 0 (
         echo       - agents [링크 제거]
@@ -69,7 +69,7 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [3/5] Commands 링크 제거 중...
+    echo [3/6] Commands 링크 제거 중...
     fsutil reparsepoint query "%CLAUDE_DIR%\commands" >nul 2>nul
     if !errorlevel! equ 0 (
         echo       - commands [링크 제거]
@@ -80,7 +80,7 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [4/5] Hooks 링크 제거 + settings.json 정리 중...
+    echo [4/6] Hooks 링크 제거 + settings.json 정리 중...
     fsutil reparsepoint query "%CLAUDE_DIR%\hooks" >nul 2>nul
     if !errorlevel! equ 0 (
         echo       - hooks [링크 제거]
@@ -93,8 +93,13 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [5/5] CLAUDE.md 장기기억 규칙 제거 중...
+    echo [5/6] CLAUDE.md 장기기억 규칙 제거 중...
     node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
+    echo       완료!
+
+    echo.
+    echo [6/6] MCP 서버 설정은 별도 관리됩니다.
+    echo       제거: node "%SCRIPT_DIR%install-mcp.js" --uninstall ^<이름^>
     echo       완료!
 
     echo.
@@ -116,7 +121,7 @@ REM   --link 모드: Junction 생성
 REM ============================================
 if "%MODE%"=="link" (
     REM Skills 링크 (개별 폴더)
-    echo [1/6] Skills 링크 중... (글로벌, Junction)
+    echo [1/7] Skills 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%skills" (
         if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
@@ -141,7 +146,7 @@ if "%MODE%"=="link" (
 
     REM Agents 링크 (전체 폴더) + skills/*/agents/ 복사
     echo.
-    echo [2/6] Agents 링크 중... (글로벌, Junction)
+    echo [2/7] Agents 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%agents" (
         set "target=%CLAUDE_DIR%\agents"
         if exist "!target!" (
@@ -170,7 +175,7 @@ if "%MODE%"=="link" (
 
     REM Commands 링크 (전체 폴더)
     echo.
-    echo [3/6] Commands 링크 중... (글로벌, Junction)
+    echo [3/7] Commands 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%commands" (
         set "target=%CLAUDE_DIR%\commands"
         if exist "!target!" (
@@ -190,7 +195,7 @@ if "%MODE%"=="link" (
 
     REM Hooks 링크 (전체 폴더) + Mnemo 훅 복사
     echo.
-    echo [4/6] Hooks 링크 중... (글로벌, Junction)
+    echo [4/7] Hooks 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%hooks" (
         set "target=%CLAUDE_DIR%\hooks"
         if exist "!target!" (
@@ -227,7 +232,7 @@ REM   기본 모드: 복사
 REM ============================================
 
 REM Skills 설치 (글로벌)
-echo [1/6] Skills 설치 중... (글로벌)
+echo [1/7] Skills 설치 중... (글로벌)
 if exist "%SCRIPT_DIR%skills" (
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         set "skill_name=%%~nxD"
@@ -242,7 +247,7 @@ if exist "%SCRIPT_DIR%skills" (
 
 REM Agents 설치 (글로벌)
 echo.
-echo [2/6] Agents 설치 중... (글로벌)
+echo [2/7] Agents 설치 중... (글로벌)
 if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
 REM 루트 agents/ 폴더
 if exist "%SCRIPT_DIR%agents" (
@@ -264,7 +269,7 @@ echo       완료!
 
 REM Commands 설치 (글로벌)
 echo.
-echo [3/6] Commands 설치 중... (글로벌)
+echo [3/7] Commands 설치 중... (글로벌)
 if exist "%SCRIPT_DIR%commands" (
     if not exist "%CLAUDE_DIR%\commands" mkdir "%CLAUDE_DIR%\commands"
     for %%F in ("%SCRIPT_DIR%commands\*.md") do (
@@ -278,7 +283,7 @@ if exist "%SCRIPT_DIR%commands" (
 
 REM Hooks 설치 (글로벌)
 echo.
-echo [4/6] Hooks 설치 중... (글로벌)
+echo [4/7] Hooks 설치 중... (글로벌)
 if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
 REM 검증/포맷팅 훅 (루트 hooks/)
 if exist "%SCRIPT_DIR%hooks" (
@@ -317,14 +322,25 @@ echo       완료!
 
 REM settings.json 훅 설정 (글로벌)
 echo.
-echo [5/6] settings.json 훅 설정 중... (글로벌)
+echo [5/7] settings.json 훅 설정 중... (글로벌)
 REM Windows에서는 항상 PowerShell 사용 (Git Bash가 있어도 Claude Code는 /bin/bash 사용)
 node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%/hooks" "%CLAUDE_DIR%\settings.json" --windows
 
 REM CLAUDE.md 장기기억 규칙 설치 (글로벌)
 echo.
-echo [6/6] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)
+echo [6/7] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)
 node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
+
+REM MCP 서버 추천 설정 안내
+echo.
+echo [7/7] MCP 서버 추천 설정 안내
+echo       사전 구성된 MCP 서버를 설치할 수 있습니다:
+echo.
+echo         node "%SCRIPT_DIR%install-mcp.js" --list      사용 가능한 MCP 목록
+echo         node "%SCRIPT_DIR%install-mcp.js" --all       무료 MCP 전부 설치
+echo         node "%SCRIPT_DIR%install-mcp.js" context7    특정 MCP 설치
+echo.
+echo       (MCP 설치는 선택사항입니다. 나중에 실행해도 됩니다.)
 
 echo.
 echo ============================================
@@ -336,11 +352,11 @@ if "%MODE%"=="link" (
 echo ============================================
 echo.
 if "%MODE%"=="link" (
-    echo   글로벌 링크 완료 (Junction):
-    echo   - Skills:   %CLAUDE_DIR%\skills\ (개별 링크)
-    echo   - Agents:   %CLAUDE_DIR%\agents\ (전체 링크)
-    echo   - Commands: %CLAUDE_DIR%\commands\ (전체 링크)
-    echo   - Hooks:    %CLAUDE_DIR%\hooks\ (전체 링크)
+    echo   글로벌 링크 완료 ^(Junction^):
+    echo   - Skills:   %CLAUDE_DIR%\skills\ ^(개별 링크^)
+    echo   - Agents:   %CLAUDE_DIR%\agents\ ^(전체 링크^)
+    echo   - Commands: %CLAUDE_DIR%\commands\ ^(전체 링크^)
+    echo   - Hooks:    %CLAUDE_DIR%\hooks\ ^(전체 링크^)
     echo.
     echo   git pull만으로 업데이트가 자동 반영됩니다.
     echo   링크 제거: install.bat --unlink
@@ -353,6 +369,7 @@ if "%MODE%"=="link" (
 )
 echo   - settings.json 훅 설정 등록 완료
 echo   - CLAUDE.md 장기기억 규칙 등록 완료
+echo   - MCP 서버: node install-mcp.js --list
 echo.
 echo   Claude Code를 재시작하면 적용됩니다.
 echo.
