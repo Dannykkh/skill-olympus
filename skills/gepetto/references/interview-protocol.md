@@ -19,6 +19,7 @@ If research was done, use it to:
 - 표면적 요구사항 뒤에 있는 **진짜 목표와 욕망**을 파악하라
 - 사용자가 "무엇"을 말하면, "왜"를 물어라
 - 디자인은 기능의 부산물이 아니라 **의도적 선택** — 획일적 디자인을 경계하라
+- **쉬운 말로 질문하라** — 전문용어에는 반드시 괄호로 풀어쓰기를 붙여라
 - Surface everything the user knows but hasn't mentioned
 - Assume the initial spec is incomplete
 - Extract context from user's head
@@ -30,18 +31,39 @@ If research was done, use it to:
 - Don't ask obvious questions already in spec
 - Dig deeper when answers reveal complexity
 - Summarize periodically to confirm understanding
+- **쉬운 말로 질문하기**: 전문용어를 쓸 때는 반드시 괄호 안에 풀어서 설명을 붙여라. 사용자가 개발자가 아닐 수 있다. 초등학생도 이해할 수 있는 수준으로 질문하되, 전문성은 유지하라.
+
+## 질문 작성 규칙
+
+**전문용어에는 반드시 쉬운 설명을 붙인다:**
+```
+❌ "확장성 목표치가 어떻게 되나요?"
+✅ "확장성(사용자가 늘어나도 느려지지 않는 것) 목표가 어떻게 되나요?"
+
+❌ "API 연동이 필요한 외부 시스템이 있나요?"
+✅ "다른 서비스와 데이터를 주고받아야(API 연동) 하는 게 있나요?"
+
+❌ "레이턴시 허용 범위는?"
+✅ "버튼을 눌렀을 때 결과가 나오기까지 몇 초 정도면 괜찮을까요?"
+```
+
+**원칙:**
+- 전문용어를 먼저 쓰고 괄호 안에 일상 언어로 풀어쓰기
+- 또는 일상 언어로 먼저 쓰고 괄호 안에 전문용어 표기
+- 비유/예시를 적극 활용: "마치 ~처럼", "예를 들어 ~같은"
+- 한 질문에 개념 2개 이상 섞지 않기
 
 ## Example Questions
 
-**Good questions:**
-- "What happens when X fails? Should we retry, log, or surface to user?"
-- "Are there existing patterns in the codebase for Y that we should follow?"
-- "What's the expected scale - dozens, thousands, or millions of Z?"
+**Good questions (쉬운 말 + 전문용어 병기):**
+- "X가 실패하면(예: 서버가 갑자기 멈추면) 어떻게 할까요? 자동으로 다시 시도? 기록만 남기기? 사용자에게 알려주기?"
+- "이미 프로젝트에 비슷한 방식으로 만들어진 부분이 있나요? 있으면 그 방식을 따르는 게 좋을까요?"
+- "사용자가 얼마나 될 것 같나요? 수십 명? 수천 명? 아니면 수백만 명 수준?"
 
-**Bad questions (too vague):**
-- "Anything else?"
-- "Is that all?"
-- "Do you have any other requirements?"
+**Bad questions (전문용어만, 풀어쓰기 없음):**
+- "컴포넌트 레이지 로딩 전략은?"
+- "CQRS 패턴 적용할 건가요?"
+- "CI/CD 파이프라인 요구사항은?"
 
 ## Question Categories
 
@@ -83,29 +105,30 @@ If research was done, use it to:
 - 벤치마킹 사이트가 있으면 URL을 기록해 두고, 이후 spec에 반영
 
 ### C. 기술적 구현 (Technical Implementation)
-- 아키텍처 선택 이유, 대안 고려 여부
-- 확장성/성능 목표치
-- 외부 시스템 연동, 데이터 볼륨
-- 에러 복구 방안
+- 구조(아키텍처)를 왜 이렇게 잡았는지, 다른 방법도 고려했는지
+- 사용자가 늘어나도 괜찮을지(확장성), 속도 목표(성능)
+- 다른 서비스와 데이터를 주고받을 일(외부 연동)이 있는지, 데이터 양은 얼마나 되는지
+- 문제가 생겼을 때 어떻게 복구할지(에러 처리)
 
 ### D. UI/UX 상세
-- 주요 사용자 시나리오
-- 모바일/접근성/다국어
-- 로딩/에러 상태 처리
+- 사용자가 실제로 이 화면을 어떤 순서로 쓰게 되는지(사용 시나리오)
+- 핸드폰에서도 잘 보여야 하는지(모바일), 장애가 있는 분도 쓸 수 있어야 하는지(접근성)
+- 데이터를 불러오는 중이거나 오류가 났을 때 화면에 뭘 보여줄지
 - **B에서 파악한 디자인 비전을 구체적 UI 요소에 매핑**
 
 ### E. 우려사항 (Concerns)
-- 기술적 리스크
-- 레거시 호환성
-- 보안 민감 데이터, 규정/컴플라이언스
+- 기술적으로 어려울 것 같은 부분(리스크)
+- 기존에 만들어둔 시스템과 잘 맞물리는지(호환성)
+- 개인정보나 민감한 데이터가 있는지, 법적으로 지켜야 할 규정이 있는지
 
 ### F. 트레이드오프 (Trade-offs)
-- 속도 vs 품질, 기능 범위 vs 완성도
-- MVP 범위, 기술 부채 허용
+- 빠르게 만들기 vs 완벽하게 만들기, 기능을 많이 넣기 vs 핵심만 잘 만들기
+- 첫 출시(MVP)에 꼭 들어가야 할 것과 나중에 해도 될 것
+- 지금 빠르게 만들되 나중에 고쳐야 할 부분(기술 부채)을 얼마나 허용할지
 
 ### G. 비기능 요구사항
-- 가용성, 백업/복구
-- 모니터링/알람, 로깅, 감사(Audit)
+- 24시간 멈추면 안 되는지(가용성), 데이터 백업/복구 방법
+- 문제가 생기면 자동으로 알림이 오게 할지(모니터링), 누가 뭘 했는지 기록(감사 로그)
 
 ## When to Stop
 
