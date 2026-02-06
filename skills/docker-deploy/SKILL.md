@@ -4,7 +4,7 @@ description: Docker 이미지 기반 배포 환경을 자동으로 구성합니�
 license: MIT
 metadata:
   author: user
-  version: "2.3.0"
+  version: "2.6.0"
 ---
 
 # Docker Deploy Skill
@@ -129,7 +129,8 @@ services:
       - MYSQL_DATABASE=${DB_NAME:-app_db}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./seed-data.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro
+      # bind mount 사용 금지! 설치 폴더 삭제 시 컨테이너 재시작 실패
+      # install.bat에서 docker exec으로 SQL 주입
     networks:
       - app-network
     healthcheck:
@@ -209,7 +210,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-app_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./seed-data.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro
+      # bind mount 사용 금지! install.bat에서 docker exec으로 SQL 주입
     networks:
       - app-network
     healthcheck:
@@ -231,6 +232,11 @@ volumes:
 ---
 
 ## 6. install.bat (처음 설치)
+
+**중요: bind mount 대신 docker exec으로 SQL 주입**
+- `docker-compose.yml`에서 `./seed-data.sql:/docker-entrypoint-initdb.d/...` bind mount 사용 금지
+- 이유: 설치 폴더 삭제 시 파일이 사라져 컨테이너 재시작 실패
+- 대신: install.bat에서 MySQL ready 후 `docker exec`으로 SQL 직접 주입
 
 ```batch
 @echo off
@@ -257,7 +263,7 @@ echo ============================================
 echo.
 
 REM Docker 실행 확인
-echo [1/4] Docker 실행 상태 확인 중...
+echo [1/5] Docker 실행 상태 확인 중...
 docker info >nul 2>&1
 if errorlevel 1 (
     echo [오류] Docker가 실행되고 있지 않습니다.
@@ -269,7 +275,7 @@ echo       Docker 정상 실행 중
 
 REM 이미지 로드
 echo.
-echo [2/4] Docker 이미지 로드 중...
+echo [2/5] Docker 이미지 로드 중...
 if exist "!PROJECT_NAME!-all.tar" (
     docker load -i "!PROJECT_NAME!-all.tar"
 ) else if exist "!PROJECT_NAME!-api.tar" (
@@ -285,23 +291,56 @@ echo       이미지 로드 완료
 
 REM 베이스 이미지 확인
 echo.
-echo [3/4] 필수 이미지 확인 중...
-docker pull mysql:8.0 >nul 2>&1
+echo [3/5] 필수 이미지 확인 중...
+docker image inspect mysql:8.0 >nul 2>&1 || docker pull mysql:8.0
 echo       완료
 
 REM 서비스 시작
 echo.
-echo [4/4] 서비스 시작 중...
-docker-compose up -d
+echo [4/5] 서비스 시작 중...
+docker compose up -d
 if errorlevel 1 (
     echo [오류] 서비스 시작 실패
     pause
     exit /b 1
 )
 
+REM DB 초기화 (seed-data.sql이 있는 경우 docker exec으로 주입)
+REM 주의: for /L 루프 안의 !errorlevel!은 불안정함 → goto 기반 루프 사용
 echo.
-echo 서비스 초기화 대기 중... (약 30초)
-timeout /t 30 /nobreak >nul
+echo [5/5] 데이터베이스 초기화 중...
+if not exist "seed-data.sql" (
+    echo       seed-data.sql 파일 없음 ^(스킵^)
+    goto SKIP_DB_INIT
+)
+
+echo       DB 준비 대기 중...
+set "RETRIES=0"
+
+:WAIT_DB
+if %RETRIES% GEQ 30 goto DB_NOT_READY
+docker exec %PROJECT_NAME%-db mysqladmin ping -h localhost -u root -p%DB_PASSWORD% >nul 2>&1
+if not errorlevel 1 goto DB_IS_READY
+set /a RETRIES+=1
+echo       대기 중... (%RETRIES%/30)
+timeout /t 2 /nobreak >nul
+goto WAIT_DB
+
+:DB_IS_READY
+echo       DB 준비 완료, 초기 데이터 로드 중...
+docker exec -i %PROJECT_NAME%-db mysql -u root -p%DB_PASSWORD% %DB_NAME% < seed-data.sql
+if errorlevel 1 (
+    echo [경고] 초기 데이터 로드 실패 ^(이미 데이터가 있을 수 있습니다^)
+) else (
+    echo       초기 데이터 로드 완료
+)
+goto SKIP_DB_INIT
+
+:DB_NOT_READY
+echo [경고] DB가 준비되지 않았습니다. 수동으로 seed-data.sql을 로드해주세요.
+echo        명령어: docker exec -i %PROJECT_NAME%-db mysql -u root -p%DB_PASSWORD% %DB_NAME% ^< seed-data.sql
+
+:SKIP_DB_INIT
 
 echo.
 echo ============================================
@@ -311,11 +350,6 @@ echo.
 echo   웹:       http://localhost:!FRONTEND_PORT!
 echo   API 문서: http://localhost:!API_PORT!/docs
 echo   DB:       localhost:!DB_PORT!
-echo.
-echo   테스트 계정:
-echo     Admin:   admin@example.com / admin1234
-echo     Manager: manager@example.com / manager1234
-echo     Member:  member@example.com / member1234
 echo.
 
 endlocal
@@ -588,7 +622,11 @@ echo       Backend 빌드 완료
 
 echo.
 echo [2/5] Building Frontend image...
-docker build -t !PROJECT_NAME!-frontend:latest -f frontend/Dockerfile --target production --build-arg VITE_API_URL=/api frontend/
+REM VITE_API_URL 설정 주의:
+REM - 엔드포인트가 이미 /api를 포함하면 빈 문자열 사용 (예: VITE_API_URL=)
+REM - 그렇지 않으면 /api 사용 (예: VITE_API_URL=/api)
+REM - Git Bash에서 /api가 C:/Program Files/Git/api로 변환될 수 있음!
+docker build -t !PROJECT_NAME!-frontend:latest -f frontend/Dockerfile --target production --build-arg "VITE_API_URL=" frontend/
 if errorlevel 1 (
     echo [ERROR] Frontend build failed.
     pause
@@ -714,3 +752,38 @@ SECRET_KEY=change-this-secret-key-in-production
 - `install.bat`: 처음 설치 (더블클릭)
 - `update.bat`: DB 유지하며 이미지만 교체 (더블클릭)
 - `reset.bat`: 볼륨까지 완전 삭제 후 재설치 (확인 필요)
+
+### 7. Git Bash 경로 변환 주의 (Windows)
+- Git Bash에서 `/api`가 `C:/Program Files/Git/api`로 변환됨
+- 해결책: 환경변수를 따옴표로 감싸기 (`"VITE_API_URL="`)
+- 또는 `MSYS_NO_PATHCONV=1` 설정 (일부 경우에만 동작)
+
+### 8. mysqldump 경고 제외
+- mysqldump 실행 시 경고가 SQL 파일에 포함될 수 있음
+- `2>/dev/null`로 stderr 제외: `mysqldump ... 2>/dev/null > dump.sql`
+- `2>&1` 사용 금지 (경고가 SQL에 섞임)
+
+### 9. VITE_API_URL 설정
+- 프론트엔드 API 호출 시 baseURL 설정
+- 엔드포인트가 이미 `/api`를 포함하면 빈 문자열 사용
+  - 예: `axios.get('/api/users')` → `VITE_API_URL=` (빈 문자열)
+- 엔드포인트가 `/api` 없이 시작하면 `/api` 사용
+  - 예: `axios.get('/users')` → `VITE_API_URL=/api`
+- 이중 경로 주의: `/api/api/users` 발생 가능
+
+### 10. SQL bind mount 사용 금지
+- `./seed-data.sql:/docker-entrypoint-initdb.d/...` bind mount 사용 **금지**
+- 문제: 설치 폴더 삭제 → 파일 사라짐 → 컴퓨터 재시작 시 컨테이너 시작 실패
+- 해결: `install.bat`에서 MySQL ready 후 `docker exec -i <컨테이너> mysql ... < seed-data.sql`로 주입
+- DB 데이터는 Docker named volume에 보존되므로, 설치 폴더 삭제해도 DB는 유지됨
+
+### 11. 프론트엔드 API 경로와 nginx 일치 필수
+- nginx의 `/api/` location으로 프록시하는 경우, 프론트엔드 모든 API 호출에 `/api` prefix 필요
+- 개발 환경(Vite 프록시)에서는 개별 경로 프록시로 동작하지만, 배포 환경(nginx)에서는 실패
+- 반드시 nginx location과 프론트엔드 API 경로를 일치시킬 것
+
+### 12. install.bat DB 대기 루프는 goto 사용
+- `for /L` 루프 안에서 `!errorlevel!`은 불안정 (Windows 배치 스크립트 알려진 버그)
+- MySQL 준비 대기 시 `goto` 기반 루프 사용 필수
+- 잘못된 예: `for /L %%i in (1,1,30) do ( if !errorlevel!==0 ... )`
+- 올바른 예: `:WAIT_DB` → `docker exec ping` → `if not errorlevel 1 goto DB_IS_READY` → `goto WAIT_DB`

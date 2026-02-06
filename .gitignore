@@ -11,6 +11,12 @@ Thumbs.db
 *.bak
 nul
 
+# Dependencies
+node_modules/
+
+# Screenshots
+screenshot*.png
+
 # Python
 __pycache__/
 *.pyc

@@ -11,6 +11,7 @@ import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
 import { glob } from 'glob';
+import { spawn, execSync } from 'child_process';
 import { StateManager } from './services/state-manager.js';
 import {
   detectAIProviders,
@@ -79,6 +80,12 @@ const GetTaskSchema = z.object({
 
 const DeleteTaskSchema = z.object({
   task_id: z.string().describe('삭제할 태스크 ID')
+});
+
+// Worker Spawn 스키마
+const SpawnWorkersSchema = z.object({
+  count: z.number().min(1).max(10).default(1).describe('생성할 Worker 수 (1-10)'),
+  auto_terminate: z.boolean().default(true).describe('태스크 완료 시 자동 종료 여부')
 });
 
 // ============================================================================
@@ -157,6 +164,17 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {}
+    }
+  },
+  {
+    name: 'orchestrator_spawn_workers',
+    description: '새 터미널에서 Worker를 자동으로 생성합니다. Worker는 태스크를 자동으로 가져와 처리하며, 모든 태스크 완료 시 자동 종료됩니다. (PM 전용)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        count: { type: 'number', description: '생성할 Worker 수 (1-10, 기본: 1)', minimum: 1, maximum: 10 },
+        auto_terminate: { type: 'boolean', description: '태스크 완료 시 자동 종료 (기본: true)' }
+      }
     }
   },
 
@@ -360,6 +378,107 @@ async function analyzeCodebase(args: z.infer<typeof AnalyzeCodebaseSchema>) {
   };
 }
 
+async function spawnWorkers(count: number, autoTerminate: boolean): Promise<{
+  success: boolean;
+  message: string;
+  spawnedWorkers: { id: string; status: string }[];
+  errors?: string[];
+}> {
+  const isWindows = process.platform === 'win32';
+  const scriptDir = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..', 'scripts');
+  const scriptName = isWindows ? 'spawn-worker.ps1' : 'spawn-worker.sh';
+  const scriptPath = path.join(scriptDir, scriptName);
+
+  // 스크립트 존재 확인
+  if (!fs.existsSync(scriptPath)) {
+    return {
+      success: false,
+      message: `Spawn script not found: ${scriptPath}`,
+      spawnedWorkers: [],
+      errors: [`Script not found: ${scriptPath}`]
+    };
+  }
+
+  const spawnedWorkers: { id: string; status: string }[] = [];
+  const errors: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const workerId = `worker-${Date.now()}-${i + 1}`;
+
+    try {
+      if (isWindows) {
+        // Windows: PowerShell로 새 터미널에서 스크립트 실행
+        const psCommand = `Start-Process powershell -ArgumentList '-ExecutionPolicy', 'Bypass', '-File', '${scriptPath.replace(/\\/g, '\\\\')}', '-WorkerId', '${workerId}', '-ProjectRoot', '${PROJECT_ROOT.replace(/\\/g, '\\\\')}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}'`;
+
+        spawn('powershell', ['-Command', psCommand], {
+          detached: true,
+          stdio: 'ignore'
+        }).unref();
+
+      } else {
+        // Mac/Linux: 새 터미널에서 스크립트 실행
+        // macOS: Terminal.app 또는 iTerm2
+        // Linux: gnome-terminal, xterm 등
+        const isMac = process.platform === 'darwin';
+
+        if (isMac) {
+          // macOS: osascript로 Terminal.app에서 실행
+          const appleScript = `tell application "Terminal" to do script "bash '${scriptPath}' '${workerId}' '${PROJECT_ROOT}' '${autoTerminate ? '1' : '0'}'"`;
+          spawn('osascript', ['-e', appleScript], {
+            detached: true,
+            stdio: 'ignore'
+          }).unref();
+        } else {
+          // Linux: 다양한 터미널 에뮬레이터 시도
+          const terminals = [
+            { cmd: 'gnome-terminal', args: ['--', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0'] },
+            { cmd: 'konsole', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0'] },
+            { cmd: 'xterm', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0'] }
+          ];
+
+          let spawned = false;
+          for (const term of terminals) {
+            try {
+              execSync(`which ${term.cmd}`, { stdio: 'ignore' });
+              spawn(term.cmd, term.args, {
+                detached: true,
+                stdio: 'ignore'
+              }).unref();
+              spawned = true;
+              break;
+            } catch {
+              continue;
+            }
+          }
+
+          if (!spawned) {
+            errors.push(`No terminal emulator found for worker ${workerId}`);
+            continue;
+          }
+        }
+      }
+
+      spawnedWorkers.push({ id: workerId, status: 'spawned' });
+
+      // 터미널 간 약간의 딜레이
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      errors.push(`Failed to spawn worker ${workerId}: ${errorMsg}`);
+    }
+  }
+
+  return {
+    success: spawnedWorkers.length > 0,
+    message: spawnedWorkers.length === count
+      ? `Successfully spawned ${count} worker(s)`
+      : `Spawned ${spawnedWorkers.length}/${count} worker(s)`,
+    spawnedWorkers,
+    errors: errors.length > 0 ? errors : undefined
+  };
+}
+
 // ============================================================================
 // MCP 서버 설정
 // ============================================================================
@@ -450,6 +569,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'orchestrator_get_progress': {
         result = stateManager.getProgress();
+        break;
+      }
+
+      case 'orchestrator_spawn_workers': {
+        const parsed = SpawnWorkersSchema.parse(args);
+        result = await spawnWorkers(parsed.count, parsed.auto_terminate);
         break;
       }
 

@@ -83,6 +83,8 @@ export declare class StateManager {
             scope?: string[];
         }[];
         message: string;
+        allTasksCompleted: boolean;
+        hasRemainingWork: boolean;
     };
     claimTask(taskId: string): {
         success: boolean;
@@ -118,5 +120,16 @@ export declare class StateManager {
         success: boolean;
         message: string;
     };
+    /**
+     * 모든 태스크가 완료되었는지 확인
+     * - 태스크가 없으면 false (아직 시작 안 함)
+     * - 모든 태스크가 completed 또는 failed면 true
+     */
+    isAllTasksCompleted(): boolean;
+    /**
+     * 작업 가능한 태스크가 남아있는지 확인
+     * - pending 또는 in_progress인 태스크가 있으면 true
+     */
+    hasRemainingWork(): boolean;
 }
 //# sourceMappingURL=state-manager.d.ts.map

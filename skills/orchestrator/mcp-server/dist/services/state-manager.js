@@ -178,12 +178,18 @@ export class StateManager {
             priority: t.priority,
             scope: t.scope
         }));
+        const allTasksCompleted = this.isAllTasksCompleted();
+        const hasRemainingWork = this.hasRemainingWork();
         return {
             workerId: this.workerId,
             availableTasks,
-            message: availableTasks.length > 0
-                ? `${availableTasks.length} task(s) available`
-                : 'No tasks available'
+            message: allTasksCompleted
+                ? 'All tasks completed. Worker can terminate.'
+                : availableTasks.length > 0
+                    ? `${availableTasks.length} task(s) available`
+                    : 'No tasks available (waiting for dependencies or tasks)',
+            allTasksCompleted,
+            hasRemainingWork
         };
     }
     claimTask(taskId) {
@@ -387,6 +393,31 @@ export class StateManager {
         this.state.tasks.splice(taskIndex, 1);
         this.saveState();
         return { success: true, message: `Task '${taskId}' deleted successfully` };
+    }
+    // --------------------------------------------------------------------------
+    // 완료 상태 확인
+    // --------------------------------------------------------------------------
+    /**
+     * 모든 태스크가 완료되었는지 확인
+     * - 태스크가 없으면 false (아직 시작 안 함)
+     * - 모든 태스크가 completed 또는 failed면 true
+     */
+    isAllTasksCompleted() {
+        this.reloadState();
+        const tasks = this.state.tasks;
+        if (tasks.length === 0) {
+            return false; // 태스크가 없으면 완료 아님 (시작 안 함)
+        }
+        return tasks.every(t => t.status === 'completed' || t.status === 'failed');
+    }
+    /**
+     * 작업 가능한 태스크가 남아있는지 확인
+     * - pending 또는 in_progress인 태스크가 있으면 true
+     */
+    hasRemainingWork() {
+        this.reloadState();
+        const tasks = this.state.tasks;
+        return tasks.some(t => t.status === 'pending' || t.status === 'in_progress');
     }
 }
 //# sourceMappingURL=state-manager.js.map
