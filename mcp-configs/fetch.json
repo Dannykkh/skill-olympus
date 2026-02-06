@@ -1,0 +1,9 @@
+{
+  "name": "fetch",
+  "description": "URL 콘텐츠 가져오기 - HTML/JSON/Markdown 변환 (무료, API 키 불필요)",
+  "requiresApiKey": false,
+  "config": {
+    "command": "uvx",
+    "args": ["mcp-server-fetch"]
+  }
+}

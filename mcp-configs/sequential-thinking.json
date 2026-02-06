@@ -1,0 +1,9 @@
+{
+  "name": "sequential-thinking",
+  "description": "단계적 사고 프로세스 MCP (무료, API 키 불필요)",
+  "requiresApiKey": false,
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+  }
+}

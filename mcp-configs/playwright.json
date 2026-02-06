@@ -1,0 +1,9 @@
+{
+  "name": "playwright",
+  "description": "브라우저 자동화 및 E2E 테스트 (무료, API 키 불필요)",
+  "requiresApiKey": false,
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@playwright/mcp@latest"]
+  }
+}
