@@ -75,6 +75,7 @@ Deep-dive interview system that generates complete spec documents from conversat
 |---------|-------------|
 | **19-step interview** | A~G categories: goals, design vision, features, tech, timeline, risks, verification |
 | **5 Whys technique** | Uncovers hidden motivations behind requirements |
+| **5-agent team review** | UX, Architecture, Red Team, Domain Process, Domain Tech agents analyze the spec in parallel |
 | **Plain language** | Technical terms explained in parentheses (accessible to non-engineers) |
 | **Auto-verification** | Sub-agents validate spec completeness and quality |
 
