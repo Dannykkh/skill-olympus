@@ -65,16 +65,16 @@ chmod +x install.sh && ./install.sh
 
 ## What's Included
 
-### Custom Skills (52 Skills)
+### Custom Skills (56 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
 | 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | External AI model integration + Multi-AI orchestration |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | Plugin/skill creation tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
-| 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/Design |
+| 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
-| 🎯 **Planning** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements (gepetto includes spec verification) |
+| 🎯 **Planning** | zephermine, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
@@ -84,7 +84,7 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (30 Agents)
+### Custom Agents (32 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
@@ -95,7 +95,8 @@ chmod +x install.sh && ./install.sh
 | **API** | api-tester, api-comparator | API testing & compatibility |
 | **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
 | **Documentation** | documentation, mermaid-diagram-specialist | Docs & diagrams |
-| **Design** | ascii-ui-mockup-generator, ui-ux-designer | UI/UX design feedback |
+| **Design** | ascii-ui-mockup-generator, ui-ux-designer, stitch-developer | UI/UX design & Stitch UI generation |
+| **Security** | security-reviewer | Security vulnerability analysis (OWASP Top 10) |
 | **Migration** | migration-helper, explore-agent | Legacy modernization |
 | **Planning** | feature-tracker | Feature tracking |
 | **Communication** | communication-excellence-coach | Email & presentation coaching |
@@ -272,7 +273,7 @@ node skills/orchestrator/install.js <target-project-path> --uninstall
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (51 skills)
+├── skills/                    # Custom skills (56 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -297,7 +298,7 @@ claude-code-customizations/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/
 │   ├── gemini/
-│   ├── gepetto/
+│   ├── zephermine/
 │   ├── humanizer/
 │   ├── jira/
 │   ├── marp-slide/
@@ -323,8 +324,12 @@ claude-code-customizations/
 │   ├── web-design-guidelines/
 │   ├── web-to-markdown/
 │   ├── workplace-conversations/
+│   ├── stitch-design-md/
+│   ├── stitch-enhance-prompt/
+│   ├── stitch-loop/
+│   ├── stitch-react/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (28 + skills/*/agents/ 2 = 30)
+├── agents/                    # Custom subagents (30 + skills/*/agents/ 2 = 32)
 │   ├── ai-ml.md
 │   ├── api-comparator.md
 │   ├── api-tester.md
@@ -351,6 +356,8 @@ claude-code-customizations/
 │   ├── react-useeffect-guidelines.md
 │   ├── reducing-entropy.md
 │   ├── spec-interviewer.md
+│   ├── security-reviewer.md
+│   ├── stitch-developer.md
 │   ├── ui-ux-designer.md
 │   └── writing-guidelines.md
 ├── commands/                  # Slash commands (17 commands)
@@ -474,4 +481,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-08

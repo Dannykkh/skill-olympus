@@ -65,16 +65,16 @@ chmod +x install.sh && ./install.sh
 
 ## 포함된 내용
 
-### 커스텀 스킬 (52개)
+### 커스텀 스킬 (56개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 |
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
-| 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter | React/TypeScript/디자인 |
+| 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
-| 🎯 **계획** | gepetto, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 (gepetto에 스펙 검증 포함) |
+| 🎯 **계획** | zephermine, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 (zephermine에 스펙 검증 포함) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
@@ -84,7 +84,7 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (30개)
+### 커스텀 에이전트 (32개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -95,7 +95,8 @@ chmod +x install.sh && ./install.sh
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
 | **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
 | **문서화** | documentation, mermaid-diagram-specialist | 문서 & 다이어그램 |
-| **디자인** | ascii-ui-mockup-generator, ui-ux-designer | UI/UX 디자인 피드백 |
+| **디자인** | ascii-ui-mockup-generator, ui-ux-designer, stitch-developer | UI/UX 디자인 피드백 & Stitch UI 생성 |
+| **보안** | security-reviewer | 보안 취약점 전문 분석 (OWASP Top 10) |
 | **마이그레이션** | migration-helper, explore-agent | 레거시 현대화 |
 | **계획** | feature-tracker | 기능 진행률 추적 |
 | **커뮤니케이션** | communication-excellence-coach | 이메일 & 프레젠테이션 코칭 |
@@ -272,7 +273,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (52개)
+├── skills/                    # 커스텀 스킬 (56개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -297,7 +298,7 @@ claude-code-customizations/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/
 │   ├── gemini/
-│   ├── gepetto/
+│   ├── zephermine/
 │   ├── humanizer/
 │   ├── jira/
 │   ├── marp-slide/
@@ -323,8 +324,12 @@ claude-code-customizations/
 │   ├── web-design-guidelines/
 │   ├── web-to-markdown/
 │   ├── workplace-conversations/
+│   ├── stitch-design-md/
+│   ├── stitch-enhance-prompt/
+│   ├── stitch-loop/
+│   ├── stitch-react/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (28 + skills/*/agents/ 2 = 30개)
+├── agents/                    # 커스텀 서브에이전트 (30 + skills/*/agents/ 2 = 32개)
 │   ├── ai-ml.md
 │   ├── api-comparator.md
 │   ├── api-tester.md
@@ -351,6 +356,8 @@ claude-code-customizations/
 │   ├── react-useeffect-guidelines.md
 │   ├── reducing-entropy.md
 │   ├── spec-interviewer.md
+│   ├── security-reviewer.md
+│   ├── stitch-developer.md
 │   ├── ui-ux-designer.md
 │   └── writing-guidelines.md
 ├── commands/                  # 슬래시 명령어 (17개)
@@ -474,4 +481,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-02-05
+**최종 업데이트:** 2026-02-08

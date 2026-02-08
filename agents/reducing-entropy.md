@@ -62,3 +62,42 @@ references:
 ```
 
 **삭제 편향. 최종 상태 측정.**
+
+## Tech Debt Detection Checklist
+
+코드 리뷰 시 아래 항목을 탐지하여 보고:
+
+### 🔴 즉시 제거
+
+|항목|탐지 패턴|조치|
+|---|---|---|
+|디버그 코드 잔류|`console.log`, `debugger`, `print()`|삭제|
+|주석 처리된 코드|`// old code`, `/* disabled */`|삭제 (git 이력에 있음)|
+|TODO/FIXME/HACK|`TODO:`, `FIXME:`, `HACK:`, `XXX:`|해결하거나 이슈로 전환|
+
+### 🟠 리팩토링 대상
+
+|항목|탐지 기준|조치|
+|---|---|---|
+|미사용 import|import 후 참조 없음|삭제|
+|미사용 변수|선언 후 사용 없음|삭제|
+|`any` 타입 사용|TypeScript `any`|구체적 타입으로 교체|
+|매직 넘버|코드 내 하드코딩된 숫자/문자열|상수로 추출|
+|긴 함수|50줄 초과|헬퍼 추출|
+|큰 파일|800줄 초과|모듈 분리|
+
+### 탐지 명령 (Grep)
+
+```bash
+# 디버그 코드
+console\.log|debugger|print\(
+
+# TODO/FIXME
+TODO:|FIXME:|HACK:|XXX:
+
+# any 타입
+:\s*any[\s;,\)\]]
+
+# 주석 처리된 코드 (연속 2줄 이상)
+^(\s*\/\/.*){2,}
+```

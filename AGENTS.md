@@ -28,6 +28,8 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Naming|agents/naming-conventions.md|
 |Full Workflow|agents/fullstack-development-workflow.md|
 |SPEC Interview|agents/spec-interviewer.md|
+|Security Review|agents/security-reviewer.md|
+|Stitch UI|agents/stitch-developer.md,skills/stitch-design-md/SKILL.md|
 
 ---
 
@@ -49,7 +51,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (51개)
+### Skills (56개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -57,16 +59,16 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성/검색 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
-| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, react-useeffect, vercel-react-best-practices | React/TypeScript/디자인 |
+| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, react-useeffect, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
-| 🎯 Planning | game-changing-features, gepetto, requirements-clarity, ship-learn-next | 계획/요구사항 |
+| 🎯 Planning | game-changing-features, zephermine, requirements-clarity, ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
-### Agents (30개)
+### Agents (32개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -94,6 +96,8 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | | mermaid-diagram-specialist | 플로우차트, 시퀀스 다이어그램, ERD 생성 |
 | **Design** | ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
 | | ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
+| | stitch-developer | Stitch MCP UI/웹사이트 생성 전문가 |
+| **Security** | security-reviewer | 보안 취약점 전문 분석 (OWASP Top 10) |
 | **Migration** | migration-helper | 레거시→모던 마이그레이션 가이드 |
 | | explore-agent | 레거시 코드 분석 |
 | **Planning** | feature-tracker | 기능 목록 및 진행 상황 관리 |

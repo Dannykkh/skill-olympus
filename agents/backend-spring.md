@@ -226,3 +226,103 @@ src/main/java/com/example/
 - Use meaningful HTTP status codes
 - Document APIs with OpenAPI annotations
 - Write unit tests for services
+
+## Performance Optimization
+
+### N+1 쿼리 방지
+
+```java
+// ❌ N+1 문제: 부모 1회 + 자식 N회 쿼리
+List<Order> orders = orderRepository.findAll();
+orders.forEach(o -> o.getItems().size()); // 각 주문마다 추가 쿼리
+
+// ✅ Fetch Join: 1회 쿼리로 해결
+@Query("SELECT o FROM Order o JOIN FETCH o.items WHERE o.status = :status")
+List<Order> findWithItems(@Param("status") OrderStatus status);
+
+// ✅ @EntityGraph: 선언적 방식
+@EntityGraph(attributePaths = {"items", "customer"})
+List<Order> findByStatus(OrderStatus status);
+```
+
+### DB 인덱스 설계
+
+```java
+@Entity
+@Table(name = "orders", indexes = {
+    @Index(name = "idx_order_status", columnList = "status"),
+    @Index(name = "idx_order_customer_date", columnList = "customer_id, created_at DESC")
+})
+public class Order { ... }
+```
+
+|원칙|설명|
+|---|---|
+|WHERE 절 컬럼|자주 검색하는 컬럼에 인덱스|
+|복합 인덱스 순서|카디널리티 높은 컬럼 먼저|
+|커버링 인덱스|SELECT 컬럼까지 인덱스에 포함|
+|과도한 인덱스 금지|INSERT/UPDATE 성능 저하 주의|
+
+### 캐싱 (Spring Cache)
+
+```java
+@Service
+@RequiredArgsConstructor
+public class ItemService {
+
+    @Cacheable(value = "items", key = "#id")
+    public ItemResponse findById(Long id) {
+        return itemRepository.findById(id)
+            .map(ItemResponse::from)
+            .orElseThrow(() -> new NotFoundException("Item not found"));
+    }
+
+    @CacheEvict(value = "items", key = "#id")
+    @Transactional
+    public ItemResponse update(Long id, ItemRequest request) {
+        // 캐시 무효화 + 업데이트
+    }
+}
+```
+
+|캐시 레벨|도구|용도|
+|---|---|---|
+|로컬|Caffeine|단일 인스턴스, 빈번한 조회|
+|분산|Redis|멀티 인스턴스, 세션, 랭킹|
+
+### 페이지네이션 필수
+
+```java
+// ❌ 전체 조회 (메모리 폭발 위험)
+List<Item> findAll();
+
+// ✅ 페이지네이션 필수
+Page<Item> findAll(Pageable pageable);
+
+// Controller에서 기본값 설정
+@GetMapping
+public Page<ItemResponse> list(
+    @PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable) {
+    return itemService.findAll(pageable);
+}
+```
+
+### Connection Pool 설정
+
+```yaml
+# application.yml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20        # 동시 연결 최대 수
+      minimum-idle: 5              # 유휴 연결 최소 수
+      idle-timeout: 300000         # 유휴 연결 제거 시간 (5분)
+      max-lifetime: 1800000        # 연결 최대 수명 (30분)
+      connection-timeout: 30000    # 연결 대기 타임아웃 (30초)
+      leak-detection-threshold: 60000  # 연결 누수 감지 (60초)
+```
+
+|설정|권장|이유|
+|---|---|---|
+|maximum-pool-size|CPU 코어 × 2 + 디스크|Amdahl's law 기반|
+|leak-detection|60초|느린 쿼리/미반환 연결 감지|
