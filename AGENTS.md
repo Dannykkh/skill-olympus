@@ -32,6 +32,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |SPEC Interview|agents/spec-interviewer.md|
 |Security Review|agents/security-reviewer.md|
 |Stitch UI|agents/stitch-developer.md,skills/stitch-design-md/SKILL.md|
+|Agent Teams (Opus 4.6 병렬 실행)|skills/agent-team/SKILL.md|
 
 ### Recommended Workflows
 
@@ -65,11 +66,11 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (55개)
+### Skills (56개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 |
+| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) |
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성/검색 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
@@ -121,7 +122,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
 
-### Commands (18개)
+### Commands (19개)
 
 | 커맨드 | 설명 |
 |--------|------|
@@ -142,6 +143,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | `/write-api-docs` | API 문서 생성 |
 | `/write-changelog` | 변경로그 자동 생성 |
 | `/write-prd` | PRD 문서 작성 |
+| `/agent-team` | Opus 4.6 Agent Teams로 zephermine 섹션 병렬 실행 |
 | `/smart-setup` | 기술 스택 자동 감지 후 리소스 추천/설치 |
 
 ## Creating a New Skill

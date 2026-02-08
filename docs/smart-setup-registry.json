@@ -205,7 +205,8 @@
     { "id": "mermaid-diagrams", "tags": ["*"], "priority": "optional" },
     { "id": "crafting-effective-readmes", "tags": ["*"], "priority": "optional" },
     { "id": "jira", "tags": ["*"], "priority": "optional" },
-    { "id": "fullstack-coding-standards", "tags": ["react", "nextjs", "typescript", "nestjs", "spring", "fastapi", "nodejs", "python", "java"], "priority": "recommended" }
+    { "id": "fullstack-coding-standards", "tags": ["react", "nextjs", "typescript", "nestjs", "spring", "fastapi", "nodejs", "python", "java"], "priority": "recommended" },
+    { "id": "agent-team", "tags": ["*"], "priority": "optional" }
   ],
 
   "internal-agents": [

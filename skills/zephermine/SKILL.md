@@ -398,6 +398,11 @@ Option C - Autonomous with Ralphy (external CLI):
 Option D - Verify after implementation:
   /zephermine @<planning_dir>/your-spec.md
   (모든 계획 파일이 있으면 자동으로 verify 모드 진입)
+
+Option E - Agent Teams로 병렬 실행 (권장):
+  /agent-team <planning_dir>
+  # 네이티브 Agent Teams로 섹션 의존성 분석 → Wave 병렬 실행
+  # 요구사항: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 ═══════════════════════════════════════════════════════════════
 ```
 

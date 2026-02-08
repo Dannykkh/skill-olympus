@@ -134,7 +134,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator | External AI model integration + Multi-AI orchestration |
+| 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team | External AI model integration + Multi-AI orchestration + Native Agent Teams (Opus 4.6) |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | Plugin/skill creation tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
