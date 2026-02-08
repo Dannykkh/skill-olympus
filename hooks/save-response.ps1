@@ -19,16 +19,42 @@ $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today.md"
 if (-not (Test-Path $ConvFile)) { exit 0 }
 
-# JSONL 마지막 500줄에서 assistant text 메시지 찾기
-# Claude Code는 thinking/text/tool_use를 별도 JSONL 줄로 분리함
-# → "type":"assistant" AND "type":"text" 둘 다 포함된 줄을 찾아야 함
+# JSONL 파일 끝에서 역방향으로 assistant text 메시지 찾기
+# Get-Content -Tail은 파일 전체를 읽으므로, 대용량 JSONL(수백MB)에서 느림
+# → FileStream.Seek로 끝에서 청크 단위로 읽어 성능 확보
 $lastTextLine = $null
-$lines = Get-Content -Path $transcriptPath -Tail 500 -Encoding UTF8
-for ($i = $lines.Count - 1; $i -ge 0; $i--) {
-    if ($lines[$i] -match '"type"\s*:\s*"assistant"' -and $lines[$i] -match '"type"\s*:\s*"text"') {
-        $lastTextLine = $lines[$i]
-        break
+try {
+    $fs = [System.IO.FileStream]::new($transcriptPath, 'Open', 'Read', 'ReadWrite')
+    $chunkSize = 512KB
+    $maxRead = 5MB  # 최대 5MB까지만 탐색
+    $totalRead = 0
+    $remainder = ""
+
+    while ($totalRead -lt $maxRead -and $fs.Length -gt 0) {
+        $readSize = [Math]::Min($chunkSize, $fs.Length - $totalRead)
+        if ($readSize -le 0) { break }
+        $seekPos = [Math]::Max(0, $fs.Length - $totalRead - $readSize)
+        $fs.Seek($seekPos, 'Begin') | Out-Null
+        $buffer = New-Object byte[] $readSize
+        $fs.Read($buffer, 0, $readSize) | Out-Null
+        $chunk = [System.Text.Encoding]::UTF8.GetString($buffer) + $remainder
+        $totalRead += $readSize
+
+        # 줄 단위로 분리 후 역순 탐색
+        $chunkLines = $chunk -split "`n"
+        $remainder = $chunkLines[0]  # 첫 줄은 잘렸을 수 있으므로 다음 청크에 이월
+        for ($i = $chunkLines.Count - 1; $i -ge 1; $i--) {
+            if ($chunkLines[$i] -match '"type"\s*:\s*"assistant"' -and $chunkLines[$i] -match '"type"\s*:\s*"text"') {
+                $lastTextLine = $chunkLines[$i]
+                break
+            }
+        }
+        if ($lastTextLine) { break }
+        if ($seekPos -eq 0) { break }
     }
+    $fs.Close()
+} catch {
+    if ($fs) { $fs.Close() }
 }
 if (-not $lastTextLine) { exit 0 }
 
