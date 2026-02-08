@@ -178,21 +178,20 @@ orchestrator_create_task({
 
 ## AI 배정 가이드
 
-**기본 원칙: Claude Worker만으로 충분합니다.** 외부 CLI는 설치 확인 후 강점에 맞게 선택적으로 사용.
+**기본 원칙: Claude(Opus 4.6)가 코딩/추론/리팩토링 모두 최상위.** 외부 CLI는 특정 강점이 있을 때만 선택적으로 사용.
 
-| 태스크 유형 | 기본 | 외부 CLI 가능 시 | 이유 |
-|------------|------|-----------------|------|
-| UI/프론트엔드 | claude | **gemini** (권장) | Gemini가 UI 생성에 강함 |
-| 코드 생성 (대량) | claude | **codex** | GPT-5.2 코딩 능력 + 빠른 생성 |
-| 백엔드/로직 | claude | claude 또는 codex | 복잡한 추론은 claude, 양이 많으면 codex |
-| 리팩토링 | claude | claude | 기존 코드 이해력 |
-| 코드 리뷰 | claude | gemini | 대용량 컨텍스트 (1M 토큰) |
-| 문서 작성 | claude | claude | 자연어 품질 |
+| 태스크 유형 | 담당 | 비고 |
+|------------|------|------|
+| **모든 코딩** | **claude** (기본) | Opus 4.6 = 코딩, 추론, 아키텍처 모두 최상위 |
+| UI/프론트엔드 | claude 또는 **gemini** | Gemini CLI 설치 시 UI 생성에 활용 가능 |
+| 대량 반복 코드 | claude 또는 **codex** | Codex CLI 설치 시 보일러플레이트 생성에 활용 가능 |
+| 코드 리뷰 (대용량) | claude 또는 **gemini** | 1M 토큰 컨텍스트가 필요한 경우 |
 
 > **규칙:**
-> - `aiProvider` 미지정 시 **claude**가 기본
-> - `orchestrator_detect_providers`에서 미설치로 나온 CLI는 **절대 배정 금지**
-> - 외부 CLI Worker가 실패하면 **claude로 자동 폴백** (태스크를 재생성하지 않고 Worker가 직접 처리)
+> - `aiProvider` 미지정 시 **claude**가 기본 — **대부분의 태스크는 claude로 충분**
+> - 외부 CLI(gemini, codex)는 **설치 확인 후에만** 배정, 미설치 시 절대 배정 금지
+> - 외부 CLI Worker가 실패하면 **claude로 자동 폴백**
+> - Claude가 못하는 건 없음. 외부 CLI는 "분산 처리"와 "특화 강점" 목적
 
 ## Worker 관리
 
