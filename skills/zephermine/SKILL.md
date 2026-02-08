@@ -172,6 +172,11 @@ This synthesizes the user's raw requirements into a complete specification.
 
 See [team-review-protocol.md](references/team-review-protocol.md)
 
+**⚠️ CONTEXT MANAGEMENT**: This step spawns 5 agents that return results. To prevent context overflow:
+1. **Before launching agents**: Consider running `/compact` if conversation is already long
+2. **Agent return value**: Each agent MUST write full results to files and return ONLY a 2-3 line summary
+3. **If context limit hit**: User can `/compact` or `/clear`, then resume from Step 9 (team-reviews/ files already saved)
+
 Launch FIVE Explore subagents in parallel — 고정 3명 + 도메인 전문가 2명:
 
 **고정 에이전트:**
@@ -185,6 +190,14 @@ Launch FIVE Explore subagents in parallel — 고정 3명 + 도메인 전문가 
 
 All five receive `claude-spec.md` + `claude-interview.md` + `claude-research.md` (if exists).
 도메인 전문가 프롬프트는 인터뷰의 `[Industry: {산업군}]` 태그를 기반으로 동적 생성.
+
+**CRITICAL — Agent return protocol:**
+Each agent must end with ONLY this format (NO full analysis in return text):
+```
+✅ {filename}.md 작성 완료. Critical: N건, Important: N건, Nice-to-Have: N건
+```
+Full analysis goes ONLY to `<planning_dir>/team-reviews/{filename}.md` files.
+This prevents the 5 combined agent outputs from overflowing the main context.
 
 Results → `<planning_dir>/team-reviews/` (개별 5개) + `<planning_dir>/claude-team-review.md` (통합).
 

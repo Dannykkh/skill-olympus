@@ -65,6 +65,18 @@ claude-spec.md ──┬──→ UX Agent ────────────�
 
 ### 3단계: 5개 Explore 서브에이전트 병렬 실행
 
+**⚠️ 컨텍스트 폭발 방지 — 필수 규칙:**
+각 에이전트 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
+```
+CRITICAL RETURN RULE: Write your FULL analysis to the file specified above.
+Your return message to the caller must be ONLY a 1-2 line summary like:
+"✅ {filename}.md written. Critical: N, Important: N, Nice-to-Have: N"
+DO NOT repeat the analysis content in your return message.
+This prevents context overflow when 5 agents return simultaneously.
+```
+
+이 규칙이 없으면 5개 에이전트의 전체 분석 내용이 메인 대화에 합산되어 컨텍스트 한도 초과.
+
 ```
 # 5개 에이전트를 하나의 메시지에서 병렬 실행:
 
@@ -89,6 +101,10 @@ Task(
 
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/ux-analysis.md
+
+  CRITICAL RETURN RULE: Write your FULL analysis to the file above.
+  Your return message must be ONLY: "✅ ux-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
+  DO NOT repeat the analysis in your return message.
   """
 )
 
@@ -113,6 +129,10 @@ Task(
 
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/architecture-analysis.md
+
+  CRITICAL RETURN RULE: Write your FULL analysis to the file above.
+  Your return message must be ONLY: "✅ architecture-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
+  DO NOT repeat the analysis in your return message.
   """
 )
 
@@ -139,6 +159,10 @@ Task(
   Be adversarial. Challenge EVERY assumption. If something "sounds easy", prove why it's not.
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/redteam-analysis.md
+
+  CRITICAL RETURN RULE: Write your FULL analysis to the file above.
+  Your return message must be ONLY: "✅ redteam-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
+  DO NOT repeat the analysis in your return message.
   """
 )
 
@@ -165,6 +189,10 @@ Task(
   Write results to: <planning_dir>/team-reviews/domain-process-analysis.md
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
+
+  CRITICAL RETURN RULE: Write your FULL analysis to the file above.
+  Your return message must be ONLY: "✅ domain-process-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
+  DO NOT repeat the analysis in your return message.
   """
 )
 
@@ -191,6 +219,10 @@ Task(
   Write results to: <planning_dir>/team-reviews/domain-technical-analysis.md
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
+
+  CRITICAL RETURN RULE: Write your FULL analysis to the file above.
+  Your return message must be ONLY: "✅ domain-technical-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
+  DO NOT repeat the analysis in your return message.
   """
 )
 ```
@@ -251,3 +283,4 @@ Task(
 | 서브에이전트 3개 이상 실패 | 팀 리뷰 스킵, 로그에 경고 남기고 Step 10으로 진행 |
 | 산업군 식별 불가 | 범용 fallback 사용 (비즈니스 프로세스 분석가 + 시스템 통합 전문가) |
 | team-reviews/ 디렉토리 생성 실패 | planning_dir 루트에 직접 작성 |
+| **Context limit reached** | 에이전트가 파일에 쓴 결과는 보존됨. `/compact` 후 재개하면 team-reviews/ 파일을 읽어 통합 진행. Resume 테이블에서 `+ spec → Step 9` 자동 매핑 |
