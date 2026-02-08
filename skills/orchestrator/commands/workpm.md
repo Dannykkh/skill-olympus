@@ -24,7 +24,8 @@ allowed-tools:
 
 1. **AI Provider 감지**
    - `orchestrator_detect_providers` 도구로 설치된 AI CLI 확인
-   - 사용 가능한 AI: Claude, Codex, Gemini
+   - **결과를 기록하고, 미설치 CLI에는 절대 태스크 배정하지 않음**
+   - Claude는 항상 사용 가능 (기본)
 
 2. **플랜 파일 로드**
    $ARGUMENTS (플랜 파일 경로가 주어진 경우 해당 파일 사용)
@@ -40,7 +41,7 @@ allowed-tools:
    - 플랜의 각 항목을 태스크로 분해
    - `orchestrator_create_task`로 태스크 생성
    - 의존성(depends_on) 설정
-   - AI Provider 배정 (강점에 따라)
+   - `aiProvider`는 **선택 사항** (미지정 시 claude 기본)
 
 5. **모니터링**
    - `orchestrator_get_progress`로 진행 상황 확인
@@ -159,8 +160,9 @@ orchestrator_create_task({
 - 비밀번호 찾기`,
   scope: ["src/api/auth/**", "src/models/User.ts"],
   depends_on: ["section-01-foundation"],
-  priority: 3,
-  aiProvider: "claude"
+  priority: 3
+  // aiProvider 생략 → claude 기본
+  // UI 태스크라면: aiProvider: "gemini"
 })
 ```
 
@@ -176,14 +178,21 @@ orchestrator_create_task({
 
 ## AI 배정 가이드
 
-| 태스크 유형 | 추천 AI | 이유 |
-|------------|---------|------|
-| 코드 생성 | codex | 빠른 코드 생성 |
-| 리팩토링 | claude | 복잡한 추론 |
-| 코드 리뷰 | gemini | 대용량 컨텍스트 |
-| 문서 작성 | claude | 자연어 품질 |
+**기본 원칙: Claude Worker만으로 충분합니다.** 외부 CLI는 설치 확인 후 강점에 맞게 선택적으로 사용.
 
-> **중요**: `aiProvider`를 반드시 지정하세요. Worker가 태스크에 맞는 AI를 선택하는 기준이 됩니다.
+| 태스크 유형 | 기본 | 외부 CLI 가능 시 | 이유 |
+|------------|------|-----------------|------|
+| UI/프론트엔드 | claude | **gemini** (권장) | Gemini가 UI 생성에 강함 |
+| 코드 생성 (대량) | claude | **codex** | GPT-5.2 코딩 능력 + 빠른 생성 |
+| 백엔드/로직 | claude | claude 또는 codex | 복잡한 추론은 claude, 양이 많으면 codex |
+| 리팩토링 | claude | claude | 기존 코드 이해력 |
+| 코드 리뷰 | claude | gemini | 대용량 컨텍스트 (1M 토큰) |
+| 문서 작성 | claude | claude | 자연어 품질 |
+
+> **규칙:**
+> - `aiProvider` 미지정 시 **claude**가 기본
+> - `orchestrator_detect_providers`에서 미설치로 나온 CLI는 **절대 배정 금지**
+> - 외부 CLI Worker가 실패하면 **claude로 자동 폴백** (태스크를 재생성하지 않고 Worker가 직접 처리)
 
 ## Worker 관리
 
@@ -212,3 +221,14 @@ Worker는 다음 조건에서 자동 종료:
 ```
 orchestrator_spawn_workers({ "count": 1, "auto_terminate": false })
 ```
+
+## 비용 주의사항
+
+Worker는 **Claude Code 인스턴스**입니다. 외부 CLI(Codex, Gemini)를 호출하면:
+- Worker(Claude) + 외부 CLI = **이중 API 비용** 발생
+- Worker 3개 = Claude 세션 3개 동시 사용
+
+**권장 사항:**
+- Worker 수는 **2~3개**로 제한 (비용 대비 효율)
+- 외부 CLI 태스크는 전체의 **30% 이하**로 유지
+- 단순 반복 코드 생성만 Codex/Gemini에 배정, 나머지는 Claude
