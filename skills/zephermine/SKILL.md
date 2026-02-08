@@ -17,41 +17,32 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 
 ### 1. Print Intro
 
-Print intro banner immediately:
+간결하게 진행 순서만 출력:
 ```
-═══════════════════════════════════════════════════════════════
-ZEPHERMINE: AI-Assisted Implementation Planning
-═══════════════════════════════════════════════════════════════
-Research → Interview → Spec Synthesis → Team Analysis → Plan → External Review → Sections → Verify
-
-Note: ZEPHERMINE will write many .md files to the planning directory you pass it
+젭마인(Zephermine) 시작
+순서: Research → Interview → Spec → Team Review → Plan → External Review → Sections → Verify
 ```
 
-### 2. Validate Spec File Input
+### 2. Resolve Spec File Path
 
 **Check if user provided @file at invocation AND it's a spec file (ends with `.md`).**
 
-If NO @file was provided OR the path doesn't end with `.md`, output this and STOP:
+**경로가 제공된 경우:** 그대로 사용
+
+**경로가 없는 경우:** 사용자 대화에서 주제를 추론하여 자동 경로 생성 후 바로 진행:
+1. 대화 컨텍스트에서 기능/프로젝트명 추출 (예: "UI 재설계" → `ui-redesign`)
+2. 기본 경로 패턴: `docs/plan/{feature-name}/spec.md`
+3. 사용자에게 경로만 간단히 확인:
+   ```
+   계획 경로: docs/plan/ui-redesign/spec.md
+   이 경로로 진행합니다. (변경하려면 알려주세요)
+   ```
+4. **확인을 기다리지 않고 바로 다음 단계 진행** (사용자가 변경 요청하면 그때 수정)
+
+**주제를 추론할 수 없는 경우에만** 간단히 질문:
 ```
-═══════════════════════════════════════════════════════════════
-ZEPHERMINE: Spec File Required
-═══════════════════════════════════════════════════════════════
-
-This skill requires a markdown spec file path (must end with .md).
-The planning directory is inferred from the spec file's parent directory.
-
-To start a NEW plan:
-  1. Run: /zephermine @docs/plan/my-feature-spec.md
-  2. Folder and spec file will be auto-created if they don't exist
-  3. Edit the spec file with your requirements, then re-run
-
-To RESUME an existing plan:
-  1. Run: /zephermine @path/to/your-spec.md
-
-Example: /zephermine @docs/plan/my-feature-spec.md
-═══════════════════════════════════════════════════════════════
+어떤 기능을 계획할까요? (예: "로그인 리팩토링", "결제 시스템")
 ```
-**Do not continue. Wait for user to re-invoke with a .md file path.**
 
 ### 3. Setup Planning Session
 
