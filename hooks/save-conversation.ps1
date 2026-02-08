@@ -1,4 +1,4 @@
-# 대화 로그 저장 (단순 append)
+﻿# 대화 로그 저장 (단순 append)
 # Claude Code는 stdin으로 JSON을 전달함 (UTF-8)
 
 # UTF-8 인코딩 설정 (BOM 없음)

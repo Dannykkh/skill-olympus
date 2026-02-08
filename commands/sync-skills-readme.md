@@ -49,7 +49,7 @@ Assign each skill to a category based on its purpose. Use this mapping:
 | Development | 🛠️ | session, handoff, entropy, development, workflow, database, dependency |
 | Design & Frontend | 🎨 | design, frontend, ui, openapi, typescript, system |
 | Utilities | 🔧 | domain, meme, web-to-markdown, utility, tool, datadog |
-| Planning | 🎯 | plan, planning, spec, forge, gepetto, requirements, clarity, game-changing, features |
+| Planning | 🎯 | plan, planning, spec, forge, zephermine, requirements, clarity, game-changing, features |
 | Professional | 👔 | professional, communication, career, soft-skill, feedback, conversation |
 | Testing | 🧪 | test, testing, qa, quality |
 | Git | 📦 | commit, git, branch, pr, pull-request |

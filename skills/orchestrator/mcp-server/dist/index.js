@@ -57,6 +57,10 @@ const GetTaskSchema = z.object({
 const DeleteTaskSchema = z.object({
     task_id: z.string().describe('삭제할 태스크 ID')
 });
+// 플랜 파일 스키마
+const ReadPlanSchema = z.object({
+    path: z.string().describe('읽을 플랜 파일 경로')
+});
 // Worker Spawn 스키마
 const SpawnWorkersSchema = z.object({
     count: z.number().min(1).max(10).default(1).describe('생성할 Worker 수 (1-10)'),
@@ -128,6 +132,33 @@ const TOOLS = [
                 }
             },
             required: ['id', 'prompt']
+        }
+    },
+    {
+        name: 'orchestrator_list_plan_files',
+        description: '.claude/plans/ 디렉토리에서 사용 가능한 플랜 파일 목록을 조회합니다. (PM 전용)',
+        inputSchema: {
+            type: 'object',
+            properties: {}
+        }
+    },
+    {
+        name: 'orchestrator_get_latest_plan',
+        description: '가장 최근 수정된 플랜 파일을 자동으로 찾아 내용을 반환합니다. (PM 전용)',
+        inputSchema: {
+            type: 'object',
+            properties: {}
+        }
+    },
+    {
+        name: 'orchestrator_read_plan',
+        description: '지정된 경로의 플랜 파일 내용을 읽어 반환합니다. (PM 전용)',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: '읽을 플랜 파일 경로' }
+            },
+            required: ['path']
         }
     },
     {
@@ -335,6 +366,47 @@ async function analyzeCodebase(args) {
         suggestions
     };
 }
+async function listPlanFiles() {
+    const plansDir = path.join(PROJECT_ROOT, '.claude', 'plans');
+    if (!fs.existsSync(plansDir)) {
+        return { files: [], directory: plansDir };
+    }
+    const entries = fs.readdirSync(plansDir);
+    const files = entries
+        .filter(f => f.endsWith('.md'))
+        .map(f => {
+        const fullPath = path.join(plansDir, f);
+        const stat = fs.statSync(fullPath);
+        return {
+            name: f,
+            path: fullPath,
+            modifiedAt: stat.mtime.toISOString(),
+            size: stat.size
+        };
+    })
+        .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+    return { files, directory: plansDir };
+}
+async function getLatestPlan() {
+    const { files } = await listPlanFiles();
+    if (files.length === 0) {
+        return { found: false, error: 'No plan files found in .claude/plans/' };
+    }
+    const latest = files[0];
+    const content = fs.readFileSync(latest.path, 'utf-8');
+    return { found: true, path: latest.path, content };
+}
+async function readPlan(filePath) {
+    // 절대 경로 또는 상대 경로 지원
+    const resolvedPath = path.isAbsolute(filePath)
+        ? filePath
+        : path.join(PROJECT_ROOT, filePath);
+    if (!fs.existsSync(resolvedPath)) {
+        return { found: false, path: resolvedPath, error: `File not found: ${resolvedPath}` };
+    }
+    const content = fs.readFileSync(resolvedPath, 'utf-8');
+    return { found: true, path: resolvedPath, content };
+}
 async function spawnWorkers(count, autoTerminate) {
     const isWindows = process.platform === 'win32';
     const scriptDir = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..', 'scripts');
@@ -493,6 +565,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     priority: parsed.priority,
                     aiProvider
                 });
+                break;
+            }
+            case 'orchestrator_list_plan_files': {
+                result = await listPlanFiles();
+                break;
+            }
+            case 'orchestrator_get_latest_plan': {
+                result = await getLatestPlan();
+                break;
+            }
+            case 'orchestrator_read_plan': {
+                const parsed = ReadPlanSchema.parse(args);
+                result = await readPlan(parsed.path);
                 break;
             }
             case 'orchestrator_get_progress': {

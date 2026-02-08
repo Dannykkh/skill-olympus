@@ -1,11 +1,15 @@
 ---
-name: gepetto
+name: zephermine
 description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis.
 ---
 
-# Gepetto
+# Zephermine
 
-Orchestrates a multi-step planning process: Research → Interview → Spec Synthesis → Plan → External Review → Sections → Verify
+> **Zephyr**(제퍼: 산들바람/서풍, 부드럽고 빠른 흐름) + **Minerva**(미네르바: 지혜·전략·판단)의 합성어.
+> 바람처럼 가볍고 빠르게 상황을 읽고, 미네르바처럼 논리적으로 설계해 실행 가능한 계획으로 만드는 능력을 뜻합니다.
+> [softaworks/gepetto](https://github.com/softaworks/gepetto) 스킬을 벤치마킹하여 커스터마이징한 버전입니다.
+
+Orchestrates a multi-step planning process: Research → Interview → Spec Synthesis → Team Analysis → Plan → External Review → Sections → Verify
 
 ## CRITICAL: First Actions
 
@@ -16,11 +20,11 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 Print intro banner immediately:
 ```
 ═══════════════════════════════════════════════════════════════
-GEPETTO: AI-Assisted Implementation Planning
+ZEPHERMINE: AI-Assisted Implementation Planning
 ═══════════════════════════════════════════════════════════════
-Research → Interview → Spec Synthesis → Plan → External Review → Sections → Verify
+Research → Interview → Spec Synthesis → Team Analysis → Plan → External Review → Sections → Verify
 
-Note: GEPETTO will write many .md files to the planning directory you pass it
+Note: ZEPHERMINE will write many .md files to the planning directory you pass it
 ```
 
 ### 2. Validate Spec File Input
@@ -30,21 +34,21 @@ Note: GEPETTO will write many .md files to the planning directory you pass it
 If NO @file was provided OR the path doesn't end with `.md`, output this and STOP:
 ```
 ═══════════════════════════════════════════════════════════════
-GEPETTO: Spec File Required
+ZEPHERMINE: Spec File Required
 ═══════════════════════════════════════════════════════════════
 
 This skill requires a markdown spec file path (must end with .md).
 The planning directory is inferred from the spec file's parent directory.
 
 To start a NEW plan:
-  1. Run: /gepetto @docs/plan/my-feature-spec.md
+  1. Run: /zephermine @docs/plan/my-feature-spec.md
   2. Folder and spec file will be auto-created if they don't exist
   3. Edit the spec file with your requirements, then re-run
 
 To RESUME an existing plan:
-  1. Run: /gepetto @path/to/your-spec.md
+  1. Run: /zephermine @path/to/your-spec.md
 
-Example: /gepetto @docs/plan/my-feature-spec.md
+Example: /zephermine @docs/plan/my-feature-spec.md
 ═══════════════════════════════════════════════════════════════
 ```
 **Do not continue. Wait for user to re-invoke with a .md file path.**
@@ -71,10 +75,12 @@ Determine session state by checking existing files:
    - `claude-research.md`
    - `claude-interview.md`
    - `claude-spec.md`
+   - `claude-team-review.md`
    - `claude-plan.md`
    - `claude-integration-notes.md`
    - `claude-ralph-loop-prompt.md`
    - `claude-ralphy-prd.md`
+   - `team-reviews/` directory
    - `reviews/` directory
    - `sections/` directory
 
@@ -85,13 +91,14 @@ Determine session state by checking existing files:
 | None | new | Step 4 |
 | research only | resume | Step 6 (interview) |
 | research + interview | resume | Step 8 (spec synthesis) |
-| + spec | resume | Step 9 (plan) |
-| + plan | resume | Step 10 (external review) |
-| + reviews | resume | Step 11 (integrate) |
-| + integration-notes | resume | Step 12 (user review) |
-| + sections/index.md | resume | Step 14 (write sections) |
-| all sections complete | resume | Step 15 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 18 (verify) |
+| + spec | resume | Step 9 (team analysis) |
+| + claude-team-review.md | resume | Step 10 (plan) |
+| + plan | resume | Step 11 (external review) |
+| + reviews | resume | Step 12 (integrate) |
+| + integration-notes | resume | Step 13 (user review) |
+| + sections/index.md | resume | Step 15 (write sections) |
+| all sections complete | resume | Step 16 (execution files) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 19 (verify) |
 | + claude-verify-report.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
@@ -114,7 +121,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/19: {STEP_NAME}
+STEP {N}/20: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
@@ -170,13 +177,40 @@ Combine into `<planning_dir>/claude-spec.md`:
 
 This synthesizes the user's raw requirements into a complete specification.
 
-### 9. Generate Implementation Plan
+### 9. Multi-Agent Team Analysis
+
+See [team-review-protocol.md](references/team-review-protocol.md)
+
+Launch FIVE Explore subagents in parallel — 고정 3명 + 도메인 전문가 2명:
+
+**고정 에이전트:**
+1. **UX Agent** — 사용자 경험, 사용성, 접근성
+2. **Architecture Agent** — 확장성, 성능, 보안, 기술 부채
+3. **Red Team Agent** — 가정 검증, 실패 모드, 엣지 케이스, 누락 항목
+
+**도메인 전문가 (인터뷰에서 파악한 산업군 기반으로 동적 구성):**
+4. **Domain Process Expert** — 해당 산업의 전체 업무 프로세스 관점
+5. **Domain Technical Expert** — 해당 산업의 필수 기술/표준/규정 관점
+
+All five receive `claude-spec.md` + `claude-interview.md` + `claude-research.md` (if exists).
+도메인 전문가 프롬프트는 인터뷰의 `[Industry: {산업군}]` 태그를 기반으로 동적 생성.
+
+Results → `<planning_dir>/team-reviews/` (개별 5개) + `<planning_dir>/claude-team-review.md` (통합).
+
+The synthesized team review feeds into Step 10 (plan generation) as additional input.
+
+### 10. Generate Implementation Plan
 
 Create detailed plan → `<planning_dir>/claude-plan.md`
 
-**IMPORTANT**: Write for an unfamiliar reader. The plan must be fully self-contained - an engineer or LLM with no prior context should understand *what* we're building, *why*, and *how* just from reading this document.
+**Inputs:**
+- `<planning_dir>/claude-spec.md`
+- `<planning_dir>/claude-team-review.md` (team analysis findings)
 
-### 10. External Review
+**IMPORTANT**: Address all "Critical Findings" from the team review.
+Write for an unfamiliar reader. The plan must be fully self-contained - an engineer or LLM with no prior context should understand *what* we're building, *why*, and *how* just from reading this document.
+
+### 11. External Review
 
 See [external-review.md](references/external-review.md)
 
@@ -186,7 +220,7 @@ Launch TWO subagents in parallel to review the plan:
 
 Both receive the plan content and return their analysis. Write results to `<planning_dir>/reviews/`.
 
-### 11. Integrate External Feedback
+### 12. Integrate External Feedback
 
 Analyze the suggestions in `<planning_dir>/reviews/`.
 
@@ -198,7 +232,7 @@ You are the authority on what to integrate or not. It's OK if you decide to not 
 
 **Step 2:** Update `<planning_dir>/claude-plan.md` with the integrated changes.
 
-### 12. User Review of Integrated Plan
+### 13. User Review of Integrated Plan
 
 Use AskUserQuestion:
 ```
@@ -214,7 +248,7 @@ Options: "Done reviewing"
 
 Wait for user confirmation before proceeding.
 
-### 13. Create Section Index
+### 14. Create Section Index
 
 See [section-index.md](references/section-index.md)
 
@@ -224,7 +258,7 @@ Read `claude-plan.md`. Identify natural section boundaries and create `<planning
 
 Write `index.md` before proceeding to section file creation.
 
-### 14. Write Section Files — Parallel Subagents
+### 15. Write Section Files — Parallel Subagents
 
 See [section-splitting.md](references/section-splitting.md)
 
@@ -274,7 +308,7 @@ Task(
 
 Wait for ALL subagents to complete before proceeding.
 
-### 15. Generate Execution Files — Subagent
+### 16. Generate Execution Files — Subagent
 
 **Delegate to subagent** to reduce main context token usage:
 
@@ -314,27 +348,29 @@ Task(
 
 Wait for subagent completion before proceeding.
 
-### 16. Final Status
+### 17. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
 
-### 17. Output Summary
+### 18. Output Summary
 
 Print generated files and next steps:
 ```
 ═══════════════════════════════════════════════════════════════
-GEPETTO: Planning Complete
+ZEPHERMINE: Planning Complete
 ═══════════════════════════════════════════════════════════════
 
 Generated files:
   - claude-research.md (research findings)
   - claude-interview.md (Q&A transcript)
   - claude-spec.md (synthesized specification)
+  - claude-team-review.md (multi-agent team analysis)
   - claude-plan.md (implementation plan)
   - claude-integration-notes.md (feedback decisions)
+  - team-reviews/ (individual agent analyses)
   - reviews/ (external LLM feedback)
   - sections/ (implementation units)
   - claude-ralph-loop-prompt.md (for ralph-loop plugin)
@@ -356,17 +392,17 @@ Option C - Autonomous with Ralphy (external CLI):
   # Or: cp <planning_dir>/claude-ralphy-prd.md ./PRD.md && ralphy
 
 Option D - Verify after implementation:
-  /gepetto @<planning_dir>/your-spec.md
+  /zephermine @<planning_dir>/your-spec.md
   (모든 계획 파일이 있으면 자동으로 verify 모드 진입)
 ═══════════════════════════════════════════════════════════════
 ```
 
-### 18. Verify Implementation
+### 19. Verify Implementation
 
 See [verify-protocol.md](references/verify-protocol.md)
 
 구현 완료 후 claude-spec.md 대비 검증.
-사용자가 `/gepetto @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
+사용자가 `/zephermine @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
 
 서브에이전트 2개 병렬 실행:
 1. 기능 검증 (Explore) — 요구사항 vs 실제 코드
@@ -374,10 +410,10 @@ See [verify-protocol.md](references/verify-protocol.md)
 
 결과 → `<planning_dir>/claude-verify-report.md`
 
-### 19. Verification Report
+### 20. Verification Report
 
 검증 결과를 사용자에게 표시.
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 18 반복
+- "수정 후 재검증" → Step 19 반복
 - "승인" → 완료

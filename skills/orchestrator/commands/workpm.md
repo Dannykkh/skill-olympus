@@ -28,7 +28,8 @@ allowed-tools:
 
 2. **플랜 파일 로드**
    $ARGUMENTS (플랜 파일 경로가 주어진 경우 해당 파일 사용)
-   - 경로가 없으면 `orchestrator_get_latest_plan`으로 최신 플랜 자동 로드
+   - 경로가 없으면 `orchestrator_get_latest_plan`으로 `.claude/plans/` 최신 플랜 자동 로드
+   - zephermine 산출물이 있으면 아래 [Zephermine 산출물 활용](#zephermine-산출물-활용) 절차 따르기
    - 플랜 파일을 분석하여 작업 목록 추출
 
 3. **프로젝트 분석**
@@ -44,6 +45,62 @@ allowed-tools:
 5. **모니터링**
    - `orchestrator_get_progress`로 진행 상황 확인
    - 블로킹된 태스크 확인 및 해결
+
+## Zephermine 산출물 활용
+
+zephermine(`/zephermine`)로 설계한 프로젝트는 planning 디렉토리에 산출물이 이미 존재합니다.
+`orchestrator_read_plan`으로 경로를 지정해 읽으세요.
+
+### 탐색 순서
+
+1. **구현 계획 확인** — 핵심 파일 먼저 읽기:
+   ```
+   orchestrator_read_plan({ path: "<planning_dir>/claude-plan.md" })
+   ```
+   `claude-plan.md`에 전체 구현 로드맵과 단계별 작업이 정의되어 있음.
+
+2. **섹션 목록 확인** — 병렬 분배 단위 파악:
+   ```
+   orchestrator_read_plan({ path: "<planning_dir>/sections/index.md" })
+   ```
+   `SECTION_MANIFEST`에 섹션별 의존성 그래프가 포함됨.
+
+3. **개별 섹션 읽기** — 태스크 1개 = 섹션 1개로 매핑:
+   ```
+   orchestrator_read_plan({ path: "<planning_dir>/sections/section-01-xxx.md" })
+   ```
+
+### zephermine 산출물 → 태스크 매핑
+
+| zephermine 파일 | PM 활용법 |
+|-------------|-----------|
+| `claude-plan.md` | 전체 작업 분해의 기준 (필수 읽기) |
+| `sections/index.md` | 섹션 간 의존성 → `depends_on` 설정 |
+| `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
+| `claude-spec.md` | 요구사항 확인 필요 시 참조 |
+| `claude-integration-notes.md` | 외부 리뷰 반영 사항 확인 |
+
+### 예시: zephermine 섹션 기반 태스크 생성
+
+```
+// sections/index.md에서 의존성 파악 후:
+orchestrator_create_task({
+  id: "section-01-foundation",
+  prompt: "<section-01 내용 기반 상세 지시>",
+  scope: ["src/core/**"],
+  priority: 3
+})
+
+orchestrator_create_task({
+  id: "section-02-api",
+  prompt: "<section-02 내용 기반 상세 지시>",
+  depends_on: ["section-01-foundation"],
+  scope: ["src/api/**"],
+  priority: 2
+})
+```
+
+> **팁**: zephermine 산출물의 `<planning_dir>` 경로는 사용자가 `/workpm docs/plan/claude-plan.md`처럼 인자로 전달하거나, 대화에서 알려줍니다.
 
 ## 태스크 설계 원칙
 

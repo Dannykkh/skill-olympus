@@ -1,0 +1,253 @@
+# Team Review Protocol
+
+5개 Explore 서브에이전트가 spec을 병렬 분석하여 plan 품질을 높이는 단계.
+
+## Overview
+
+```
+claude-spec.md ──┬──→ UX Agent ──────────────────→ ux-analysis.md
+                 ├──→ Architecture Agent ─────────→ architecture-analysis.md
+                 ├──→ Red Team Agent ─────────────→ redteam-analysis.md
+                 ├──→ Domain Process Expert ──────→ domain-process-analysis.md
+                 └──→ Domain Technical Expert ────→ domain-technical-analysis.md
+                                                          │
+                                                          ▼
+                                                  claude-team-review.md (통합)
+```
+
+## 에이전트 구성
+
+### 고정 에이전트 (모든 프로젝트)
+
+| # | 에이전트 | 관점 |
+|---|----------|------|
+| 1 | **UX Agent** | 사용자 경험, 사용성, 접근성, 사용자 여정 |
+| 2 | **Architecture Agent** | 확장성, 성능, 보안, 기술 부채 |
+| 3 | **Red Team Agent** (악마의 변호인) | 가정 검증, 실패 모드, 엣지 케이스, 누락 항목 |
+
+### 동적 도메인 전문가 (산업군 기반)
+
+| # | 에이전트 | 관점 |
+|---|----------|------|
+| 4 | **Domain Process Expert** | 해당 산업의 전체 업무 프로세스 |
+| 5 | **Domain Technical Expert** | 해당 산업의 필수 기술/표준/규정 |
+
+인터뷰에서 파악한 산업군(`[Industry: {산업군}]` 태그)을 기반으로 페르소나를 동적 결정.
+
+## 산업군 → 도메인 전문가 매핑
+
+| 산업군 | 프로세스 전문가 | 기술 전문가 |
+|--------|----------------|-------------|
+| 의료/헬스케어 | 병원 운영 전문가 (진료→처방→수납→보험청구) | 의료IT 전문가 (HL7/FHIR, HIPAA, EMR/EHR) |
+| 금융/핀테크 | 금융 업무 전문가 (KYC→거래→정산→보고) | 금융IT 전문가 (PCI-DSS, 암호화, 실시간 거래) |
+| 이커머스 | 커머스 운영 전문가 (상품등록→주문→결제→배송→CS) | 커머스 기술 전문가 (결제 PG, 재고 관리, 검색 엔진) |
+| 교육/에듀테크 | 교육 과정 전문가 (커리큘럼→수업→평가→성적) | 에듀테크 전문가 (LMS, SCORM, 적응형 학습) |
+| 물류/SCM | 물류 운영 전문가 (입고→보관→피킹→출고→배송) | 물류IT 전문가 (WMS, TMS, 바코드/RFID) |
+| 제조 | 생산관리 전문가 (수주→자재→생산→품질→출하) | 제조IT 전문가 (MES, PLC, IoT 센서) |
+| 부동산 | 부동산 거래 전문가 (매물등록→중개→계약→등기) | 프롭테크 전문가 (GIS, 공시가격 API, 등기 연동) |
+| **범용 (불명확)** | **비즈니스 프로세스 분석가** | **시스템 통합 전문가** |
+
+## 실행 절차
+
+### 1단계: 입력 파일 준비 + 산업군 식별
+
+1. `<planning_dir>/claude-interview.md`에서 `[Industry: {산업군}]` 태그 추출
+2. 태그가 없으면 인터뷰 내용에서 산업군 추론, 없으면 "범용" 사용
+3. 입력 파일 목록 확인:
+   - `claude-spec.md` (필수)
+   - `claude-interview.md` (필수)
+   - `claude-research.md` (있으면 포함)
+
+### 2단계: 도메인 전문가 페르소나 결정
+
+산업군 매핑 테이블에서 프로세스/기술 전문가 페르소나 선택.
+매핑에 없는 산업군이면 범용 fallback 사용.
+
+### 3단계: 5개 Explore 서브에이전트 병렬 실행
+
+```
+# 5개 에이전트를 하나의 메시지에서 병렬 실행:
+
+Task(
+  subagent_type="Explore",
+  prompt="""
+  You are a **UX Expert** — 사용자 경험 전문가 (15년 경력).
+
+  Read these files:
+  - <planning_dir>/claude-spec.md
+  - <planning_dir>/claude-interview.md
+  - <planning_dir>/claude-research.md (if exists)
+
+  Also explore the existing codebase for context.
+
+  Analyze and report:
+  1. **User Journey**: 주요 사용 시나리오별 흐름 매핑. 혼란/좌절 지점 식별.
+  2. **Usability**: 정보 구조, 인지 부하, 일관성 문제.
+  3. **Accessibility**: 키보드 네비게이션, 스크린 리더, 색상 대비.
+  4. **Edge Scenarios**: 첫 사용자, 파워 유저, 에러 복구 시나리오.
+  5. **DX** (프론트엔드 없는 프로젝트): API UX, 개발자 경험 관점.
+
+  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Write results to: <planning_dir>/team-reviews/ux-analysis.md
+  """
+)
+
+Task(
+  subagent_type="Explore",
+  prompt="""
+  You are a **Technical Architecture Expert** — 시스템 아키텍처 전문가 (15년 경력).
+
+  Read these files:
+  - <planning_dir>/claude-spec.md
+  - <planning_dir>/claude-interview.md
+  - <planning_dir>/claude-research.md (if exists)
+
+  Also explore the existing codebase for context.
+
+  Analyze and report:
+  1. **Architecture Fit**: 아키텍처 패턴, 결합도, 데이터 흐름 적절성.
+  2. **Scalability**: 병목 지점, 데이터 증가 대응, 캐싱 전략.
+  3. **Performance**: 지연 민감 경로, I/O 패턴, DB 쿼리 효율성.
+  4. **Security**: 인증/인가, 입력 검증, OWASP Top 10.
+  5. **Tech Debt**: 의존성 리스크, 테스트 전략 적합성.
+
+  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Write results to: <planning_dir>/team-reviews/architecture-analysis.md
+  """
+)
+
+Task(
+  subagent_type="Explore",
+  prompt="""
+  You are a **Red Team Agent** (악마의 변호인) — 모든 가정에 의문을 제기하는 전문가.
+
+  Read these files:
+  - <planning_dir>/claude-spec.md
+  - <planning_dir>/claude-interview.md
+  - <planning_dir>/claude-research.md (if exists)
+
+  Also explore the existing codebase for context.
+
+  Analyze and report:
+  1. **Assumption Audit**: "simple"이라고 적힌 것이 진짜 심플한가? 숨겨진 복잡성.
+  2. **Failure Modes**: 외부 의존성 장애, 레이스 컨디션, 데이터 손상 시나리오.
+  3. **Edge/Corner Cases**: 경계값, 타이밍, 권한 변경, 동시성.
+  4. **Scope Creep Risk**: 숨겨진 복잡성, 과소평가된 작업량.
+  5. **Missing Items**: 에러 핸들링, 모니터링, 롤백, 마이그레이션, 문서.
+  6. **Risk Matrix**: 각 리스크별 확률 × 영향 × 완화 방안.
+
+  Be adversarial. Challenge EVERY assumption. If something "sounds easy", prove why it's not.
+  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Write results to: <planning_dir>/team-reviews/redteam-analysis.md
+  """
+)
+
+Task(
+  subagent_type="Explore",
+  prompt="""
+  You are a **{산업군} Process Expert** — 20년 경력의 {산업군} 업무 전문가.
+  {산업군}의 전체 비즈니스 프로세스와 업무 흐름을 깊이 이해하고 있습니다.
+
+  Read these files:
+  - <planning_dir>/claude-spec.md
+  - <planning_dir>/claude-interview.md
+  - <planning_dir>/claude-research.md (if exists)
+
+  Analyze and report:
+  1. **프로세스 완전성**: spec이 {산업군}의 핵심 업무 흐름을 빠짐없이 커버하는가?
+  2. **프로세스 순서/의존성**: 업무 단계 간 순서가 올바른가? 누락된 단계는?
+  3. **이해관계자**: 빠진 역할/부서가 있는가? (예: 승인자, 감사자, 외부 기관)
+  4. **예외 프로세스**: 정상 흐름 외에 반품/취소/이의신청 등 예외 흐름은?
+  5. **업계 관행**: {산업군}에서 당연시하는 관행인데 spec에 빠진 것은?
+  6. **규제/컴플라이언스**: 법적 의무사항 중 누락된 것은?
+
+  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Write results to: <planning_dir>/team-reviews/domain-process-analysis.md
+
+  NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
+  """
+)
+
+Task(
+  subagent_type="Explore",
+  prompt="""
+  You are a **{산업군} Technical Domain Expert** — {산업군} IT 시스템 구축 전문가.
+  {산업군}에서 핵심적으로 필요한 기술, 표준, 규격을 깊이 이해하고 있습니다.
+
+  Read these files:
+  - <planning_dir>/claude-spec.md
+  - <planning_dir>/claude-interview.md
+  - <planning_dir>/claude-research.md (if exists)
+
+  Analyze and report:
+  1. **필수 기술/표준**: {산업군}에서 반드시 사용해야 하는 기술 표준은?
+  2. **필수 연동**: 이 산업에서 통상적으로 연동하는 외부 시스템은?
+  3. **데이터 형식**: 업계 표준 데이터 포맷이 있는가?
+  4. **보안/규정**: {산업군} 특화 보안 요구사항 (개인정보, 금융규제, 의료정보 등)
+  5. **성능 기준**: {산업군}에서 통상적으로 요구하는 SLA/성능 수준은?
+  6. **기존 솔루션**: 이미 검증된 오픈소스/상용 솔루션이 있어 바퀴를 재발명할 필요 없는 부분은?
+
+  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Write results to: <planning_dir>/team-reviews/domain-technical-analysis.md
+
+  NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
+  """
+)
+```
+
+### 4단계: 개별 결과 저장
+
+각 서브에이전트가 `<planning_dir>/team-reviews/` 디렉토리에 직접 작성:
+
+| 에이전트 | 산출물 |
+|----------|--------|
+| UX Agent | `team-reviews/ux-analysis.md` |
+| Architecture Agent | `team-reviews/architecture-analysis.md` |
+| Red Team Agent | `team-reviews/redteam-analysis.md` |
+| Domain Process Expert | `team-reviews/domain-process-analysis.md` |
+| Domain Technical Expert | `team-reviews/domain-technical-analysis.md` |
+
+### 5단계: 통합 리뷰 작성
+
+5개 분석 결과를 읽고 `<planning_dir>/claude-team-review.md` 작성.
+
+**통합 기준:**
+- **Critical**: 다수 팀 공통 지적 + 레드팀 고위험 + 도메인 전문가 필수 지적
+- **Important**: 2팀 이상 지적 또는 중요도 높은 사항
+- **Nice-to-Have**: 단일 팀 지적, 개선 사항
+- **Dismissed**: 반영하지 않는 항목 + 이유
+
+**통합 리뷰 형식:**
+
+```markdown
+# Team Review Summary
+
+## Industry Context
+- 산업군: {산업군}
+- 도메인 프로세스 전문가: {페르소나명}
+- 도메인 기술 전문가: {페르소나명}
+
+## Critical Findings (반드시 plan에 반영)
+- [출처: UX/Arch/RedTeam/DomainProcess/DomainTech] finding 내용
+
+## Important Findings (plan에 반영 권장)
+- [출처] finding 내용
+
+## Nice-to-Have (선택적 반영)
+- [출처] finding 내용
+
+## Dismissed (반영하지 않음 + 이유)
+- [출처] finding 내용 — 사유: ...
+
+## Impact on Plan
+- 어떤 영역이 변경되어야 하는지 요약
+```
+
+## 실패 처리
+
+| 상황 | 대응 |
+|------|------|
+| 서브에이전트 1개 실패 | 나머지 결과로 통합 진행, 실패 에이전트 결과는 "N/A" 표기 |
+| 서브에이전트 3개 이상 실패 | 팀 리뷰 스킵, 로그에 경고 남기고 Step 10으로 진행 |
+| 산업군 식별 불가 | 범용 fallback 사용 (비즈니스 프로세스 분석가 + 시스템 통합 전문가) |
+| team-reviews/ 디렉토리 생성 실패 | planning_dir 루트에 직접 작성 |
