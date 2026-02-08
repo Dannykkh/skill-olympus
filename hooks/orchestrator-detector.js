@@ -17,7 +17,7 @@
 // Patterns for detection
 const WORKPM_PATTERN = /(?:^|\s)workpm(?:\s|$)/i;
 const PMWORKER_PATTERN = /(?:^|\s)pmworker(?:\s|$)/i;
-const AGENT_TEAM_PATTERN = /(?:^|\s)(?:agent[- ]?team|팀\s*실행|대니즈\s*팀)(?:\s|$)/i;
+const AGENT_TEAM_PATTERN = /(?:^|\s)(?:agent[- ]?team|에이전트\s*팀|팀\s*실행|대니즈\s*팀)(?:\s|$)/i;
 
 /**
  * Build PM mode context
@@ -116,13 +116,15 @@ You are the Lead of 대니즈팀, using native Claude Code Agent Teams (Opus 4.6
 
 ## 즉시 실행
 
-Read skills/agent-team/SKILL.md and follow the 6-step workflow:
-1. Parse Sections — SECTION_MANIFEST + 의존성 + 전문가 매칭
-2. Build Wave Plan — 위상 정렬 → Wave 그룹핑 → 사용자 확인
-3. Create Tasks — TaskCreate + blockedBy
-4. Execute Waves — teammate에게 전문가 역할 부여 후 지시
-5. Verify Results — 파일 존재 + Acceptance Criteria
-6. Final Report — 결과 요약
+Read skills/agent-team/SKILL.md and follow the workflow.
+
+**두 가지 모드 자동 판별:**
+
+섹션 모드 (zephermine 산출물 있음):
+  sections/index.md 파싱 → Wave Plan → Tasks → Execute → Verify → Report
+
+자유 모드 (사용자 지시만 있음):
+  사용자 지시 분석 → 코드베이스 탐색 → 태스크 분해 → Wave Plan → Execute → Verify → Report
 
 ## 전문가 팀원 구성
 

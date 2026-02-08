@@ -31,30 +31,55 @@ teammate 생성 시 이 팀명을 사용하세요.
 ### 1. Print Intro
 
 ```
-Agent Team 시작
-순서: Parse Sections → Build Wave Plan → Create Tasks → Execute Waves → Verify → Report
+대니즈팀(Dannys Team) 시작
 ```
 
-### 2. Resolve Planning Directory
+모드 판별 후 표시:
+```
+[섹션 모드] 순서: Parse Sections → Wave Plan → Tasks → Execute → Verify → Report
+[자유 모드] 순서: Analyze → Wave Plan → Tasks → Execute → Verify → Report
+```
 
-**$ARGUMENTS가 제공된 경우:** 해당 경로를 planning_dir로 사용
+### 2. Determine Mode
 
-**$ARGUMENTS가 없는 경우:** 자동 탐색
-1. `docs/plan/*/sections/index.md` 패턴으로 Glob 검색
-2. 여러 개 발견 시 AskUserQuestion으로 선택
-3. 발견 못하면 사용자에게 경로 질문
+**두 가지 모드를 자동 판별:**
 
-### 3. Validate Prerequisites
+#### 섹션 모드 (zephermine 산출물 있음)
+- `$ARGUMENTS`로 planning_dir가 제공되었거나
+- `docs/plan/*/sections/index.md`가 존재하면
+- → **섹션 모드**로 진행 (기존 6단계 워크플로우)
 
+#### 자유 모드 (사용자 지시만 있음)
+- planning_dir이 없고, sections/index.md도 없으면
+- 사용자의 대화 컨텍스트에서 작업 지시를 추출
+- → **자유 모드**로 진행 (Lead가 직접 분석 → 분배)
+
+```
+섹션 모드: "agent-team docs/plan/my-feature" → sections/ 파싱 → Wave 실행
+자유 모드: "이 3개 파일 리팩토링해줘. 에이전트팀 진행하자" → Lead가 분석 → 분배
+```
+
+### 3. Setup (모드별 분기)
+
+#### 섹션 모드 Setup
 1. `sections/index.md` 존재 확인
 2. `SECTION_MANIFEST` 블록 파싱 확인
 3. 최소 1개 이상 `section-NN-*.md` 파일 존재 확인
+4. → **Step 1 (Parse Sections)**로 진행
 
-실패 시 중단:
-```
-❌ 필수 파일이 없습니다.
-먼저 /zephermine으로 계획을 생성하세요.
-```
+#### 자유 모드 Setup
+1. 사용자 지시에서 작업 목표 추출
+2. 관련 코드베이스 탐색 (Glob, Grep, Read)
+3. 작업을 독립적인 태스크로 분해 (파일/모듈/기능 단위)
+4. 각 태스크의 의존성 판별 → Wave 그룹핑
+5. 전문가 매칭 (expert-matching.md 참조)
+6. **Step 2 (Build Wave Plan)**의 사용자 확인 출력으로 합류
+
+**자유 모드 태스크 분해 원칙:**
+- 파일 충돌 없도록 담당 파일을 명확히 분리
+- 태스크당 1~5개 파일 범위
+- 의존성이 없으면 모두 Wave 1에 배치 (최대 병렬)
+- description에 구현 지시 + 담당 파일 + 관련 코드 컨텍스트 포함
 
 ---
 
