@@ -193,7 +193,7 @@ if "%MODE%"=="link" (
         echo       명령어 없음
     )
 
-    REM Hooks 링크 (전체 폴더) + Mnemo 훅 복사
+    REM Hooks 링크 (전체 폴더)
     echo.
     echo [4/7] Hooks 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%hooks" (
@@ -210,17 +210,6 @@ if "%MODE%"=="link" (
         echo       - hooks [linked]
     ) else (
         if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
-    )
-    REM Mnemo 훅은 별도 폴더에 있어 복사 필요
-    if exist "%SCRIPT_DIR%skills\mnemo\hooks" (
-        for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.ps1") do (
-            echo       - %%~nxF [mnemo, copied]
-            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
-        )
-        for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.sh") do (
-            echo       - %%~nxF [mnemo, copied]
-            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
-        )
     )
     echo       완료!
 
@@ -288,32 +277,20 @@ if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
 REM 검증/포맷팅 훅 (루트 hooks/)
 if exist "%SCRIPT_DIR%hooks" (
     for %%F in ("%SCRIPT_DIR%hooks\*.ps1") do (
-        REM 프로젝트 전용 훅 제외 (orchestrator)
-        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode debug" >nul && (
-            echo       - %%~nxF [스킵: 프로젝트 전용/디버그]
+        echo %%~nxF | findstr /i "debug" >nul && (
+            echo       - %%~nxF [스킵: 디버그]
         ) || (
             echo       - %%~nxF
             copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
         )
     )
     for %%F in ("%SCRIPT_DIR%hooks\*.sh") do (
-        echo %%~nxF | findstr /i "workpm-hook pmworker-hook orchestrator-mode debug" >nul && (
-            echo       - %%~nxF [스킵: 프로젝트 전용/디버그]
+        echo %%~nxF | findstr /i "debug" >nul && (
+            echo       - %%~nxF [스킵: 디버그]
         ) || (
             echo       - %%~nxF
             copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
         )
-    )
-)
-REM Mnemo 훅 (skills/mnemo/hooks/)
-if exist "%SCRIPT_DIR%skills\mnemo\hooks" (
-    for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.ps1") do (
-        echo       - %%~nxF [mnemo]
-        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
-    )
-    for %%F in ("%SCRIPT_DIR%skills\mnemo\hooks\*.sh") do (
-        echo       - %%~nxF [mnemo]
-        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
     )
 )
 echo       완료!

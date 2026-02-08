@@ -39,7 +39,7 @@ fi
 #   --unlink 모드: 심볼릭 링크 제거 + settings.json 정리
 # ============================================
 if [ "$MODE" = "unlink" ]; then
-    echo "[1/5] Skills 링크 제거 중..."
+    echo "[1/6] Skills 링크 제거 중..."
     if [ -d "$SCRIPT_DIR/skills" ]; then
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
             if [ -d "$skill_dir" ]; then
@@ -57,7 +57,7 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[2/5] Agents 링크 제거 중..."
+    echo "[2/6] Agents 링크 제거 중..."
     if [ -L "$CLAUDE_DIR/agents" ]; then
         echo "      - agents [링크 제거]"
         rm "$CLAUDE_DIR/agents"
@@ -67,7 +67,7 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[3/5] Commands 링크 제거 중..."
+    echo "[3/6] Commands 링크 제거 중..."
     if [ -L "$CLAUDE_DIR/commands" ]; then
         echo "      - commands [링크 제거]"
         rm "$CLAUDE_DIR/commands"
@@ -77,7 +77,7 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[4/5] Hooks 링크 제거 + settings.json 정리 중..."
+    echo "[4/6] Hooks 링크 제거 + settings.json 정리 중..."
     if [ -L "$CLAUDE_DIR/hooks" ]; then
         echo "      - hooks [링크 제거]"
         rm "$CLAUDE_DIR/hooks"
@@ -89,8 +89,13 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[5/5] CLAUDE.md 장기기억 규칙 제거 중..."
+    echo "[5/6] CLAUDE.md 장기기억 규칙 제거 중..."
     node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md" --uninstall
+    echo "      완료!"
+
+    echo ""
+    echo "[6/6] MCP 서버 설정은 별도 관리됩니다."
+    echo "      제거: node \"$SCRIPT_DIR/install-mcp.js\" --uninstall <이름>"
     echo "      완료!"
 
     echo ""
@@ -110,7 +115,7 @@ fi
 # ============================================
 if [ "$MODE" = "link" ]; then
     # Skills 링크 (개별 폴더)
-    echo "[1/6] Skills 링크 중... (글로벌, symlink)"
+    echo "[1/7] Skills 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/skills" ]; then
         mkdir -p "$CLAUDE_DIR/skills"
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
@@ -134,7 +139,7 @@ if [ "$MODE" = "link" ]; then
 
     # Agents 링크 (전체 폴더) + skills/*/agents/ 복사
     echo ""
-    echo "[2/6] Agents 링크 중... (글로벌, symlink)"
+    echo "[2/7] Agents 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/agents" ]; then
         target="$CLAUDE_DIR/agents"
         if [ -L "$target" ]; then
@@ -163,7 +168,7 @@ if [ "$MODE" = "link" ]; then
 
     # Commands 링크 (전체 폴더)
     echo ""
-    echo "[3/6] Commands 링크 중... (글로벌, symlink)"
+    echo "[3/7] Commands 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/commands" ]; then
         target="$CLAUDE_DIR/commands"
         if [ -L "$target" ]; then
@@ -178,9 +183,9 @@ if [ "$MODE" = "link" ]; then
         echo "      명령어 없음"
     fi
 
-    # Hooks 링크 (전체 폴더) + Mnemo 훅 복사
+    # Hooks 링크 (전체 폴더)
     echo ""
-    echo "[4/6] Hooks 링크 중... (글로벌, symlink)"
+    echo "[4/7] Hooks 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/hooks" ]; then
         target="$CLAUDE_DIR/hooks"
         if [ -L "$target" ]; then
@@ -193,17 +198,6 @@ if [ "$MODE" = "link" ]; then
     else
         mkdir -p "$CLAUDE_DIR/hooks"
     fi
-    # Mnemo 훅은 별도 폴더에 있어 복사 필요
-    if [ -d "$SCRIPT_DIR/skills/mnemo/hooks" ]; then
-        for hook_file in "$SCRIPT_DIR/skills/mnemo/hooks"/*.sh; do
-            if [ -f "$hook_file" ]; then
-                hook_name=$(basename "$hook_file")
-                echo "      - $hook_name [mnemo, copied]"
-                cp "$hook_file" "$CLAUDE_DIR/hooks/"
-                chmod +x "$CLAUDE_DIR/hooks/$hook_name"
-            fi
-        done
-    fi
     echo "      완료!"
 else
     # ============================================
@@ -211,7 +205,7 @@ else
     # ============================================
 
     # Skills 설치 (글로벌)
-    echo "[1/6] Skills 설치 중... (글로벌)"
+    echo "[1/7] Skills 설치 중... (글로벌)"
     if [ -d "$SCRIPT_DIR/skills" ]; then
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
             if [ -d "$skill_dir" ]; then
@@ -228,7 +222,7 @@ else
 
     # Agents 설치 (글로벌)
     echo ""
-    echo "[2/6] Agents 설치 중... (글로벌)"
+    echo "[2/7] Agents 설치 중... (글로벌)"
     mkdir -p "$CLAUDE_DIR/agents"
     # 루트 agents/ 폴더
     if [ -d "$SCRIPT_DIR/agents" ]; then
@@ -255,7 +249,7 @@ else
 
     # Commands 설치 (글로벌)
     echo ""
-    echo "[3/6] Commands 설치 중... (글로벌)"
+    echo "[3/7] Commands 설치 중... (글로벌)"
     if [ -d "$SCRIPT_DIR/commands" ] && [ "$(ls -A "$SCRIPT_DIR/commands"/*.md 2>/dev/null)" ]; then
         mkdir -p "$CLAUDE_DIR/commands"
         for cmd_file in "$SCRIPT_DIR/commands"/*.md; do
@@ -271,51 +265,24 @@ else
 
     # Hooks 설치 (글로벌)
     echo ""
-    echo "[4/6] Hooks 설치 중... (글로벌)"
+    echo "[4/7] Hooks 설치 중... (글로벌)"
     if [ -d "$SCRIPT_DIR/hooks" ]; then
         mkdir -p "$CLAUDE_DIR/hooks"
         for hook_file in "$SCRIPT_DIR/hooks"/*.sh; do
             if [ -f "$hook_file" ]; then
                 hook_name=$(basename "$hook_file")
-                # 프로젝트 전용 훅 제외 (orchestrator)
-                case "$hook_name" in
-                    workpm-hook*|pmworker-hook*|orchestrator-mode*)
-                        echo "      - $hook_name [스킵: 프로젝트 전용]"
-                        ;;
-                    *)
-                        echo "      - $hook_name"
-                        cp "$hook_file" "$CLAUDE_DIR/hooks/"
-                        chmod +x "$CLAUDE_DIR/hooks/$hook_name"
-                        ;;
-                esac
+                echo "      - $hook_name"
+                cp "$hook_file" "$CLAUDE_DIR/hooks/"
+                chmod +x "$CLAUDE_DIR/hooks/$hook_name"
             fi
         done
         for hook_file in "$SCRIPT_DIR/hooks"/*.ps1; do
             if [ -f "$hook_file" ]; then
                 hook_name=$(basename "$hook_file")
-                # 프로젝트 전용 훅 제외 (orchestrator)
-                case "$hook_name" in
-                    workpm-hook*|pmworker-hook*|orchestrator-mode*)
-                        echo "      - $hook_name [스킵: 프로젝트 전용]"
-                        ;;
-                    *)
-                        echo "      - $hook_name"
-                        cp "$hook_file" "$CLAUDE_DIR/hooks/"
-                        ;;
-                esac
+                echo "      - $hook_name"
+                cp "$hook_file" "$CLAUDE_DIR/hooks/"
             fi
         done
-        # Mnemo 훅 (skills/mnemo/hooks/)
-        if [ -d "$SCRIPT_DIR/skills/mnemo/hooks" ]; then
-            for hook_file in "$SCRIPT_DIR/skills/mnemo/hooks"/*.sh; do
-                if [ -f "$hook_file" ]; then
-                    hook_name=$(basename "$hook_file")
-                    echo "      - $hook_name [mnemo]"
-                    cp "$hook_file" "$CLAUDE_DIR/hooks/"
-                    chmod +x "$CLAUDE_DIR/hooks/$hook_name"
-                fi
-            done
-        fi
         echo "      완료!"
     else
         echo "      훅 없음"
@@ -324,13 +291,24 @@ fi
 
 # settings.json 훅 설정 (글로벌)
 echo ""
-echo "[5/6] settings.json 훅 설정 중... (글로벌)"
+echo "[5/7] settings.json 훅 설정 중... (글로벌)"
 node "$SCRIPT_DIR/install-hooks-config.js" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/settings.json" --bash
 
 # CLAUDE.md 장기기억 규칙 설치 (글로벌)
 echo ""
-echo "[6/6] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)"
+echo "[6/7] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)"
 node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md"
+
+# MCP 서버 추천 설정 안내
+echo ""
+echo "[7/7] MCP 서버 추천 설정 안내"
+echo "      사전 구성된 MCP 서버를 설치할 수 있습니다:"
+echo ""
+echo "        node \"$SCRIPT_DIR/install-mcp.js\" --list      사용 가능한 MCP 목록"
+echo "        node \"$SCRIPT_DIR/install-mcp.js\" --all       무료 MCP 전부 설치"
+echo "        node \"$SCRIPT_DIR/install-mcp.js\" context7    특정 MCP 설치"
+echo ""
+echo "      (MCP 설치는 선택사항입니다. 나중에 실행해도 됩니다.)"
 
 echo ""
 echo "============================================"
@@ -359,6 +337,7 @@ else
 fi
 echo "  - settings.json 훅 설정 등록 완료"
 echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
+echo "  - MCP 서버: node install-mcp.js --list"
 echo ""
 echo "  Claude Code를 재시작하면 적용됩니다."
 echo ""
