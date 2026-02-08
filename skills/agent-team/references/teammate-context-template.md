@@ -9,6 +9,26 @@ teammate는 Lead의 대화 히스토리를 상속하지 않습니다.
 
 ## 필수 전달 항목
 
+### 0. Expert Role (전문가 역할)
+
+See [expert-matching.md](expert-matching.md)
+
+섹션의 파일 패턴에서 매칭된 전문가 역할을 teammate에게 부여:
+
+```
+"너는 대니즈팀(Dannys Team)의 **백엔드 전문가**야.
+agents/backend-spring.md의 규칙을 참조해서 작업해.
+특히 다음을 준수해:
+- Controller → Flow → Service → Repository 4계층 구조
+- @Transactional은 Flow에서만
+- DTO ↔ Entity 변환은 Service 계층에서"
+```
+
+**전달 규칙:**
+- 에이전트 파일 경로 + 핵심 규칙 3~5개만 전달 (전체 임베딩 X)
+- teammate가 필요하면 Read로 에이전트 파일을 직접 읽을 수 있음
+- 매칭 안 되면 `fullstack-coding-standards.md` (범용)
+
 ### 1. Mission (한 줄)
 
 ```
@@ -25,6 +45,10 @@ Task의 `description`에 해당 section-NN.md 파일 전체 내용을 임베딩�
 TaskCreate({
   subject: "Section 04: API Layer",
   description: `
+## Expert Role
+너는 대니즈팀의 **백엔드 전문가**야.
+agents/backend-spring.md의 규칙을 참조해서 작업해.
+
 ## Mission
 section-04-api 구현 담당
 

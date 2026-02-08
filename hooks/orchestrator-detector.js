@@ -2,12 +2,13 @@
 /**
  * Orchestrator Mode Detector Hook
  *
- * Detects 'workpm' or 'pmworker' keywords in user prompt
- * and injects appropriate mode instructions.
+ * Detects keywords in user prompt and injects mode instructions.
  *
  * Supported keywords:
- *   workpm    - PM (Project Manager) mode
- *   pmworker  - Worker mode
+ *   workpm      - PM (Project Manager) mode
+ *   pmworker    - Worker mode
+ *   agent-team  - Agent Teams Lead mode (대니즈팀)
+ *   팀 실행      - Agent Teams Lead mode (한국어)
  *
  * Hook Type: UserPromptSubmit
  * Output: JSON with additionalContext
@@ -16,6 +17,7 @@
 // Patterns for detection
 const WORKPM_PATTERN = /(?:^|\s)workpm(?:\s|$)/i;
 const PMWORKER_PATTERN = /(?:^|\s)pmworker(?:\s|$)/i;
+const AGENT_TEAM_PATTERN = /(?:^|\s)(?:agent[- ]?team|팀\s*실행|대니즈\s*팀)(?:\s|$)/i;
 
 /**
  * Build PM mode context
@@ -104,9 +106,60 @@ Start now by calling orchestrator_get_available_tasks.
 }
 
 /**
+ * Build Agent Teams Lead context (대니즈팀)
+ */
+function buildAgentTeamContext() {
+  return `
+[AGENT TEAM MODE — 대니즈팀(Dannys Team) ACTIVATED]
+
+You are the Lead of 대니즈팀, using native Claude Code Agent Teams (Opus 4.6).
+
+## 즉시 실행
+
+Read skills/agent-team/SKILL.md and follow the 6-step workflow:
+1. Parse Sections — SECTION_MANIFEST + 의존성 + 전문가 매칭
+2. Build Wave Plan — 위상 정렬 → Wave 그룹핑 → 사용자 확인
+3. Create Tasks — TaskCreate + blockedBy
+4. Execute Waves — teammate에게 전문가 역할 부여 후 지시
+5. Verify Results — 파일 존재 + Acceptance Criteria
+6. Final Report — 결과 요약
+
+## 전문가 팀원 구성
+
+파일 패턴으로 자동 매칭 (expert-matching.md 참조):
+- *.tsx, components/** → 프론트엔드 전문가 (frontend-react.md)
+- api/**, controllers/** → 백엔드 전문가 (backend-spring.md)
+- migrations/**, *.sql → DB 전문가 (database-postgresql.md)
+- *.py → Python 전문가 (python-fastapi-guidelines.md)
+- 매칭 안 됨 → 풀스택 (fullstack-coding-standards.md)
+
+## 핵심 규칙
+
+- 팀명: 대니즈팀(Dannys Team)
+- Wave당 최대 5명 teammate
+- teammate에게 섹션 전체 내용 + 전문가 역할 + 파일 소유권 전달
+- Delegate 모드 권장 (Lead는 조율만, 코드는 teammate가 작성)
+- 다른 teammate의 파일 수정 금지
+
+---
+Start now: Read skills/agent-team/SKILL.md
+`;
+}
+
+/**
  * Main processing function
  */
 function processPrompt(prompt) {
+  // Detect agent-team (우선 체크 — workpm보다 먼저)
+  if (AGENT_TEAM_PATTERN.test(prompt)) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'UserPromptSubmit',
+        additionalContext: buildAgentTeamContext(),
+      },
+    };
+  }
+
   // Detect workpm
   if (WORKPM_PATTERN.test(prompt)) {
     return {

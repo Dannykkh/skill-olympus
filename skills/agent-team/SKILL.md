@@ -72,6 +72,21 @@ See [section-parser.md](references/section-parser.md)
 
 **출력:** 섹션 목록 + 의존성 맵 + 파일 소유권(각 섹션의 "Files to Create/Modify")
 
+#### 전문가 매칭
+
+See [expert-matching.md](references/expert-matching.md)
+
+각 섹션의 파일 패턴을 분석하여 전문가 에이전트를 자동 매칭:
+
+```
+section-01-foundation → fullstack-coding-standards (타입/모델)
+section-02-ui         → frontend-react (tsx 파일 다수)
+section-03-api        → backend-spring (api/controllers)
+section-04-database   → database-postgresql (migrations/sql)
+```
+
+매칭 결과를 Step 2 출력과 Step 4 teammate 지시에 반영.
+
 ### Step 2: Build Wave Plan
 
 의존성 그래프를 위상 정렬(Kahn's Algorithm)하여 Wave 그룹으로 분류:
@@ -89,19 +104,19 @@ See [section-parser.md](references/section-parser.md)
 
 ```
 ═══════════════════════════════════════
-Agent Team 실행 계획
+대니즈팀(Dannys Team) 실행 계획
 ═══════════════════════════════════════
 Wave 1 (병렬 3개):
-  - section-01-foundation (파일: src/core/**)
-  - section-02-config (파일: src/config/**)
-  - section-03-types (파일: src/types/**)
+  - section-01-foundation [풀스택] (파일: src/core/**)
+  - section-02-config [풀스택] (파일: src/config/**)
+  - section-03-types [풀스택] (파일: src/types/**)
 
 Wave 2 (병렬 2개):
-  - section-04-api (→ 01, 03 완료 후) (파일: src/api/**)
-  - section-05-database (→ 01, 02 완료 후) (파일: src/db/**)
+  - section-04-api [백엔드 전문가] (→ 01, 03 완료 후) (파일: src/api/**)
+  - section-05-database [DB 전문가] (→ 01, 02 완료 후) (파일: src/db/**)
 
 Wave 3 (순차 1개):
-  - section-06-integration (→ 04, 05 완료 후)
+  - section-06-integration [풀스택] (→ 04, 05 완료 후)
 
 총 섹션: 6개 | 총 Wave: 3개 | 예상 teammate: 6명
 ═══════════════════════════════════════
@@ -154,9 +169,13 @@ for each wave:
 **teammate 지시 형식:**
 
 ```
-"Section NN: {name}을 구현해줘.
-Task #{taskId}를 확인해서 상세 내용을 읽고,
+"너는 대니즈팀의 **{전문가 역할}** 담당이야.
+agents/{agent-file}.md의 규칙을 참조해서 작업해.
+
+Section NN: {name}을 구현해줘.
+Task #{taskId}를 TaskGet으로 읽어서 상세 내용을 확인해.
 구현 완료 후 TaskUpdate로 completed 처리해.
+
 담당 파일: {file_list}
 ⚠️ 다른 teammate의 파일은 절대 수정하지 마."
 ```
