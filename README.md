@@ -79,7 +79,7 @@ Deep-dive interview system that generates complete spec documents from conversat
 | **Auto-verification** | Sub-agents validate spec completeness and quality |
 
 ```
-/zephermine → Interview → SPEC.md → Verification → architect → Implementation
+/zephermine (젭마인) → Interview → SPEC.md → Verification → architect → Implementation
 ```
 
 > **[Skill Details](skills/zephermine/SKILL.md)**
@@ -138,7 +138,7 @@ node skills/orchestrator/install.js <target-project-path>
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
-| 🎯 **Planning** | zephermine, game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
+| 🎯 **Planning** | zephermine (젭마인), game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |

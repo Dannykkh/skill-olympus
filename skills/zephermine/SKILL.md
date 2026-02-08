@@ -1,6 +1,6 @@
 ---
 name: zephermine
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis.
+description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. Also known as 젭마인, 제퍼마인, 제퍼미네.
 ---
 
 # Zephermine

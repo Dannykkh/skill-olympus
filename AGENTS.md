@@ -75,7 +75,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
-| 🎯 Planning | game-changing-features, zephermine, ship-learn-next | 계획/요구사항 |
+| 🎯 Planning | game-changing-features, zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |

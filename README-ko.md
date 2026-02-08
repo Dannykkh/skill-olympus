@@ -79,7 +79,7 @@ chmod +x install.sh && ./install.sh
 | **자동 검증** | 서브에이전트가 스펙 완성도 & 품질 검증 |
 
 ```
-/zephermine → 인터뷰 → SPEC.md → 검증 → architect → 구현
+/zephermine (젭마인) → 인터뷰 → SPEC.md → 검증 → architect → 구현
 ```
 
 > **[스킬 상세](skills/zephermine/SKILL.md)**
@@ -138,7 +138,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
-| 🎯 **계획** | zephermine, game-changing-features, ship-learn-next | 계획 & 요구사항 (zephermine에 스펙 검증 포함) |
+| 🎯 **계획** | zephermine (젭마인), game-changing-features, ship-learn-next | 계획 & 요구사항 (zephermine에 스펙 검증 포함) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
