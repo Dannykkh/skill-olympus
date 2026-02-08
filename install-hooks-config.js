@@ -112,12 +112,17 @@ function writeSettings(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
+// 환경변수 설정 (Agent Teams 등)
+const ENV_DEFAULTS = {
+  CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: "1",
+};
+
 // 메인 로직
 function main() {
   const settings = readSettings(settingsPath);
 
   if (mode === "--uninstall") {
-    // hooks 키만 제거, 나머지 보존
+    // hooks 키만 제거, env는 유지 (사용자가 수동 관리)
     delete settings.hooks;
     writeSettings(settingsPath, settings);
     console.log("      settings.json에서 hooks 설정 제거 완료");
@@ -127,17 +132,34 @@ function main() {
   const isWindows = mode === "--windows";
   const hooksConfig = buildHooksConfig(hooksDir, isWindows);
 
-  // hooks 키만 교체, 나머지 보존
+  // hooks 키 교체
   settings.hooks = hooksConfig;
+
+  // env 키 머지 (기존 값 보존, 새 값만 추가)
+  if (!settings.env) settings.env = {};
+  for (const [key, value] of Object.entries(ENV_DEFAULTS)) {
+    if (!(key in settings.env)) {
+      settings.env[key] = value;
+    }
+  }
+
+  // teammateMode 설정 (macOS/Linux: tmux, Windows: in-process)
+  // tmux split pane은 macOS(iTerm2) + Linux에서 지원, Windows Terminal은 미지원
+  if (!settings.teammateMode) {
+    settings.teammateMode = isWindows ? "in-process" : "tmux";
+  }
+
   writeSettings(settingsPath, settings);
 
   const platform = isWindows ? "PowerShell" : "Bash";
+  const teammateMode = settings.teammateMode;
   const hookCount = Object.values(hooksConfig).reduce(
     (sum, arr) => sum + arr.length,
     0
   );
+  const envCount = Object.keys(ENV_DEFAULTS).length;
   console.log(
-    `      settings.json 훅 설정 완료 (${platform}, ${hookCount}개 훅)`
+    `      settings.json 설정 완료 (${platform}, ${hookCount}개 훅, env ${envCount}개, teammateMode: ${teammateMode})`
   );
 }
 
