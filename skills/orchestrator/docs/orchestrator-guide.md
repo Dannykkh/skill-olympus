@@ -112,7 +112,7 @@ npm run build
     "UserPromptSubmit": [
       {
         "description": "오케스트레이터 PM/Worker 모드 감지",
-        "hooks": ["powershell -ExecutionPolicy Bypass -File hooks/orchestrator-mode.ps1 \"$PROMPT\""]
+        "command": "node hooks/orchestrator-detector.js"
       }
     ]
   }

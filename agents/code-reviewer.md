@@ -24,13 +24,10 @@ You are a code review specialist. You review code for quality, security, perform
 - [ ] Type hints/annotations used
 - [ ] Docstrings/comments for complex logic
 
-### 2. Security
-- [ ] SQL Injection prevention (parameterized queries, ORM)
-- [ ] XSS prevention (input validation, output escaping)
-- [ ] Authentication/Authorization checks
+### 2. Security (기본 확인)
 - [ ] No sensitive data exposure (API keys, passwords, PII)
-- [ ] Rate limiting applied
-- [ ] CORS configuration verified
+- [ ] Input validation exists
+- 심층 보안 리뷰 필요 시 → **security-reviewer** 에이전트 사용
 
 ### 3. Performance
 - [ ] No N+1 queries (use eager loading)

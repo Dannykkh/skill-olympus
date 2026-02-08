@@ -103,6 +103,11 @@ generated 3 million lines of code.
 - [ ] 소리 내어 읽으면 자연스러움
 - [ ] 개성/의견 포함
 
+## 관련 에이전트
+
+- 글쓰기 구조/원칙: **writing-guidelines** (Strunk 규칙, 능동태, 간결함)
+- 초안 검토/톤 조정: **communication-excellence-coach** (롤플레이, 프레젠테이션 피드백)
+
 ## Full Reference
 
 전체 24개 패턴: `skills/humanizer/SKILL.md`

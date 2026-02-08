@@ -32,10 +32,9 @@ chmod +x install.sh && ./install.sh
 | 기능 | 트리거 | 설명 |
 |------|--------|------|
 | **Multi-AI 오케스트레이터** | `workpm`, `pmworker` | Claude + Codex + Gemini 병렬 처리 |
-| **장기기억** | `/memory` | 세션 간 컨텍스트 유지 |
-| **키워드 검색** | `/memory find` | 이전 대화 RAG 검색 |
+| **장기기억** | `/mnemo` | 세션 간 컨텍스트 유지 (대화 저장 + 태깅 + 검색) |
 | **코드 리뷰** | `/review` | 자동 코드 리뷰 |
-| **세션 핸드오프** | `/handoff` | 세션 인수인계 문서 |
+| **세션 핸드오프** | `/wrap-up` | 세션 요약 + MEMORY.md 업데이트 |
 
 ---
 
@@ -79,24 +78,23 @@ chmod +x install.sh && ./install.sh
 
 ## 4. 메모리 시스템 빠른 시작
 
-### 정보 기억하기
+### 자동 저장 (훅)
 
-```
-/memory add Redis TTL은 1시간으로 설정
-기억해: API 엔드포인트는 /api/v1 프리픽스 사용
-```
+대화는 `save-conversation` / `save-response` 훅이 자동으로 `.claude/conversations/YYYY-MM-DD.md`에 저장합니다.
+응답 끝에 `` `#tags: keyword1, keyword2` ``를 붙이면 키워드도 함께 저장됩니다.
 
 ### 이전 대화 검색
 
 ```
-/memory find 인증
 이전에 OAuth 구현한 적 있어?
+→ Claude가 자동으로 대화 기록에서 검색
 ```
 
-### 수동 키워드 태깅
+### 세션 종료
 
 ```
-/memory tag oauth, jwt, 로그인
+/wrap-up
+→ 키워드 추출, 세션 요약, MEMORY.md 업데이트
 ```
 
 ---
@@ -131,8 +129,8 @@ chmod +x install.sh && ./install.sh
   },
   "hooks": {
     "UserPromptSubmit": [
-      {"hooks": ["powershell -File hooks/orchestrator-mode.ps1 \"$PROMPT\""]},
-      {"hooks": ["powershell -File hooks/save-conversation.ps1 \"$PROMPT\""]}
+      {"command": "node hooks/orchestrator-detector.js"},
+      {"command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""}
     ]
   }
 }
@@ -165,33 +163,23 @@ chmod +x install.sh && ./install.sh
 | `workpm` | PM 모드 시작 |
 | `pmworker` | Worker 모드 시작 |
 
-### 메모리
-
-| 명령어 | 설명 |
-|--------|------|
-| `/memory add <내용>` | 정보 기억 |
-| `/memory find <키워드>` | 대화 검색 |
-| `/memory search <키워드>` | MEMORY.md 검색 |
-| `/memory tag <키워드들>` | 수동 태깅 |
-| `/memory list` | 전체 기억 보기 |
-
 ### 개발
 
 | 명령어 | 설명 |
 |--------|------|
 | `/review` | 코드 리뷰 |
 | `/docker-deploy` | Docker 설정 생성 |
-| `/diagram` | 다이어그램 생성 |
-| `/handoff` | 세션 핸드오프 |
+| `/wrap-up` | 세션 요약 + MEMORY.md 업데이트 |
+| `/smart-setup` | 기술 스택 감지 후 리소스 추천 |
 
 ---
 
 ## 9. 다음 단계
 
-- **상세 가이드**: [오케스트레이터 가이드](orchestrator-guide.md)
-- **메모리 시스템**: [메모리 시스템 가이드](memory-system.md)
+- **상세 가이드**: [오케스트레이터 가이드](../skills/orchestrator/docs/orchestrator-guide.md)
 - **전체 스킬 목록**: [README.md](../README.md)
 - **설정 상세**: [SETUP.md](../SETUP.md)
+- **외부 리소스**: [references.md](references.md)
 
 ---
 
@@ -222,4 +210,4 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
-**최종 업데이트:** 2026-02-02
+**최종 업데이트:** 2026-02-08

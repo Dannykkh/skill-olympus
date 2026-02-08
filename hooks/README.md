@@ -50,15 +50,15 @@ Claude Code 훅 스크립트 모음입니다.
 
 | 파일 | 용도 | 이벤트 |
 |------|------|--------|
-| save-conversation | 사용자 입력 저장 (Claude 응답은 CLAUDE.md 규칙으로 저장) | UserPromptSubmit |
+| save-conversation | 사용자 입력 저장 | UserPromptSubmit |
+| save-response | Assistant 응답 저장 (코드 블록 제거, 2000자) | Stop |
+| orchestrator-detector.js | PM/Worker 모드 감지 | UserPromptSubmit |
 | protect-files | 중요 파일 보호 | PreToolUse (Write/Edit) |
 | check-new-file | 새 파일 생성 검토 | PreToolUse (Write) |
 | validate-code | 코드 품질 검사 | PostToolUse (Write/Edit) |
 | validate-api | API 파일 검증 | PostToolUse (Write/Edit) |
 | validate-docs | 문서 AI 패턴 검출 | PostToolUse (Write) |
-| format-code | 자동 코드 포맷팅 | PostToolUse (Write/Edit) |
-| format-java | Java 포맷팅 | PostToolUse (Write/Edit) |
-| format-typescript | TS/JS 포맷팅 | PostToolUse (Write/Edit) |
+| format-code | 자동 코드 포맷팅 (Python/TS/JS/Java/CSS) | PostToolUse (Write/Edit) |
 
 ## 예시 설정 파일
 

@@ -143,7 +143,7 @@ git checkout master && git merge develop
 |설계|spec-interviewer|SPEC.md 심층 인터뷰|
 |프론트|frontend-react|React 구현|
 |백엔드|backend-spring / python-fastapi|API 구현|
-|DB|database-mysql|스키마 설계|
+|DB|database-mysql, database-postgresql|스키마 설계|
 |문서|documentation|PRD, 기술문서|
 |테스트|qa-engineer, qa-writer|테스트 전략/시나리오|
 |리뷰|code-reviewer|코드 품질 검증|

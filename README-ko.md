@@ -63,9 +63,73 @@ chmod +x install.sh && ./install.sh
 
 ---
 
+## 핵심 시스템
+
+이 프로젝트의 3가지 핵심 시스템:
+
+### Zephermine - SPEC 심층 인터뷰 & 검증
+
+대화를 통해 완전한 스펙 문서를 생성하는 심층 인터뷰 시스템.
+
+| 기능 | 설명 |
+|------|------|
+| **19단계 인터뷰** | A~G 카테고리: 목표, 디자인 비전, 기능, 기술, 일정, 리스크, 검증 |
+| **5 Whys 기법** | 요구사항 뒤의 숨겨진 동기 발굴 |
+| **쉬운 말 규칙** | 전문용어에 괄호 풀이 필수 (비개발자도 이해 가능) |
+| **자동 검증** | 서브에이전트가 스펙 완성도 & 품질 검증 |
+
+```
+/zephermine → 인터뷰 → SPEC.md → 검증 → architect → 구현
+```
+
+> **[스킬 상세](skills/zephermine/SKILL.md)**
+
+### Mnemo - 세션 간 장기기억
+
+세션 간 컨텍스트 유지를 위한 파일 기반 메모리 시스템. DB 없음, 훅에서 AI 호출 없음.
+
+| 구성요소 | 역할 |
+|---------|------|
+| `MEMORY.md` | 의미기억 - 컨텍스트 트리 (architecture/, patterns/, gotchas/) |
+| `conversations/*.md` | 일화기억 - `#tags:` 포함 대화 로그 |
+| `save-conversation` 훅 | 사용자 입력 자동 저장 |
+| `save-response` 훅 | Assistant 응답 + 키워드 자동 저장 |
+
+```
+세션 A: 작업 → #tags 저장 → /wrap-up → MEMORY.md 업데이트
+세션 B: MEMORY.md 자동 로드 → 과거 검색 → 컨텍스트 복원
+```
+
+> **[스킬 상세](skills/mnemo/SKILL.md)** | **[시스템 구조](skills/mnemo/docs/memory-system.md)**
+
+### Orchestrator - Multi-AI 병렬 실행
+
+PM이 태스크를 분배하고, Worker(Claude + Codex + Gemini)가 파일 락과 함께 병렬 수행.
+
+| 구성요소 | 설명 |
+|---------|------|
+| MCP 서버 | 태스크 큐, 파일 락, 의존성 해소 |
+| `workpm` | PM 모드 - 프로젝트 분석, 태스크 분해, AI 배정 |
+| `pmworker` | Worker 모드 - 태스크 담당, 파일 락, 실행, 보고 |
+
+```
+터미널 1 (PM):     workpm → 분석 → 태스크 3개 생성
+터미널 2 (Worker): pmworker → task-1 담당 → 실행 → 완료
+터미널 3 (Worker): pmworker → task-2 담당 → 실행 → 완료
+```
+
+```bash
+# 프로젝트에 설치 (프로젝트별, MCP가 프로젝트 루트 필요)
+node skills/orchestrator/install.js <대상-프로젝트-경로>
+```
+
+> **[스킬 상세](skills/orchestrator/SKILL.md)** | **[전체 가이드](skills/orchestrator/docs/orchestrator-guide.md)**
+
+---
+
 ## 포함된 내용
 
-### 커스텀 스킬 (56개)
+### 커스텀 스킬 (55개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -74,7 +138,7 @@ chmod +x install.sh && ./install.sh
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
-| 🎯 **계획** | zephermine, requirements-clarity, game-changing-features, ship-learn-next | 계획 & 요구사항 (zephermine에 스펙 검증 포함) |
+| 🎯 **계획** | zephermine, game-changing-features, ship-learn-next | 계획 & 요구사항 (zephermine에 스펙 검증 포함) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
@@ -84,13 +148,13 @@ chmod +x install.sh && ./install.sh
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (32개)
+### 커스텀 에이전트 (34개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
-| **워크플로우** | fullstack-development-workflow, spec-interviewer | 전체 개발 사이클 관리 |
+| **워크플로우** | fullstack-development-workflow, spec-interviewer, architect | 전체 개발 사이클 관리 + 아키텍처 설계 |
 | **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | 패시브 규칙 (항상 적용) |
-| **풀스택** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL 전문가 |
+| **풀스택** | frontend-react, backend-spring, database-mysql, database-postgresql | React/Spring/MySQL/PostgreSQL 전문가 |
 | **AI/ML** | ai-ml | LLM 통합, RAG 시스템 |
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
 | **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
@@ -128,80 +192,24 @@ chmod +x install.sh && ./install.sh
 
 ### 훅
 
-**글로벌 훅 (install.bat으로 설치):**
-
 | 훅 | 타이밍 | 설명 |
 |----|--------|------|
 | save-conversation.sh | UserPromptSubmit | 사용자 입력 저장 (Mnemo) |
 | save-response.sh | Stop | Assistant 응답 + #tags 저장 (Mnemo) |
+| orchestrator-detector.js | UserPromptSubmit | PM/Worker 모드 감지 |
 | validate-code.sh | PostToolUse | 코드 검증 (500줄, 함수 크기, 보안) |
 | check-new-file.sh | PreToolUse | 새 파일 생성 전 reducing-entropy 확인 |
 | validate-docs.sh | PostToolUse | 마크다운 AI 글쓰기 패턴 검출 |
 | protect-files.sh | PreToolUse | 중요 파일 수정 전 보호 검사 |
-| format-code.sh | PostToolUse | 파일 수정 후 코드 포맷팅 |
+| format-code.sh | PostToolUse | 파일 수정 후 코드 포맷팅 (Python/TS/JS/Java/CSS) |
 | validate-api.sh | PostToolUse | API 파일 수정 후 유효성 검사 |
 
-**프로젝트 전용 훅 (orchestrator/install.js로 설치):**
+### Mnemo & Orchestrator
 
-| 훅 | 타이밍 | 설명 |
-|----|--------|------|
-| workpm-hook.sh | UserPromptSubmit | PM 모드 활성화 |
-| pmworker-hook.sh | UserPromptSubmit | Worker 모드 활성화 |
-
-### Mnemo - 메모리 시스템
-
-> 기억의 여신 Mnemosyne에서 유래
-
-세션 간 컨텍스트 유지를 위한 빠른 파일 기반 메모리 시스템.
-
-| 구성요소 | 역할 |
-|---------|------|
-| `MEMORY.md` | 의미기억 - 컨텍스트 트리 (architecture/, patterns/, gotchas/) |
-| `conversations/*.md` | 일화기억 - 상세 대화 로그 |
-| `save-conversation.sh` | UserPromptSubmit 훅 - 사용자 입력 저장 |
-| `save-response.sh` | Stop 훅 - Assistant 응답 + #tags 저장 |
-
-**핵심 원칙:**
-- 빠르게: 훅에서 AI 호출 금지
-- 단순하게: 파일 기반, 복잡한 DB 없음
-- 검색 가능하게: 키워드 + 동의어 확장 (한↔영 양방향)
-
-**기능:**
-- 대화 자동 저장 (훅)
-- 키워드 태깅 (응답의 `#tags:`)
-- 과거 대화 검색 ("이전에 ~했었지?")
-- 세션 핸드오프 (세션 간 컨텍스트 전달)
-
-**설치:** 글로벌 install에 포함 (`install.bat`)
-
-> **[상세 문서](skills/mnemo/docs/memory-system.md)** - 시스템 구조, 사용법 가이드.
-
-### Orchestrator - Multi-AI 병렬 시스템
-
-PM (Project Manager)이 태스크를 분배하고, Worker들이 병렬로 수행합니다.
-
-| 구성요소 | 위치 |
-|---------|------|
-| MCP 서버 | `skills/orchestrator/mcp-server/` |
-| 훅 | `skills/orchestrator/hooks/` |
-| 명령어 | `skills/orchestrator/commands/` |
-
-**트리거:**
-- `workpm` - PM 모드 시작 (프로젝트 분석, 태스크 분해, AI 배정)
-- `pmworker` - Worker 모드 시작 (태스크 담당, 파일 락, 작업 수행)
-
-**프로젝트에 설치:**
-```bash
-# 설치 (훅, 명령어 복사 + MCP/훅 설정 자동 등록)
-node skills/orchestrator/install.js <대상-프로젝트-경로>
-
-# 제거
-node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
-```
-
-> **참고:** Orchestrator는 프로젝트별로 설치 필요 (MCP가 프로젝트 루트 경로 필요)
+> 위의 **[핵심 시스템](#핵심-시스템)** 섹션에서 상세 설명을 확인하세요.
 >
-> **[오케스트레이터 가이드](skills/orchestrator/docs/orchestrator-guide.md)** - Multi-AI 오케스트레이션 완전 가이드.
+> - **Mnemo**: 글로벌 install에 포함 (`install.bat`). [시스템 구조](skills/mnemo/docs/memory-system.md)
+> - **Orchestrator**: 프로젝트별 설치 필요. [전체 가이드](skills/orchestrator/docs/orchestrator-guide.md)
 
 ---
 
@@ -273,7 +281,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (56개)
+├── skills/                    # 커스텀 스킬 (55개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -315,9 +323,7 @@ claude-code-customizations/
 │   ├── python-backend-fastapi/
 │   ├── qa-test-planner/
 │   ├── react-dev/
-│   ├── react-useeffect/
 │   ├── reducing-entropy/
-│   ├── requirements-clarity/
 │   ├── ship-learn-next/
 │   ├── skill-judge/
 │   ├── vercel-react-best-practices/
@@ -328,8 +334,16 @@ claude-code-customizations/
 │   ├── stitch-enhance-prompt/
 │   ├── stitch-loop/
 │   ├── stitch-react/
+│   ├── docx/
+│   ├── pdf/
+│   ├── nano-banana/
+│   ├── semgrep-rule-creator/
+│   ├── systematic-debugging/
+│   ├── test-driven-development/
+│   ├── wrangler/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (30 + skills/*/agents/ 2 = 32개)
+├── agents/                    # 커스텀 서브에이전트 (32 + skills/*/agents/ 2 = 34개)
+│   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
 │   ├── api-tester.md
@@ -340,6 +354,7 @@ claude-code-customizations/
 │   ├── code-reviewer.md
 │   ├── communication-excellence-coach.md
 │   ├── database-mysql.md
+│   ├── database-postgresql.md
 │   ├── documentation.md
 │   ├── explore-agent.md
 │   ├── feature-tracker.md
@@ -378,7 +393,10 @@ claude-code-customizations/
 │   ├── write-api-docs.md
 │   ├── write-changelog.md
 │   └── write-prd.md
-├── hooks/                     # 글로벌 훅
+├── hooks/                     # 글로벌 훅 (9개)
+│   ├── save-conversation.sh/.ps1
+│   ├── save-response.sh/.ps1
+│   ├── orchestrator-detector.js
 │   ├── check-new-file.sh/.ps1
 │   ├── format-code.sh/.ps1
 │   ├── protect-files.sh/.ps1

@@ -22,8 +22,8 @@ const templatePath = args[1];
 const isUninstall = args.includes("--uninstall");
 
 // 마커 (설치된 규칙 식별용)
-const START_MARKER = "<!-- CLAUDE-CODE-CUSTOMIZATIONS:START -->";
-const END_MARKER = "<!-- CLAUDE-CODE-CUSTOMIZATIONS:END -->";
+const START_MARKER = "<!-- MNEMO:START -->";
+const END_MARKER = "<!-- MNEMO:END -->";
 
 function readFile(filePath) {
   try {

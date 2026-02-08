@@ -18,6 +18,18 @@
 
 ---
 
+## 통합 외부 스킬 출처
+
+| 프로젝트 | 통합 스킬 | 링크 |
+|---------|----------|------|
+| **obra/superpowers** | test-driven-development, systematic-debugging | [GitHub](https://github.com/obra/superpowers) |
+| **trailofbits/skills** | semgrep-rule-creator | [GitHub](https://github.com/nickcoblentz/claude-code-trailofbits-skills) |
+| **anthropics/skills** | docx, pdf | [GitHub](https://github.com/anthropics/skills) |
+| **cloudflare/skills** | wrangler | [GitHub](https://github.com/nickcoblentz/claude-code-cloudflare-skills) |
+| **jh941213/my-claude-code-asset** | security-reviewer, architect, stitch-developer 벤치마킹 | [GitHub](https://github.com/jh941213/my-claude-code-asset) |
+
+---
+
 ## 기술 스택별 스킬
 
 | 프로젝트 | 기술 스택 | 링크 |
@@ -84,4 +96,4 @@
 
 ---
 
-**최종 업데이트:** 2026-02-01
+**최종 업데이트:** 2026-02-08

@@ -64,6 +64,11 @@ leverage, robust, seamless, streamline, utilize
 - [ ] AI 어휘를 사용하지 않았는가?
 - [ ] 소리 내어 읽으면 자연스러운가?
 
+## 관련 에이전트
+
+- AI 패턴 제거 상세: **humanizer-guidelines** (24개 패턴)
+- 초안 검토/톤 조정: **communication-excellence-coach** (롤플레이, 프레젠테이션 피드백)
+
 ## Full Documentation
 
 - Strunk 규칙 상세: `skills/writing-clearly-and-concisely/`

@@ -188,93 +188,7 @@ After designing a schema:
 
 ---
 
-<details>
-<summary><strong>Deep Dive: Normalization (SQL)</strong></summary>
-
-### Normal Forms
-
-| Form | Rule | Violation Example |
-|------|------|-------------------|
-| **1NF** | Atomic values, no repeating groups | `product_ids = '1,2,3'` |
-| **2NF** | 1NF + no partial dependencies | customer_name in order_items |
-| **3NF** | 2NF + no transitive dependencies | country derived from postal_code |
-
-### 1st Normal Form (1NF)
-
-```sql
--- BAD: Multiple values in column
-CREATE TABLE orders (
-  id INT PRIMARY KEY,
-  product_ids VARCHAR(255)  -- '101,102,103'
-);
-
--- GOOD: Separate table for items
-CREATE TABLE orders (
-  id INT PRIMARY KEY,
-  customer_id INT
-);
-
-CREATE TABLE order_items (
-  id INT PRIMARY KEY,
-  order_id INT REFERENCES orders(id),
-  product_id INT
-);
-```
-
-### 2nd Normal Form (2NF)
-
-```sql
--- BAD: customer_name depends only on customer_id
-CREATE TABLE order_items (
-  order_id INT,
-  product_id INT,
-  customer_name VARCHAR(100),  -- Partial dependency!
-  PRIMARY KEY (order_id, product_id)
-);
-
--- GOOD: Customer data in separate table
-CREATE TABLE customers (
-  id INT PRIMARY KEY,
-  name VARCHAR(100)
-);
-```
-
-### 3rd Normal Form (3NF)
-
-```sql
--- BAD: country depends on postal_code
-CREATE TABLE customers (
-  id INT PRIMARY KEY,
-  postal_code VARCHAR(10),
-  country VARCHAR(50)  -- Transitive dependency!
-);
-
--- GOOD: Separate postal_codes table
-CREATE TABLE postal_codes (
-  code VARCHAR(10) PRIMARY KEY,
-  country VARCHAR(50)
-);
-```
-
-### When to Denormalize
-
-| Scenario | Denormalization Strategy |
-|----------|-------------------------|
-| Read-heavy reporting | Pre-calculated aggregates |
-| Expensive JOINs | Cached derived columns |
-| Analytics dashboards | Materialized views |
-
-```sql
--- Denormalized for performance
-CREATE TABLE orders (
-  id INT PRIMARY KEY,
-  customer_id INT,
-  total_amount DECIMAL(10,2),  -- Calculated
-  item_count INT               -- Calculated
-);
-```
-
-</details>
+**Deep Dive: Normalization (SQL)** > 상세: [references/normalization.md](references/normalization.md)
 
 <details>
 <summary><strong>Deep Dive: Data Types</strong></summary>
@@ -510,63 +424,7 @@ CREATE TABLE comments (
 
 </details>
 
-<details>
-<summary><strong>Deep Dive: NoSQL Design (MongoDB)</strong></summary>
-
-### Embedding vs Referencing
-
-| Factor | Embed | Reference |
-|--------|-------|-----------|
-| Access pattern | Read together | Read separately |
-| Relationship | 1:few | 1:many |
-| Document size | Small | Approaching 16MB |
-| Update frequency | Rarely | Frequently |
-
-### Embedded Document
-
-```json
-{
-  "_id": "order_123",
-  "customer": {
-    "id": "cust_456",
-    "name": "Jane Smith",
-    "email": "jane@example.com"
-  },
-  "items": [
-    { "product_id": "prod_789", "quantity": 2, "price": 29.99 }
-  ],
-  "total": 109.97
-}
-```
-
-### Referenced Document
-
-```json
-{
-  "_id": "order_123",
-  "customer_id": "cust_456",
-  "item_ids": ["item_1", "item_2"],
-  "total": 109.97
-}
-```
-
-### MongoDB Indexes
-
-```javascript
-// Single field
-db.users.createIndex({ email: 1 }, { unique: true });
-
-// Composite
-db.orders.createIndex({ customer_id: 1, created_at: -1 });
-
-// Text search
-db.articles.createIndex({ title: "text", content: "text" });
-
-// Geospatial
-db.stores.createIndex({ location: "2dsphere" });
-```
-
-</details>
+**Deep Dive: NoSQL Design (MongoDB)** > 상세: [references/nosql-mongodb.md](references/nosql-mongodb.md)
 
 <details>
 <summary><strong>Deep Dive: Migrations</strong></summary>
@@ -631,57 +489,12 @@ COMMIT;
 
 </details>
 
-<details>
-<summary><strong>Deep Dive: Performance Optimization</strong></summary>
-
-### Query Analysis
-
-```sql
-EXPLAIN SELECT * FROM orders
-WHERE customer_id = 123 AND status = 'pending';
-```
-
-| Look For | Meaning |
-|----------|---------|
-| type: ALL | Full table scan (bad) |
-| type: ref | Index used (good) |
-| key: NULL | No index used |
-| rows: high | Many rows scanned |
-
-### N+1 Query Problem
-
-```python
-# BAD: N+1 queries
-orders = db.query("SELECT * FROM orders")
-for order in orders:
-    customer = db.query(f"SELECT * FROM customers WHERE id = {order.customer_id}")
-
-# GOOD: Single JOIN
-results = db.query("""
-    SELECT orders.*, customers.name
-    FROM orders
-    JOIN customers ON orders.customer_id = customers.id
-""")
-```
-
-### Optimization Techniques
-
-| Technique | When to Use |
-|-----------|-------------|
-| Add indexes | Slow WHERE/ORDER BY |
-| Denormalize | Expensive JOINs |
-| Pagination | Large result sets |
-| Caching | Repeated queries |
-| Read replicas | Read-heavy load |
-| Partitioning | Very large tables |
-
-</details>
+**Deep Dive: Performance Optimization** > 상세: [references/performance-optimization.md](references/performance-optimization.md)
 
 ---
 
-## Extension Points
+## Related Resources
 
-1. **Database-Specific Patterns:** Add MySQL vs PostgreSQL vs SQLite variations
-2. **Advanced Patterns:** Time-series, event sourcing, CQRS, multi-tenancy
-3. **ORM Integration:** TypeORM, Prisma, SQLAlchemy patterns
-4. **Monitoring:** Query performance tracking, slow query alerts
+- **MySQL 전문가:** `agents/database-mysql.md`
+- **PostgreSQL/Supabase 전문가:** `agents/database-postgresql.md`
+- **Supabase Best Practices:** `skills/supabase-postgres-best-practices/SKILL.md`

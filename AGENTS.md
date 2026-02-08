@@ -23,13 +23,27 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |FastAPI|agents/python-fastapi-guidelines.md|
 |Spring Boot|agents/backend-spring.md,agents/fullstack-coding-standards.md|
 |Fullstack Standards|agents/fullstack-coding-standards.md,skills/fullstack-coding-standards/SKILL.md|
-|Database|agents/database-mysql.md|
+|Database (MySQL)|agents/database-mysql.md|
+|Database (PostgreSQL/Supabase)|agents/database-postgresql.md,skills/supabase-postgres-best-practices/SKILL.md|
 |Migration|agents/migration-helper.md,agents/explore-agent.md|
 |Naming|agents/naming-conventions.md|
 |Full Workflow|agents/fullstack-development-workflow.md|
+|Architecture|agents/architect.md|
 |SPEC Interview|agents/spec-interviewer.md|
 |Security Review|agents/security-reviewer.md|
 |Stitch UI|agents/stitch-developer.md,skills/stitch-design-md/SKILL.md|
+
+### Recommended Workflows
+
+|시나리오|체이닝 순서|
+|---|---|
+|새 프로젝트 시작|spec-interviewer → architect → fullstack-development-workflow|
+|UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
+|UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|
+|코드 리뷰 종합|code-reviewer → security-reviewer → reducing-entropy|
+|기능 추가|spec-interviewer → fullstack-coding-standards → frontend-react/backend-spring → qa-writer|
+|리팩토링|explore-agent → reducing-entropy → code-reviewer|
+|보안 감사|security-reviewer → code-review-checklist|
 
 ---
 
@@ -51,7 +65,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (56개)
+### Skills (55개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -59,21 +73,22 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성/검색 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
-| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, react-useeffect, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
+| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
-| 🎯 Planning | game-changing-features, zephermine, requirements-clarity, ship-learn-next | 계획/요구사항 |
+| 🎯 Planning | game-changing-features, zephermine, ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
-### Agents (32개)
+### Agents (34개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
 | **Workflow** | fullstack-development-workflow | 풀스택 개발 종합 워크플로우 |
 | | spec-interviewer | SPEC.md 심층 인터뷰 |
+| | architect | 시스템 아키텍처 설계, 기술 스택 평가, ADR 작성 |
 | **Guidelines (Passive)** | react-best-practices | React/Next.js 최적화 규칙 (항상 적용) |
 | | react-useeffect-guidelines | useEffect 베스트 프랙티스 (항상 적용) |
 | | python-fastapi-guidelines | FastAPI 모범 사례 (항상 적용) |
@@ -86,6 +101,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
 | | backend-spring | Spring Boot 백엔드 전문가 |
 | | database-mysql | MySQL 데이터베이스 전문가 |
+| | database-postgresql | PostgreSQL/Supabase 데이터베이스 전문가 |
 | **AI/ML** | ai-ml | AI/ML 통합 전문가 |
 | **API** | api-tester | API 엔드포인트 테스트 |
 | | api-comparator | API 호환성 비교 검증 |
@@ -266,8 +282,11 @@ Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-
 |check-new-file.sh|PreToolUse|새 파일 생성|reducing-entropy 확인, 유사 파일 경고|
 |validate-docs.sh|PostToolUse|*.md 작성|AI 글쓰기 패턴 검출|
 |protect-files.sh|PreToolUse|민감 파일 수정|.env, credentials 보호|
-|format-code.sh|PostToolUse|코드 수정|자동 포맷팅|
+|format-code.sh|PostToolUse|코드 수정|자동 포맷팅 (Python/TS/JS/Java/CSS)|
 |validate-api.sh|PostToolUse|API 파일 수정|구문/타입 검사|
+|save-conversation.sh|UserPromptSubmit|모든 입력|사용자 입력을 대화 파일에 저장|
+|save-response.sh|Stop|세션 종료|Assistant 응답을 대화 파일에 저장|
+|orchestrator-detector.js|UserPromptSubmit|workpm/pmworker 입력|PM/Worker 모드 감지|
 
 ### 3-Layer Architecture
 

@@ -236,6 +236,7 @@ claude plugin install voltagent-qa-sec
 | `agents/frontend-react.md` | React + Zustand + TanStack |
 | `agents/backend-spring.md` | Java 21 + Spring Boot 3.x |
 | `agents/database-mysql.md` | MySQL 8.0 + Flyway |
+| `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS |
 | `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 (패시브 에이전트) |
 | `agents/ai-ml.md` | LLM + RAG + Vector DB |
 

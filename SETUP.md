@@ -640,18 +640,20 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
 ```
 
-**설치 스크립트가 수행하는 4단계:**
+**설치 스크립트가 수행하는 단계:**
 
 | 단계 | 내용 |
 |------|------|
 | 1. MCP 서버 빌드 | `dist/index.js` 없으면 자동 `npm install && npm run build` |
-| 2. 훅 파일 복사 | 플랫폼 감지 후 `workpm-hook.{ps1\|sh}`, `pmworker-hook.{ps1\|sh}` 복사 |
-| 3. 명령어 복사 | `.claude/commands/`에 `workpm.md`, `pmworker.md` 복사 |
-| 4. settings.local.json 머지 | MCP 서버 + 훅 설정 추가 (기존 설정 보존, 중복 방지) |
+| 2. 명령어 복사 | `.claude/commands/`에 `workpm.md`, `pmworker.md` 복사 |
+| 3. settings.local.json 머지 | MCP 서버 + 훅 설정 추가 (기존 설정 보존, 중복 방지) |
+
+> **참고**: PM/Worker 모드 감지는 글로벌 훅 `orchestrator-detector.js`로 처리합니다.
+> `install.bat`/`install.sh` 실행 시 자동 설치됩니다.
 
 **제거 시:**
-- `settings.local.json`에서 orchestrator MCP + 훅 항목만 제거 (다른 설정 보존)
-- 복사된 훅/명령어 파일 삭제
+- `settings.local.json`에서 orchestrator MCP 설정만 제거 (다른 설정 보존)
+- 복사된 명령어 파일 삭제
 
 ### 수동 설치
 
@@ -747,28 +749,37 @@ claude plugin install pg-aiguide
 | Stitch | UI 디자인 | `npx -p stitch-mcp-auto ...` |
 | GitHub | GitHub API | `claude mcp add github ...` |
 
-### 글로벌 스킬 (직접 제작)
+### 글로벌 스킬 (직접 제작, 주요 항목)
 
 | 이름 | 용도 |
 |------|------|
 | docker-deploy | Docker 배포 환경 구성 |
 | code-reviewer | 코드 리뷰 |
-| react-best-practices | React 성능 최적화 |
-| python-backend | Python FastAPI 개발 가이드 |
+| react-dev | React/TypeScript 개발 (useEffect 통합) |
+| python-backend-fastapi | Python FastAPI 개발 가이드 |
+| mnemo | 장기기억 시스템 (대화 저장 + 태깅 + 검색) |
+| orchestrator | PM-Worker 병렬 작업 시스템 |
+| excel2md | 엑셀 → 마크다운 변환 |
+| fullstack-coding-standards | 풀스택 코딩 표준 |
+| test-driven-development | TDD 워크플로우 |
+| systematic-debugging | 체계적 디버깅 |
 
-### 글로벌 에이전트 (직접 제작)
+### 글로벌 에이전트 (직접 제작, 주요 항목)
 
 | 이름 | 용도 |
 |------|------|
-| api-tester | API 테스트 |
-| code-reviewer | 코드 리뷰 |
 | frontend-react | 프론트엔드 개발/분석 |
+| backend-spring | Spring Boot 백엔드 |
+| architect | 아키텍처 설계, ADR 작성 |
+| security-reviewer | 보안 취약점 분석 (OWASP) |
+| stitch-developer | Stitch MCP UI 생성 |
+| code-reviewer | 코드 리뷰 |
 | qa-engineer | QA 검증 |
-| qa-writer | QA 시나리오 작성 |
 | documentation | 문서 작성 |
-| migration-helper | 마이그레이션 |
+| spec-interviewer | SPEC.md 심층 인터뷰 |
+| fullstack-development-workflow | 풀스택 개발 종합 워크플로우 |
 
-### 글로벌 Commands
+### 글로벌 Commands (주요 항목)
 
 | 이름 | 용도 |
 |------|------|
@@ -776,6 +787,9 @@ claude plugin install pg-aiguide
 | /write-api-docs | API 문서 생성 |
 | /write-changelog | Changelog 생성 |
 | /write-prd | PRD 작성 |
+| /smart-setup | 기술 스택 자동 감지 후 리소스 추천 |
+| /review | 코드 리뷰 수행 |
+| /sync-skills-readme | README 스킬 목록 동기화 |
 
 ---
 
@@ -822,4 +836,4 @@ claude plugin install pg-aiguide
 
 ---
 
-**최종 업데이트:** 2026-02-05
+**최종 업데이트:** 2026-02-08

@@ -1,7 +1,7 @@
 ---
 name: react-dev
 version: 1.0.0
-description: This skill should be used when building React components with TypeScript, typing hooks, handling events, or when React TypeScript, React 19, Server Components are mentioned. Covers type-safe patterns for React 18-19 including generic components, proper event typing, and routing integration (TanStack Router, React Router).
+description: This skill should be used when building React components with TypeScript, typing hooks, handling events, useEffect patterns, or when React TypeScript, React 19, Server Components are mentioned. Covers type-safe patterns for React 18-19 including generic components, proper event typing, useEffect best practices, and routing integration (TanStack Router, React Router).
 ---
 
 # React TypeScript
@@ -378,8 +378,39 @@ NEVER:
 
 </rules>
 
+<useeffect_best_practices>
+
+Effects are an **escape hatch** from React. If no external system is involved, you don't need an Effect.
+
+**Decision Tree:**
+```
+Need to respond to something?
+├── User interaction (click, submit)? → EVENT HANDLER
+├── Component appeared on screen? → EFFECT (external sync, analytics)
+├── Props/state changed, need derived value? → CALCULATE DURING RENDER
+│   └── Expensive? → useMemo
+└── Reset state when prop changes? → KEY PROP
+```
+
+**Quick Reference:**
+| Situation | DON'T | DO |
+|-----------|-------|-----|
+| Derived state | useState + useEffect | Calculate during render |
+| Expensive calc | useEffect cache | useMemo |
+| Reset on prop change | useEffect + setState | key prop |
+| User event response | useEffect watching state | Event handler |
+| Notify parent | useEffect calling onChange | Call in event handler |
+| Data fetching | useEffect without cleanup | useEffect with cleanup OR framework |
+
+See [useeffect-anti-patterns.md](references/useeffect-anti-patterns.md) for 9 common mistakes with fixes.
+See [useeffect-alternatives.md](references/useeffect-alternatives.md) for useMemo, key prop, useSyncExternalStore patterns.
+
+</useeffect_best_practices>
+
 <references>
 
+- [useeffect-anti-patterns.md](references/useeffect-anti-patterns.md) - 9 common useEffect mistakes with fixes
+- [useeffect-alternatives.md](references/useeffect-alternatives.md) - useMemo, key prop, useSyncExternalStore, lifting state
 - [hooks.md](references/hooks.md) - useState, useRef, useReducer, useContext, custom hooks
 - [event-handlers.md](references/event-handlers.md) - all event types, generic handlers
 - [react-19-patterns.md](references/react-19-patterns.md) - useActionState, use(), useOptimistic, migration

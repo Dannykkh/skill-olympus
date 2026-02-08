@@ -7,7 +7,7 @@
       {
         "description": "오케스트레이터 PM/Worker 모드 감지",
         "matcher": "",
-        "command": "powershell -ExecutionPolicy Bypass -File hooks/orchestrator-mode.ps1 \"$PROMPT\""
+        "command": "node hooks/orchestrator-detector.js"
       },
       {
         "description": "모든 대화를 .md 파일로 저장 (세션 간 공유)",
@@ -49,9 +49,9 @@
 
     "Stop": [
       {
-        "description": "세션 종료 시 MEMORY.md 자동 업데이트",
+        "description": "Assistant 응답을 대화 파일에 저장",
         "matcher": "",
-        "command": "powershell -ExecutionPolicy Bypass -File hooks/update-memory.ps1"
+        "command": "powershell -ExecutionPolicy Bypass -File hooks/save-response.ps1"
       }
     ]
   },

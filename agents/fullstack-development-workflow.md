@@ -53,6 +53,17 @@ SPEC.md 기반 심층 인터뷰 진행:
 4. 트레이드오프 분석
 5. 완료까지 반복 질문
 
+### Phase 1.5: 아키텍처 설계
+
+SPEC.md 기반으로 시스템 아키텍처를 설계:
+1. 아키텍처 패턴 선택 (모놀리식/모듈러/마이크로서비스)
+2. 기술 스택 평가 및 선정
+3. 확장성 전략 수립
+4. ADR (Architecture Decision Record) 작성
+5. 시스템 다이어그램 생성
+
+> **에이전트**: `architect` → `mermaid-diagram-specialist` 순서로 실행
+
 ### Phase 2: 문서화
 
 |문서|내용|도구|
@@ -141,9 +152,10 @@ git checkout master && git merge develop
 |단계|에이전트|용도|
 |---|---|---|
 |설계|spec-interviewer|SPEC.md 심층 인터뷰|
+|설계|architect|시스템 아키텍처 설계, 기술 스택 평가|
 |프론트|frontend-react|React 구현|
 |백엔드|backend-spring / python-fastapi|API 구현|
-|DB|database-mysql|스키마 설계|
+|DB|database-mysql, database-postgresql|스키마 설계|
 |문서|documentation|PRD, 기술문서|
 |테스트|qa-engineer, qa-writer|테스트 전략/시나리오|
 |리뷰|code-reviewer|코드 품질 검증|

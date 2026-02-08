@@ -30,10 +30,6 @@ orchestrator/
 ├── mcp-server/                 # Orchestrator MCP 서버
 │   ├── src/
 │   └── package.json
-├── hooks/
-│   ├── workpm-hook.ps1/.sh     # PM 모드 훅
-│   ├── pmworker-hook.ps1/.sh   # Worker 모드 훅
-│   └── orchestrator-mode.ps1/.sh
 ├── commands/
 │   ├── workpm.md               # PM 시작 명령어
 │   └── pmworker.md             # Worker 시작 명령어

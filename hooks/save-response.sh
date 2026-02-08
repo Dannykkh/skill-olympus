@@ -19,13 +19,13 @@ if [ ! -f "$CONV_FILE" ]; then
     exit 0
 fi
 
-# JSONL 마지막 20줄에서 assistant text 메시지 찾기
+# JSONL 마지막 500줄에서 assistant text 메시지 찾기
 # Claude Code는 thinking/text/tool_use를 별도 JSONL 줄로 분리함
 # → "type":"assistant" AND "type":"text" 둘 다 포함된 줄을 찾아야 함
-LAST_TEXT_LINE=$(tail -n 20 "$TRANSCRIPT_PATH" | grep '"type":"assistant"' | grep '"type":"text"' | tail -n 1)
+LAST_TEXT_LINE=$(tail -n 500 "$TRANSCRIPT_PATH" | grep '"type":"assistant"' | grep '"type":"text"' | tail -n 1)
 if [ -z "$LAST_TEXT_LINE" ]; then
     # type 앞에 공백이 있을 수 있음
-    LAST_TEXT_LINE=$(tail -n 20 "$TRANSCRIPT_PATH" | grep -E '"type"\s*:\s*"assistant"' | grep -E '"type"\s*:\s*"text"' | tail -n 1)
+    LAST_TEXT_LINE=$(tail -n 500 "$TRANSCRIPT_PATH" | grep -E '"type"\s*:\s*"assistant"' | grep -E '"type"\s*:\s*"text"' | tail -n 1)
 fi
 if [ -z "$LAST_TEXT_LINE" ]; then
     exit 0
@@ -40,13 +40,16 @@ if [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; then
     exit 0
 fi
 
-# 500자 제한
-if [ ${#RESPONSE} -gt 500 ]; then
-    RESPONSE="${RESPONSE:0:500}..."
+# 코드 블록 제거 (```...``` 사이의 내용을 [code block] 으로 대체)
+RESPONSE=$(echo "$RESPONSE" | perl -0777 -pe 's/```[^\n]*\n.*?```/[code block]/gs' 2>/dev/null || echo "$RESPONSE")
+
+# 2000자 제한
+if [ ${#RESPONSE} -gt 2000 ]; then
+    RESPONSE="${RESPONSE:0:2000}..."
 fi
 
-# 중복 방지: 같은 분에 이미 Assistant 저장되어 있으면 스킵
-TIMESTAMP=$(date +%H:%M)
+# 중복 방지: 같은 초에 이미 Assistant 저장되어 있으면 스킵
+TIMESTAMP=$(date +%H:%M:%S)
 if grep -qF "## [$TIMESTAMP] Assistant" "$CONV_FILE" 2>/dev/null; then
     exit 0
 fi

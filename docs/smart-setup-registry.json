@@ -2,7 +2,7 @@
   "$schema": "smart-setup-registry",
   "version": "1.0.0",
   "description": "기술 태그별 리소스 매핑 데이터 (Single Source of Truth). /smart-setup 커맨드에서 사용.",
-  "lastUpdated": "2026-02-03",
+  "lastUpdated": "2026-02-08",
 
   "detection-rules": [
     { "file": "package.json", "match": "\"react\"", "tags": ["react"] },
@@ -37,6 +37,7 @@
     { "file": "docker-compose.yml", "match": null, "tags": ["docker"] },
     { "file": "docker-compose.yaml", "match": null, "tags": ["docker"] },
     { "file": "Dockerfile", "match": null, "tags": ["docker"] },
+    { "file": "package.json", "match": "\"@supabase/supabase-js\"", "tags": ["supabase", "postgresql"] },
     { "file": "prisma/schema.prisma", "match": "postgresql", "tags": ["postgresql", "prisma"] },
     { "file": "prisma/schema.prisma", "match": "mysql", "tags": ["mysql", "prisma"] },
     { "file": "prisma/schema.prisma", "match": null, "tags": ["prisma"] },
@@ -191,6 +192,7 @@
     { "id": "python-backend-fastapi", "tags": ["python", "fastapi"], "priority": "essential" },
     { "id": "docker-deploy", "tags": ["docker"], "priority": "essential" },
     { "id": "database-schema-designer", "tags": ["postgresql", "mysql", "prisma"], "priority": "recommended" },
+    { "id": "supabase-postgres-best-practices", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
     { "id": "mnemo", "tags": ["*"], "priority": "recommended" },
     { "id": "commit-work", "tags": ["*"], "priority": "optional" },
@@ -212,6 +214,7 @@
     { "id": "react-useeffect-guidelines", "tags": ["react"], "priority": "optional" },
     { "id": "backend-spring", "tags": ["java", "spring"], "priority": "essential" },
     { "id": "database-mysql", "tags": ["mysql"], "priority": "essential" },
+    { "id": "database-postgresql", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "python-fastapi-guidelines", "tags": ["python", "fastapi"], "priority": "essential" },
     { "id": "ai-ml", "tags": ["python"], "priority": "optional" },
     { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "recommended" },
@@ -230,7 +233,13 @@
     { "id": "mermaid-diagram-specialist", "tags": ["*"], "priority": "optional" },
     { "id": "fullstack-development-workflow", "tags": ["react", "nextjs", "nestjs", "spring", "dotnet"], "priority": "recommended" },
     { "id": "spec-interviewer", "tags": ["*"], "priority": "optional" },
-    { "id": "feature-tracker", "tags": ["*"], "priority": "optional" }
+    { "id": "feature-tracker", "tags": ["*"], "priority": "optional" },
+    { "id": "architect", "tags": ["*"], "priority": "recommended" },
+    { "id": "security-reviewer", "tags": ["*"], "priority": "recommended" },
+    { "id": "stitch-developer", "tags": ["react", "nextjs", "vue", "angular"], "priority": "optional" },
+    { "id": "ui-ux-designer", "tags": ["react", "nextjs", "vue", "angular"], "priority": "optional" },
+    { "id": "ascii-ui-mockup-generator", "tags": ["react", "nextjs", "vue", "angular"], "priority": "optional" },
+    { "id": "communication-excellence-coach", "tags": ["*"], "priority": "optional" }
   ],
 
   "hooks": [
@@ -240,7 +249,8 @@
     { "id": "validate-code", "tags": ["*"], "priority": "recommended" },
     { "id": "validate-docs", "tags": ["*"], "priority": "optional" },
     { "id": "format-code", "tags": ["typescript", "react", "nextjs", "nestjs", "nodejs", "vue", "angular"], "priority": "recommended" },
-    { "id": "format-java", "tags": ["java", "spring"], "priority": "recommended" },
-    { "id": "validate-api", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify"], "priority": "optional" }
+    { "id": "validate-api", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify"], "priority": "optional" },
+    { "id": "save-response", "tags": ["*"], "priority": "recommended" },
+    { "id": "orchestrator-detector", "tags": ["*"], "priority": "optional" }
   ]
 }

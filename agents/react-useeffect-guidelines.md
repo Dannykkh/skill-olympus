@@ -6,7 +6,8 @@ auto_apply:
   - "*.jsx"
   - "**/hooks/**"
 references:
-  - skills/react-useeffect/SKILL.md
+  - skills/react-dev/references/useeffect-anti-patterns.md
+  - skills/react-dev/references/useeffect-alternatives.md
 ---
 
 # React useEffect Guidelines (Passive)
@@ -88,4 +89,4 @@ function handleSubmit() {
 
 ## Full Documentation
 
-상세 가이드: `skills/react-useeffect/SKILL.md`
+상세 가이드: `skills/react-dev/SKILL.md` (useEffect 섹션 포함)

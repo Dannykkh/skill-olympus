@@ -74,12 +74,7 @@ const HeavyChart = dynamic(() => import('@/components/HeavyChart'));
 
 ## useEffect Rules
 
-|상황|하지 말 것|해야 할 것|
-|---|---|---|
-|파생 상태|useState + useEffect|렌더링 시 계산|
-|비싼 계산|useEffect로 캐시|useMemo|
-|prop 변경 시 리셋|useEffect + setState|key prop|
-|이벤트 응답|state 감시 useEffect|이벤트 핸들러|
+상세 가이드: **react-useeffect-guidelines** 에이전트 (Decision Tree, 5가지 케이스 포함)
 
 ## Full Documentation
 

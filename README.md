@@ -63,9 +63,73 @@ chmod +x install.sh && ./install.sh
 
 ---
 
+## Core Systems
+
+Three core systems that differentiate this project:
+
+### Zephermine - SPEC Interview & Verification
+
+Deep-dive interview system that generates complete spec documents from conversations.
+
+| Feature | Description |
+|---------|-------------|
+| **19-step interview** | A~G categories: goals, design vision, features, tech, timeline, risks, verification |
+| **5 Whys technique** | Uncovers hidden motivations behind requirements |
+| **Plain language** | Technical terms explained in parentheses (accessible to non-engineers) |
+| **Auto-verification** | Sub-agents validate spec completeness and quality |
+
+```
+/zephermine → Interview → SPEC.md → Verification → architect → Implementation
+```
+
+> **[Skill Details](skills/zephermine/SKILL.md)**
+
+### Mnemo - Cross-Session Memory
+
+File-based memory system for context persistence across sessions. No DB, no AI calls in hooks.
+
+| Component | Role |
+|-----------|------|
+| `MEMORY.md` | Semantic memory - context tree (architecture/, patterns/, gotchas/) |
+| `conversations/*.md` | Episodic memory - conversation logs with `#tags:` |
+| `save-conversation` hook | Auto-saves user input |
+| `save-response` hook | Auto-saves assistant response + keywords |
+
+```
+Session A: work → #tags saved → /wrap-up → MEMORY.md updated
+Session B: MEMORY.md auto-loaded → past search → context restored
+```
+
+> **[Skill Details](skills/mnemo/SKILL.md)** | **[System Architecture](skills/mnemo/docs/memory-system.md)**
+
+### Orchestrator - Multi-AI Parallel Execution
+
+PM distributes tasks, Workers (Claude + Codex + Gemini) execute in parallel with file locking.
+
+| Component | Description |
+|-----------|-------------|
+| MCP Server | Task queue, file locks, dependency resolution |
+| `workpm` | PM mode - analyze project, decompose tasks, assign AI |
+| `pmworker` | Worker mode - claim task, lock files, execute, report |
+
+```
+Terminal 1 (PM):     workpm → analyze → create 3 tasks
+Terminal 2 (Worker): pmworker → claim task-1 → execute → complete
+Terminal 3 (Worker): pmworker → claim task-2 → execute → complete
+```
+
+```bash
+# Install to a project (per-project, MCP needs project root)
+node skills/orchestrator/install.js <target-project-path>
+```
+
+> **[Skill Details](skills/orchestrator/SKILL.md)** | **[Full Guide](skills/orchestrator/docs/orchestrator-guide.md)**
+
+---
+
 ## What's Included
 
-### Custom Skills (56 Skills)
+### Custom Skills (55 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -74,7 +138,7 @@ chmod +x install.sh && ./install.sh
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
-| 🎯 **Planning** | zephermine, requirements-clarity, game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
+| 🎯 **Planning** | zephermine, game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
@@ -84,13 +148,13 @@ chmod +x install.sh && ./install.sh
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (32 Agents)
+### Custom Agents (34 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
-| **Workflow** | fullstack-development-workflow, spec-interviewer | Full development cycle management |
+| **Workflow** | fullstack-development-workflow, spec-interviewer, architect | Full development cycle management & architecture design |
 | **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | Passive rules (always applied) |
-| **Full Stack** | frontend-react, backend-spring, database-mysql | React/Spring/MySQL specialists |
+| **Full Stack** | frontend-react, backend-spring, database-mysql, database-postgresql | React/Spring/MySQL/PostgreSQL specialists |
 | **AI/ML** | ai-ml | LLM integration, RAG systems |
 | **API** | api-tester, api-comparator | API testing & compatibility |
 | **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
@@ -128,80 +192,24 @@ chmod +x install.sh && ./install.sh
 
 ### Hooks
 
-**Global Hooks (installed via install.bat):**
-
 | Hook | Timing | Description |
 |------|--------|-------------|
 | save-conversation.sh | UserPromptSubmit | Save user input to conversations (Mnemo) |
 | save-response.sh | Stop | Save assistant responses with #tags (Mnemo) |
+| orchestrator-detector.js | UserPromptSubmit | PM/Worker mode detection |
 | validate-code.sh | PostToolUse | Code validation (500 lines, function size, security) |
 | check-new-file.sh | PreToolUse | Reducing entropy check before new file creation |
 | validate-docs.sh | PostToolUse | AI writing pattern detection in markdown |
 | protect-files.sh | PreToolUse | Protect critical files from modification |
-| format-code.sh | PostToolUse | Auto-format code after changes |
+| format-code.sh | PostToolUse | Auto-format code (Python/TS/JS/Java/CSS) |
 | validate-api.sh | PostToolUse | Validate API files after modification |
 
-**Project-specific Hooks (installed via orchestrator/install.js):**
+### Mnemo & Orchestrator
 
-| Hook | Timing | Description |
-|------|--------|-------------|
-| workpm-hook.sh | UserPromptSubmit | PM mode activation |
-| pmworker-hook.sh | UserPromptSubmit | Worker mode activation |
-
-### Mnemo - Memory System
-
-> Named after Mnemosyne, goddess of memory
-
-Fast, file-based memory system for cross-session context persistence.
-
-| Component | Role |
-|-----------|------|
-| `MEMORY.md` | Semantic memory - context tree (architecture/, patterns/, gotchas/) |
-| `conversations/*.md` | Episodic memory - detailed conversation logs |
-| `save-conversation.sh` | UserPromptSubmit hook - saves user input |
-| `save-response.sh` | Stop hook - saves assistant response with #tags |
-
-**Key Principles:**
-- Fast: No AI calls in hooks
-- Simple: File-based, no complex DB
-- Searchable: Keywords + synonym expansion (Korean↔English bidirectional)
-
-**Features:**
-- Automatic conversation saving (hooks)
-- Keyword tagging (`#tags:` in responses)
-- Past conversation search ("이전에 ~했었지?")
-- Session handoff (context transfer between sessions)
-
-**Installation:** Included in global install (`install.bat`)
-
-> **[Detailed Documentation](skills/mnemo/docs/memory-system.md)** - Full system architecture and usage guide.
-
-### Orchestrator - Multi-AI Parallel System
-
-PM (Project Manager) distributes tasks, Workers execute in parallel.
-
-| Component | Location |
-|-----------|----------|
-| MCP Server | `skills/orchestrator/mcp-server/` |
-| Hooks | `skills/orchestrator/hooks/` |
-| Commands | `skills/orchestrator/commands/` |
-
-**Triggers:**
-- `workpm` - Start PM mode (project analysis, task decomposition, AI assignment)
-- `pmworker` - Start Worker mode (claim tasks, lock files, execute work)
-
-**Install to a project:**
-```bash
-# Install (copies hooks, commands, registers MCP + hook settings)
-node skills/orchestrator/install.js <target-project-path>
-
-# Uninstall
-node skills/orchestrator/install.js <target-project-path> --uninstall
-```
-
-> **Note:** Orchestrator requires per-project installation (MCP needs project root path).
+> See **[Core Systems](#core-systems)** above for detailed descriptions.
 >
-> **[Orchestrator Guide](skills/orchestrator/docs/orchestrator-guide.md)** - Complete guide for Multi-AI orchestration.
+> - **Mnemo**: Included in global install (`install.bat`). [System Architecture](skills/mnemo/docs/memory-system.md)
+> - **Orchestrator**: Per-project install required. [Full Guide](skills/orchestrator/docs/orchestrator-guide.md)
 
 ---
 
@@ -273,7 +281,7 @@ node skills/orchestrator/install.js <target-project-path> --uninstall
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (56 skills)
+├── skills/                    # Custom skills (55 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -315,9 +323,7 @@ claude-code-customizations/
 │   ├── python-backend-fastapi/
 │   ├── qa-test-planner/
 │   ├── react-dev/
-│   ├── react-useeffect/
 │   ├── reducing-entropy/
-│   ├── requirements-clarity/
 │   ├── ship-learn-next/
 │   ├── skill-judge/
 │   ├── vercel-react-best-practices/
@@ -328,8 +334,16 @@ claude-code-customizations/
 │   ├── stitch-enhance-prompt/
 │   ├── stitch-loop/
 │   ├── stitch-react/
+│   ├── nano-banana/
+│   ├── semgrep-rule-creator/
+│   ├── systematic-debugging/
+│   ├── test-driven-development/
+│   ├── wrangler/
+│   ├── docx/
+│   ├── pdf/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (30 + skills/*/agents/ 2 = 32)
+├── agents/                    # Custom subagents (32 + skills/*/agents/ 2 = 34)
+│   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
 │   ├── api-tester.md
@@ -340,6 +354,7 @@ claude-code-customizations/
 │   ├── code-reviewer.md
 │   ├── communication-excellence-coach.md
 │   ├── database-mysql.md
+│   ├── database-postgresql.md
 │   ├── documentation.md
 │   ├── explore-agent.md
 │   ├── feature-tracker.md
@@ -378,7 +393,10 @@ claude-code-customizations/
 │   ├── write-api-docs.md
 │   ├── write-changelog.md
 │   └── write-prd.md
-├── hooks/                     # Global hooks
+├── hooks/                     # Global hooks (9 hooks)
+│   ├── save-conversation.sh/.ps1
+│   ├── save-response.sh/.ps1
+│   ├── orchestrator-detector.js
 │   ├── check-new-file.sh/.ps1
 │   ├── format-code.sh/.ps1
 │   ├── protect-files.sh/.ps1

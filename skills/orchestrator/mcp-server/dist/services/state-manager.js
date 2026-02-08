@@ -93,6 +93,14 @@ export class StateManager {
         if (this.state.tasks.find(t => t.id === id)) {
             return { success: false, message: `Task with id '${id}' already exists` };
         }
+        // prompt 최소 길이 검증 (모호한 태스크 방지)
+        if (prompt.length < 50) {
+            return { success: false, message: `Task prompt too short (${prompt.length} chars, minimum 50). Include: what to do, expected input/output, success criteria.` };
+        }
+        // scope 누락 경고 (파일 락이 작동하지 않음)
+        if (!options.scope || options.scope.length === 0) {
+            return { success: false, message: `Task scope is required. Specify files/directories this task will modify (e.g., ["src/api/**", "src/models/User.ts"]). Without scope, file locking cannot prevent conflicts.` };
+        }
         // 의존성 태스크 존재 확인
         const dependsOn = options.dependsOn || [];
         for (const depId of dependsOn) {
@@ -172,12 +180,21 @@ export class StateManager {
             return !t.scope.some(scopePath => this.isPathLocked(scopePath));
         })
             .sort((a, b) => b.priority - a.priority)
-            .map(t => ({
-            id: t.id,
-            prompt: t.prompt,
-            priority: t.priority,
-            scope: t.scope
-        }));
+            .map(t => {
+            // 완료된 선행 태스크의 result 수집 (Worker가 맥락 파악용)
+            const predecessorResults = t.dependsOn
+                .map(depId => this.state.tasks.find(dt => dt.id === depId))
+                .filter((dt) => !!dt && dt.status === 'completed' && !!dt.result)
+                .map(dt => ({ taskId: dt.id, result: dt.result }));
+            return {
+                id: t.id,
+                prompt: t.prompt,
+                priority: t.priority,
+                scope: t.scope,
+                aiProvider: t.aiProvider,
+                predecessorResults: predecessorResults.length > 0 ? predecessorResults : undefined
+            };
+        });
         const allTasksCompleted = this.isAllTasksCompleted();
         const hasRemainingWork = this.hasRemainingWork();
         return {

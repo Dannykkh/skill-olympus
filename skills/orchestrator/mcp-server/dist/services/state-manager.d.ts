@@ -81,6 +81,11 @@ export declare class StateManager {
             prompt: string;
             priority: number;
             scope?: string[];
+            aiProvider?: AIProvider;
+            predecessorResults?: {
+                taskId: string;
+                result: string;
+            }[];
         }[];
         message: string;
         allTasksCompleted: boolean;

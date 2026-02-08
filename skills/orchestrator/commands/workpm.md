@@ -110,6 +110,69 @@ orchestrator_create_task({
 | 명확한 범위 | scope로 수정 가능 파일 명시 |
 | 적절한 크기 | 하나의 기능/모듈 단위 |
 | 의존성 명시 | depends_on으로 순서 지정 |
+| 요구사항 명확화 | 태스크 prompt 작성 전 아래 체크 수행 |
+
+### 태스크 요구사항 명확화 체크
+
+태스크 prompt를 작성하기 전에 **모호성을 제거**하세요:
+
+**YAGNI 체크**: "이 태스크가 정말 필요한가?"
+- SPEC에 명시된 기능인가?
+- MVP에 포함되는가, 향후 확장인가?
+
+**KISS 체크**: "더 단순한 방법은 없는가?"
+- 과도한 추상화를 요구하고 있지 않은가?
+- 기존 코드/패턴으로 해결 가능한가?
+
+**모호성 감지** — 아래 항목이 빠져있으면 prompt에 보충:
+- 입력/출력이 명확한가?
+- 에러 처리 기준이 있는가?
+- 성공 기준(검증 방법)이 있는가?
+- "무엇이 범위 밖인지" 명시되어 있는가?
+
+## 태스크 Prompt 템플릿
+
+태스크 생성 시 아래 구조를 따르세요. **모호한 prompt는 거부됩니다** (최소 50자).
+
+```
+orchestrator_create_task({
+  id: "feature-user-auth",
+  prompt: `## 목표
+사용자 인증 API 구현 (JWT 기반 로그인/로그아웃)
+
+## 구현 사항
+- POST /api/auth/login: email + password → JWT 토큰 반환
+- POST /api/auth/logout: 토큰 무효화
+- GET /api/auth/me: 현재 사용자 정보
+
+## 입력/출력
+- 입력: { email: string, password: string }
+- 출력: { token: string, expiresIn: number }
+
+## 성공 기준
+- 로그인 성공/실패 분기 동작
+- 잘못된 토큰 시 401 반환
+- 테스트 코드 포함
+
+## 범위 밖
+- 소셜 로그인 (향후 확장)
+- 비밀번호 찾기`,
+  scope: ["src/api/auth/**", "src/models/User.ts"],
+  depends_on: ["section-01-foundation"],
+  priority: 3,
+  aiProvider: "claude"
+})
+```
+
+### prompt 필수 항목
+
+| 항목 | 설명 | 누락 시 영향 |
+|------|------|-------------|
+| 목표 | 한 문장 요약 | Worker가 방향 잡지 못함 |
+| 구현 사항 | 구체적 동작 목록 | 과소/과잉 구현 |
+| 입력/출력 | 데이터 형식 명시 | 인터페이스 불일치 |
+| 성공 기준 | 검증 방법 | 완료 판단 불가 |
+| 범위 밖 | 하지 않을 것 | 불필요한 작업 |
 
 ## AI 배정 가이드
 
@@ -119,6 +182,8 @@ orchestrator_create_task({
 | 리팩토링 | claude | 복잡한 추론 |
 | 코드 리뷰 | gemini | 대용량 컨텍스트 |
 | 문서 작성 | claude | 자연어 품질 |
+
+> **중요**: `aiProvider`를 반드시 지정하세요. Worker가 태스크에 맞는 AI를 선택하는 기준이 됩니다.
 
 ## Worker 관리
 

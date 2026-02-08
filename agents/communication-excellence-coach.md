@@ -221,10 +221,12 @@ This agent:
 - Legal or compliance review
 - Content that needs domain expertise you have
 
+## 관련 에이전트
+
+- 글쓰기 원칙 (패시브): **writing-guidelines** (Strunk 규칙, 능동태, 간결함)
+- AI 패턴 제거 (패시브): **humanizer-guidelines** (24개 패턴 자동 적용)
+
 ## See Also
 
-- `professional-effective-communication` skill - Frameworks and templates
-- `feedback-mastery` skill - SBI model and difficult conversations
-- `tech-talks-craft` skill - Presentation structure guidance
 - `/compose-email` command - Generate emails from scratch
-- `/feedback-composer` command - Structure feedback using SBI
+- `skills/professional-communication/SKILL.md` - 프레임워크/템플릿
