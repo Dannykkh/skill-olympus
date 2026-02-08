@@ -44,10 +44,13 @@ function buildHooksConfig(dir, isWindows) {
     // PowerShell 명령어 (stdin으로 데이터 수신)
     const cmd = (script) =>
       `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`;
+    // Node.js 명령어 (orchestrator-detector 등)
+    const nodeCmd = (script) => `node "${d}/${script}"`;
 
     return {
       UserPromptSubmit: [
         hookEntry(".*", cmd("save-conversation.ps1")),
+        hookEntry(".*", nodeCmd("orchestrator-detector.js")),
       ],
       PreToolUse: [
         hookEntry("Write", cmd("check-new-file.ps1")),
@@ -66,10 +69,13 @@ function buildHooksConfig(dir, isWindows) {
     // Bash 명령어 (stdin으로 데이터 수신)
     const cmd = (script) =>
       `bash "${d}/${script}"`;
+    // Node.js 명령어 (orchestrator-detector 등)
+    const nodeCmd = (script) => `node "${d}/${script}"`;
 
     return {
       UserPromptSubmit: [
         hookEntry(".*", cmd("save-conversation.sh")),
+        hookEntry(".*", nodeCmd("orchestrator-detector.js")),
       ],
       PreToolUse: [
         hookEntry("Write", cmd("check-new-file.sh")),

@@ -292,6 +292,11 @@ if exist "%SCRIPT_DIR%hooks" (
             copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
         )
     )
+    REM JS 훅 (orchestrator-detector 등)
+    for %%F in ("%SCRIPT_DIR%hooks\*.js") do (
+        echo       - %%~nxF
+        copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+    )
 )
 echo       완료!
 

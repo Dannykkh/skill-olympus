@@ -283,6 +283,14 @@ else
                 cp "$hook_file" "$CLAUDE_DIR/hooks/"
             fi
         done
+        # JS 훅 (orchestrator-detector 등)
+        for hook_file in "$SCRIPT_DIR/hooks"/*.js; do
+            if [ -f "$hook_file" ]; then
+                hook_name=$(basename "$hook_file")
+                echo "      - $hook_name"
+                cp "$hook_file" "$CLAUDE_DIR/hooks/"
+            fi
+        done
         echo "      완료!"
     else
         echo "      훅 없음"
