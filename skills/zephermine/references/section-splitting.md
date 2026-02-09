@@ -130,11 +130,32 @@ Include all necessary background, requirements, and implementation details withi
 
 {Details}
 
+## Test Scenarios
+
+이 섹션의 기능에 대한 입출력 기대값. 구현자가 테스트 코드 작성 시 참고.
+
+### {기능/API 1}
+
+| 케이스 | 입력 | 기대 결과 |
+|--------|------|-----------|
+| 정상 | {valid input} | {expected output} |
+| 에러 - 필수값 누락 | {missing required} | 400, "{error message}" |
+| 에러 - 중복 | {duplicate data} | 409, "{conflict message}" |
+| 엣지 - 빈 값 | {} | 400, "{validation error}" |
+| 엣지 - 최대값 초과 | {max+1 length} | 400, "{limit message}" |
+
+### {기능/API 2}
+
+| 케이스 | 입력 | 기대 결과 |
+|--------|------|-----------|
+| ... | ... | ... |
+
 ## Acceptance Criteria
 
 - [ ] {Criterion 1}
 - [ ] {Criterion 2}
 - [ ] {Criterion 3}
+- [ ] 위 Test Scenarios의 정상/에러/엣지 케이스가 모두 통과
 
 ## Files to Create/Modify
 

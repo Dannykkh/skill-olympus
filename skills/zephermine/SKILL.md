@@ -20,7 +20,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Plan → External Review → Sections → Verify
+순서: Research → Interview → Spec → Team Review → Plan → External Review → Sections → QA Scenarios → Verify
 ```
 
 ### 2. Resolve Spec File Path
@@ -89,7 +89,7 @@ Determine session state by checking existing files:
 | + integration-notes | resume | Step 13 (user review) |
 | + sections/index.md | resume | Step 15 (write sections) |
 | all sections complete | resume | Step 16 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 19 (verify) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 20 (verify) |
 | + claude-verify-report.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
@@ -167,8 +167,16 @@ Combine into `<planning_dir>/claude-spec.md`:
 - **Initial input** (the spec file)
 - **Research findings** (if step 5 was done)
 - **Interview answers** (from step 6)
+- **Test Scenarios** (각 기능별 입출력 기대값)
 
 This synthesizes the user's raw requirements into a complete specification.
+
+**필수 포함: Test Scenarios 섹션** — 각 주요 기능(API, 화면, 로직)마다:
+- 정상 케이스: 입력 → 기대 출력
+- 에러 케이스: 잘못된 입력 → 기대 에러
+- 엣지 케이스: 경계값, 빈 값, 최대값 등
+
+See [test-scenario-guide.md](references/test-scenario-guide.md)
 
 ### 9. Multi-Agent Team Analysis
 
@@ -292,6 +300,7 @@ Task(
   - Requirements (what must be true when complete)
   - Dependencies (requires/blocks)
   - Implementation details (from the plan)
+  - Test Scenarios (각 기능별 입출력 테이블: 정상/에러/엣지 케이스)
   - Acceptance criteria (checkboxes)
   - Files to create/modify
 
@@ -354,14 +363,58 @@ Task(
 
 Wait for subagent completion before proceeding.
 
-### 17. Final Status
+### 17. Generate QA Scenarios Document — Subagent
+
+모든 섹션의 Test Scenarios를 통합하여 체크 가능한 QA 문서 생성:
+
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+  Generate a consolidated QA test scenarios document.
+
+  Input files:
+  - <planning_dir>/claude-spec.md (overall test scenarios)
+  - <planning_dir>/sections/section-*.md (each section's test scenarios)
+
+  Output: <planning_dir>/claude-qa-scenarios.md
+
+  Structure:
+  1. 각 섹션의 Test Scenarios 테이블을 수집
+  2. 기능별로 그룹핑 (API, UI, 비즈니스 로직)
+  3. 각 테스트 케이스에 체크박스 추가
+
+  Format:
+  ## Section 01: {name}
+  ### POST /api/users
+  - [ ] 정상 생성: { name: "홍길동" } → 201
+  - [ ] 필수값 누락: { name: "" } → 400
+  - [ ] 이메일 중복: → 409
+  ...
+
+  ## Section 02: {name}
+  ...
+
+  ## Summary
+  - 총 테스트 케이스: N건
+  - 정상 케이스: N건
+  - 에러 케이스: N건
+  - 엣지 케이스: N건
+
+  Write the file.
+  """
+)
+```
+
+### 18. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
+- `claude-qa-scenarios.md`
 
-### 18. Output Summary
+### 19. Output Summary
 
 Print generated files and next steps:
 ```
@@ -381,6 +434,7 @@ Generated files:
   - sections/ (implementation units)
   - claude-ralph-loop-prompt.md (for ralph-loop plugin)
   - claude-ralphy-prd.md (for Ralphy CLI)
+  - claude-qa-scenarios.md (QA test scenarios checklist)
   - claude-verify-report.md (implementation verification - after implementation)
 
 How to implement:
@@ -408,23 +462,32 @@ Option E - Agent Teams로 병렬 실행 (권장):
 ═══════════════════════════════════════════════════════════════
 ```
 
-### 19. Verify Implementation
+### 20. Verify Implementation
 
 See [verify-protocol.md](references/verify-protocol.md)
 
-구현 완료 후 claude-spec.md 대비 검증.
+구현 완료 후 claude-spec.md + claude-qa-scenarios.md 대비 검증.
 사용자가 `/zephermine @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
 
-서브에이전트 2개 병렬 실행:
+**Phase 1 — 정적 검증** (서브에이전트 2개 병렬):
 1. 기능 검증 (Explore) — 요구사항 vs 실제 코드
 2. 품질 검증 (Explore) — 비기능 요구사항 + 코드 품질
 
-결과 → `<planning_dir>/claude-verify-report.md`
+**Phase 2 — 런타임 검증** (빌드/테스트 실행):
+3. 빌드 검증 — `npm run build`, `mvn compile` 등 자동 감지
+4. 단위 테스트 — `npm test`, `pytest` 등 실행 + 결과 파싱
+5. E2E 테스트 — Playwright/Cypress 감지 시 실행 (미감지 시 건너뜀)
 
-### 20. Verification Report
+**Phase 3 — QA 시나리오 검증**:
+6. `claude-qa-scenarios.md`의 각 체크박스를 코드/테스트 결과 기반으로 ✅/❌ 마킹
+7. 통과율 집계 (정상/에러/엣지 케이스별)
+
+결과 → `<planning_dir>/claude-verify-report.md` (QA 통과율 포함)
+
+### 21. Verification Report
 
 검증 결과를 사용자에게 표시.
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 19 반복
+- "수정 후 재검증" → Step 20 반복
 - "승인" → 완료
