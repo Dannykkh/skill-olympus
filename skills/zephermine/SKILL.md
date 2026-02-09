@@ -89,7 +89,7 @@ Determine session state by checking existing files:
 | + integration-notes | resume | Step 13 (user review) |
 | + sections/index.md | resume | Step 15 (write sections) |
 | all sections complete | resume | Step 16 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 20 (verify) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 21 (verify) |
 | + claude-verify-report.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
@@ -262,7 +262,41 @@ Options: "Done reviewing"
 
 Wait for user confirmation before proceeding.
 
-### 14. Create Section Index
+### 14. Generate API Specification
+
+See [api-spec-guide.md](references/api-spec-guide.md)
+
+`claude-plan.md`에서 모든 API 엔드포인트를 추출하여 `<planning_dir>/claude-api-spec.md` 생성.
+
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+  Generate API specification from the implementation plan.
+
+  Input: <planning_dir>/claude-plan.md
+  Output: <planning_dir>/claude-api-spec.md
+
+  Extract all API endpoints and document:
+  - Method + Path (예: POST /api/users)
+  - Request: headers, params, body (with types)
+  - Response: status codes, body schema
+  - Auth requirements
+  - Frontend caller (which page/component calls this)
+
+  Format: see api-spec-guide.md template.
+  If no API endpoints found (static site, CLI tool, etc.), skip this file.
+  """
+)
+```
+
+**이 문서의 역할:**
+- 프론트↔백엔드 계약서 (구현 전 합의)
+- 섹션 파일에서 참조 (각 섹션이 담당하는 API 명시)
+- QA 시나리오의 통합 테스트 기준
+- **구현 중 새 API 추가 시 반드시 이 문서에도 추가** (drift 방지)
+
+### 15. Create Section Index
 
 See [section-index.md](references/section-index.md)
 
@@ -272,7 +306,7 @@ Read `claude-plan.md`. Identify natural section boundaries and create `<planning
 
 Write `index.md` before proceeding to section file creation.
 
-### 15. Write Section Files — Parallel Subagents
+### 16. Write Section Files — Parallel Subagents
 
 See [section-splitting.md](references/section-splitting.md)
 
@@ -292,6 +326,7 @@ Task(
   Inputs:
   - <planning_dir>/claude-plan.md
   - <planning_dir>/sections/index.md
+  - <planning_dir>/claude-api-spec.md (if exists)
 
   Output: <planning_dir>/sections/section-01-{name}.md
 
@@ -323,7 +358,7 @@ Task(
 
 Wait for ALL subagents to complete before proceeding.
 
-### 16. Generate Execution Files — Subagent
+### 17. Generate Execution Files — Subagent
 
 **Delegate to subagent** to reduce main context token usage:
 
@@ -363,7 +398,7 @@ Task(
 
 Wait for subagent completion before proceeding.
 
-### 17. Generate QA Scenarios Document — Subagent
+### 18. Generate QA Scenarios Document — Subagent
 
 모든 섹션의 Test Scenarios를 통합하여 체크 가능한 QA 문서 생성:
 
@@ -375,6 +410,7 @@ Task(
 
   Input files:
   - <planning_dir>/claude-spec.md (overall test scenarios)
+  - <planning_dir>/claude-api-spec.md (API specification, if exists)
   - <planning_dir>/sections/section-*.md (each section's test scenarios)
 
   Output: <planning_dir>/claude-qa-scenarios.md
@@ -383,6 +419,7 @@ Task(
   1. 각 섹션의 Test Scenarios 테이블을 수집
   2. 기능별로 그룹핑 (API, UI, 비즈니스 로직)
   3. 각 테스트 케이스에 체크박스 추가
+  4. API 통합 테스트 섹션 추가 (claude-api-spec.md 기반)
 
   Format:
   ## Section 01: {name}
@@ -395,26 +432,33 @@ Task(
   ## Section 02: {name}
   ...
 
+  ## Frontend ↔ Backend Integration Tests
+  claude-api-spec.md의 각 엔드포인트에 대해:
+  - [ ] {Page/Component} → {Method} {Path}: 요청 데이터 → 기대 응답
+  - [ ] {Page/Component} → {Method} {Path}: 에러 시 프론트 처리 (토스트, 리다이렉트 등)
+  ...
+
   ## Summary
   - 총 테스트 케이스: N건
-  - 정상 케이스: N건
-  - 에러 케이스: N건
-  - 엣지 케이스: N건
+  - 단위 테스트: N건
+  - API 통합 테스트: N건
+  - 에러/엣지 케이스: N건
 
   Write the file.
   """
 )
 ```
 
-### 18. Final Status
+### 19. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
+- `claude-api-spec.md` (API가 있는 프로젝트)
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
 - `claude-qa-scenarios.md`
 
-### 19. Output Summary
+### 20. Output Summary
 
 Print generated files and next steps:
 ```
@@ -428,6 +472,7 @@ Generated files:
   - claude-spec.md (synthesized specification)
   - claude-team-review.md (multi-agent team analysis)
   - claude-plan.md (implementation plan)
+  - claude-api-spec.md (API specification — frontend↔backend contract)
   - claude-integration-notes.md (feedback decisions)
   - team-reviews/ (individual agent analyses)
   - reviews/ (external LLM feedback)
@@ -462,11 +507,11 @@ Option E - Agent Teams로 병렬 실행 (권장):
 ═══════════════════════════════════════════════════════════════
 ```
 
-### 20. Verify Implementation
+### 21. Verify Implementation
 
 See [verify-protocol.md](references/verify-protocol.md)
 
-구현 완료 후 claude-spec.md + claude-qa-scenarios.md 대비 검증.
+구현 완료 후 claude-spec.md + claude-api-spec.md + claude-qa-scenarios.md 대비 검증.
 사용자가 `/zephermine @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
 
 **Phase 1 — 정적 검증** (서브에이전트 2개 병렬):
@@ -478,16 +523,22 @@ See [verify-protocol.md](references/verify-protocol.md)
 4. 단위 테스트 — `npm test`, `pytest` 등 실행 + 결과 파싱
 5. E2E 테스트 — Playwright/Cypress 감지 시 실행 (미감지 시 건너뜀)
 
-**Phase 3 — QA 시나리오 검증**:
-6. `claude-qa-scenarios.md`의 각 체크박스를 코드/테스트 결과 기반으로 ✅/❌ 마킹
-7. 통과율 집계 (정상/에러/엣지 케이스별)
+**Phase 3 — API 일치 검증** (claude-api-spec.md 있는 경우):
+6. 코드의 실제 API 라우트 vs api-spec 문서 대조
+7. 문서에 없는 새 API → ❌ 미등록 경고
+8. 문서에는 있지만 미구현 API → ❌ 누락 경고
+9. 이름/경로 중복 API 탐지 (같은 기능, 다른 이름)
 
-결과 → `<planning_dir>/claude-verify-report.md` (QA 통과율 포함)
+**Phase 4 — QA 시나리오 검증**:
+10. `claude-qa-scenarios.md`의 각 체크박스를 코드/테스트 결과 기반으로 ✅/❌ 마킹
+11. 통과율 집계 (단위/통합/에러/엣지 케이스별)
 
-### 21. Verification Report
+결과 → `<planning_dir>/claude-verify-report.md` (API 일치 + QA 통과율 포함)
+
+### 22. Verification Report
 
 검증 결과를 사용자에게 표시.
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 20 반복
+- "수정 후 재검증" → Step 21 반복
 - "승인" → 완료

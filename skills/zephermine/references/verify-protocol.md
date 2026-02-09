@@ -8,7 +8,7 @@ zephermine resume 시 모든 계획 파일이 존재하고 사용자가 "구현 
 
 ## 검증 프로세스
 
-### Step 20: 서브에이전트 검증 실행
+### Step 21: 서브에이전트 검증 실행
 
 **Phase 1: 정적 검증** — Task(subagent_type="Explore") 2개 병렬 실행:
 
@@ -157,7 +157,55 @@ Bash: {detected_e2e_command}
 
 ---
 
-**Phase 3: QA 시나리오 검증** — claude-qa-scenarios.md 기반 통과 체크
+**Phase 3: API 일치 검증** — claude-api-spec.md 기반 (API 프로젝트만)
+
+`<planning_dir>/claude-api-spec.md`가 존재하면 실행.
+
+#### 3-1. 실제 API 라우트 추출
+
+코드베이스에서 실제 등록된 API 엔드포인트를 추출:
+
+```
+감지 패턴:
+- Express: app.get/post/put/delete, router.get/post/...
+- Next.js: app/api/**/route.ts, pages/api/**
+- Spring: @GetMapping, @PostMapping, @RequestMapping
+- FastAPI: @app.get, @router.post
+```
+
+#### 3-2. API Spec vs 실제 코드 대조
+
+| 검사 항목 | 판정 |
+|-----------|------|
+| spec에 있고 코드에 있음 | ✅ 일치 |
+| spec에 있지만 코드에 없음 | ❌ 미구현 |
+| 코드에 있지만 spec에 없음 | ⚠️ 미등록 (api-spec에 추가 필요) |
+| 같은 기능인데 다른 경로/이름 | ⚠️ 중복 의심 |
+
+#### 3-3. 중복 API 탐지
+
+유사한 경로나 핸들러 이름을 비교:
+- `/api/users` vs `/api/user` (단수/복수)
+- `/api/getUsers` vs `/api/users` (GET) (동사 중복)
+- 같은 응답 스키마를 반환하는 다른 엔드포인트
+
+#### 3-4. API 검증 결과
+
+```markdown
+## API 일치 검증 결과
+
+| Endpoint | Spec | Code | 상태 |
+|----------|------|------|------|
+| POST /api/users | ✅ | ✅ | 일치 |
+| GET /api/users/:id | ✅ | ✅ | 일치 |
+| DELETE /api/users/:id | ✅ | ❌ | 미구현 |
+| GET /api/user/profile | ❌ | ✅ | 미등록 (spec 추가 필요) |
+| GET /api/users/me | ❌ | ✅ | ⚠️ /user/profile과 중복 의심 |
+```
+
+---
+
+**Phase 4: QA 시나리오 검증** — claude-qa-scenarios.md 기반 통과 체크
 
 계획 단계에서 정의한 입출력 기대값을 실제 구현과 대조합니다.
 
@@ -203,9 +251,9 @@ Bash: {detected_e2e_command}
 
 ---
 
-Phase 1 + Phase 2 + Phase 3 결과를 합쳐 `<planning_dir>/claude-verify-report.md`로 작성.
+Phase 1 + Phase 2 + Phase 3 + Phase 4 결과를 합쳐 `<planning_dir>/claude-verify-report.md`로 작성.
 
-### Step 21: 검증 결과 보고
+### Step 22: 검증 결과 보고
 
 사용자에게 결과 제시:
 - 전체 충족률 (%)

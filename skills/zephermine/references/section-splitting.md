@@ -100,6 +100,9 @@ The implementer reading a section file should NOT need to reference `claude-plan
 
 Include all necessary background, requirements, and implementation details within each section.
 
+**API가 있는 프로젝트**: `claude-api-spec.md`의 해당 엔드포인트를 섹션에 포함.
+구현 중 새 API를 추가하면 반드시 `claude-api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
+
 ### Section File Template
 
 ```markdown
