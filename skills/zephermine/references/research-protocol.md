@@ -11,8 +11,9 @@ This document defines the research decision and execution flow.
 │  Step 4: Decide what to research                            │
 │    - Codebase research? (existing patterns/conventions)     │
 │    - Web research? (best practices, SOTA approaches)        │
+│    - GitHub research? (similar projects, reference impl.)   │
 │                                                             │
-│  Step 5: Execute research (parallel if both selected)       │
+│  Step 5: Execute research (parallel if multiple selected)   │
 │    - Subagents return results                               │
 │    - Main Claude combines and writes claude-research.md     │
 │                                                             │
@@ -55,7 +56,26 @@ options:
     description: "This is a new project or standalone feature"
 ```
 
-### 4.3 Ask About Web Research
+### 4.3 Ask About GitHub Similar Projects
+
+Use AskUserQuestion:
+
+```
+question: "Should I search GitHub for similar projects to use as reference?"
+header: "GitHub"
+options:
+  - label: "Yes, find similar projects"
+    description: "Search GitHub for reference implementations, architecture patterns, proven solutions"
+  - label: "No, skip"
+    description: "Enough context from codebase and web research"
+```
+
+If user selects yes, auto-generate search queries from spec:
+- `"{core_feature} {tech_stack}"` (예: "real-time chat nextjs")
+- `"{domain} {architecture_pattern}"` (예: "e-commerce microservices")
+- 스펙에서 추출한 기술 키워드 조합 (최대 3개 쿼리)
+
+### 4.4 Ask About Web Research
 
 Present the derived topics as multi-select options:
 
@@ -74,9 +94,9 @@ options:
 
 If user selects "Other", follow up to get custom topics.
 
-### 4.4 Handle "No Research" Case
+### 4.5 Handle "No Research" Case
 
-If user selects no codebase AND no web research, skip step 5 entirely.
+If user selects no codebase AND no web research AND no GitHub research, skip step 5 entirely.
 
 ---
 
@@ -91,12 +111,13 @@ If user selects no codebase AND no web research, skip step 5 entirely.
 │  PARALLEL RESEARCH EXECUTION                                │
 │                                                             │
 │  Task 1: Explore ──────────┐                                │
-│    (returns codebase       │                                │
-│     findings as markdown)  ├──→ Main Claude combines       │
-│                            │    and writes single          │
-│  Task 2: Explore ──────────┘    claude-research.md         │
-│    (returns best practices                                  │
-│     findings as markdown)                                   │
+│    (codebase patterns)     │                                │
+│                            ├──→ Main Claude combines       │
+│  Task 2: Explore ──────────┤    and writes single          │
+│    (web best practices)    │    claude-research.md         │
+│                            │                                │
+│  Task 3: Explore ──────────┘                                │
+│    (GitHub similar projects)                                │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -144,19 +165,54 @@ Task tool:
     DO NOT write to any files. Return findings in your response.
 ```
 
-### 5.3 Parallel Execution
+### 5.3 GitHub Similar Projects (if selected)
 
-If both codebase and web research are needed, launch **both Task tools in a single message**.
+Launch Task tool with `subagent_type=Explore`:
+
+```
+Task tool:
+  subagent_type: Explore
+  description: "Search GitHub similar projects"
+  prompt: |
+    Search GitHub for similar open-source projects related to:
+    {project_description_from_spec}
+
+    Tech stack: {detected_tech_stack}
+
+    Search queries to try:
+    {auto_generated_queries}
+
+    For each promising project found:
+    1. Use WebSearch with "site:github.com {query}" to find repositories
+    2. Use WebFetch on the GitHub repo page to read the README
+    3. Analyze: project structure, key design decisions, tech choices
+    4. Note: star count, last update, maturity level
+
+    Select top 3-5 most relevant projects. For each, provide:
+    - **Repo**: owner/name (URL)
+    - **Stars / Last updated**: popularity and freshness
+    - **Relevance**: why this project is useful as reference
+    - **Architecture**: key patterns, folder structure, tech stack
+    - **Takeaways**: specific ideas we can adopt or avoid
+
+    Return your findings as markdown. Always include repo URLs.
+    DO NOT write to any files. Return findings in your response.
+```
+
+### 5.4 Parallel Execution
+
+If multiple research types are needed, launch **all Task tools in a single message**.
 
 ```
 # Single message with multiple tool calls:
 [Task tool call 1: Explore subagent for codebase]
 [Task tool call 2: Explore subagent for web research]
+[Task tool call 3: Explore subagent for GitHub projects]
 ```
 
-Wait for both to complete, then combine results.
+Wait for all to complete, then combine results.
 
-### 5.4 Combine Results and Write File
+### 5.5 Combine Results and Write File
 
 After collecting results from all subagents, combine them into `<planning_dir>/claude-research.md`.
 
@@ -171,5 +227,6 @@ Structure the file however makes sense for the findings.
 | Spec file is vague | Present generic options based on detected language/framework |
 | User selects no research | Skip step 5, proceed to step 6 (interview) |
 | One subagent fails | Log warning, write file with only successful research |
-| Both subagents fail | Log error, ask user if they want to retry or proceed |
+| All subagents fail | Log error, ask user if they want to retry or proceed |
 | Only one research type | Run single subagent, write file with just that content |
+| GitHub search returns no relevant results | Note in research file, not a blocker |

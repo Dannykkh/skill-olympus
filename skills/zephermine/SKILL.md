@@ -130,8 +130,9 @@ See [research-protocol.md](references/research-protocol.md).
 1. Read the spec file
 2. Extract potential research topics (technologies, patterns, integrations)
 3. Ask user about codebase research needs
-4. Ask user about web research needs (present derived topics as multi-select)
-5. Record which research types to perform in step 5
+4. Ask user about GitHub similar project search (reference implementations)
+5. Ask user about web research needs (present derived topics as multi-select)
+6. Record which research types to perform in step 5
 
 ### 5. Execute Research
 
@@ -139,9 +140,10 @@ See [research-protocol.md](references/research-protocol.md).
 
 Based on decisions from step 4, launch research subagents:
 - **Codebase research:** `Task(subagent_type=Explore)`
+- **GitHub research:** `Task(subagent_type=Explore)` with WebSearch (`site:github.com`)
 - **Web research:** `Task(subagent_type=Explore)` with WebSearch
 
-If both are needed, launch both Task tools in parallel (single message with multiple tool calls).
+If multiple are needed, launch all Task tools in parallel (single message with multiple tool calls).
 
 **Important:** Subagents return their findings - they do NOT write files directly. After collecting results from all subagents, combine them and write to `<planning_dir>/claude-research.md`.
 
