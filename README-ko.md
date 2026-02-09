@@ -24,6 +24,8 @@ Claude Code를 사용하면서 반복적으로 겪는 문제들이 있었습니�
 
 > **5분 빠른 시작?** **[빠른 시작 가이드](docs/quickstart.md)**에서 핵심 기능을 빠르게 시작하세요.
 >
+> **전체 파이프라인?** **[워크플로우 가이드](docs/workflow-guide.md)** — 설계 → 구현 → QA 엔드투엔드.
+>
 > **새 환경 설정?** [SETUP.md](SETUP.md)에서 프로젝트 유형별 상세 설치 가이드를 확인하세요.
 
 ### 프로젝트 유형별 설치
@@ -130,7 +132,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (55개)
+### 커스텀 스킬 (56개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -142,7 +144,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🎯 **계획** | zephermine (젭마인), game-changing-features, ship-learn-next | 계획 & 요구사항 (zephermine에 스펙 검증 포함) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
-| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner | 코드 리뷰 & QA |
+| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qa-until-pass | 코드 리뷰 & QA |
 | 📦 **Git** | commit-work | Git 워크플로우 |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
 | 🧠 **메모리** | mnemo | 통합 메모리 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
@@ -282,7 +284,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (55개)
+├── skills/                    # 커스텀 스킬 (56개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -323,6 +325,7 @@ claude-code-customizations/
 │   ├── professional-communication/
 │   ├── python-backend-fastapi/
 │   ├── qa-test-planner/
+│   ├── qa-until-pass/
 │   ├── react-dev/
 │   ├── reducing-entropy/
 │   ├── ship-learn-next/
@@ -408,6 +411,7 @@ claude-code-customizations/
 │   └── README.md
 ├── docs/                      # 문서
 │   ├── quickstart.md
+│   ├── workflow-guide.md      # 엔드투엔드 파이프라인 가이드
 │   └── resources/
 ├── install.bat                # Windows 설치 (6단계, Mnemo 포함)
 ├── install.sh                 # Linux/Mac 설치 (6단계, Mnemo 포함)

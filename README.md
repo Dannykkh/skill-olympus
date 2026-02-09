@@ -24,6 +24,8 @@ This repository solves these problems by:
 
 > **5-minute guide?** See **[Quick Start Guide](docs/quickstart.md)** for getting started with core features fast.
 >
+> **Full pipeline?** See **[Workflow Guide](docs/workflow-guide.md)** — Design → Build → QA end-to-end.
+>
 > **New environment?** See [SETUP.md](SETUP.md) for complete setup guide with project-type specific installations.
 
 ### Install by Project Type
@@ -130,7 +132,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ## What's Included
 
-### Custom Skills (55 Skills)
+### Custom Skills (56 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -142,7 +144,7 @@ node skills/orchestrator/install.js <target-project-path>
 | 🎯 **Planning** | zephermine (젭마인), game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner | Code review & QA |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qa-until-pass | Code review & QA |
 | 📦 **Git** | commit-work | Git workflow |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
@@ -282,7 +284,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (55 skills)
+├── skills/                    # Custom skills (56 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -323,6 +325,7 @@ claude-code-customizations/
 │   ├── professional-communication/
 │   ├── python-backend-fastapi/
 │   ├── qa-test-planner/
+│   ├── qa-until-pass/
 │   ├── react-dev/
 │   ├── reducing-entropy/
 │   ├── ship-learn-next/
@@ -408,6 +411,7 @@ claude-code-customizations/
 │   └── README.md
 ├── docs/                      # Documentation
 │   ├── quickstart.md
+│   ├── workflow-guide.md      # End-to-end pipeline guide
 │   └── resources/
 ├── install.bat                # Windows installer (6 steps, includes Mnemo)
 ├── install.sh                 # Linux/Mac installer (6 steps, includes Mnemo)

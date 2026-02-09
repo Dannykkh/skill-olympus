@@ -55,6 +55,7 @@
 |--------|------|------|
 | **TDD Guide 에이전트** | Red-Green-Refactor 강제, 80%+ 커버리지 | `curl -o ~/.claude/agents/tdd-guide.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/tdd-guide.md` |
 | **/tdd 명령어** | TDD 워크플로우 실행 | `curl -o .claude/commands/tdd.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/commands/tdd.md` |
+| **qa-until-pass (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 | 이 저장소의 `skills/qa-until-pass/` |
 
 ### 코드 리뷰
 

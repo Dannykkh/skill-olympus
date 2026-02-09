@@ -38,13 +38,16 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |시나리오|체이닝 순서|
 |---|---|
-|새 프로젝트 시작|spec-interviewer → architect → fullstack-development-workflow|
+|새 프로젝트 (풀코스)|zephermine → architect → agent-team → qa-until-pass|
+|기능 추가|zephermine → agent-team/수동 구현 → qa-until-pass|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
 |UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|
 |코드 리뷰 종합|code-reviewer → security-reviewer → reducing-entropy|
-|기능 추가|spec-interviewer → fullstack-coding-standards → frontend-react/backend-spring → qa-writer|
 |리팩토링|explore-agent → reducing-entropy → code-reviewer|
 |보안 감사|security-reviewer → code-review-checklist|
+|QA 자동화|qa-until-pass (시나리오 자동 생성 → Playwright → Healer)|
+
+> 상세 가이드: [docs/workflow-guide.md](docs/workflow-guide.md)
 
 ---
 
@@ -66,7 +69,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 ## Available Resources
 
-### Skills (56개)
+### Skills (57개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -78,7 +81,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner | 테스트/리뷰 |
+| 🧪 Testing | code-reviewer, qa-test-planner, qa-until-pass | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |

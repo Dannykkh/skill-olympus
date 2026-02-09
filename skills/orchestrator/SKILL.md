@@ -115,3 +115,22 @@ pmworker → task-3 담당 (task-1 완료 후 언블록) → ...
 ## 상세 가이드
 
 [docs/orchestrator-guide.md](docs/orchestrator-guide.md) 참조
+
+---
+
+## 다음 단계 안내
+
+모든 Worker 태스크가 완료되면 사용자에게 다음 단계를 안내합니다:
+
+```
+✅ 오케스트레이터 구현 완료!
+
+📊 결과: {완료 태스크 수}/{전체 태스크 수}
+
+👉 다음 단계 (선택):
+  /qa-until-pass       → Playwright 자동 테스트 + Healer 루프
+  /review              → 코드 리뷰 (품질/보안/성능)
+  /commit              → 변경사항 커밋
+
+📎 참고: docs/workflow-guide.md
+```

@@ -499,3 +499,20 @@ generate_report(all_findings)
 
 **버전:** 2.0.0 (통합 버전)
 **최종 업데이트:** 2026-01-24
+
+---
+
+## 다음 단계 안내
+
+리뷰가 완료되면 사용자에게 다음 단계를 안내합니다:
+
+```
+✅ 코드 리뷰 완료! (결과: {PASS/CONDITIONAL/FAIL})
+
+👉 다음 단계 (선택):
+  /qa-until-pass       → Playwright 자동 테스트 (아직 안 했다면)
+  security-reviewer    → 보안 전문 리뷰 (필요하면)
+  /commit              → 변경사항 커밋
+
+📎 참고: docs/workflow-guide.md
+```

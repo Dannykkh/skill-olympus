@@ -542,3 +542,22 @@ See [verify-protocol.md](references/verify-protocol.md)
 AskUserQuestion으로 다음 선택:
 - "수정 후 재검증" → Step 21 반복
 - "승인" → 완료
+
+---
+
+## 다음 단계 안내
+
+설계가 완료되면 사용자에게 다음 단계를 안내합니다:
+
+```
+✅ 젭마인 설계 완료!
+
+📦 산출물: claude-ralph.md, claude-ralphy.md, claude-qa-scenarios.md, sections/
+
+👉 다음 단계 (선택):
+  /agent-team          → 섹션 기반 병렬 구현 (Claude 네이티브)
+  workpm               → 멀티AI 병렬 구현 (Codex/Gemini 혼합)
+  수동 구현             → 직접 코딩
+
+📎 참고: docs/workflow-guide.md
+```

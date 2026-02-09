@@ -299,3 +299,22 @@ Step {N} complete: {summary}
 | teammate 실패/타임아웃 | 해당 Task 로그 확인 → 재시도 1회 → 실패 시 사용자 보고 |
 | 파일 충돌 감지 | 두 teammate가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
 | 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → 사용자에게 새 세션에서 재개 안내 |
+
+---
+
+## 다음 단계 안내
+
+구현이 완료되면 사용자에게 다음 단계를 안내합니다:
+
+```
+✅ 에이전트팀 구현 완료!
+
+📊 결과: {통과/실패 요약}
+
+👉 다음 단계 (선택):
+  /qa-until-pass       → Playwright 자동 테스트 + Healer 루프
+  /review              → 코드 리뷰 (품질/보안/성능)
+  /commit              → 변경사항 커밋
+
+📎 참고: docs/workflow-guide.md
+```
