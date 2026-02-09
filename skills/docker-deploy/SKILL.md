@@ -4,7 +4,7 @@ description: Docker 이미지 기반 배포 환경을 자동으로 구성합니�
 license: MIT
 metadata:
   author: user
-  version: "2.6.0"
+  version: "2.7.0"
 ---
 
 # Docker Deploy Skill
@@ -60,6 +60,11 @@ AskUserQuestion 도구로 다음을 확인:
 #### 2.3 테스트 계정
 - 초기 테스트 계정 생성 여부
 - 계정 정보 (admin/manager/member 등)
+
+#### 2.4 DB 덤프 자동 추출
+- 빌드 시 실행 중인 DB 컨테이너에서 full-dump.sql을 자동 추출할지 여부
+- DB 컨테이너명 확인 (기본: `${PROJECT_NAME}-db`)
+- 추출 시 docker exec으로 mysqldump/pg_dump 실행
 
 ---
 
@@ -386,7 +391,7 @@ echo ============================================
 echo.
 
 REM Docker 실행 확인
-echo [1/4] Docker 실행 상태 확인 중...
+echo [1/5] Docker 실행 상태 확인 중...
 docker info >nul 2>&1
 if errorlevel 1 (
     echo [오류] Docker가 실행되고 있지 않습니다.
@@ -397,7 +402,7 @@ echo       Docker 정상 실행 중
 
 REM 기존 서비스 중지 (볼륨 유지)
 echo.
-echo [2/4] 기존 서비스 중지 중...
+echo [2/5] 기존 서비스 중지 중...
 docker-compose down
 if errorlevel 1 (
     echo [경고] docker-compose down 실패, 강제 중지 시도...
@@ -420,7 +425,7 @@ echo       이미지 삭제 완료
 
 REM 새 이미지 로드
 echo.
-echo [3/4] 새 Docker 이미지 로드 중...
+echo [3/5] 새 Docker 이미지 로드 중...
 if exist "!PROJECT_NAME!-all.tar" (
     docker load -i "!PROJECT_NAME!-all.tar"
 ) else if exist "!PROJECT_NAME!-api.tar" (
@@ -435,12 +440,31 @@ echo       이미지 로드 완료
 
 REM 서비스 재시작
 echo.
-echo [4/4] 서비스 시작 중...
+echo [4/5] 서비스 시작 중...
 docker-compose up -d
 if errorlevel 1 (
     echo [오류] 서비스 시작 실패
     pause
     exit /b 1
+)
+
+REM DB 마이그레이션 (migrations 폴더가 있는 경우)
+echo.
+echo [5/5] DB 스키마 마이그레이션 실행 중...
+if exist "%SCRIPT_DIR%migrations" (
+    echo       DB 준비 대기 중...
+    timeout /t 15 /nobreak >nul
+    for %%f in ("%SCRIPT_DIR%migrations\*.sql") do (
+        echo       %%~nxf 적용 중...
+        docker exec -i !PROJECT_NAME!-db sh -c "mysql -u root -p\$MYSQL_ROOT_PASSWORD \$MYSQL_DATABASE" < "%%f" 2>nul
+        if not errorlevel 1 (
+            echo       %%~nxf 적용 완료
+        ) else (
+            echo       %%~nxf 스킵 ^(이미 적용됨^)
+        )
+    )
+) else (
+    echo       마이그레이션 파일 없음 ^(스킵^)
 )
 
 echo.
@@ -611,7 +635,7 @@ if errorlevel 1 (
 REM 출력 폴더 확인
 if not exist "docker-images" mkdir docker-images
 
-echo [1/5] Building Backend API image...
+echo [1/7] Building Backend API image...
 docker build -t !PROJECT_NAME!-api:latest -f backend/Dockerfile --target production backend/
 if errorlevel 1 (
     echo [ERROR] Backend build failed.
@@ -621,7 +645,7 @@ if errorlevel 1 (
 echo       Backend 빌드 완료
 
 echo.
-echo [2/5] Building Frontend image...
+echo [2/7] Building Frontend image...
 REM VITE_API_URL 설정 주의:
 REM - 엔드포인트가 이미 /api를 포함하면 빈 문자열 사용 (예: VITE_API_URL=)
 REM - 그렇지 않으면 /api 사용 (예: VITE_API_URL=/api)
@@ -635,34 +659,80 @@ if errorlevel 1 (
 echo       Frontend 빌드 완료
 
 echo.
-echo [3/5] Saving images to tar file...
+echo [3/7] Saving images to tar file...
 docker save !PROJECT_NAME!-api:latest !PROJECT_NAME!-frontend:latest -o docker-images/!PROJECT_NAME!-all.tar
 echo       이미지 저장 완료
 
 echo.
-echo [4/5] Copying deployment files...
+echo [4/7] Copying deployment files...
 if exist "database\schema.sql" copy /Y database\schema.sql docker-images\schema.sql >nul
 if exist "database\seed-data.sql" copy /Y database\seed-data.sql docker-images\seed-data.sql >nul
+if not exist "docker-images\migrations" mkdir docker-images\migrations
 echo       SQL 파일 복사 완료
 
 echo.
-echo [5/5] Verifying output files...
-dir docker-images /B
+echo [5/7] DB 덤프 추출 중 (full-dump.sql)...
+docker ps --filter "name=!PROJECT_NAME!-db" --filter "status=running" -q >nul 2>&1
+for /f %%i in ('docker ps --filter "name=!PROJECT_NAME!-db" --filter "status=running" -q 2^>nul') do set "DB_RUNNING=%%i"
+if defined DB_RUNNING (
+    docker exec !PROJECT_NAME!-db sh -c "mysqldump -u root -p\$MYSQL_ROOT_PASSWORD --routines --triggers --events --single-transaction \$MYSQL_DATABASE" > docker-images/full-dump.sql 2>nul
+    if not errorlevel 1 (
+        echo       full-dump.sql 추출 완료
+    ) else (
+        echo [경고] DB 덤프 추출 실패 - 기존 full-dump.sql을 유지합니다.
+    )
+) else (
+    echo [경고] DB 컨테이너^(!PROJECT_NAME!-db^)가 실행 중이 아닙니다.
+    echo        기존 full-dump.sql을 유지합니다.
+    if not exist "docker-images\full-dump.sql" (
+        echo [ERROR] full-dump.sql이 없습니다! DB 컨테이너를 먼저 실행하세요.
+        pause
+        exit /b 1
+    )
+)
+
+echo.
+echo [6/7] Verifying output files...
+echo.
+echo   docker-images 폴더 내용:
+echo   ─────────────────────────
+for %%f in (docker-images\*) do echo     %%~nxf  (%%~zf bytes)
+if exist "docker-images\migrations\*.sql" (
+    echo     migrations\
+    for %%f in (docker-images\migrations\*.sql) do echo       %%~nxf
+)
 echo.
 
+echo.
+echo [7/7] ZIP 배포 파일 생성 중...
+REM 이전 개별 tar 파일 정리 (통합 tar만 유지)
+if exist "docker-images\!PROJECT_NAME!-api.tar" del /Q "docker-images\!PROJECT_NAME!-api.tar"
+if exist "docker-images\!PROJECT_NAME!-frontend.tar" del /Q "docker-images\!PROJECT_NAME!-frontend.tar"
+REM test-results 제거
+if exist "docker-images\test-results" rmdir /S /Q "docker-images\test-results"
+powershell -Command "Compress-Archive -Path 'docker-images\*' -DestinationPath '!PROJECT_NAME!-docker-deploy.zip' -Force"
+if errorlevel 1 (
+    echo [ERROR] ZIP 생성 실패
+    pause
+    exit /b 1
+)
+for %%f in (!PROJECT_NAME!-docker-deploy.zip) do echo       !PROJECT_NAME!-docker-deploy.zip (%%~zf bytes)
+echo       ZIP 생성 완료
+
+echo.
 echo ============================================
 echo   Build Complete!
 echo ============================================
 echo.
-echo   Output folder: docker-images\
-echo.
-echo   배포 ZIP 파일 생성:
-echo     powershell Compress-Archive -Path 'docker-images\*' -DestinationPath '!PROJECT_NAME!-docker-deploy.zip' -Force
+echo   Output:
+echo     docker-images\              배포 폴더
+echo     !PROJECT_NAME!-docker-deploy.zip   배포 ZIP
 echo.
 echo   배포 절차:
 echo     1. !PROJECT_NAME!-docker-deploy.zip을 배포 PC로 복사
 echo     2. 압축 해제
-echo     3. install.bat 더블클릭
+echo     3. install.bat 더블클릭 (신규 설치)
+echo        또는 update.bat 더블클릭 (업데이트)
 echo.
 
 endlocal
