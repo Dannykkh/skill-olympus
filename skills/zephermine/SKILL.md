@@ -194,11 +194,12 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 4. **Domain Researcher** (Claude + WebSearch) — 산업별 기술/표준/솔루션 **검색**
 
 **Phase B — 도메인 전문가 (리서치 결과 활용, 2개 병렬):**
-5. **Domain Process Expert** — 해당 산업의 전체 업무 프로세스 관점
-6. **Domain Technical Expert** — 해당 산업의 필수 기술/표준/규정 관점
+5. **Domain Process Expert** — 업무 흐름표 작성 (기능별 왜/누가/CRUD 권한/입출력/예외)
+6. **Domain Technical Expert** — 기술 스택 매핑 (기능별 필수 기술/연동/규제/기존 솔루션)
 
 > Phase B는 Phase A 완료 후 실행 (domain-research.md 필요).
 > 도메인 전문가는 리서치 결과를 기반으로 **실제 기술/솔루션을 참조하여** 분석합니다.
+> **spec에 없는 업무도 추가**: 해당 산업에서 필수인데 빠진 업무/역할/규제를 보완합니다.
 
 | Codex | Gemini | 도메인 전문가 실행 (Phase B) |
 |-------|--------|---------------------------|
@@ -229,8 +230,11 @@ Create detailed plan → `<planning_dir>/claude-plan.md`
 **Inputs:**
 - `<planning_dir>/claude-spec.md`
 - `<planning_dir>/claude-team-review.md` (team analysis findings)
+- `<planning_dir>/team-reviews/domain-process-analysis.md` (업무 흐름표 — CRUD 권한, 역할, 입출력)
+- `<planning_dir>/team-reviews/domain-technical-analysis.md` (기술 스택 매핑 — 연동, 규제, 솔루션)
 
 **IMPORTANT**: Address all "Critical Findings" from the team review.
+도메인 전문가가 추가한 누락 업무/역할/규제를 plan에 반영합니다.
 Write for an unfamiliar reader. The plan must be fully self-contained - an engineer or LLM with no prior context should understand *what* we're building, *why*, and *how* just from reading this document.
 
 ### 11. External Review
