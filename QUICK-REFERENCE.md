@@ -74,6 +74,7 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
+| **zephermine (로컬)** | 인터뷰 → 리서치 → 도메인 분석 → 스펙 → 섹션 분리 (Multi-AI 도메인 전문가 포함) | 이 저장소의 `skills/zephermine/` |
 | **Planner 에이전트** | 구현 전 상세 계획 수립 | `curl -o ~/.claude/agents/planner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/planner.md` |
 | **Architect 에이전트** | 시스템 설계, 아키텍처 결정 | `curl -o ~/.claude/agents/architect.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/architect.md` |
 
@@ -226,6 +227,8 @@ claude plugin install voltagent-qa-sec
 
 | 경로 | 설명 |
 |------|------|
+| `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
+| `skills/qa-until-pass/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
 | `skills/react-best-practices/` | Vercel 45개 규칙 |
