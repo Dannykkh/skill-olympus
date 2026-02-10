@@ -4,7 +4,7 @@ description: Docker 이미지 기반 배포 환경을 자동으로 구성합니�
 license: MIT
 metadata:
   author: user
-  version: "2.7.0"
+  version: "2.8.0"
 ---
 
 # Docker Deploy Skill
@@ -31,6 +31,7 @@ Docker 이미지 기반 배포 파일을 자동 생성하는 스킬입니다.
 - `docker-images/.env` - 환경변수 (기본값 포함)
 - `docker-images/logs.bat` - 로그 보기
 - `docker-images/seed-data.sql` - 초기 데이터 (선택)
+- `deploy.bat` - Git Deploy Monitor 연동용 자동 배포 스크립트
 
 ---
 
@@ -857,6 +858,164 @@ SECRET_KEY=change-this-secret-key-in-production
 - MySQL 준비 대기 시 `goto` 기반 루프 사용 필수
 - 잘못된 예: `for /L %%i in (1,1,30) do ( if !errorlevel!==0 ... )`
 - 올바른 예: `:WAIT_DB` → `docker exec ping` → `if not errorlevel 1 goto DB_IS_READY` → `goto WAIT_DB`
+
+---
+
+## 13. deploy.bat (Git Deploy Monitor 연동)
+
+Git Deploy Monitor가 git push 감지 시 자동으로 실행하는 스크립트입니다.
+이 파일은 **배포 폴더** (예: `D:\deploy\{프로젝트명}\`)에 위치해야 합니다.
+
+### 배포 흐름
+```
+Git push → DeployMonitor 감지 → deploy.bat auto 실행
+  1. git pull (bare repo에서 최신 코드)
+  2. Docker 이미지 빌드
+  3. 기존 컨테이너 중지 (DB 유지)
+  4. 새 이미지로 컨테이너 시작
+```
+
+### deploy.bat 생성 위치
+
+사용자에게 **배포 폴더 경로**를 확인합니다:
+- 기본: `D:\deploy\{프로젝트명}\`
+- 이 폴더에 프로젝트 소스 코드가 git clone 되어 있어야 함
+- deploy.bat을 이 폴더 루트에 생성
+
+### deploy.bat 템플릿
+
+```batch
+@echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%"
+
+REM === 설정 ===
+set "PROJECT_NAME={프로젝트명}"
+set "API_PORT=9201"
+set "FRONTEND_PORT=8001"
+set "DB_PORT=3307"
+
+REM 모드 확인 (auto = DeployMonitor 자동 실행)
+set "MODE=%~1"
+
+echo ============================================
+echo   [%PROJECT_NAME%] 자동 배포 시작
+echo   모드: %MODE%
+echo   시각: %date% %time%
+echo ============================================
+
+REM [1] 최신 코드 가져오기
+echo.
+echo [1/4] git pull 실행 중...
+git pull
+if errorlevel 1 (
+    echo [오류] git pull 실패
+    if not "%MODE%"=="auto" pause
+    exit /b 1
+)
+echo       git pull 완료
+
+REM [2] Docker 이미지 빌드
+echo.
+echo [2/4] Docker 이미지 빌드 중...
+docker build -t %PROJECT_NAME%-api:latest -f backend/Dockerfile --target production backend/
+if errorlevel 1 (
+    echo [오류] Backend 빌드 실패
+    if not "%MODE%"=="auto" pause
+    exit /b 2
+)
+echo       Backend 빌드 완료
+
+docker build -t %PROJECT_NAME%-frontend:latest -f frontend/Dockerfile --target production --build-arg "VITE_API_URL=" frontend/
+if errorlevel 1 (
+    echo [오류] Frontend 빌드 실패
+    if not "%MODE%"=="auto" pause
+    exit /b 3
+)
+echo       Frontend 빌드 완료
+
+REM [3] 컨테이너 재시작 (DB 유지)
+echo.
+echo [3/4] 컨테이너 재시작 중...
+cd /d "%SCRIPT_DIR%docker-images"
+docker compose stop api frontend
+docker compose rm -f api frontend
+docker compose up -d api frontend
+if errorlevel 1 (
+    echo [오류] 컨테이너 시작 실패
+    cd /d "%SCRIPT_DIR%"
+    if not "%MODE%"=="auto" pause
+    exit /b 4
+)
+cd /d "%SCRIPT_DIR%"
+echo       컨테이너 재시작 완료
+
+REM [4] 헬스체크 대기
+echo.
+echo [4/4] 서비스 상태 확인 중...
+timeout /t 10 /nobreak >nul
+
+set "RETRIES=0"
+:HEALTH_CHECK
+if %RETRIES% GEQ 15 goto HEALTH_FAIL
+curl -sf http://localhost:%API_PORT%/health >nul 2>&1
+if not errorlevel 1 goto HEALTH_OK
+set /a RETRIES+=1
+echo       대기 중... (%RETRIES%/15)
+timeout /t 2 /nobreak >nul
+goto HEALTH_CHECK
+
+:HEALTH_OK
+echo       API 헬스체크 통과
+
+echo.
+echo ============================================
+echo   [%PROJECT_NAME%] 배포 완료!
+echo   웹: http://localhost:%FRONTEND_PORT%
+echo   API: http://localhost:%API_PORT%/docs
+echo ============================================
+
+if not "%MODE%"=="auto" pause
+exit /b 0
+
+:HEALTH_FAIL
+echo [경고] API 헬스체크 실패 (컨테이너는 실행 중)
+echo        수동 확인 필요: docker logs %PROJECT_NAME%-api
+if not "%MODE%"=="auto" pause
+exit /b 5
+```
+
+### deploy.bat 커스터마이즈 포인트
+
+| 항목 | 설명 |
+|------|------|
+| `PROJECT_NAME` | 프로젝트명 (docker-compose name과 일치) |
+| `API_PORT` 등 | docker-compose.yml의 포트와 일치 |
+| `VITE_API_URL` | 프론트엔드 API 경로 (프로젝트에 맞게 조정) |
+| git pull 방식 | bare repo clone이면 remote 설정 필요 |
+| 헬스체크 URL | `/health` 엔드포인트 경로 |
+
+### DeployMonitor 연동 설정
+
+배포 폴더 구조 예시:
+```
+D:\deploy\bizmanagement\           ← 배포 폴더 (DeployMonitor 설정)
+├── deploy.bat                     ← 이 파일 (자동 배포 스크립트)
+├── backend/
+├── frontend/
+├── docker-images/
+│   ├── docker-compose.yml
+│   └── .env
+└── ...
+```
+
+DeployMonitor 설정:
+- 저장소 폴더: `C:\Bonobo.Git.Server\App_Data\Repositories` (bare repo)
+- 배포 폴더: `D:\deploy` (각 프로젝트 하위에 deploy.bat 존재)
+- 감시 브랜치: `master`
 
 ---
 
