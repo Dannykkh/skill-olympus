@@ -258,15 +258,30 @@ Task(
 
   Use the domain-research.md findings to ground your analysis with real technologies and solutions.
 
-  Analyze and report:
-  1. **프로세스 완전성**: spec이 {산업군}의 핵심 업무 흐름을 빠짐없이 커버하는가?
-  2. **프로세스 순서/의존성**: 업무 단계 간 순서가 올바른가? 누락된 단계는?
-  3. **이해관계자**: 빠진 역할/부서가 있는가? (예: 승인자, 감사자, 외부 기관)
-  4. **예외 프로세스**: 정상 흐름 외에 반품/취소/이의신청 등 예외 흐름은?
-  5. **업계 관행**: {산업군}에서 당연시하는 관행인데 spec에 빠진 것은?
-  6. **규제/컴플라이언스**: 법적 의무사항 중 누락된 것은?
+  **Your job: spec의 각 기능/업무를 촘촘한 업무 흐름표로 작성합니다.**
+  개발자가 이 문서만 보고도 "누가, 왜, 뭘, 어떤 권한으로, 어떤 결과를" 파악할 수 있어야 합니다.
 
-  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Output format — 각 업무/기능마다:
+
+  ## {업무명} (예: 주문 생성)
+  - **왜 (목적)**: 이 업무가 존재하는 비즈니스 이유
+  - **누가 (역할)**: 담당자/부서 (예: 고객, 관리자, 시스템)
+  - **권한 (CRUD)**:
+    | 역할 | Create | Read | Update | Delete |
+    |------|--------|------|--------|--------|
+    | 고객 | ✅ | 본인만 | ❌ | 취소만 |
+    | 관리자 | ✅ | 전체 | ✅ | ✅ |
+  - **입력**: 필요한 데이터/전제 조건
+  - **처리**: 구체적으로 무엇을 하는가 (단계별)
+  - **출력**: 결과물, 상태 변경, 다음 업무 트리거
+  - **예외 흐름**: 실패/거절/취소 시 어떻게 되는가
+
+  추가 분석:
+  - **누락 업무**: spec에 없지만 {산업군}에서 반드시 필요한 업무
+  - **누락 역할**: spec에 없지만 필요한 이해관계자 (승인자, 감사자, 외부 기관)
+  - **업계 관행**: {산업군}에서 당연시하는 관행인데 빠진 것
+  - **규제/컴플라이언스**: 법적 의무사항 중 누락된 것
+
   Write results to: <planning_dir>/team-reviews/domain-process-analysis.md
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
@@ -291,15 +306,39 @@ Task(
 
   Use the domain-research.md findings to ground your analysis with real technologies and solutions.
 
-  Analyze and report:
-  1. **필수 기술/표준**: {산업군}에서 반드시 사용해야 하는 기술 표준은?
-  2. **필수 연동**: 이 산업에서 통상적으로 연동하는 외부 시스템은?
-  3. **데이터 형식**: 업계 표준 데이터 포맷이 있는가?
-  4. **보안/규정**: {산업군} 특화 보안 요구사항 (개인정보, 금융규제, 의료정보 등)
-  5. **성능 기준**: {산업군}에서 통상적으로 요구하는 SLA/성능 수준은?
-  6. **기존 솔루션**: 이미 검증된 오픈소스/상용 솔루션이 있어 바퀴를 재발명할 필요 없는 부분은?
+  **Your job: spec의 각 기능에 필요한 기술 스택과 연동을 구체적으로 매핑합니다.**
+  개발자가 이 문서만 보고도 "어떤 기술로, 뭘 연동하고, 어떤 규격을 지켜야 하는지" 파악할 수 있어야 합니다.
 
-  Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
+  Output format:
+
+  ## 1. 필수 기술/표준
+  domain-research.md의 검색 결과를 참조하여 구체적 기술명과 URL 포함.
+  | 기능 영역 | 필수 기술/표준 | 이유 | 참고 URL |
+  |----------|--------------|------|---------|
+
+  ## 2. 외부 시스템 연동
+  | 연동 대상 | 프로토콜/API | 용도 | SDK/라이브러리 |
+  |----------|------------|------|--------------|
+
+  ## 3. 데이터 형식/규격
+  업계 표준 데이터 포맷 (예: HL7/FHIR, EDI, ISO 8583 등)
+
+  ## 4. 보안/규정 요구사항
+  | 규제 | 적용 범위 | 필수 조치 | 위반 시 리스크 |
+  |------|----------|----------|--------------|
+
+  ## 5. 성능 기준 (SLA)
+  | 항목 | 업계 기준 | 권장 목표 |
+  |------|---------|----------|
+
+  ## 6. 기존 솔루션 (바퀴 재발명 방지)
+  domain-research.md에서 발견된 솔루션 중 이 프로젝트에 적용 가능한 것:
+  | 영역 | 솔루션명 | GitHub Stars / 가격 | 적용 방법 |
+  |------|---------|-------------------|----------|
+
+  ## 7. 누락 사항 (spec에 없지만 필요한 기술)
+  severity: Critical / Important / Nice-to-Have
+
   Write results to: <planning_dir>/team-reviews/domain-technical-analysis.md
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
@@ -328,16 +367,28 @@ cat > "<planning_dir>/team-reviews/domain-process-prompt.txt" << 'PROMPT_EOF'
 You are a {산업군} Process Expert — 20년 경력의 {산업군} 업무 전문가.
 {산업군}의 전체 비즈니스 프로세스와 업무 흐름을 깊이 이해하고 있습니다.
 
-Analyze the provided spec and interview documents:
+Analyze the spec, interview, and domain-research documents.
+Write a detailed business process document for developers.
 
-1. 프로세스 완전성: 핵심 업무 흐름을 빠짐없이 커버하는가?
-2. 프로세스 순서/의존성: 단계 간 순서가 올바른가? 누락된 단계는?
-3. 이해관계자: 빠진 역할/부서가 있는가?
-4. 예외 프로세스: 반품/취소/이의신청 등 예외 흐름은?
-5. 업계 관행: 당연시하는 관행인데 spec에 빠진 것은?
-6. 규제/컴플라이언스: 법적 의무사항 중 누락된 것은?
+For EACH business task/function in the spec, output:
 
-Format each finding with severity: Critical / Important / Nice-to-Have.
+## {업무명}
+- 왜 (목적): 이 업무가 존재하는 비즈니스 이유
+- 누가 (역할): 담당자/부서
+- 권한 (CRUD):
+  | 역할 | Create | Read | Update | Delete |
+  |------|--------|------|--------|--------|
+- 입력: 필요한 데이터/전제 조건
+- 처리: 구체적으로 무엇을 하는가 (단계별)
+- 출력: 결과물, 상태 변경, 다음 업무 트리거
+- 예외 흐름: 실패/거절/취소 시 처리
+
+Also add:
+- 누락 업무: spec에 없지만 {산업군}에서 반드시 필요한 업무
+- 누락 역할: 필요한 이해관계자 (승인자, 감사자, 외부 기관)
+- 업계 관행: 당연시하는 관행인데 빠진 것
+- 규제/컴플라이언스: 법적 의무사항 중 누락된 것
+
 Output in markdown format.
 PROMPT_EOF
 
@@ -346,16 +397,37 @@ cat > "<planning_dir>/team-reviews/domain-technical-prompt.txt" << 'PROMPT_EOF'
 You are a {산업군} Technical Domain Expert — {산업군} IT 시스템 구축 전문가.
 {산업군}에서 핵심적으로 필요한 기술, 표준, 규격을 깊이 이해하고 있습니다.
 
-Analyze the provided spec and interview documents:
+Analyze the spec, interview, and domain-research documents.
+Map concrete technologies to each feature area.
 
-1. 필수 기술/표준: 반드시 사용해야 하는 기술 표준은?
-2. 필수 연동: 통상적으로 연동하는 외부 시스템은?
-3. 데이터 형식: 업계 표준 데이터 포맷이 있는가?
-4. 보안/규정: 특화 보안 요구사항
-5. 성능 기준: 통상적으로 요구하는 SLA/성능 수준은?
-6. 기존 솔루션: 검증된 오픈소스/상용 솔루션으로 대체 가능한 부분은?
+Output format:
 
-Format each finding with severity: Critical / Important / Nice-to-Have.
+## 1. 필수 기술/표준
+| 기능 영역 | 필수 기술/표준 | 이유 | 참고 URL |
+|----------|--------------|------|---------|
+
+## 2. 외부 시스템 연동
+| 연동 대상 | 프로토콜/API | 용도 | SDK/라이브러리 |
+|----------|------------|------|--------------|
+
+## 3. 데이터 형식/규격
+업계 표준 포맷 (예: HL7/FHIR, EDI, ISO 8583 등)
+
+## 4. 보안/규정 요구사항
+| 규제 | 적용 범위 | 필수 조치 | 위반 시 리스크 |
+|------|----------|----------|--------------|
+
+## 5. 성능 기준 (SLA)
+| 항목 | 업계 기준 | 권장 목표 |
+|------|---------|----------|
+
+## 6. 기존 솔루션 (바퀴 재발명 방지)
+| 영역 | 솔루션명 | Stars/가격 | 적용 방법 |
+|------|---------|-----------|----------|
+
+## 7. 누락 사항
+severity: Critical / Important / Nice-to-Have
+
 Output in markdown format.
 PROMPT_EOF
 ```
