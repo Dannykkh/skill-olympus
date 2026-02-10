@@ -5,11 +5,13 @@
 ## Overview
 
 ```
-claude-spec.md ──┬──→ UX Agent ──────────────────→ ux-analysis.md
-                 ├──→ Architecture Agent ─────────→ architecture-analysis.md
-                 ├──→ Red Team Agent ─────────────→ redteam-analysis.md
+claude-spec.md ──┬──→ UX Agent (Claude) ─────────→ ux-analysis.md
+                 ├──→ Architecture Agent (Claude) → architecture-analysis.md
+                 ├──→ Red Team Agent (Claude) ────→ redteam-analysis.md
                  ├──→ Domain Process Expert ──────→ domain-process-analysis.md
+                 │    (Codex / Gemini / Claude)
                  └──→ Domain Technical Expert ────→ domain-technical-analysis.md
+                      (Gemini / Codex / Claude)
                                                           │
                                                           ▼
                                                   claude-team-review.md (통합)
@@ -33,6 +35,8 @@ claude-spec.md ──┬──→ UX Agent ────────────�
 | 5 | **Domain Technical Expert** | 해당 산업의 필수 기술/표준/규정 |
 
 인터뷰에서 파악한 산업군(`[Industry: {산업군}]` 태그)을 기반으로 페르소나를 동적 결정.
+
+> **Multi-AI 지원**: 도메인 전문가는 Codex/Gemini CLI가 설치되어 있으면 외부 AI로 실행하여 Claude 편향을 보완합니다. 고정 에이전트(UX, Architecture, Red Team)는 항상 Claude입니다.
 
 ## 산업군 → 도메인 전문가 매핑
 
@@ -63,7 +67,29 @@ claude-spec.md ──┬──→ UX Agent ────────────�
 산업군 매핑 테이블에서 프로세스/기술 전문가 페르소나 선택.
 매핑에 없는 산업군이면 범용 fallback 사용.
 
-### 3단계: 5개 Explore 서브에이전트 병렬 실행
+### 3단계: External AI CLI 감지
+
+도메인 전문가에 외부 AI(Codex/Gemini CLI)를 활용하여 Claude 편향을 보완합니다.
+
+```bash
+which codex 2>/dev/null && echo "codex: OK" || echo "codex: NOT FOUND"
+which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
+```
+
+**실행 모드 결정:**
+
+| Codex | Gemini | 모드 | Process Expert | Technical Expert |
+|-------|--------|------|----------------|------------------|
+| ✅ | ✅ | **Dual-AI** | Codex (GPT) | Gemini |
+| ✅ | ❌ | **Single-AI** | Codex | Codex |
+| ❌ | ✅ | **Single-AI** | Gemini | Gemini |
+| ❌ | ❌ | **Claude-only** | Explore subagent | Explore subagent |
+
+**외부 AI 장점:** 같은 산업 분석을 서로 다른 LLM이 수행하면 다양한 관점 확보 + Claude 편향 보완.
+
+### 4단계: 에이전트 병렬 실행
+
+하나의 메시지에서 **고정 3 Claude + 도메인 2 (Multi-AI 또는 Claude)**를 모두 병렬 실행합니다.
 
 **⚠️ 컨텍스트 폭발 방지 — 필수 규칙:**
 각 에이전트 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
@@ -227,7 +253,94 @@ Task(
 )
 ```
 
-### 4단계: 개별 결과 저장
+#### External AI 모드: 도메인 전문가 CLI 실행
+
+3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 **Domain Process Expert**와 **Domain Technical Expert**의 `Task(Explore)`를 **아래 Bash 실행으로 대체**합니다.
+
+> 고정 에이전트 (UX, Architecture, Red Team)는 항상 위의 Task(Explore)로 실행합니다.
+
+**1. 프롬프트 파일 생성:**
+
+```bash
+mkdir -p "<planning_dir>/team-reviews"
+
+# 프로세스 전문가 프롬프트 ({산업군}은 실제 산업군으로 치환)
+cat > "<planning_dir>/team-reviews/domain-process-prompt.txt" << 'PROMPT_EOF'
+You are a {산업군} Process Expert — 20년 경력의 {산업군} 업무 전문가.
+{산업군}의 전체 비즈니스 프로세스와 업무 흐름을 깊이 이해하고 있습니다.
+
+Analyze the provided spec and interview documents:
+
+1. 프로세스 완전성: 핵심 업무 흐름을 빠짐없이 커버하는가?
+2. 프로세스 순서/의존성: 단계 간 순서가 올바른가? 누락된 단계는?
+3. 이해관계자: 빠진 역할/부서가 있는가?
+4. 예외 프로세스: 반품/취소/이의신청 등 예외 흐름은?
+5. 업계 관행: 당연시하는 관행인데 spec에 빠진 것은?
+6. 규제/컴플라이언스: 법적 의무사항 중 누락된 것은?
+
+Format each finding with severity: Critical / Important / Nice-to-Have.
+Output in markdown format.
+PROMPT_EOF
+
+# 기술 전문가 프롬프트
+cat > "<planning_dir>/team-reviews/domain-technical-prompt.txt" << 'PROMPT_EOF'
+You are a {산업군} Technical Domain Expert — {산업군} IT 시스템 구축 전문가.
+{산업군}에서 핵심적으로 필요한 기술, 표준, 규격을 깊이 이해하고 있습니다.
+
+Analyze the provided spec and interview documents:
+
+1. 필수 기술/표준: 반드시 사용해야 하는 기술 표준은?
+2. 필수 연동: 통상적으로 연동하는 외부 시스템은?
+3. 데이터 형식: 업계 표준 데이터 포맷이 있는가?
+4. 보안/규정: 특화 보안 요구사항
+5. 성능 기준: 통상적으로 요구하는 SLA/성능 수준은?
+6. 기존 솔루션: 검증된 오픈소스/상용 솔루션으로 대체 가능한 부분은?
+
+Format each finding with severity: Critical / Important / Nice-to-Have.
+Output in markdown format.
+PROMPT_EOF
+```
+
+**2. Codex 실행** (timeout 3분):
+
+```bash
+echo "$(cat '<planning_dir>/team-reviews/domain-process-prompt.txt')
+
+===== claude-spec.md =====
+$(cat '<planning_dir>/claude-spec.md')
+
+===== claude-interview.md =====
+$(cat '<planning_dir>/claude-interview.md')" \
+  | codex exec -m gpt-5.2 \
+    --sandbox read-only \
+    --skip-git-repo-check \
+    --full-auto \
+    2>/dev/null \
+  > "<planning_dir>/team-reviews/domain-process-analysis.md"
+```
+
+**3. Gemini 실행** (timeout 3분):
+
+```bash
+gemini -m gemini-3-pro-preview --approval-mode yolo \
+  "$(cat '<planning_dir>/team-reviews/domain-technical-prompt.txt')" \
+  @<planning_dir>/claude-spec.md \
+  @<planning_dir>/claude-interview.md \
+  > "<planning_dir>/team-reviews/domain-technical-analysis.md"
+```
+
+> **모드별 Bash 조합 (3단계에서 결정):**
+>
+> | 모드 | Process Expert → | Technical Expert → |
+> |------|------------------|--------------------|
+> | **Dual-AI** | Codex (위 2번) | Gemini (위 3번) |
+> | **Single-AI (Codex)** | Codex (process 프롬프트) | Codex (technical 프롬프트) |
+> | **Single-AI (Gemini)** | Gemini (process 프롬프트) | Gemini (technical 프롬프트) |
+> | **Claude-only** | Task(Explore) 위 그대로 | Task(Explore) 위 그대로 |
+>
+> **실패 폴백**: 외부 AI 출력 파일이 비어있거나 오류면 해당 전문가만 Claude Explore로 재실행.
+
+### 5단계: 개별 결과 저장
 
 각 서브에이전트가 `<planning_dir>/team-reviews/` 디렉토리에 직접 작성:
 
@@ -239,7 +352,7 @@ Task(
 | Domain Process Expert | `team-reviews/domain-process-analysis.md` |
 | Domain Technical Expert | `team-reviews/domain-technical-analysis.md` |
 
-### 5단계: 통합 리뷰 작성
+### 6단계: 통합 리뷰 작성
 
 5개 분석 결과를 읽고 `<planning_dir>/claude-team-review.md` 작성.
 
@@ -256,8 +369,8 @@ Task(
 
 ## Industry Context
 - 산업군: {산업군}
-- 도메인 프로세스 전문가: {페르소나명}
-- 도메인 기술 전문가: {페르소나명}
+- 도메인 프로세스 전문가: {페르소나명} (via {Codex/Gemini/Claude})
+- 도메인 기술 전문가: {페르소나명} (via {Gemini/Codex/Claude})
 
 ## Critical Findings (반드시 plan에 반영)
 - [출처: UX/Arch/RedTeam/DomainProcess/DomainTech] finding 내용
@@ -283,4 +396,6 @@ Task(
 | 서브에이전트 3개 이상 실패 | 팀 리뷰 스킵, 로그에 경고 남기고 Step 10으로 진행 |
 | 산업군 식별 불가 | 범용 fallback 사용 (비즈니스 프로세스 분석가 + 시스템 통합 전문가) |
 | team-reviews/ 디렉토리 생성 실패 | planning_dir 루트에 직접 작성 |
+| **External AI 실행 실패** | 출력 파일이 비어있거나 오류 → 해당 전문가만 Claude Explore로 폴백 재실행 |
+| **External AI timeout (3분+)** | 프로세스 kill, 해당 전문가만 Claude Explore로 폴백 |
 | **Context limit reached** | 에이전트가 파일에 쓴 결과는 보존됨. `/compact` 후 재개하면 team-reviews/ 파일을 읽어 통합 진행. Resume 테이블에서 `+ spec → Step 9` 자동 매핑 |

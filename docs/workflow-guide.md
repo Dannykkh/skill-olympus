@@ -30,7 +30,7 @@
 
 | Phase | 스킬 | 에이전트 (패시브) | MCP |
 |-------|------|-----------------|-----|
-| **설계** | zephermine | spec-interviewer | Tavily (웹 리서치), Exa (코드 검색) |
+| **설계** | zephermine | spec-interviewer | Tavily (웹 리서치), Exa (코드 검색), Codex/Gemini CLI (도메인 전문가) |
 | **아키텍처** | — | architect | — |
 | **구현** | agent-team, orchestrator | frontend-react, backend-spring, database-mysql, database-postgresql, fullstack-coding-standards, naming-conventions | Playwright (E2E), Context7 (라이브러리 문서) |
 | **검증** | qa-until-pass | qa-engineer, qa-writer, code-review-checklist | Playwright (테스트 실행) |

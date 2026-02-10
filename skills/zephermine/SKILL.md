@@ -187,19 +187,27 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 2. **Agent return value**: Each agent MUST write full results to files and return ONLY a 2-3 line summary
 3. **If context limit hit**: User can `/compact` or `/clear`, then resume from Step 9 (team-reviews/ files already saved)
 
-Launch FIVE Explore subagents in parallel — 고정 3명 + 도메인 전문가 2명:
+**고정 3 Claude + 도메인 2 Multi-AI**를 병렬 실행:
 
-**고정 에이전트:**
+**고정 에이전트 (항상 Claude Explore):**
 1. **UX Agent** — 사용자 경험, 사용성, 접근성
 2. **Architecture Agent** — 확장성, 성능, 보안, 기술 부채
 3. **Red Team Agent** — 가정 검증, 실패 모드, 엣지 케이스, 누락 항목
 
-**도메인 전문가 (인터뷰에서 파악한 산업군 기반으로 동적 구성):**
+**도메인 전문가 (Multi-AI 지원 — Codex/Gemini CLI 감지 시 외부 AI 실행):**
 4. **Domain Process Expert** — 해당 산업의 전체 업무 프로세스 관점
 5. **Domain Technical Expert** — 해당 산업의 필수 기술/표준/규정 관점
 
+| Codex | Gemini | 도메인 전문가 실행 |
+|-------|--------|-------------------|
+| ✅ | ✅ | Process → Codex, Technical → Gemini |
+| ✅ | ❌ | 둘 다 Codex |
+| ❌ | ✅ | 둘 다 Gemini |
+| ❌ | ❌ | 둘 다 Claude Explore (기존 방식) |
+
 All five receive `claude-spec.md` + `claude-interview.md` + `claude-research.md` (if exists).
 도메인 전문가 프롬프트는 인터뷰의 `[Industry: {산업군}]` 태그를 기반으로 동적 생성.
+외부 AI 실행 실패 시 해당 전문가만 Claude Explore로 폴백.
 
 **CRITICAL — Agent return protocol:**
 Each agent must end with ONLY this format (NO full analysis in return text):
