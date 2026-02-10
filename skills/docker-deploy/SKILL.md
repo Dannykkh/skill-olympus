@@ -857,3 +857,23 @@ SECRET_KEY=change-this-secret-key-in-production
 - MySQL 준비 대기 시 `goto` 기반 루프 사용 필수
 - 잘못된 예: `for /L %%i in (1,1,30) do ( if !errorlevel!==0 ... )`
 - 올바른 예: `:WAIT_DB` → `docker exec ping` → `if not errorlevel 1 goto DB_IS_READY` → `goto WAIT_DB`
+
+---
+
+## 다음 단계 안내
+
+배포 환경 생성이 완료되면 사용자에게 다음 단계를 안내합니다:
+
+```
+✅ Docker 배포 환경 생성 완료!
+
+📦 산출물: Dockerfile, docker-compose.yml, install.bat/sh
+
+👉 다음 단계 (선택):
+  ./install.bat        → 로컬에서 Docker 빌드 & 실행
+  /write-api-docs      → API 문서 생성
+  /commit              → 변경사항 커밋
+  /wrap-up             → 세션 요약 + MEMORY.md 업데이트
+
+📎 참고: docs/workflow-guide.md
+```

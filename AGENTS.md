@@ -38,7 +38,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |시나리오|체이닝 순서|
 |---|---|
-|새 프로젝트 (풀코스)|zephermine → architect → agent-team → qa-until-pass|
+|새 프로젝트 (풀코스)|zephermine → architect → agent-team → qa-until-pass → docker-deploy|
 |기능 추가|zephermine → agent-team/수동 구현 → qa-until-pass|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
 |UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|

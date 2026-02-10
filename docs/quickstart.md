@@ -35,9 +35,9 @@ chmod +x install.sh && ./install.sh
 프로젝트 규모에 따라 필요한 단계만 골라 쓰세요:
 
 ```
-설계              구현                 검증
-────────         ─────────           ──────────
-/zephermine  →   /agent-team    →   /qa-until-pass
+설계              구현                 검증               배포
+────────         ─────────           ──────────        ──────────
+/zephermine  →   /agent-team    →   /qa-until-pass →  /docker-deploy
                  (또는 workpm)
 ```
 
@@ -46,6 +46,7 @@ chmod +x install.sh && ./install.sh
 | **설계** | `/zephermine "온라인 서점 만들어줘"` | 인터뷰 → 리서치 → 스펙 → QA 시나리오 → 섹션 분리 |
 | **구현** | `/agent-team` | 섹션별 팀원 배정 → 병렬 코딩 → 검증 |
 | **검증** | `/qa-until-pass` | Playwright 테스트 자동 생성 → 실패 시 자동 수정 (max 5회) |
+| **배포** | `/docker-deploy` | Dockerfile + docker-compose + 원클릭 설치 스크립트 |
 
 각 단계가 끝나면 **다음에 뭘 할지 안내**가 나옵니다.
 
@@ -53,7 +54,7 @@ chmod +x install.sh && ./install.sh
 
 | 규모 | 사용법 |
 |------|--------|
-| **대형** (신규 프로젝트) | `/zephermine` → `/agent-team` → `/qa-until-pass` |
+| **대형** (신규 프로젝트) | `/zephermine` → `/agent-team` → `/qa-until-pass` → `/docker-deploy` |
 | **중형** (기능 추가) | `/zephermine` → 직접 코딩 → `/qa-until-pass` |
 | **소형** (버그 수정) | 직접 수정 → `/qa-until-pass` |
 | **QA만** | `/qa-until-pass` |

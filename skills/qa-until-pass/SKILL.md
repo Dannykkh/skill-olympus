@@ -283,6 +283,7 @@ QA가 완료되면 사용자에게 다음 단계를 안내합니다:
 ✅ QA Until Pass 완료! (결과: {PASS/CONDITIONAL/FAIL})
 
 👉 다음 단계 (선택):
+  /docker-deploy       → Docker 배포 환경 생성
   /review              → 코드 리뷰 (아직 안 했다면)
   /write-api-docs      → API 문서 생성
   /commit              → 변경사항 커밋
