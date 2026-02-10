@@ -35,7 +35,7 @@ function hookEntry(matcher, command) {
   };
 }
 
-// 훅 정의 (프로젝트 전용 제외: orchestrator-mode, workpm-hook, pmworker-hook)
+// 훅 정의 (프로젝트 전용 orchestrator 훅은 orchestrator-detector.js가 통합 처리)
 // Claude Code는 stdin으로 JSON을 전달하므로 명령줄 인자 불필요
 function buildHooksConfig(dir, isWindows) {
   const d = normalizePath(dir);

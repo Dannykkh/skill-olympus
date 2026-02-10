@@ -185,7 +185,7 @@
   "internal-skills": [
     { "id": "react-dev", "tags": ["react", "nextjs"], "priority": "recommended" },
     { "id": "vercel-react-best-practices", "tags": ["react", "nextjs"], "priority": "recommended" },
-    { "id": "react-useeffect", "tags": ["react"], "priority": "optional" },
+    { "id": "react-useeffect", "tags": ["react"], "priority": "optional", "alias": "react-dev" },
     { "id": "mui", "tags": ["react"], "priority": "optional" },
     { "id": "design-system-starter", "tags": ["react", "nextjs", "vue", "angular"], "priority": "optional" },
     { "id": "openapi-to-typescript", "tags": ["typescript", "nestjs", "nodejs"], "priority": "optional" },
