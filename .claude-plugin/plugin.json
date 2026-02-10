@@ -1,0 +1,23 @@
+{
+  "name": "danny-tools",
+  "description": "65+ skills and 34+ agents for Claude Code: project planning (zephermine), parallel coding (agent-team), QA automation (qa-until-pass), Docker deploy, fullstack standards, and more.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Dannykkh"
+  },
+  "homepage": "https://github.com/Dannykkh/claude-code-agent-customizations",
+  "repository": "https://github.com/Dannykkh/claude-code-agent-customizations",
+  "license": "MIT",
+  "keywords": [
+    "zephermine",
+    "agent-team",
+    "qa-until-pass",
+    "docker-deploy",
+    "fullstack",
+    "orchestrator",
+    "multi-ai",
+    "planning",
+    "code-review",
+    "korean"
+  ]
+}
