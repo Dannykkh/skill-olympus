@@ -5,16 +5,21 @@
 ## Overview
 
 ```
+Phase A (병렬):
 claude-spec.md ──┬──→ UX Agent (Claude) ─────────→ ux-analysis.md
                  ├──→ Architecture Agent (Claude) → architecture-analysis.md
                  ├──→ Red Team Agent (Claude) ────→ redteam-analysis.md
-                 ├──→ Domain Process Expert ──────→ domain-process-analysis.md
+                 └──→ Domain Researcher (Claude)  → domain-research.md
+                      (WebSearch로 산업별 기술/솔루션 검색)
+
+Phase B (domain-research.md 활용):
+                 ┌──→ Domain Process Expert ──────→ domain-process-analysis.md
                  │    (Codex / Gemini / Claude)
                  └──→ Domain Technical Expert ────→ domain-technical-analysis.md
                       (Gemini / Codex / Claude)
-                                                          │
-                                                          ▼
-                                                  claude-team-review.md (통합)
+                                    │
+                                    ▼
+                            claude-team-review.md (통합)
 ```
 
 ## 에이전트 구성
@@ -87,9 +92,10 @@ which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
 
 **외부 AI 장점:** 같은 산업 분석을 서로 다른 LLM이 수행하면 다양한 관점 확보 + Claude 편향 보완.
 
-### 4단계: 에이전트 병렬 실행
+### 4단계: 도메인 리서치 + 고정 에이전트 병렬 실행 (Phase A)
 
-하나의 메시지에서 **고정 3 Claude + 도메인 2 (Multi-AI 또는 Claude)**를 모두 병렬 실행합니다.
+고정 3 에이전트와 도메인 리서치를 **동시에** 병렬 실행합니다.
+도메인 전문가는 리서치 완료 후 5단계(Phase B)에서 실행합니다.
 
 **⚠️ 컨텍스트 폭발 방지 — 필수 규칙:**
 각 에이전트 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
@@ -104,7 +110,7 @@ This prevents context overflow when 5 agents return simultaneously.
 이 규칙이 없으면 5개 에이전트의 전체 분석 내용이 메인 대화에 합산되어 컨텍스트 한도 초과.
 
 ```
-# 5개 에이전트를 하나의 메시지에서 병렬 실행:
+# Phase A: 고정 3 에이전트 + 도메인 리서치를 하나의 메시지에서 병렬 실행:
 
 Task(
   subagent_type="Explore",
@@ -195,6 +201,52 @@ Task(
 Task(
   subagent_type="Explore",
   prompt="""
+  You are a **Domain Industry Researcher** for {산업군}.
+
+  Read these files for context:
+  - <planning_dir>/claude-spec.md
+  - <planning_dir>/claude-interview.md
+
+  Then use **WebSearch** to find current technologies, frameworks, standards, and solutions
+  relevant to building a {산업군} system.
+
+  Search and report:
+  1. **필수 기술/표준**: {산업군}에서 사용하는 기술 표준, 프로토콜 (검색 키워드: "{산업군} technology standards")
+  2. **오픈소스 솔루션**: GitHub stars 높은 관련 프로젝트 (URL + stars + 라이선스)
+  3. **SaaS/상용 솔루션**: 시장에 있는 서비스 (가격대 포함)
+  4. **규제/인증**: 법적 요구사항, 필수 인증 (예: HIPAA, PCI-DSS, GDPR)
+  5. **업계 사례**: 유사 시스템 구축 사례, 아키텍처 블로그/포스트
+  6. **SDK/API**: 연동에 사용되는 공식 SDK, API (예: PG 결제 API, FHIR API)
+
+  For each finding:
+  - Name + URL (가능하면)
+  - Why it's relevant to this project
+  - Adoption level: widely-used / emerging / niche
+
+  NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
+
+  Write results to: <planning_dir>/team-reviews/domain-research.md
+
+  CRITICAL RETURN RULE: Write your FULL research to the file above.
+  Your return message must be ONLY: "✅ domain-research.md written. Technologies: N, Solutions: N, Regulations: N"
+  DO NOT repeat the research in your return message.
+  """
+)
+```
+
+### 5단계: 도메인 전문가 실행 (Phase B)
+
+4단계의 `domain-research.md`를 활용하여 도메인 전문가를 실행합니다.
+**반드시 4단계 완료를 기다린 후 실행합니다** (domain-research.md 필요).
+
+#### Claude-only 모드
+
+```
+# Phase B: 도메인 전문가 2명을 하나의 메시지에서 병렬 실행:
+
+Task(
+  subagent_type="Explore",
+  prompt="""
   You are a **{산업군} Process Expert** — 20년 경력의 {산업군} 업무 전문가.
   {산업군}의 전체 비즈니스 프로세스와 업무 흐름을 깊이 이해하고 있습니다.
 
@@ -202,6 +254,9 @@ Task(
   - <planning_dir>/claude-spec.md
   - <planning_dir>/claude-interview.md
   - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치)
+
+  Use the domain-research.md findings to ground your analysis with real technologies and solutions.
 
   Analyze and report:
   1. **프로세스 완전성**: spec이 {산업군}의 핵심 업무 흐름을 빠짐없이 커버하는가?
@@ -232,6 +287,9 @@ Task(
   - <planning_dir>/claude-spec.md
   - <planning_dir>/claude-interview.md
   - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치)
+
+  Use the domain-research.md findings to ground your analysis with real technologies and solutions.
 
   Analyze and report:
   1. **필수 기술/표준**: {산업군}에서 반드시 사용해야 하는 기술 표준은?
@@ -255,7 +313,8 @@ Task(
 
 #### External AI 모드: 도메인 전문가 CLI 실행
 
-3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 **Domain Process Expert**와 **Domain Technical Expert**의 `Task(Explore)`를 **아래 Bash 실행으로 대체**합니다.
+3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 Claude-only 모드의 `Task(Explore)`를 **아래 Bash 실행으로 대체**합니다.
+`domain-research.md`는 동일하게 입력으로 전달합니다.
 
 > 고정 에이전트 (UX, Architecture, Red Team)는 항상 위의 Task(Explore)로 실행합니다.
 
@@ -310,7 +369,10 @@ echo "$(cat '<planning_dir>/team-reviews/domain-process-prompt.txt')
 $(cat '<planning_dir>/claude-spec.md')
 
 ===== claude-interview.md =====
-$(cat '<planning_dir>/claude-interview.md')" \
+$(cat '<planning_dir>/claude-interview.md')
+
+===== domain-research.md (산업별 기술/솔루션 리서치) =====
+$(cat '<planning_dir>/team-reviews/domain-research.md')" \
   | codex exec -m gpt-5.2 \
     --sandbox read-only \
     --skip-git-repo-check \
@@ -326,6 +388,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
   "$(cat '<planning_dir>/team-reviews/domain-technical-prompt.txt')" \
   @<planning_dir>/claude-spec.md \
   @<planning_dir>/claude-interview.md \
+  @<planning_dir>/team-reviews/domain-research.md \
   > "<planning_dir>/team-reviews/domain-technical-analysis.md"
 ```
 
@@ -340,21 +403,22 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 >
 > **실패 폴백**: 외부 AI 출력 파일이 비어있거나 오류면 해당 전문가만 Claude Explore로 재실행.
 
-### 5단계: 개별 결과 저장
+### 6단계: 개별 결과 저장
 
 각 서브에이전트가 `<planning_dir>/team-reviews/` 디렉토리에 직접 작성:
 
-| 에이전트 | 산출물 |
-|----------|--------|
-| UX Agent | `team-reviews/ux-analysis.md` |
-| Architecture Agent | `team-reviews/architecture-analysis.md` |
-| Red Team Agent | `team-reviews/redteam-analysis.md` |
-| Domain Process Expert | `team-reviews/domain-process-analysis.md` |
-| Domain Technical Expert | `team-reviews/domain-technical-analysis.md` |
+| 에이전트 | 산출물 | Phase |
+|----------|--------|-------|
+| UX Agent | `team-reviews/ux-analysis.md` | A |
+| Architecture Agent | `team-reviews/architecture-analysis.md` | A |
+| Red Team Agent | `team-reviews/redteam-analysis.md` | A |
+| Domain Researcher | `team-reviews/domain-research.md` | A |
+| Domain Process Expert | `team-reviews/domain-process-analysis.md` | B |
+| Domain Technical Expert | `team-reviews/domain-technical-analysis.md` | B |
 
-### 6단계: 통합 리뷰 작성
+### 7단계: 통합 리뷰 작성
 
-5개 분석 결과를 읽고 `<planning_dir>/claude-team-review.md` 작성.
+6개 분석 결과(리서치 1 + 고정 3 + 도메인 2)를 읽고 `<planning_dir>/claude-team-review.md` 작성.
 
 **통합 기준:**
 - **Critical**: 다수 팀 공통 지적 + 레드팀 고위험 + 도메인 전문가 필수 지적

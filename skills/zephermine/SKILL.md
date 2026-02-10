@@ -182,30 +182,31 @@ See [test-scenario-guide.md](references/test-scenario-guide.md)
 
 See [team-review-protocol.md](references/team-review-protocol.md)
 
-**⚠️ CONTEXT MANAGEMENT**: This step spawns 5 agents that return results. To prevent context overflow:
+**⚠️ CONTEXT MANAGEMENT**: This step spawns 6 agents (Phase A 4개 + Phase B 2개). To prevent context overflow:
 1. **Before launching agents**: Consider running `/compact` if conversation is already long
 2. **Agent return value**: Each agent MUST write full results to files and return ONLY a 2-3 line summary
 3. **If context limit hit**: User can `/compact` or `/clear`, then resume from Step 9 (team-reviews/ files already saved)
 
-**고정 3 Claude + 도메인 2 Multi-AI**를 병렬 실행:
+**Phase A — 도메인 리서치 + 고정 에이전트 (4개 병렬):**
+1. **UX Agent** (Claude) — 사용자 경험, 사용성, 접근성
+2. **Architecture Agent** (Claude) — 확장성, 성능, 보안, 기술 부채
+3. **Red Team Agent** (Claude) — 가정 검증, 실패 모드, 엣지 케이스, 누락 항목
+4. **Domain Researcher** (Claude + WebSearch) — 산업별 기술/표준/솔루션 **검색**
 
-**고정 에이전트 (항상 Claude Explore):**
-1. **UX Agent** — 사용자 경험, 사용성, 접근성
-2. **Architecture Agent** — 확장성, 성능, 보안, 기술 부채
-3. **Red Team Agent** — 가정 검증, 실패 모드, 엣지 케이스, 누락 항목
+**Phase B — 도메인 전문가 (리서치 결과 활용, 2개 병렬):**
+5. **Domain Process Expert** — 해당 산업의 전체 업무 프로세스 관점
+6. **Domain Technical Expert** — 해당 산업의 필수 기술/표준/규정 관점
 
-**도메인 전문가 (Multi-AI 지원 — Codex/Gemini CLI 감지 시 외부 AI 실행):**
-4. **Domain Process Expert** — 해당 산업의 전체 업무 프로세스 관점
-5. **Domain Technical Expert** — 해당 산업의 필수 기술/표준/규정 관점
+> Phase B는 Phase A 완료 후 실행 (domain-research.md 필요).
+> 도메인 전문가는 리서치 결과를 기반으로 **실제 기술/솔루션을 참조하여** 분석합니다.
 
-| Codex | Gemini | 도메인 전문가 실행 |
-|-------|--------|-------------------|
+| Codex | Gemini | 도메인 전문가 실행 (Phase B) |
+|-------|--------|---------------------------|
 | ✅ | ✅ | Process → Codex, Technical → Gemini |
 | ✅ | ❌ | 둘 다 Codex |
 | ❌ | ✅ | 둘 다 Gemini |
-| ❌ | ❌ | 둘 다 Claude Explore (기존 방식) |
+| ❌ | ❌ | 둘 다 Claude Explore |
 
-All five receive `claude-spec.md` + `claude-interview.md` + `claude-research.md` (if exists).
 도메인 전문가 프롬프트는 인터뷰의 `[Industry: {산업군}]` 태그를 기반으로 동적 생성.
 외부 AI 실행 실패 시 해당 전문가만 Claude Explore로 폴백.
 
@@ -215,9 +216,9 @@ Each agent must end with ONLY this format (NO full analysis in return text):
 ✅ {filename}.md 작성 완료. Critical: N건, Important: N건, Nice-to-Have: N건
 ```
 Full analysis goes ONLY to `<planning_dir>/team-reviews/{filename}.md` files.
-This prevents the 5 combined agent outputs from overflowing the main context.
+This prevents the combined agent outputs from overflowing the main context.
 
-Results → `<planning_dir>/team-reviews/` (개별 5개) + `<planning_dir>/claude-team-review.md` (통합).
+Results → `<planning_dir>/team-reviews/` (개별 6개) + `<planning_dir>/claude-team-review.md` (통합).
 
 The synthesized team review feeds into Step 10 (plan generation) as additional input.
 
