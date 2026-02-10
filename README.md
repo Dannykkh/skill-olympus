@@ -132,7 +132,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ## What's Included
 
-### Custom Skills (56 Skills)
+### Custom Skills (57 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -145,7 +145,7 @@ node skills/orchestrator/install.js <target-project-path>
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qa-until-pass | Code review & QA |
-| 📦 **Git** | commit-work | Git workflow |
+| 📦 **Git** | commit-work, git-deploy | Git workflow & deploy |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
 
@@ -284,7 +284,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (56 skills)
+├── skills/                    # Custom skills (57 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -309,6 +309,7 @@ claude-code-customizations/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/
 │   ├── gemini/
+│   ├── git-deploy/
 │   ├── zephermine/
 │   ├── humanizer/
 │   ├── jira/
@@ -504,4 +505,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-02-11
