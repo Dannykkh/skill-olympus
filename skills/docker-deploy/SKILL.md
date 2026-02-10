@@ -869,10 +869,11 @@ Git Deploy Monitor가 git push 감지 시 자동으로 실행하는 스크립트
 ### 배포 흐름
 ```
 Git push → DeployMonitor 감지 → deploy.bat auto 실행
-  1. git pull (bare repo에서 최신 코드)
+  1. git pull (최신 코드)
   2. Docker 이미지 빌드
-  3. 기존 컨테이너 중지 (DB 유지)
-  4. 새 이미지로 컨테이너 시작
+  3. 컨테이너 재시작 (DB 유지)
+  4. DB 초기화 또는 마이그레이션
+  5. 헬스체크
 ```
 
 ### deploy.bat 생성 위치
@@ -892,11 +893,14 @@ setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
 
-REM === 설정 ===
+REM === 설정 (프로젝트별로 수정) ===
 set "PROJECT_NAME={프로젝트명}"
 set "API_PORT=9201"
 set "FRONTEND_PORT=8001"
 set "DB_PORT=3307"
+set "DB_USER=root"
+set "DB_PASSWORD=password123"
+set "DB_NAME=app_db"
 
 REM 모드 확인 (auto = DeployMonitor 자동 실행)
 set "MODE=%~1"
@@ -907,9 +911,11 @@ echo   모드: %MODE%
 echo   시각: %date% %time%
 echo ============================================
 
-REM [1] 최신 코드 가져오기
+REM ========================================
+REM [1/5] 최신 코드 가져오기
+REM ========================================
 echo.
-echo [1/4] git pull 실행 중...
+echo [1/5] git pull 실행 중...
 git pull
 if errorlevel 1 (
     echo [오류] git pull 실패
@@ -918,9 +924,11 @@ if errorlevel 1 (
 )
 echo       git pull 완료
 
-REM [2] Docker 이미지 빌드
+REM ========================================
+REM [2/5] Docker 이미지 빌드
+REM ========================================
 echo.
-echo [2/4] Docker 이미지 빌드 중...
+echo [2/5] Docker 이미지 빌드 중...
 docker build -t %PROJECT_NAME%-api:latest -f backend/Dockerfile --target production backend/
 if errorlevel 1 (
     echo [오류] Backend 빌드 실패
@@ -937,13 +945,27 @@ if errorlevel 1 (
 )
 echo       Frontend 빌드 완료
 
-REM [3] 컨테이너 재시작 (DB 유지)
+REM ========================================
+REM [3/5] 컨테이너 재시작 (DB 유지)
+REM ========================================
 echo.
-echo [3/4] 컨테이너 재시작 중...
+echo [3/5] 컨테이너 재시작 중...
 cd /d "%SCRIPT_DIR%docker-images"
-docker compose stop api frontend
-docker compose rm -f api frontend
-docker compose up -d api frontend
+
+REM DB 컨테이너 실행 여부 확인
+for /f %%i in ('docker ps -q --filter "name=%PROJECT_NAME%-db" 2^>nul') do set "DB_EXISTS=1"
+
+if not defined DB_EXISTS (
+    REM 최초 실행 - 전체 서비스 시작
+    echo       최초 실행 감지 - 전체 서비스 시작...
+    docker compose up -d
+) else (
+    REM 업데이트 - API/Frontend만 재시작
+    docker compose stop api frontend
+    docker compose rm -f api frontend
+    docker compose up -d api frontend
+)
+
 if errorlevel 1 (
     echo [오류] 컨테이너 시작 실패
     cd /d "%SCRIPT_DIR%"
@@ -953,9 +975,113 @@ if errorlevel 1 (
 cd /d "%SCRIPT_DIR%"
 echo       컨테이너 재시작 완료
 
-REM [4] 헬스체크 대기
+REM ========================================
+REM [4/5] DB 초기화 / 마이그레이션
+REM ========================================
 echo.
-echo [4/4] 서비스 상태 확인 중...
+echo [4/5] DB 처리 중...
+
+REM DB 준비 대기 (goto 루프 - for /L의 errorlevel 버그 방지)
+set "DB_RETRIES=0"
+:WAIT_DB
+if %DB_RETRIES% GEQ 30 goto DB_TIMEOUT
+docker exec %PROJECT_NAME%-db mysqladmin ping -h localhost -u %DB_USER% -p%DB_PASSWORD% >nul 2>&1
+if not errorlevel 1 goto DB_READY
+set /a DB_RETRIES+=1
+echo       DB 대기 중... (%DB_RETRIES%/30)
+timeout /t 2 /nobreak >nul
+goto WAIT_DB
+
+:DB_TIMEOUT
+echo [경고] DB 준비 타임아웃 - DB 처리 건너뜀
+goto SKIP_DB
+
+:DB_READY
+echo       DB 연결 확인
+
+REM 테이블 존재 여부로 초기화/마이그레이션 분기
+set "TABLE_COUNT=0"
+for /f %%c in ('docker exec %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()" 2^>nul') do set "TABLE_COUNT=%%c"
+
+if "%TABLE_COUNT%"=="0" goto DB_INIT
+goto DB_MIGRATE
+
+REM --- 최초 설치: schema.sql + seed-data.sql ---
+:DB_INIT
+echo       테이블 없음 - 최초 DB 초기화 실행
+if exist "database\schema.sql" (
+    echo       schema.sql 적용 중...
+    docker exec -i %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "database\schema.sql"
+    if errorlevel 1 (
+        echo [오류] schema.sql 적용 실패
+        if not "%MODE%"=="auto" pause
+        exit /b 6
+    )
+    echo       schema.sql 적용 완료
+) else (
+    echo [오류] database\schema.sql 파일 없음
+    if not "%MODE%"=="auto" pause
+    exit /b 6
+)
+
+if exist "database\seed-data.sql" (
+    echo       seed-data.sql 적용 중...
+    docker exec -i %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "database\seed-data.sql"
+    if not errorlevel 1 (
+        echo       seed-data.sql 적용 완료
+    ) else (
+        echo [경고] seed-data.sql 적용 실패 ^(무시^)
+    )
+)
+echo       DB 초기화 완료
+goto SKIP_DB
+
+REM --- 업데이트: 마이그레이션 파일 적용 ---
+:DB_MIGRATE
+echo       기존 DB 감지 (테이블 %TABLE_COUNT%개) - 마이그레이션 확인
+
+REM _migrations 추적 테이블 생성 (없으면)
+docker exec %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "CREATE TABLE IF NOT EXISTS _migrations (filename VARCHAR(255) PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP)" >nul 2>&1
+
+REM database\migrations\ 폴더의 .sql 파일 순서대로 적용
+set "MIG_COUNT=0"
+if not exist "database\migrations" goto NO_MIGRATIONS
+
+for %%f in (database\migrations\*.sql) do (
+    REM 이미 적용된 파일인지 확인
+    set "APPLIED="
+    for /f %%r in ('docker exec %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -N -e "SELECT COUNT(*) FROM _migrations WHERE filename='%%~nxf'" 2^>nul') do set "APPLIED=%%r"
+
+    if "!APPLIED!"=="0" (
+        echo       %%~nxf 적용 중...
+        docker exec -i %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "%%f" 2>nul
+        if not errorlevel 1 (
+            docker exec %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "INSERT INTO _migrations (filename) VALUES ('%%~nxf')" >nul 2>&1
+            echo       %%~nxf 적용 완료
+            set /a MIG_COUNT+=1
+        ) else (
+            echo [경고] %%~nxf 적용 실패 - 수동 확인 필요
+        )
+    )
+)
+
+if %MIG_COUNT%==0 (
+    echo       적용할 새 마이그레이션 없음
+) else (
+    echo       마이그레이션 %MIG_COUNT%개 적용 완료
+)
+goto SKIP_DB
+
+:NO_MIGRATIONS
+echo       database\migrations\ 폴더 없음 - 마이그레이션 건너뜀
+
+:SKIP_DB
+
+REM ========================================
+REM [5/5] 헬스체크 대기
+REM ========================================
+echo.
+echo [5/5] 서비스 상태 확인 중...
 timeout /t 10 /nobreak >nul
 
 set "RETRIES=0"
@@ -988,11 +1114,37 @@ if not "%MODE%"=="auto" pause
 exit /b 5
 ```
 
+### DB 처리 전략
+
+| 상황 | 동작 |
+|------|------|
+| **DB 컨테이너 없음** (최초) | docker compose up -d (전체 시작) → schema.sql → seed-data.sql |
+| **DB 있지만 테이블 0개** | schema.sql + seed-data.sql 적용 |
+| **DB 있고 테이블 있음** (업데이트) | `_migrations` 테이블로 미적용 SQL만 순서대로 적용 |
+| **마이그레이션 폴더 없음** | 건너뜀 |
+
+### 마이그레이션 파일 규칙
+
+```
+database/
+├── schema.sql                    ← 전체 스키마 (CREATE TABLE)
+├── seed-data.sql                 ← 초기 데이터 (선택)
+└── migrations/                   ← 변경분 (순서대로 적용)
+    ├── 001_add_timezone.sql
+    ├── 002_add_task_requests.sql
+    └── 003_add_report_schedule.sql
+```
+
+- 파일명은 `숫자_설명.sql` 형식 (순서 보장)
+- `_migrations` 테이블이 적용 이력을 추적 → 중복 적용 방지
+- 마이그레이션 SQL은 **멱등성** 권장 (`IF NOT EXISTS`, `IF EXISTS` 사용)
+
 ### deploy.bat 커스터마이즈 포인트
 
 | 항목 | 설명 |
 |------|------|
 | `PROJECT_NAME` | 프로젝트명 (docker-compose name과 일치) |
+| `DB_USER/PASSWORD/NAME` | docker-compose.yml의 DB 설정과 일치 |
 | `API_PORT` 등 | docker-compose.yml의 포트와 일치 |
 | `VITE_API_URL` | 프론트엔드 API 경로 (프로젝트에 맞게 조정) |
 | git pull 방식 | bare repo clone이면 remote 설정 필요 |
@@ -1003,9 +1155,15 @@ exit /b 5
 배포 폴더 구조 예시:
 ```
 D:\deploy\bizmanagement\           ← 배포 폴더 (DeployMonitor 설정)
-├── deploy.bat                     ← 이 파일 (자동 배포 스크립트)
+├── deploy.bat                     ← 자동 배포 스크립트
 ├── backend/
 ├── frontend/
+├── database/
+│   ├── schema.sql                 ← 전체 스키마
+│   ├── seed-data.sql              ← 초기 데이터
+│   └── migrations/                ← 스키마 변경분
+│       ├── 001_add_timezone.sql
+│       └── 002_add_task_requests.sql
 ├── docker-images/
 │   ├── docker-compose.yml
 │   └── .env
