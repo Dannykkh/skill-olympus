@@ -1,6 +1,6 @@
 ---
 name: zephermine
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. Also known as 젭마인, 제퍼마인, 제퍼미네.
+description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. Also known as 젭마인, 제퍼마인, 제퍼미네.
 ---
 
 # Zephermine
@@ -68,10 +68,12 @@ Determine session state by checking existing files:
    - `claude-spec.md`
    - `claude-team-review.md`
    - `claude-plan.md`
+   - `claude-api-spec.md`
    - `claude-integration-notes.md`
    - `claude-ralph-loop-prompt.md`
    - `claude-ralphy-prd.md`
-   - `team-reviews/` directory
+   - `claude-qa-scenarios.md`
+   - `team-reviews/` directory (domain-research.md, 개별 분석 파일)
    - `reviews/` directory
    - `sections/` directory
 
@@ -470,6 +472,9 @@ Verify all files were created successfully:
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
 - `claude-qa-scenarios.md`
+- `team-reviews/domain-research.md` (도메인 리서치)
+- `team-reviews/domain-process-analysis.md` (업무 흐름표)
+- `team-reviews/domain-technical-analysis.md` (기술 스택 매핑)
 
 ### 20. Output Summary
 
@@ -483,11 +488,14 @@ Generated files:
   - claude-research.md (research findings)
   - claude-interview.md (Q&A transcript)
   - claude-spec.md (synthesized specification)
-  - claude-team-review.md (multi-agent team analysis)
+  - claude-team-review.md (multi-agent team analysis — 통합)
   - claude-plan.md (implementation plan)
   - claude-api-spec.md (API specification — frontend↔backend contract)
   - claude-integration-notes.md (feedback decisions)
-  - team-reviews/ (individual agent analyses)
+  - team-reviews/domain-research.md (산업별 기술/솔루션 WebSearch 결과)
+  - team-reviews/domain-process-analysis.md (업무 흐름표 — 역할/CRUD/입출력/예외)
+  - team-reviews/domain-technical-analysis.md (기술 스택 매핑 — 연동/규제/솔루션)
+  - team-reviews/ (UX, Architecture, Red Team 개별 분석)
   - reviews/ (external LLM feedback)
   - sections/ (implementation units)
   - claude-ralph-loop-prompt.md (for ralph-loop plugin)

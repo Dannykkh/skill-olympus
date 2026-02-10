@@ -43,7 +43,7 @@ chmod +x install.sh && ./install.sh
 
 | 단계 | 명령어 | 하는 일 |
 |------|--------|--------|
-| **설계** | `/zephermine "온라인 서점 만들어줘"` | 인터뷰 → 리서치 → 스펙 → QA 시나리오 → 섹션 분리 |
+| **설계** | `/zephermine "온라인 서점 만들어줘"` | 인터뷰 → 리서치 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
 | **구현** | `/agent-team` | 섹션별 팀원 배정 → 병렬 코딩 → 검증 |
 | **검증** | `/qa-until-pass` | Playwright 테스트 자동 생성 → 실패 시 자동 수정 (max 5회) |
 | **배포** | `/docker-deploy` | Dockerfile + docker-compose + 원클릭 설치 스크립트 |

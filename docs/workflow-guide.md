@@ -108,11 +108,14 @@
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | zephermine | 22단계 워크플로우 (인터뷰→리서치→스펙→섹션) |
+| **스킬** | zephermine | 22단계 워크플로우 (인터뷰→리서치→도메인분석→스펙→섹션) |
 | **에이전트** | spec-interviewer | 심층 인터뷰 진행 (A~G 카테고리) |
 | **에이전트** | explore-agent | 기존 코드베이스 분석 |
+| **에이전트** | Domain Process Expert | 업무 흐름표 작성 (기능별 역할/CRUD 권한/입출력/예외) |
+| **에이전트** | Domain Technical Expert | 기술 스택 매핑 (연동/규제/SLA/기존 솔루션) |
 | **MCP** | Tavily | 웹 리서치 (기술 트렌드, 경쟁사 분석) |
 | **MCP** | Exa | 코드 스니펫 검색 (구현 패턴, API 사용법) |
+| **외부 AI** | Codex / Gemini CLI | 도메인 전문가 분석 (설치 시 자동 활용, 없으면 Claude) |
 
 ### 산출물
 
@@ -120,6 +123,8 @@
 |------|------|-------------------|
 | `claude-ralph.md` | 설계 스펙 (기능, 비기능, 제약사항) | architect, 개발자 |
 | `claude-ralphy.md` | 섹션별 구현 계획 | agent-team |
+| `domain-process-analysis.md` | 업무 흐름표 (역할/CRUD/입출력/예외) | 개발자 (API 설계 근거) |
+| `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | architect, 개발자 |
 | `claude-qa-scenarios.md` | QA 테스트 시나리오 | qa-until-pass |
 | `claude-api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, qa-until-pass |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
