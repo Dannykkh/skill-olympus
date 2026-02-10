@@ -1,6 +1,6 @@
 # 빠른 시작 가이드
 
-Claude Code 커스터마이징의 핵심 기능을 5분 안에 시작하는 가이드입니다.
+Claude Code 커스터마이징을 설치하고 사용하는 방법입니다.
 
 ---
 
@@ -9,11 +9,8 @@ Claude Code 커스터마이징의 핵심 기능을 5분 안에 시작하는 가�
 ### Windows
 
 ```powershell
-# 저장소 클론
 git clone https://github.com/Dannykkh/claude-code-agent-customizations.git
 cd claude-code-agent-customizations
-
-# 설치 스크립트 실행
 .\install.bat
 ```
 
@@ -25,189 +22,180 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
----
-
-## 2. 핵심 기능 요약
-
-| 기능 | 트리거 | 설명 |
-|------|--------|------|
-| **Multi-AI 오케스트레이터** | `workpm`, `pmworker` | Claude + Codex + Gemini 병렬 처리 |
-| **장기기억** | `/mnemo` | 세션 간 컨텍스트 유지 (대화 저장 + 태깅 + 검색) |
-| **코드 리뷰** | `/review` | 자동 코드 리뷰 |
-| **세션 핸드오프** | `/wrap-up` | 세션 요약 + MEMORY.md 업데이트 |
+설치하면 **57개 스킬**, **34개 에이전트**, **훅**, **장기기억 시스템**이 활성화됩니다.
 
 ---
 
-## 3. 오케스트레이터 빠른 시작
+## 2. 이렇게 씁니다
 
-### 단일 터미널 (일반 사용)
+설치 후 Claude Code에서 슬래시 명령어로 사용합니다.
+
+### 메인 파이프라인
+
+프로젝트 규모에 따라 필요한 단계만 골라 쓰세요:
 
 ```
-> workpm
-인증 시스템 구현해줘
-
-→ AI 감지, 프로젝트 분석, 태스크 생성
-→ 순차 실행
+설계              구현                 검증
+────────         ─────────           ──────────
+/zephermine  →   /agent-team    →   /qa-until-pass
+                 (또는 workpm)
 ```
 
-### 다중 터미널 (병렬 처리)
+| 단계 | 명령어 | 하는 일 |
+|------|--------|--------|
+| **설계** | `/zephermine "온라인 서점 만들어줘"` | 인터뷰 → 리서치 → 스펙 → QA 시나리오 → 섹션 분리 |
+| **구현** | `/agent-team` | 섹션별 팀원 배정 → 병렬 코딩 → 검증 |
+| **검증** | `/qa-until-pass` | Playwright 테스트 자동 생성 → 실패 시 자동 수정 (max 5회) |
 
-**터미널 1 (PM):**
-```
-> workpm
-인증 시스템 구현해줘. 3개 태스크로 분리해서 병렬 처리해줘.
-```
+각 단계가 끝나면 **다음에 뭘 할지 안내**가 나옵니다.
 
-**터미널 2 (Worker):**
-```
-> pmworker
-```
+### 규모별 사용법
 
-**터미널 3 (Worker):**
-```
-> pmworker
-```
+| 규모 | 사용법 |
+|------|--------|
+| **대형** (신규 프로젝트) | `/zephermine` → `/agent-team` → `/qa-until-pass` |
+| **중형** (기능 추가) | `/zephermine` → 직접 코딩 → `/qa-until-pass` |
+| **소형** (버그 수정) | 직접 수정 → `/qa-until-pass` |
+| **QA만** | `/qa-until-pass` |
 
-### Multi-AI 자동 실행
-
-```powershell
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
-```
+> 상세: [워크플로우 가이드](workflow-guide.md)
 
 ---
 
-## 4. 메모리 시스템 빠른 시작
+## 3. 자주 쓰는 명령어
 
-### 자동 저장 (훅)
-
-대화는 `save-conversation` / `save-response` 훅이 자동으로 `.claude/conversations/YYYY-MM-DD.md`에 저장합니다.
-응답 끝에 `` `#tags: keyword1, keyword2` ``를 붙이면 키워드도 함께 저장됩니다.
-
-### 이전 대화 검색
-
-```
-이전에 OAuth 구현한 적 있어?
-→ Claude가 자동으로 대화 기록에서 검색
-```
-
-### 세션 종료
-
-```
-/wrap-up
-→ 키워드 추출, 세션 요약, MEMORY.md 업데이트
-```
-
----
-
-## 5. 주요 스킬
-
-| 스킬 | 트리거 | 용도 |
-|------|--------|------|
-| **code-reviewer** | `/review` | 코드 품질, 보안 검토 |
-| **docker-deploy** | `/docker-deploy` | Docker 배포 환경 생성 |
-| **humanizer** | `/humanizer` | AI 글쓰기 패턴 제거 |
-| **mnemo** | 자동 | 장기기억 시스템 (대화 저장 + 세션 핸드오프) |
-| **mermaid-diagrams** | `/diagram` | 다이어그램 생성 |
-
----
-
-## 6. 설정 파일
-
-### .claude/settings.local.json
-
-```json
-{
-  "mcpServers": {
-    "orchestrator": {
-      "command": "node",
-      "args": ["path/to/claude-orchestrator-mcp/dist/index.js"],
-      "env": {
-        "ORCHESTRATOR_PROJECT_ROOT": "${workspaceFolder}",
-        "ORCHESTRATOR_WORKER_ID": "pm"
-      }
-    }
-  },
-  "hooks": {
-    "UserPromptSubmit": [
-      {"command": "node hooks/orchestrator-detector.js"},
-      {"command": "powershell -ExecutionPolicy Bypass -File hooks/save-conversation.ps1 \"$PROMPT\""}
-    ]
-  }
-}
-```
-
----
-
-## 7. 디렉토리 구조
-
-```
-프로젝트/
-├── CLAUDE.md              # 프로젝트 지침 (@MEMORY.md 참조)
-├── MEMORY.md              # 장기기억 (항상 로드됨)
-├── .claude/
-│   ├── settings.local.json  # MCP + 훅 설정
-│   ├── conversations/       # 대화 로그 + 키워드 인덱스
-│   └── handoffs/           # 세션 핸드오프 문서
-└── .orchestrator/          # 오케스트레이터 상태 (멀티 터미널 시)
-    └── state.json
-```
-
----
-
-## 8. 자주 쓰는 명령어
-
-### 오케스트레이터
+### 핵심 파이프라인
 
 | 명령어 | 설명 |
 |--------|------|
-| `workpm` | PM 모드 시작 |
-| `pmworker` | Worker 모드 시작 |
+| `/zephermine` | 심층 인터뷰 → 설계 스펙 생성 |
+| `/agent-team` | Agent Teams 병렬 구현 (Claude 네이티브) |
+| `workpm` | Multi-AI 병렬 구현 (Claude + Codex + Gemini) |
+| `/qa-until-pass` | QA 시나리오 → Playwright 테스트 → 자동 수정 루프 |
 
-### 개발
+### 코드 품질
 
 | 명령어 | 설명 |
 |--------|------|
-| `/review` | 코드 리뷰 |
-| `/docker-deploy` | Docker 설정 생성 |
+| `/review` | 코드 리뷰 (품질/보안/성능) |
+| `/test` | 테스트 실행 |
+| `/tdd` | TDD 워크플로우 (Red-Green-Refactor) |
+
+### 문서화
+
+| 명령어 | 설명 |
+|--------|------|
+| `/write-prd` | PRD (요구사항 정의서) 작성 |
+| `/write-api-docs` | API 문서 자동 생성 |
+| `/diagram` | Mermaid 다이어그램 생성 |
+
+### 유틸리티
+
+| 명령어 | 설명 |
+|--------|------|
+| `/commit` | Git 커밋 (변경사항 분석 → 메시지 생성) |
+| `/explain @파일` | 코드를 비유로 설명 + Mermaid 다이어그램 |
+| `/docker-deploy` | Docker 배포 환경 자동 생성 |
+| `/smart-setup` | 기술 스택 감지 → 필요한 리소스 추천 |
+
+### 세션 관리
+
+| 명령어 | 설명 |
+|--------|------|
 | `/wrap-up` | 세션 요약 + MEMORY.md 업데이트 |
-| `/smart-setup` | 기술 스택 감지 후 리소스 추천 |
+| `/mnemo` | 장기기억 관리 (대화 저장/검색) |
 
 ---
 
-## 9. 다음 단계
+## 4. 자동으로 작동하는 것들
 
-- **상세 가이드**: [오케스트레이터 가이드](../skills/orchestrator/docs/orchestrator-guide.md)
-- **전체 스킬 목록**: [README.md](../README.md)
-- **설정 상세**: [SETUP.md](../SETUP.md)
-- **외부 리소스**: [references.md](references.md)
+설치만 하면 별도 명령어 없이 자동 적용됩니다:
+
+| 기능 | 동작 |
+|------|------|
+| **대화 자동 저장** | 모든 대화가 `.claude/conversations/`에 저장됨 |
+| **코딩 규칙** | fullstack-coding-standards, naming-conventions 등 패시브 에이전트 |
+| **키워드 태깅** | 응답 끝에 `#tags:`가 자동 저장되어 나중에 검색 가능 |
+| **과거 대화 검색** | "이전에 OAuth 구현한 적 있어?" → 자동으로 기록 검색 |
 
 ---
 
-## 10. 트러블슈팅
+## 5. 실전 예시
+
+### 예시 1: 새 프로젝트 시작
+
+```
+나: /zephermine "할일 관리 앱 만들어줘"
+→ 인터뷰 10분 → 스펙 + QA 시나리오 + 5개 섹션 생성
+
+나: /agent-team
+→ 5개 섹션 파싱 → 팀원 배정 → 병렬 구현 → 빌드 검증
+
+나: /qa-until-pass
+→ QA 시나리오 25개 → Playwright 테스트 → 전체 PASS
+```
+
+### 예시 2: 코드 리뷰 후 배포
+
+```
+나: /review
+→ 품질/보안/성능 리뷰 → PASS
+
+나: /docker-deploy
+→ Dockerfile + docker-compose + install.bat 생성
+
+나: /commit
+→ 변경사항 분석 → 커밋 메시지 생성 → 커밋
+```
+
+### 예시 3: 기존 코드 이해
+
+```
+나: /explain @src/auth/login.ts
+→ 한 줄 요약 + 실생활 비유 + Mermaid 흐름도
+```
+
+---
+
+## 6. 트러블슈팅
+
+### 스킬이 인식 안됨
+
+```bash
+# 스킬 설치 확인
+ls ~/.claude/skills/
+# 비어있으면 install.bat/sh 재실행
+```
 
 ### MCP 서버 연결 안됨
 
 ```powershell
-# MCP 서버 빌드 확인
-cd skills/orchestrator/mcp-server
-npm install && npm run build
+# MCP 설치 확인
+node skills/orchestrator/install-mcp.js --list
 ```
 
 ### 훅이 작동 안함
 
-```
-# 훅 스크립트 권한 확인 (Linux/Mac)
+```bash
+# Linux/Mac: 실행 권한
 chmod +x hooks/*.sh
 
-# PowerShell 실행 정책 확인 (Windows)
+# Windows: PowerShell 정책
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### 키워드 검색 안됨
+---
 
-대화 파일에 `#tags:`가 저장되어 있으면 grep으로 검색됩니다.
-과거 대화에 태그가 없으면 Claude에게 "이전 대화들 읽고 키워드 추가해줘"라고 요청하세요.
+## 7. 더 알아보기
+
+| 문서 | 내용 |
+|------|------|
+| [워크플로우 가이드](workflow-guide.md) | 설계→구현→QA 파이프라인 상세 |
+| [QUICK-REFERENCE.md](../QUICK-REFERENCE.md) | 외부 리소스 포함 전체 참조표 |
+| [AGENTS.md](../AGENTS.md) | 에이전트/스킬 전체 목록 |
+| [SETUP.md](../SETUP.md) | 프로젝트별 상세 설치 가이드 |
+| [references.md](references.md) | 참고한 프로젝트/리소스 전체 |
 
 ---
 
-**최종 업데이트:** 2026-02-08
+**최종 업데이트:** 2026-02-09
