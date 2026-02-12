@@ -145,7 +145,7 @@ node skills/orchestrator/install.js <target-project-path>
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qa-until-pass | Code review & QA |
-| 📦 **Git** | commit-work, git-deploy | Git workflow & deploy |
+| 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
 
@@ -309,7 +309,7 @@ claude-code-customizations/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/
 │   ├── gemini/
-│   ├── git-deploy/
+│   ├── deploymonitor/
 │   ├── zephermine/
 │   ├── humanizer/
 │   ├── jira/

@@ -859,9 +859,25 @@ SECRET_KEY=change-this-secret-key-in-production
 - 잘못된 예: `for /L %%i in (1,1,30) do ( if !errorlevel!==0 ... )`
 - 올바른 예: `:WAIT_DB` → `docker exec ping` → `if not errorlevel 1 goto DB_IS_READY` → `goto WAIT_DB`
 
+### 13. deploy.bat Self-Reload 패턴 (v3.0) 필수
+- Windows 배치 파일은 실행 시작 시점에 전체 로드됨
+- `git pull`로 deploy.bat이 업데이트되어도 구버전이 계속 실행됨
+- 해결: git pull 후 `call "%~f0" %1 --reloaded`로 자기 자신 재실행
+- `--reloaded` 플래그로 무한 루프 방지
+
+### 14. DB 상태 판단은 USER_COUNT 사용
+- `TABLE_COUNT`(테이블 개수) 대신 `USER_COUNT`(users 테이블 데이터)로 판단
+- 이유: 빈 테이블이 있어도 운영 DB로 오판하는 것을 방지
+- 분기: 쿼리 실패 → 전체 초기화, users=0 → seed만, users>0 → 마이그레이션만
+
+### 15. .deploy-mode는 .gitignore에 추가 필수
+- `.deploy-mode` 파일이 git에 커밋되면 `git pull` 시마다 복원됨
+- 의도치 않은 reset 배포 발생 가능
+- deploy.bat에서 읽은 후 즉시 삭제해야 함
+
 ---
 
-## 13. deploy.bat (Git Deploy Monitor 연동)
+## 16. deploy.bat (Git Deploy Monitor 연동)
 
 Git Deploy Monitor가 git push 감지 시 자동으로 실행하는 스크립트입니다.
 이 파일은 **배포 폴더** (예: `D:\deploy\{프로젝트명}\`)에 위치해야 합니다.
@@ -869,11 +885,13 @@ Git Deploy Monitor가 git push 감지 시 자동으로 실행하는 스크립트
 ### 배포 흐름
 ```
 Git push → DeployMonitor 감지 → deploy.bat auto 실행
-  1. git pull (최신 코드)
+  0. Self-Reload (git pull 후 새 deploy.bat 재실행)
+  1. .deploy-mode 확인 (reset/update)
   2. Docker 이미지 빌드
   3. 컨테이너 재시작 (DB 유지)
-  4. DB 초기화 또는 마이그레이션
-  5. 헬스체크
+  4. DB 상태 확인 (users 테이블)
+  5. DB 초기화 또는 마이그레이션
+  6. 헬스체크
 ```
 
 ### deploy.bat 생성 위치
@@ -883,7 +901,21 @@ Git push → DeployMonitor 감지 → deploy.bat auto 실행
 - 이 폴더에 프로젝트 소스 코드가 git clone 되어 있어야 함
 - deploy.bat을 이 폴더 루트에 생성
 
-### deploy.bat 템플릿
+### deploy.bat Self-Reload 패턴 (v3.0)
+
+**문제**: Windows 배치 파일은 실행 시작 시점에 전체 로드됨.
+`git pull`로 deploy.bat 파일이 업데이트되어도, 메모리에 로드된 **구버전**이 계속 실행됨.
+
+**해결**: Self-Reload - git pull 후 자기 자신을 다시 호출
+
+```
+1. DeployMonitor → deploy.bat auto (구버전 메모리 로드)
+2. git pull → deploy.bat 파일 업데이트
+3. call "%~f0" %1 --reloaded → 새 deploy.bat 실행
+4. --reloaded 플래그로 git pull 스킵 → 실제 로직 실행
+```
+
+### deploy.bat 템플릿 (v3.0)
 
 ```batch
 @echo off
@@ -892,6 +924,18 @@ setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
+
+REM === deploy.bat v3.0 - Self-Reload Pattern ===
+REM 두 번째 인자가 --reloaded면 이미 git pull 완료된 상태
+if "%~2"=="--reloaded" goto MAIN_START
+
+REM 첫 실행: git pull 후 새 deploy.bat으로 재실행
+echo [0/6] Self-Reload: git pull 후 재실행...
+git pull
+call "%~f0" %1 --reloaded
+exit /b %errorlevel%
+
+:MAIN_START
 
 REM === 설정 (프로젝트별로 수정) ===
 set "PROJECT_NAME={프로젝트명}"
@@ -906,29 +950,34 @@ REM 모드 확인 (auto = DeployMonitor 자동 실행)
 set "MODE=%~1"
 
 echo ============================================
-echo   [%PROJECT_NAME%] 자동 배포 시작
+echo   [%PROJECT_NAME%] 자동 배포 시작 (v3.0)
 echo   모드: %MODE%
 echo   시각: %date% %time%
 echo ============================================
 
 REM ========================================
-REM [1/5] 최신 코드 가져오기
+REM [1/6] .deploy-mode 확인 (reset/update)
 REM ========================================
 echo.
-echo [1/5] git pull 실행 중...
-git pull
-if errorlevel 1 (
-    echo [오류] git pull 실패
-    if not "%MODE%"=="auto" pause
-    exit /b 1
+echo [1/6] 배포 모드 확인 중...
+set "DEPLOY_MODE=update"
+if exist ".deploy-mode" (
+    set /p DEPLOY_MODE=<.deploy-mode
+    del .deploy-mode >nul 2>&1
+    echo       .deploy-mode 파일 읽고 삭제: !DEPLOY_MODE!
 )
-echo       git pull 완료
+if /i "!DEPLOY_MODE!"=="reset" (
+    echo       ⚠️ RESET 모드 - DB 전체 초기화 예정
+) else (
+    set "DEPLOY_MODE=update"
+    echo       UPDATE 모드 - DB 유지
+)
 
 REM ========================================
-REM [2/5] Docker 이미지 빌드
+REM [2/6] Docker 이미지 빌드
 REM ========================================
 echo.
-echo [2/5] Docker 이미지 빌드 중...
+echo [2/6] Docker 이미지 빌드 중...
 docker build -t %PROJECT_NAME%-api:latest -f backend/Dockerfile --target production backend/
 if errorlevel 1 (
     echo [오류] Backend 빌드 실패
@@ -946,24 +995,29 @@ if errorlevel 1 (
 echo       Frontend 빌드 완료
 
 REM ========================================
-REM [3/5] 컨테이너 재시작 (DB 유지)
+REM [3/6] 컨테이너 재시작
 REM ========================================
 echo.
-echo [3/5] 컨테이너 재시작 중...
+echo [3/6] 컨테이너 재시작 중...
 cd /d "%SCRIPT_DIR%docker-images"
 
-REM DB 컨테이너 실행 여부 확인
-for /f %%i in ('docker ps -q --filter "name=%PROJECT_NAME%-db" 2^>nul') do set "DB_EXISTS=1"
-
-if not defined DB_EXISTS (
-    REM 최초 실행 - 전체 서비스 시작
-    echo       최초 실행 감지 - 전체 서비스 시작...
+if /i "!DEPLOY_MODE!"=="reset" (
+    REM RESET 모드: 볼륨까지 삭제 후 전체 재시작
+    echo       RESET 모드 - 볼륨 삭제 후 재시작...
+    docker compose down -v
     docker compose up -d
 ) else (
-    REM 업데이트 - API/Frontend만 재시작
-    docker compose stop api frontend
-    docker compose rm -f api frontend
-    docker compose up -d api frontend
+    REM UPDATE 모드: DB 컨테이너 유지
+    for /f %%i in ('docker ps -q --filter "name=%PROJECT_NAME%-db" 2^>nul') do set "DB_EXISTS=1"
+    if not defined DB_EXISTS (
+        echo       최초 실행 감지 - 전체 서비스 시작...
+        docker compose up -d
+    ) else (
+        echo       API/Frontend만 재시작 (DB 유지)...
+        docker compose stop api frontend
+        docker compose rm -f api frontend
+        docker compose up -d api frontend
+    )
 )
 
 if errorlevel 1 (
@@ -976,19 +1030,18 @@ cd /d "%SCRIPT_DIR%"
 echo       컨테이너 재시작 완료
 
 REM ========================================
-REM [4/5] DB 초기화 / 마이그레이션
+REM [4/6] DB 준비 대기
 REM ========================================
 echo.
-echo [4/5] DB 처리 중...
+echo [4/6] DB 준비 대기 중...
 
-REM DB 준비 대기 (goto 루프 - for /L의 errorlevel 버그 방지)
 set "DB_RETRIES=0"
 :WAIT_DB
 if %DB_RETRIES% GEQ 30 goto DB_TIMEOUT
 docker exec %PROJECT_NAME%-db mysqladmin ping -h localhost -u %DB_USER% -p%DB_PASSWORD% >nul 2>&1
 if not errorlevel 1 goto DB_READY
 set /a DB_RETRIES+=1
-echo       DB 대기 중... (%DB_RETRIES%/30)
+echo       대기 중... (%DB_RETRIES%/30)
 timeout /t 2 /nobreak >nul
 goto WAIT_DB
 
@@ -999,16 +1052,23 @@ goto SKIP_DB
 :DB_READY
 echo       DB 연결 확인
 
-REM 테이블 존재 여부로 초기화/마이그레이션 분기
-set "TABLE_COUNT=0"
-for /f %%c in ('docker exec %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()" 2^>nul') do set "TABLE_COUNT=%%c"
+REM ========================================
+REM [5/6] DB 초기화 / 마이그레이션
+REM ========================================
+echo.
+echo [5/6] DB 처리 중...
 
-if "%TABLE_COUNT%"=="0" goto DB_INIT
+REM users 테이블 데이터 개수로 DB 상태 판단 (TABLE_COUNT보다 정확)
+set "USER_COUNT="
+for /f "usebackq" %%c in (`docker exec %PROJECT_NAME%-db mysql --silent --skip-column-names -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "SELECT COUNT(*) FROM users" 2^>nul`) do set "USER_COUNT=%%c"
+
+if "!USER_COUNT!"=="" goto DB_INIT
+if "!USER_COUNT!"=="0" goto DB_SEED_ONLY
 goto DB_MIGRATE
 
 REM --- 최초 설치: schema.sql + seed-data.sql ---
 :DB_INIT
-echo       테이블 없음 - 최초 DB 초기화 실행
+echo       users 쿼리 실패 - 최초 DB 초기화 실행
 if exist "database\schema.sql" (
     echo       schema.sql 적용 중...
     docker exec -i %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "database\schema.sql"
@@ -1023,7 +1083,12 @@ if exist "database\schema.sql" (
     if not "%MODE%"=="auto" pause
     exit /b 6
 )
+REM schema 적용 후 seed로 이동
+goto DB_SEED_ONLY
 
+REM --- 스키마만 있고 데이터 없음: seed-data.sql만 ---
+:DB_SEED_ONLY
+echo       users = 0 - seed-data.sql만 적용
 if exist "database\seed-data.sql" (
     echo       seed-data.sql 적용 중...
     docker exec -i %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "database\seed-data.sql"
@@ -1032,13 +1097,15 @@ if exist "database\seed-data.sql" (
     ) else (
         echo [경고] seed-data.sql 적용 실패 ^(무시^)
     )
+) else (
+    echo       seed-data.sql 파일 없음 ^(스킵^)
 )
 echo       DB 초기화 완료
 goto SKIP_DB
 
 REM --- 업데이트: 마이그레이션 파일 적용 ---
 :DB_MIGRATE
-echo       기존 DB 감지 (테이블 %TABLE_COUNT%개) - 마이그레이션 확인
+echo       기존 DB 감지 (users !USER_COUNT!명) - 마이그레이션 확인
 
 REM _migrations 추적 테이블 생성 (없으면)
 docker exec %PROJECT_NAME%-db mysql -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "CREATE TABLE IF NOT EXISTS _migrations (filename VARCHAR(255) PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP)" >nul 2>&1
@@ -1078,10 +1145,10 @@ echo       database\migrations\ 폴더 없음 - 마이그레이션 건너뜀
 :SKIP_DB
 
 REM ========================================
-REM [5/5] 헬스체크 대기
+REM [6/6] 헬스체크 대기
 REM ========================================
 echo.
-echo [5/5] 서비스 상태 확인 중...
+echo [6/6] 서비스 상태 확인 중...
 timeout /t 10 /nobreak >nul
 
 set "RETRIES=0"
@@ -1112,16 +1179,22 @@ echo [경고] API 헬스체크 실패 (컨테이너는 실행 중)
 echo        수동 확인 필요: docker logs %PROJECT_NAME%-api
 if not "%MODE%"=="auto" pause
 exit /b 5
+
+REM rebuild trigger - change this to force rebuild without code changes
 ```
 
 ### DB 처리 전략
 
-| 상황 | 동작 |
-|------|------|
-| **DB 컨테이너 없음** (최초) | docker compose up -d (전체 시작) → schema.sql → seed-data.sql |
-| **DB 있지만 테이블 0개** | schema.sql + seed-data.sql 적용 |
-| **DB 있고 테이블 있음** (업데이트) | `_migrations` 테이블로 미적용 SQL만 순서대로 적용 |
-| **마이그레이션 폴더 없음** | 건너뜀 |
+| 상황 | 판단 기준 | 동작 |
+|------|-----------|------|
+| **RESET 모드** | .deploy-mode = reset | docker compose down -v → 전체 재설치 |
+| **users 쿼리 실패** | USER_COUNT = "" | DB_INIT: schema.sql + seed-data.sql |
+| **users = 0** | 스키마만 있음 | DB_SEED_ONLY: seed-data.sql만 |
+| **users > 0** | 운영 중인 DB | DB_MIGRATE: migrations/*.sql만 |
+| **마이그레이션 폴더 없음** | - | 건너뜀 |
+
+**중요**: `TABLE_COUNT`(테이블 개수)가 아닌 `USER_COUNT`(users 테이블 데이터)로 판단해야 함.
+빈 테이블도 운영 DB로 오판하는 것을 방지.
 
 ### 마이그레이션 파일 규칙
 

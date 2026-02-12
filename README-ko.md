@@ -145,7 +145,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qa-until-pass | 코드 리뷰 & QA |
-| 📦 **Git** | commit-work, git-deploy | Git 워크플로우 & 배포 |
+| 📦 **Git** | commit-work, deploymonitor | Git 워크플로우 & DeployMonitor 자동 배포 |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
 | 🧠 **메모리** | mnemo | 통합 메모리 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
@@ -309,7 +309,7 @@ claude-code-customizations/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/
 │   ├── gemini/
-│   ├── git-deploy/
+│   ├── deploymonitor/
 │   ├── zephermine/
 │   ├── humanizer/
 │   ├── jira/
