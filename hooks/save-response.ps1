@@ -14,9 +14,9 @@ $transcriptPath = $json.transcript_path
 if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
 
 # 대화 파일 확인
-$ConvDir = Join-Path $PWD.Path ".claude\conversations"
+$ConvDir = Join-Path $PWD.Path "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
-$ConvFile = Join-Path $ConvDir "$Today.md"
+$ConvFile = Join-Path $ConvDir "$Today-claude.md"
 if (-not (Test-Path $ConvFile)) { exit 0 }
 
 # JSONL 파일 끝에서 역방향으로 assistant text 메시지 찾기

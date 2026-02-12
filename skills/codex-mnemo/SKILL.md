@@ -31,7 +31,7 @@ node skills/codex-mnemo/install.js --uninstall  # 제거
 | 데이터 전달 | stdin JSON + transcript JSONL 파싱 | **argv JSON** (user+assistant 직접 포함) |
 | 설정 | settings.json (JSON) | **config.toml** (TOML) |
 | 규칙 파일 | CLAUDE.md | **AGENTS.md** |
-| 저장 경로 | `.claude/conversations/` | **`.codex/conversations/`** |
+| 저장 경로 | `conversations/*-claude.md` | **`conversations/*-codex.md`** |
 | 중복 방지 | 타임스탬프 기반 | **turn-id 기반** (더 정확) |
 
 ---
@@ -71,7 +71,7 @@ Codex CLI 대화
     → input-messages → User 입력 추출
     → last-assistant-message → Assistant 응답 추출
     → 코드 블록 제거 + 2000자 제한
-    → .codex/conversations/YYYY-MM-DD.md에 append
+    → conversations/YYYY-MM-DD-codex.md에 append
     → turn-id 기반 중복 방지
 ```
 
@@ -81,7 +81,7 @@ Codex CLI 대화
 
 | 파일 | 위치 |
 |------|------|
-| 대화 로그 | `.codex/conversations/YYYY-MM-DD.md` |
+| 대화 로그 | `conversations/YYYY-MM-DD-codex.md` |
 | 의미기억 | `MEMORY.md` (프로젝트 루트) |
 | 훅 | `~/.codex/hooks/save-turn.ps1\|.sh` |
 | 설정 | `~/.codex/config.toml` |

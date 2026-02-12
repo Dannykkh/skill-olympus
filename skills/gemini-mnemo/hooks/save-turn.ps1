@@ -30,9 +30,9 @@ if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $respon
 }
 
 # 대화 디렉토리 및 파일
-$ConvDir = Join-Path $PWD.Path ".gemini\conversations"
+$ConvDir = Join-Path $PWD.Path "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
-$ConvFile = Join-Path $ConvDir "$Today.md"
+$ConvFile = Join-Path $ConvDir "$Today-gemini.md"
 
 # 폴더 생성
 if (-not (Test-Path $ConvDir)) {

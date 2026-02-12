@@ -69,7 +69,7 @@
       "exit 0: 통과, exit 1: 차단"
     ],
     "conversation_logs": [
-      "대화 로그는 .claude/conversations/YYYY-MM-DD.md에 저장됨",
+      "대화 로그는 conversations/YYYY-MM-DD-{claude|codex|gemini}.md에 저장됨",
       "세션 간 대화 내용을 참조할 수 있음"
     ]
   }

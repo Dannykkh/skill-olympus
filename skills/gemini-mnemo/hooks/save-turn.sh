@@ -41,9 +41,9 @@ if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; the
 fi
 
 # 대화 디렉토리 및 파일
-CONV_DIR="$PWD/.gemini/conversations"
+CONV_DIR="$PWD/conversations"
 TODAY=$(date +%Y-%m-%d)
-CONV_FILE="$CONV_DIR/$TODAY.md"
+CONV_FILE="$CONV_DIR/$TODAY-gemini.md"
 PROJECT_NAME=$(basename "$PWD")
 
 # 폴더 생성

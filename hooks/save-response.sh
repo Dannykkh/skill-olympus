@@ -12,9 +12,9 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
 fi
 
 # 대화 파일 확인
-CONV_DIR="$PWD/.claude/conversations"
+CONV_DIR="$PWD/conversations"
 TODAY=$(date +%Y-%m-%d)
-CONV_FILE="$CONV_DIR/$TODAY.md"
+CONV_FILE="$CONV_DIR/$TODAY-claude.md"
 if [ ! -f "$CONV_FILE" ]; then
     exit 0
 fi

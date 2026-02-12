@@ -148,6 +148,6 @@ python scripts/check_staleness.py <handoff-file>
 
 | 파일 | 위치 |
 |------|------|
-| 대화 로그 | `.claude/conversations/YYYY-MM-DD.md` |
+| 대화 로그 | `conversations/YYYY-MM-DD-claude.md` |
 | 핸드오프 | `.claude/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 | 의미기억 | `MEMORY.md` (프로젝트 루트) |

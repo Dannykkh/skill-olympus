@@ -50,8 +50,8 @@ Stop 훅이 응답 텍스트를 자동 저장하므로, 키워드도 함께 캡�
    - 예: "속도 문제" → `performance`, `speed`, `느림`, `최적화`, `optimization`
    - 한국어 ↔ 영어 양방향 확장 필수
 3. 확장된 키워드로 대화 파일 검색 (여러 번 grep):
-   - `Grep "#tags:.*키워드1" .claude/conversations/`
-   - `Grep "#tags:.*키워드2" .claude/conversations/`
+   - `Grep "#tags:.*키워드1" conversations/`
+   - `Grep "#tags:.*키워드2" conversations/`
    - 첫 grep에서 못 찾으면 동의어로 재시도, 최대 3회
 4. 매칭된 대화 파일의 해당 섹션(전후 문맥) 읽기
 5. 관련 키워드가 추가로 발견되면 **하위 탐색** (1회 더 grep)

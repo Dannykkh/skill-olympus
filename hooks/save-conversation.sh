@@ -4,9 +4,9 @@
 
 INPUT_JSON=$(cat)
 PROMPT=$(echo "$INPUT_JSON" | jq -r '.prompt // empty' 2>/dev/null)
-CONV_DIR="$PWD/.claude/conversations"
+CONV_DIR="$PWD/conversations"
 TODAY=$(date +%Y-%m-%d)
-CONV_FILE="$CONV_DIR/$TODAY.md"
+CONV_FILE="$CONV_DIR/$TODAY-claude.md"
 PROJECT_NAME=$(basename "$PWD")
 
 # 폴더 생성

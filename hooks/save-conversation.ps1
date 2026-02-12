@@ -10,9 +10,9 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $Prompt = $json.prompt
 
-$ConvDir = Join-Path $PWD.Path ".claude\conversations"
+$ConvDir = Join-Path $PWD.Path "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
-$ConvFile = Join-Path $ConvDir "$Today.md"
+$ConvFile = Join-Path $ConvDir "$Today-claude.md"
 
 # 폴더 생성
 if (-not (Test-Path $ConvDir)) {

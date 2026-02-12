@@ -32,7 +32,7 @@ node skills/gemini-mnemo/install.js --uninstall  # 제거
 | 페이로드 | prompt / transcript 파싱 | input-messages / last-assistant-message | **prompt / prompt_response** |
 | 설정 형식 | settings.json | config.toml | **settings.json** (Claude와 동일!) |
 | 규칙 파일 | CLAUDE.md | AGENTS.md | **AGENTS.md** |
-| 저장 경로 | `.claude/conversations/` | `.codex/conversations/` | **`.gemini/conversations/`** |
+| 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | **`conversations/*-gemini.md`** |
 | 중복 방지 | 타임스탬프 | turn-id | **타임스탬프** |
 
 ---
@@ -72,7 +72,7 @@ Gemini CLI 대화
     → prompt → User 입력 추출
     → prompt_response → Assistant 응답 추출
     → 코드 블록 제거 + 2000자 제한
-    → .gemini/conversations/YYYY-MM-DD.md에 append
+    → conversations/YYYY-MM-DD-gemini.md에 append
     → 타임스탬프 기반 중복 방지
 ```
 
@@ -82,7 +82,7 @@ Gemini CLI 대화
 
 | 파일 | 위치 |
 |------|------|
-| 대화 로그 | `.gemini/conversations/YYYY-MM-DD.md` |
+| 대화 로그 | `conversations/YYYY-MM-DD-gemini.md` |
 | 의미기억 | `MEMORY.md` (프로젝트 루트) |
 | 훅 | `~/.gemini/hooks/save-turn.ps1\|.sh` |
 | 설정 | `~/.gemini/settings.json` |

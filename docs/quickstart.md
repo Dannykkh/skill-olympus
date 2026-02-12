@@ -114,7 +114,7 @@ chmod +x install.sh && ./install.sh
 
 | 기능 | 동작 |
 |------|------|
-| **대화 자동 저장** | 모든 대화가 `.claude/conversations/`에 저장됨 |
+| **대화 자동 저장** | 모든 대화가 `conversations/`에 저장됨 (Claude/Codex/Gemini 통합) |
 | **코딩 규칙** | fullstack-coding-standards, naming-conventions 등 패시브 에이전트 |
 | **키워드 태깅** | 응답 끝에 `#tags:`가 자동 저장되어 나중에 검색 가능 |
 | **과거 대화 검색** | "이전에 OAuth 구현한 적 있어?" → 자동으로 기록 검색 |
