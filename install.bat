@@ -40,7 +40,7 @@ REM ============================================
 REM   --unlink 모드: Junction 제거 + settings.json 정리
 REM ============================================
 if "%MODE%"=="unlink" (
-    echo [1/7] Skills 링크 제거 중...
+    echo [1/8] Skills 링크 제거 중...
     if exist "%SCRIPT_DIR%skills" (
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
             set "skill_name=%%~nxD"
@@ -58,7 +58,7 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [2/7] Agents 링크 제거 중...
+    echo [2/8] Agents 링크 제거 중...
     fsutil reparsepoint query "%CLAUDE_DIR%\agents" >nul 2>nul
     if !errorlevel! equ 0 (
         echo       - agents [링크 제거]
@@ -69,7 +69,7 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [3/7] Hooks 링크 제거 + settings.json 정리 중...
+    echo [3/8] Hooks 링크 제거 + settings.json 정리 중...
     fsutil reparsepoint query "%CLAUDE_DIR%\hooks" >nul 2>nul
     if !errorlevel! equ 0 (
         echo       - hooks [링크 제거]
@@ -82,22 +82,27 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [4/7] CLAUDE.md 장기기억 규칙 제거 중...
+    echo [4/8] CLAUDE.md 장기기억 규칙 제거 중...
     node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
     echo       완료!
 
     echo.
-    echo [5/7] MCP 서버 설정은 별도 관리됩니다.
+    echo [5/8] MCP 서버 설정은 별도 관리됩니다.
     echo       제거: node "%SCRIPT_DIR%install-mcp.js" --uninstall ^<이름^>
     echo       완료!
 
     echo.
-    echo [6/7] Codex-Mnemo 제거 중...
+    echo [6/8] Orchestrator MCP 제거 중...
+    claude mcp remove orchestrator -s user >nul 2>nul
+    echo       완료!
+
+    echo.
+    echo [7/8] Codex-Mnemo 제거 중...
     node "%SCRIPT_DIR%skills\codex-mnemo\install.js" --uninstall
     echo       완료!
 
     echo.
-    echo [7/7] Gemini-Mnemo 제거 중...
+    echo [8/8] Gemini-Mnemo 제거 중...
     node "%SCRIPT_DIR%skills\gemini-mnemo\install.js" --uninstall
     echo       완료!
 
@@ -120,7 +125,7 @@ REM   --link 모드: Junction 생성
 REM ============================================
 if "%MODE%"=="link" (
     REM Skills 링크 (개별 폴더)
-    echo [1/8] Skills 링크 중... (글로벌, Junction)
+    echo [1/9] Skills 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%skills" (
         if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
@@ -145,7 +150,7 @@ if "%MODE%"=="link" (
 
     REM Agents 링크 (전체 폴더) + skills/*/agents/ 복사
     echo.
-    echo [2/8] Agents 링크 중... (글로벌, Junction)
+    echo [2/9] Agents 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%agents" (
         set "target=%CLAUDE_DIR%\agents"
         if exist "!target!" (
@@ -174,7 +179,7 @@ if "%MODE%"=="link" (
 
     REM Hooks 링크 (전체 폴더)
     echo.
-    echo [3/8] Hooks 링크 중... (글로벌, Junction)
+    echo [3/9] Hooks 링크 중... (글로벌, Junction)
     if exist "%SCRIPT_DIR%hooks" (
         set "target=%CLAUDE_DIR%\hooks"
         if exist "!target!" (
@@ -200,7 +205,7 @@ REM   기본 모드: 복사
 REM ============================================
 
 REM Skills 설치 (글로벌)
-echo [1/8] Skills 설치 중... (글로벌)
+echo [1/9] Skills 설치 중... (글로벌)
 if exist "%SCRIPT_DIR%skills" (
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         set "skill_name=%%~nxD"
@@ -215,7 +220,7 @@ if exist "%SCRIPT_DIR%skills" (
 
 REM Agents 설치 (글로벌)
 echo.
-echo [2/8] Agents 설치 중... (글로벌)
+echo [2/9] Agents 설치 중... (글로벌)
 if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
 REM 루트 agents/ 폴더
 if exist "%SCRIPT_DIR%agents" (
@@ -237,7 +242,7 @@ echo       완료!
 
 REM Hooks 설치 (글로벌)
 echo.
-echo [3/8] Hooks 설치 중... (글로벌)
+echo [3/9] Hooks 설치 중... (글로벌)
 if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
 REM 검증/포맷팅 훅 (루트 hooks/)
 if exist "%SCRIPT_DIR%hooks" (
@@ -269,18 +274,18 @@ echo       완료!
 
 REM settings.json 훅 설정 (글로벌)
 echo.
-echo [4/8] settings.json 훅 설정 중... (글로벌)
+echo [4/9] settings.json 훅 설정 중... (글로벌)
 REM Windows에서는 항상 PowerShell 사용 (Git Bash가 있어도 Claude Code는 /bin/bash 사용)
 node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%/hooks" "%CLAUDE_DIR%\settings.json" --windows
 
 REM CLAUDE.md 장기기억 규칙 설치 (글로벌)
 echo.
-echo [5/8] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)
+echo [5/9] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)
 node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
 REM MCP 서버 자동 설치 (글로벌, 무료 MCP만)
 echo.
-echo [6/8] MCP 서버 설치 중... (글로벌, 무료만 자동 설치)
+echo [6/9] MCP 서버 설치 중... (글로벌, 무료만 자동 설치)
 echo.
 echo       사용 가능한 MCP 서버:
 node "%SCRIPT_DIR%install-mcp.js" --list
@@ -291,14 +296,31 @@ node "%SCRIPT_DIR%install-mcp.js" --all
 echo.
 echo       (추가 설치/제거: node "%SCRIPT_DIR%install-mcp.js" --list)
 
+REM Orchestrator MCP 서버 등록 (글로벌, PM-Worker 병렬 작업)
+echo.
+echo [7/9] Orchestrator MCP 서버 등록 중... (글로벌)
+set "ORCH_DIST=%SCRIPT_DIR%mcp-servers\claude-orchestrator-mcp\dist\index.js"
+if not exist "%ORCH_DIST%" (
+    echo       MCP 서버 빌드 중...
+    cd /d "%SCRIPT_DIR%mcp-servers\claude-orchestrator-mcp" && npm install >nul 2>nul && npm run build >nul 2>nul
+    cd /d "%SCRIPT_DIR%"
+)
+if exist "%ORCH_DIST%" (
+    claude mcp remove orchestrator -s user >nul 2>nul
+    claude mcp add orchestrator --scope user -- node "%ORCH_DIST:\=/%" >nul 2>nul
+    echo       Orchestrator MCP 등록 완료
+) else (
+    echo       [경고] MCP 서버 빌드 실패, 건너뜀
+)
+
 REM Codex-Mnemo 설치 (Codex CLI 장기기억)
 echo.
-echo [7/8] Codex-Mnemo 설치 중... (Codex CLI 장기기억)
+echo [8/9] Codex-Mnemo 설치 중... (Codex CLI 장기기억)
 node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
 
 REM Gemini-Mnemo 설치 (Gemini CLI 장기기억)
 echo.
-echo [8/8] Gemini-Mnemo 설치 중... (Gemini CLI 장기기억)
+echo [9/9] Gemini-Mnemo 설치 중... (Gemini CLI 장기기억)
 node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
 
 echo.
@@ -327,6 +349,7 @@ if "%MODE%"=="link" (
 echo   - settings.json 훅 설정 등록 완료
 echo   - CLAUDE.md 장기기억 규칙 등록 완료
 echo   - MCP 서버 자동 설치 완료 (변경: node install-mcp.js --list)
+echo   - Orchestrator MCP 등록 완료
 echo   - Codex-Mnemo 장기기억 등록 완료
 echo   - Gemini-Mnemo 장기기억 등록 완료
 echo.
