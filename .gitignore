@@ -35,3 +35,6 @@ conversations/
 
 # Claude conversation logs (auto-generated)
 .claude/conversations/
+
+# MCP servers build artifacts
+mcp-servers/*/dist/
