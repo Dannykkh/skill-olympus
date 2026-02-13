@@ -10,6 +10,8 @@ REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
+set "CODEX_MNEMO_RESULT=미실행"
+set "GEMINI_MNEMO_RESULT=미실행"
 
 REM 모드 결정
 set "MODE=copy"
@@ -98,13 +100,35 @@ if "%MODE%"=="unlink" (
 
     echo.
     echo [7/8] Codex-Mnemo 제거 중...
-    node "%SCRIPT_DIR%skills\codex-mnemo\install.js" --uninstall
-    echo       완료!
+    if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
+        node "%SCRIPT_DIR%skills\codex-mnemo\install.js" --uninstall
+        if !errorlevel! equ 0 (
+            set "CODEX_MNEMO_RESULT=제거 완료"
+            echo       완료!
+        ) else (
+            set "CODEX_MNEMO_RESULT=제거 실패"
+            echo       [경고] 제거 실패 (exit: !errorlevel!)
+        )
+    ) else (
+        set "CODEX_MNEMO_RESULT=스킵(install.js 없음)"
+        echo       [경고] install.js 없음, 건너뜀
+    )
 
     echo.
     echo [8/8] Gemini-Mnemo 제거 중...
-    node "%SCRIPT_DIR%skills\gemini-mnemo\install.js" --uninstall
-    echo       완료!
+    if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
+        node "%SCRIPT_DIR%skills\gemini-mnemo\install.js" --uninstall
+        if !errorlevel! equ 0 (
+            set "GEMINI_MNEMO_RESULT=제거 완료"
+            echo       완료!
+        ) else (
+            set "GEMINI_MNEMO_RESULT=제거 실패"
+            echo       [경고] 제거 실패 (exit: !errorlevel!)
+        )
+    ) else (
+        set "GEMINI_MNEMO_RESULT=스킵(install.js 없음)"
+        echo       [경고] install.js 없음, 건너뜀
+    )
 
     echo.
     echo ============================================
@@ -316,12 +340,36 @@ if exist "%ORCH_DIST%" (
 REM Codex-Mnemo 설치 (Codex CLI 장기기억)
 echo.
 echo [8/9] Codex-Mnemo 설치 중... (Codex CLI 장기기억)
-node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
+if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
+    node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
+    if !errorlevel! equ 0 (
+        set "CODEX_MNEMO_RESULT=설치 완료"
+        echo       완료!
+    ) else (
+        set "CODEX_MNEMO_RESULT=설치 실패"
+        echo       [경고] 설치 실패 (exit: !errorlevel!)
+    )
+) else (
+    set "CODEX_MNEMO_RESULT=스킵(install.js 없음)"
+    echo       [경고] install.js 없음, 건너뜀
+)
 
 REM Gemini-Mnemo 설치 (Gemini CLI 장기기억)
 echo.
 echo [9/9] Gemini-Mnemo 설치 중... (Gemini CLI 장기기억)
-node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
+if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
+    node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
+    if !errorlevel! equ 0 (
+        set "GEMINI_MNEMO_RESULT=설치 완료"
+        echo       완료!
+    ) else (
+        set "GEMINI_MNEMO_RESULT=설치 실패"
+        echo       [경고] 설치 실패 (exit: !errorlevel!)
+    )
+) else (
+    set "GEMINI_MNEMO_RESULT=스킵(install.js 없음)"
+    echo       [경고] install.js 없음, 건너뜀
+)
 
 echo.
 echo ============================================
@@ -350,8 +398,8 @@ echo   - settings.json 훅 설정 등록 완료
 echo   - CLAUDE.md 장기기억 규칙 등록 완료
 echo   - MCP 서버 자동 설치 완료 (변경: node install-mcp.js --list)
 echo   - Orchestrator MCP 등록 완료
-echo   - Codex-Mnemo 장기기억 등록 완료
-echo   - Gemini-Mnemo 장기기억 등록 완료
+echo   - Codex-Mnemo: !CODEX_MNEMO_RESULT!
+echo   - Gemini-Mnemo: !GEMINI_MNEMO_RESULT!
 echo.
 echo   Claude Code / Codex CLI를 재시작하면 적용됩니다.
 echo.

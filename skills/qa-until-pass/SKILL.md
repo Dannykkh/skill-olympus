@@ -113,21 +113,49 @@ tests/
 
 ## Step 3: 테스트 실행
 
-```bash
-# 기본 실행
-npx playwright test --reporter=list
+### Worker 수 제한 (CPU 보호)
 
-# 프로젝트 설정에 따라 자동 조정
+**기본값: CPU 논리코어의 50%** (`--workers=50%`)
+사용자가 `--workers` 옵션으로 오버라이드 가능합니다.
+
+```bash
+# 기본 실행 (CPU 50% 제한)
+npx playwright test --reporter=list --workers=50%
+
+# 사용자가 --workers 지정 시 해당 값 사용
+npx playwright test --reporter=list --workers=3      # 고정 3개
+npx playwright test --reporter=list --workers=25%    # CPU 25%
+npx playwright test --reporter=list --workers=1      # 직렬 (디버깅)
+
 # headed 모드 (디버깅 필요 시)
-npx playwright test --headed
+npx playwright test --headed --workers=50%
 
 # 특정 파일만
-npx playwright test tests/e2e/auth.spec.ts
+npx playwright test tests/e2e/auth.spec.ts --workers=50%
 ```
 
 ### 사전 조건 확인
 
-테스트 실행 전 확인 사항:
+테스트 실행 전 **머신 상태를 감지하여 사용자에게 보여주고** workers 수를 확인합니다.
+
+**CPU 코어 감지 (Bash):**
+- **Windows**: `powershell -Command "(Get-CimInstance Win32_Processor).NumberOfLogicalProcessors"`
+- **Linux**: `nproc`
+- **Mac**: `sysctl -n hw.logicalcpu`
+
+감지 결과를 기반으로 표시:
+
+```
+🖥️ 머신 상태:
+  CPU: {감지된 코어}코어 (논리 프로세서)
+  Workers (50%): {코어/2}개 동시 실행
+  예상 RAM: ~{코어/2 * 200}MB (Worker당 ~200MB)
+
+  Workers 수를 조정하시겠습니까?
+  [50% 유지 (Recommended)] [25%로 줄이기] [직접 입력]
+```
+
+추가 사전 조건:
 
 ```
 1. 앱 서버 실행 중인지 확인 (baseURL 접근 가능)
@@ -244,6 +272,7 @@ IF retry >= max_retries:
 
 | 옵션 | 설명 | 기본값 |
 |------|------|--------|
+| `--workers N` | Playwright worker 수 (숫자 또는 퍼센트) | 50% |
 | `--api-only` | API 테스트만 생성/실행 | false |
 | `--ui-only` | UI E2E 테스트만 생성/실행 | false |
 | `--max-retries N` | Healer 최대 반복 횟수 | 5 |

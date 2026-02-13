@@ -103,13 +103,38 @@ function escapeRegex(str) {
 function buildNotifyCommand(hooksDir) {
   const d = normalizePath(hooksDir);
   if (isWindows) {
-    return `powershell -ExecutionPolicy Bypass -File "${d}/save-turn.ps1"`;
+    const pwsh = "C:/Program Files/PowerShell/7/pwsh.exe";
+    const winPs = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe";
+    const shell = fs.existsSync(pwsh) ? pwsh : winPs;
+    return [shell, "-ExecutionPolicy", "Bypass", "-File", `${d}/save-turn.ps1`];
   } else {
-    return `bash "${d}/save-turn.sh"`;
+    return ["bash", `${d}/save-turn.sh`];
   }
 }
 
-function installTomlNotify(configPath, notifyCmd) {
+function findNotifyBlock(content) {
+  const singleLine = /^notify\s*=\s*\[(.*?)\]\s*$/m;
+  const multiLine = /^notify\s*=\s*\[\s*\n([\s\S]*?)\]\s*$/m;
+
+  let match = content.match(singleLine);
+  if (match) {
+    return { fullMatch: match[0], inner: match[1] ?? "" };
+  }
+
+  match = content.match(multiLine);
+  if (match) {
+    return { fullMatch: match[0], inner: match[1] ?? "" };
+  }
+
+  return null;
+}
+
+function stringifyNotify(args) {
+  const escaped = args.map((x) => `'${x.replace(/'/g, "''")}'`);
+  return `notify = [${escaped.join(", ")}]`;
+}
+
+function installTomlNotify(configPath, notifyArgs) {
   let content = "";
   try {
     content = fs.readFileSync(configPath, "utf8");
@@ -117,30 +142,21 @@ function installTomlNotify(configPath, notifyCmd) {
     content = "";
   }
 
-  // notify = [...] 줄 찾기 (한 줄 또는 여러 줄)
-  const notifyLineRegex = /^notify\s*=\s*\[.*?\]$/m;
-  const notifyMultilineRegex = /^notify\s*=\s*\[\s*\n([\s\S]*?)\]/m;
+  const block = findNotifyBlock(content);
+  const newLine = stringifyNotify(notifyArgs);
 
-  // TOML 리터럴 문자열(작은따옴표)로 감싸서 내부 큰따옴표 보존
-  const newNotifyLine = `notify = ['${notifyCmd}']`;
-
-  if (notifyLineRegex.test(content)) {
-    // 기존 한 줄 notify가 있으면 교체
-    const oldMatch = content.match(notifyLineRegex)[0];
-    if (oldMatch !== newNotifyLine) {
-      console.log(`      ⚠️  기존 notify 설정 덮어쓰기: ${oldMatch}`);
+  if (block) {
+    if (block.fullMatch.trim() !== newLine.trim()) {
+      console.log("      기존 notify 설정을 codex-mnemo 형식으로 교체");
+    } else {
+      console.log("      notify 설정에 이미 codex-mnemo 명령이 존재");
     }
-    content = content.replace(notifyLineRegex, newNotifyLine);
-  } else if (notifyMultilineRegex.test(content)) {
-    // 기존 여러 줄 notify가 있으면 교체
-    console.log("      ⚠️  기존 notify 설정(멀티라인) 덮어쓰기");
-    content = content.replace(notifyMultilineRegex, newNotifyLine);
+    content = content.replace(block.fullMatch, newLine);
   } else {
-    // notify 설정이 없으면 추가
     if (content.length > 0 && !content.endsWith("\n")) {
       content += "\n";
     }
-    content += `\n${newNotifyLine}\n`;
+    content += `\n${newLine}\n`;
   }
 
   ensureDir(path.dirname(configPath));
@@ -150,11 +166,10 @@ function installTomlNotify(configPath, notifyCmd) {
 function removeTomlNotify(configPath) {
   try {
     let content = fs.readFileSync(configPath, "utf8");
-
-    // 한 줄 notify 제거
-    content = content.replace(/^notify\s*=\s*\[.*?\]\s*\n?/m, "");
-    // 여러 줄 notify 제거
-    content = content.replace(/^notify\s*=\s*\[\s*\n[\s\S]*?\]\s*\n?/m, "");
+    const block = findNotifyBlock(content);
+    if (!block) return true;
+    content = content.replace(`${block.fullMatch}\n`, "");
+    content = content.replace(block.fullMatch, "");
 
     fs.writeFileSync(configPath, content, "utf8");
     return true;
@@ -180,27 +195,32 @@ function install() {
   console.log("[1/3] 훅 파일 설치 중...");
   ensureDir(hooksDir);
 
-  const hookFile = isWindows ? "save-turn.ps1" : "save-turn.sh";
-  const src = path.join(sourceDir, "hooks", hookFile);
-  const dest = path.join(hooksDir, hookFile);
+  const hookFiles = isWindows
+    ? ["save-turn.ps1", "append-user.ps1", "append-assistant.ps1"]
+    : ["save-turn.sh", "append-user.sh", "append-assistant.sh"];
 
-  if (fs.existsSync(src)) {
+  for (const hookFile of hookFiles) {
+    const src = path.join(sourceDir, "hooks", hookFile);
+    const dest = path.join(hooksDir, hookFile);
+
+    if (!fs.existsSync(src)) {
+      console.error(`      오류: ${src} 파일을 찾을 수 없습니다.`);
+      process.exit(1);
+    }
+
     copyFile(src, dest);
     if (!isWindows) {
       fs.chmodSync(dest, 0o755);
     }
     console.log(`      - ${hookFile}`);
-  } else {
-    console.error(`      오류: ${src} 파일을 찾을 수 없습니다.`);
-    process.exit(1);
   }
   console.log("      완료!");
 
   // [2/3] config.toml notify 설정
   console.log("\n[2/3] config.toml notify 설정 중...");
-  const notifyCmd = buildNotifyCommand(hooksDir);
-  installTomlNotify(configPath, notifyCmd);
-  console.log(`      notify = ['${notifyCmd}']`);
+  const notifyArgs = buildNotifyCommand(hooksDir);
+  installTomlNotify(configPath, notifyArgs);
+  console.log(`      ${stringifyNotify(notifyArgs)}`);
   console.log("      완료!");
 
   // [3/3] AGENTS.md 규칙 설치
@@ -245,7 +265,14 @@ function uninstall() {
 
   // [1/3] 훅 파일 제거
   console.log("[1/3] 훅 파일 제거 중...");
-  const hookFiles = ["save-turn.ps1", "save-turn.sh"];
+  const hookFiles = [
+    "save-turn.ps1",
+    "append-user.ps1",
+    "append-assistant.ps1",
+    "save-turn.sh",
+    "append-user.sh",
+    "append-assistant.sh",
+  ];
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {
       console.log(`      - ${file} 제거됨`);

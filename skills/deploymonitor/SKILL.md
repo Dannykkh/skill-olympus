@@ -180,11 +180,30 @@ Report success:
 │ deploy.bat (v3.0 Self-Reload)           │
 │   0. git pull → 자기 자신 재실행        │
 │   1. .deploy-mode 확인 (있으면 reset)   │
-│   2. docker compose up --build -d       │
-│   3. DB 상태 확인 (users 테이블)        │
-│   4. DB 초기화 또는 마이그레이션        │
-│   5. 헬스체크                           │
+│   2. docker compose down [-v] (reset시) │
+│   3. DB만 먼저 시작 (up -d db)          │
+│   4. DB 덤프/seed 복원 (API 시작 전!)   │
+│   5. API 시작 (up -d api [frontend])    │
+│   6. 헬스체크                           │
 └─────────────────────────────────────────┘
+```
+
+### 핵심: DB 시작 순서
+
+**JPA/ORM이 빈 DB에 테이블을 먼저 생성하면 덤프 복원 시 "already exists" 충돌 발생.**
+반드시 DB → 덤프 복원 → API 순서를 지켜야 합니다.
+
+```
+❌ 잘못된 순서:
+docker compose up -d          ← DB + API 동시 시작
+  → JPA ddl-auto: update → 빈 테이블 생성
+  → 덤프 적용 → "relation already exists" 충돌!
+
+✅ 올바른 순서:
+docker compose up -d db       ← DB만 먼저
+pg_isready / mysqladmin ping  ← DB ready 대기
+psql < dump.sql               ← 깨끗한 DB에 덤프 복원
+docker compose up -d api      ← API 나중에 시작 (JPA는 기존 테이블 skip)
 ```
 
 ---
@@ -223,7 +242,47 @@ REM 여기서부터 실제 배포 로직 (최신 버전 보장)
 
 ## DB 초기화 판단 로직
 
+### Reset 모드 (DB 볼륨 삭제 후 재설치)
+
+**순서가 핵심: DB만 먼저 → 덤프 복원 → API 시작**
+
+```batch
+REM 1. 기존 서비스 + 볼륨 완전 삭제
+docker compose down -v
+
+REM 2. DB만 먼저 시작 (API가 빈 DB에 테이블 만드는 것 방지)
+docker compose up -d db
+
+REM 3. DB ready 대기
+:WAIT_DB
+docker exec %PROJECT_NAME%-db pg_isready -U %DB_USER% >nul 2>&1
+if not errorlevel 1 goto DB_READY
+timeout /t 2 /nobreak >nul
+goto WAIT_DB
+
+:DB_READY
+REM 4. 덤프 복원 (우선순위: dump > seed-data)
+if exist "dump.sql" (
+    docker exec -i %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% < dump.sql
+) else if exist "seed-data.sql" (
+    docker exec -i %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% < seed-data.sql
+)
+
+REM 5. API 시작 (JPA는 이미 있는 테이블을 skip)
+docker compose up -d api frontend
+```
+
 ### Update 모드에서 DB 상태 확인
+
+Update 모드에서는 DB가 유지되므로 API와 동시 시작 가능:
+```batch
+REM DB 있으면 API만 재시작
+docker compose stop api frontend
+docker compose rm -f api frontend
+docker compose up -d api frontend
+```
+
+마이그레이션이 필요한 경우:
 ```batch
 REM users 테이블 데이터 개수로 판단
 for /f "usebackq" %%c in (`docker exec db mysql --silent --skip-column-names -u root -pPASS DB -e "SELECT COUNT(*) FROM users"`) do set "USER_COUNT=%%c"
@@ -234,11 +293,12 @@ REM USER_COUNT > 0 → 마이그레이션만
 ```
 
 ### 분기 흐름
-| 조건 | 동작 |
-|------|------|
-| users 쿼리 실패 | DB_INIT: schema.sql + seed-data.sql |
-| users = 0 | DB_SEED_ONLY: seed-data.sql만 |
-| users > 0 | DB_MIGRATE: migrations/*.sql만 |
+| 모드 | 조건 | 동작 |
+|------|------|------|
+| **Reset** | 항상 | down -v → DB만 시작 → 덤프 복원 → API 시작 |
+| **Update** | users 쿼리 실패 | DB_INIT: schema.sql + seed-data.sql |
+| **Update** | users = 0 | DB_SEED_ONLY: seed-data.sql만 |
+| **Update** | users > 0 | DB_MIGRATE: migrations/*.sql만 |
 
 ---
 
@@ -335,6 +395,7 @@ curl http://localhost:9201/health
 | deploy.bat 변경 미적용 | 구버전 메모리 실행 | v3.0 self-reload 패턴 적용 |
 | DB 매번 초기화됨 | users 체크 로직 누락 | USER_COUNT 판단 로직 추가 |
 | .deploy-mode 계속 복원 | git에 커밋됨 | .gitignore에 추가 |
+| **덤프 복원 시 "already exists"** | **JPA가 빈 DB에 테이블 먼저 생성** | **DB만 먼저 시작 → 덤프 → API 시작** |
 
 ---
 
@@ -350,6 +411,7 @@ curl http://localhost:9201/health
 | TABLE_COUNT로 DB 판단 | 빈 테이블도 운영DB로 오판 | USER_COUNT로 판단 |
 | Push without asking mode | User should decide | Always ask |
 | Default to RESET | Data loss risk | Default to UPDATE |
+| Reset에서 DB+API 동시 시작 | JPA가 빈 테이블 생성→덤프 충돌 | DB만 먼저→덤프→API 시작 |
 
 ---
 

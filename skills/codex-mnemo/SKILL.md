@@ -28,7 +28,7 @@ node skills/codex-mnemo/install.js --uninstall  # 제거
 | | Claude Code (Mnemo) | Codex CLI (Codex-Mnemo) |
 |---|---|---|
 | 훅 | 2개 (UserPromptSubmit + Stop) | **1개** (notify: agent-turn-complete) |
-| 데이터 전달 | stdin JSON + transcript JSONL 파싱 | **argv JSON** (user+assistant 직접 포함) |
+| 데이터 전달 | stdin JSON + transcript JSONL 파싱 | **notify payload(JSON)** (argv/stdin/파일경로 모두 처리) |
 | 설정 | settings.json (JSON) | **config.toml** (TOML) |
 | 규칙 파일 | CLAUDE.md | **AGENTS.md** |
 | 저장 경로 | `conversations/*-claude.md` | **`conversations/*-codex.md`** |
@@ -53,8 +53,12 @@ codex-mnemo/
 ├── SKILL.md                     # 이 파일
 ├── install.js                   # 설치/제거 스크립트
 ├── hooks/
-│   ├── save-turn.ps1            # Windows notify 스크립트
-│   └── save-turn.sh             # Linux/Mac notify 스크립트
+│   ├── save-turn.ps1            # Windows notify 오케스트레이터
+│   ├── append-user.ps1          # User 저장 전담
+│   ├── append-assistant.ps1     # Assistant 저장 전담
+│   ├── save-turn.sh             # Linux/Mac notify 오케스트레이터
+│   ├── append-user.sh           # User 저장 전담
+│   └── append-assistant.sh      # Assistant 저장 전담
 └── templates/
     └── agents-md-rules.md       # AGENTS.md 주입 규칙
 ```
@@ -67,10 +71,10 @@ codex-mnemo/
 Codex CLI 대화
     ↓
 [notify: agent-turn-complete]
-    → argv JSON 페이로드 수신
-    → input-messages → User 입력 추출
-    → last-assistant-message → Assistant 응답 추출
-    → 코드 블록 제거 + 2000자 제한
+    → JSON 페이로드 수신 (argv/stdin/파일경로)
+    → save-turn(오케스트레이터)에서 역할 분리 호출
+      → append-user: User 입력 저장
+      → append-assistant: Assistant 응답 저장(코드블록 치환/2000자 제한)
     → conversations/YYYY-MM-DD-codex.md에 append
     → turn-id 기반 중복 방지
 ```

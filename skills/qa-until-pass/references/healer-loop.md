@@ -5,9 +5,9 @@
 ## 루프 흐름
 
 ```
-┌─────────────────────────────────────────┐
-│ npx playwright test --reporter=list     │
-└──────────────┬──────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ npx playwright test --reporter=list --workers=50%    │
+└──────────────┬───────────────────────────────────────┘
                │
          ┌─────▼─────┐
          │ 전체 통과? │──── Yes ──→ ✅ PASS → Step 5 보고
@@ -198,15 +198,17 @@ app.post('/api/users', (req, res) => {
 ## Phase 4: 재실행
 
 ```bash
-# 실패한 테스트만 재실행 (효율적)
-npx playwright test --grep "실패한테스트패턴"
+# 실패한 테스트만 재실행 (효율적, workers 유지)
+npx playwright test --grep "실패한테스트패턴" --workers=50%
 
 # 또는 실패한 파일만
-npx playwright test tests/e2e/auth.spec.ts
+npx playwright test tests/e2e/auth.spec.ts --workers=50%
 
 # 마지막 실패 테스트만 재실행
-npx playwright test --last-failed
+npx playwright test --last-failed --workers=50%
 ```
+
+> **참고**: `--workers` 값은 SKILL.md 옵션에서 사용자가 지정한 값을 사용합니다. 기본값 50%.
 
 ## 종료 조건
 

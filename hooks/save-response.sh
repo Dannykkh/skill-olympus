@@ -48,9 +48,15 @@ if [ ${#RESPONSE} -gt 2000 ]; then
     RESPONSE="${RESPONSE:0:2000}..."
 fi
 
-# 중복 방지: 같은 초에 이미 Assistant 저장되어 있으면 스킵
+# 중복 방지: 타임스탬프 + 응답 내용 fingerprint 이중 체크
 TIMESTAMP=$(date +%H:%M:%S)
+# 1) 같은 초에 이미 저장되어 있으면 스킵
 if grep -qF "## [$TIMESTAMP] Assistant" "$CONV_FILE" 2>/dev/null; then
+    exit 0
+fi
+# 2) 응답 첫 80자가 이미 파일에 있으면 스킵 (다른 초에 같은 내용 방지)
+FINGERPRINT="${RESPONSE:0:80}"
+if [ -n "$FINGERPRINT" ] && grep -qF "$FINGERPRINT" "$CONV_FILE" 2>/dev/null; then
     exit 0
 fi
 

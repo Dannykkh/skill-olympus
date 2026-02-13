@@ -83,11 +83,18 @@ if ($response.Length -gt 2000) {
     $response = $response.Substring(0, 2000) + "..."
 }
 
-# 중복 방지: 같은 초에 이미 Assistant 저장되어 있으면 스킵
+# 중복 방지: 타임스탬프 + 응답 내용 fingerprint 이중 체크
 $ts = Get-Date -Format 'HH:mm:ss'
 if (Test-Path $ConvFile) {
     $existing = Get-Content $ConvFile -Raw -Encoding UTF8
+    # 1) 같은 초에 이미 저장되어 있으면 스킵
     if ($existing -match [regex]::Escape("## [$ts] Assistant")) {
+        exit 0
+    }
+    # 2) 응답 첫 80자가 이미 파일에 있으면 스킵 (다른 초에 같은 내용 방지)
+    $fpLen = [Math]::Min(80, $response.Length)
+    $fingerprint = $response.Substring(0, $fpLen)
+    if ($existing.Contains($fingerprint)) {
         exit 0
     }
 }
