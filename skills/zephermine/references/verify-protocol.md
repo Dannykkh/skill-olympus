@@ -253,7 +253,7 @@ Bash: {detected_e2e_command}
 
 Phase 1 + Phase 2 + Phase 3 + Phase 4 결과를 합쳐 `<planning_dir>/claude-verify-report.md`로 작성.
 
-### Step 22: 검증 결과 보고
+### Step 23: 검증 결과 보고
 
 사용자에게 결과 제시:
 - 전체 충족률 (%)
@@ -262,13 +262,13 @@ Phase 1 + Phase 2 + Phase 3 + Phase 4 결과를 합쳐 `<planning_dir>/claude-ve
 - 누락 항목 목록
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 19 반복
+- "수정 후 재검증" → Step 22 반복
 - "현재 상태 승인" → 완료
 
 ```
 AskUserQuestion:
   question: "검증 결과를 확인했습니다. 어떻게 하시겠습니까?"
   options:
-    - "수정 후 재검증" (누락 항목 수정 후 Step 19 재실행)
+    - "수정 후 재검증" (누락 항목 수정 후 Step 22 재실행)
     - "현재 상태 승인" (검증 완료, 종료)
 ```

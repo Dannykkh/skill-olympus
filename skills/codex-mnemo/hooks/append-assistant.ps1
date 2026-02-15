@@ -11,11 +11,6 @@ function Add-CodexAssistantEntry {
     # Replace fenced code blocks with placeholder.
     $text = [regex]::Replace($text, '(?s)```.*?```', '[code block]')
 
-    # Trim long responses.
-    if ($text.Length -gt 2000) {
-        $text = $text.Substring(0, 2000) + "..."
-    }
-
     $entry = "`n## [$Timestamp] Assistant`n`n$text`n"
     [System.IO.File]::AppendAllText($ConvFile, $entry, [System.Text.Encoding]::UTF8)
 }

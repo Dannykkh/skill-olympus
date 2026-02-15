@@ -112,21 +112,84 @@ function buildNotifyCommand(hooksDir) {
   }
 }
 
-function findNotifyBlock(content) {
-  const singleLine = /^notify\s*=\s*\[(.*?)\]\s*$/m;
-  const multiLine = /^notify\s*=\s*\[\s*\n([\s\S]*?)\]\s*$/m;
+function stripLineEndings(content) {
+  return content.replace(/\r\n/g, "\n");
+}
 
-  let match = content.match(singleLine);
-  if (match) {
-    return { fullMatch: match[0], inner: match[1] ?? "" };
+function insertRootLine(content, line) {
+  const lines = stripLineEndings(content).split("\n");
+  const firstTable = lines.findIndex((l) => /^\s*\[/.test(l));
+  const idx = firstTable >= 0 ? firstTable : lines.length;
+  lines.splice(idx, 0, line);
+  return lines.join("\n");
+}
+
+function removeLine(content, regex) {
+  const lines = stripLineEndings(content).split("\n");
+  return lines.filter((l) => !regex.test(l)).join("\n");
+}
+
+function removeNotifyAssignmentsEverywhere(content) {
+  const lines = stripLineEndings(content).split("\n");
+  const kept = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (/^\s*notify\s*=/.test(line)) {
+      if (!/\[/.test(line)) {
+        continue;
+      }
+
+      // notify = [ ... ] 단일 라인
+      if (/\]/.test(line)) {
+        continue;
+      }
+
+      // notify = [ ... ] 멀티 라인 블록 제거
+      while (i + 1 < lines.length) {
+        i += 1;
+        if (/\]/.test(lines[i])) {
+          break;
+        }
+      }
+      continue;
+    }
+
+    kept.push(line);
   }
 
-  match = content.match(multiLine);
-  if (match) {
-    return { fullMatch: match[0], inner: match[1] ?? "" };
+  return kept.join("\n");
+}
+
+function upsertTuiNotifications(content) {
+  const lines = stripLineEndings(content).split("\n");
+  const tuiHeader = lines.findIndex((l) => /^\s*\[tui\]\s*$/.test(l));
+  if (tuiHeader >= 0) {
+    let end = lines.length;
+    for (let i = tuiHeader + 1; i < lines.length; i++) {
+      if (/^\s*\[/.test(lines[i])) {
+        end = i;
+        break;
+      }
+    }
+    let found = false;
+    for (let i = tuiHeader + 1; i < end; i++) {
+      if (/^\s*notifications\s*=/.test(lines[i])) {
+        lines[i] = "notifications = true";
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      lines.splice(end, 0, "notifications = true");
+    }
+    return lines.join("\n");
   }
 
-  return null;
+  let updated = removeLine(content, /^\s*tui\.notifications\s*=/);
+  updated = insertRootLine(updated, "tui.notifications = true");
+  return updated;
 }
 
 function stringifyNotify(args) {
@@ -142,21 +205,18 @@ function installTomlNotify(configPath, notifyArgs) {
     content = "";
   }
 
-  const block = findNotifyBlock(content);
   const newLine = stringifyNotify(notifyArgs);
+  const hadNotify = /^\s*notify\s*=/m.test(content);
+  console.log(hadNotify ? "      기존 notify 설정을 codex-mnemo 형식으로 교체" : "      notify 설정 추가");
 
-  if (block) {
-    if (block.fullMatch.trim() !== newLine.trim()) {
-      console.log("      기존 notify 설정을 codex-mnemo 형식으로 교체");
-    } else {
-      console.log("      notify 설정에 이미 codex-mnemo 명령이 존재");
-    }
-    content = content.replace(block.fullMatch, newLine);
+  content = removeNotifyAssignmentsEverywhere(content);
+  content = insertRootLine(content, newLine);
+  content = upsertTuiNotifications(content);
+
+  if (content.length > 0 && !content.endsWith("\n")) {
+    content += "\n";
   } else {
-    if (content.length > 0 && !content.endsWith("\n")) {
-      content += "\n";
-    }
-    content += `\n${newLine}\n`;
+    content += "";
   }
 
   ensureDir(path.dirname(configPath));
@@ -166,10 +226,8 @@ function installTomlNotify(configPath, notifyArgs) {
 function removeTomlNotify(configPath) {
   try {
     let content = fs.readFileSync(configPath, "utf8");
-    const block = findNotifyBlock(content);
-    if (!block) return true;
-    content = content.replace(`${block.fullMatch}\n`, "");
-    content = content.replace(block.fullMatch, "");
+    content = removeNotifyAssignmentsEverywhere(content);
+    content = removeLine(content, /^\s*tui\.notifications\s*=/);
 
     fs.writeFileSync(configPath, content, "utf8");
     return true;
@@ -221,6 +279,7 @@ function install() {
   const notifyArgs = buildNotifyCommand(hooksDir);
   installTomlNotify(configPath, notifyArgs);
   console.log(`      ${stringifyNotify(notifyArgs)}`);
+  console.log("      tui.notifications = true");
   console.log("      완료!");
 
   // [3/3] AGENTS.md 규칙 설치
@@ -269,6 +328,7 @@ function uninstall() {
     "save-turn.ps1",
     "append-user.ps1",
     "append-assistant.ps1",
+    "sync-sessions.ps1",
     "save-turn.sh",
     "append-user.sh",
     "append-assistant.sh",

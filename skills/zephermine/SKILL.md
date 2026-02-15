@@ -20,7 +20,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Plan → External Review → Sections → QA Scenarios → Verify
+순서: Research → Interview → Spec → Team Review → Plan → External Review → Sections → QA Scenarios → Skill Discovery → Verify
 ```
 
 ### 2. Resolve Spec File Path
@@ -91,7 +91,7 @@ Determine session state by checking existing files:
 | + integration-notes | resume | Step 13 (user review) |
 | + sections/index.md | resume | Step 15 (write sections) |
 | all sections complete | resume | Step 16 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 21 (verify) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 22 (verify) |
 | + claude-verify-report.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
@@ -114,7 +114,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/20: {STEP_NAME}
+STEP {N}/23: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
@@ -528,7 +528,23 @@ Option E - Agent Teams로 병렬 실행 (권장):
 ═══════════════════════════════════════════════════════════════
 ```
 
-### 21. Verify Implementation
+### 21. Discover Implementation Skills
+
+구현 시작 전, 프로젝트에 도움될 외부 스킬을 탐색합니다.
+
+**1) 키워드 추출:** `claude-plan.md`와 `sections/section-*.md`를 읽고 기술 스택 키워드 추출 (예: React, Docker, PostgreSQL, Spring Boot, Playwright)
+
+**2) 로컬 스킬 확인:** `Glob("skills/*/SKILL.md")`로 이미 설치된 스킬 목록 수집, 키워드와 매칭
+
+**3) 외부 스킬 검색:** 매칭되지 않은 주요 키워드(최대 5개)로 Bash `npx skills find "{keyword}"` 실행
+
+**4) 결과 표시:** 이미 설치된 관련 스킬 + 새로 설치 가능한 스킬 목록 출력
+
+**5) 선택적 설치:** AskUserQuestion(multiSelect)으로 설치할 스킬 선택. "건너뛰기" 옵션 포함. 선택 시 `npx skills add {package} -g -y` 실행.
+
+> 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.
+
+### 22. Verify Implementation
 
 See [verify-protocol.md](references/verify-protocol.md)
 
@@ -556,12 +572,12 @@ See [verify-protocol.md](references/verify-protocol.md)
 
 결과 → `<planning_dir>/claude-verify-report.md` (API 일치 + QA 통과율 포함)
 
-### 22. Verification Report
+### 23. Verification Report
 
 검증 결과를 사용자에게 표시.
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 21 반복
+- "수정 후 재검증" → Step 22 반복
 - "승인" → 완료
 
 ---

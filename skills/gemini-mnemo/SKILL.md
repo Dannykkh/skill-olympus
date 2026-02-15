@@ -30,8 +30,9 @@ node skills/gemini-mnemo/install.js --uninstall  # 제거
 | 훅 | 2개 (Submit + Stop) | 1개 (notify) | **1개** (AfterAgent) |
 | 데이터 전달 | stdin + transcript JSONL | argv JSON | **stdin JSON** |
 | 페이로드 | prompt / transcript 파싱 | input-messages / last-assistant-message | **prompt / prompt_response** |
-| 설정 형식 | settings.json | config.toml | **settings.json** (Claude와 동일!) |
+| 설정 형식 | settings.json | config.toml | **settings.json** |
 | 규칙 파일 | CLAUDE.md | AGENTS.md | **AGENTS.md** |
+| 컨텍스트 파일 인식 | 기본 내장 | 기본 내장 | **`context.fileName`에 AGENTS.md 추가 필요** |
 | 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | **`conversations/*-gemini.md`** |
 | 중복 방지 | 타임스탬프 | turn-id | **타임스탬프** |
 
@@ -71,6 +72,7 @@ Gemini CLI 대화
     → stdin JSON 페이로드 수신
     → prompt → User 입력 추출
     → prompt_response → Assistant 응답 추출
+    → settings.json의 context.fileName으로 AGENTS.md 로드 보장
     → 코드 블록 제거 + 2000자 제한
     → conversations/YYYY-MM-DD-gemini.md에 append
     → 타임스탬프 기반 중복 방지
@@ -87,3 +89,4 @@ Gemini CLI 대화
 | 훅 | `~/.gemini/hooks/save-turn.ps1\|.sh` |
 | 설정 | `~/.gemini/settings.json` |
 | 규칙 | `~/.gemini/AGENTS.md` |
+| 컨텍스트 파일명 | `~/.gemini/settings.json`의 `context.fileName` |

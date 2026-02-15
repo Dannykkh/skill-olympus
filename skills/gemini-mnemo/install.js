@@ -8,6 +8,7 @@
 // Gemini-Mnemo 핵심 구성요소:
 //   - 훅: save-turn (AfterAgent 이벤트로 User+Assistant 대화 자동 저장)
 //   - AGENTS.md 규칙: 응답 태그, 과거 대화 검색
+//   - context.fileName: AGENTS.md 로드 보장 (Gemini CLI 최신 설정)
 
 const fs = require("fs");
 const path = require("path");
@@ -129,8 +130,8 @@ function mergeHooksConfig(settingsPath, hookCommand) {
 
   // 기존 gemini-mnemo 훅이 있는지 확인
   const exists = settings.hooks.AfterAgent.some(h =>
-    h.hooks && h.hooks[0] && h.hooks[0].command &&
-    h.hooks[0].command.includes("save-turn")
+    Array.isArray(h.hooks) &&
+    h.hooks.some(cmd => cmd && typeof cmd.command === "string" && cmd.command.includes("save-turn"))
   );
 
   if (!exists) {
@@ -151,10 +152,24 @@ function removeHooksConfig(settingsPath) {
   if (!settings.hooks) return;
 
   if (settings.hooks.AfterAgent) {
-    settings.hooks.AfterAgent = settings.hooks.AfterAgent.filter(h => {
-      if (!h.hooks || !h.hooks[0] || !h.hooks[0].command) return true;
-      return !h.hooks[0].command.includes("save-turn");
-    });
+    const cleaned = [];
+
+    for (const h of settings.hooks.AfterAgent) {
+      if (!Array.isArray(h.hooks)) {
+        cleaned.push(h);
+        continue;
+      }
+
+      const hooks = h.hooks.filter(
+        cmd => !(cmd && typeof cmd.command === "string" && cmd.command.includes("save-turn"))
+      );
+
+      if (hooks.length > 0) {
+        cleaned.push({ ...h, hooks });
+      }
+    }
+
+    settings.hooks.AfterAgent = cleaned;
 
     if (settings.hooks.AfterAgent.length === 0) {
       delete settings.hooks.AfterAgent;
@@ -163,6 +178,68 @@ function removeHooksConfig(settingsPath) {
 
   if (Object.keys(settings.hooks).length === 0) {
     delete settings.hooks;
+  }
+
+  writeJson(settingsPath, settings);
+}
+
+// ── 컨텍스트 파일명 설정 (settings.json > context.fileName) ──
+// Gemini CLI 기본 컨텍스트 파일은 GEMINI.md이지만,
+// AGENTS.md를 사용하려면 context.fileName에 명시해야 합니다.
+
+function normalizeContextFileNames(currentValue) {
+  if (typeof currentValue === "string") {
+    return [currentValue];
+  }
+  if (Array.isArray(currentValue)) {
+    return currentValue.filter(v => typeof v === "string" && v.trim().length > 0);
+  }
+  return [];
+}
+
+function mergeContextFileName(settingsPath) {
+  const settings = readJson(settingsPath);
+  settings.context = settings.context || {};
+
+  const current = normalizeContextFileNames(settings.context.fileName);
+  const isEmpty = current.length === 0;
+  const merged = [...current];
+
+  // 최초 설정 시 기본값 GEMINI.md를 유지하면서 AGENTS.md를 추가
+  if (isEmpty) {
+    merged.push("AGENTS.md", "GEMINI.md");
+  } else if (!merged.includes("AGENTS.md")) {
+    merged.push("AGENTS.md");
+  }
+
+  settings.context.fileName = merged;
+  writeJson(settingsPath, settings);
+  return merged;
+}
+
+function removeContextFileName(settingsPath) {
+  const settings = readJson(settingsPath);
+  if (!settings.context || settings.context.fileName === undefined) return;
+
+  const current = settings.context.fileName;
+
+  if (typeof current === "string") {
+    if (current === "AGENTS.md") {
+      delete settings.context.fileName;
+    }
+  } else if (Array.isArray(current)) {
+    const next = current.filter(v => v !== "AGENTS.md");
+    if (next.length === 0) {
+      delete settings.context.fileName;
+    } else if (next.length === 1) {
+      settings.context.fileName = next[0];
+    } else {
+      settings.context.fileName = next;
+    }
+  }
+
+  if (Object.keys(settings.context).length === 0) {
+    delete settings.context;
   }
 
   writeJson(settingsPath, settings);
@@ -201,11 +278,13 @@ function install() {
   }
   console.log("      완료!");
 
-  // [2/3] settings.json AfterAgent 훅 설정
+  // [2/3] settings.json AfterAgent 훅 + context.fileName 설정
   console.log("\n[2/3] settings.json AfterAgent 훅 설정 중...");
   const hookCommand = buildHookCommand(hooksDir);
   mergeHooksConfig(settingsPath, hookCommand);
+  const contextFiles = mergeContextFileName(settingsPath);
   console.log(`      AfterAgent → ${hookFile}`);
+  console.log(`      context.fileName → ${JSON.stringify(contextFiles)}`);
   console.log("      완료!");
 
   // [3/3] AGENTS.md 규칙 설치
@@ -258,9 +337,11 @@ function uninstall() {
   }
   console.log("      완료!");
 
-  // [2/3] settings.json 훅 설정 제거
+  // [2/3] settings.json 훅/컨텍스트 설정 제거
   console.log("\n[2/3] settings.json AfterAgent 훅 설정 제거 중...");
   removeHooksConfig(settingsPath);
+  removeContextFileName(settingsPath);
+  console.log("      context.fileName에서 AGENTS.md 제거");
   console.log("      완료!");
 
   // [3/3] AGENTS.md 규칙 제거

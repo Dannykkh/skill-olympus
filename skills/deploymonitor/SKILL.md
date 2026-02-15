@@ -84,6 +84,7 @@ Check for:
 - `database/schema.sql` changes - Major DB changes = warn about RESET
 - `backend/` or `frontend/` only - Code changes = suggest UPDATE
 - First deploy - suggest RESET
+- **DEPLOY_TRIGGERS 경로 외 변경만 있으면** - 배포 불필요 안내
 
 ### Step 3: Ask Deploy Mode
 
@@ -129,7 +130,7 @@ Mode: UPDATE|RESET
 Changes:
 - [list of changes]
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
 ```
 
 ### Step 6: Push
@@ -141,7 +142,7 @@ git push origin master
 Report success:
 ```
 ✅ Pushed to origin/master
-📡 DeployMonitor가 자동 배포합니다
+📡 DeployMonitor will auto-deploy
 🔧 Mode: UPDATE (DB preserved)
 ```
 
@@ -208,6 +209,56 @@ docker compose up -d api      ← API 나중에 시작 (JPA는 기존 테이블 
 
 ---
 
+## 선택적 배포 트리거 (DEPLOY_TRIGGERS)
+
+### 문제
+모노레포에서 배포 대상이 아닌 코드(모바일, 문서 등)만 변경되어도 불필요한 빌드 + 다운타임이 발생한다.
+
+### 해결
+deploy.bat Config 영역에 `DEPLOY_TRIGGERS` 변수를 추가한다.
+이 변수에 지정된 경로에 변경이 있을 때만 배포를 진행한다.
+
+```batch
+REM === Config ===
+set "PROJECT_NAME=MyProject"
+set "IMAGE_NAME=myproject"
+REM ...
+
+REM === Deploy Trigger Config ===
+REM 이 경로에 변경이 있을 때만 배포 진행 (공백으로 구분)
+REM 미설정 시 모든 변경에 대해 배포 진행 (기존 동작 유지)
+set "DEPLOY_TRIGGERS=backend/ docker-images/ deploy.bat"
+```
+
+### 사용 규칙
+
+| 상황 | DEPLOY_TRIGGERS 설정 |
+|------|---------------------|
+| 서버 + 클라이언트 공존 | 서버 경로만 지정 |
+| 서버만 있는 저장소 | 미설정 (모든 변경에 배포) |
+
+- 디렉토리는 `/`로 끝낸다 (예: `backend/`)
+- 개별 파일은 파일명을 그대로 쓴다 (예: `deploy.bat`)
+- 공백으로 구분하여 여러 경로 지정 가능
+
+### DeployMonitor 연동
+
+DeployMonitor가 git pull 후 변경 파일을 `DEPLOY_TRIGGERS`와 비교한다:
+
+```
+CommitWatcher: 커밋 해시 변경 감지
+    ↓
+DeployRunner: git pull 실행
+    ↓
+DEPLOY_TRIGGERS 설정됨?
+    ├─ NO → deploy.bat 실행 (기존 동작 유지)
+    └─ YES → 변경 파일이 트리거 경로에 해당?
+              ├─ YES → deploy.bat 실행
+              └─ NO → 스킵 (로그만 남김)
+```
+
+---
+
 ## deploy.bat Self-Reload 패턴 (v3.0)
 
 ### 문제
@@ -221,13 +272,13 @@ REM deploy.bat v3.0 - self-reload after git pull
 
 if "%~2"=="--reloaded" goto MAIN_START
 
-REM 첫 실행: git pull 후 새 deploy.bat으로 재실행
+REM First run: git pull then re-execute with updated deploy.bat
 git pull
 call "%~f0" %1 --reloaded
 exit /b %errorlevel%
 
 :MAIN_START
-REM 여기서부터 실제 배포 로직 (최신 버전 보장)
+REM Actual deploy logic starts here (latest version guaranteed)
 ```
 
 ### 동작 흐름
@@ -247,13 +298,13 @@ REM 여기서부터 실제 배포 로직 (최신 버전 보장)
 **순서가 핵심: DB만 먼저 → 덤프 복원 → API 시작**
 
 ```batch
-REM 1. 기존 서비스 + 볼륨 완전 삭제
+REM 1. Remove all services + volumes
 docker compose down -v
 
-REM 2. DB만 먼저 시작 (API가 빈 DB에 테이블 만드는 것 방지)
+REM 2. Start DB first (prevent API from creating tables on empty DB)
 docker compose up -d db
 
-REM 3. DB ready 대기
+REM 3. Wait for DB ready
 :WAIT_DB
 docker exec %PROJECT_NAME%-db pg_isready -U %DB_USER% >nul 2>&1
 if not errorlevel 1 goto DB_READY
@@ -261,14 +312,14 @@ timeout /t 2 /nobreak >nul
 goto WAIT_DB
 
 :DB_READY
-REM 4. 덤프 복원 (우선순위: dump > seed-data)
+REM 4. Restore dump (priority: dump > seed-data)
 if exist "dump.sql" (
     docker exec -i %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% < dump.sql
 ) else if exist "seed-data.sql" (
     docker exec -i %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% < seed-data.sql
 )
 
-REM 5. API 시작 (JPA는 이미 있는 테이블을 skip)
+REM 5. Start API (JPA skips existing tables)
 docker compose up -d api frontend
 ```
 
@@ -276,7 +327,7 @@ docker compose up -d api frontend
 
 Update 모드에서는 DB가 유지되므로 API와 동시 시작 가능:
 ```batch
-REM DB 있으면 API만 재시작
+REM DB exists, restart API only
 docker compose stop api frontend
 docker compose rm -f api frontend
 docker compose up -d api frontend
@@ -284,12 +335,12 @@ docker compose up -d api frontend
 
 마이그레이션이 필요한 경우:
 ```batch
-REM users 테이블 데이터 개수로 판단
-for /f "usebackq" %%c in (`docker exec db mysql --silent --skip-column-names -u root -pPASS DB -e "SELECT COUNT(*) FROM users"`) do set "USER_COUNT=%%c"
+REM Check user count in users table to determine DB state
+for /f "usebackq" %%c in (`docker exec %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% -t -c "SELECT COUNT(*) FROM users"`) do set "USER_COUNT=%%c"
 
-if "!USER_COUNT!"=="" goto DB_INIT          REM 쿼리 실패 → 초기화
-if "!USER_COUNT!"=="0" goto DB_SEED_ONLY    REM 스키마만 있음 → seed
-REM USER_COUNT > 0 → 마이그레이션만
+if "!USER_COUNT!"=="" goto DB_INIT          REM Query failed → initialize
+if "!USER_COUNT!"=="0" goto DB_SEED_ONLY    REM Schema only → seed
+REM USER_COUNT > 0 → migration only
 ```
 
 ### 분기 흐름
@@ -314,51 +365,51 @@ REM rebuild trigger 1234567890 - description
 
 ## Examples
 
-### Example 1: 프론트엔드 코드 변경
+### Example 1: Frontend code change
 ```
 User: /deploy
 Assistant:
-  변경 파일:
-  - frontend/src/pages/WeeklyReport.tsx (modified)
+  Changed files:
+  - frontend/src/pages/Dashboard.tsx (modified)
 
   Recommended: UPDATE (code only)
 
-  [사용자 확인]
-  [커밋 & 푸시]
+  [User confirms]
+  [Commit & Push]
 
   ✅ Pushed to origin/master
-  📡 DeployMonitor가 자동 배포합니다
+  📡 DeployMonitor will auto-deploy
 ```
 
-### Example 2: DB 마이그레이션 추가
+### Example 2: DB migration added
 ```
 User: 배포해줘
 Assistant:
-  변경 파일:
+  Changed files:
   - database/migrations/004_add_column.sql (new)
   - backend/app/models/user.py (modified)
 
   Recommended: UPDATE (migration will be applied)
 
-  [커밋 & 푸시]
+  [Commit & Push]
 
-  ✅ 배포 시작
-  📋 새 마이그레이션이 자동 적용됩니다
+  ✅ Deploy started
+  📋 New migration will be applied automatically
 ```
 
-### Example 3: DB 리셋 필요
+### Example 3: DB reset required
 ```
 User: /deploy reset
 Assistant:
-  ⚠️ RESET 모드: 모든 DB 데이터가 삭제됩니다!
-  정말 진행하시겠습니까?
+  ⚠️ RESET mode: All DB data will be deleted!
+  Are you sure?
 
-  [확인 받고]
-  [.deploy-mode = reset 파일 생성]
-  [커밋 & 푸시]
+  [User confirms]
+  [Create .deploy-mode = reset]
+  [Commit & Push]
 
-  ✅ Reset 배포 시작
-  🔄 DB 전체 초기화 후 재설치
+  ✅ Reset deploy started
+  🔄 Full DB reset and reinstall
 ```
 
 ---
@@ -367,18 +418,18 @@ Assistant:
 
 ### 서비스 상태
 ```bash
-docker compose -f docker-compose.server.yml ps
+docker compose ps
 ```
 
 ### 로그 확인
 ```bash
-docker logs bizmanagement-api -f
-docker logs bizmanagement-frontend -f
+docker logs %PROJECT_NAME%-api -f
+docker logs %PROJECT_NAME%-frontend -f
 ```
 
 ### 헬스체크
 ```bash
-curl http://localhost:9201/health
+curl http://localhost:%PORT%/health
 ```
 
 ---
@@ -396,6 +447,7 @@ curl http://localhost:9201/health
 | DB 매번 초기화됨 | users 체크 로직 누락 | USER_COUNT 판단 로직 추가 |
 | .deploy-mode 계속 복원 | git에 커밋됨 | .gitignore에 추가 |
 | **덤프 복원 시 "already exists"** | **JPA가 빈 DB에 테이블 먼저 생성** | **DB만 먼저 시작 → 덤프 → API 시작** |
+| **모바일만 변경했는데 서버 재배포** | **DEPLOY_TRIGGERS 미설정** | **deploy.bat에 DEPLOY_TRIGGERS 추가** |
 
 ---
 
@@ -412,6 +464,7 @@ curl http://localhost:9201/health
 | Push without asking mode | User should decide | Always ask |
 | Default to RESET | Data loss risk | Default to UPDATE |
 | Reset에서 DB+API 동시 시작 | JPA가 빈 테이블 생성→덤프 충돌 | DB만 먼저→덤프→API 시작 |
+| 모노레포에서 DEPLOY_TRIGGERS 없이 배포 | 비서버 변경에도 재배포 | DEPLOY_TRIGGERS로 서버 경로만 지정 |
 
 ---
 
