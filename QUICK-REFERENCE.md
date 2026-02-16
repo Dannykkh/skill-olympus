@@ -243,6 +243,7 @@ claude plugin install voltagent-qa-sec
 | `agents/database-mysql.md` | MySQL 8.0 + Flyway |
 | `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS |
 | `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 (패시브 에이전트) |
+| `agents/ai-api-guide.md` | LLM API 최신 모델/SDK 코딩 가이드 |
 | `agents/ai-ml.md` | LLM + RAG + Vector DB |
 
 ---

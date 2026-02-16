@@ -219,6 +219,7 @@
     { "id": "database-postgresql", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "python-fastapi-guidelines", "tags": ["python", "fastapi"], "priority": "essential" },
     { "id": "ai-ml", "tags": ["python"], "priority": "optional" },
+    { "id": "ai-api-guide", "tags": ["python", "openai", "anthropic", "gemini", "ollama"], "priority": "recommended" },
     { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "recommended" },
     { "id": "api-comparator", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
     { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
