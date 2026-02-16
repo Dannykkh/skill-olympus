@@ -110,10 +110,10 @@ if "%MODE%"=="unlink" (
             echo       완료!
         ) else (
             set "CODEX_MNEMO_RESULT=제거 실패"
-            echo       [경고] 제거 실패 (exit: !errorlevel!)
+            echo       [경고] 제거 실패 exit: !errorlevel!
         )
     ) else (
-        set "CODEX_MNEMO_RESULT=스킵(install.js 없음)"
+        set "CODEX_MNEMO_RESULT=스킵: install.js 없음"
         echo       [경고] install.js 없음, 건너뜀
     )
 
@@ -126,15 +126,15 @@ if "%MODE%"=="unlink" (
             echo       완료!
         ) else (
             set "CODEX_SYNC_RESULT=해제 실패"
-            echo       [경고] 해제 실패 (exit: !errorlevel!)
+            echo       [경고] 해제 실패 exit: !errorlevel!
         )
     ) else (
-        set "CODEX_SYNC_RESULT=스킵(sync 스크립트 없음)"
+        set "CODEX_SYNC_RESULT=스킵: sync 스크립트 없음"
         echo       [경고] sync-codex-assets.js 없음, 건너뜀
     )
 
     echo.
-    echo [9/11] Codex MCP(무료 세트) 제거 중...
+    echo [9/11] Codex MCP 무료 세트 제거 중...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
@@ -144,14 +144,14 @@ if "%MODE%"=="unlink" (
                 echo       완료!
             ) else (
                 set "CODEX_MCP_RESULT=제거 부분 실패"
-                echo       [경고] 일부 제거 실패 (exit: !errorlevel!)
+                echo       [경고] 일부 제거 실패 exit: !errorlevel!
             )
         ) else (
-            set "CODEX_MCP_RESULT=스킵(install-mcp-codex.js 없음)"
+            set "CODEX_MCP_RESULT=스킵: install-mcp-codex.js 없음"
             echo       [경고] install-mcp-codex.js 없음, 건너뜀
         )
     ) else (
-        set "CODEX_MCP_RESULT=스킵(codex CLI 없음)"
+        set "CODEX_MCP_RESULT=스킵: codex CLI 없음"
         echo       [경고] codex CLI 없음, 건너뜀
     )
 
@@ -168,7 +168,7 @@ if "%MODE%"=="unlink" (
             echo       [경고] 제거 실패 또는 미등록
         )
     ) else (
-        set "CODEX_ORCH_RESULT=스킵(codex CLI 없음)"
+        set "CODEX_ORCH_RESULT=스킵: codex CLI 없음"
         echo       [경고] codex CLI 없음, 건너뜀
     )
 
@@ -181,10 +181,10 @@ if "%MODE%"=="unlink" (
             echo       완료!
         ) else (
             set "GEMINI_MNEMO_RESULT=제거 실패"
-            echo       [경고] 제거 실패 (exit: !errorlevel!)
+            echo       [경고] 제거 실패 exit: !errorlevel!
         )
     ) else (
-        set "GEMINI_MNEMO_RESULT=스킵(install.js 없음)"
+        set "GEMINI_MNEMO_RESULT=스킵: install.js 없음"
         echo       [경고] install.js 없음, 건너뜀
     )
 
@@ -206,14 +206,14 @@ REM ============================================
 REM   --link 모드: Junction 생성
 REM ============================================
 if "%MODE%"=="link" (
-    REM Skills 링크 (개별 폴더)
-    echo [1/12] Skills 링크 중... (글로벌, Junction)
+    REM Skills 링크 - 개별 폴더
+    echo [1/12] Skills 링크 중... - 글로벌, Junction
     if exist "%SCRIPT_DIR%skills" (
         if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
             set "skill_name=%%~nxD"
             set "target=%CLAUDE_DIR%\skills\!skill_name!"
-            REM 기존 항목이 있으면 제거 (Junction이든 일반 폴더든)
+            REM 기존 항목이 있으면 제거 - Junction이든 일반 폴더든
             if exist "!target!" (
                 fsutil reparsepoint query "!target!" >nul 2>nul
                 if !errorlevel! equ 0 (
@@ -230,9 +230,9 @@ if "%MODE%"=="link" (
         echo       스킬 없음
     )
 
-    REM Agents 링크 (전체 폴더) + skills/*/agents/ 복사
+    REM Agents 링크 - 전체 폴더 + skills/*/agents/ 복사
     echo.
-    echo [2/12] Agents 링크 중... (글로벌, Junction)
+    echo [2/12] Agents 링크 중... - 글로벌, Junction
     if exist "%SCRIPT_DIR%agents" (
         set "target=%CLAUDE_DIR%\agents"
         if exist "!target!" (
@@ -248,7 +248,7 @@ if "%MODE%"=="link" (
     ) else (
         if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
     )
-    REM skills/*/agents/ 폴더는 별도 복사 (링크 폴더에 추가)
+    REM skills/*/agents/ 폴더는 별도 복사 - 링크 폴더에 추가
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         if exist "%%D\agents" (
             for %%F in ("%%D\agents\*.md") do (
@@ -259,9 +259,9 @@ if "%MODE%"=="link" (
     )
     echo       완료!
 
-    REM Hooks 링크 (전체 폴더)
+    REM Hooks 링크 - 전체 폴더
     echo.
-    echo [3/12] Hooks 링크 중... (글로벌, Junction)
+    echo [3/12] Hooks 링크 중... - 글로벌, Junction
     if exist "%SCRIPT_DIR%hooks" (
         set "target=%CLAUDE_DIR%\hooks"
         if exist "!target!" (
@@ -344,7 +344,7 @@ if exist "%SCRIPT_DIR%hooks" (
             copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
         )
     )
-    REM JS 훅 (orchestrator-detector 등)
+    REM JS 훅 - orchestrator-detector 등
     for %%F in ("%SCRIPT_DIR%hooks\*.js") do (
         echo       - %%~nxF
         copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
@@ -405,10 +405,10 @@ if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
         echo       완료!
     ) else (
         set "CODEX_MNEMO_RESULT=설치 실패"
-        echo       [경고] 설치 실패 (exit: !errorlevel!)
+        echo       [경고] 설치 실패 exit: !errorlevel!
     )
 ) else (
-    set "CODEX_MNEMO_RESULT=스킵(install.js 없음)"
+    set "CODEX_MNEMO_RESULT=스킵: install.js 없음"
     echo       [경고] install.js 없음, 건너뜀
 )
 
@@ -426,10 +426,10 @@ if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
         echo       완료!
     ) else (
         set "CODEX_SYNC_RESULT=동기화 실패"
-        echo       [경고] 동기화 실패 (exit: !errorlevel!)
+        echo       [경고] 동기화 실패 exit: !errorlevel!
     )
 ) else (
-    set "CODEX_SYNC_RESULT=스킵(sync 스크립트 없음)"
+    set "CODEX_SYNC_RESULT=스킵: sync 스크립트 없음"
     echo       [경고] sync-codex-assets.js 없음, 건너뜀
 )
 
@@ -445,14 +445,14 @@ if !errorlevel! equ 0 (
             echo       완료!
         ) else (
             set "CODEX_MCP_RESULT=설치 실패"
-            echo       [경고] 설치 실패 (exit: !errorlevel!)
+            echo       [경고] 설치 실패 exit: !errorlevel!
         )
     ) else (
-        set "CODEX_MCP_RESULT=스킵(install-mcp-codex.js 없음)"
+        set "CODEX_MCP_RESULT=스킵: install-mcp-codex.js 없음"
         echo       [경고] install-mcp-codex.js 없음, 건너뜀
     )
 ) else (
-    set "CODEX_MCP_RESULT=스킵(codex CLI 없음)"
+    set "CODEX_MCP_RESULT=스킵: codex CLI 없음"
     echo       [경고] codex CLI 없음, 건너뜀
 )
 
@@ -482,11 +482,11 @@ if !errorlevel! equ 0 (
             echo       [경고] MCP 등록 실패, 건너뜀
         )
     ) else (
-        set "CODEX_ORCH_RESULT=스킵(빌드 실패)"
+        set "CODEX_ORCH_RESULT=스킵: 빌드 실패"
         echo       [경고] MCP 서버 빌드 실패, 건너뜀
     )
 ) else (
-    set "CODEX_ORCH_RESULT=스킵(codex CLI 없음)"
+    set "CODEX_ORCH_RESULT=스킵: codex CLI 없음"
     echo       [경고] codex CLI 없음, 건너뜀
 )
 
@@ -500,10 +500,10 @@ if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
         echo       완료!
     ) else (
         set "GEMINI_MNEMO_RESULT=설치 실패"
-        echo       [경고] 설치 실패 (exit: !errorlevel!)
+        echo       [경고] 설치 실패 exit: !errorlevel!
     )
 ) else (
-    set "GEMINI_MNEMO_RESULT=스킵(install.js 없음)"
+    set "GEMINI_MNEMO_RESULT=스킵: install.js 없음"
     echo       [경고] install.js 없음, 건너뜀
 )
 
