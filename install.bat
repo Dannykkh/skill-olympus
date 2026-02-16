@@ -159,7 +159,7 @@ if "%MODE%"=="unlink" (
     echo [10/11] Codex Orchestrator MCP 제거 중...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
-        codex mcp remove orchestrator >nul 2>nul
+        call codex mcp remove orchestrator >nul 2>nul
         if !errorlevel! equ 0 (
             set "CODEX_ORCH_RESULT=제거 완료"
             echo       완료!
@@ -472,8 +472,8 @@ if !errorlevel! equ 0 (
         if "!CODEX_ORCH_PROJECT_ROOT:~-1!"=="\" set "CODEX_ORCH_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT:~0,-1!"
         set "CODEX_ORCH_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT:\=/!"
         set "CODEX_ORCH_DIST_NORM=%CODEX_ORCH_DIST:\=/%"
-        codex mcp remove orchestrator >nul 2>nul
-        codex mcp add --env ORCHESTRATOR_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT! --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
+        call codex mcp remove orchestrator >nul 2>nul
+        call codex mcp add --env ORCHESTRATOR_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT! --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
         if !errorlevel! equ 0 (
             set "CODEX_ORCH_RESULT=등록 완료"
             echo       Orchestrator MCP 등록 완료
