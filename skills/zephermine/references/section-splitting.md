@@ -121,6 +121,14 @@ Include all necessary background, requirements, and implementation details withi
 - Requires: {list of prior sections that must be complete}
 - Blocks: {list of sections that depend on this one}
 
+## Reference Libraries
+
+구현에 사용하는 주요 라이브러리. **코딩 전 Context7 MCP로 공식 문서를 확인**하여 최신 API에 맞춰 구현.
+
+| 라이브러리 | 버전 | 용도 |
+|-----------|------|------|
+| {library} | {version} | {purpose} |
+
 ## Implementation Details
 
 {Detailed implementation guidance}

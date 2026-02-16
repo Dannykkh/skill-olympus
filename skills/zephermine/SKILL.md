@@ -349,6 +349,7 @@ Task(
   - Background (why this section exists)
   - Requirements (what must be true when complete)
   - Dependencies (requires/blocks)
+  - Reference Libraries (라이브러리명+버전+용도 — 구현 전 Context7 MCP로 공식 문서 확인 필수)
   - Implementation details (from the plan)
   - Test Scenarios (각 기능별 입출력 테이블: 정상/에러/엣지 케이스)
   - Acceptance criteria (checkboxes)
