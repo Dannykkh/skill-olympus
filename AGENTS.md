@@ -15,7 +15,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |Task|Read First|
 |---|---|
-|AI/LLM API 코딩|agents/ai-api-guide.md,agents/ai-ml.md|
+|AI/LLM API 코딩|agents/ai-ml.md|
 |React/Next.js|agents/react-best-practices.md,agents/react-useeffect-guidelines.md|
 |Code Review|agents/code-review-checklist.md,skills/code-reviewer/SKILL.md|
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
@@ -87,7 +87,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
-### Agents (35개)
+### Agents (34개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -107,8 +107,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | | backend-spring | Spring Boot 백엔드 전문가 |
 | | database-mysql | MySQL 데이터베이스 전문가 |
 | | database-postgresql | PostgreSQL/Supabase 데이터베이스 전문가 |
-| **AI/ML** | ai-ml | AI/ML 통합 전문가 |
-| | ai-api-guide | LLM API 최신 모델/SDK 코딩 가이드 (OpenAI, Anthropic, Gemini, Ollama) |
+| **AI/ML** | ai-ml | AI/ML 통합 + LLM API 최신 모델/SDK 가이드 (OpenAI, Anthropic, Gemini, Ollama) |
 | **API** | api-tester | API 엔드포인트 테스트 |
 | | api-comparator | API 호환성 비교 검증 |
 | **QA** | qa-engineer | 테스트 전략 및 품질 검증 |

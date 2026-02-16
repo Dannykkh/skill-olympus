@@ -151,14 +151,14 @@ node skills/orchestrator/install.js <target-project-path>
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (35 Agents)
+### Custom Agents (34 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
 | **Workflow** | fullstack-development-workflow, spec-interviewer, architect | Full development cycle management & architecture design |
 | **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | Passive rules (always applied) |
 | **Full Stack** | frontend-react, backend-spring, database-mysql, database-postgresql | React/Spring/MySQL/PostgreSQL specialists |
-| **AI/ML** | ai-ml, ai-api-guide | LLM integration, RAG systems, Latest model/SDK coding guide |
+| **AI/ML** | ai-ml | LLM integration, RAG systems, Latest model/SDK coding guide |
 | **API** | api-tester, api-comparator | API testing & compatibility |
 | **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
 | **Documentation** | documentation, mermaid-diagram-specialist | Docs & diagrams |
@@ -347,9 +347,8 @@ claude-code-customizations/
 │   ├── docx/
 │   ├── pdf/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (33 + skills/*/agents/ 2 = 35)
+├── agents/                    # Custom subagents (32 + skills/*/agents/ 2 = 34)
 │   ├── architect.md
-│   ├── ai-api-guide.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
 │   ├── api-tester.md

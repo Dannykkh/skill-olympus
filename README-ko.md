@@ -151,14 +151,14 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (35개)
+### 커스텀 에이전트 (34개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
 | **워크플로우** | fullstack-development-workflow, spec-interviewer, architect | 전체 개발 사이클 관리 + 아키텍처 설계 |
 | **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | 패시브 규칙 (항상 적용) |
 | **풀스택** | frontend-react, backend-spring, database-mysql, database-postgresql | React/Spring/MySQL/PostgreSQL 전문가 |
-| **AI/ML** | ai-ml, ai-api-guide | LLM 통합, RAG 시스템, 최신 모델/SDK 코딩 가이드 |
+| **AI/ML** | ai-ml | LLM 통합, RAG 시스템, 최신 모델/SDK 코딩 가이드 |
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
 | **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
 | **문서화** | documentation, mermaid-diagram-specialist | 문서 & 다이어그램 |
@@ -347,9 +347,8 @@ claude-code-customizations/
 │   ├── test-driven-development/
 │   ├── wrangler/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (33 + skills/*/agents/ 2 = 35개)
+├── agents/                    # 커스텀 서브에이전트 (32 + skills/*/agents/ 2 = 34개)
 │   ├── architect.md
-│   ├── ai-api-guide.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
 │   ├── api-tester.md
