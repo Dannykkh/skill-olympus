@@ -8,6 +8,9 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 CODEX_MNEMO_RESULT="미실행"
+CODEX_SYNC_RESULT="미실행"
+CODEX_MCP_RESULT="미실행"
+CODEX_ORCH_RESULT="미실행"
 GEMINI_MNEMO_RESULT="미실행"
 
 # 모드 결정
@@ -41,7 +44,7 @@ fi
 #   --unlink 모드: 심볼릭 링크 제거 + settings.json 정리
 # ============================================
 if [ "$MODE" = "unlink" ]; then
-    echo "[1/8] Skills 링크 제거 중..."
+    echo "[1/11] Skills 링크 제거 중..."
     if [ -d "$SCRIPT_DIR/skills" ]; then
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
             if [ -d "$skill_dir" ]; then
@@ -59,7 +62,7 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[2/8] Agents 링크 제거 중..."
+    echo "[2/11] Agents 링크 제거 중..."
     if [ -L "$CLAUDE_DIR/agents" ]; then
         echo "      - agents [링크 제거]"
         rm "$CLAUDE_DIR/agents"
@@ -69,7 +72,7 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[3/8] Hooks 링크 제거 + settings.json 정리 중..."
+    echo "[3/11] Hooks 링크 제거 + settings.json 정리 중..."
     if [ -L "$CLAUDE_DIR/hooks" ]; then
         echo "      - hooks [링크 제거]"
         rm "$CLAUDE_DIR/hooks"
@@ -81,22 +84,22 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[4/8] CLAUDE.md 장기기억 규칙 제거 중..."
+    echo "[4/11] CLAUDE.md 장기기억 규칙 제거 중..."
     node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md" --uninstall
     echo "      완료!"
 
     echo ""
-    echo "[5/8] MCP 서버 설정은 별도 관리됩니다."
+    echo "[5/11] MCP 서버 설정은 별도 관리됩니다."
     echo "      제거: node \"$SCRIPT_DIR/install-mcp.js\" --uninstall <이름>"
     echo "      완료!"
 
     echo ""
-    echo "[6/8] Orchestrator MCP 제거 중..."
+    echo "[6/11] Orchestrator MCP 제거 중..."
     claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
     echo "      완료!"
 
     echo ""
-    echo "[7/8] Codex-Mnemo 제거 중..."
+    echo "[7/11] Codex-Mnemo 제거 중..."
     if [ -f "$SCRIPT_DIR/skills/codex-mnemo/install.js" ]; then
         if node "$SCRIPT_DIR/skills/codex-mnemo/install.js" --uninstall; then
             CODEX_MNEMO_RESULT="제거 완료"
@@ -111,7 +114,58 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo "[8/8] Gemini-Mnemo 제거 중..."
+    echo ""
+    echo "[8/11] Codex Skills/Agents 동기화 해제 중..."
+    if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
+        if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --unlink; then
+            CODEX_SYNC_RESULT="해제 완료"
+            echo "      완료!"
+        else
+            CODEX_SYNC_RESULT="해제 실패"
+            echo "      [경고] 해제 실패"
+        fi
+    else
+        CODEX_SYNC_RESULT="스킵(sync 스크립트 없음)"
+        echo "      [경고] sync-codex-assets.js 없음, 건너뜀"
+    fi
+
+    echo ""
+    echo "[9/11] Codex MCP(무료 세트) 제거 중..."
+    if command -v codex >/dev/null 2>&1; then
+        if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
+            if node "$SCRIPT_DIR/install-mcp-codex.js" --uninstall context7 fetch playwright sequential-thinking; then
+                CODEX_MCP_RESULT="제거 완료"
+                echo "      완료!"
+            else
+                CODEX_MCP_RESULT="제거 부분 실패"
+                echo "      [경고] 일부 제거 실패"
+            fi
+        else
+            CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
+            echo "      [경고] install-mcp-codex.js 없음, 건너뜀"
+        fi
+    else
+        CODEX_MCP_RESULT="스킵(codex CLI 없음)"
+        echo "      [경고] codex CLI 없음, 건너뜀"
+    fi
+
+    echo ""
+    echo "[10/11] Codex Orchestrator MCP 제거 중..."
+    if command -v codex >/dev/null 2>&1; then
+        if codex mcp remove orchestrator >/dev/null 2>&1; then
+            CODEX_ORCH_RESULT="제거 완료"
+            echo "      완료!"
+        else
+            CODEX_ORCH_RESULT="스킵/실패"
+            echo "      [경고] 제거 실패 또는 미등록"
+        fi
+    else
+        CODEX_ORCH_RESULT="스킵(codex CLI 없음)"
+        echo "      [경고] codex CLI 없음, 건너뜀"
+    fi
+
+    echo ""
+    echo "[11/11] Gemini-Mnemo 제거 중..."
     if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/install.js" ]; then
         if node "$SCRIPT_DIR/skills/gemini-mnemo/install.js" --uninstall; then
             GEMINI_MNEMO_RESULT="제거 완료"
@@ -142,7 +196,7 @@ fi
 # ============================================
 if [ "$MODE" = "link" ]; then
     # Skills 링크 (개별 폴더)
-    echo "[1/9] Skills 링크 중... (글로벌, symlink)"
+    echo "[1/12] Skills 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/skills" ]; then
         mkdir -p "$CLAUDE_DIR/skills"
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
@@ -166,7 +220,7 @@ if [ "$MODE" = "link" ]; then
 
     # Agents 링크 (전체 폴더) + skills/*/agents/ 복사
     echo ""
-    echo "[2/9] Agents 링크 중... (글로벌, symlink)"
+    echo "[2/12] Agents 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/agents" ]; then
         target="$CLAUDE_DIR/agents"
         if [ -L "$target" ]; then
@@ -195,7 +249,7 @@ if [ "$MODE" = "link" ]; then
 
     # Hooks 링크 (전체 폴더)
     echo ""
-    echo "[3/9] Hooks 링크 중... (글로벌, symlink)"
+    echo "[3/12] Hooks 링크 중... (글로벌, symlink)"
     if [ -d "$SCRIPT_DIR/hooks" ]; then
         target="$CLAUDE_DIR/hooks"
         if [ -L "$target" ]; then
@@ -215,7 +269,7 @@ else
     # ============================================
 
     # Skills 설치 (글로벌)
-    echo "[1/9] Skills 설치 중... (글로벌)"
+    echo "[1/12] Skills 설치 중... (글로벌)"
     if [ -d "$SCRIPT_DIR/skills" ]; then
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
             if [ -d "$skill_dir" ]; then
@@ -232,7 +286,7 @@ else
 
     # Agents 설치 (글로벌)
     echo ""
-    echo "[2/9] Agents 설치 중... (글로벌)"
+    echo "[2/12] Agents 설치 중... (글로벌)"
     mkdir -p "$CLAUDE_DIR/agents"
     # 루트 agents/ 폴더
     if [ -d "$SCRIPT_DIR/agents" ]; then
@@ -259,7 +313,7 @@ else
 
     # Hooks 설치 (글로벌)
     echo ""
-    echo "[3/9] Hooks 설치 중... (글로벌)"
+    echo "[3/12] Hooks 설치 중... (글로벌)"
     if [ -d "$SCRIPT_DIR/hooks" ]; then
         mkdir -p "$CLAUDE_DIR/hooks"
         for hook_file in "$SCRIPT_DIR/hooks"/*.sh; do
@@ -293,17 +347,17 @@ fi
 
 # settings.json 훅 설정 (글로벌)
 echo ""
-echo "[4/9] settings.json 훅 설정 중... (글로벌)"
+echo "[4/12] settings.json 훅 설정 중... (글로벌)"
 node "$SCRIPT_DIR/install-hooks-config.js" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/settings.json" --bash
 
 # CLAUDE.md 장기기억 규칙 설치 (글로벌)
 echo ""
-echo "[5/9] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)"
+echo "[5/12] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)"
 node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md"
 
 # MCP 서버 자동 설치 (글로벌, 무료 MCP만)
 echo ""
-echo "[6/9] MCP 서버 설치 중... (글로벌, 무료만 자동 설치)"
+echo "[6/12] MCP 서버 설치 중... (글로벌, 무료만 자동 설치)"
 echo ""
 echo "      사용 가능한 MCP 서버:"
 node "$SCRIPT_DIR/install-mcp.js" --list
@@ -316,7 +370,7 @@ echo "      (추가 설치/제거: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
 
 # Orchestrator MCP 서버 등록 (글로벌, PM-Worker 병렬 작업)
 echo ""
-echo "[7/9] Orchestrator MCP 서버 등록 중... (글로벌)"
+echo "[7/12] Orchestrator MCP 서버 등록 중... (글로벌)"
 ORCH_DIST="$SCRIPT_DIR/mcp-servers/claude-orchestrator-mcp/dist/index.js"
 if [ ! -f "$ORCH_DIST" ]; then
     echo "      MCP 서버 빌드 중..."
@@ -332,7 +386,7 @@ fi
 
 # Codex-Mnemo 설치 (Codex CLI 장기기억)
 echo ""
-echo "[8/9] Codex-Mnemo 설치 중... (Codex CLI 장기기억)"
+echo "[8/12] Codex-Mnemo 설치 중... (Codex CLI 장기기억)"
 if [ -f "$SCRIPT_DIR/skills/codex-mnemo/install.js" ]; then
     if node "$SCRIPT_DIR/skills/codex-mnemo/install.js"; then
         CODEX_MNEMO_RESULT="설치 완료"
@@ -346,9 +400,84 @@ else
     echo "      [경고] install.js 없음, 건너뜀"
 fi
 
+# Codex Skills/Agents 동기화 (프로젝트 .agents + ~/.codex)
+echo ""
+echo "[9/12] Codex Skills/Agents 동기화 중... (프로젝트 + 글로벌)"
+if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
+    if [ "$MODE" = "link" ]; then
+        if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --link; then
+            CODEX_SYNC_RESULT="동기화 완료"
+            echo "      완료!"
+        else
+            CODEX_SYNC_RESULT="동기화 실패"
+            echo "      [경고] 동기화 실패"
+        fi
+    else
+        if node "$SCRIPT_DIR/scripts/sync-codex-assets.js"; then
+            CODEX_SYNC_RESULT="동기화 완료"
+            echo "      완료!"
+        else
+            CODEX_SYNC_RESULT="동기화 실패"
+            echo "      [경고] 동기화 실패"
+        fi
+    fi
+else
+    CODEX_SYNC_RESULT="스킵(sync 스크립트 없음)"
+    echo "      [경고] sync-codex-assets.js 없음, 건너뜀"
+fi
+
+# Codex MCP 설치 (Codex CLI 무료 MCP 일괄)
+echo ""
+echo "[10/12] Codex MCP 설치 중... (Codex CLI, 무료 세트)"
+if command -v codex >/dev/null 2>&1; then
+    if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
+        if node "$SCRIPT_DIR/install-mcp-codex.js" --all; then
+            CODEX_MCP_RESULT="설치 완료"
+            echo "      완료!"
+        else
+            CODEX_MCP_RESULT="설치 실패"
+            echo "      [경고] 설치 실패"
+        fi
+    else
+        CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
+        echo "      [경고] install-mcp-codex.js 없음, 건너뜀"
+    fi
+else
+    CODEX_MCP_RESULT="스킵(codex CLI 없음)"
+    echo "      [경고] codex CLI 없음, 건너뜀"
+fi
+
+# Codex Orchestrator MCP 등록 (Codex CLI, PM-Worker 병렬 작업)
+echo ""
+echo "[11/12] Codex Orchestrator MCP 등록 중... (Codex CLI)"
+CODEX_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
+if [ ! -f "$CODEX_ORCH_DIST" ]; then
+    echo "      MCP 서버 빌드 중..."
+    (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+fi
+if command -v codex >/dev/null 2>&1; then
+    if [ -f "$CODEX_ORCH_DIST" ]; then
+        CODEX_ORCH_PROJECT_ROOT="${SCRIPT_DIR%/}"
+        codex mcp remove orchestrator >/dev/null 2>&1 || true
+        if codex mcp add --env "ORCHESTRATOR_PROJECT_ROOT=$CODEX_ORCH_PROJECT_ROOT" --env "ORCHESTRATOR_WORKER_ID=pm" orchestrator -- node "$CODEX_ORCH_DIST" >/dev/null 2>&1; then
+            CODEX_ORCH_RESULT="등록 완료"
+            echo "      Orchestrator MCP 등록 완료"
+        else
+            CODEX_ORCH_RESULT="등록 실패"
+            echo "      [경고] MCP 등록 실패, 건너뜀"
+        fi
+    else
+        CODEX_ORCH_RESULT="스킵(빌드 실패)"
+        echo "      [경고] MCP 서버 빌드 실패, 건너뜀"
+    fi
+else
+    CODEX_ORCH_RESULT="스킵(codex CLI 없음)"
+    echo "      [경고] codex CLI 없음, 건너뜀"
+fi
+
 # Gemini-Mnemo 설치 (Gemini CLI 장기기억)
 echo ""
-echo "[9/9] Gemini-Mnemo 설치 중... (Gemini CLI 장기기억)"
+echo "[12/12] Gemini-Mnemo 설치 중... (Gemini CLI 장기기억)"
 if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/install.js" ]; then
     if node "$SCRIPT_DIR/skills/gemini-mnemo/install.js"; then
         GEMINI_MNEMO_RESULT="설치 완료"
@@ -387,9 +516,12 @@ else
 fi
 echo "  - settings.json 훅 설정 등록 완료"
 echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
-echo "  - MCP 서버 자동 설치 완료 (변경: node install-mcp.js --list)"
-echo "  - Orchestrator MCP 등록 완료"
+echo "  - Claude MCP 서버 자동 설치 완료 (변경: node install-mcp.js --list)"
+echo "  - Claude Orchestrator MCP 등록 완료"
 echo "  - Codex-Mnemo: $CODEX_MNEMO_RESULT"
+echo "  - Codex Skills/Agents 동기화: $CODEX_SYNC_RESULT"
+echo "  - Codex MCP(무료): $CODEX_MCP_RESULT"
+echo "  - Codex Orchestrator MCP: $CODEX_ORCH_RESULT"
 echo "  - Gemini-Mnemo: $GEMINI_MNEMO_RESULT"
 echo ""
 echo "  Claude Code / Codex CLI를 재시작하면 적용됩니다."

@@ -57,11 +57,12 @@ chmod +x install.sh && ./install.sh
 
 > **링크 모드**는 파일 복사 대신 심볼릭 링크(Windows: Junction, Linux/Mac: symlink)를 생성합니다. `git pull`만 하면 변경사항이 즉시 반영되어 설치 스크립트를 다시 실행할 필요가 없습니다.
 >
-> 설치 스크립트는 **6가지 구성요소를 모두 글로벌로 설치**합니다:
-> - Skills, Agents, Commands, Hooks (파일)
-> - Mnemo 훅 (`save-conversation`, `save-response`)
-> - `~/.claude/settings.json` (훅 설정)
-> - `~/.claude/CLAUDE.md` (메모리 규칙 - 응답 태그, 대화 검색)
+> 설치 스크립트는 **12단계**로 Claude Code, Codex CLI, Gemini CLI를 모두 지원합니다:
+> - **1-7단계** (Claude Code): Skills, Agents, Hooks, settings.json, CLAUDE.md, MCP 서버, Orchestrator MCP
+> - **8-11단계** (Codex CLI): Codex-Mnemo, Skills/Agents 동기화, MCP 서버, Orchestrator MCP
+> - **12단계** (Gemini CLI): Gemini-Mnemo
+>
+> Codex/Gemini CLI가 설치되어 있지 않으면 해당 단계는 자동으로 건너뜁니다.
 
 ---
 
@@ -75,7 +76,7 @@ chmod +x install.sh && ./install.sh
 
 | 기능 | 설명 |
 |------|------|
-| **19단계 인터뷰** | A~G 카테고리: 목표, 디자인 비전, 기능, 기술, 일정, 리스크, 검증 |
+| **23단계 워크플로우** | A~G 카테고리: 목표, 디자인 비전, 기능, 기술, 일정, 리스크, 검증, 스킬 탐색 |
 | **5 Whys 기법** | 요구사항 뒤의 숨겨진 동기 발굴 |
 | **5개 전문가 에이전트 팀 리뷰** | UX, 아키텍처, Red Team(악마의 변호인), 도메인 프로세스, 도메인 기술 에이전트가 병렬 분석 |
 | **쉬운 말 규칙** | 전문용어에 괄호 풀이 필수 (비개발자도 이해 가능) |
@@ -410,14 +411,21 @@ claude-code-customizations/
 │   └── validate-docs.sh/.ps1
 ├── mcp-servers/               # MCP 서버 가이드
 │   └── README.md
+├── mcp-configs/               # MCP 서버 사전 설정 (Claude + Codex)
+│   └── README.md
+├── scripts/                   # 유틸리티 스크립트
+│   ├── sync-codex-assets.js   # Codex CLI에 Skills/Agents 동기화
+│   └── generate-codex-compat-report.js  # Codex 호환성 분석기
 ├── docs/                      # 문서
 │   ├── quickstart.md
 │   ├── workflow-guide.md      # 엔드투엔드 파이프라인 가이드
+│   ├── codex-compatibility-report.md    # Codex CLI 호환성 현황
 │   └── resources/
-├── install.bat                # Windows 설치 (6단계, Mnemo 포함)
-├── install.sh                 # Linux/Mac 설치 (6단계, Mnemo 포함)
+├── install.bat                # Windows 설치 (12단계, Claude + Codex + Gemini)
+├── install.sh                 # Linux/Mac 설치 (12단계, Claude + Codex + Gemini)
 ├── install-hooks-config.js    # 훅 설정 헬퍼
 ├── install-claude-md.js       # CLAUDE.md 규칙 머지
+├── install-mcp-codex.js       # Codex CLI MCP 설치 (codex mcp add/remove)
 ├── SETUP.md                   # 전체 설정 가이드
 └── README.md                  # 이 파일
 ```
@@ -505,4 +513,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-02-11
+**최종 업데이트:** 2026-02-17

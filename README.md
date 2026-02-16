@@ -57,11 +57,12 @@ chmod +x install.sh && ./install.sh
 
 > **Link mode** creates symlinks (Windows: Junction, Linux/Mac: symlink) instead of copying files. Changes to the repo are reflected immediately after `git pull` — no need to re-run the installer.
 >
-> The installer configures **all 6 components globally**:
-> - Skills, Agents, Commands, Hooks (files)
-> - Mnemo hooks (`save-conversation`, `save-response`)
-> - `~/.claude/settings.json` (hook settings)
-> - `~/.claude/CLAUDE.md` (memory rules - response tags, conversation search)
+> The installer runs **12 steps** covering Claude Code, Codex CLI, and Gemini CLI:
+> - **Steps 1-7** (Claude Code): Skills, Agents, Hooks, settings.json, CLAUDE.md, MCP servers, Orchestrator MCP
+> - **Steps 8-11** (Codex CLI): Codex-Mnemo, Skills/Agents sync, MCP servers, Orchestrator MCP
+> - **Step 12** (Gemini CLI): Gemini-Mnemo
+>
+> Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
 ---
 
@@ -75,7 +76,7 @@ Deep-dive interview system that generates complete spec documents from conversat
 
 | Feature | Description |
 |---------|-------------|
-| **19-step interview** | A~G categories: goals, design vision, features, tech, timeline, risks, verification |
+| **23-step workflow** | A~G categories: goals, design vision, features, tech, timeline, risks, verification, skill discovery |
 | **5 Whys technique** | Uncovers hidden motivations behind requirements |
 | **5-agent team review** | UX, Architecture, Red Team, Domain Process, Domain Tech agents analyze the spec in parallel |
 | **Plain language** | Technical terms explained in parentheses (accessible to non-engineers) |
@@ -410,14 +411,21 @@ claude-code-customizations/
 │   └── validate-docs.sh/.ps1
 ├── mcp-servers/               # MCP server guides
 │   └── README.md
+├── mcp-configs/               # MCP server preset configs (Claude + Codex)
+│   └── README.md
+├── scripts/                   # Utility scripts
+│   ├── sync-codex-assets.js   # Sync skills/agents to Codex CLI
+│   └── generate-codex-compat-report.js  # Codex compatibility analyzer
 ├── docs/                      # Documentation
 │   ├── quickstart.md
 │   ├── workflow-guide.md      # End-to-end pipeline guide
+│   ├── codex-compatibility-report.md    # Codex CLI compatibility status
 │   └── resources/
-├── install.bat                # Windows installer (6 steps, includes Mnemo)
-├── install.sh                 # Linux/Mac installer (6 steps, includes Mnemo)
+├── install.bat                # Windows installer (12 steps, Claude + Codex + Gemini)
+├── install.sh                 # Linux/Mac installer (12 steps, Claude + Codex + Gemini)
 ├── install-hooks-config.js    # Hook settings helper
 ├── install-claude-md.js       # CLAUDE.md rules merger
+├── install-mcp-codex.js       # Codex CLI MCP installer (codex mcp add/remove)
 ├── SETUP.md                   # Complete setup guide
 └── README.md                  # This file
 ```
@@ -505,4 +513,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-11
+**Last Updated:** 2026-02-17

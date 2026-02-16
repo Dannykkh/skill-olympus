@@ -27,6 +27,9 @@ __pycache__/
 MEMORY.md
 CLAUDE.md
 
+# Codex CLI - 자동 생성 (sync-codex-assets.js)
+.agents/
+
 # Orchestrator state (auto-generated)
 .orchestrator/
 

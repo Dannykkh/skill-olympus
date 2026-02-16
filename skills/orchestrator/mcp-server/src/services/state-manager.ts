@@ -101,11 +101,17 @@ export class StateManager {
   // --------------------------------------------------------------------------
 
   private loadState(): OrchestratorState {
-    const content = fs.readFileSync(this.stateFilePath, 'utf-8');
-    return JSON.parse(content) as OrchestratorState;
+    try {
+      const content = fs.readFileSync(this.stateFilePath, 'utf-8');
+      const parsed = JSON.parse(content) as unknown;
+      return this.normalizeState(parsed, this.getStateProjectRootFallback());
+    } catch {
+      return this.createInitialState(this.getStateProjectRootFallback());
+    }
   }
 
   private saveState(): void {
+    this.state = this.normalizeState(this.state, this.getStateProjectRootFallback());
     fs.writeFileSync(this.stateFilePath, JSON.stringify(this.state, null, 2), 'utf-8');
   }
 
@@ -117,6 +123,38 @@ export class StateManager {
       projectRoot,
       startedAt: new Date().toISOString(),
       version: '1.0.0'
+    };
+  }
+
+  private getStateProjectRootFallback(): string {
+    return path.dirname(path.dirname(this.stateFilePath));
+  }
+
+  private normalizeState(rawState: unknown, fallbackProjectRoot: string): OrchestratorState {
+    const baseState = this.createInitialState(fallbackProjectRoot);
+
+    if (!rawState || typeof rawState !== 'object' || Array.isArray(rawState)) {
+      return baseState;
+    }
+
+    const candidate = rawState as Partial<OrchestratorState>;
+
+    return {
+      tasks: Array.isArray(candidate.tasks) ? candidate.tasks : [],
+      fileLocks: Array.isArray(candidate.fileLocks) ? candidate.fileLocks : [],
+      workers: Array.isArray(candidate.workers) ? candidate.workers : [],
+      projectRoot:
+        typeof candidate.projectRoot === 'string' && candidate.projectRoot.length > 0
+          ? candidate.projectRoot
+          : fallbackProjectRoot,
+      startedAt:
+        typeof candidate.startedAt === 'string' && candidate.startedAt.length > 0
+          ? candidate.startedAt
+          : baseState.startedAt,
+      version:
+        typeof candidate.version === 'string' && candidate.version.length > 0
+          ? candidate.version
+          : baseState.version
     };
   }
 

@@ -59,6 +59,8 @@ export declare class StateManager {
     private loadState;
     private saveState;
     private createInitialState;
+    private getStateProjectRootFallback;
+    private normalizeState;
     private reloadState;
     private registerWorker;
     updateHeartbeat(): void;
