@@ -112,9 +112,10 @@ function writeSettings(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
-// 환경변수 설정 (Agent Teams 등)
+// 환경변수 설정 (Agent Teams, 1M 컨텍스트 등)
 const ENV_DEFAULTS = {
   CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: "1",
+  ANTHROPIC_DEFAULT_SONNET_MODEL: "claude-sonnet-4-6[1m]",
 };
 
 // 메인 로직
