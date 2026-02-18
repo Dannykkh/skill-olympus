@@ -24,6 +24,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |FastAPI|agents/python-fastapi-guidelines.md|
 |Spring Boot|agents/backend-spring.md,agents/fullstack-coding-standards.md|
 |Fullstack Standards|agents/fullstack-coding-standards.md,skills/fullstack-coding-standards/SKILL.md|
+|Database Design|agents/database-schema-designer.md,skills/database-schema-designer/SKILL.md|
 |Database (MySQL)|agents/database-mysql.md|
 |Database (PostgreSQL/Supabase)|agents/database-postgresql.md,skills/supabase-postgres-best-practices/SKILL.md|
 |Migration|agents/migration-helper.md,agents/explore-agent.md|
@@ -34,6 +35,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Security Review|agents/security-reviewer.md|
 |Stitch UI|agents/stitch-developer.md,skills/stitch-design-md/SKILL.md|
 |Agent Teams (Opus 4.6 병렬 실행)|skills/agent-team/SKILL.md|
+|Codex Multi-Agent Team|skills/agent-team-codex/SKILL.md|
 
 ### Recommended Workflows
 
@@ -41,6 +43,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |---|---|
 |새 프로젝트 (풀코스)|zephermine → architect → agent-team → qa-until-pass → docker-deploy|
 |기능 추가|zephermine → agent-team/수동 구현 → qa-until-pass|
+|데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
 |UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|
 |코드 리뷰 종합|code-reviewer → security-reviewer → reducing-entropy|
@@ -74,7 +77,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) |
+| 🤖 AI Tools | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성/검색 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
@@ -87,7 +90,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
-### Agents (34개)
+### Agents (35개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -105,6 +108,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | | fullstack-coding-standards | 풀스택 코딩 표준 (백엔드 계층, 프론트 API, DB 연동) |
 | **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
 | | backend-spring | Spring Boot 백엔드 전문가 |
+| | database-schema-designer | DB 스키마 설계 전문가 (DB-First, ERD, DDL) |
 | | database-mysql | MySQL 데이터베이스 전문가 |
 | | database-postgresql | PostgreSQL/Supabase 데이터베이스 전문가 |
 | **AI/ML** | ai-ml | AI/ML 통합 + LLM API 최신 모델/SDK 가이드 (OpenAI, Anthropic, Gemini, Ollama) |

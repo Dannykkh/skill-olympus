@@ -1,6 +1,6 @@
 ---
 name: zephermine
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. Also known as 젭마인, 제퍼마인, 제퍼미네.
+description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. Also known as 젭마인, 제퍼마인, 제퍼미네.
 ---
 
 # Zephermine
@@ -20,7 +20,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Plan → External Review → Sections → QA Scenarios → Skill Discovery → Verify
+순서: Research → Interview → Spec → Team Review → Plan → External Review → DB Schema → Sections → QA Scenarios → Skill Discovery → Verify
 ```
 
 ### 2. Resolve Spec File Path
@@ -69,6 +69,7 @@ Determine session state by checking existing files:
    - `claude-team-review.md`
    - `claude-plan.md`
    - `claude-api-spec.md`
+   - `claude-db-schema.md`
    - `claude-integration-notes.md`
    - `claude-ralph-loop-prompt.md`
    - `claude-ralphy-prd.md`
@@ -89,9 +90,10 @@ Determine session state by checking existing files:
 | + plan | resume | Step 11 (external review) |
 | + reviews | resume | Step 12 (integrate) |
 | + integration-notes | resume | Step 13 (user review) |
-| + sections/index.md | resume | Step 15 (write sections) |
-| all sections complete | resume | Step 16 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 22 (verify) |
+| + claude-db-schema.md | resume | Step 15 (API spec) |
+| + sections/index.md | resume | Step 16 (write sections) |
+| all sections complete | resume | Step 17 (execution files) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 23 (verify) |
 | + claude-verify-report.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
@@ -114,7 +116,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/23: {STEP_NAME}
+STEP {N}/24: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
@@ -277,11 +279,67 @@ Options: "Done reviewing"
 
 Wait for user confirmation before proceeding.
 
-### 14. Generate API Specification
+### 14. Generate Database Schema
+
+See [schema-design-guide.md](references/schema-design-guide.md)
+
+도메인 전문가의 업무 흐름표 + 기술 스택 매핑 + Plan에서 데이터 모델을 추출하여
+`<planning_dir>/claude-db-schema.md` 생성.
+
+**Inputs:**
+- `<planning_dir>/team-reviews/domain-process-analysis.md` (엔티티, CRUD 권한, 입출력)
+- `<planning_dir>/team-reviews/domain-technical-analysis.md` (기술 스택, 규제)
+- `<planning_dir>/claude-plan.md` (구현 계획)
+
+**Process:**
+1. **DB 확인**: plan/architect 산출물에서 대상 DB 감지. 미결정 시 AskUserQuestion
+2. 엔티티 추출: 업무 흐름표의 명사(사용자, 주문, 상품 등)에서 테이블 후보 도출
+3. 관계 분석: CRUD 권한/입출력에서 1:N, M:N, Self-Reference 판별
+4. **DB 특성 반영 설계**: 대상 DB의 강점을 활용한 구조 결정
+5. 정규화: 3NF 적용 후 역정규화 필요성 판단 (읽기 패턴 + DB 특성 기반)
+6. ERD 생성: Mermaid erDiagram 형식
+7. DDL 생성: 대상 DB 방언으로 SQL 작성
+8. 인덱스 전략: 접근 패턴 + DB별 인덱스 유형에서 도출
+9. 설계 근거: 각 테이블/관계에 "왜 이 구조인지" 1줄 설명
+
+**DB가 없는 프로젝트(CLI, 라이브러리, 정적사이트)는 자동 건너뜀.**
+
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+  Generate database schema from domain analysis and implementation plan.
+
+  Inputs:
+  - <planning_dir>/team-reviews/domain-process-analysis.md
+  - <planning_dir>/team-reviews/domain-technical-analysis.md
+  - <planning_dir>/claude-plan.md
+
+  Process: See schema-design-guide.md for detailed rules.
+
+  Output: <planning_dir>/claude-db-schema.md
+  Format: ERD (Mermaid) + DDL + Design Rationale table + Index Strategy
+
+  If no database is needed (CLI, library, static site), skip this file.
+  """
+)
+```
+
+**이 문서의 역할:**
+- 구현 전 데이터 구조 확정 (ERD + DDL)
+- API 스펙의 Request/Response 스키마 근거
+- 섹션 파일에서 참조 (각 섹션이 담당하는 테이블 명시)
+- verify 단계에서 실제 DB vs 설계 대조 검증
+
+### 15. Generate API Specification
 
 See [api-spec-guide.md](references/api-spec-guide.md)
 
 `claude-plan.md`에서 모든 API 엔드포인트를 추출하여 `<planning_dir>/claude-api-spec.md` 생성.
+
+**Inputs:**
+- `<planning_dir>/claude-plan.md`
+- `<planning_dir>/claude-db-schema.md` (if exists)
 
 ```
 Task(
@@ -290,12 +348,13 @@ Task(
   Generate API specification from the implementation plan.
 
   Input: <planning_dir>/claude-plan.md
+  Input (optional): <planning_dir>/claude-db-schema.md
   Output: <planning_dir>/claude-api-spec.md
 
   Extract all API endpoints and document:
   - Method + Path (예: POST /api/users)
   - Request: headers, params, body (with types)
-  - Response: status codes, body schema
+  - Response: status codes, body schema (align with DB schema if available)
   - Auth requirements
   - Frontend caller (which page/component calls this)
 
@@ -311,7 +370,7 @@ Task(
 - QA 시나리오의 통합 테스트 기준
 - **구현 중 새 API 추가 시 반드시 이 문서에도 추가** (drift 방지)
 
-### 15. Create Section Index
+### 16. Create Section Index
 
 See [section-index.md](references/section-index.md)
 
@@ -321,7 +380,7 @@ Read `claude-plan.md`. Identify natural section boundaries and create `<planning
 
 Write `index.md` before proceeding to section file creation.
 
-### 16. Write Section Files — Parallel Subagents
+### 17. Write Section Files — Parallel Subagents
 
 See [section-splitting.md](references/section-splitting.md)
 
@@ -342,6 +401,7 @@ Task(
   - <planning_dir>/claude-plan.md
   - <planning_dir>/sections/index.md
   - <planning_dir>/claude-api-spec.md (if exists)
+  - <planning_dir>/claude-db-schema.md (if exists)
 
   Output: <planning_dir>/sections/section-01-{name}.md
 
@@ -374,7 +434,7 @@ Task(
 
 Wait for ALL subagents to complete before proceeding.
 
-### 17. Generate Execution Files — Subagent
+### 18. Generate Execution Files — Subagent
 
 **Delegate to subagent** to reduce main context token usage:
 
@@ -414,7 +474,7 @@ Task(
 
 Wait for subagent completion before proceeding.
 
-### 18. Generate QA Scenarios Document — Subagent
+### 19. Generate QA Scenarios Document — Subagent
 
 모든 섹션의 Test Scenarios를 통합하여 체크 가능한 QA 문서 생성:
 
@@ -465,11 +525,12 @@ Task(
 )
 ```
 
-### 19. Final Status
+### 20. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
 - `claude-api-spec.md` (API가 있는 프로젝트)
+- `claude-db-schema.md` (DB가 있는 프로젝트)
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
 - `claude-qa-scenarios.md`
@@ -477,7 +538,7 @@ Verify all files were created successfully:
 - `team-reviews/domain-process-analysis.md` (업무 흐름표)
 - `team-reviews/domain-technical-analysis.md` (기술 스택 매핑)
 
-### 20. Output Summary
+### 21. Output Summary
 
 Print generated files and next steps:
 ```
@@ -492,6 +553,7 @@ Generated files:
   - claude-team-review.md (multi-agent team analysis — 통합)
   - claude-plan.md (implementation plan)
   - claude-api-spec.md (API specification — frontend↔backend contract)
+  - claude-db-schema.md (database schema — ERD + DDL + design rationale)
   - claude-integration-notes.md (feedback decisions)
   - team-reviews/domain-research.md (산업별 기술/솔루션 WebSearch 결과)
   - team-reviews/domain-process-analysis.md (업무 흐름표 — 역할/CRUD/입출력/예외)
@@ -529,7 +591,7 @@ Option E - Agent Teams로 병렬 실행 (권장):
 ═══════════════════════════════════════════════════════════════
 ```
 
-### 21. Discover Implementation Skills
+### 22. Discover Implementation Skills
 
 구현 시작 전, 프로젝트에 도움될 외부 스킬을 탐색합니다.
 
@@ -545,7 +607,7 @@ Option E - Agent Teams로 병렬 실행 (권장):
 
 > 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.
 
-### 22. Verify Implementation
+### 23. Verify Implementation
 
 See [verify-protocol.md](references/verify-protocol.md)
 
@@ -573,12 +635,12 @@ See [verify-protocol.md](references/verify-protocol.md)
 
 결과 → `<planning_dir>/claude-verify-report.md` (API 일치 + QA 통과율 포함)
 
-### 23. Verification Report
+### 24. Verification Report
 
 검증 결과를 사용자에게 표시.
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 22 반복
+- "수정 후 재검증" → Step 23 반복
 - "승인" → 완료
 
 ---

@@ -76,7 +76,7 @@ chmod +x install.sh && ./install.sh
 
 | 기능 | 설명 |
 |------|------|
-| **23단계 워크플로우** | A~G 카테고리: 목표, 디자인 비전, 기능, 기술, 일정, 리스크, 검증, 스킬 탐색 |
+| **24단계 워크플로우** | A~G 카테고리: 목표, 디자인 비전, 기능, 기술, 일정, 리스크, DB 스키마, 검증, 스킬 탐색 |
 | **5 Whys 기법** | 요구사항 뒤의 숨겨진 동기 발굴 |
 | **5개 전문가 에이전트 팀 리뷰** | UX, 아키텍처, Red Team(악마의 변호인), 도메인 프로세스, 도메인 기술 에이전트가 병렬 분석 |
 | **쉬운 말 규칙** | 전문용어에 괄호 풀이 필수 (비개발자도 이해 가능) |
@@ -152,13 +152,13 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (34개)
+### 커스텀 에이전트 (35개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
 | **워크플로우** | fullstack-development-workflow, spec-interviewer, architect | 전체 개발 사이클 관리 + 아키텍처 설계 |
 | **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | 패시브 규칙 (항상 적용) |
-| **풀스택** | frontend-react, backend-spring, database-mysql, database-postgresql | React/Spring/MySQL/PostgreSQL 전문가 |
+| **풀스택** | frontend-react, backend-spring, database-schema-designer, database-mysql, database-postgresql | React/Spring/스키마 설계/MySQL/PostgreSQL 전문가 |
 | **AI/ML** | ai-ml | LLM 통합, RAG 시스템, 최신 모델/SDK 코딩 가이드 |
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
 | **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
@@ -348,7 +348,7 @@ claude-code-customizations/
 │   ├── test-driven-development/
 │   ├── wrangler/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (32 + skills/*/agents/ 2 = 34개)
+├── agents/                    # 커스텀 서브에이전트 (33 + skills/*/agents/ 2 = 35개)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
@@ -361,6 +361,7 @@ claude-code-customizations/
 │   ├── communication-excellence-coach.md
 │   ├── database-mysql.md
 │   ├── database-postgresql.md
+│   ├── database-schema-designer.md
 │   ├── documentation.md
 │   ├── explore-agent.md
 │   ├── feature-tracker.md
@@ -419,6 +420,7 @@ claude-code-customizations/
 ├── docs/                      # 문서
 │   ├── quickstart.md
 │   ├── workflow-guide.md      # 엔드투엔드 파이프라인 가이드
+│   ├── schema-design-workflow.md  # DB 스키마 설계 워크플로우
 │   ├── codex-compatibility-report.md    # Codex CLI 호환성 현황
 │   └── resources/
 ├── install.bat                # Windows 설치 (12단계, Claude + Codex + Gemini)

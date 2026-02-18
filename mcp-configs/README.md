@@ -8,7 +8,7 @@ Claude Code/Codex에서 자주 사용하는 MCP 서버들의 사전 구성된 �
 |------|------|--------|--------|
 | context7 | 최신 라이브러리 문서 검색 | 불필요 | `@upstash/context7-mcp` |
 | playwright | 브라우저 자동화 및 E2E 테스트 | 불필요 | `@playwright/mcp` |
-| fetch | URL 콘텐츠 가져오기 (HTML/JSON/MD) | 불필요 | `mcp-server-fetch` (uvx) |
+| fetch | URL 콘텐츠 가져오기 (HTML/JSON/MD) | 불필요 | `mcp-fetch-server` (npx) |
 | sequential-thinking | 단계적 사고 프로세스 | 불필요 | `@modelcontextprotocol/server-sequential-thinking` |
 | github | GitHub API 통합 (PR, Issue 등) | **필요** | `@modelcontextprotocol/server-github` |
 

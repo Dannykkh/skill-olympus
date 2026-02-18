@@ -76,7 +76,7 @@ Deep-dive interview system that generates complete spec documents from conversat
 
 | Feature | Description |
 |---------|-------------|
-| **23-step workflow** | A~G categories: goals, design vision, features, tech, timeline, risks, verification, skill discovery |
+| **24-step workflow** | A~G categories: goals, design vision, features, tech, timeline, risks, DB schema, verification, skill discovery |
 | **5 Whys technique** | Uncovers hidden motivations behind requirements |
 | **5-agent team review** | UX, Architecture, Red Team, Domain Process, Domain Tech agents analyze the spec in parallel |
 | **Plain language** | Technical terms explained in parentheses (accessible to non-engineers) |
@@ -152,13 +152,13 @@ node skills/orchestrator/install.js <target-project-path>
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (34 Agents)
+### Custom Agents (35 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
 | **Workflow** | fullstack-development-workflow, spec-interviewer, architect | Full development cycle management & architecture design |
 | **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | Passive rules (always applied) |
-| **Full Stack** | frontend-react, backend-spring, database-mysql, database-postgresql | React/Spring/MySQL/PostgreSQL specialists |
+| **Full Stack** | frontend-react, backend-spring, database-schema-designer, database-mysql, database-postgresql | React/Spring/Schema Design/MySQL/PostgreSQL specialists |
 | **AI/ML** | ai-ml | LLM integration, RAG systems, Latest model/SDK coding guide |
 | **API** | api-tester, api-comparator | API testing & compatibility |
 | **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
@@ -348,7 +348,7 @@ claude-code-customizations/
 │   ├── docx/
 │   ├── pdf/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (32 + skills/*/agents/ 2 = 34)
+├── agents/                    # Custom subagents (33 + skills/*/agents/ 2 = 35)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
@@ -361,6 +361,7 @@ claude-code-customizations/
 │   ├── communication-excellence-coach.md
 │   ├── database-mysql.md
 │   ├── database-postgresql.md
+│   ├── database-schema-designer.md
 │   ├── documentation.md
 │   ├── explore-agent.md
 │   ├── feature-tracker.md
@@ -419,6 +420,7 @@ claude-code-customizations/
 ├── docs/                      # Documentation
 │   ├── quickstart.md
 │   ├── workflow-guide.md      # End-to-end pipeline guide
+│   ├── schema-design-workflow.md  # Database schema design workflow
 │   ├── codex-compatibility-report.md    # Codex CLI compatibility status
 │   └── resources/
 ├── install.bat                # Windows installer (12 steps, Claude + Codex + Gemini)

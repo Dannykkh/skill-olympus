@@ -42,13 +42,16 @@ function readJson(filePath) {
   }
 }
 
-// claude mcp 명령 실행
+// claude mcp 명령 실행 (CLAUDECODE 환경변수 제거하여 중첩 세션 방지)
 function runClaude(cmdArgs) {
   try {
+    const env = { ...process.env };
+    delete env.CLAUDECODE;
     return execSync(`claude ${cmdArgs}`, {
       encoding: "utf-8",
       timeout: 30000,
       stdio: ["pipe", "pipe", "pipe"],
+      env,
     }).trim();
   } catch (e) {
     return null;

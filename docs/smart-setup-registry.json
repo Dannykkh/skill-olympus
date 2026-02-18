@@ -215,6 +215,7 @@
     { "id": "react-best-practices", "tags": ["react", "nextjs"], "priority": "recommended" },
     { "id": "react-useeffect-guidelines", "tags": ["react"], "priority": "optional" },
     { "id": "backend-spring", "tags": ["java", "spring"], "priority": "essential" },
+    { "id": "database-schema-designer", "tags": ["mysql", "postgresql", "supabase", "sqlite", "mongodb"], "priority": "recommended" },
     { "id": "database-mysql", "tags": ["mysql"], "priority": "essential" },
     { "id": "database-postgresql", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "python-fastapi-guidelines", "tags": ["python", "fastapi"], "priority": "essential" },

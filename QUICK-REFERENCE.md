@@ -32,6 +32,15 @@
 |--------|------|------|
 | **pg-aiguide** | 스키마/인덱스 베스트 프랙티스, 제약조건 4배↑ | `claude plugin install pg-aiguide` |
 
+### 데이터베이스 설계
+
+| 리소스 | 설명 | 설치 |
+|--------|------|------|
+| **database-schema-designer (에이전트)** | DB-First 스키마 설계, ERD, DDL, 검증 체크리스트 | 이 저장소의 `agents/database-schema-designer.md` |
+| **database-schema-designer (스킬)** | 상세 참조: 타입, 인덱스, 제약조건, 마이그레이션 | 이 저장소의 `skills/database-schema-designer/` |
+| **database-mysql (에이전트)** | MySQL 8.0 전문가 | 이 저장소의 `agents/database-mysql.md` |
+| **database-postgresql (에이전트)** | PostgreSQL 16 + Supabase + RLS | 이 저장소의 `agents/database-postgresql.md` |
+
 ### Java / Spring Boot
 
 | 리소스 | 설명 | 설치 |
@@ -241,6 +250,7 @@ claude plugin install voltagent-qa-sec
 | `skills/ppt-generator/` | PPT 생성 |
 | `agents/frontend-react.md` | React + Zustand + TanStack |
 | `agents/backend-spring.md` | Java 21 + Spring Boot 3.x |
+| `agents/database-schema-designer.md` | DB-First 스키마 설계 + ERD + DDL |
 | `agents/database-mysql.md` | MySQL 8.0 + Flyway |
 | `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS |
 | `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 (패시브 에이전트) |

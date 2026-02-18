@@ -1,3 +1,8 @@
+---
+name: deploymonitor
+description: Git push 후 DeployMonitor 자동 배포 워크플로우를 점검하고 실행합니다.
+---
+
 # DeployMonitor Skill
 
 Git push 후 DeployMonitor가 자동 배포하는 워크플로우.

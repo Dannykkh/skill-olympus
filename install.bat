@@ -13,6 +13,7 @@ set "CLAUDE_DIR=%USERPROFILE%\.claude"
 set "CODEX_MNEMO_RESULT=미실행"
 set "CODEX_SYNC_RESULT=미실행"
 set "CODEX_MCP_RESULT=미실행"
+set "CODEX_MULTI_AGENT_RESULT=미실행"
 set "CODEX_ORCH_RESULT=미실행"
 set "GEMINI_MNEMO_RESULT=미실행"
 
@@ -98,7 +99,10 @@ if "%MODE%"=="unlink" (
 
     echo.
     echo [6/11] Orchestrator MCP 제거 중...
+    set "SAVE_CLAUDECODE=!CLAUDECODE!"
+    set "CLAUDECODE="
     claude mcp remove orchestrator -s user >nul 2>nul
+    set "CLAUDECODE=!SAVE_CLAUDECODE!"
     echo       완료!
 
     echo.
@@ -212,18 +216,22 @@ if "%MODE%"=="link" (
         if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
             set "skill_name=%%~nxD"
-            set "target=%CLAUDE_DIR%\skills\!skill_name!"
-            REM 기존 항목이 있으면 제거 - Junction이든 일반 폴더든
-            if exist "!target!" (
-                fsutil reparsepoint query "!target!" >nul 2>nul
-                if !errorlevel! equ 0 (
-                    rmdir "!target!"
-                ) else (
-                    rmdir /s /q "!target!"
+            if /i "!skill_name!"=="agent-team-codex" (
+                echo       - !skill_name! [스킵: codex 전용]
+            ) else (
+                set "target=%CLAUDE_DIR%\skills\!skill_name!"
+                REM 기존 항목이 있으면 제거 - Junction이든 일반 폴더든
+                if exist "!target!" (
+                    fsutil reparsepoint query "!target!" >nul 2>nul
+                    if !errorlevel! equ 0 (
+                        rmdir "!target!"
+                    ) else (
+                        rmdir /s /q "!target!"
+                    )
                 )
+                mklink /J "!target!" "%%D" >nul
+                echo       - !skill_name! [linked]
             )
-            mklink /J "!target!" "%%D" >nul
-            echo       - !skill_name! [linked]
         )
         echo       완료!
     ) else (
@@ -291,9 +299,13 @@ echo [1/12] Skills 설치 중... (글로벌)
 if exist "%SCRIPT_DIR%skills" (
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         set "skill_name=%%~nxD"
-        echo       - !skill_name!
-        if not exist "%CLAUDE_DIR%\skills\!skill_name!" mkdir "%CLAUDE_DIR%\skills\!skill_name!"
-        xcopy /s /y /q "%%D\*" "%CLAUDE_DIR%\skills\!skill_name!\" >nul
+        if /i "!skill_name!"=="agent-team-codex" (
+            echo       - !skill_name! [스킵: codex 전용]
+        ) else (
+            echo       - !skill_name!
+            if not exist "%CLAUDE_DIR%\skills\!skill_name!" mkdir "%CLAUDE_DIR%\skills\!skill_name!"
+            xcopy /s /y /q "%%D\*" "%CLAUDE_DIR%\skills\!skill_name!\" >nul
+        )
     )
     echo       완료!
 ) else (
@@ -366,6 +378,9 @@ echo [5/12] CLAUDE.md 장기기억 규칙 설치 중... (글로벌)
 node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
 REM MCP 서버 자동 설치 (글로벌, 무료 MCP만)
+REM 주의: CLAUDECODE 환경변수가 있으면 claude CLI가 중첩 세션으로 거부하므로 임시 해제
+set "SAVE_CLAUDECODE=!CLAUDECODE!"
+set "CLAUDECODE="
 echo.
 echo [6/12] MCP 서버 설치 중... (글로벌, 무료만 자동 설치)
 echo.
@@ -394,6 +409,8 @@ if exist "%ORCH_DIST%" (
 ) else (
     echo       [경고] MCP 서버 빌드 실패, 건너뜀
 )
+REM CLAUDECODE 환경변수 복원
+set "CLAUDECODE=!SAVE_CLAUDECODE!"
 
 REM Codex-Mnemo 설치 (Codex CLI 장기기억)
 echo.
@@ -435,7 +452,7 @@ if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
 
 REM Codex MCP 설치 (Codex CLI 무료 MCP 일괄)
 echo.
-echo [10/12] Codex MCP 설치 중... (Codex CLI, 무료 세트)
+echo [10/12] Codex MCP 설치 중... (Codex CLI, 무료 세트 + multi_agent 활성화)
 where codex >nul 2>nul
 if !errorlevel! equ 0 (
     if exist "%SCRIPT_DIR%install-mcp-codex.js" (
@@ -451,8 +468,18 @@ if !errorlevel! equ 0 (
         set "CODEX_MCP_RESULT=스킵: install-mcp-codex.js 없음"
         echo       [경고] install-mcp-codex.js 없음, 건너뜀
     )
+
+    call codex features enable multi_agent >nul 2>nul
+    if !errorlevel! equ 0 (
+        set "CODEX_MULTI_AGENT_RESULT=활성화 완료"
+        echo       multi_agent 활성화 완료
+    ) else (
+        set "CODEX_MULTI_AGENT_RESULT=활성화 실패"
+        echo       [경고] multi_agent 활성화 실패, 수동 설정 필요
+    )
 ) else (
     set "CODEX_MCP_RESULT=스킵: codex CLI 없음"
+    set "CODEX_MULTI_AGENT_RESULT=스킵: codex CLI 없음"
     echo       [경고] codex CLI 없음, 건너뜀
 )
 
@@ -537,6 +564,7 @@ echo   - Claude Orchestrator MCP 등록 완료
 echo   - Codex-Mnemo: !CODEX_MNEMO_RESULT!
 echo   - Codex Skills/Agents 동기화: !CODEX_SYNC_RESULT!
 echo   - Codex MCP(무료): !CODEX_MCP_RESULT!
+echo   - Codex multi_agent: !CODEX_MULTI_AGENT_RESULT!
 echo   - Codex Orchestrator MCP: !CODEX_ORCH_RESULT!
 echo   - Gemini-Mnemo: !GEMINI_MNEMO_RESULT!
 echo.

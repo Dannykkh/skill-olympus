@@ -20,7 +20,7 @@
 
 | Phase | 명령어 | 산출물 | 핵심 질문 |
 |-------|--------|--------|----------|
-| **설계** | `/zephermine` | 스펙, 섹션, QA 시나리오, API 명세 | **무엇**을 만드는가? |
+| **설계** | `/zephermine` | 스펙, 섹션, QA 시나리오, API 명세, DB 스키마 | **무엇**을 만드는가? |
 | **아키텍처** | `architect` 에이전트 | ADR, 기술 스택 결정 | **어떤 구조**로 만드는가? |
 | **구현** | `/agent-team` 또는 `workpm` | 소스 코드 | **코드**를 작성 |
 | **검증** | `/qa-until-pass` | 테스트 코드, QA 보고서 | **동작**하는가? |
@@ -108,7 +108,7 @@
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | zephermine | 23단계 워크플로우 (인터뷰→리서치→도메인분석→스펙→섹션→스킬탐색) |
+| **스킬** | zephermine | 24단계 워크플로우 (인터뷰→리서치→도메인분석→스펙→DB스키마→섹션→스킬탐색) |
 | **에이전트** | spec-interviewer | 심층 인터뷰 진행 (A~G 카테고리) |
 | **에이전트** | explore-agent | 기존 코드베이스 분석 |
 | **에이전트** | Domain Process Expert | 업무 흐름표 작성 (기능별 역할/CRUD 권한/입출력/예외) |
@@ -126,6 +126,7 @@
 | `domain-process-analysis.md` | 업무 흐름표 (역할/CRUD/입출력/예외) | 개발자 (API 설계 근거) |
 | `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | architect, 개발자 |
 | `claude-qa-scenarios.md` | QA 테스트 시나리오 | qa-until-pass |
+| `claude-db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | architect, 개발자, api-spec |
 | `claude-api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, qa-until-pass |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
 
@@ -151,14 +152,16 @@
 | 종류 | 이름 | 역할 |
 |------|------|------|
 | **에이전트** | architect | 아키텍처 패턴, 기술 스택 평가, SOLID, ADR |
+| **에이전트** | database-schema-designer | DB-First 스키마 설계, ERD, DDL |
 | **스킬** | mermaid-diagrams | 아키텍처 다이어그램 시각화 |
-| **스킬** | database-schema-designer | DB 스키마 설계 + ERD |
+| **스킬** | database-schema-designer | DB 스키마 설계 상세 참조 |
 
 ### 산출물
 
 - ADR (Architecture Decision Record)
 - 기술 스택 평가 매트릭스
 - 시스템 아키텍처 다이어그램
+- `claude-db-schema.md` (ERD + DDL + 설계 근거)
 
 ### 건너뛸 때
 
@@ -320,7 +323,7 @@
 | `/write-prd` | 스킬 | PRD (요구사항 정의서) 작성 | 설계 전 또는 설계 중 |
 | `/write-api-docs` | 스킬 | API 엔드포인트 문서 생성 | 구현 후 |
 | `mermaid-diagrams` | 스킬 | ERD, 시퀀스, 아키텍처 다이어그램 | 설계 중 또는 구현 후 |
-| `database-schema-designer` | 스킬 | DB 스키마 설계 + ERD | 설계 중 (architect 이후) |
+| `database-schema-designer` | 에이전트+스킬 | DB 스키마 설계 + ERD (DB-First) | 설계 중 (architect 이후) |
 | `documentation` | 에이전트 | 기술 문서, 변경 이력 | 구현 후 |
 | `/update-docs` | 스킬 | 기존 문서 파일 업데이트 | 구현 후 |
 
@@ -429,6 +432,7 @@
 | 문서 | 내용 |
 |------|------|
 | [quickstart.md](quickstart.md) | 설치 및 빠른 시작 |
+| [schema-design-workflow.md](schema-design-workflow.md) | 스키마 설계 워크플로우 상세 |
 | [AGENTS.md](../AGENTS.md) | 에이전트/스킬 전체 목록 + Recommended Workflows |
 | [QUICK-REFERENCE.md](../QUICK-REFERENCE.md) | 외부 리소스 포함 전체 참조 |
 | [skills/zephermine/](../skills/zephermine/) | 젭마인 설계 스킬 |
