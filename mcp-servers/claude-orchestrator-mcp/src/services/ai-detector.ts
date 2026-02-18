@@ -1,4 +1,4 @@
-﻿import { execSync } from 'child_process';
+import { execSync } from 'child_process';
 
 // ============================================================================
 // AI Provider 타입 정의

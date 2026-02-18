@@ -51,9 +51,34 @@ export interface ProgressInfo {
         startedAt: string;
     }[];
 }
+export type ActivityType = 'progress' | 'decision' | 'error' | 'milestone' | 'file_change';
+export interface ActivityEntry {
+    timestamp: string;
+    workerId: string;
+    taskId?: string;
+    type: ActivityType;
+    message: string;
+    files?: string[];
+    tags?: string[];
+}
+export interface ActivityQuery {
+    taskId?: string;
+    workerId?: string;
+    type?: ActivityType;
+    since?: string;
+    limit?: number;
+}
+export interface TaskActivitySummary {
+    taskId: string;
+    totalEntries: number;
+    milestones: string[];
+    errors: string[];
+    lastActivity?: ActivityEntry;
+}
 export declare class StateManager {
     private state;
     private stateFilePath;
+    private activityLogPath;
     private workerId;
     constructor(projectRoot: string, workerId: string);
     private loadState;
@@ -122,6 +147,28 @@ export declare class StateManager {
     getAllTasks(): Task[];
     getStatus(): OrchestratorState;
     getProjectRoot(): string;
+    /**
+     * 활동 로그 기록 — append-only JSONL, 동시 쓰기 안전
+     */
+    logActivity(type: ActivityType, message: string, options?: {
+        taskId?: string;
+        files?: string[];
+        tags?: string[];
+    }): {
+        success: boolean;
+        message: string;
+    };
+    /**
+     * 활동 로그 조회 — JSONL 줄 단위 파싱 + 필터링
+     */
+    getActivityLog(query?: ActivityQuery): {
+        entries: ActivityEntry[];
+        total: number;
+    };
+    /**
+     * 태스크별 활동 요약 — milestones/errors/lastActivity
+     */
+    getTaskActivitySummary(taskId: string): TaskActivitySummary;
     resetState(): void;
     deleteTask(taskId: string): {
         success: boolean;

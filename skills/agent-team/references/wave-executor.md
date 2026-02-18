@@ -45,6 +45,10 @@ description에 구현해야 할 전체 내용이 있어.
 2. 다른 teammate의 파일은 절대 수정 금지
 3. 구현 완료 후 반드시 TaskUpdate({ taskId: '#{taskId}', status: 'completed' }) 실행
 4. 문제가 있으면 Lead에게 메시지로 보고
+5. 작업 활동을 conversations/{YYYY-MM-DD}-team-dannys.md 에 기록할 것
+   - 시작/결정/에러/파일변경/완료 시점에 기록
+   - 형식: ## [HH:mm:ss] {name} ({section}) → **{TYPE}**: {message} → #tags:
+   - 각 기록 3줄 이내로 간결하게
 
 선행 섹션 결과:
 {선행 섹션에서 생성된 파일 목록 + 주요 인터페이스/타입 요약}

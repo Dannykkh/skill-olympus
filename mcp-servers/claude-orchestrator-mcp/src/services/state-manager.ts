@@ -1,4 +1,4 @@
-﻿import * as fs from 'fs';
+import * as fs from 'fs';
 import * as path from 'path';
 
 // ============================================================================
@@ -65,6 +65,34 @@ export interface ProgressInfo {
   }[];
 }
 
+export type ActivityType = 'progress' | 'decision' | 'error' | 'milestone' | 'file_change';
+
+export interface ActivityEntry {
+  timestamp: string;      // ISO 8601
+  workerId: string;
+  taskId?: string;
+  type: ActivityType;
+  message: string;        // 1줄 요약
+  files?: string[];
+  tags?: string[];        // Mnemo 검색용 키워드
+}
+
+export interface ActivityQuery {
+  taskId?: string;
+  workerId?: string;
+  type?: ActivityType;
+  since?: string;         // ISO 8601
+  limit?: number;
+}
+
+export interface TaskActivitySummary {
+  taskId: string;
+  totalEntries: number;
+  milestones: string[];
+  errors: string[];
+  lastActivity?: ActivityEntry;
+}
+
 // ============================================================================
 // StateManager 클래스
 // ============================================================================
@@ -72,11 +100,13 @@ export interface ProgressInfo {
 export class StateManager {
   private state: OrchestratorState;
   private stateFilePath: string;
+  private activityLogPath: string;
   private workerId: string;
 
   constructor(projectRoot: string, workerId: string) {
     this.workerId = workerId;
     this.stateFilePath = path.join(projectRoot, '.orchestrator', 'state.json');
+    this.activityLogPath = path.join(projectRoot, '.orchestrator', 'activity-log.jsonl');
 
     // 상태 디렉토리 생성
     const stateDir = path.dirname(this.stateFilePath);
@@ -101,11 +131,17 @@ export class StateManager {
   // --------------------------------------------------------------------------
 
   private loadState(): OrchestratorState {
-    const content = fs.readFileSync(this.stateFilePath, 'utf-8');
-    return JSON.parse(content) as OrchestratorState;
+    try {
+      const content = fs.readFileSync(this.stateFilePath, 'utf-8');
+      const parsed = JSON.parse(content) as unknown;
+      return this.normalizeState(parsed, this.getStateProjectRootFallback());
+    } catch {
+      return this.createInitialState(this.getStateProjectRootFallback());
+    }
   }
 
   private saveState(): void {
+    this.state = this.normalizeState(this.state, this.getStateProjectRootFallback());
     fs.writeFileSync(this.stateFilePath, JSON.stringify(this.state, null, 2), 'utf-8');
   }
 
@@ -117,6 +153,38 @@ export class StateManager {
       projectRoot,
       startedAt: new Date().toISOString(),
       version: '1.0.0'
+    };
+  }
+
+  private getStateProjectRootFallback(): string {
+    return path.dirname(path.dirname(this.stateFilePath));
+  }
+
+  private normalizeState(rawState: unknown, fallbackProjectRoot: string): OrchestratorState {
+    const baseState = this.createInitialState(fallbackProjectRoot);
+
+    if (!rawState || typeof rawState !== 'object' || Array.isArray(rawState)) {
+      return baseState;
+    }
+
+    const candidate = rawState as Partial<OrchestratorState>;
+
+    return {
+      tasks: Array.isArray(candidate.tasks) ? candidate.tasks : [],
+      fileLocks: Array.isArray(candidate.fileLocks) ? candidate.fileLocks : [],
+      workers: Array.isArray(candidate.workers) ? candidate.workers : [],
+      projectRoot:
+        typeof candidate.projectRoot === 'string' && candidate.projectRoot.length > 0
+          ? candidate.projectRoot
+          : fallbackProjectRoot,
+      startedAt:
+        typeof candidate.startedAt === 'string' && candidate.startedAt.length > 0
+          ? candidate.startedAt
+          : baseState.startedAt,
+      version:
+        typeof candidate.version === 'string' && candidate.version.length > 0
+          ? candidate.version
+          : baseState.version
     };
   }
 
@@ -368,6 +436,9 @@ export class StateManager {
       worker.currentTask = taskId;
     }
 
+    // 자동 활동 로깅
+    this.logActivity('milestone', `태스크 시작: ${task.prompt.slice(0, 80)}`, { taskId });
+
     this.saveState();
 
     return { success: true, message: `Task '${taskId}' claimed by ${this.workerId}`, task };
@@ -415,6 +486,9 @@ export class StateManager {
       })
       .map(t => t.id);
 
+    // 자동 활동 로깅
+    this.logActivity('milestone', `태스크 완료: ${(result || '').slice(0, 100)}`, { taskId });
+
     this.saveState();
 
     return {
@@ -449,6 +523,9 @@ export class StateManager {
       worker.status = 'idle';
       worker.currentTask = undefined;
     }
+
+    // 자동 활동 로깅
+    this.logActivity('error', `태스크 실패: ${error.slice(0, 100)}`, { taskId });
 
     this.saveState();
 
@@ -558,6 +635,101 @@ export class StateManager {
   }
 
   // --------------------------------------------------------------------------
+  // Activity Log
+  // --------------------------------------------------------------------------
+
+  /**
+   * 활동 로그 기록 — append-only JSONL, 동시 쓰기 안전
+   */
+  public logActivity(
+    type: ActivityType,
+    message: string,
+    options: { taskId?: string; files?: string[]; tags?: string[] } = {}
+  ): { success: boolean; message: string } {
+    const entry: ActivityEntry = {
+      timestamp: new Date().toISOString(),
+      workerId: this.workerId,
+      taskId: options.taskId,
+      type,
+      message,
+      files: options.files,
+      tags: options.tags
+    };
+
+    try {
+      // 디렉토리 확보
+      const dir = path.dirname(this.activityLogPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.appendFileSync(this.activityLogPath, JSON.stringify(entry) + '\n', 'utf-8');
+      return { success: true, message: 'Activity logged' };
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      return { success: false, message: `Failed to log activity: ${errMsg}` };
+    }
+  }
+
+  /**
+   * 활동 로그 조회 — JSONL 줄 단위 파싱 + 필터링
+   */
+  public getActivityLog(query: ActivityQuery = {}): { entries: ActivityEntry[]; total: number } {
+    if (!fs.existsSync(this.activityLogPath)) {
+      return { entries: [], total: 0 };
+    }
+
+    const lines = fs.readFileSync(this.activityLogPath, 'utf-8').split('\n').filter(l => l.trim());
+    let entries: ActivityEntry[] = [];
+
+    for (const line of lines) {
+      try {
+        entries.push(JSON.parse(line) as ActivityEntry);
+      } catch {
+        // 파싱 실패한 줄은 무시
+      }
+    }
+
+    const total = entries.length;
+
+    // 필터링
+    if (query.taskId) {
+      entries = entries.filter(e => e.taskId === query.taskId);
+    }
+    if (query.workerId) {
+      entries = entries.filter(e => e.workerId === query.workerId);
+    }
+    if (query.type) {
+      entries = entries.filter(e => e.type === query.type);
+    }
+    if (query.since) {
+      const sinceDate = new Date(query.since).getTime();
+      entries = entries.filter(e => new Date(e.timestamp).getTime() >= sinceDate);
+    }
+
+    // limit (최신 N건)
+    if (query.limit && query.limit > 0) {
+      entries = entries.slice(-query.limit);
+    }
+
+    return { entries, total };
+  }
+
+  /**
+   * 태스크별 활동 요약 — milestones/errors/lastActivity
+   */
+  public getTaskActivitySummary(taskId: string): TaskActivitySummary {
+    const { entries } = this.getActivityLog({ taskId });
+
+    return {
+      taskId,
+      totalEntries: entries.length,
+      milestones: entries.filter(e => e.type === 'milestone').map(e => e.message),
+      errors: entries.filter(e => e.type === 'error').map(e => e.message),
+      lastActivity: entries.length > 0 ? entries[entries.length - 1] : undefined
+    };
+  }
+
+  // --------------------------------------------------------------------------
   // 관리 기능
   // --------------------------------------------------------------------------
 
@@ -565,6 +737,11 @@ export class StateManager {
     this.state = this.createInitialState(this.state.projectRoot);
     this.registerWorker();
     this.saveState();
+
+    // Activity log JSONL도 삭제
+    if (fs.existsSync(this.activityLogPath)) {
+      fs.unlinkSync(this.activityLogPath);
+    }
   }
 
   public deleteTask(taskId: string): { success: boolean; message: string } {

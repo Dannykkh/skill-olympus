@@ -187,8 +187,11 @@ for each wave:
   1. Wave에 속한 Task들의 blockedBy가 모두 해소되었는지 확인
   2. 각 Task에 대해 teammate에게 자연어로 지시
   3. teammate에게 전달할 컨텍스트 구성 (→ teammate-context-template.md 참조)
-  4. TaskList 폴링으로 진행 상황 모니터링
-  5. 모든 Task completed → 다음 Wave로 진행
+  4. teammate에게 Activity Logging 규칙 전달:
+     - conversations/{YYYY-MM-DD}-team-dannys.md에 작업 과정 기록
+     - 시작/결정/에러/파일변경/완료 5개 시점에 기록
+  5. TaskList 폴링으로 진행 상황 모니터링
+  6. 모든 Task completed → 다음 Wave로 진행
 ```
 
 **teammate 지시 형식:**
@@ -228,6 +231,27 @@ See [verification-protocol.md](references/verification-protocol.md)
 검증 실패 시:
 - 해당 섹션의 Task를 다시 생성
 - 실패 원인을 description에 포함하여 재실행
+
+### Step 5.5: Activity Log Summary
+
+모든 Wave 완료 후, Verify 전에 활동 로그를 요약합니다:
+
+1. `conversations/{YYYY-MM-DD}-team-dannys.md` 파일 읽기
+2. teammate별 활동 통계 집계:
+   - 기록 수, 에러 수, 생성/수정 파일 수
+3. Orchestrator MCP 사용 시 `orchestrator_get_activity_log`로 JSONL 로그도 확인
+4. 요약을 Final Report에 포함
+
+```
+═══════════════════════════════════════
+STEP 5.5/7: ACTIVITY LOG SUMMARY
+═══════════════════════════════════════
+teammate-1 (section-01): 기록 5건, 에러 0건, 파일 3개
+teammate-2 (section-02): 기록 4건, 에러 1건 (해결됨), 파일 2개
+...
+Activity log: conversations/2026-02-18-team-dannys.md
+───────────────────────────────────────────────────────
+```
 
 ### Step 6: Final Report
 

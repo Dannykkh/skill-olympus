@@ -57,6 +57,11 @@
 5. 진행 모니터링
    → orchestrator_get_progress()
    → 블로킹된 태스크, 실패한 태스크 확인
+
+6. 활동 로그 리뷰
+   → orchestrator_get_activity_log({task_id, worker_id, type, since, limit})
+   → orchestrator_get_task_summary({task_id}) — 마일스톤/에러 요약
+   → Worker의 의사결정 과정, 에러 이력 확인
 ```
 
 ### AI 배정 가이드
@@ -108,9 +113,12 @@
    → orchestrator_lock_file({path: "src/auth/"})
    → 다른 Worker와 충돌 방지
 
-4. 작업 수행
+4. 작업 수행 + 활동 기록
    → TaskUpdate로 진행 상태 업데이트
    → 각 하위 TODO 완료 시 completed 처리
+   → orchestrator_log_activity로 주요 활동 기록:
+     - type: 'progress' (진행), 'decision' (결정), 'error' (에러), 'file_change' (파일 변경)
+     - task_id, tags 포함으로 나중에 검색 가능
 
 5. 작업 완료
    → orchestrator_complete_task({

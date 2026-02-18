@@ -137,7 +137,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) |
+| 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |

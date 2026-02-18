@@ -6,7 +6,7 @@
 ## Inventory
 
 - Agents: 34
-- Skills: 69
+- Skills: 70
 - Root hooks (Claude format): 21
 - Codex notify hooks: 7
 - MCP config presets: 5
@@ -19,7 +19,7 @@
 ## Skills
 
 - `portable`: 57
-- `codex-ready`: 1
+- `codex-ready`: 2
 - `codex-ready-manual`: 1
 - `needs-adaptation`: 7
 - `claude-only`: 2
@@ -27,9 +27,10 @@
 
 ### Codex Ready
 - codex-mnemo
+- agent-team-codex (Codex multi_agent 기반 병렬 실행 + Activity Logging)
 
 ### Codex Ready (Manual Setup)
-- orchestrator
+- orchestrator (Activity Log 도구 3개 추가: log_activity, get_activity_log, get_task_summary)
 
 ### Needs Adaptation
 - agent-md-refactor, api-handoff, command-creator, daily-meeting-update, draw-io, game-changing-features, zephermine

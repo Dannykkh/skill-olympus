@@ -234,7 +234,8 @@ claude plugin install voltagent-qa-sec
 | `skills/react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
 | `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |
-| `skills/agent-team/` | Agent Teams 병렬 실행 — Opus 4.6 네이티브 (zephermine 섹션 기반) |
+| `skills/agent-team/` | Agent Teams 병렬 실행 — Opus 4.6 네이티브 (zephermine 섹션 기반) + Activity Log |
+| `skills/agent-team-codex/` | Codex CLI multi_agent 기반 병렬 실행 + Activity Log |
 | `skills/erd-designer/` | Mermaid ERD 생성 |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |

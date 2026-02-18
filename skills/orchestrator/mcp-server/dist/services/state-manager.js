@@ -6,10 +6,12 @@ import * as path from 'path';
 export class StateManager {
     state;
     stateFilePath;
+    activityLogPath;
     workerId;
     constructor(projectRoot, workerId) {
         this.workerId = workerId;
         this.stateFilePath = path.join(projectRoot, '.orchestrator', 'state.json');
+        this.activityLogPath = path.join(projectRoot, '.orchestrator', 'activity-log.jsonl');
         // 상태 디렉토리 생성
         const stateDir = path.dirname(this.stateFilePath);
         if (!fs.existsSync(stateDir)) {
@@ -270,6 +272,8 @@ export class StateManager {
             worker.status = 'working';
             worker.currentTask = taskId;
         }
+        // 자동 활동 로깅
+        this.logActivity('milestone', `태스크 시작: ${task.prompt.slice(0, 80)}`, { taskId });
         this.saveState();
         return { success: true, message: `Task '${taskId}' claimed by ${this.workerId}`, task };
     }
@@ -306,6 +310,8 @@ export class StateManager {
             });
         })
             .map(t => t.id);
+        // 자동 활동 로깅
+        this.logActivity('milestone', `태스크 완료: ${(result || '').slice(0, 100)}`, { taskId });
         this.saveState();
         return {
             success: true,
@@ -333,6 +339,8 @@ export class StateManager {
             worker.status = 'idle';
             worker.currentTask = undefined;
         }
+        // 자동 활동 로깅
+        this.logActivity('error', `태스크 실패: ${error.slice(0, 100)}`, { taskId });
         this.saveState();
         return { success: true, message: `Task '${taskId}' marked as failed` };
     }
@@ -417,12 +425,97 @@ export class StateManager {
         return this.state.projectRoot;
     }
     // --------------------------------------------------------------------------
+    // Activity Log
+    // --------------------------------------------------------------------------
+    /**
+     * 활동 로그 기록 — append-only JSONL, 동시 쓰기 안전
+     */
+    logActivity(type, message, options = {}) {
+        const entry = {
+            timestamp: new Date().toISOString(),
+            workerId: this.workerId,
+            taskId: options.taskId,
+            type,
+            message,
+            files: options.files,
+            tags: options.tags
+        };
+        try {
+            // 디렉토리 확보
+            const dir = path.dirname(this.activityLogPath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            fs.appendFileSync(this.activityLogPath, JSON.stringify(entry) + '\n', 'utf-8');
+            return { success: true, message: 'Activity logged' };
+        }
+        catch (err) {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            return { success: false, message: `Failed to log activity: ${errMsg}` };
+        }
+    }
+    /**
+     * 활동 로그 조회 — JSONL 줄 단위 파싱 + 필터링
+     */
+    getActivityLog(query = {}) {
+        if (!fs.existsSync(this.activityLogPath)) {
+            return { entries: [], total: 0 };
+        }
+        const lines = fs.readFileSync(this.activityLogPath, 'utf-8').split('\n').filter(l => l.trim());
+        let entries = [];
+        for (const line of lines) {
+            try {
+                entries.push(JSON.parse(line));
+            }
+            catch {
+                // 파싱 실패한 줄은 무시
+            }
+        }
+        const total = entries.length;
+        // 필터링
+        if (query.taskId) {
+            entries = entries.filter(e => e.taskId === query.taskId);
+        }
+        if (query.workerId) {
+            entries = entries.filter(e => e.workerId === query.workerId);
+        }
+        if (query.type) {
+            entries = entries.filter(e => e.type === query.type);
+        }
+        if (query.since) {
+            const sinceDate = new Date(query.since).getTime();
+            entries = entries.filter(e => new Date(e.timestamp).getTime() >= sinceDate);
+        }
+        // limit (최신 N건)
+        if (query.limit && query.limit > 0) {
+            entries = entries.slice(-query.limit);
+        }
+        return { entries, total };
+    }
+    /**
+     * 태스크별 활동 요약 — milestones/errors/lastActivity
+     */
+    getTaskActivitySummary(taskId) {
+        const { entries } = this.getActivityLog({ taskId });
+        return {
+            taskId,
+            totalEntries: entries.length,
+            milestones: entries.filter(e => e.type === 'milestone').map(e => e.message),
+            errors: entries.filter(e => e.type === 'error').map(e => e.message),
+            lastActivity: entries.length > 0 ? entries[entries.length - 1] : undefined
+        };
+    }
+    // --------------------------------------------------------------------------
     // 관리 기능
     // --------------------------------------------------------------------------
     resetState() {
         this.state = this.createInitialState(this.state.projectRoot);
         this.registerWorker();
         this.saveState();
+        // Activity log JSONL도 삭제
+        if (fs.existsSync(this.activityLogPath)) {
+            fs.unlinkSync(this.activityLogPath);
+        }
     }
     deleteTask(taskId) {
         this.reloadState();

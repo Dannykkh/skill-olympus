@@ -129,6 +129,50 @@ Task #4를 확인하세요.
 5. 구현 중 문제 발견 시 Lead에게 메시지로 보고
 ```
 
+**⚠️ CRITICAL RETURN RULE:**
+- 작업 결과는 **파일에만** 쓸 것
+- Lead에게 보내는 return/메시지는 **1줄 요약만** (전체 분석 텍스트 X)
+- 예: `✅ section-04-api 완료. 파일 5개 생성, 에러 0건.`
+- 이유: return text가 Lead 컨텍스트에 합산되어 컨텍스트 폭발 방지
+
+### 7. Activity Logging (활동 기록)
+
+작업 과정을 `conversations/` 디렉토리에 기록합니다.
+teammate의 의사결정/에러/진행이 세션 종료 후에도 검색 가능하도록 보존합니다.
+
+**대상 파일:** `conversations/{YYYY-MM-DD}-team-dannys.md`
+
+**기록 시점 5가지:**
+
+| 시점 | type | 예시 |
+|------|------|------|
+| 작업 시작 | START | 섹션 구현 시작, 파일 목록 확인 |
+| 주요 결정 | DECISION | "Zustand 대신 Context API 선택 — 외부 의존성 최소화" |
+| 에러 발생 | ERROR | "빌드 실패: tsconfig에 paths 누락" |
+| 파일 생성/수정 | FILE | "src/api/routes.ts 생성 (12개 엔드포인트)" |
+| 작업 완료 | DONE | 섹션 완료 요약 |
+
+**형식:**
+```markdown
+## [HH:mm:ss] {teammate-name} ({section-name})
+**{TYPE}**: {message}
+`#tags: keyword1, keyword2`
+```
+
+**규칙:**
+- 각 기록 **3줄 이내** (간결하게)
+- 파일이 없으면 frontmatter와 함께 생성:
+  ```markdown
+  ---
+  date: YYYY-MM-DD
+  team: dannys-team
+  type: activity-log
+  ---
+  # Team Activity Log — YYYY-MM-DD
+  ```
+- 기존 파일이 있으면 **Edit 도구로 끝에 추가**
+- Orchestrator MCP 사용 시 `orchestrator_log_activity`도 병행 호출
+
 ## 컨텍스트 크기 관리
 
 | 항목 | 크기 관리 |

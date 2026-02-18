@@ -93,6 +93,27 @@ const SpawnWorkersSchema = z.object({
   auto_terminate: z.boolean().default(true).describe('태스크 완료 시 자동 종료 여부')
 });
 
+// Activity Log 스키마
+const LogActivitySchema = z.object({
+  task_id: z.string().optional().describe('관련 태스크 ID'),
+  type: z.enum(['progress', 'decision', 'error', 'milestone', 'file_change']).describe('활동 유형'),
+  message: z.string().describe('활동 내용 (1줄 요약)'),
+  files: z.array(z.string()).optional().describe('관련 파일 목록'),
+  tags: z.array(z.string()).optional().describe('Mnemo 검색용 키워드')
+});
+
+const GetActivityLogSchema = z.object({
+  task_id: z.string().optional().describe('태스크 ID 필터'),
+  worker_id: z.string().optional().describe('워커 ID 필터'),
+  type: z.enum(['progress', 'decision', 'error', 'milestone', 'file_change']).optional().describe('활동 유형 필터'),
+  since: z.string().optional().describe('이 시각 이후만 조회 (ISO 8601)'),
+  limit: z.number().optional().describe('최대 반환 건수 (최신 N건)')
+});
+
+const GetTaskActivitySummarySchema = z.object({
+  task_id: z.string().describe('요약할 태스크 ID')
+});
+
 // ============================================================================
 // 도구 정의
 // ============================================================================
@@ -331,6 +352,64 @@ const TOOLS: Tool[] = [
     inputSchema: {
       type: 'object',
       properties: {}
+    }
+  },
+
+  // Activity Log 도구
+  {
+    name: 'orchestrator_log_activity',
+    description: '활동을 기록합니다. 진행 상황, 의사결정, 에러, 마일스톤, 파일 변경 등. (Worker/PM 공용)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task_id: { type: 'string', description: '관련 태스크 ID' },
+        type: {
+          type: 'string',
+          enum: ['progress', 'decision', 'error', 'milestone', 'file_change'],
+          description: '활동 유형'
+        },
+        message: { type: 'string', description: '활동 내용 (1줄 요약)' },
+        files: {
+          type: 'array',
+          items: { type: 'string' },
+          description: '관련 파일 목록'
+        },
+        tags: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Mnemo 검색용 키워드'
+        }
+      },
+      required: ['type', 'message']
+    }
+  },
+  {
+    name: 'orchestrator_get_activity_log',
+    description: '활동 로그를 조회합니다. 태스크/워커/유형별 필터링 가능. (PM 전용)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task_id: { type: 'string', description: '태스크 ID 필터' },
+        worker_id: { type: 'string', description: '워커 ID 필터' },
+        type: {
+          type: 'string',
+          enum: ['progress', 'decision', 'error', 'milestone', 'file_change'],
+          description: '활동 유형 필터'
+        },
+        since: { type: 'string', description: '이 시각 이후만 조회 (ISO 8601)' },
+        limit: { type: 'number', description: '최대 반환 건수 (최신 N건)' }
+      }
+    }
+  },
+  {
+    name: 'orchestrator_get_task_summary',
+    description: '특정 태스크의 활동 요약을 조회합니다. milestones/errors/lastActivity. (PM 전용)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task_id: { type: 'string', description: '요약할 태스크 ID' }
+      },
+      required: ['task_id']
     }
   }
 ];
@@ -747,6 +826,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'orchestrator_heartbeat': {
         stateManager.updateHeartbeat();
         result = { success: true, workerId: WORKER_ID, timestamp: new Date().toISOString() };
+        break;
+      }
+
+      // Activity Log 도구
+      case 'orchestrator_log_activity': {
+        const parsed = LogActivitySchema.parse(args);
+        result = stateManager.logActivity(parsed.type, parsed.message, {
+          taskId: parsed.task_id,
+          files: parsed.files,
+          tags: parsed.tags
+        });
+        break;
+      }
+
+      case 'orchestrator_get_activity_log': {
+        const parsed = GetActivityLogSchema.parse(args);
+        result = stateManager.getActivityLog({
+          taskId: parsed.task_id,
+          workerId: parsed.worker_id,
+          type: parsed.type,
+          since: parsed.since,
+          limit: parsed.limit
+        });
+        break;
+      }
+
+      case 'orchestrator_get_task_summary': {
+        const parsed = GetTaskActivitySummarySchema.parse(args);
+        result = stateManager.getTaskActivitySummary(parsed.task_id);
         break;
       }
 
