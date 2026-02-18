@@ -10,6 +10,7 @@ CLAUDE_DIR="$HOME/.claude"
 CODEX_MNEMO_RESULT="미실행"
 CODEX_SYNC_RESULT="미실행"
 CODEX_MCP_RESULT="미실행"
+CODEX_MULTI_AGENT_RESULT="미실행"
 CODEX_ORCH_RESULT="미실행"
 GEMINI_MNEMO_RESULT="미실행"
 
@@ -428,7 +429,7 @@ fi
 
 # Codex MCP 설치 (Codex CLI 무료 MCP 일괄)
 echo ""
-echo "[10/12] Codex MCP 설치 중... (Codex CLI, 무료 세트)"
+echo "[10/12] Codex MCP 설치 중... (Codex CLI, 무료 세트 + multi_agent 활성화)"
 if command -v codex >/dev/null 2>&1; then
     if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
         if node "$SCRIPT_DIR/install-mcp-codex.js" --all; then
@@ -442,8 +443,17 @@ if command -v codex >/dev/null 2>&1; then
         CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
         echo "      [경고] install-mcp-codex.js 없음, 건너뜀"
     fi
+
+    if codex features enable multi_agent >/dev/null 2>&1; then
+        CODEX_MULTI_AGENT_RESULT="활성화 완료"
+        echo "      multi_agent 활성화 완료"
+    else
+        CODEX_MULTI_AGENT_RESULT="활성화 실패"
+        echo "      [경고] multi_agent 활성화 실패, 수동 설정 필요"
+    fi
 else
     CODEX_MCP_RESULT="스킵(codex CLI 없음)"
+    CODEX_MULTI_AGENT_RESULT="스킵(codex CLI 없음)"
     echo "      [경고] codex CLI 없음, 건너뜀"
 fi
 
@@ -521,6 +531,7 @@ echo "  - Claude Orchestrator MCP 등록 완료"
 echo "  - Codex-Mnemo: $CODEX_MNEMO_RESULT"
 echo "  - Codex Skills/Agents 동기화: $CODEX_SYNC_RESULT"
 echo "  - Codex MCP(무료): $CODEX_MCP_RESULT"
+echo "  - Codex multi_agent: $CODEX_MULTI_AGENT_RESULT"
 echo "  - Codex Orchestrator MCP: $CODEX_ORCH_RESULT"
 echo "  - Gemini-Mnemo: $GEMINI_MNEMO_RESULT"
 echo ""
