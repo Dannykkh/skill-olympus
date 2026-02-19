@@ -2,7 +2,6 @@
 name: documentation
 description: Technical documentation specialist. Creates PRD, API docs, implementation tracking, changelogs. Runs on "write docs", "create PRD", "API documentation" requests.
 tools: Read, Write, Glob, Grep
-model: sonnet
 ---
 
 # Documentation Agent

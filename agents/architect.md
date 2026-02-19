@@ -4,7 +4,6 @@ description: |
   시스템 아키텍처 설계 및 기술 의사결정 전문가. 기술 스택 평가, 확장성 설계, 아키텍처 리뷰.
   "아키텍처 설계", "기술 스택 선정", "시스템 구조" 요청에 실행.
 tools: Read, Grep, Glob, Bash
-model: sonnet
 ---
 
 # Architect Agent

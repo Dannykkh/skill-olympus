@@ -2,7 +2,6 @@
 name: qa-writer
 description: QA test scenario and test case writer. Runs on "write test cases", "create QA scenarios" requests.
 tools: Read, Write, Glob
-model: sonnet
 ---
 
 # QA Test Scenario Writer

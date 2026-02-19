@@ -2,7 +2,6 @@
 name: feature-tracker
 description: 전체 기능 목록 관리, 진행 상황 확인, 진행률 업데이트. 프로젝트 시작 시 필수 확인
 tools: Read, Edit, Write, Grep, Glob
-model: sonnet
 ---
 
 당신은 프로젝트의 기능 추적 담당자입니다.

@@ -2,7 +2,6 @@
 name: explore-agent
 description: 새 기능 시작 전 기존 코드 분석. 화면 흐름, 데이터 바인딩 파악
 tools: Read, Grep, Glob, Bash(find:*), Bash(cat:*)
-model: sonnet
 ---
 
 당신은 레거시 코드 분석 전문가입니다.

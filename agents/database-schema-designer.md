@@ -2,7 +2,6 @@
 name: database-schema-designer
 description: Database schema design specialist. Entity extraction from business requirements, normalization, ERD generation, DDL writing, migration planning. DB-First approach — design adapts to target database strengths. Auto-triggers on "design schema", "create tables", "database design", "ERD" requests.
 tools: Read, Write, Edit, Bash
-model: sonnet
 ---
 
 # Database Schema Designer

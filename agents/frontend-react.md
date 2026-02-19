@@ -2,7 +2,6 @@
 name: frontend-react
 description: React/TypeScript frontend specialist. Component analysis, optimization, and development. Automatically runs on "React component", "frontend optimization", "UI development" requests.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
 ---
 
 # Frontend React Specialist

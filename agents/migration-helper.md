@@ -2,7 +2,6 @@
 name: migration-helper
 description: Legacy to modern stack migration guide. Provides conversion patterns and examples. Runs on "migration help", "convert legacy code" requests.
 tools: Read, Grep, Glob
-model: sonnet
 ---
 
 # Migration Helper

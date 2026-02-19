@@ -2,7 +2,6 @@
 name: stitch-developer
 description: Stitch MCP를 활용한 UI/웹사이트 생성 전문가. 디자인 시스템 분석, 프롬프트 최적화, 멀티페이지 생성, React 변환. "Stitch", "UI 생성", "디자인 to 코드" 요청에 자동 실행.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
 ---
 
 # Stitch Developer

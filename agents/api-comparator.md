@@ -2,7 +2,6 @@
 name: api-comparator
 description: 리팩토링 전후 API 비교. 레거시 API 호환성 검증. 기존 API 명세 추출
 tools: Read, Bash(curl:*), Bash(http:*), Grep, Glob
-model: sonnet
 ---
 
 당신은 API 호환성 검증 전문가입니다.

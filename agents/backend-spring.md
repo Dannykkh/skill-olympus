@@ -2,7 +2,6 @@
 name: backend-spring
 description: Spring Boot backend specialist. API design, service layer, database integration. Runs on "Spring Boot", "backend API", "Java service" requests.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
 ---
 
 # Backend Agent (Spring Boot)
