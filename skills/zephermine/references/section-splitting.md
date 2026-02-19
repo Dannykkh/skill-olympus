@@ -161,12 +161,47 @@ Include all necessary background, requirements, and implementation details withi
 |--------|------|-----------|
 | ... | ... | ... |
 
+## Implementation Strategy
+
+구현자가 따를 TDD 기반 접근 방식. 각 Phase를 순서대로 진행.
+
+### Phase 1: Red (테스트 먼저)
+- Test Scenarios 기반으로 테스트 파일 작성
+- 모든 테스트가 실패(Red)하는 것을 확인
+
+### Phase 2: Green (최소 구현)
+- 테스트를 통과시키는 최소한의 코드 작성
+- 동작하는 코드 먼저, 최적화는 나중에
+
+### Phase 3: Refactor (개선)
+- 중복 제거, 네이밍 개선, 구조 정리
+- 테스트가 여전히 통과하는지 확인
+
+## Quality Gate
+
+이 섹션을 "완료"로 표시하기 전 반드시 확인할 체크리스트:
+
+- [ ] 모든 Test Scenarios에 대응하는 테스트 코드 존재
+- [ ] 빌드 에러 없음 (`npm run build` / `mvn compile` 등)
+- [ ] 기존 테스트가 깨지지 않음 (회귀 없음)
+- [ ] Dependencies의 선행 섹션이 모두 완료됨
+- [ ] 새로 추가한 API가 `claude-api-spec.md`에 등록됨 (해당 시)
+
+## Risk & Rollback
+
+| 위험 요소 | 영향도 | 완화 전략 | 롤백 방법 |
+|-----------|--------|-----------|-----------|
+| {risk 1} | High/Medium/Low | {mitigation} | {rollback steps} |
+
+> 구현 중 예상치 못한 위험 발견 시 이 테이블에 추가하고, 다음 섹션 진행 전 대응.
+
 ## Acceptance Criteria
 
 - [ ] {Criterion 1}
 - [ ] {Criterion 2}
 - [ ] {Criterion 3}
 - [ ] 위 Test Scenarios의 정상/에러/엣지 케이스가 모두 통과
+- [ ] Quality Gate 전 항목 통과
 
 ## Files to Create/Modify
 

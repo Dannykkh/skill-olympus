@@ -250,7 +250,9 @@
     { "id": "workplace-conversations", "tags": ["*"], "priority": "optional" },
     { "id": "wrangler", "tags": ["*"], "priority": "optional" },
     { "id": "writing-clearly-and-concisely", "tags": ["*"], "priority": "optional" },
-    { "id": "zephermine", "tags": ["*"], "priority": "recommended" }
+    { "id": "zephermine", "tags": ["*"], "priority": "recommended" },
+    { "id": "manage-skills", "tags": ["*"], "priority": "optional" },
+    { "id": "verify-implementation", "tags": ["*"], "priority": "optional" }
   ],
 
   "internal-agents": [

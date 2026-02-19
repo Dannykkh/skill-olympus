@@ -134,12 +134,12 @@ node skills/orchestrator/install.js <target-project-path>
 
 ## What's Included
 
-### Custom Skills (68 Skills)
+### Custom Skills (70 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
 | 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
-| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | Plugin/skill creation tools |
+| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
@@ -264,7 +264,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (68 skills)
+├── skills/                    # Custom skills (70 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -323,6 +323,8 @@ claude-code-customizations/
 │   ├── semgrep-rule-creator/
 │   ├── systematic-debugging/
 │   ├── test-driven-development/
+│   ├── manage-skills/
+│   ├── verify-implementation/
 │   ├── wrangler/
 │   ├── docx/
 │   ├── pdf/

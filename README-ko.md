@@ -134,12 +134,12 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (68개)
+### 커스텀 스킬 (70개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
-| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills | 플러그인/스킬 생성 도구 |
+| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검증 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
@@ -264,7 +264,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (68개)
+├── skills/                    # 커스텀 스킬 (70개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -325,6 +325,8 @@ claude-code-customizations/
 │   ├── semgrep-rule-creator/
 │   ├── systematic-debugging/
 │   ├── test-driven-development/
+│   ├── manage-skills/
+│   ├── verify-implementation/
 │   ├── wrangler/
 │   └── writing-clearly-and-concisely/
 ├── agents/                    # 커스텀 서브에이전트 (33 + skills/*/agents/ 2 = 35 에이전트)

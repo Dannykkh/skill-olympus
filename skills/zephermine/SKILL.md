@@ -175,6 +175,16 @@ Combine into `<planning_dir>/claude-spec.md`:
 
 This synthesizes the user's raw requirements into a complete specification.
 
+**필수 포함: Risk Assessment 섹션** — 프로젝트 수준의 위험 요소 분석:
+
+| 위험 요소 | 영향도 | 발생 확률 | 완화 전략 |
+|-----------|--------|-----------|-----------|
+| {기술적 위험} | High/Med/Low | High/Med/Low | {대응 방안} |
+| {외부 의존성 위험} | ... | ... | ... |
+| {일정/범위 위험} | ... | ... | ... |
+
+> 각 섹션은 이 테이블을 참조하여 섹션별 Risk & Rollback을 구체화합니다.
+
 **필수 포함: Test Scenarios 섹션** — 각 주요 기능(API, 화면, 로직)마다:
 - 정상 케이스: 입력 → 기대 출력
 - 에러 케이스: 잘못된 입력 → 기대 에러
@@ -317,7 +327,7 @@ See [section-splitting.md](references/section-splitting.md)
 
 1. Parse `sections/index.md`의 SECTION_MANIFEST
 2. 각 섹션마다 Task 1개씩, **모든 Task를 한 메시지에서 병렬 실행**
-3. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, Reference Libraries, Implementation, Test Scenarios, Acceptance Criteria, Files 포함)
+3. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, Reference Libraries, Implementation, Test Scenarios, Implementation Strategy, Quality Gate, Risk & Rollback, Acceptance Criteria, Files 포함)
 4. 구현자가 다른 문서를 참조하지 않아도 되어야 함
 
 Wait for ALL subagents to complete before proceeding.
