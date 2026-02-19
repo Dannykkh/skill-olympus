@@ -20,7 +20,7 @@ workpm      ← PM 모드 시작 (프로젝트 분석, 태스크 분해)
 pmworker    ← Worker 모드 시작 (태스크 수행)
 ```
 
-## 1. 보유 도구: claude-orchestrator-mcp
+## 1. 보유 도구: orchestrator-mcp
 
 ### 개요
 PM + Multi-AI Worker 패턴으로 여러 AI를 병렬 실행합니다.
@@ -44,7 +44,7 @@ PM + Multi-AI Worker 패턴으로 여러 AI를 병렬 실행합니다.
 
 ```powershell
 # 기본 실행 (Claude만)
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project"
+.\skills\orchestrator\mcp-server\scripts\launch.ps1 -ProjectPath "C:\your\project"
 
 # Multi-AI 모드 (설치된 CLI 자동 감지)
 .\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
@@ -151,7 +151,7 @@ npx github:cexll/myclaude
 
 | 도구 | 지원 AI | 특징 | 설치 난이도 |
 |------|---------|------|------------|
-| claude-orchestrator-mcp | Claude (다중) | 파일 락, 태스크 의존성 | 보유 중 |
+| orchestrator-mcp | Claude (다중) | 파일 락, 태스크 의존성 | 보유 중 |
 | Claude-Octopus | Claude+Codex+Gemini | 다양한 관점 수집 | 쉬움 |
 | CCW | Claude+Codex+Gemini+Qwen | 가장 풍부한 기능 | 보통 |
 | myclaude | Claude+Codex+Gemini+OpenCode | 심플 | 쉬움 |
@@ -161,7 +161,7 @@ npx github:cexll/myclaude
 ## 사용 시나리오
 
 ### 시나리오 1: 대규모 리팩토링
-→ **claude-orchestrator-mcp** 사용
+→ **orchestrator-mcp** 사용
 - PM이 모듈별 태스크 분배
 - Worker들이 병렬로 각 모듈 작업
 - 파일 락으로 충돌 방지

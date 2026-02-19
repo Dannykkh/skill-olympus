@@ -143,7 +143,7 @@ orchestrator_log_activity({
 ### 1. MCP 서버 빌드
 
 ```powershell
-cd mcp-servers/claude-orchestrator-mcp
+cd skills/orchestrator/mcp-server
 npm install
 npm run build
 ```
@@ -157,7 +157,7 @@ npm run build
   "mcpServers": {
     "orchestrator": {
       "command": "node",
-      "args": ["D:/git/claude-code-agent-customizations/mcp-servers/claude-orchestrator-mcp/dist/index.js"],
+      "args": ["D:/git/claude-code-agent-customizations/skills/orchestrator/mcp-server/dist/index.js"],
       "env": {
         "ORCHESTRATOR_PROJECT_ROOT": "${workspaceFolder}",
         "ORCHESTRATOR_WORKER_ID": "pm"
@@ -179,7 +179,7 @@ npm run build
 
 ```powershell
 # launch.ps1 사용
-.\mcp-servers\claude-orchestrator-mcp\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
+.\skills\orchestrator\mcp-server\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
 ```
 
 이 명령은:
@@ -694,7 +694,7 @@ orchestrator_reset()
 
 ## 참고
 
-- [MCP 서버 소스](../mcp-servers/claude-orchestrator-mcp/)
+- [MCP 서버 소스](../skills/orchestrator/mcp-server/)
 - [PM 스킬](../skills/orchestrator-pm/SKILL.md)
 - [Worker 스킬](../skills/orchestrator-worker/SKILL.md)
-- [launch.ps1 스크립트](../mcp-servers/claude-orchestrator-mcp/scripts/launch.ps1)
+- [launch.ps1 스크립트](../skills/orchestrator/mcp-server/scripts/launch.ps1)

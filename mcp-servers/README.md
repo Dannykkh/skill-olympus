@@ -649,59 +649,12 @@ pip install -r requirements.txt
 
 ## 📦 포함된 커스텀 MCP 서버
 
-### claude-orchestrator-mcp
+### orchestrator (skills/orchestrator/mcp-server/)
 
-Claude Code의 다중 에이전트 오케스트레이션을 위한 MCP 서버입니다.
+PM-Worker 패턴의 멀티AI 오케스트레이션 MCP 서버입니다.
 
-**기능:**
-- PM (Project Manager) 모드: 작업을 여러 에이전트로 분할
-- Worker 모드: 개별 작업 실행
-- 병렬 실행: 여러 에이전트가 동시에 작업 수행
-- 작업 추적: 각 에이전트의 진행 상황 모니터링
-
-**아키텍처:**
-```
-Main Claude (PM)
-    ↓
-┌───┴───┬───────┬───────┐
-│       │       │       │
-Agent1  Agent2  Agent3  Agent4
-(분석)  (코딩)  (테스트) (리팩토링)
-
-→ 복잡한 작업을 여러 에이전트가 병렬로 처리
-```
-
-**설치 및 설정:**
-
-1. **의존성 설치:**
-```bash
-cd mcp-servers/claude-orchestrator-mcp
-npm install
-```
-
-2. **빌드:**
-```bash
-npm run build
-```
-
-3. **Claude Code 설정 파일에 추가:**
-```json
-{
-  "mcpServers": {
-    "orchestrator": {
-      "command": "node",
-      "args": [
-        "/path/to/claude-code-customizations/mcp-servers/claude-orchestrator-mcp/dist/index.js"
-      ]
-    }
-  }
-}
-```
-
-**제공하는 MCP 도구:**
-- `orchestrate_agents`: PM 모드로 작업 분할 및 에이전트 오케스트레이션
-- `execute_task`: Worker 모드로 개별 작업 실행
-- `list_agents`: 현재 실행 중인 에이전트 목록 조회
+> **참고:** MCP 서버 소스는 `skills/orchestrator/mcp-server/`에 통합되어 있습니다.
+> 설치는 `install.sh`가 자동으로 처리합니다.
 
 ---
 

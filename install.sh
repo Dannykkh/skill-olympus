@@ -480,10 +480,10 @@ fi
 echo ""
 if [ "$HAS_ORCHESTRATOR" = "1" ]; then
     echo "[7/7] Orchestrator MCP 서버 등록 중... (Claude)"
-    ORCH_DIST="$SCRIPT_DIR/mcp-servers/claude-orchestrator-mcp/dist/index.js"
+    ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
     if [ ! -f "$ORCH_DIST" ]; then
         echo "      MCP 서버 빌드 중..."
-        (cd "$SCRIPT_DIR/mcp-servers/claude-orchestrator-mcp" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+        (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     if [ -f "$ORCH_DIST" ]; then
         claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
@@ -683,10 +683,10 @@ fi
 if [ "$HAS_ORCHESTRATOR" = "1" ]; then
     echo ""
     echo "  Gemini Orchestrator MCP 등록 중..."
-    GEMINI_ORCH_DIST="$SCRIPT_DIR/mcp-servers/claude-orchestrator-mcp/dist/index.js"
+    GEMINI_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
     if [ ! -f "$GEMINI_ORCH_DIST" ]; then
         echo "      MCP 서버 빌드 중..."
-        (cd "$SCRIPT_DIR/mcp-servers/claude-orchestrator-mcp" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+        (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     if command -v gemini >/dev/null 2>&1; then
         if [ -f "$GEMINI_ORCH_DIST" ]; then

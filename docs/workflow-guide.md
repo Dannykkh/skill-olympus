@@ -209,7 +209,7 @@
 | 종류 | 이름 | 역할 |
 |------|------|------|
 | **스킬** | orchestrator | PM-Worker 패턴, 태스크 분배, 파일 락 |
-| **MCP** | claude-orchestrator-mcp | PM/Worker 간 통신, 태스크 상태 관리 |
+| **MCP** | orchestrator | PM/Worker 간 통신, 태스크 상태 관리 |
 | **외부 AI** | Codex CLI | 추론 집약 작업 (알고리즘, 리팩토링) |
 | **외부 AI** | Gemini CLI | 대용량 컨텍스트 (200K+ 토큰) |
 
