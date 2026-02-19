@@ -209,12 +209,10 @@ function writeSettings(filePath, data) {
 // env → 번들 매핑 (Claude 전용)
 const CLAUDE_ENV_BUNDLE_MAP = {
   CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: ["agent-team"],
-  ANTHROPIC_DEFAULT_SONNET_MODEL: ["all-only"],
 };
 
 const CLAUDE_ENV_DEFAULTS = {
   CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: "1",
-  ANTHROPIC_DEFAULT_SONNET_MODEL: "claude-sonnet-4-6[1m]",
 };
 
 // 메인 로직
