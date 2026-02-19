@@ -520,7 +520,11 @@ echo.
 if "!HAS_ORCHESTRATOR!"=="1" (
     echo [7/7] Orchestrator MCP 서버 등록 중... (Claude)
     set "ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
-    if not exist "!ORCH_DIST!" (
+    set "ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "NEED_ORCH_BUILD=0"
+    if not exist "!ORCH_DIST!" set "NEED_ORCH_BUILD=1"
+    if not exist "!ORCH_SDK!" set "NEED_ORCH_BUILD=1"
+    if "!NEED_ORCH_BUILD!"=="1" (
         echo       MCP 서버 빌드 중...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
@@ -629,7 +633,11 @@ if "!HAS_ORCHESTRATOR!"=="1" (
     echo.
     echo   Codex Orchestrator MCP 등록 중...
     set "CODEX_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
-    if not exist "!CODEX_ORCH_DIST!" (
+    set "CODEX_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "NEED_CODEX_ORCH_BUILD=0"
+    if not exist "!CODEX_ORCH_DIST!" set "NEED_CODEX_ORCH_BUILD=1"
+    if not exist "!CODEX_ORCH_SDK!" set "NEED_CODEX_ORCH_BUILD=1"
+    if "!NEED_CODEX_ORCH_BUILD!"=="1" (
         echo       MCP 서버 빌드 중...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
@@ -770,7 +778,11 @@ if "!HAS_ORCHESTRATOR!"=="1" (
     echo.
     echo   Gemini Orchestrator MCP 등록 중...
     set "GEMINI_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
-    if not exist "!GEMINI_ORCH_DIST!" (
+    set "GEMINI_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "NEED_GEMINI_ORCH_BUILD=0"
+    if not exist "!GEMINI_ORCH_DIST!" set "NEED_GEMINI_ORCH_BUILD=1"
+    if not exist "!GEMINI_ORCH_SDK!" set "NEED_GEMINI_ORCH_BUILD=1"
+    if "!NEED_GEMINI_ORCH_BUILD!"=="1" (
         echo       MCP 서버 빌드 중...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"

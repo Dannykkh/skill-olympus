@@ -481,7 +481,8 @@ echo ""
 if [ "$HAS_ORCHESTRATOR" = "1" ]; then
     echo "[7/7] Orchestrator MCP 서버 등록 중... (Claude)"
     ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    if [ ! -f "$ORCH_DIST" ]; then
+    ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    if [ ! -f "$ORCH_DIST" ] || [ ! -f "$ORCH_SDK" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
@@ -567,7 +568,8 @@ if [ "$HAS_ORCHESTRATOR" = "1" ]; then
     echo ""
     echo "  Codex Orchestrator MCP 등록 중..."
     CODEX_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    if [ ! -f "$CODEX_ORCH_DIST" ]; then
+    CODEX_ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
@@ -684,7 +686,8 @@ if [ "$HAS_ORCHESTRATOR" = "1" ]; then
     echo ""
     echo "  Gemini Orchestrator MCP 등록 중..."
     GEMINI_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    if [ ! -f "$GEMINI_ORCH_DIST" ]; then
+    GEMINI_ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    if [ ! -f "$GEMINI_ORCH_DIST" ] || [ ! -f "$GEMINI_ORCH_SDK" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
