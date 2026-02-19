@@ -96,6 +96,20 @@
 
 ---
 
+### 전자동: 한 줄 설명으로 전부 끝내기
+
+```
+/zeus "할일 관리 앱 만들어줘"
+```
+
+1. **`/zeus`**: 설계(zephermine) → 구현(workpm) → 테스트(qpassenger)를 **zero-interaction**으로 전체 자동 실행
+
+AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리합니다.
+
+**예시**: 빠른 프로토타입, 해커톤, "일단 돌아가는 것" 확인
+
+---
+
 ## Phase 1: 설계 — `/zephermine`
 
 **언제 쓰나**: 요구사항이 모호하거나, 여러 기능이 엮여 있을 때
@@ -439,6 +453,7 @@
 | [schema-design-workflow.md](schema-design-workflow.md) | 스키마 설계 워크플로우 상세 |
 | [AGENTS.md](../AGENTS.md) | 에이전트/스킬 전체 목록 + Recommended Workflows |
 | [QUICK-REFERENCE.md](../QUICK-REFERENCE.md) | 외부 리소스 포함 전체 참조 |
+| [skills/zeus/](../skills/zeus/) | 제우스 전자동 파이프라인 (설계→구현→테스트) |
 | [skills/zephermine/](../skills/zephermine/) | 젭마인 설계 스킬 |
 | [skills/agent-team/](../skills/agent-team/) | Agent Teams 병렬 실행 |
 | [skills/orchestrator/](../skills/orchestrator/) | PM-Worker 멀티AI 오케스트레이션 |

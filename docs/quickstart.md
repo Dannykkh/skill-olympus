@@ -54,6 +54,7 @@ chmod +x install.sh && ./install.sh
 
 | 규모 | 사용법 |
 |------|--------|
+| **전자동** (제우스) | `/zeus "설명"` — 한 줄이면 설계→구현→테스트 전부 자동 |
 | **대형** (신규 프로젝트) | `/zephermine` → `/agent-team` → `/qpassenger` → `/docker-deploy` |
 | **중형** (기능 추가) | `/zephermine` → 직접 코딩 → `/qpassenger` |
 | **소형** (버그 수정) | 직접 수정 → `/qpassenger` |
@@ -69,6 +70,7 @@ chmod +x install.sh && ./install.sh
 
 | 명령어 | 설명 |
 |--------|------|
+| `/zeus` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동 |
 | `/zephermine` | 심층 인터뷰 → 설계 스펙 생성 |
 | `/agent-team` | Agent Teams 병렬 구현 (Claude 네이티브) |
 | `workpm` | Multi-AI 병렬 구현 (Claude + Codex + Gemini) |

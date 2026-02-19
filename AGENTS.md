@@ -42,6 +42,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |시나리오|체이닝 순서|
 |---|---|
 |새 프로젝트 (풀코스)|zephermine → architect → agent-team → qpassenger → docker-deploy|
+|전자동 (제우스)|zeus — 한 줄 설명만으로 설계→구현→테스트 완전 자동|
 |기능 추가|zephermine → agent-team/수동 구현 → qpassenger|
 |데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
@@ -83,7 +84,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
-| 🎯 Planning | game-changing-features, zephermine (젭마인), ship-learn-next | 계획/요구사항 |
+| 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner, qpassenger | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
