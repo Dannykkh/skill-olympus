@@ -165,6 +165,16 @@ function syncAgents(destDir, agentFiles, mode) {
     }
     fs.copyFileSync(src, dest);
   }
+  // agents/ 하위 디렉토리도 동기화 (references/ 등)
+  if (mode !== "unlink" && fs.existsSync(agentsSrcDir)) {
+    for (const entry of fs.readdirSync(agentsSrcDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const src = path.join(agentsSrcDir, entry.name);
+      const dest = path.join(destDir, entry.name);
+      safeRm(dest);
+      fs.cpSync(src, dest, { recursive: true, force: true });
+    }
+  }
 }
 
 function pruneAgentFiles(destDir, currentNames) {

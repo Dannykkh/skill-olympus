@@ -1,0 +1,9 @@
+{
+  "name": "chrome-devtools",
+  "description": "Chrome DevTools 연동 - 브라우저 제어, 디버깅, 성능 분석 (무료, API 키 불필요)",
+  "requiresApiKey": false,
+  "config": {
+    "command": "npx",
+    "args": ["-y", "chrome-devtools-mcp@latest"]
+  }
+}
