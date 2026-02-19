@@ -2,6 +2,7 @@
 name: api-tester
 description: API endpoint testing and validation specialist. Automatically runs on "test API", "validate endpoint", "API integration test" requests.
 tools: Bash, Read, Write
+model: sonnet
 ---
 
 # API Testing Specialist

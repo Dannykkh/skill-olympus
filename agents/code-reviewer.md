@@ -3,6 +3,7 @@ name: code-reviewer
 description: Code review specialist. Reviews code quality, security, performance, and test coverage. Automatically runs on "review code", "code review please" requests.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit
+model: sonnet
 references:
   - skills/code-reviewer/SKILL.md
 ---

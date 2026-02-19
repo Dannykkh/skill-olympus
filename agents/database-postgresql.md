@@ -2,6 +2,7 @@
 name: database-postgresql
 description: PostgreSQL/Supabase database specialist. Schema design, RLS, query optimization, migrations. Runs on "PostgreSQL", "Supabase", "Postgres query", "RLS" requests.
 tools: Read, Write, Edit, Bash
+model: sonnet
 ---
 
 # Database Agent (PostgreSQL / Supabase)

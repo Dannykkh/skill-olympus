@@ -1,6 +1,7 @@
 ---
 name: ascii-ui-mockup-generator
 description: Use this agent when you need to visualize UI concepts through ASCII mockups before implementation. Examples: <example>Context: User has an idea for a dashboard layout with data tables and charts. user: 'I want to create a dashboard that shows user analytics with a sidebar navigation, main content area with charts, and a data table below' assistant: 'I'll use the ascii-ui-mockup-generator agent to create multiple ASCII mockup variations for your dashboard concept.' <commentary>The user wants to visualize a UI concept, so use the ascii-ui-mockup-generator to create multiple ASCII representations they can choose from.</commentary></example> <example>Context: User is designing a form layout with multiple input fields. user: 'I need a contact form with name, email, message fields and a submit button' assistant: 'Let me use the ascii-ui-mockup-generator to create several ASCII mockup options for your contact form layout.' <commentary>Since the user needs to visualize form layouts, use the ascii-ui-mockup-generator to provide multiple ASCII design options.</commentary></example>
+model: sonnet
 color: green
 ---
 

@@ -2,6 +2,7 @@
 name: ai-ml
 description: AI/ML 통합 전문가 + LLM API 최신 모델/SDK 코딩 가이드. RAG 시스템, 문서 분석, OpenAI/Anthropic/Gemini/Ollama 최신 API 보장. "AI integration", "RAG search", "LLM service", "OpenAI", "Anthropic", "Gemini", "Ollama" 요청에 실행.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 ---
 
 # AI/ML Agent

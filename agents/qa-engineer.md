@@ -2,6 +2,7 @@
 name: qa-engineer
 description: QA engineer for test strategy, quality verification, and regression testing. Runs on "QA check", "verify quality", "regression test" requests.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 # QA Engineer Agent

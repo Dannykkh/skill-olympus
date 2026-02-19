@@ -2,6 +2,7 @@
 name: database-mysql
 description: MySQL database specialist. Schema design, query optimization, migrations. Runs on "database design", "MySQL query", "schema optimization" requests.
 tools: Read, Write, Edit, Bash
+model: sonnet
 ---
 
 # Database Agent (MySQL)
