@@ -190,15 +190,18 @@ npm run build
 
 ---
 
-## PM 모드 (workpm)
+## PM 모드
 
-### 시작
+### CLI별 명령어 선택
 
-PM 터미널에서:
+| CLI | 명령어 | 모드 | 특징 |
+|-----|--------|------|------|
+| **Claude** | `workpm` | Agent Teams | 팀원과 실시간 대화, 해고/재고용 |
+| **Codex** | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
+| **Gemini** | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
 
-```
-workpm
-```
+- `workpm`: Claude Agent Teams 활용. TeamCreate/SendMessage로 팀원 관리
+- `workpm-mcp`: orchestrator_* MCP 도구만 사용. 모든 CLI에서 동작
 
 ### PM이 하는 일 (v2)
 

@@ -29,10 +29,12 @@ orchestrator/
 ├── install.js                  # 설치 스크립트
 ├── mcp-server/                 # Orchestrator MCP 서버
 │   ├── src/
+│   ├── scripts/                # Worker spawn 스크립트 (ps1, sh)
 │   └── package.json
 ├── commands/
-│   ├── workpm.md               # PM 시작 명령어
-│   └── pmworker.md             # Worker 시작 명령어
+│   ├── workpm.md               # PM 명령어 (Claude Agent Teams 모드)
+│   ├── workpm-mcp.md           # PM 명령어 (MCP 전용, 모든 CLI)
+│   └── pmworker.md             # Worker 명령어 (모든 CLI)
 └── docs/
     └── orchestrator-guide.md   # 상세 가이드
 ```
@@ -41,20 +43,24 @@ orchestrator/
 
 ## 사용법
 
-### PM 모드 시작
-```
-workpm
-```
-- 팀 구성 및 태스크 분배
-- 2단계 워크플로우 (리서치→구현)
-- 리더는 오케스트레이션만, 코딩 금지
+### CLI별 PM 모드
 
-### Worker 모드 시작
+| CLI | 명령어 | 특징 |
+|-----|--------|------|
+| **Claude** | `workpm` | Agent Teams 활용, 실시간 팀원 통신 |
+| **Codex** | `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
+| **Gemini** | `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
+
+- `workpm`: Claude 전용. TeamCreate/SendMessage로 팀원과 실시간 대화
+- `workpm-mcp`: 모든 CLI에서 동작. orchestrator_* MCP 도구만 사용
+
+### Worker 모드 (모든 CLI 공통)
 ```
 pmworker
 ```
 - 가용 태스크 확인 및 수행
 - 파일 락 및 완료 보고
+- MCP 도구만 사용하므로 Claude/Codex/Gemini 모두 동작
 
 ---
 

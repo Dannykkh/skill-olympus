@@ -4,6 +4,7 @@ description: |
   풀스택 개발 종합 워크플로우. 프론트엔드~백엔드 구현, 문서화, 테스트, 릴리즈까지
   전체 개발 사이클을 관리합니다. 프로젝트 시작 시 자동 적용.
 auto_apply: true
+priority: high
 references:
   - agents/frontend-react.md
   - agents/backend-spring.md

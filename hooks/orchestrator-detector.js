@@ -5,7 +5,8 @@
  * Detects keywords in user prompt and injects mode instructions.
  *
  * Supported keywords:
- *   workpm      - PM (Project Manager) mode
+ *   workpm      - PM mode (Claude Agent Teams)
+ *   workpm-mcp  - PM mode (MCP only, all CLIs)
  *   pmworker    - Worker mode
  *   agent-team  - Agent Teams Lead mode (대니즈팀)
  *   팀 실행      - Agent Teams Lead mode (한국어)
@@ -16,6 +17,7 @@
 
 // Patterns for detection
 const WORKPM_PATTERN = /(?:^|\s)workpm(?:\s|$)/i;
+const WORKPM_MCP_PATTERN = /(?:^|\s)workpm[- ]?mcp(?:\s|$)/i;
 const PMWORKER_PATTERN = /(?:^|\s)pmworker(?:\s|$)/i;
 const AGENT_TEAM_PATTERN = /(?:^|\s)(?:agent[- ]?team|에이전트\s*팀|팀\s*실행|대니즈\s*팀)(?:\s|$)/i;
 
@@ -72,6 +74,62 @@ orchestrator_spawn_workers({ "count": 2 })
 Or manually run 'pmworker' in another terminal.
 
 ---
+Start now by calling orchestrator_detect_providers.
+`;
+}
+
+/**
+ * Build PM mode context (MCP only — works on Claude, Codex, Gemini)
+ */
+function buildPMMCPContext() {
+  return `
+[PM MODE ACTIVATED — MCP ONLY]
+
+You are the PM (Project Manager) of Multi-AI Orchestrator.
+This mode uses ONLY orchestrator_* MCP tools — works on Claude, Codex, and Gemini.
+
+## Key Difference from Agent Teams Mode
+
+- NO TeamCreate/SendMessage/Task (Agent Teams features)
+- Workers are spawned as separate terminals via orchestrator_spawn_workers
+- PM creates tasks → spawns workers → monitors progress
+- Workers auto-claim and execute tasks independently
+
+## Startup Procedure
+
+1. **Detect AI Providers**
+   Use orchestrator_detect_providers to check installed AI CLIs
+
+2. **Load Plan File**
+   Use orchestrator_get_latest_plan to auto-load latest plan
+
+3. **Create Tasks**
+   Use orchestrator_create_task for each task
+   - Set dependencies (depends_on), scope, priority, ai_provider
+
+4. **Spawn Workers**
+   Use orchestrator_spawn_workers({ count: 2 })
+   Optional: orchestrator_spawn_workers({ count: 3, providers: ["claude", "codex", "gemini"] })
+
+5. **Monitor Progress**
+   Use orchestrator_get_progress periodically (every 30s)
+   Use orchestrator_get_task_summary for detailed status
+
+6. **Log Decisions**
+   Use orchestrator_log_activity for important decisions
+
+## Task Design is Critical
+
+Workers cannot communicate with PM in this mode.
+Task prompts must be complete and unambiguous:
+- Goal (one sentence)
+- Implementation items
+- Input/Output specification
+- Success criteria
+- Out of scope
+
+---
+Read skills/orchestrator/commands/workpm-mcp.md for full workflow.
 Start now by calling orchestrator_detect_providers.
 `;
 }
@@ -169,7 +227,17 @@ function processPrompt(prompt) {
     };
   }
 
-  // Detect workpm
+  // Detect workpm-mcp (MCP only mode, check before workpm)
+  if (WORKPM_MCP_PATTERN.test(prompt)) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'UserPromptSubmit',
+        additionalContext: buildPMMCPContext(),
+      },
+    };
+  }
+
+  // Detect workpm (Agent Teams mode)
   if (WORKPM_PATTERN.test(prompt)) {
     return {
       hookSpecificOutput: {

@@ -113,8 +113,9 @@ PM distributes tasks, Workers (Claude + Codex + Gemini) execute in parallel with
 | Component | Description |
 |-----------|-------------|
 | MCP Server | Task queue, file locks, dependency resolution |
-| `workpm` | PM mode - analyze project, decompose tasks, assign AI |
-| `pmworker` | Worker mode - claim task, lock files, execute, report |
+| `workpm` | PM mode (Claude Agent Teams) - real-time team communication |
+| `workpm-mcp` | PM mode (MCP only) - works on Claude, Codex, Gemini |
+| `pmworker` | Worker mode - claim task, lock files, execute, report (all CLIs) |
 
 ```
 Terminal 1 (PM):     workpm → analyze → create 3 tasks

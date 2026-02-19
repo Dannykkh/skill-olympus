@@ -239,7 +239,7 @@ if "%MODE%"=="unlink" (
     echo [15/15] Gemini Orchestrator MCP 제거 중...
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
-        gemini mcp remove orchestrator >nul 2>nul
+        call gemini mcp remove orchestrator >nul 2>nul
         echo       완료!
     ) else (
         echo       [경고] gemini CLI 없음, 건너뜀
@@ -519,10 +519,10 @@ REM Orchestrator MCP 서버 등록 (orchestrator 번들)
 echo.
 if "!HAS_ORCHESTRATOR!"=="1" (
     echo [7/7] Orchestrator MCP 서버 등록 중... (Claude)
-    set "ORCH_DIST=%SCRIPT_DIR%mcp-servers\claude-orchestrator-mcp\dist\index.js"
+    set "ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     if not exist "!ORCH_DIST!" (
         echo       MCP 서버 빌드 중...
-        cd /d "%SCRIPT_DIR%mcp-servers\claude-orchestrator-mcp" && npm install >nul 2>nul && npm run build >nul 2>nul
+        cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
     if exist "!ORCH_DIST!" (
@@ -769,18 +769,18 @@ REM Gemini Orchestrator MCP (orchestrator 번들)
 if "!HAS_ORCHESTRATOR!"=="1" (
     echo.
     echo   Gemini Orchestrator MCP 등록 중...
-    set "GEMINI_ORCH_DIST=%SCRIPT_DIR%mcp-servers\claude-orchestrator-mcp\dist\index.js"
+    set "GEMINI_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     if not exist "!GEMINI_ORCH_DIST!" (
         echo       MCP 서버 빌드 중...
-        cd /d "%SCRIPT_DIR%mcp-servers\claude-orchestrator-mcp" && npm install >nul 2>nul && npm run build >nul 2>nul
+        cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "!GEMINI_ORCH_DIST!" (
             set "GEMINI_ORCH_DIST_NORM=!GEMINI_ORCH_DIST:\=/!"
-            gemini mcp remove orchestrator >nul 2>nul
-            gemini mcp add orchestrator -- node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
+            call gemini mcp remove orchestrator >nul 2>nul
+            call gemini mcp add orchestrator node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
             if !errorlevel! equ 0 (
                 set "GEMINI_ORCH_RESULT=등록 완료"
             ) else (

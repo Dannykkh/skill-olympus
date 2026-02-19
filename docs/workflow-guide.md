@@ -170,18 +170,19 @@
 
 ---
 
-## Phase 2: 구현 — `/agent-team` vs `workpm`
+## Phase 2: 구현 — `/agent-team` vs `workpm` vs `workpm-mcp`
 
 ### 선택 기준
 
-| 기준 | `/agent-team` | `workpm` |
-|------|--------------|-----------|
-| **AI 엔진** | Claude만 | Claude + Codex + Gemini |
-| **장점** | 네이티브 통합, 팀원 간 대화, 빠름 | 멀티AI 조합, 각 AI 강점 활용 |
-| **단점** | Claude 토큰만 소비 | 설정 복잡, 외부 AI CLI 필요 |
-| **적합** | 젭마인 섹션 기반 구현 | 대규모 독립 작업, 특정 AI가 유리한 작업 |
-| **입력** | sections/index.md (자동 파싱) | 사용자 지시 |
-| **병렬** | Wave 기반 (의존성 자동 해소) | PM이 태스크 분배 |
+| 기준 | `/agent-team` | `workpm` | `workpm-mcp` |
+|------|--------------|-----------|-------------|
+| **AI 엔진** | Claude만 | Claude (+ Codex/Gemini Worker) | 모든 CLI |
+| **PM↔Worker** | 실시간 대화 | 실시간 대화 | 태스크 기반 (대화 없음) |
+| **장점** | 네이티브 통합, 빠름 | 팀원 통신 + 멀티AI | Codex/Gemini PM 가능 |
+| **단점** | Claude 토큰만 소비 | Claude PM 필수 | PM↔Worker 통신 불가 |
+| **적합** | 젭마인 섹션 기반 | 복잡한 조율 필요 | 명확한 태스크 분할 |
+| **입력** | sections/index.md | 사용자 지시 | 사용자 지시 |
+| **병렬** | Wave 기반 | PM이 분배 | PM이 분배 |
 
 ### `/agent-team` 사용 시 리소스
 
@@ -204,11 +205,14 @@
 - `*.py` → python-fastapi-guidelines
 - 매칭 안 됨 → fullstack-coding-standards
 
-### `workpm` 사용 시 리소스
+### `workpm` / `workpm-mcp` 사용 시 리소스
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
 | **스킬** | orchestrator | PM-Worker 패턴, 태스크 분배, 파일 락 |
+| **커맨드** | workpm | PM 모드 (Claude Agent Teams, 실시간 대화) |
+| **커맨드** | workpm-mcp | PM 모드 (MCP 전용, 모든 CLI에서 동작) |
+| **커맨드** | pmworker | Worker 모드 (모든 CLI에서 동작) |
 | **MCP** | orchestrator | PM/Worker 간 통신, 태스크 상태 관리 |
 | **외부 AI** | Codex CLI | 추론 집약 작업 (알고리즘, 리팩토링) |
 | **외부 AI** | Gemini CLI | 대용량 컨텍스트 (200K+ 토큰) |

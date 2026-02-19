@@ -16,8 +16,9 @@ triggers:
 ## 빠른 시작
 
 ```
-workpm      ← PM 모드 시작 (프로젝트 분석, 태스크 분해)
-pmworker    ← Worker 모드 시작 (태스크 수행)
+workpm      ← PM 모드 (Claude Agent Teams, 실시간 팀원 통신)
+workpm-mcp  ← PM 모드 (MCP 전용, Codex/Gemini에서도 동작)
+pmworker    ← Worker 모드 (모든 CLI에서 동작)
 ```
 
 ## 1. 보유 도구: orchestrator-mcp

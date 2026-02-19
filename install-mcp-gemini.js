@@ -108,7 +108,7 @@ function buildAddCommand(cfg) {
   }
 
   const cmdArgs = Array.isArray(cfg.config.args) ? cfg.config.args : [];
-  parts.push("--");
+  // Gemini CLI는 Claude와 달리 '--' 구분자 없이 command를 직접 전달
   parts.push(shellQuote(cfg.config.command));
   for (const arg of cmdArgs) {
     parts.push(shellQuote(arg));

@@ -691,7 +691,7 @@ if [ "$HAS_ORCHESTRATOR" = "1" ]; then
     if command -v gemini >/dev/null 2>&1; then
         if [ -f "$GEMINI_ORCH_DIST" ]; then
             gemini mcp remove orchestrator >/dev/null 2>&1 || true
-            if gemini mcp add orchestrator -- node "$GEMINI_ORCH_DIST" >/dev/null 2>&1; then
+            if gemini mcp add orchestrator node "$GEMINI_ORCH_DIST" >/dev/null 2>&1; then
                 GEMINI_ORCH_RESULT="등록 완료"
             else
                 GEMINI_ORCH_RESULT="등록 실패"
