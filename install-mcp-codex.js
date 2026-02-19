@@ -10,6 +10,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const { execSync } = require("child_process");
 
 const args = process.argv.slice(2);
@@ -21,6 +22,11 @@ const mcpNames = args.filter((a) => !a.startsWith("--"));
 
 const scriptDir = path.resolve(__dirname);
 const mcpConfigsDir = path.join(scriptDir, "mcp-configs");
+const codexHome = process.env.CODEX_HOME
+  ? path.resolve(process.env.CODEX_HOME)
+  : path.join(os.homedir(), ".codex");
+const codexConfigPath = path.join(codexHome, "config.toml");
+const FETCH_STARTUP_TIMEOUT_SEC = 30;
 
 function readJson(filePath) {
   try {
@@ -117,6 +123,65 @@ function buildAddCommand(cfg) {
   return parts.join(" ");
 }
 
+function ensureFetchStartupTimeout(configPath, timeoutSec) {
+  let content = "";
+  try {
+    content = fs.readFileSync(configPath, "utf-8");
+  } catch {
+    return { ok: false, reason: "config-missing" };
+  }
+
+  const lines = content.replace(/\r\n/g, "\n").split("\n");
+  const sectionHeader = "[mcp_servers.fetch]";
+  const start = lines.findIndex((line) => line.trim() === sectionHeader);
+  if (start < 0) {
+    return { ok: false, reason: "fetch-section-missing" };
+  }
+
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^\s*\[/.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+
+  const timeoutLine = `startup_timeout_sec = ${timeoutSec}`;
+  let changed = false;
+  let foundTimeout = false;
+
+  for (let i = start + 1; i < end; i++) {
+    if (/^\s*startup_timeout_sec\s*=/.test(lines[i])) {
+      foundTimeout = true;
+      if (lines[i].trim() !== timeoutLine) {
+        lines[i] = timeoutLine;
+        changed = true;
+      }
+      break;
+    }
+  }
+
+  if (!foundTimeout) {
+    let insertPos = end;
+    for (let i = start + 1; i < end; i++) {
+      if (/^\s*args\s*=/.test(lines[i])) {
+        insertPos = i + 1;
+        break;
+      }
+    }
+    lines.splice(insertPos, 0, timeoutLine);
+    changed = true;
+  }
+
+  if (!changed) {
+    return { ok: true, changed: false };
+  }
+
+  const updated = lines.join("\n");
+  fs.writeFileSync(configPath, updated.endsWith("\n") ? updated : `${updated}\n`, "utf-8");
+  return { ok: true, changed: true };
+}
+
 if (isListMode) {
   const configs = loadAvailableConfigs();
   console.log("\n사용 가능한 MCP 서버 (Codex):");
@@ -202,6 +267,7 @@ if (toInstall.length === 0) {
 
 let installed = 0;
 let skipped = 0;
+const shouldEnsureFetchTimeout = toInstall.some((cfg) => cfg.name === "fetch");
 
 for (const cfg of toInstall) {
   if (cfg.requiresApiKey) {
@@ -230,6 +296,26 @@ for (const cfg of toInstall) {
     installed++;
   } else {
     console.log(`  ❌ ${cfg.name} 설치 실패`);
+  }
+}
+
+if (shouldEnsureFetchTimeout) {
+  const timeoutResult = ensureFetchStartupTimeout(
+    codexConfigPath,
+    FETCH_STARTUP_TIMEOUT_SEC
+  );
+  if (timeoutResult.ok && timeoutResult.changed) {
+    console.log(
+      `  ✅ fetch startup_timeout_sec=${FETCH_STARTUP_TIMEOUT_SEC} 설정됨`
+    );
+  } else if (timeoutResult.ok) {
+    console.log(
+      `  ⏭️  fetch startup_timeout_sec=${FETCH_STARTUP_TIMEOUT_SEC} 이미 설정됨`
+    );
+  } else {
+    console.log(
+      `  ⚠️  fetch timeout 설정 건너뜀 (${timeoutResult.reason})`
+    );
   }
 }
 
