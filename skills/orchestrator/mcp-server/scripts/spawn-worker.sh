@@ -1,14 +1,16 @@
 #!/bin/bash
 # spawn-worker.sh
 # Orchestrator Worker를 새 터미널에서 실행하는 스크립트
+# 멀티AI 지원: Claude, Codex, Gemini
 #
 # 사용법:
-#   ./spawn-worker.sh <worker-id> <project-root> <auto-terminate>
-#   ./spawn-worker.sh worker-1 /path/to/project 1
+#   ./spawn-worker.sh <worker-id> <project-root> <auto-terminate> <ai-provider>
+#   ./spawn-worker.sh worker-1 /path/to/project 1 claude
 
 WORKER_ID="${1:-worker-$(date +%s)}"
 PROJECT_ROOT="${2:-$(pwd)}"
 AUTO_TERMINATE="${3:-1}"
+AI_PROVIDER="${4:-claude}"
 
 # 환경 변수 설정
 export ORCHESTRATOR_WORKER_ID="$WORKER_ID"
@@ -20,6 +22,7 @@ echo "  Orchestrator Worker Starting..."
 echo "========================================"
 echo ""
 echo "Worker ID: $WORKER_ID"
+echo "AI Provider: $AI_PROVIDER"
 echo "Project: $PROJECT_ROOT"
 echo "Auto-terminate: $([ "$AUTO_TERMINATE" = "1" ] && echo "true" || echo "false")"
 echo ""
@@ -45,21 +48,40 @@ SYSTEM_PROMPT="당신은 Orchestrator Worker입니다. Worker ID: $WORKER_ID
 
 지금 바로 orchestrator_get_available_tasks를 호출하여 작업을 시작하세요."
 
-# Claude Code가 설치되어 있는지 확인
-if ! command -v claude &> /dev/null; then
-    echo "ERROR: claude command not found. Please install Claude Code first."
-    exit 1
-fi
-
-echo "Starting Claude Code with Worker prompt..."
-echo ""
-
 # 프로젝트 디렉토리로 이동
 cd "$PROJECT_ROOT" || exit 1
 
-# Claude Code 실행
-# stdin으로 프롬프트 전달
-echo "$SYSTEM_PROMPT" | claude --dangerously-skip-permissions
+# AI Provider별 CLI 실행
+case "$AI_PROVIDER" in
+    claude)
+        if ! command -v claude &> /dev/null; then
+            echo "ERROR: claude command not found."
+            exit 1
+        fi
+        echo "Starting Claude Code..."
+        echo "$SYSTEM_PROMPT" | claude --dangerously-skip-permissions
+        ;;
+    codex)
+        if ! command -v codex &> /dev/null; then
+            echo "ERROR: codex command not found."
+            exit 1
+        fi
+        echo "Starting Codex CLI..."
+        codex --full-auto --approval-mode full-auto -q "$SYSTEM_PROMPT"
+        ;;
+    gemini)
+        if ! command -v gemini &> /dev/null; then
+            echo "ERROR: gemini command not found."
+            exit 1
+        fi
+        echo "Starting Gemini CLI..."
+        echo "$SYSTEM_PROMPT" | gemini
+        ;;
+    *)
+        echo "ERROR: Unknown AI provider: $AI_PROVIDER (claude|codex|gemini)"
+        exit 1
+        ;;
+esac
 
 # 자동 종료가 비활성화된 경우 대기
 if [ "$AUTO_TERMINATE" = "0" ]; then

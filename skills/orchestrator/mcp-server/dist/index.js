@@ -64,7 +64,8 @@ const ReadPlanSchema = z.object({
 // Worker Spawn 스키마
 const SpawnWorkersSchema = z.object({
     count: z.number().min(1).max(10).default(1).describe('생성할 Worker 수 (1-10)'),
-    auto_terminate: z.boolean().default(true).describe('태스크 완료 시 자동 종료 여부')
+    auto_terminate: z.boolean().default(true).describe('태스크 완료 시 자동 종료 여부'),
+    providers: z.array(z.enum(['claude', 'codex', 'gemini'])).optional().describe('각 Worker에 할당할 AI Provider 배열 (미지정 시 모두 claude)')
 });
 // Activity Log 스키마
 const LogActivitySchema = z.object({
@@ -189,12 +190,13 @@ const TOOLS = [
     },
     {
         name: 'orchestrator_spawn_workers',
-        description: '새 터미널에서 Worker를 자동으로 생성합니다. Worker는 태스크를 자동으로 가져와 처리하며, 모든 태스크 완료 시 자동 종료됩니다. (PM 전용)',
+        description: '새 터미널에서 Worker를 자동으로 생성합니다. Worker는 태스크를 자동으로 가져와 처리하며, 모든 태스크 완료 시 자동 종료됩니다. providers로 각 Worker의 AI를 지정할 수 있습니다. (PM 전용)',
         inputSchema: {
             type: 'object',
             properties: {
                 count: { type: 'number', description: '생성할 Worker 수 (1-10, 기본: 1)', minimum: 1, maximum: 10 },
-                auto_terminate: { type: 'boolean', description: '태스크 완료 시 자동 종료 (기본: true)' }
+                auto_terminate: { type: 'boolean', description: '태스크 완료 시 자동 종료 (기본: true)' },
+                providers: { type: 'array', items: { type: 'string', enum: ['claude', 'codex', 'gemini'] }, description: '각 Worker에 할당할 AI (예: ["claude", "codex", "gemini"]). 미지정 시 모두 claude' }
             }
         }
     },
@@ -482,7 +484,7 @@ async function readPlan(filePath) {
     const content = fs.readFileSync(resolvedPath, 'utf-8');
     return { found: true, path: resolvedPath, content };
 }
-async function spawnWorkers(count, autoTerminate) {
+async function spawnWorkers(count, autoTerminate, providers) {
     const isWindows = process.platform === 'win32';
     const scriptDir = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..', 'scripts');
     const scriptName = isWindows ? 'spawn-worker.ps1' : 'spawn-worker.sh';
@@ -499,11 +501,12 @@ async function spawnWorkers(count, autoTerminate) {
     const spawnedWorkers = [];
     const errors = [];
     for (let i = 0; i < count; i++) {
-        const workerId = `worker-${Date.now()}-${i + 1}`;
+        const provider = providers && providers[i] ? providers[i] : 'claude';
+        const workerId = `${provider}-worker-${Date.now()}-${i + 1}`;
         try {
             if (isWindows) {
                 // Windows: PowerShell로 새 터미널에서 스크립트 실행
-                const psCommand = `Start-Process powershell -ArgumentList '-ExecutionPolicy', 'Bypass', '-File', '${scriptPath.replace(/\\/g, '\\\\')}', '-WorkerId', '${workerId}', '-ProjectRoot', '${PROJECT_ROOT.replace(/\\/g, '\\\\')}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}'`;
+                const psCommand = `Start-Process powershell -ArgumentList '-ExecutionPolicy', 'Bypass', '-File', '${scriptPath.replace(/\\/g, '\\\\')}', '-WorkerId', '${workerId}', '-ProjectRoot', '${PROJECT_ROOT.replace(/\\/g, '\\\\')}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}', '-AIProvider', '${provider}'`;
                 spawn('powershell', ['-Command', psCommand], {
                     detached: true,
                     stdio: 'ignore'
@@ -516,7 +519,7 @@ async function spawnWorkers(count, autoTerminate) {
                 const isMac = process.platform === 'darwin';
                 if (isMac) {
                     // macOS: osascript로 Terminal.app에서 실행
-                    const appleScript = `tell application "Terminal" to do script "bash '${scriptPath}' '${workerId}' '${PROJECT_ROOT}' '${autoTerminate ? '1' : '0'}'"`;
+                    const appleScript = `tell application "Terminal" to do script "bash '${scriptPath}' '${workerId}' '${PROJECT_ROOT}' '${autoTerminate ? '1' : '0'}' '${provider}'"`;
                     spawn('osascript', ['-e', appleScript], {
                         detached: true,
                         stdio: 'ignore'
@@ -525,9 +528,9 @@ async function spawnWorkers(count, autoTerminate) {
                 else {
                     // Linux: 다양한 터미널 에뮬레이터 시도
                     const terminals = [
-                        { cmd: 'gnome-terminal', args: ['--', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0'] },
-                        { cmd: 'konsole', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0'] },
-                        { cmd: 'xterm', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0'] }
+                        { cmd: 'gnome-terminal', args: ['--', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider] },
+                        { cmd: 'konsole', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider] },
+                        { cmd: 'xterm', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider] }
                     ];
                     let spawned = false;
                     for (const term of terminals) {
@@ -550,7 +553,7 @@ async function spawnWorkers(count, autoTerminate) {
                     }
                 }
             }
-            spawnedWorkers.push({ id: workerId, status: 'spawned' });
+            spawnedWorkers.push({ id: workerId, status: 'spawned', provider });
             // 터미널 간 약간의 딜레이
             await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -661,7 +664,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
             case 'orchestrator_spawn_workers': {
                 const parsed = SpawnWorkersSchema.parse(args);
-                result = await spawnWorkers(parsed.count, parsed.auto_terminate);
+                result = await spawnWorkers(parsed.count, parsed.auto_terminate, parsed.providers);
                 break;
             }
             // Worker 전용 도구
