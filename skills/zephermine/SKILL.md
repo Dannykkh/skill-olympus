@@ -71,6 +71,7 @@ Determine session state by checking existing files:
    - `claude-api-spec.md`
    - `claude-db-schema.md`
    - `claude-integration-notes.md`
+   - `claude-design-system.md`
    - `claude-ralph-loop-prompt.md`
    - `claude-ralphy-prd.md`
    - `claude-qa-scenarios.md`
@@ -184,6 +185,13 @@ This synthesizes the user's raw requirements into a complete specification.
 | {일정/범위 위험} | ... | ... | ... |
 
 > 각 섹션은 이 테이블을 참조하여 섹션별 Risk & Rollback을 구체화합니다.
+
+**조건부 생성: Design System** — 인터뷰 Category B(디자인 비전)가 수집된 경우:
+
+See [design-system-guide.md](references/design-system-guide.md)
+
+`<planning_dir>/claude-design-system.md` 생성. 인터뷰에서 수집한 톤/무드, 색상, 레이아웃, 벤치마킹, 안티 패턴을 **구현자가 바로 참조할 수 있는 디자인 규칙**으로 정리.
+UI/프론트엔드가 없는 프로젝트(CLI, 라이브러리, 백엔드 API 전용)는 자동 건너뜀.
 
 **필수 포함: Test Scenarios 섹션** — 각 주요 기능(API, 화면, 로직)마다:
 - 정상 케이스: 입력 → 기대 출력
@@ -358,6 +366,7 @@ Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
 - `claude-api-spec.md` (API가 있는 프로젝트)
 - `claude-db-schema.md` (DB가 있는 프로젝트)
+- `claude-design-system.md` (UI가 있는 프로젝트)
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
 - `claude-qa-scenarios.md`
@@ -372,7 +381,7 @@ Print generated files list and implementation options:
 ZEPHERMINE: Planning Complete
 
 Generated: claude-research/interview/spec/team-review/plan/api-spec/db-schema/
-           integration-notes/ralph-loop-prompt/ralphy-prd/qa-scenarios.md
+           design-system/integration-notes/ralph-loop-prompt/ralphy-prd/qa-scenarios.md
            + team-reviews/ + reviews/ + sections/
 
 Implementation options:
