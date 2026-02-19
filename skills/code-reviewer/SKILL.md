@@ -261,7 +261,7 @@ users = await db.execute(select(User).options(selectinload(User.projects)))
 ✅ 코드 리뷰 완료! (결과: {PASS/CONDITIONAL/FAIL})
 
 다음 단계 (선택):
-  /qa-until-pass       → Playwright 자동 테스트
+  /qpassenger          → Playwright 자동 테스트
   security-reviewer    → 보안 전문 리뷰
   /commit              → 변경사항 커밋
 ```

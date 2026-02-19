@@ -336,7 +336,7 @@ Step {N} complete: {summary}
 📊 결과: {통과/실패 요약}
 
 👉 다음 단계 (선택):
-  /qa-until-pass       → Playwright 자동 테스트 + Healer 루프
+  /qpassenger          → Playwright 자동 테스트 + Healer 루프
   /review              → 코드 리뷰 (품질/보안/성능)
   /commit              → 변경사항 커밋
 

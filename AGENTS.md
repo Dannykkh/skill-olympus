@@ -41,15 +41,15 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |시나리오|체이닝 순서|
 |---|---|
-|새 프로젝트 (풀코스)|zephermine → architect → agent-team → qa-until-pass → docker-deploy|
-|기능 추가|zephermine → agent-team/수동 구현 → qa-until-pass|
+|새 프로젝트 (풀코스)|zephermine → architect → agent-team → qpassenger → docker-deploy|
+|기능 추가|zephermine → agent-team/수동 구현 → qpassenger|
 |데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
 |UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|
 |코드 리뷰 종합|code-reviewer → security-reviewer → reducing-entropy|
 |리팩토링|explore-agent → reducing-entropy → code-reviewer|
 |보안 감사|security-reviewer → code-review-checklist|
-|QA 자동화|qa-until-pass (시나리오 자동 생성 → Playwright → Healer)|
+|QA 자동화|qpassenger (시나리오 자동 생성 → Playwright → Healer)|
 
 > 상세 가이드: [docs/workflow-guide.md](docs/workflow-guide.md)
 
@@ -85,7 +85,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner, qa-until-pass | 테스트/리뷰 |
+| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |

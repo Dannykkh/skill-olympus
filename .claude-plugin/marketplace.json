@@ -14,7 +14,7 @@
         "source": "github",
         "repo": "Dannykkh/claude-code-agent-customizations"
       },
-      "description": "65+ skills, 34+ agents: zephermine (설계 자동화), agent-team (병렬 코딩), qa-until-pass (QA 자동화), docker-deploy, fullstack standards, multi-AI orchestration",
+      "description": "65+ skills, 34+ agents: zephermine (설계 자동화), agent-team (병렬 코딩), qpassenger (QA 자동화), docker-deploy, fullstack standards, multi-AI orchestration",
       "version": "1.0.0",
       "category": "productivity",
       "tags": [

@@ -1,7 +1,9 @@
 ---
-name: qa-until-pass
-description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프. qa-writer → 코드 생성 → 실행 → 수정 반복.
+name: qpassenger
+description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프 (큐패신저). qa-writer → 코드 생성 → 실행 → 수정 반복.
 triggers:
+  - "qpassenger"
+  - "큐패신저"
   - "qa-until-pass"
   - "QA 통과할 때까지"
   - "테스트 통과까지"
@@ -9,17 +11,17 @@ triggers:
 auto_apply: false
 ---
 
-# QA Until Pass
+# QPassenger (큐패신저)
 
 QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트가 통과할 때까지 자동으로 수정을 반복합니다.
 
 ## Quick Start
 
 ```
-/qa-until-pass                           # 자동 감지 (qa-scenarios.md 또는 docs/qa/)
-/qa-until-pass @claude-qa-scenarios.md   # 특정 QA 문서 지정
-/qa-until-pass --api-only                # API 테스트만
-/qa-until-pass --ui-only                 # UI 테스트만
+/qpassenger                           # 자동 감지 (qa-scenarios.md 또는 docs/qa/)
+/qpassenger @claude-qa-scenarios.md   # 특정 QA 문서 지정
+/qpassenger --api-only                # API 테스트만
+/qpassenger --ui-only                 # UI 테스트만
 ```
 
 ## 워크플로우 (5단계)
@@ -224,7 +226,7 @@ IF retry >= max_retries:
 ### 결과 보고서 생성
 
 ```markdown
-# QA Until Pass 결과
+# QPassenger 결과
 
 ## 요약
 - 총 시나리오: N개
@@ -309,7 +311,7 @@ IF retry >= max_retries:
 QA가 완료되면 사용자에게 다음 단계를 안내합니다:
 
 ```
-✅ QA Until Pass 완료! (결과: {PASS/CONDITIONAL/FAIL})
+✅ QPassenger 완료! (결과: {PASS/CONDITIONAL/FAIL})
 
 👉 다음 단계 (선택):
   /docker-deploy       → Docker 배포 환경 생성

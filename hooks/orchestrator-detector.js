@@ -5,6 +5,7 @@
  * Detects keywords in user prompt and injects mode instructions.
  *
  * Supported keywords:
+ *   zeus        - Zeus mode (전자동 파이프라인: 설계→구현→테스트)
  *   workpm      - PM mode (Claude Agent Teams)
  *   workpm-mcp  - PM mode (MCP only, all CLIs)
  *   pmworker    - Worker mode
@@ -15,7 +16,8 @@
  * Output: JSON with additionalContext
  */
 
-// Patterns for detection
+// Patterns for detection (zeus는 최상위 우선순위)
+const ZEUS_PATTERN = /(?:^|\s)(?:zeus|제우스|\/zeus)(?:\s|$)/i;
 const WORKPM_PATTERN = /(?:^|\s)workpm(?:\s|$)/i;
 const WORKPM_MCP_PATTERN = /(?:^|\s)workpm[- ]?mcp(?:\s|$)/i;
 const PMWORKER_PATTERN = /(?:^|\s)pmworker(?:\s|$)/i;
@@ -171,6 +173,28 @@ Start now by calling orchestrator_get_available_tasks.
 }
 
 /**
+ * Build Zeus mode context (전자동 파이프라인)
+ */
+function buildZeusContext() {
+  return `
+[ZEUS MODE ACTIVATED — 전자동 파이프라인]
+
+Read skills/zeus/SKILL.md and follow the workflow.
+
+CRITICAL RULES:
+- NEVER call AskUserQuestion — 모든 결정은 자동 응답 테이블로 처리
+- zephermine SKILL.md를 읽되, AskUserQuestion 지점은 자동 응답으로 대체
+- 인터뷰(Step 6)는 합성 트랜스크립트로 자동 생성
+- Planning 완료 후 workpm으로 구현 (orchestrator MCP)
+- 구현 완료 후 qpassenger로 테스트
+- 에러 시 zeus-log.md에 기록하고 계속 진행
+- 절대 멈추지 않는다
+
+Start now: Read skills/zeus/SKILL.md
+`;
+}
+
+/**
  * Build Agent Teams Lead context (대니즈팀)
  */
 function buildAgentTeamContext() {
@@ -217,6 +241,16 @@ Start now: Read skills/agent-team/SKILL.md
  * Main processing function
  */
 function processPrompt(prompt) {
+  // Detect zeus (최상위 우선순위 — 전자동 파이프라인)
+  if (ZEUS_PATTERN.test(prompt)) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: 'UserPromptSubmit',
+        additionalContext: buildZeusContext(),
+      },
+    };
+  }
+
   // Detect agent-team (우선 체크 — workpm보다 먼저)
   if (AGENT_TEAM_PATTERN.test(prompt)) {
     return {

@@ -1,6 +1,6 @@
 {
   "name": "danny-tools",
-  "description": "65+ skills and 34+ agents for Claude Code: project planning (zephermine), parallel coding (agent-team), QA automation (qa-until-pass), Docker deploy, fullstack standards, and more.",
+  "description": "65+ skills and 34+ agents for Claude Code: project planning (zephermine), parallel coding (agent-team), QA automation (qpassenger), Docker deploy, fullstack standards, and more.",
   "version": "1.0.0",
   "author": {
     "name": "Dannykkh"
@@ -11,7 +11,7 @@
   "keywords": [
     "zephermine",
     "agent-team",
-    "qa-until-pass",
+    "qpassenger",
     "docker-deploy",
     "fullstack",
     "orchestrator",

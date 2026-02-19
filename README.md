@@ -134,7 +134,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ## What's Included
 
-### Custom Skills (70 Skills)
+### Custom Skills (71 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -143,10 +143,10 @@ node skills/orchestrator/install.js <target-project-path>
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
 | 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
-| 🎯 **Planning** | zephermine (젭마인), game-changing-features, ship-learn-next | Planning & requirements (zephermine includes spec verification) |
+| 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qa-until-pass | Code review & QA |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger | Code review & QA |
 | 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
@@ -264,7 +264,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (70 skills)
+├── skills/                    # Custom skills (71 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -291,6 +291,7 @@ claude-code-customizations/
 │   ├── gemini/
 │   ├── deploymonitor/
 │   ├── zephermine/
+│   ├── zeus/
 │   ├── humanizer/
 │   ├── jira/
 │   ├── marp-slide/
@@ -306,7 +307,7 @@ claude-code-customizations/
 │   ├── professional-communication/
 │   ├── python-backend-fastapi/
 │   ├── qa-test-planner/
-│   ├── qa-until-pass/
+│   ├── qpassenger/
 │   ├── react-dev/
 │   ├── reducing-entropy/
 │   ├── ship-learn-next/

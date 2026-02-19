@@ -64,7 +64,7 @@
 |--------|------|------|
 | **TDD Guide 에이전트** (외부) | Red-Green-Refactor 강제, 80%+ 커버리지 | `curl -o ~/.claude/agents/tdd-guide.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/tdd-guide.md` |
 | **/tdd 명령어** | TDD 워크플로우 실행 | `curl -o .claude/commands/tdd.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/commands/tdd.md` |
-| **qa-until-pass (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 | 이 저장소의 `skills/qa-until-pass/` |
+| **qpassenger (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) | 이 저장소의 `skills/qpassenger/` |
 
 ### 코드 리뷰
 
@@ -236,8 +236,9 @@ claude plugin install voltagent-qa-sec
 
 | 경로 | 설명 |
 |------|------|
+| `skills/zeus/` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동화 (/zeus) |
 | `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
-| `skills/qa-until-pass/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 |
+| `skills/qpassenger/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |

@@ -396,7 +396,7 @@ orchestrator_spawn_workers({ "count": 2 })
 📊 결과: {완료}/{전체}
 
 👉 다음 단계 (선택):
-  /qa-until-pass  → Playwright 자동 테스트
+  /qpassenger     → Playwright 자동 테스트
   /review         → 코드 리뷰
   /commit         → 변경사항 커밋
 ```

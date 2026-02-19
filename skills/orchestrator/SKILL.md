@@ -128,7 +128,7 @@ Phase 2: 구현 & 검증
 📊 결과: {완료 태스크 수}/{전체 태스크 수}
 
 👉 다음 단계 (선택):
-  /qa-until-pass       → Playwright 자동 테스트 + Healer 루프
+  /qpassenger          → Playwright 자동 테스트 + Healer 루프
   /review              → 코드 리뷰 (품질/보안/성능)
   /commit              → 변경사항 커밋
 

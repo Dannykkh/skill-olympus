@@ -201,7 +201,7 @@
     { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "recommended" },
     { "id": "api-handoff", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
     { "id": "qa-test-planner", "tags": ["*"], "priority": "optional" },
-    { "id": "qa-until-pass", "tags": ["*"], "priority": "optional" },
+    { "id": "qpassenger", "tags": ["*"], "priority": "optional" },
     { "id": "mermaid-diagrams", "tags": ["*"], "priority": "optional" },
     { "id": "crafting-effective-readmes", "tags": ["*"], "priority": "optional" },
     { "id": "jira", "tags": ["*"], "priority": "optional" },
@@ -250,6 +250,7 @@
     { "id": "workplace-conversations", "tags": ["*"], "priority": "optional" },
     { "id": "wrangler", "tags": ["*"], "priority": "optional" },
     { "id": "writing-clearly-and-concisely", "tags": ["*"], "priority": "optional" },
+    { "id": "zeus", "tags": ["*"], "priority": "optional" },
     { "id": "zephermine", "tags": ["*"], "priority": "recommended" },
     { "id": "manage-skills", "tags": ["*"], "priority": "optional" },
     { "id": "verify-implementation", "tags": ["*"], "priority": "optional" }
