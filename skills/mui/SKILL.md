@@ -495,10 +495,3 @@ const styles = {
 ```
 
 ---
-
-## Additional Resources
-
-For more detailed patterns, see:
-- [styling-guide.md](resources/styling-guide.md) - Advanced styling patterns
-- [component-library.md](resources/component-library.md) - Component examples
-- [theme-customization.md](resources/theme-customization.md) - Theme setup

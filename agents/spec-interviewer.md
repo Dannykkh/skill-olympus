@@ -3,12 +3,7 @@ name: spec-interviewer
 description: |
   SPEC.md 파일 기반 심층 인터뷰 에이전트. 기술 구현, UI/UX, 우려사항, 트레이드오프 등
   모든 측면을 심층적으로 질문하여 요구사항을 완성합니다.
-trigger: "SPEC.md 읽고 인터뷰", "요구사항 인터뷰", "스펙 정의"
-tools:
-  - Read
-  - AskUserQuestion
-  - Write
-  - Edit
+tools: Read, AskUserQuestion, Write, Edit
 ---
 
 # SPEC Interviewer Agent

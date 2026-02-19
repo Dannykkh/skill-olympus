@@ -1,6 +1,6 @@
 # Claude Code Customizations
 
-A comprehensive collection of custom Skills, Agents, Commands, Hooks, and MCP servers for Claude Code.
+A comprehensive collection of custom Skills, Agents, Hooks, and MCP servers for Claude Code.
 
 **[한국어 버전](README-ko.md)**
 
@@ -133,7 +133,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ## What's Included
 
-### Custom Skills (57 Skills)
+### Custom Skills (68 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -171,28 +171,6 @@ node skills/orchestrator/install.js <target-project-path>
 | **General** | general-purpose, codebase-pattern-finder | Multi-purpose agents |
 
 > **Full list**: See `agents/` directory or [AGENTS.md](AGENTS.md) for complete agent descriptions.
-
-### Commands (17 Commands)
-
-| Command | Description |
-|---------|-------------|
-| `/check-todos` | Review and prioritize TODO items |
-| `/codex-plan` | Create implementation plan with Codex |
-| `/compose-email` | Draft professional emails |
-| `/daily-sync` | Daily sync and status check |
-| `/explain-pr-changes` | Summarize PR changes |
-| `/generate` | Generate code templates |
-| `/migrate` | Execute migration tasks |
-| `/review` | Perform code review |
-| `/sync-branch` | Sync branch with main |
-| `/test` | Run tests and generate coverage report |
-| `/update-docs` | Update documentation files |
-| `/write-api-docs` | Generate API documentation |
-| `/write-changelog` | Auto-generate changelog from git commits |
-| `/write-prd` | Write Product Requirements Document |
-| `/smart-setup` | Auto-detect tech stack and recommend/install resources |
-
-> **Full list**: See `commands/` directory or [AGENTS.md](AGENTS.md)
 
 ### Hooks
 
@@ -285,7 +263,7 @@ node skills/orchestrator/install.js <target-project-path>
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (57 skills)
+├── skills/                    # Custom skills (68 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -348,7 +326,7 @@ claude-code-customizations/
 │   ├── docx/
 │   ├── pdf/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (33 + skills/*/agents/ 2 = 35)
+├── agents/                    # Custom subagents (33 + skills/*/agents/ 2 = 35 agents)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
@@ -382,24 +360,6 @@ claude-code-customizations/
 │   ├── stitch-developer.md
 │   ├── ui-ux-designer.md
 │   └── writing-guidelines.md
-├── commands/                  # Slash commands (17 commands)
-│   ├── check-todos.md
-│   ├── codex-plan.md
-│   ├── compose-email.md
-│   ├── daily-sync.md
-│   ├── explain-changes-mental-model.md
-│   ├── explain-pr-changes.md
-│   ├── generate.md
-│   ├── migrate.md
-│   ├── review.md
-│   ├── sync-branch.md
-│   ├── sync-skills-readme.md
-│   ├── test.md
-│   ├── update-docs.md
-│   ├── viral-tweet.md
-│   ├── write-api-docs.md
-│   ├── write-changelog.md
-│   └── write-prd.md
 ├── hooks/                     # Global hooks (9 hooks)
 │   ├── save-conversation.sh/.ps1
 │   ├── save-response.sh/.ps1
@@ -440,7 +400,6 @@ claude-code-customizations/
 |------|--------|---------|
 | Skills | `~/.claude/skills/` | `.claude/skills/` |
 | Agents | `~/.claude/agents/` | `.claude/agents/` |
-| Commands | `~/.claude/commands/` | `.claude/commands/` |
 | Hooks | `~/.claude/hooks/` + `~/.claude/settings.json` | `.claude/hooks/` + `.claude/settings.json` |
 
 - **Global**: Available in all projects (installer auto-configures all items globally)
@@ -459,11 +418,6 @@ mkdir skills/my-skill
 ### Add a new agent
 ```bash
 # Create agents/my-agent.md
-```
-
-### Add a new command
-```bash
-# Create commands/my-command.md
 ```
 
 ---
@@ -515,4 +469,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-19

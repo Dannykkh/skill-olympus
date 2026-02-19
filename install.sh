@@ -101,7 +101,12 @@ if [ "$MODE" = "unlink" ]; then
 
     echo ""
     echo "[6/15] Orchestrator MCP 제거 중..."
+    SAVE_CLAUDECODE="${CLAUDECODE:-}"
+    unset CLAUDECODE
     claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
+    if [ -n "$SAVE_CLAUDECODE" ]; then
+        export CLAUDECODE="$SAVE_CLAUDECODE"
+    fi
     echo "      완료!"
 
     echo ""
@@ -431,6 +436,10 @@ else
     fi
 fi
 
+# CLAUDECODE 환경변수 임시 해제 (claude CLI 중첩 세션 방지)
+SAVE_CLAUDECODE="${CLAUDECODE:-}"
+unset CLAUDECODE
+
 # ============================================
 #   Phase 1: Claude (settings.json + CLAUDE.md + MCP + Orchestrator)
 # ============================================
@@ -699,6 +708,11 @@ else
 fi
 
 fi # HAS_GEMINI
+
+# CLAUDECODE 환경변수 복원
+if [ -n "$SAVE_CLAUDECODE" ]; then
+    export CLAUDECODE="$SAVE_CLAUDECODE"
+fi
 
 echo ""
 echo "============================================"

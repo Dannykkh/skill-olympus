@@ -9,7 +9,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |IMPORTANT: Prefer retrieval-led reasoning over pre-training knowledge
 |skills/:{ai-tools,meta,documentation,frontend,development,planning,professional,testing,git,utilities}
 |agents/:{fullstack,ai-ml,api,qa,docs,design,migration,planning,communication,general}
-|commands/:{todos,codex,email,sync,pr,generate,migrate,review,test,docs,changelog,prd}
+
 
 ### Quick Retrieval Paths
 
@@ -69,11 +69,11 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 ## Repository Overview
 
-A comprehensive collection of skills, agents, and commands for Claude Code and other AI coding agents. Extends agent capabilities across development, documentation, planning, and professional workflows.
+A comprehensive collection of skills and agents for Claude Code and other AI coding agents. Extends agent capabilities across development, documentation, planning, and professional workflows.
 
 ## Available Resources
 
-### Skills (57개)
+### Skills (68개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -84,7 +84,7 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zephermine (젭마인), ship-learn-next | 계획/요구사항 |
-| 👔 Professional | daily-meeting-update, difficult-workplace-conversations, feedback-mastery, professional-communication | 비즈니스 커뮤니케이션 |
+| 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner, qa-until-pass | 테스트/리뷰 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
@@ -129,30 +129,6 @@ A comprehensive collection of skills, agents, and commands for Claude Code and o
 | **Communication** | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
 | **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
-
-### Commands (19개)
-
-| 커맨드 | 설명 |
-|--------|------|
-| `/check-todos` | TODO 항목 검토 |
-| `/codex-plan` | Codex로 구현 계획 생성 |
-| `/compose-email` | 전문적인 이메일 작성 |
-| `/daily-sync` | 일일 동기화 및 상태 확인 |
-| `/explain-changes-mental-model` | 변경사항 멘탈 모델 설명 |
-| `/explain-pr-changes` | PR 변경사항 요약 |
-| `/generate` | 코드 템플릿 생성 |
-| `/migrate` | 마이그레이션 작업 |
-| `/review` | 코드 리뷰 수행 |
-| `/sync-branch` | 브랜치 동기화 |
-| `/sync-skills-readme` | README 스킬 목록 동기화 |
-| `/test` | 테스트 실행 및 커버리지 |
-| `/update-docs` | 문서 업데이트 |
-| `/viral-tweet` | 바이럴 트윗 생성 |
-| `/write-api-docs` | API 문서 생성 |
-| `/write-changelog` | 변경로그 자동 생성 |
-| `/write-prd` | PRD 문서 작성 |
-| `/agent-team` | Opus 4.6 Agent Teams로 zephermine 섹션 병렬 실행 |
-| `/smart-setup` | 기술 스택 자동 감지 후 리소스 추천/설치 |
 
 ## Creating a New Skill
 

@@ -2,6 +2,7 @@
 name: security-reviewer
 description: 보안 취약점 전문 분석. 코드 리뷰 시 보안 관점 심층 검토. "보안 리뷰", "security review", "취약점 분석" 요청에 자동 실행.
 tools: Read, Grep, Glob, Bash
+disallowedTools: [Write, Edit]
 model: sonnet
 ---
 

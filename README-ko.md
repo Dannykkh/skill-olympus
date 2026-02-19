@@ -1,6 +1,6 @@
 # Claude Code 커스터마이징
 
-Claude Code를 위한 커스텀 Skills, Agents, Commands, Hooks, MCP 서버 모음입니다.
+Claude Code를 위한 커스텀 Skills, Agents, Hooks, MCP 서버 모음입니다.
 
 **[English Version](README.md)**
 
@@ -133,7 +133,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (57개)
+### 커스텀 스킬 (68개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -171,28 +171,6 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | **범용** | general-purpose, codebase-pattern-finder | 다목적 에이전트 |
 
 > **전체 목록**: `agents/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
-
-### 명령어 (17개)
-
-| 명령어 | 설명 |
-|--------|------|
-| `/check-todos` | TODO 항목 검토 및 우선순위 분류 |
-| `/codex-plan` | Codex로 구현 계획 생성 |
-| `/compose-email` | 전문적인 이메일 작성 |
-| `/daily-sync` | 일일 동기화 및 상태 확인 |
-| `/explain-pr-changes` | PR 변경사항 요약 |
-| `/generate` | 코드 템플릿 생성 |
-| `/migrate` | 마이그레이션 작업 실행 |
-| `/review` | 코드 리뷰 수행 |
-| `/sync-branch` | 브랜치 동기화 |
-| `/test` | 테스트 실행 및 커버리지 보고서 |
-| `/update-docs` | 문서 파일 업데이트 |
-| `/write-api-docs` | API 문서 자동 생성 |
-| `/write-changelog` | Git 커밋 기반 Changelog 자동 생성 |
-| `/write-prd` | PRD (제품 요구사항 문서) 작성 |
-| `/smart-setup` | 기술 스택 자동 감지 후 리소스 추천/설치 |
-
-> **전체 목록**: `commands/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
 ### 훅
 
@@ -285,7 +263,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (57개)
+├── skills/                    # 커스텀 스킬 (68개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -348,7 +326,7 @@ claude-code-customizations/
 │   ├── test-driven-development/
 │   ├── wrangler/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (33 + skills/*/agents/ 2 = 35개)
+├── agents/                    # 커스텀 서브에이전트 (33 + skills/*/agents/ 2 = 35 에이전트)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
@@ -382,24 +360,6 @@ claude-code-customizations/
 │   ├── stitch-developer.md
 │   ├── ui-ux-designer.md
 │   └── writing-guidelines.md
-├── commands/                  # 슬래시 명령어 (17개)
-│   ├── check-todos.md
-│   ├── codex-plan.md
-│   ├── compose-email.md
-│   ├── daily-sync.md
-│   ├── explain-changes-mental-model.md
-│   ├── explain-pr-changes.md
-│   ├── generate.md
-│   ├── migrate.md
-│   ├── review.md
-│   ├── sync-branch.md
-│   ├── sync-skills-readme.md
-│   ├── test.md
-│   ├── update-docs.md
-│   ├── viral-tweet.md
-│   ├── write-api-docs.md
-│   ├── write-changelog.md
-│   └── write-prd.md
 ├── hooks/                     # 글로벌 훅 (9개)
 │   ├── save-conversation.sh/.ps1
 │   ├── save-response.sh/.ps1
@@ -440,7 +400,6 @@ claude-code-customizations/
 |------|------------|--------------|
 | Skills | `~/.claude/skills/` | `.claude/skills/` |
 | Agents | `~/.claude/agents/` | `.claude/agents/` |
-| Commands | `~/.claude/commands/` | `.claude/commands/` |
 | Hooks | `~/.claude/hooks/` + `~/.claude/settings.json` | `.claude/hooks/` + `.claude/settings.json` |
 
 - **글로벌**: 모든 프로젝트에서 사용 가능 (설치 스크립트가 모든 항목을 글로벌로 자동 설정)
@@ -459,11 +418,6 @@ mkdir skills/my-skill
 ### 새 에이전트 추가
 ```bash
 # agents/my-agent.md 파일 작성
-```
-
-### 새 명령어 추가
-```bash
-# commands/my-command.md 파일 작성
 ```
 
 ---
@@ -515,4 +469,4 @@ MIT License
 
 ---
 
-**최종 업데이트:** 2026-02-17
+**최종 업데이트:** 2026-02-19

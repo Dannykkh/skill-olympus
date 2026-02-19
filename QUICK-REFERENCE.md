@@ -52,7 +52,7 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **fullstack-coding-standards** | 3계층 구조 (Router→Service→Repository), DB 연동 규칙 | 이 저장소의 `skills/fullstack-coding-standards/` |
-| **python-backend (로컬)** | 비동기, Pydantic, 500줄 제한 | 이 저장소의 `skills/python-backend/` |
+| **python-backend-fastapi (로컬)** | 비동기, Pydantic, 500줄 제한 | 이 저장소의 `skills/python-backend-fastapi/` |
 
 ---
 
@@ -62,7 +62,7 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **TDD Guide 에이전트** | Red-Green-Refactor 강제, 80%+ 커버리지 | `curl -o ~/.claude/agents/tdd-guide.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/tdd-guide.md` |
+| **TDD Guide 에이전트** (외부) | Red-Green-Refactor 강제, 80%+ 커버리지 | `curl -o ~/.claude/agents/tdd-guide.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/tdd-guide.md` |
 | **/tdd 명령어** | TDD 워크플로우 실행 | `curl -o .claude/commands/tdd.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/commands/tdd.md` |
 | **qa-until-pass (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 | 이 저장소의 `skills/qa-until-pass/` |
 
@@ -84,14 +84,14 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **zephermine (로컬)** | 인터뷰 → 리서치 → 도메인 분석 → 스펙 → 섹션 분리 (Multi-AI 도메인 전문가 포함) | 이 저장소의 `skills/zephermine/` |
-| **Planner 에이전트** | 구현 전 상세 계획 수립 | `curl -o ~/.claude/agents/planner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/planner.md` |
+| **Planner 에이전트** (외부) | 구현 전 상세 계획 수립 | `curl -o ~/.claude/agents/planner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/planner.md` |
 | **Architect 에이전트** | 시스템 설계, 아키텍처 결정 | `curl -o ~/.claude/agents/architect.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/architect.md` |
 
 ### 리팩토링
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **Refactor Cleaner 에이전트** | 데드 코드 제거, 정리 | `curl -o ~/.claude/agents/refactor-cleaner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/refactor-cleaner.md` |
+| **Refactor Cleaner 에이전트** (외부) | 데드 코드 제거, 정리 | `curl -o ~/.claude/agents/refactor-cleaner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/refactor-cleaner.md` |
 
 ---
 
@@ -240,12 +240,12 @@ claude plugin install voltagent-qa-sec
 | `skills/qa-until-pass/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
-| `skills/react-best-practices/` | Vercel 45개 규칙 |
+| `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
 | `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |
 | `skills/agent-team/` | Agent Teams 병렬 실행 — Opus 4.6 네이티브 (zephermine 섹션 기반) + Activity Log |
 | `skills/agent-team-codex/` | Codex CLI multi_agent 기반 병렬 실행 + Activity Log |
-| `skills/erd-designer/` | Mermaid ERD 생성 |
+| `skills/mermaid-diagrams/` | Mermaid 다이어그램 (ERD 포함) |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |
 | `agents/frontend-react.md` | React + Zustand + TanStack |
@@ -276,4 +276,4 @@ https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/mast
 ---
 
 **저장소:** https://github.com/Dannykkh/claude-code-agent-customizations
-**마지막 업데이트:** 2026-02-05
+**마지막 업데이트:** 2026-02-19

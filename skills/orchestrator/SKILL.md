@@ -45,33 +45,56 @@ orchestrator/
 ```
 workpm
 ```
-- 프로젝트 분석
-- 태스크 분해 및 생성
-- AI 배정 (Claude, Codex, Gemini)
+- 팀 구성 및 태스크 분배
+- 2단계 워크플로우 (리서치→구현)
+- 리더는 오케스트레이션만, 코딩 금지
 
 ### Worker 모드 시작
 ```
 pmworker
 ```
-- 가용 태스크 확인
-- 태스크 담당 및 파일 락
-- 작업 수행 및 완료 보고
+- 가용 태스크 확인 및 수행
+- 파일 락 및 완료 보고
 
 ---
 
-## PM 명령어
+## 핵심 3원칙
+
+| 원칙 | 설명 |
+|------|------|
+| **작업 외주화** | 리더는 코딩하지 않는다. 전략만 |
+| **기억 외부화** | 중요 결정은 activity log에 즉시 기록 |
+| **계속 해고** | 작업 끝난 팀원은 교체. 깨끗한 컨텍스트 유지 |
+
+---
+
+## 워크플로우
+
+```
+Phase 1: 리서치 & 제안
+  리더 → 팀원 4명 → 심부름꾼 ~30명 병렬 리서치
+  → 보고서 → 3가지 제안서 → 사용자 승인
+
+Phase 2: 구현 & 검증
+  기존 팀원 해고 → 새 팀원 4명 → 심부름꾼 ~30명 병렬 구현
+  → 팀원 검토 → 리더 최종 검토 → 최종 보고
+```
+
+---
+
+## 명령어 요약
+
+### PM 전용
 
 | 명령어 | 설명 |
 |--------|------|
 | `orchestrator_detect_providers()` | AI CLI 감지 |
-| `orchestrator_analyze_codebase()` | 프로젝트 분석 |
 | `orchestrator_create_task({...})` | 태스크 생성 |
 | `orchestrator_get_progress()` | 진행 상황 |
-| `orchestrator_get_status()` | 전체 상태 |
+| `orchestrator_log_activity({...})` | 결정/진행 기록 |
+| `orchestrator_get_activity_log({...})` | 활동 로그 조회 |
 
----
-
-## Worker 명령어
+### Worker 전용
 
 | 명령어 | 설명 |
 |--------|------|
@@ -80,35 +103,6 @@ pmworker
 | `orchestrator_lock_file({path})` | 파일/폴더 락 |
 | `orchestrator_complete_task({task_id, result})` | 완료 보고 |
 | `orchestrator_fail_task({task_id, error})` | 실패 보고 |
-
----
-
-## AI 배정 가이드
-
-| 태스크 유형 | 추천 AI | 이유 |
-|------------|---------|------|
-| 코드 생성/구현 | codex | 빠른 코드 생성 |
-| 리팩토링 | claude | 복잡한 추론 |
-| 코드 리뷰 | gemini | 대용량 컨텍스트 |
-| 문서 작성 | claude | 자연어 품질 |
-
----
-
-## 워크플로우
-
-```
-[PM 터미널]
-workpm → 프로젝트 분석 → 태스크 분해 → 생성
-
-[Worker 터미널 1]
-pmworker → task-1 담당 → 락 획득 → 작업 → 완료
-
-[Worker 터미널 2]
-pmworker → task-2 담당 → 락 획득 → 작업 → 완료
-
-[Worker 터미널 3]
-pmworker → task-3 담당 (task-1 완료 후 언블록) → ...
-```
 
 ---
 

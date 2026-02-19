@@ -2,7 +2,6 @@
 name: reducing-entropy
 description: 코드베이스 최소화 철학. 새 파일/기능 추가 전 검토 시 적용.
 auto_apply: false
-manual_trigger: true
 references:
   - skills/reducing-entropy/SKILL.md
 ---
