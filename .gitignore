@@ -16,6 +16,7 @@ node_modules/
 
 # Screenshots
 screenshot*.png
+.playwright-mcp/
 
 # Python
 __pycache__/
