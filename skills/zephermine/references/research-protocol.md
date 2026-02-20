@@ -185,14 +185,27 @@ Task tool:
     For each promising project found:
     1. Use WebSearch with "site:github.com {query}" to find repositories
     2. Use WebFetch on the GitHub repo page to read the README
-    3. Analyze: project structure, key design decisions, tech choices
-    4. Note: star count, last update, maturity level
+    3. Use Bash to browse source code with gh CLI:
+       - `gh api repos/{owner}/{repo}/contents` — 루트 디렉토리 구조
+       - `gh api repos/{owner}/{repo}/contents/{path}` — 핵심 파일 내용 (base64 → jq -r '.content' | base64 -d)
+       - 우선 탐색 대상: 엔트리포인트(main/app/index), 라우터/컨트롤러, 스키마/모델, 설정 파일
+       - 전체 클론 금지 — API로 필요한 파일만 선택적 읽기 (최대 10개 파일)
+    4. Feature & Menu Analysis (기능/메뉴 분석):
+       - README, 라우터/네비게이션 파일, 사이드바/헤더 컴포넌트에서 기능 목록 추출
+       - 메뉴 구조 파악: 페이지/화면 목록, 네비게이션 계층, 사용자 흐름
+       - 핵심 기능별 구현 방식 확인 (인증, CRUD, 검색, 대시보드 등)
+       - 우리 스펙에 없지만 유사 프로젝트에 공통으로 있는 기능 식별 → 누락 후보
+    5. Analyze: project structure, key design decisions, tech choices, code patterns
+    6. Note: star count, last update, maturity level
 
     Select top 3-5 most relevant projects. For each, provide:
     - **Repo**: owner/name (URL)
     - **Stars / Last updated**: popularity and freshness
     - **Relevance**: why this project is useful as reference
+    - **Features**: 주요 기능 목록 (우리 스펙과 겹치는 기능은 ✅, 우리에게 없는 기능은 💡 표시)
+    - **Menu/Pages**: 메뉴 구조 또는 페이지 목록 (트리 형태)
     - **Architecture**: key patterns, folder structure, tech stack
+    - **Key Code**: 참고할 만한 핵심 코드 패턴 (파일 경로 + 요약)
     - **Takeaways**: specific ideas we can adopt or avoid
 
     Return your findings as markdown. Always include repo URLs.
