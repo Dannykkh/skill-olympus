@@ -68,7 +68,7 @@ chmod +x install.sh && ./install.sh
 
 ## Core Systems
 
-Three core systems that differentiate this project:
+Four core systems that differentiate this project:
 
 ### Zephermine - SPEC Interview & Verification
 
@@ -129,6 +129,26 @@ node skills/orchestrator/install.js <target-project-path>
 ```
 
 > **[Skill Details](skills/orchestrator/SKILL.md)** | **[Full Guide](skills/orchestrator/docs/orchestrator-guide.md)**
+
+### Zeus - Zero-Interaction Full Pipeline
+
+One-line description in, fully built project out. Chains zephermine → orchestrator → qpassenger automatically.
+
+| Phase | What it does |
+|-------|-------------|
+| **Phase 0** | Parse description — extract industry, tech stack, features |
+| **Phase 1** | Planning (zephermine 24 steps) — synthetic interview, spec, sections |
+| **Phase 2** | Implementation (workpm) — PM creates tasks, workers build in parallel |
+| **Phase 3** | Testing (qpassenger) — Playwright E2E tests + Healer loop |
+| **Phase 4** | Final report — `zeus-report.md` with pass/fail summary |
+
+```
+/zeus "쇼핑몰 만들어줘. React+Spring Boot"
+    → Phase 0~4 auto-executed without stopping
+    → Never calls AskUserQuestion — all decisions via auto-response table
+```
+
+> **[Skill Details](skills/zeus/SKILL.md)**
 
 ---
 

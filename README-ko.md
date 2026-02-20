@@ -68,7 +68,7 @@ chmod +x install.sh && ./install.sh
 
 ## 핵심 시스템
 
-이 프로젝트의 3가지 핵심 시스템:
+이 프로젝트의 4가지 핵심 시스템:
 
 ### Zephermine - SPEC 심층 인터뷰 & 검증
 
@@ -129,6 +129,26 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 ```
 
 > **[스킬 상세](skills/orchestrator/SKILL.md)** | **[전체 가이드](skills/orchestrator/docs/orchestrator-guide.md)**
+
+### Zeus (제우스) - 전자동 파이프라인
+
+한 줄 설명만 넣으면 설계부터 구현, 테스트까지 전부 자동 완료. zephermine → orchestrator → qpassenger를 자동 연결.
+
+| Phase | 하는 일 |
+|-------|---------|
+| **Phase 0** | 설명 파싱 — 산업군, 기술스택, 기능 추출 |
+| **Phase 1** | 설계 (zephermine 24단계) — 합성 인터뷰, 스펙, 섹션 생성 |
+| **Phase 2** | 구현 (workpm) — PM이 태스크 분배, Workers가 병렬 구현 |
+| **Phase 3** | 테스트 (qpassenger) — Playwright E2E 테스트 + Healer 루프 |
+| **Phase 4** | 최종 보고서 — `zeus-report.md` 통과/실패 요약 |
+
+```
+/zeus "쇼핑몰 만들어줘. React+Spring Boot"
+    → Phase 0~4 멈추지 않고 자동 실행
+    → AskUserQuestion 절대 호출 안 함 — 모든 결정은 자동 응답 테이블로 처리
+```
+
+> **[스킬 상세](skills/zeus/SKILL.md)**
 
 ---
 
