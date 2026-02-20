@@ -29,16 +29,29 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch, A
 2. **절대 멈추지 않는다** — 에러 발생 시 zeus-log.md에 기록하고 다음 단계로 진행
 3. **[ZEUS-AUTO] 태그** — 자동 결정에는 반드시 태그 표시
 
-### Phase 순서
+### Phase 순서 — 자동 루프
 
-0. **Description Parsing** — 산업군, 기술스택, 기능 추출 (references/description-parser.md)
+Phase 0~4를 **연속으로 실행**합니다. 각 Phase가 끝나면 멈추지 말고 즉시 다음 Phase로 진입하세요.
+
+```
+LOOP:
+  Phase 0 → 완료 → 즉시 Phase 1 시작
+  Phase 1 → 완료 → 즉시 Phase 2 시작
+  Phase 2 → 완료 → 즉시 Phase 3 시작
+  Phase 3 → 완료 → 즉시 Phase 4 시작
+  Phase 4 → 완료 → 종료
+```
+
+0. **Description Parsing** — 산업군, 기술스택, 기능 추출
 1. **Planning** — zephermine 24단계 자동 실행 (인터뷰는 합성 생성)
 2. **Implementation** — workpm으로 병렬 구현 (orchestrator MCP)
 3. **Testing** — qpassenger로 E2E 테스트
 4. **Report** — zeus-report.md 최종 보고서
 
+**CRITICAL**: 각 Phase 사이에 사용자에게 "다음 단계를 진행합니다" 같은 확인을 구하지 마세요. 바로 다음 Phase 코드를 실행하세요. 중간에 멈추는 것은 zeus의 목적에 반합니다.
+
 ### 재개
 
 이전 실행이 중단된 경우, `/zeus`를 다시 실행하면 zeus-state.json에서 마지막 완료 지점부터 자동 재개합니다.
 
-Start now: Read skills/zeus/SKILL.md
+Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 4 without stopping.

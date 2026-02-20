@@ -39,8 +39,9 @@ Phase 4: Final Report ─────────── zeus-report.md 생성
 
 1. **NEVER call AskUserQuestion** — 모든 결정은 자동 응답 테이블로 처리
 2. **절대 멈추지 않는다** — 에러 시 기록하고 계속 진행
-3. **[ZEUS-AUTO] 태그** — 자동 결정에는 반드시 태그 표시
-4. **재개 지원** — zeus-state.json으로 중단 지점부터 재개
+3. **Phase 완료 즉시 다음 Phase 시작** — "다음을 진행합니다" 같은 중간 보고 금지. Phase 0→1→2→3→4를 한 턴에 연속 실행
+4. **[ZEUS-AUTO] 태그** — 자동 결정에는 반드시 태그 표시
+5. **재개 지원** — zeus-state.json으로 중단 지점부터 재개
 
 ---
 
