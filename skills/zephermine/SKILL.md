@@ -222,7 +222,7 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 
 > Phase B는 Phase A 완료 후 실행 (domain-research.md 필요).
 > 도메인 전문가는 리서치 결과를 기반으로 **실제 기술/솔루션을 참조하여** 분석합니다.
-> **spec에 없는 업무도 추가**: 해당 산업에서 필수인데 빠진 업무/역할/규제를 보완합니다.
+> **spec에 없는 업무도 제안**: 해당 산업에서 필수인데 빠진 업무/역할/규제를 제안합니다 (사용자 확인 후 채택).
 
 | Codex | Gemini | 도메인 전문가 실행 (Phase B) |
 |-------|--------|---------------------------|
@@ -244,7 +244,41 @@ This prevents the combined agent outputs from overflowing the main context.
 
 Results → `<planning_dir>/team-reviews/` (개별 6개) + `<planning_dir>/claude-team-review.md` (통합).
 
-The synthesized team review feeds into Step 10 (plan generation) as additional input.
+The synthesized team review feeds into Step 9.5 (user confirmation) and then Step 10 (plan generation) as additional input.
+
+### 9.5. User Confirmation of Domain Expert Suggestions
+
+도메인 전문가가 추가 제안한 "누락 사항"(누락 업무, 누락 역할, 업계 관행, 규제 등)을 사용자에게 보여주고 **선택적으로 채택**합니다.
+
+**1) 제안 항목 추출:** `team-reviews/domain-process-analysis.md`와 `team-reviews/domain-technical-analysis.md`에서 우선순위 테이블(🔴/🟡/🟢) 항목을 추출합니다.
+
+**2) 사용자 확인:** AskUserQuestion(multiSelect)으로 제안 항목을 보여줍니다:
+
+```
+question: "도메인 전문가가 아래 항목을 추가 제안했습니다. 채택할 항목을 선택하세요. (🔴필수/🟡권장/🟢선택은 AI 판단이며, 최종 결정은 사용자입니다)"
+header: "Domain"
+multiSelect: true
+options:
+  - label: "🔴 {항목1}: {한줄요약}"
+    description: "{근거}"
+  - label: "🟡 {항목2}: {한줄요약}"
+    description: "{근거}"
+  - label: "🟢 {항목3}: {한줄요약}"
+    description: "{근거}"
+  ...
+```
+
+> 항목이 너무 많으면 (8개+) 🔴필수/🟡권장/🟢선택 그룹별로 나누어 2~3회 질문합니다.
+
+**3) 채택 결과 기록:** `claude-team-review.md`의 "Impact on Plan" 섹션에 사용자 채택 결과를 추가합니다:
+
+```markdown
+## User-Approved Domain Suggestions
+- ✅ 채택: {항목명} — {이유}
+- ❌ 미채택: {항목명} — 사용자 판단: {이유 또는 "불필요"}
+```
+
+**4) 미채택 항목은 Plan에 반영하지 않습니다.** Step 10은 채택된 항목만 반영합니다.
 
 ### 10. Generate Implementation Plan
 
@@ -257,7 +291,8 @@ Create detailed plan → `<planning_dir>/claude-plan.md`
 - `<planning_dir>/team-reviews/domain-technical-analysis.md` (기술 스택 매핑 — 연동, 규제, 솔루션)
 
 **IMPORTANT**: Address all "Critical Findings" from the team review.
-도메인 전문가가 추가한 누락 업무/역할/규제를 plan에 반영합니다.
+도메인 전문가의 추가 제안 중 **Step 9.5에서 사용자가 채택한 항목만** plan에 반영합니다.
+미채택 항목은 반영하지 않습니다.
 Write for an unfamiliar reader. The plan must be fully self-contained - an engineer or LLM with no prior context should understand *what* we're building, *why*, and *how* just from reading this document.
 
 ### 11. External Review
