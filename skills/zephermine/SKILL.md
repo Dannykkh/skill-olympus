@@ -20,7 +20,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Plan → External Review → DB Schema → Sections → QA Scenarios → Skill Discovery → Verify
+순서: Research → Interview → Spec → Team Review → Plan → External Review → DB Schema → Sections → Operation Scenarios → QA Scenarios → Skill Discovery → Verify
 ```
 
 ### 2. Resolve Spec File Path
@@ -74,6 +74,7 @@ Determine session state by checking existing files:
    - `claude-design-system.md`
    - `claude-ralph-loop-prompt.md`
    - `claude-ralphy-prd.md`
+   - `claude-operation-scenarios.md`
    - `claude-qa-scenarios.md`
    - `team-reviews/` directory (domain-research.md, 개별 분석 파일)
    - `reviews/` directory
@@ -94,7 +95,7 @@ Determine session state by checking existing files:
 | + claude-db-schema.md | resume | Step 15 (API spec) |
 | + sections/index.md | resume | Step 16 (write sections) |
 | all sections complete | resume | Step 17 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 23 (verify) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 24 (verify) |
 | + claude-verify-report.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
@@ -349,18 +350,63 @@ Wait for ALL subagents to complete before proceeding.
 
 Wait for subagent completion before proceeding.
 
-### 19. Generate QA Scenarios Document — Subagent
+### 19. Generate Operation Scenarios — Subagent
 
-모든 섹션의 Test Scenarios를 통합하여 `<planning_dir>/claude-qa-scenarios.md` 생성.
+운영 시나리오를 정의하여 `<planning_dir>/claude-operation-scenarios.md` 생성.
+QA 시나리오의 근거가 되는 문서 — 운영 시나리오 없이 QA 시나리오는 만들 수 없음.
 
-**Inputs:** `claude-spec.md` + `claude-api-spec.md` + `sections/section-*.md`
+**Inputs:** `claude-spec.md` + `claude-plan.md` + `claude-api-spec.md` + `sections/section-*.md` + `team-reviews/domain-process-analysis.md`
 
 **구조:**
-- 섹션별 테스트 시나리오 (체크박스)
+
+```markdown
+# 운영 시나리오
+
+## 1. 역할 정의
+| 역할 | 설명 | 주요 권한 |
+|------|------|-----------|
+
+## 2. 메뉴별 시나리오
+### 메뉴: {메뉴명}
+- **접근 역할**: 관리자, 일반 사용자
+- **화면 구성**: 목록 → 상세 → 편집
+- **정상 흐름**: 1. ... → 2. ... → 3. ...
+- **예외 흐름**: 권한 없음, 데이터 없음, 입력 오류
+
+## 3. 업무 시나리오 (End-to-End)
+### 시나리오: {업무명} (예: 신규 주문 처리)
+- **역할**: 고객 → 관리자
+- **선행 조건**: 로그인 완료, 상품 존재
+- **흐름**: 1. 상품 검색 → 2. 장바구니 → 3. 결제 → 4. 주문 확인
+- **예외**: 재고 부족, 결제 실패, 쿠폰 만료
+- **후행 조건**: 주문 생성, 재고 차감, 알림 발송
+
+## 4. 화면 흐름도
+(Mermaid flowchart — 주요 페이지 간 이동 경로)
+```
+
+**규칙:**
+- 메뉴/페이지가 있는 프로젝트: 메뉴별 시나리오 필수
+- CLI/라이브러리: 명령어별 사용 시나리오로 대체
+- API only: 엔드포인트 그룹별 호출 시나리오로 대체
+- 도메인 프로세스 분석(team-reviews)의 업무 흐름표를 적극 활용
+- spec에 없지만 유사 프로젝트(claude-research.md)에서 발견된 공통 기능 → 💡 누락 후보로 표시
+
+### 20. Generate QA Scenarios Document — Subagent
+
+**운영 시나리오를 기반으로** QA 테스트 케이스를 생성하여 `<planning_dir>/claude-qa-scenarios.md` 작성.
+
+**Inputs:** `claude-operation-scenarios.md` + `claude-spec.md` + `claude-api-spec.md` + `sections/section-*.md`
+
+**구조:**
+- 메뉴별 테스트 시나리오 (운영 시나리오의 메뉴별 정상/예외 흐름 → 테스트 케이스)
+- 업무 시나리오별 E2E 테스트 (End-to-End 흐름 → 통합 테스트)
 - Frontend ↔ Backend 통합 테스트 (api-spec 기반)
 - Summary (총 테스트/단위/통합/에러 케이스 건수)
 
-### 20. Final Status
+**매핑 규칙:** 운영 시나리오 1개 → QA 테스트 케이스 N개 (정상 1 + 예외 N-1)
+
+### 21. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
@@ -369,19 +415,21 @@ Verify all files were created successfully:
 - `claude-design-system.md` (UI가 있는 프로젝트)
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
+- `claude-operation-scenarios.md`
 - `claude-qa-scenarios.md`
 - `team-reviews/domain-research.md` (도메인 리서치)
 - `team-reviews/domain-process-analysis.md` (업무 흐름표)
 - `team-reviews/domain-technical-analysis.md` (기술 스택 매핑)
 
-### 21. Output Summary
+### 22. Output Summary
 
 Print generated files list and implementation options:
 ```
 ZEPHERMINE: Planning Complete
 
 Generated: claude-research/interview/spec/team-review/plan/api-spec/db-schema/
-           design-system/integration-notes/ralph-loop-prompt/ralphy-prd/qa-scenarios.md
+           design-system/integration-notes/ralph-loop-prompt/ralphy-prd/
+           operation-scenarios/qa-scenarios.md
            + team-reviews/ + reviews/ + sections/
 
 Implementation options:
@@ -392,7 +440,7 @@ Implementation options:
   E. Agent Teams: /agent-team <planning_dir> (병렬 실행, 권장)
 ```
 
-### 22. Discover Implementation Skills
+### 23. Discover Implementation Skills
 
 구현 시작 전, 프로젝트에 도움될 외부 스킬을 탐색합니다.
 
@@ -408,11 +456,11 @@ Implementation options:
 
 > 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.
 
-### 23. Verify Implementation
+### 24. Verify Implementation
 
 See [verify-protocol.md](references/verify-protocol.md)
 
-구현 완료 후 claude-spec.md + claude-api-spec.md + claude-qa-scenarios.md 대비 검증.
+구현 완료 후 claude-spec.md + claude-api-spec.md + claude-operation-scenarios.md + claude-qa-scenarios.md 대비 검증.
 사용자가 `/zephermine @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
 
 **Phase 1 — 정적 검증** (서브에이전트 2개 병렬):
@@ -436,7 +484,7 @@ See [verify-protocol.md](references/verify-protocol.md)
 
 결과 → `<planning_dir>/claude-verify-report.md` (API 일치 + QA 통과율 포함)
 
-### 24. Verification Report
+### 25. Verification Report
 
 검증 결과를 사용자에게 표시.
 
@@ -453,7 +501,7 @@ AskUserQuestion으로 다음 선택:
 ```
 ✅ 젭마인 설계 완료!
 
-📦 산출물: claude-ralph.md, claude-ralphy.md, claude-qa-scenarios.md, sections/
+📦 산출물: claude-ralph.md, claude-ralphy.md, claude-operation-scenarios.md, claude-qa-scenarios.md, sections/
 
 👉 다음 단계 (선택):
   /agent-team          → 섹션 기반 병렬 구현 (Claude 네이티브)
