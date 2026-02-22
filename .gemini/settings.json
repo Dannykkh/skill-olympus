@@ -28,17 +28,17 @@
         "@playwright/mcp@latest"
       ]
     },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
     "orchestrator": {
       "command": "node",
       "args": [
         "D:/git/claude-code-agent-customizations/skills/orchestrator/mcp-server/dist/index.js"
+      ]
+    },
+    "open-websearch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "open-websearch@latest"
       ]
     }
   }
