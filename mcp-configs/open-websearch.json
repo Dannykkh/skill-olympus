@@ -1,0 +1,13 @@
+{
+  "name": "open-websearch",
+  "description": "다중 엔진 웹 검색 (Bing/DuckDuckGo/Brave 등) - fetch 실패 시 폴백 (무료, API 키 불필요)",
+  "requiresApiKey": false,
+  "config": {
+    "command": "npx",
+    "args": ["-y", "open-websearch@latest"],
+    "env": {
+      "DEFAULT_SEARCH_ENGINE": "duckduckgo",
+      "MODE": "stdio"
+    }
+  }
+}

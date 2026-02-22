@@ -10,7 +10,7 @@ Claude Code/Codex에서 자주 사용하는 MCP 서버들의 사전 구성된 �
 | playwright | 브라우저 자동화 및 E2E 테스트 | 불필요 | `@playwright/mcp` |
 | chrome-devtools | Chrome DevTools 연동 (네트워크/콘솔/성능) | 불필요 | `@anthropic-ai/chrome-devtools-mcp` |
 | fetch | URL 콘텐츠 가져오기 (HTML/JSON/MD) | 불필요 | `mcp-fetch-server` |
-| firecrawl | JS 렌더링 웹 스크래핑/검색 (fetch 실패 시 폴백) | **필요** | `firecrawl-mcp` |
+| open-websearch | 다중 엔진 웹 검색 (Bing/DuckDuckGo/Brave 등) | 불필요 | `open-websearch` |
 | github | GitHub API 통합 (PR, Issue 등) | **필요** | `@modelcontextprotocol/server-github` |
 
 ## 설치 방법
@@ -90,7 +90,7 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
 claude mcp add playwright -- npx -y @playwright/mcp@latest
 claude mcp add chrome-devtools -- npx -y @anthropic-ai/chrome-devtools-mcp@latest
 claude mcp add fetch -- npx -y mcp-fetch-server@latest
-claude mcp add firecrawl -e FIRECRAWL_API_KEY=your-key -- npx -y firecrawl-mcp@latest
+claude mcp add open-websearch -e DEFAULT_SEARCH_ENGINE=duckduckgo -e MODE=stdio -- npx -y open-websearch@latest
 
 # Codex CLI 사용
 codex mcp add context7 -- npx -y @upstash/context7-mcp@latest
