@@ -208,9 +208,20 @@ if (-not $turnId) {
     $turnId = "$($payload.turn_id)".Trim()
 }
 
-$userText = (Extract-Text $payload.'input-messages').Trim()
+# input-messages가 배열이면 마지막 요소만 추출 (Codex는 누적 전달)
+$inputMsgs = $payload.'input-messages'
+if ($inputMsgs -is [array] -and $inputMsgs.Count -gt 0) {
+    $userText = (Extract-Text $inputMsgs[-1]).Trim()
+} else {
+    $userText = (Extract-Text $inputMsgs).Trim()
+}
 if (-not $userText) {
-    $userText = (Extract-Text $payload.'input_messages').Trim()
+    $inputMsgs2 = $payload.'input_messages'
+    if ($inputMsgs2 -is [array] -and $inputMsgs2.Count -gt 0) {
+        $userText = (Extract-Text $inputMsgs2[-1]).Trim()
+    } else {
+        $userText = (Extract-Text $inputMsgs2).Trim()
+    }
 }
 
 $response = (Extract-Text $payload.'last-assistant-message').Trim()

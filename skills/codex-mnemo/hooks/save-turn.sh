@@ -82,12 +82,20 @@ if [ -z "$TURN_ID" ]; then
     TURN_ID="$(json_get '.turn_id')"
 fi
 
-USER_TEXT="$(json_join_array "input-messages")"
-if [ -z "$USER_TEXT" ]; then
-    USER_TEXT="$(json_get '."input-messages"')"
+# input-messages가 배열이면 마지막 요소만 추출 (Codex는 누적 전달)
+if command -v jq &>/dev/null; then
+    USER_TEXT="$(echo "$PAYLOAD" | jq -r '
+        (."input-messages" // .input_messages // null)
+        | if type == "array" and length > 0 then .[-1]
+          elif type == "string" then .
+          else empty end
+        | if type == "object" then (.text // .content // empty)
+          elif type == "array" then map(if type == "object" then (.text // .content // empty) else . end) | join("\n")
+          else . end
+    ' 2>/dev/null)"
 fi
 if [ -z "$USER_TEXT" ]; then
-    USER_TEXT="$(json_join_array "input_messages")"
+    USER_TEXT="$(json_get '."input-messages"')"
 fi
 if [ -z "$USER_TEXT" ]; then
     USER_TEXT="$(json_get '.input_messages')"
