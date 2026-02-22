@@ -1,0 +1,13 @@
+{
+  "name": "firecrawl",
+  "description": "JS 렌더링 웹 스크래핑/검색 - fetch 실패 시 폴백 (무료 500크레딧/월, API 키 필요)",
+  "requiresApiKey": true,
+  "apiKeyEnvVar": "FIRECRAWL_API_KEY",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "firecrawl-mcp@latest"],
+    "env": {
+      "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+    }
+  }
+}

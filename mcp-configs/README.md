@@ -8,8 +8,9 @@ Claude Code/Codex에서 자주 사용하는 MCP 서버들의 사전 구성된 �
 |------|------|--------|--------|
 | context7 | 최신 라이브러리 문서 검색 | 불필요 | `@upstash/context7-mcp` |
 | playwright | 브라우저 자동화 및 E2E 테스트 | 불필요 | `@playwright/mcp` |
-| fetch | URL 콘텐츠 가져오기 (HTML/JSON/MD) | 불필요 | `mcp-fetch-server` (npx) |
-| sequential-thinking | 단계적 사고 프로세스 | 불필요 | `@modelcontextprotocol/server-sequential-thinking` |
+| chrome-devtools | Chrome DevTools 연동 (네트워크/콘솔/성능) | 불필요 | `@anthropic-ai/chrome-devtools-mcp` |
+| fetch | URL 콘텐츠 가져오기 (HTML/JSON/MD) | 불필요 | `mcp-fetch-server` |
+| firecrawl | JS 렌더링 웹 스크래핑/검색 (fetch 실패 시 폴백) | **필요** | `firecrawl-mcp` |
 | github | GitHub API 통합 (PR, Issue 등) | **필요** | `@modelcontextprotocol/server-github` |
 
 ## 설치 방법
@@ -87,10 +88,11 @@ API 키가 필요한 경우:
 # Claude Code CLI 사용
 claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
 claude mcp add playwright -- npx -y @playwright/mcp@latest
-claude mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
+claude mcp add chrome-devtools -- npx -y @anthropic-ai/chrome-devtools-mcp@latest
+claude mcp add fetch -- npx -y mcp-fetch-server@latest
+claude mcp add firecrawl -e FIRECRAWL_API_KEY=your-key -- npx -y firecrawl-mcp@latest
 
 # Codex CLI 사용
 codex mcp add context7 -- npx -y @upstash/context7-mcp@latest
 codex mcp add playwright -- npx -y @playwright/mcp@latest
-codex mcp add sequential-thinking -- npx -y @modelcontextprotocol/server-sequential-thinking
 ```
