@@ -5,7 +5,7 @@ setlocal enabledelayedexpansion
 REM ============================================
 REM   Claude Code Customizations Installer
 REM   Skills, Agents, Hooks + MCP 자동 설치
-REM   사용법: install.bat [--link | --unlink] [--all] [--llm ...] [--only ...] [--skip ...]
+REM   사용법: install.bat [--link | --unlink] [--with-open-websearch] [--all] [--llm ...] [--only ...] [--skip ...]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -20,13 +20,18 @@ set "GEMINI_SYNC_RESULT=미실행"
 set "GEMINI_MCP_RESULT=미실행"
 set "GEMINI_ORCH_RESULT=미실행"
 set "GEMINI_HOOKS_RESULT=미실행"
+set "INCLUDE_OPEN_WEBSEARCH=0"
+set "DEFAULT_MCP_SERVERS=context7 fetch playwright chrome-devtools"
+set "LEGACY_MCP_SERVERS=open-websearch sequential-thinking"
 
 REM 모드 결정 (인자 전체 스캔)
 set "MODE=copy"
 for %%A in (%*) do (
     if /i "%%A"=="--link" set "MODE=link"
     if /i "%%A"=="--unlink" set "MODE=unlink"
+    if /i "%%A"=="--with-open-websearch" set "INCLUDE_OPEN_WEBSEARCH=1"
 )
+if "!INCLUDE_OPEN_WEBSEARCH!"=="1" set "DEFAULT_MCP_SERVERS=!DEFAULT_MCP_SERVERS! open-websearch"
 
 echo.
 echo ============================================
@@ -144,11 +149,11 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [9/15] Codex MCP 무료 세트 제거 중...
+    echo [9/15] Codex MCP 기본/레거시 세트 제거 중...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
-            node "%SCRIPT_DIR%install-mcp-codex.js" --uninstall context7 fetch playwright sequential-thinking
+            node "%SCRIPT_DIR%install-mcp-codex.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
             if !errorlevel! equ 0 (
                 set "CODEX_MCP_RESULT=제거 완료"
                 echo       완료!
@@ -226,7 +231,7 @@ if "%MODE%"=="unlink" (
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
-            node "%SCRIPT_DIR%install-mcp-gemini.js" --uninstall context7 fetch playwright sequential-thinking
+            node "%SCRIPT_DIR%install-mcp-gemini.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
             echo       완료!
         ) else (
             echo       [경고] install-mcp-gemini.js 없음, 건너뜀
@@ -492,7 +497,7 @@ node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%/hooks" "%CLAUDE_DIR%\se
 REM CLAUDE.md 장기기억 규칙 설치 (mnemo 번들)
 echo.
 if "!HAS_MNEMO!"=="1" (
-    echo [5/7] CLAUDE.md 장기기억 규칙 설치 중... (Claude)
+    echo [5/7] CLAUDE.md 장기기억 규칙 설치 중... - Claude
     node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 ) else (
     echo [5/7] CLAUDE.md 장기기억 규칙 [건너뜀] - mnemo 번들 미선택
@@ -501,16 +506,16 @@ if "!HAS_MNEMO!"=="1" (
 REM MCP 서버 자동 설치 (mcp 번들)
 echo.
 if "!HAS_MCP!"=="1" (
-    echo [6/7] MCP 서버 설치 중... (Claude, 무료만 자동 설치)
+    echo [6/7] MCP 서버 설치 중... - Claude 기본 안정 세트
     echo.
     echo       사용 가능한 MCP 서버:
     node "%SCRIPT_DIR%install-mcp.js" --list
     echo.
-    echo       무료 MCP 자동 설치를 시작합니다...
+    echo       기본 MCP 자동 설치를 시작합니다: !DEFAULT_MCP_SERVERS!
     echo.
-    node "%SCRIPT_DIR%install-mcp.js" --all
+    node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
     echo.
-    echo       완료! (추가: node "%SCRIPT_DIR%install-mcp.js" --list^)
+    echo       완료. 추가 설치: node "%SCRIPT_DIR%install-mcp.js" --list, 선택: open-websearch
 ) else (
     echo [6/7] MCP 서버 [건너뜀] - mcp 번들 미선택
 )
@@ -518,7 +523,7 @@ if "!HAS_MCP!"=="1" (
 REM Orchestrator MCP 서버 등록 (orchestrator 번들)
 echo.
 if "!HAS_ORCHESTRATOR!"=="1" (
-    echo [7/7] Orchestrator MCP 서버 등록 중... (Claude)
+    echo [7/7] Orchestrator MCP 서버 등록 중... - Claude
     set "ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
     set "NEED_ORCH_BUILD=0"
@@ -603,7 +608,7 @@ if "!HAS_MCP!"=="1" (
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
-            node "%SCRIPT_DIR%install-mcp-codex.js" --all
+            node "%SCRIPT_DIR%install-mcp-codex.js" !DEFAULT_MCP_SERVERS!
             if !errorlevel! equ 0 (
                 set "CODEX_MCP_RESULT=설치 완료"
             ) else (
@@ -756,7 +761,7 @@ if "!HAS_MCP!"=="1" (
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
-            node "%SCRIPT_DIR%install-mcp-gemini.js" --all
+            node "%SCRIPT_DIR%install-mcp-gemini.js" !DEFAULT_MCP_SERVERS!
             if !errorlevel! equ 0 (
                 set "GEMINI_MCP_RESULT=설치 완료"
             ) else (
