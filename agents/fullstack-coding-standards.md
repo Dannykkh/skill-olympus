@@ -62,6 +62,20 @@ Controller → Service → Repository
 - 복잡한 조합은 별도 OrchestratorService 분리 가능 (선택)
 - 구조: `src/modules/{feature}/{controller,service,repository,module,dto,entities}`
 
+### C#/ASP.NET Core — Clean Architecture
+
+```
+Api (Controller/Minimal API) → Application (Service) → Domain (Entity)
+                                      ↓
+                              Infrastructure (EF Core, 외부 서비스)
+```
+
+- Domain은 다른 레이어에 의존하지 않음 (순수 C# 클래스)
+- Application은 Domain만 참조 (Infrastructure 참조 금지)
+- record DTO 사용 (불변, 값 기반 동등성)
+- 모든 DB 호출은 async + CancellationToken 전달
+- 상세 규칙 → `skills/dotnet-coding-standards/` 참조
+
 ---
 
 ## 프론트엔드 규칙

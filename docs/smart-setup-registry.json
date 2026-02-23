@@ -206,6 +206,8 @@
     { "id": "crafting-effective-readmes", "tags": ["*"], "priority": "optional" },
     { "id": "jira", "tags": ["*"], "priority": "optional" },
     { "id": "fullstack-coding-standards", "tags": ["react", "nextjs", "typescript", "nestjs", "spring", "fastapi", "nodejs", "python", "java"], "priority": "recommended" },
+    { "id": "dotnet-coding-standards", "tags": ["dotnet", "aspnet", "csharp", "blazor"], "priority": "recommended" },
+    { "id": "wpf-coding-standards", "tags": ["dotnet", "wpf", "csharp"], "priority": "recommended" },
     { "id": "agent-team", "tags": ["*"], "priority": "optional" },
     { "id": "agent-md-refactor", "tags": ["*"], "priority": "optional" },
     { "id": "agent-team-codex", "tags": ["*"], "priority": "optional" },
@@ -261,6 +263,7 @@
     { "id": "react-best-practices", "tags": ["react", "nextjs"], "priority": "recommended" },
     { "id": "react-useeffect-guidelines", "tags": ["react"], "priority": "optional" },
     { "id": "backend-spring", "tags": ["java", "spring"], "priority": "essential" },
+    { "id": "backend-dotnet", "tags": ["dotnet", "aspnet", "csharp"], "priority": "essential" },
     { "id": "database-schema-designer", "tags": ["mysql", "postgresql", "supabase", "sqlite", "mongodb"], "priority": "recommended" },
     { "id": "database-mysql", "tags": ["mysql"], "priority": "essential" },
     { "id": "database-postgresql", "tags": ["postgresql", "supabase"], "priority": "essential" },
@@ -291,6 +294,8 @@
     { "id": "communication-excellence-coach", "tags": ["*"], "priority": "optional" },
     { "id": "codebase-pattern-finder", "tags": ["*"], "priority": "optional" },
     { "id": "fullstack-coding-standards", "tags": ["react", "spring", "nestjs", "fullstack"], "priority": "recommended" },
+    { "id": "dotnet-coding-standards", "tags": ["dotnet", "aspnet", "csharp", "blazor"], "priority": "recommended" },
+    { "id": "desktop-wpf", "tags": ["dotnet", "wpf", "csharp"], "priority": "essential" },
     { "id": "general-purpose", "tags": ["*"], "priority": "optional" }
   ],
 

@@ -8,6 +8,8 @@ priority: high
 references:
   - agents/frontend-react.md
   - agents/backend-spring.md
+  - agents/backend-dotnet.md
+  - agents/desktop-wpf.md
   - agents/python-fastapi-guidelines.md
   - agents/react-best-practices.md
   - agents/documentation.md
@@ -35,7 +37,7 @@ references:
 ```
 Frontend (React/Next.js)
     ↓ API 호출 (Proxy 설정)
-Backend (FastAPI/Spring)
+Backend (FastAPI/Spring/ASP.NET Core/WPF Desktop)
     ↓ Repository Pattern
 Database (MySQL/PostgreSQL)
 ```
@@ -142,7 +144,8 @@ git checkout master && git merge develop
 |---|---|---|
 |설계|spec-interviewer|SPEC.md 심층 인터뷰|
 |프론트|frontend-react|React 구현|
-|백엔드|backend-spring / python-fastapi|API 구현|
+|백엔드|backend-spring / python-fastapi / backend-dotnet|API 구현|
+|데스크톱|desktop-wpf|WPF 데스크톱 구현 (MVVM, 스레딩, 메모리)|
 |DB 설계|database-schema-designer|스키마 설계 (DB-First, ERD, DDL)|
 |DB 구현|database-mysql, database-postgresql|DB별 전문 구현|
 |문서|documentation|PRD, 기술문서|

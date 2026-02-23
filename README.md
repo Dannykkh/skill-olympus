@@ -154,7 +154,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (71 Skills)
+### Custom Skills (73 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -162,7 +162,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
-| 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | Dev tools & deployment |
+| 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | Dev tools & deployment |
 | 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
@@ -173,13 +173,13 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (35 Agents)
+### Custom Agents (37 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
 | **Workflow** | fullstack-development-workflow, spec-interviewer, architect | Full development cycle management & architecture design |
 | **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | Passive rules (always applied) |
-| **Full Stack** | frontend-react, backend-spring, database-schema-designer, database-mysql, database-postgresql | React/Spring/Schema Design/MySQL/PostgreSQL specialists |
+| **Full Stack** | frontend-react, backend-spring, backend-dotnet, desktop-wpf, database-schema-designer, database-mysql, database-postgresql | React/Spring/ASP.NET Core/WPF Desktop/Schema Design/MySQL/PostgreSQL specialists |
 | **AI/ML** | ai-ml | LLM integration, RAG systems, Latest model/SDK coding guide |
 | **API** | api-tester, api-comparator | API testing & compatibility |
 | **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
@@ -284,7 +284,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (71 skills)
+├── skills/                    # Custom skills (73 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -350,7 +350,7 @@ claude-code-customizations/
 │   ├── docx/
 │   ├── pdf/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (33 + skills/*/agents/ 2 = 35 agents)
+├── agents/                    # Custom subagents (35 + skills/*/agents/ 2 = 37 agents)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md

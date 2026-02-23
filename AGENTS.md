@@ -23,6 +23,8 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Documentation|agents/documentation.md,agents/writing-guidelines.md|
 |FastAPI|agents/python-fastapi-guidelines.md|
 |Spring Boot|agents/backend-spring.md,agents/fullstack-coding-standards.md|
+|ASP.NET Core|agents/backend-dotnet.md,skills/dotnet-coding-standards/SKILL.md|
+|WPF Desktop|agents/desktop-wpf.md,skills/wpf-coding-standards/SKILL.md|
 |Fullstack Standards|agents/fullstack-coding-standards.md,skills/fullstack-coding-standards/SKILL.md|
 |Database Design|agents/database-schema-designer.md,skills/database-schema-designer/SKILL.md|
 |Database (MySQL)|agents/database-mysql.md|
@@ -74,7 +76,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (70개)
+### Skills (73개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -83,7 +85,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
-| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
+| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner, qpassenger | 테스트/리뷰 |
@@ -91,7 +93,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
-### Agents (35개)
+### Agents (37개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -109,6 +111,8 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | | fullstack-coding-standards | 풀스택 코딩 표준 (백엔드 계층, 프론트 API, DB 연동) |
 | **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
 | | backend-spring | Spring Boot 백엔드 전문가 |
+| | backend-dotnet | ASP.NET Core 백엔드 전문가 (Clean Architecture, EF Core) |
+| | desktop-wpf | WPF 데스크톱 전문가 (MVVM, 스레딩, 메모리 관리, GPU 렌더링) |
 | | database-schema-designer | DB 스키마 설계 전문가 (DB-First, ERD, DDL) |
 | | database-mysql | MySQL 데이터베이스 전문가 |
 | | database-postgresql | PostgreSQL/Supabase 데이터베이스 전문가 |

@@ -24,6 +24,10 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
+| **backend-dotnet (에이전트)** | ASP.NET Core 전문가 (Clean Architecture, EF Core, Minimal API) | 이 저장소의 `agents/backend-dotnet.md` |
+| **dotnet-coding-standards (스킬)** | .NET 코딩 표준 통합 패키지 (패시브 에이전트 + C#/ASP.NET/EF Core 템플릿) | 이 저장소의 `skills/dotnet-coding-standards/` |
+| **desktop-wpf (에이전트)** | WPF 데스크톱 전문가 (MVVM, 스레딩, 메모리 관리, GPU 렌더링) | 이 저장소의 `agents/desktop-wpf.md` |
+| **wpf-coding-standards (스킬)** | WPF 코딩 표준 통합 패키지 (패시브 에이전트 + MVVM/스레딩/메모리 템플릿) | 이 저장소의 `skills/wpf-coding-standards/` |
 | **claude-code-dotnet** | 25개 스킬, 5개 에이전트 | `npx add-skill Aaronontheweb/claude-code-dotnet -a claude-code` |
 
 ### PostgreSQL
@@ -251,6 +255,8 @@ claude plugin install voltagent-qa-sec
 | `skills/ppt-generator/` | PPT 생성 |
 | `agents/frontend-react.md` | React + Zustand + TanStack |
 | `agents/backend-spring.md` | Java 21 + Spring Boot 3.x |
+| `agents/backend-dotnet.md` | ASP.NET Core + Clean Architecture + EF Core |
+| `agents/desktop-wpf.md` | WPF 데스크톱 (MVVM, 스레딩, 메모리, GPU) |
 | `agents/database-schema-designer.md` | DB-First 스키마 설계 + ERD + DDL |
 | `agents/database-mysql.md` | MySQL 8.0 + Flyway |
 | `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS |

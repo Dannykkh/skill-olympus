@@ -154,7 +154,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (71개)
+### 커스텀 스킬 (73개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -162,7 +162,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검증 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
-| 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards | 개발 도구 & 배포 |
+| 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | 개발 도구 & 배포 |
 | 🎯 **계획** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | 계획 & 요구사항 (zeus: 전자동 파이프라인, zephermine: 스펙 검증) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
@@ -173,13 +173,13 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (35개)
+### 커스텀 에이전트 (37개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
 | **워크플로우** | fullstack-development-workflow, spec-interviewer, architect | 전체 개발 사이클 관리 + 아키텍처 설계 |
 | **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | 패시브 규칙 (항상 적용) |
-| **풀스택** | frontend-react, backend-spring, database-schema-designer, database-mysql, database-postgresql | React/Spring/스키마 설계/MySQL/PostgreSQL 전문가 |
+| **풀스택** | frontend-react, backend-spring, backend-dotnet, desktop-wpf, database-schema-designer, database-mysql, database-postgresql | React/Spring/ASP.NET Core/WPF 데스크톱/스키마 설계/MySQL/PostgreSQL 전문가 |
 | **AI/ML** | ai-ml | LLM 통합, RAG 시스템, 최신 모델/SDK 코딩 가이드 |
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
 | **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
@@ -284,7 +284,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (71개)
+├── skills/                    # 커스텀 스킬 (73개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -350,7 +350,7 @@ claude-code-customizations/
 │   ├── verify-implementation/
 │   ├── wrangler/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (33 + skills/*/agents/ 2 = 35 에이전트)
+├── agents/                    # 커스텀 서브에이전트 (35 + skills/*/agents/ 2 = 37 에이전트)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
