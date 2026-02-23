@@ -27,6 +27,7 @@ const codexHome = process.env.CODEX_HOME
   : path.join(os.homedir(), ".codex");
 const codexConfigPath = path.join(codexHome, "config.toml");
 const FETCH_STARTUP_TIMEOUT_SEC = 30;
+const OPEN_WEBSEARCH_STARTUP_TIMEOUT_SEC = 45;
 
 function readJson(filePath) {
   try {
@@ -113,6 +114,22 @@ function buildAddCommand(cfg) {
     return null;
   }
 
+  // open-websearch는 서버 배너를 stdout으로 출력해 MCP stdio handshake를 깨뜨릴 수 있어
+  // Codex에서는 wrapper를 통해 배너를 stderr로 우회합니다.
+  if (cfg.name === "open-websearch") {
+    const wrapperPath = path.join(
+      scriptDir,
+      "scripts",
+      "open-websearch-stdio-wrapper.cjs"
+    );
+    if (fs.existsSync(wrapperPath)) {
+      parts.push("--");
+      parts.push(shellQuote("node"));
+      parts.push(shellQuote(wrapperPath.replace(/\\/g, "/")));
+      return parts.join(" ");
+    }
+  }
+
   const cmdArgs = Array.isArray(cfg.config.args) ? cfg.config.args : [];
   parts.push("--");
   parts.push(shellQuote(cfg.config.command));
@@ -123,7 +140,7 @@ function buildAddCommand(cfg) {
   return parts.join(" ");
 }
 
-function ensureFetchStartupTimeout(configPath, timeoutSec) {
+function ensureServerStartupTimeout(configPath, serverName, timeoutSec) {
   let content = "";
   try {
     content = fs.readFileSync(configPath, "utf-8");
@@ -132,10 +149,10 @@ function ensureFetchStartupTimeout(configPath, timeoutSec) {
   }
 
   const lines = content.replace(/\r\n/g, "\n").split("\n");
-  const sectionHeader = "[mcp_servers.fetch]";
+  const sectionHeader = `[mcp_servers.${serverName}]`;
   const start = lines.findIndex((line) => line.trim() === sectionHeader);
   if (start < 0) {
-    return { ok: false, reason: "fetch-section-missing" };
+    return { ok: false, reason: `${serverName}-section-missing` };
   }
 
   let end = lines.length;
@@ -267,7 +284,19 @@ if (toInstall.length === 0) {
 
 let installed = 0;
 let skipped = 0;
-const shouldEnsureFetchTimeout = toInstall.some((cfg) => cfg.name === "fetch");
+const serverTimeoutTargets = [];
+if (toInstall.some((cfg) => cfg.name === "fetch")) {
+  serverTimeoutTargets.push({
+    name: "fetch",
+    timeoutSec: FETCH_STARTUP_TIMEOUT_SEC,
+  });
+}
+if (toInstall.some((cfg) => cfg.name === "open-websearch")) {
+  serverTimeoutTargets.push({
+    name: "open-websearch",
+    timeoutSec: OPEN_WEBSEARCH_STARTUP_TIMEOUT_SEC,
+  });
+}
 
 for (const cfg of toInstall) {
   if (cfg.requiresApiKey) {
@@ -299,22 +328,23 @@ for (const cfg of toInstall) {
   }
 }
 
-if (shouldEnsureFetchTimeout) {
-  const timeoutResult = ensureFetchStartupTimeout(
+for (const target of serverTimeoutTargets) {
+  const timeoutResult = ensureServerStartupTimeout(
     codexConfigPath,
-    FETCH_STARTUP_TIMEOUT_SEC
+    target.name,
+    target.timeoutSec
   );
   if (timeoutResult.ok && timeoutResult.changed) {
     console.log(
-      `  ✅ fetch startup_timeout_sec=${FETCH_STARTUP_TIMEOUT_SEC} 설정됨`
+      `  ✅ ${target.name} startup_timeout_sec=${target.timeoutSec} 설정됨`
     );
   } else if (timeoutResult.ok) {
     console.log(
-      `  ⏭️  fetch startup_timeout_sec=${FETCH_STARTUP_TIMEOUT_SEC} 이미 설정됨`
+      `  ⏭️  ${target.name} startup_timeout_sec=${target.timeoutSec} 이미 설정됨`
     );
   } else {
     console.log(
-      `  ⚠️  fetch timeout 설정 건너뜀 (${timeoutResult.reason})`
+      `  ⚠️  ${target.name} timeout 설정 건너뜀 (${timeoutResult.reason})`
     );
   }
 }
