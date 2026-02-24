@@ -35,6 +35,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Architecture|agents/architect.md|
 |SPEC Interview|agents/spec-interviewer.md|
 |Security Review|agents/security-reviewer.md|
+|Web Preview + 디자인 토큰|agents/web-preview-guide.md,skills/design-system-starter/SKILL.md|
 |Stitch UI|agents/stitch-developer.md,skills/stitch-design-md/SKILL.md|
 |Agent Teams (Opus 4.6 병렬 실행)|skills/agent-team/SKILL.md|
 |Codex Multi-Agent Team|skills/agent-team-codex/SKILL.md|
@@ -70,6 +71,20 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 ---
 
+### Web Preview Mode Development Guide
+
+웹 프리뷰 모드(채팅 모드 + dev server + PreviewPanel)에서는 **디자인 DNA(토큰) → Frontend → Backend** 순서를 따릅니다.
+
+|Phase|핵심|
+|---|---|
+|Phase 0: Design DNA|디자인 방향성 → 레퍼런스 수집 → shadcn/ui 호환 토큰 생성 → 검증 (WCAG AA)|
+|Phase 1: Frontend → Backend|토큰 기반 UI 구현 → 인터랙션 → API → 에러 처리 (프리뷰 패널 실시간 확인)|
+|Phase 2: Pre-Delivery|접근성, 반응형, 아이콘, hover/focus 상태 최종 검증|
+
+> **상세 가이드**: [agents/web-preview-guide.md](agents/web-preview-guide.md)
+
+---
+
 ## Repository Overview
 
 A comprehensive collection of skills and agents for Claude Code and other AI coding agents. Extends agent capabilities across development, documentation, planning, and professional workflows.
@@ -93,7 +108,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
 
-### Agents (37개)
+### Agents (38개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -108,6 +123,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | | code-review-checklist | 코드 리뷰 체크리스트 (항상 적용) |
 | | naming-conventions | 네이밍 컨벤션 (항상 적용) |
 | | reducing-entropy | 코드베이스 최소화 철학 |
+| | web-preview-guide | 웹 프리뷰 모드 개발 가이드 (디자인 DNA → Frontend → Backend) |
 | | fullstack-coding-standards | 풀스택 코딩 표준 (백엔드 계층, 프론트 API, DB 연동) |
 | **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
 | | backend-spring | Spring Boot 백엔드 전문가 |

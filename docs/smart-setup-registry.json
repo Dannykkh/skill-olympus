@@ -296,7 +296,8 @@
     { "id": "fullstack-coding-standards", "tags": ["react", "spring", "nestjs", "fullstack"], "priority": "recommended" },
     { "id": "dotnet-coding-standards", "tags": ["dotnet", "aspnet", "csharp", "blazor"], "priority": "recommended" },
     { "id": "desktop-wpf", "tags": ["dotnet", "wpf", "csharp"], "priority": "essential" },
-    { "id": "general-purpose", "tags": ["*"], "priority": "optional" }
+    { "id": "general-purpose", "tags": ["*"], "priority": "optional" },
+    { "id": "web-preview-guide", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "recommended" }
   ],
 
   "hooks": [

@@ -173,12 +173,12 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (37 Agents)
+### Custom Agents (38 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
 | **Workflow** | fullstack-development-workflow, spec-interviewer, architect | Full development cycle management & architecture design |
-| **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, fullstack-coding-standards | Passive rules (always applied) |
+| **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, web-preview-guide, fullstack-coding-standards | Passive rules (always applied) |
 | **Full Stack** | frontend-react, backend-spring, backend-dotnet, desktop-wpf, database-schema-designer, database-mysql, database-postgresql | React/Spring/ASP.NET Core/WPF Desktop/Schema Design/MySQL/PostgreSQL specialists |
 | **AI/ML** | ai-ml | LLM integration, RAG systems, Latest model/SDK coding guide |
 | **API** | api-tester, api-comparator | API testing & compatibility |
