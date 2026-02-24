@@ -58,10 +58,49 @@ function runClaude(cmdArgs) {
   }
 }
 
-// MCP가 이미 등록되어 있는지 확인
-function isMcpInstalled(name) {
-  const result = runClaude(`mcp get ${name}`);
-  return result !== null;
+function normalizeSpace(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function resolveCommandAndArgs(command, args) {
+  const cmd = String(command || "").trim();
+  const normalizedArgs = Array.isArray(args) ? args : [];
+  if (process.platform === "win32" && cmd.toLowerCase() === "npx") {
+    return { command: "cmd", args: ["/c", "npx", ...normalizedArgs] };
+  }
+  return { command: cmd, args: normalizedArgs };
+}
+
+function parseScope(scopeLine) {
+  const normalized = (scopeLine || "").toLowerCase();
+  if (normalized.includes("user config")) return "user";
+  if (normalized.includes("local config")) return "local";
+  if (normalized.includes("project config")) return "project";
+  return null;
+}
+
+function getMcpState(name) {
+  const output = runClaude(`mcp get "${name}"`);
+  if (output === null) {
+    return { installed: false };
+  }
+
+  const scopeLine = (output.match(/^\s*Scope:\s*(.+)$/m) || [])[1] || "";
+  const commandLine = (output.match(/^\s*Command:\s*(.+)$/m) || [])[1] || "";
+  const argsLine = (output.match(/^\s*Args:\s*(.*)$/m) || [])[1] || "";
+  const statusLine = (output.match(/^\s*Status:\s*(.+)$/m) || [])[1] || "";
+  const connected = /connected/i.test(statusLine) && !/[✗x]/i.test(statusLine);
+  const failedToConnect = /failed to connect/i.test(statusLine);
+
+  return {
+    installed: true,
+    connected,
+    failedToConnect,
+    scope: parseScope(scopeLine),
+    command: normalizeSpace(commandLine),
+    args: normalizeSpace(argsLine),
+    raw: output,
+  };
 }
 
 // 사용 가능한 MCP 설정 로드
@@ -91,7 +130,7 @@ if (isListMode) {
   console.log("━".repeat(70));
 
   for (const cfg of configs) {
-    const installed = isMcpInstalled(cfg.name);
+    const installed = getMcpState(cfg.name).installed;
     const status = installed ? "✅ 설치됨" : "  미설치";
     const apiKey = cfg.requiresApiKey ? "🔑 API 키 필요" : "🆓 무료";
     console.log(
@@ -115,7 +154,8 @@ if (isUninstall) {
 
   let removed = 0;
   for (const name of mcpNames) {
-    if (!isMcpInstalled(name)) {
+    const state = getMcpState(name);
+    if (!state.installed) {
       console.log(`  ⚠️  ${name} 은(는) 설치되어 있지 않습니다.`);
       continue;
     }
@@ -178,6 +218,7 @@ console.log(`\n스코프: ${scope}\n`);
 
 let installed = 0;
 let skipped = 0;
+let repaired = 0;
 
 for (const cfg of toInstall) {
   // API 키 경고
@@ -190,15 +231,46 @@ for (const cfg of toInstall) {
     }
   }
 
-  // 이미 설치되어 있으면 건너뜀
-  if (isMcpInstalled(cfg.name)) {
-    console.log(`  ⏭️  ${cfg.name} (이미 설치됨, 건너뜀)`);
-    skipped++;
-    continue;
+  const resolvedRuntime = resolveCommandAndArgs(
+    cfg.config.command,
+    cfg.config.args
+  );
+  const desiredCommand = normalizeSpace(resolvedRuntime.command);
+  const desiredArgs = normalizeSpace((resolvedRuntime.args || []).join(" "));
+  const state = getMcpState(cfg.name);
+  let needsInstall = !state.installed;
+  let repairedThisServer = false;
+
+  if (state.installed) {
+    const reasons = [];
+    if (state.failedToConnect) reasons.push("연결 실패");
+    if (desiredCommand && state.command && state.command !== desiredCommand) {
+      reasons.push(`command 불일치(${state.command} -> ${desiredCommand})`);
+    }
+    if (desiredArgs && state.args && state.args !== desiredArgs) {
+      reasons.push(`args 불일치(${state.args} -> ${desiredArgs})`);
+    }
+
+    if (reasons.length > 0) {
+      const removeScope = state.scope || scope;
+      console.log(`  🔧 ${cfg.name} 기존 설정 복구: ${reasons.join(", ")}`);
+      const removedResult = runClaude(`mcp remove "${cfg.name}" -s ${removeScope}`);
+      if (removedResult === null) {
+        console.log(`  ❌ ${cfg.name} 기존 설정 제거 실패 (scope: ${removeScope})`);
+        continue;
+      }
+      repairedThisServer = true;
+      needsInstall = true;
+    } else {
+      console.log(`  ⏭️  ${cfg.name} (이미 정상 설정, 건너뜀)`);
+      skipped++;
+      continue;
+    }
   }
 
   // claude mcp add 명령 구성
-  const { command, args: cfgArgs, env } = cfg.config;
+  const { env } = cfg.config;
+  const { command, args: cfgArgs } = resolvedRuntime;
   let cmdParts = [`mcp add --scope ${scope}`];
 
   // 환경변수 (-e KEY=value)
@@ -221,14 +293,21 @@ for (const cfg of toInstall) {
   const result = runClaude(fullCmd);
 
   if (result !== null) {
-    console.log(`  ✅ ${cfg.name} 설치됨`);
+    if (repairedThisServer) {
+      repaired++;
+      console.log(`  ✅ ${cfg.name} 복구 완료`);
+    } else if (needsInstall) {
+      console.log(`  ✅ ${cfg.name} 설치됨`);
+    } else {
+      console.log(`  ✅ ${cfg.name} 적용됨`);
+    }
     installed++;
   } else {
     console.log(`  ❌ ${cfg.name} 설치 실패`);
   }
 }
 
-console.log(`\n완료: ${installed}개 설치, ${skipped}개 건너뜀`);
+console.log(`\n완료: ${installed}개 설치/복구 (${repaired}개 복구), ${skipped}개 건너뜀`);
 
 if (installed > 0) {
   console.log("Claude Code를 재시작하면 적용됩니다.\n");

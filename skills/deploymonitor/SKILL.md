@@ -33,27 +33,33 @@ Git push 후 DeployMonitor가 자동 배포하는 워크플로우.
 │ 2. Analyze changes                      │
 │    - DB schema changes? (migrations/)   │
 │    - Code only changes?                 │
+│    - Docker file changes?               │
 │    - deploy.bat changes?                │
 ├─────────────────────────────────────────┤
-│ 3. Ask deploy mode (UPDATE/RESET)       │
+│ 3. Trigger 매칭 확인                    │
+│    - DeployMonitor와 deploy.bat 트리거  │
+│      둘 다 확인                         │
+│    - 매칭 안 되면 rebuild trigger 추가  │
+├─────────────────────────────────────────┤
+│ 4. Ask deploy mode (UPDATE/RESET)       │
 │    - UPDATE: Keep DB, cache build       │
 │    - RESET: Delete DB, full reinstall   │
 ├─────────────────────────────────────────┤
-│ 4. Write .deploy-mode file (reset only) │
+│ 5. Write .deploy-mode file (reset only) │
 │    - UPDATE는 기본값이라 파일 불필요    │
 ├─────────────────────────────────────────┤
-│ 5. Commit all changes                   │
+│ 6. Commit all changes                   │
 │    - Descriptive commit message         │
 │    - Co-Authored-By 포함                │
 ├─────────────────────────────────────────┤
-│ 6. Push to remote                       │
+│ 7. Push to remote                       │
 │    - git push origin master             │
 ├─────────────────────────────────────────┤
-│ 7. DeployMonitor 감지                   │
+│ 8. DeployMonitor 감지                   │
 │    - refs/heads/master 파일 변경 감지   │
-│    - deploy.bat auto 자동 실행          │
+│    - deploy.bat 자동 실행               │
 ├─────────────────────────────────────────┤
-│ 8. 배포 완료                            │
+│ 9. 배포 완료                            │
 │    - Docker 이미지 재빌드 (cache 사용)  │
 │    - 컨테이너 재시작                    │
 │    - DB 유지 (named volume)             │
@@ -71,6 +77,56 @@ Git push 후 DeployMonitor가 자동 배포하는 워크플로우.
 
 ---
 
+## ⚠️ CRITICAL: 2단계 트리거 시스템
+
+**DeployMonitor와 deploy.bat는 각각 독립적인 트리거 목록을 가진다.**
+
+```
+커밋 push → DeployMonitor 트리거 체크 (1단계)
+                 │
+         매칭 O? ├─ YES → deploy.bat 실행 → deploy.bat 트리거 체크 (2단계)
+                 └─ NO  → 스킵 (deploy.bat 실행 안 됨!)
+```
+
+### DeployMonitor 트리거 (1단계 — WPF 앱 내부)
+
+DeployMonitor는 **자체 트리거 목록**으로 먼저 필터링한다.
+이 목록은 deploy.bat의 DEPLOY_TRIGGERS와 **별개**이며, DeployMonitor 앱 재시작 시 deploy.bat에서 읽어온다.
+
+**주의: deploy.bat에 새 트리거를 추가해도, DeployMonitor가 재시작되기 전까지는 이전 트리거 목록을 사용할 수 있다.**
+
+### deploy.bat 트리거 (2단계 — 배치 스크립트 내부)
+
+```batch
+set "DEPLOY_TRIGGERS=app.js config/ middleware/ models/ routes/ services/ jobs/ views/ public/ migrations/ scripts/ seeds/ package.json package-lock.json deploy.bat Dockerfile docker-compose.yml docker-entrypoint.sh"
+```
+
+### 트리거 불일치 해결: rebuild trigger 패턴
+
+**Docker 인프라 파일(.dockerignore, .gitattributes 등)이나 DeployMonitor 트리거에 없는 파일만 변경할 경우, 반드시 deploy.bat에 rebuild trigger를 추가하여 배포를 강제한다.**
+
+```batch
+REM deploy.bat 맨 끝에 추가
+REM rebuild trigger YYYYMMDD-NN - description
+```
+
+### 언제 rebuild trigger가 필요한가?
+
+| 변경 파일 | 트리거 매칭 | rebuild trigger 필요? |
+|-----------|------------|----------------------|
+| `app.js`, `routes/*.js` 등 | O | X |
+| `deploy.bat` | O | X |
+| `Dockerfile` | △ (deploy.bat에는 있지만 DeployMonitor에 없을 수 있음) | **O** |
+| `docker-compose.yml` | △ | **O** |
+| `.dockerignore` | X | **O (필수)** |
+| `.gitattributes` | X | **O (필수)** |
+| `docker-entrypoint.sh` | △ | **O** |
+| `.env.docker` | X | **O (필수)** |
+
+**규칙: 코드/설정 파일이 아닌 인프라 파일만 변경할 때는 항상 deploy.bat에 rebuild trigger를 함께 커밋한다.**
+
+---
+
 ## Instructions
 
 ### Step 1: Check Git Status
@@ -82,14 +138,21 @@ git diff --stat
 
 Show user what will be deployed.
 
-### Step 2: Analyze Changes
+### Step 2: Analyze Changes + Trigger Check
 
 Check for:
-- `database/migrations/*.sql` - New migrations = suggest UPDATE
-- `database/schema.sql` changes - Major DB changes = warn about RESET
-- `backend/` or `frontend/` only - Code changes = suggest UPDATE
+- `migrations/*.sql` - New migrations = suggest UPDATE
+- `docs/database-schema.sql` changes - Major DB changes = warn about RESET
+- `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `docker-entrypoint.sh` changes - Docker infra
+- Code only changes - suggest UPDATE
 - First deploy - suggest RESET
 - **DEPLOY_TRIGGERS 경로 외 변경만 있으면** - 배포 불필요 안내
+
+**트리거 매칭 확인:**
+1. deploy.bat에서 DEPLOY_TRIGGERS 목록을 읽는다
+2. 변경된 파일이 트리거에 매칭되는지 확인
+3. **매칭 안 되는 파일만 있으면** → deploy.bat에 rebuild trigger 추가 필요
+4. deploy.bat 자체가 변경에 포함되면 트리거 매칭 보장
 
 ### Step 3: Ask Deploy Mode
 
@@ -127,6 +190,8 @@ echo "reset" > .deploy-mode
 
 ### Step 5: Commit Changes
 
+**트리거 매칭 안 되는 파일만 변경된 경우, deploy.bat에 rebuild trigger를 추가한 후 함께 커밋한다.**
+
 ```bash
 git add [files]
 git commit -m "deploy: [description]
@@ -146,10 +211,56 @@ git push origin master
 
 Report success:
 ```
-✅ Pushed to origin/master
-📡 DeployMonitor will auto-deploy
-🔧 Mode: UPDATE (DB preserved)
+Pushed to origin/master
+DeployMonitor will auto-deploy
+Mode: UPDATE (DB preserved)
 ```
+
+---
+
+## Docker 배포 구조
+
+### 파일 구성
+
+| 파일 | 역할 |
+|------|------|
+| `Dockerfile` | Node.js 앱 이미지 빌드 (Alpine + bcrypt 빌드 의존성) |
+| `docker-compose.yml` | MySQL 8.0 (db) + Node.js API (api) 서비스 정의 |
+| `docker-entrypoint.sh` | MySQL 연결 대기 → 마이그레이션 → 앱 시작 |
+| `.dockerignore` | Docker 빌드에서 제외할 파일 |
+| `.env.docker` | 배포 서버용 환경변수 템플릿 |
+| `deploy.bat` | 자동 배포 스크립트 (Docker Compose 기반) |
+
+### deploy.bat 흐름 (Docker Edition)
+
+```
+0. git pull + self-reload
+1. .env 없으면 .env.docker에서 자동 복사
+2. Docker 실행 가능 여부 확인
+3. 변경 파일 분석 (DEPLOY_TRIGGERS 매칭)
+4. deploy mode 확인 (update/reset)
+5. docker compose down [-v]
+6. docker compose build api
+7. docker compose up -d db (healthcheck 대기)
+8. docker compose up -d api (entrypoint: migrate → start)
+9. docker compose ps 상태 확인
+```
+
+### docker-entrypoint.sh 흐름
+
+```
+1. MySQL 연결 대기 (최대 30회 재시도)
+2. node scripts/migrate.js 실행
+   - tickets 테이블 없으면 → docs/database-schema.sql 기본 스키마 자동 적용
+   - 이후 migrations/*.sql 순차 실행
+3. node app.js 시작
+```
+
+### .dockerignore 주의사항
+
+- `docs/` 는 제외되지만 `docs/database-schema.sql`은 반드시 포함 (`!docs/database-schema.sql`)
+- `.env` 파일은 제외 (docker-compose.yml의 env_file로 주입)
+- `*.sh` 파일은 `.gitattributes`에서 LF 줄바꿈 강제 (Windows CRLF → Linux LF)
 
 ---
 
@@ -166,11 +277,23 @@ Report success:
 
 ---
 
+## .gitattributes 필수 항목
+
+```gitattributes
+# Force LF line endings for shell scripts (Linux containers)
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+```
+
+**이유**: Windows CRLF 줄바꿈이 Alpine Linux 컨테이너에서 `exec: no such file or directory` 에러 유발
+
+---
+
 ## DeployMonitor 동작 원리
 
 ```
 ┌─────────────────────────────────────────┐
-│ Bonobo Git Server (Bare Repo)           │
+│ Git Server (Bare Repo)                  │
 │   refs/heads/master 파일                │
 └─────────────────┬───────────────────────┘
                   │ FileSystemWatcher
@@ -178,93 +301,28 @@ Report success:
 ┌─────────────────────────────────────────┐
 │ DeployMonitor (WPF App)                 │
 │   - 해시 변경 감지                       │
-│   - deploy.bat auto 자동 실행           │
+│   - git pull 실행                       │
+│   - DEPLOY_TRIGGERS 매칭 확인 (1단계)   │
+│   - 매칭 시 deploy.bat 자동 실행        │
 └─────────────────┬───────────────────────┘
                   │
                   ▼
 ┌─────────────────────────────────────────┐
-│ deploy.bat (v3.0 Self-Reload)           │
+│ deploy.bat (Docker Edition)             │
 │   0. git pull → 자기 자신 재실행        │
-│   1. .deploy-mode 확인 (있으면 reset)   │
-│   2. docker compose down [-v] (reset시) │
-│   3. DB만 먼저 시작 (up -d db)          │
-│   4. DB 덤프/seed 복원 (API 시작 전!)   │
-│   5. API 시작 (up -d api [frontend])    │
-│   6. 헬스체크                           │
+│   1. .env 자동 생성 (.env.docker 복사)  │
+│   2. DEPLOY_TRIGGERS 매칭 확인 (2단계)  │
+│   3. docker compose down [-v]           │
+│   4. docker compose build               │
+│   5. DB만 먼저 시작 + healthcheck 대기  │
+│   6. API 시작 (entrypoint: migrate+run) │
+│   7. docker compose ps 상태 확인        │
 └─────────────────────────────────────────┘
 ```
 
-### 핵심: DB 시작 순서
-
-**JPA/ORM이 빈 DB에 테이블을 먼저 생성하면 덤프 복원 시 "already exists" 충돌 발생.**
-반드시 DB → 덤프 복원 → API 순서를 지켜야 합니다.
-
-```
-❌ 잘못된 순서:
-docker compose up -d          ← DB + API 동시 시작
-  → JPA ddl-auto: update → 빈 테이블 생성
-  → 덤프 적용 → "relation already exists" 충돌!
-
-✅ 올바른 순서:
-docker compose up -d db       ← DB만 먼저
-pg_isready / mysqladmin ping  ← DB ready 대기
-psql < dump.sql               ← 깨끗한 DB에 덤프 복원
-docker compose up -d api      ← API 나중에 시작 (JPA는 기존 테이블 skip)
-```
-
 ---
 
-## 선택적 배포 트리거 (DEPLOY_TRIGGERS)
-
-### 문제
-모노레포에서 배포 대상이 아닌 코드(모바일, 문서 등)만 변경되어도 불필요한 빌드 + 다운타임이 발생한다.
-
-### 해결
-deploy.bat Config 영역에 `DEPLOY_TRIGGERS` 변수를 추가한다.
-이 변수에 지정된 경로에 변경이 있을 때만 배포를 진행한다.
-
-```batch
-REM === Config ===
-set "PROJECT_NAME=MyProject"
-set "IMAGE_NAME=myproject"
-REM ...
-
-REM === Deploy Trigger Config ===
-REM 이 경로에 변경이 있을 때만 배포 진행 (공백으로 구분)
-REM 미설정 시 모든 변경에 대해 배포 진행 (기존 동작 유지)
-set "DEPLOY_TRIGGERS=backend/ docker-images/ deploy.bat"
-```
-
-### 사용 규칙
-
-| 상황 | DEPLOY_TRIGGERS 설정 |
-|------|---------------------|
-| 서버 + 클라이언트 공존 | 서버 경로만 지정 |
-| 서버만 있는 저장소 | 미설정 (모든 변경에 배포) |
-
-- 디렉토리는 `/`로 끝낸다 (예: `backend/`)
-- 개별 파일은 파일명을 그대로 쓴다 (예: `deploy.bat`)
-- 공백으로 구분하여 여러 경로 지정 가능
-
-### DeployMonitor 연동
-
-DeployMonitor가 git pull 후 변경 파일을 `DEPLOY_TRIGGERS`와 비교한다:
-
-```
-CommitWatcher: 커밋 해시 변경 감지
-    ↓
-DeployRunner: git pull 실행
-    ↓
-DEPLOY_TRIGGERS 설정됨?
-    ├─ NO → deploy.bat 실행 (기존 동작 유지)
-    └─ YES → 변경 파일이 트리거 경로에 해당?
-              ├─ YES → deploy.bat 실행
-              └─ NO → 스킵 (로그만 남김)
-```
-
----
-
-## deploy.bat Self-Reload 패턴 (v3.0)
+## deploy.bat Self-Reload 패턴
 
 ### 문제
 Windows 배치 파일은 실행 시작 시점에 전체 로드됨.
@@ -273,136 +331,87 @@ Windows 배치 파일은 실행 시작 시점에 전체 로드됨.
 ### 해결: Self-Reload
 ```batch
 @echo off
-REM deploy.bat v3.0 - self-reload after git pull
+if /I "%~1"=="--reloaded" goto MAIN_START
 
-if "%~2"=="--reloaded" goto MAIN_START
-
-REM First run: git pull then re-execute with updated deploy.bat
-git pull
-call "%~f0" %1 --reloaded
+git pull --ff-only
+call "%~f0" --reloaded
 exit /b %errorlevel%
 
 :MAIN_START
 REM Actual deploy logic starts here (latest version guaranteed)
 ```
 
-### 동작 흐름
-```
-1. DeployMonitor → deploy.bat auto (구버전 메모리 로드)
-2. git pull → deploy.bat 파일 업데이트
-3. call "%~f0" %1 --reloaded → 새 deploy.bat 실행
-4. --reloaded 플래그로 git pull 스킵 → 실제 로직 실행
-```
-
----
-
-## DB 초기화 판단 로직
-
-### Reset 모드 (DB 볼륨 삭제 후 재설치)
-
-**순서가 핵심: DB만 먼저 → 덤프 복원 → API 시작**
-
-```batch
-REM 1. Remove all services + volumes
-docker compose down -v
-
-REM 2. Start DB first (prevent API from creating tables on empty DB)
-docker compose up -d db
-
-REM 3. Wait for DB ready
-:WAIT_DB
-docker exec %PROJECT_NAME%-db pg_isready -U %DB_USER% >nul 2>&1
-if not errorlevel 1 goto DB_READY
-timeout /t 2 /nobreak >nul
-goto WAIT_DB
-
-:DB_READY
-REM 4. Restore dump (priority: dump > seed-data)
-if exist "dump.sql" (
-    docker exec -i %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% < dump.sql
-) else if exist "seed-data.sql" (
-    docker exec -i %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% < seed-data.sql
-)
-
-REM 5. Start API (JPA skips existing tables)
-docker compose up -d api frontend
-```
-
-### Update 모드에서 DB 상태 확인
-
-Update 모드에서는 DB가 유지되므로 API와 동시 시작 가능:
-```batch
-REM DB exists, restart API only
-docker compose stop api frontend
-docker compose rm -f api frontend
-docker compose up -d api frontend
-```
-
-마이그레이션이 필요한 경우:
-```batch
-REM Check user count in users table to determine DB state
-for /f "usebackq" %%c in (`docker exec %PROJECT_NAME%-db psql -U %DB_USER% -d %DB_NAME% -t -c "SELECT COUNT(*) FROM users"`) do set "USER_COUNT=%%c"
-
-if "!USER_COUNT!"=="" goto DB_INIT          REM Query failed → initialize
-if "!USER_COUNT!"=="0" goto DB_SEED_ONLY    REM Schema only → seed
-REM USER_COUNT > 0 → migration only
-```
-
-### 분기 흐름
-| 모드 | 조건 | 동작 |
-|------|------|------|
-| **Reset** | 항상 | down -v → DB만 시작 → 덤프 복원 → API 시작 |
-| **Update** | users 쿼리 실패 | DB_INIT: schema.sql + seed-data.sql |
-| **Update** | users = 0 | DB_SEED_ONLY: seed-data.sql만 |
-| **Update** | users > 0 | DB_MIGRATE: migrations/*.sql만 |
-
 ---
 
 ## 빌드 강제 트리거
 
-코드 변경 없이 재빌드가 필요할 때 deploy.bat 끝에 트리거 수정:
+코드 변경 없이 재빌드가 필요하거나, DeployMonitor 트리거에 매칭 안 되는 파일만 변경할 때:
 
 ```batch
-REM rebuild trigger 1234567890 - description
+REM deploy.bat 맨 끝에 트리거 수정
+REM rebuild trigger YYYYMMDD-NN - description
 ```
+
+**번호 규칙:** `YYYYMMDD-NN` (같은 날 여러 번이면 NN 증가)
 
 ---
 
 ## Examples
 
-### Example 1: Frontend code change
+### Example 1: Code change
 ```
 User: /deploy
 Assistant:
   Changed files:
-  - frontend/src/pages/Dashboard.tsx (modified)
+  - routes/tickets.js (modified)
+  - views/tickets/detail.ejs (modified)
 
+  트리거 매칭: O (routes/, views/)
   Recommended: UPDATE (code only)
 
   [User confirms]
   [Commit & Push]
 
-  ✅ Pushed to origin/master
-  📡 DeployMonitor will auto-deploy
+  Pushed to origin/master
+  DeployMonitor will auto-deploy
 ```
 
-### Example 2: DB migration added
+### Example 2: Docker infra change only
+```
+User: /deploy
+Assistant:
+  Changed files:
+  - .dockerignore (modified)
+
+  트리거 매칭: X (.dockerignore는 트리거 목록에 없음)
+  → deploy.bat에 rebuild trigger 추가 필요
+
+  [deploy.bat 끝에 rebuild trigger 추가]
+  [.dockerignore + deploy.bat 함께 커밋]
+  [Push]
+
+  Pushed to origin/master
+  DeployMonitor will auto-deploy (deploy.bat 변경으로 트리거 매칭)
+```
+
+### Example 3: DB migration added
 ```
 User: 배포해줘
 Assistant:
   Changed files:
-  - database/migrations/004_add_column.sql (new)
-  - backend/app/models/user.py (modified)
+  - migrations/020_add_column.sql (new)
+  - models/Ticket.js (modified)
 
+  트리거 매칭: O (migrations/, models/)
   Recommended: UPDATE (migration will be applied)
 
   [Commit & Push]
 
-  ✅ Deploy started
-  📋 New migration will be applied automatically
+  Deploy started
+  New migration will be applied automatically
 ```
 
-### Example 3: DB reset required
+### Example 4: DB reset required
 ```
 User: /deploy reset
 Assistant:
@@ -413,28 +422,8 @@ Assistant:
   [Create .deploy-mode = reset]
   [Commit & Push]
 
-  ✅ Reset deploy started
-  🔄 Full DB reset and reinstall
-```
-
----
-
-## 배포 결과 확인
-
-### 서비스 상태
-```bash
-docker compose ps
-```
-
-### 로그 확인
-```bash
-docker logs %PROJECT_NAME%-api -f
-docker logs %PROJECT_NAME%-frontend -f
-```
-
-### 헬스체크
-```bash
-curl http://localhost:%PORT%/health
+  Reset deploy started
+  Full DB reset and reinstall
 ```
 
 ---
@@ -444,15 +433,16 @@ curl http://localhost:%PORT%/health
 | 증상 | 원인 | 해결 |
 |------|------|------|
 | 배포 안 됨 | DeployMonitor 미실행 | DeployMonitor 앱 확인 |
+| `[SKIP] 배포 대상 변경 없음` | 변경 파일이 트리거 목록에 없음 | deploy.bat에 rebuild trigger 추가 후 재푸시 |
 | 빌드 실패 | Dockerfile 오류 | docker logs 확인 |
-| DB 연결 실패 | 컨테이너 순서 | docker compose restart |
-| API 500 에러 | 코드 오류 | docker logs api 확인 |
+| DB 연결 실패 (.env 없음) | 배포 서버에 .env 없음 | deploy.bat가 .env.docker에서 자동 복사 |
+| DB healthcheck 실패 | .env의 DB_PASSWORD 누락 | .env.docker 확인 |
+| API 500 에러 | 코드 오류 | docker logs pfms-api 확인 |
+| `exec: no such file or directory` | Windows CRLF 줄바꿈 | Dockerfile에서 `sed -i 's/\r$//'` + .gitattributes |
+| `Table 'pfms.tickets' doesn't exist` | 기본 스키마 미적용 | .dockerignore에서 `!docs/database-schema.sql` 확인 |
 | 이전 코드 실행 | Docker cache | deploy.bat의 rebuild trigger 변경 |
-| deploy.bat 변경 미적용 | 구버전 메모리 실행 | v3.0 self-reload 패턴 적용 |
-| DB 매번 초기화됨 | users 체크 로직 누락 | USER_COUNT 판단 로직 추가 |
+| deploy.bat 변경 미적용 | 구버전 메모리 실행 | self-reload 패턴 |
 | .deploy-mode 계속 복원 | git에 커밋됨 | .gitignore에 추가 |
-| **덤프 복원 시 "already exists"** | **JPA가 빈 DB에 테이블 먼저 생성** | **DB만 먼저 시작 → 덤프 → API 시작** |
-| **모바일만 변경했는데 서버 재배포** | **DEPLOY_TRIGGERS 미설정** | **deploy.bat에 DEPLOY_TRIGGERS 추가** |
 
 ---
 
@@ -460,16 +450,13 @@ curl http://localhost:%PORT%/health
 
 | Avoid | Why | Instead |
 |-------|-----|---------|
+| Docker 파일만 변경 후 push | DeployMonitor 트리거 불일치로 스킵 | rebuild trigger 함께 커밋 |
 | 매번 모드 물어보기 | 대부분 UPDATE | Update가 기본, reset만 확인 |
-| 불필요한 .deploy-mode | 기본이 update | reset 때만 생성 |
-| push 전 확인 물어보기 | 자동화 지연 | 바로 push |
 | .deploy-mode git 커밋 | pull마다 복원됨 | .gitignore에 추가 필수 |
-| deploy.bat에서 git pull만 | 구버전 계속 실행 | self-reload 패턴 적용 |
-| TABLE_COUNT로 DB 판단 | 빈 테이블도 운영DB로 오판 | USER_COUNT로 판단 |
+| .sh 파일 Windows CRLF | 컨테이너에서 실행 불가 | .gitattributes에 `eol=lf` |
+| .dockerignore에서 docs/ 전체 제외 | base schema 누락 | `!docs/database-schema.sql` 예외 추가 |
 | Push without asking mode | User should decide | Always ask |
 | Default to RESET | Data loss risk | Default to UPDATE |
-| Reset에서 DB+API 동시 시작 | JPA가 빈 테이블 생성→덤프 충돌 | DB만 먼저→덤프→API 시작 |
-| 모노레포에서 DEPLOY_TRIGGERS 없이 배포 | 비서버 변경에도 재배포 | DEPLOY_TRIGGERS로 서버 경로만 지정 |
 
 ---
 
@@ -477,10 +464,9 @@ curl http://localhost:%PORT%/health
 
 - [ ] Git status 확인
 - [ ] 변경사항 분석
+- [ ] **트리거 매칭 확인 (매칭 안 되면 rebuild trigger 추가)**
 - [ ] Deploy mode 선택 (사용자)
 - [ ] .deploy-mode 파일 생성 (reset 시)
 - [ ] 변경사항 커밋
-- [ ] git push 완료
-- [ ] DeployMonitor 트레이 아이콘 확인
-- [ ] 배포 완료 풍선 알림 확인
-- [ ] 웹 접속 테스트
+- [ ] git push origin master
+- [ ] 배포 완료 확인
