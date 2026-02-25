@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""엑셀 → 마크다운 변환기 (이미지 추출 지원)
+"""엑셀 → 마크다운/JSON 변환기 (이미지 추출 지원)
 
 사용법:
     python excel2md.py report.xlsx
+    python excel2md.py data.xlsx --format json
     python excel2md.py data.xlsx --sheet "매출현황"
     python excel2md.py data.xlsx --output ./docs --overwrite
     python excel2md.py data.xlsx --no-images
 """
 
 import argparse
+import json
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -170,14 +172,15 @@ def _extract_media_fallback(zf: zipfile.ZipFile, out_dir: Path) -> dict:
     return dict(result)
 
 
-def excel_to_markdown(
+def convert_excel(
     excel_path: str,
     output_dir: str | None = None,
     sheet_name: str | None = None,
     overwrite: bool = False,
-    no_images: bool = False
+    no_images: bool = False,
+    fmt: str = "json",
 ) -> list[str]:
-    """엑셀 파일을 마크다운으로 변환
+    """엑셀 파일을 JSON 또는 마크다운으로 변환
 
     Args:
         excel_path: 엑셀 파일 경로
@@ -185,9 +188,10 @@ def excel_to_markdown(
         sheet_name: 특정 시트만 변환 (None이면 전체)
         overwrite: 기존 파일 덮어쓰기
         no_images: True면 이미지 추출 건너뛰기
+        fmt: 출력 포맷 ("json" 또는 "md")
 
     Returns:
-        생성된 md 파일 경로 목록
+        생성된 파일 경로 목록
     """
     excel_path = Path(excel_path)
     if not excel_path.exists():
@@ -223,26 +227,110 @@ def excel_to_markdown(
     # 시트 필터링
     sheets = [sheet_name] if sheet_name else wb.sheetnames
 
+    ext = "json" if fmt == "json" else "md"
+
     for idx, name in enumerate(wb.sheetnames):
         if name not in sheets:
             continue
 
         ws = wb[name]
-        # 해당 시트의 이미지 목록
         sheet_images = image_map.get(idx, [])
-        md_content = sheet_to_markdown(ws, excel_path.name, name, sheet_images)
-
-        # 파일명에서 특수문자 제거
         safe_name = sanitize_filename(name)
-        md_path = out_dir / f"{safe_name}.md"
 
-        md_path.write_text(md_content, encoding='utf-8')
-        created_files.append(str(md_path))
+        if fmt == "json":
+            data = sheet_to_json(ws, excel_path.name, name, sheet_images)
+            out_path = out_dir / f"{safe_name}.json"
+            out_path.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2),
+                encoding='utf-8',
+            )
+        else:
+            content = sheet_to_markdown(ws, excel_path.name, name, sheet_images)
+            out_path = out_dir / f"{safe_name}.md"
+            out_path.write_text(content, encoding='utf-8')
+
+        created_files.append(str(out_path))
         img_note = f" (+이미지 {len(sheet_images)}개)" if sheet_images else ""
-        print(f"[OK] {md_path}{img_note}")
+        print(f"[OK] {out_path}{img_note}")
 
     wb.close()
     return created_files
+
+
+# 하위 호환 래퍼
+def excel_to_markdown(
+    excel_path: str,
+    output_dir: str | None = None,
+    sheet_name: str | None = None,
+    overwrite: bool = False,
+    no_images: bool = False,
+) -> list[str]:
+    """하위 호환용 래퍼 — convert_excel(fmt='md')로 위임"""
+    return convert_excel(
+        excel_path, output_dir, sheet_name, overwrite, no_images, fmt="md"
+    )
+
+
+def sheet_to_json(ws, source_file: str, sheet_name: str,
+                  images: list | None = None) -> dict:
+    """워크시트를 구조화된 dict로 변환 (글/그림 분리)
+
+    Returns:
+        {
+          "source": "파일명.xlsx",
+          "sheet": "시트명",
+          "row_count": int,
+          "headers": ["컬럼1", ...],
+          "rows": [ {"컬럼1": "값", ...}, ... ],
+          "images": [ {"filename": "img.png", "row": 0, "col": 0}, ... ]
+        }
+    """
+    if images is None:
+        images = []
+
+    rows = list(ws.iter_rows(values_only=True))
+
+    if not rows:
+        return {
+            "source": source_file,
+            "sheet": sheet_name,
+            "row_count": 0,
+            "headers": [],
+            "rows": [],
+            "images": images,
+        }
+
+    # 첫 행 = 헤더
+    headers = [str(h) if h is not None else f"Col{i+1}" for i, h in enumerate(rows[0])]
+    data_rows = rows[1:]
+
+    structured_rows = []
+    for row in data_rows:
+        obj = {}
+        for i, header in enumerate(headers):
+            val = row[i] if i < len(row) else None
+            obj[header] = _json_cell(val)
+        structured_rows.append(obj)
+
+    return {
+        "source": source_file,
+        "sheet": sheet_name,
+        "row_count": len(data_rows),
+        "headers": headers,
+        "rows": structured_rows,
+        "images": images,
+    }
+
+
+def _json_cell(value):
+    """셀 값을 JSON 직렬화 가능한 타입으로 변환"""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value
+    return str(value)
 
 
 def sheet_to_markdown(ws, source_file: str, sheet_name: str,
@@ -368,11 +456,12 @@ def sanitize_filename(name: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="엑셀 파일을 마크다운 테이블로 변환 (이미지 추출 지원)",
+        description="엑셀 파일을 JSON/마크다운으로 변환 (이미지 추출 지원)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 예시:
-  python excel2md.py report.xlsx
+  python excel2md.py report.xlsx                         # JSON (기본)
+  python excel2md.py report.xlsx --format md             # 마크다운
   python excel2md.py data.xlsx --sheet "매출현황"
   python excel2md.py data.xlsx --output ./docs --overwrite
   python excel2md.py data.xlsx --no-images
@@ -380,6 +469,8 @@ def main():
     )
 
     parser.add_argument("excel_file", help="변환할 엑셀 파일 경로")
+    parser.add_argument("--format", choices=["json", "md"], default="json",
+                        help="출력 포맷 (기본: json)")
     parser.add_argument("--sheet", "-s", help="특정 시트만 변환")
     parser.add_argument("--output", "-o", help="출력 디렉토리")
     parser.add_argument("--overwrite", "-f", action="store_true",
@@ -390,12 +481,13 @@ def main():
     args = parser.parse_args()
 
     try:
-        files = excel_to_markdown(
+        files = convert_excel(
             args.excel_file,
             output_dir=args.output,
             sheet_name=args.sheet,
             overwrite=args.overwrite,
-            no_images=args.no_images
+            no_images=args.no_images,
+            fmt=args.format,
         )
 
         if files:
