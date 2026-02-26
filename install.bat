@@ -312,24 +312,14 @@ REM ============================================
 REM   --link 모드: Junction 생성
 REM ============================================
 if "%MODE%"=="link" (
-    REM Skills 링크 - 번들에 따라 개별 폴더
-    echo [1/7] Skills 링크 중... - 글로벌, Junction
+    REM Skills 링크 - 전체 코어 설치
+    echo [1/7] Skills 링크 중... - 글로벌, Junction [코어]
     if exist "%SCRIPT_DIR%skills" (
         if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
         for /d %%D in ("%SCRIPT_DIR%skills\*") do (
             set "skill_name=%%~nxD"
-            set "INSTALL_SKILL=0"
-            if "!HAS_ALL_BUNDLES!"=="1" set "INSTALL_SKILL=1"
-            REM 필수 스킬: 항상 설치 (mnemo, zephermine, orchestrator, qpassenger, zeus)
-            if /i "!skill_name!"=="mnemo" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="codex-mnemo" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="gemini-mnemo" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="zephermine" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="orchestrator" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="qpassenger" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="zeus" set "INSTALL_SKILL=1"
-            REM 선택적 스킬: 번들 선택 시에만
-            if /i "!skill_name!"=="agent-team" if "!HAS_AGENT_TEAM!"=="1" set "INSTALL_SKILL=1"
+            set "INSTALL_SKILL=1"
+            REM Codex 전용 스킬은 Claude에 설치하지 않음
             if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
             if "!INSTALL_SKILL!"=="1" (
                 set "target=%CLAUDE_DIR%\skills\!skill_name!"
@@ -346,31 +336,27 @@ if "%MODE%"=="link" (
     )
     echo       완료!
 
-    REM Agents 링크 - all 번들일 때만 전체 링크
+    REM Agents 링크 - 코어 설치
     echo.
-    echo [2/7] Agents 링크 중... - 글로벌, Junction
-    if "!HAS_ALL_BUNDLES!"=="1" (
-        if exist "%SCRIPT_DIR%agents" (
-            set "target=%CLAUDE_DIR%\agents"
-            if exist "!target!" (
-                fsutil reparsepoint query "!target!" >nul 2>nul
-                if !errorlevel! equ 0 ( rmdir "!target!" ) else ( rmdir /s /q "!target!" )
-            )
-            mklink /J "!target!" "%SCRIPT_DIR%agents" >nul
-            echo       - agents [linked]
-        ) else (
-            if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
+    echo [2/7] Agents 링크 중... - 글로벌, Junction [코어]
+    if exist "%SCRIPT_DIR%agents" (
+        set "target=%CLAUDE_DIR%\agents"
+        if exist "!target!" (
+            fsutil reparsepoint query "!target!" >nul 2>nul
+            if !errorlevel! equ 0 ( rmdir "!target!" ) else ( rmdir /s /q "!target!" )
         )
-        for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-            if exist "%%D\agents" (
-                for %%F in ("%%D\agents\*.md") do (
-                    echo       - %%~nxF [%%~nxD, copied]
-                    copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
-                )
-            )
-        )
+        mklink /J "!target!" "%SCRIPT_DIR%agents" >nul
+        echo       - agents [linked]
     ) else (
-        echo       [건너뜀] 개별 번들 모드 - 에이전트 미설치
+        if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
+    )
+    for /d %%D in ("%SCRIPT_DIR%skills\*") do (
+        if exist "%%D\agents" (
+            for %%F in ("%%D\agents\*.md") do (
+                echo       - %%~nxF [%%~nxD, copied]
+                copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
+            )
+        )
     )
     echo       완료!
 
@@ -401,22 +387,12 @@ REM   기본 모드: 복사 (번들 기반 필터링)
 REM ============================================
 
 REM Skills 설치 (글로벌, 번들 필터링)
-echo [1/7] Skills 설치 중... (글로벌)
+echo [1/7] Skills 설치 중... (글로벌) [코어]
 if exist "%SCRIPT_DIR%skills" (
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         set "skill_name=%%~nxD"
-        set "INSTALL_SKILL=0"
-        if "!HAS_ALL_BUNDLES!"=="1" set "INSTALL_SKILL=1"
-        REM 필수 스킬: 항상 설치 (mnemo, zephermine, orchestrator, qpassenger, zeus)
-        if /i "!skill_name!"=="mnemo" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="codex-mnemo" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="gemini-mnemo" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="zephermine" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="orchestrator" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="qpassenger" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="zeus" set "INSTALL_SKILL=1"
-        REM 선택적 스킬: 번들 선택 시에만
-        if /i "!skill_name!"=="agent-team" if "!HAS_AGENT_TEAM!"=="1" set "INSTALL_SKILL=1"
+        set "INSTALL_SKILL=1"
+        REM Codex 전용 스킬은 Claude에 설치하지 않음
         if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
         if "!INSTALL_SKILL!"=="1" (
             echo       - !skill_name!
@@ -431,29 +407,25 @@ if exist "%SCRIPT_DIR%skills" (
     echo       스킬 없음
 )
 
-REM Agents 설치 (글로벌, all 번들만)
+REM Agents 설치 (글로벌, 코어)
 echo.
-echo [2/7] Agents 설치 중... (글로벌)
-if "!HAS_ALL_BUNDLES!"=="1" (
-    if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
-    if exist "%SCRIPT_DIR%agents" (
-        for %%F in ("%SCRIPT_DIR%agents\*.md") do (
-            echo       - %%~nxF
+echo [2/7] Agents 설치 중... (글로벌) [코어]
+if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
+if exist "%SCRIPT_DIR%agents" (
+    for %%F in ("%SCRIPT_DIR%agents\*.md") do (
+        echo       - %%~nxF
+        copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
+    )
+)
+for /d %%D in ("%SCRIPT_DIR%skills\*") do (
+    if exist "%%D\agents" (
+        for %%F in ("%%D\agents\*.md") do (
+            echo       - %%~nxF [%%~nxD]
             copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
         )
     )
-    for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-        if exist "%%D\agents" (
-            for %%F in ("%%D\agents\*.md") do (
-                echo       - %%~nxF [%%~nxD]
-                copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
-            )
-        )
-    )
-    echo       완료!
-) else (
-    echo       [건너뜀] 개별 번들 모드 - 에이전트 미설치
 )
+echo       완료!
 
 REM Hooks 설치 (글로벌, mnemo 필수이므로 항상 설치)
 echo.
@@ -509,10 +481,10 @@ echo.
 echo [5/7] CLAUDE.md 장기기억 규칙 설치 중... - Claude [필수]
 node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
-REM MCP 서버 자동 설치 (mcp 번들)
+REM MCP 서버 자동 설치 (코어)
 echo.
-if "!HAS_MCP!"=="1" (
-    echo [6/7] MCP 서버 설치 중... - Claude 기본 안정 세트
+echo [6/7] MCP 서버 설치 중... - Claude 기본 안정 세트 [코어]
+if 1==1 (
     echo.
     echo       사용 가능한 MCP 서버:
     node "%SCRIPT_DIR%install-mcp.js" --list
@@ -522,8 +494,6 @@ if "!HAS_MCP!"=="1" (
     node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
     echo.
     echo       완료. 추가 설치: node "%SCRIPT_DIR%install-mcp.js" --list, 선택: open-websearch
-) else (
-    echo [6/7] MCP 서버 [건너뜀] - mcp 번들 미선택
 )
 
 REM Orchestrator MCP 서버 등록 (필수 설치)
@@ -615,10 +585,10 @@ if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
 )
 echo       !CODEX_SYNC_RESULT!
 
-REM Codex MCP (mcp 번들)
-if "!HAS_MCP!"=="1" (
-    echo.
-    echo   Codex MCP 설치 중...
+REM Codex MCP (코어)
+echo.
+echo   Codex MCP 설치 중... [코어]
+if 1==1 (
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
@@ -642,9 +612,6 @@ if "!HAS_MCP!"=="1" (
         set "CODEX_MULTI_AGENT_RESULT=스킵: codex CLI 없음"
     )
     echo       MCP: !CODEX_MCP_RESULT!, multi_agent: !CODEX_MULTI_AGENT_RESULT!
-) else (
-    set "CODEX_MCP_RESULT=건너뜀: mcp 미선택"
-    set "CODEX_MULTI_AGENT_RESULT=건너뜀: mcp 미선택"
 )
 
 REM Codex Orchestrator MCP (필수 설치)
@@ -752,10 +719,10 @@ if "!NEED_GEMINI_HOOKS!"=="1" (
     set "GEMINI_HOOKS_RESULT=건너뜀: 훅 번들 미선택"
 )
 
-REM Gemini MCP (mcp 번들)
-if "!HAS_MCP!"=="1" (
-    echo.
-    echo   Gemini MCP 설치 중...
+REM Gemini MCP (코어)
+echo.
+echo   Gemini MCP 설치 중... [코어]
+if 1==1 (
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
@@ -772,8 +739,6 @@ if "!HAS_MCP!"=="1" (
         set "GEMINI_MCP_RESULT=스킵: gemini CLI 없음"
     )
     echo       MCP: !GEMINI_MCP_RESULT!
-) else (
-    set "GEMINI_MCP_RESULT=건너뜀: mcp 미선택"
 )
 
 REM Gemini Orchestrator MCP (필수 설치)
@@ -833,9 +798,9 @@ if "!HAS_CLAUDE!"=="1" (
     ) else (
         echo   - Skills: %CLAUDE_DIR%\skills\
     )
-    if "!HAS_ALL_BUNDLES!"=="1" echo   - Agents: %CLAUDE_DIR%\agents\
+    echo   - Agents: %CLAUDE_DIR%\agents\
     echo   - CLAUDE.md 장기기억 규칙 등록 완료
-    if "!HAS_MCP!"=="1" echo   - MCP 서버 설치 완료
+    echo   - MCP 서버 설치 완료
     echo   - Orchestrator MCP 등록 완료
 )
 if "!HAS_CODEX!"=="1" (

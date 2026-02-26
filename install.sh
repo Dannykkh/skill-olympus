@@ -290,25 +290,15 @@ echo ""
 #   --link 모드: 심볼릭 링크 생성
 # ============================================
 if [ "$MODE" = "link" ]; then
-    # Skills 링크 (번들 필터링)
-    echo "[1/7] Skills 링크 중... (글로벌, symlink)"
+    # Skills 링크 (코어 설치)
+    echo "[1/7] Skills 링크 중... (글로벌, symlink) [코어]"
     if [ -d "$SCRIPT_DIR/skills" ]; then
         mkdir -p "$CLAUDE_DIR/skills"
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
             if [ -d "$skill_dir" ]; then
                 skill_name=$(basename "$skill_dir")
-                INSTALL_SKILL=0
-                [ "$HAS_ALL_BUNDLES" = "1" ] && INSTALL_SKILL=1
-                # 필수 스킬: 항상 설치 (mnemo, zephermine, orchestrator, qpassenger, zeus)
-                [ "$skill_name" = "mnemo" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "codex-mnemo" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "gemini-mnemo" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "zephermine" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "orchestrator" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "qpassenger" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "zeus" ] && INSTALL_SKILL=1
-                # 선택적 스킬: 번들 선택 시에만
-                [ "$skill_name" = "agent-team" ] && [ "$HAS_AGENT_TEAM" = "1" ] && INSTALL_SKILL=1
+                INSTALL_SKILL=1
+                # Codex 전용 스킬은 Claude에 설치하지 않음
                 [ "$skill_name" = "agent-team-codex" ] && INSTALL_SKILL=0
                 if [ "$INSTALL_SKILL" = "1" ]; then
                     target="$CLAUDE_DIR/skills/$skill_name"
@@ -324,30 +314,26 @@ if [ "$MODE" = "link" ]; then
     fi
     echo "      완료!"
 
-    # Agents 링크 (all 번들만)
+    # Agents 링크 (코어 설치)
     echo ""
-    echo "[2/7] Agents 링크 중... (글로벌, symlink)"
-    if [ "$HAS_ALL_BUNDLES" = "1" ]; then
-        if [ -d "$SCRIPT_DIR/agents" ]; then
-            target="$CLAUDE_DIR/agents"
-            [ -L "$target" ] && rm "$target"
-            [ -d "$target" ] && rm -rf "$target"
-            ln -s "$SCRIPT_DIR/agents" "$target"
-            echo "      - agents [linked]"
-        else
-            mkdir -p "$CLAUDE_DIR/agents"
-        fi
-        for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-            if [ -d "${skill_dir}agents" ]; then
-                skill_name=$(basename "$skill_dir")
-                for agent_file in "${skill_dir}agents"/*.md; do
-                    [ -f "$agent_file" ] && echo "      - $(basename "$agent_file") [$skill_name, copied]" && cp "$agent_file" "$CLAUDE_DIR/agents/"
-                done
-            fi
-        done
+    echo "[2/7] Agents 링크 중... (글로벌, symlink) [코어]"
+    if [ -d "$SCRIPT_DIR/agents" ]; then
+        target="$CLAUDE_DIR/agents"
+        [ -L "$target" ] && rm "$target"
+        [ -d "$target" ] && rm -rf "$target"
+        ln -s "$SCRIPT_DIR/agents" "$target"
+        echo "      - agents [linked]"
     else
-        echo "      [건너뜀] 개별 번들 모드 - 에이전트 미설치"
+        mkdir -p "$CLAUDE_DIR/agents"
     fi
+    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+        if [ -d "${skill_dir}agents" ]; then
+            skill_name=$(basename "$skill_dir")
+            for agent_file in "${skill_dir}agents"/*.md; do
+                [ -f "$agent_file" ] && echo "      - $(basename "$agent_file") [$skill_name, copied]" && cp "$agent_file" "$CLAUDE_DIR/agents/"
+            done
+        fi
+    done
     echo "      완료!"
 
     # Hooks 링크 (mnemo 필수이므로 항상 링크)
@@ -369,24 +355,14 @@ else
     #   기본 모드: 복사 (번들 기반 필터링)
     # ============================================
 
-    # Skills 설치 (번들 필터링)
-    echo "[1/7] Skills 설치 중... (글로벌)"
+    # Skills 설치 (코어 설치)
+    echo "[1/7] Skills 설치 중... (글로벌) [코어]"
     if [ -d "$SCRIPT_DIR/skills" ]; then
         for skill_dir in "$SCRIPT_DIR/skills"/*/; do
             if [ -d "$skill_dir" ]; then
                 skill_name=$(basename "$skill_dir")
-                INSTALL_SKILL=0
-                [ "$HAS_ALL_BUNDLES" = "1" ] && INSTALL_SKILL=1
-                # 필수 스킬: 항상 설치 (mnemo, zephermine, orchestrator, qpassenger, zeus)
-                [ "$skill_name" = "mnemo" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "codex-mnemo" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "gemini-mnemo" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "zephermine" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "orchestrator" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "qpassenger" ] && INSTALL_SKILL=1
-                [ "$skill_name" = "zeus" ] && INSTALL_SKILL=1
-                # 선택적 스킬: 번들 선택 시에만
-                [ "$skill_name" = "agent-team" ] && [ "$HAS_AGENT_TEAM" = "1" ] && INSTALL_SKILL=1
+                INSTALL_SKILL=1
+                # Codex 전용 스킬은 Claude에 설치하지 않음
                 [ "$skill_name" = "agent-team-codex" ] && INSTALL_SKILL=0
                 if [ "$INSTALL_SKILL" = "1" ]; then
                     echo "      - $skill_name"
@@ -402,28 +378,24 @@ else
         echo "      스킬 없음"
     fi
 
-    # Agents 설치 (all 번들만)
+    # Agents 설치 (코어)
     echo ""
-    echo "[2/7] Agents 설치 중... (글로벌)"
-    if [ "$HAS_ALL_BUNDLES" = "1" ]; then
-        mkdir -p "$CLAUDE_DIR/agents"
-        if [ -d "$SCRIPT_DIR/agents" ]; then
-            for agent_file in "$SCRIPT_DIR/agents"/*.md; do
-                [ -f "$agent_file" ] && echo "      - $(basename "$agent_file")" && cp "$agent_file" "$CLAUDE_DIR/agents/"
+    echo "[2/7] Agents 설치 중... (글로벌) [코어]"
+    mkdir -p "$CLAUDE_DIR/agents"
+    if [ -d "$SCRIPT_DIR/agents" ]; then
+        for agent_file in "$SCRIPT_DIR/agents"/*.md; do
+            [ -f "$agent_file" ] && echo "      - $(basename "$agent_file")" && cp "$agent_file" "$CLAUDE_DIR/agents/"
+        done
+    fi
+    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+        if [ -d "${skill_dir}agents" ]; then
+            skill_name=$(basename "$skill_dir")
+            for agent_file in "${skill_dir}agents"/*.md; do
+                [ -f "$agent_file" ] && echo "      - $(basename "$agent_file") [$skill_name]" && cp "$agent_file" "$CLAUDE_DIR/agents/"
             done
         fi
-        for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-            if [ -d "${skill_dir}agents" ]; then
-                skill_name=$(basename "$skill_dir")
-                for agent_file in "${skill_dir}agents"/*.md; do
-                    [ -f "$agent_file" ] && echo "      - $(basename "$agent_file") [$skill_name]" && cp "$agent_file" "$CLAUDE_DIR/agents/"
-                done
-            fi
-        done
-        echo "      완료!"
-    else
-        echo "      [건너뜀] 개별 번들 모드 - 에이전트 미설치"
-    fi
+    done
+    echo "      완료!"
 
     # Hooks 설치 (mnemo 필수이므로 항상 설치)
     echo ""
@@ -465,10 +437,10 @@ echo ""
 echo "[5/7] CLAUDE.md 장기기억 규칙 설치 중... (Claude) [필수]"
 node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md"
 
-# MCP 서버 자동 설치 (mcp 번들)
+# MCP 서버 자동 설치 (코어)
 echo ""
-if [ "$HAS_MCP" = "1" ]; then
-    echo "[6/7] MCP 서버 설치 중... (Claude, 무료만 자동 설치)"
+echo "[6/7] MCP 서버 설치 중... (Claude, 무료만 자동 설치) [코어]"
+if true; then
     echo ""
     echo "      사용 가능한 MCP 서버:"
     node "$SCRIPT_DIR/install-mcp.js" --list
@@ -478,8 +450,6 @@ if [ "$HAS_MCP" = "1" ]; then
     node "$SCRIPT_DIR/install-mcp.js" --all
     echo ""
     echo "      완료! (추가: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
-else
-    echo "[6/7] MCP 서버 [건너뜀] - mcp 번들 미선택"
 fi
 
 # Orchestrator MCP 서버 등록 (필수 설치)
@@ -561,10 +531,10 @@ if true; then
     echo "      $CODEX_SYNC_RESULT"
 fi
 
-# Codex MCP (mcp 번들)
-if [ "$HAS_MCP" = "1" ]; then
-    echo ""
-    echo "  Codex MCP 설치 중..."
+# Codex MCP (코어)
+echo ""
+echo "  Codex MCP 설치 중... [코어]"
+if true; then
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
             node "$SCRIPT_DIR/install-mcp-codex.js" --all && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
@@ -577,9 +547,6 @@ if [ "$HAS_MCP" = "1" ]; then
         CODEX_MULTI_AGENT_RESULT="스킵(codex CLI 없음)"
     fi
     echo "      MCP: $CODEX_MCP_RESULT, multi_agent: $CODEX_MULTI_AGENT_RESULT"
-else
-    CODEX_MCP_RESULT="건너뜀: mcp 미선택"
-    CODEX_MULTI_AGENT_RESULT="건너뜀: mcp 미선택"
 fi
 
 # Codex Orchestrator MCP (필수 설치)
@@ -676,10 +643,10 @@ else
     GEMINI_HOOKS_RESULT="건너뜀: 훅 번들 미선택"
 fi
 
-# Gemini MCP (mcp 번들)
-if [ "$HAS_MCP" = "1" ]; then
-    echo ""
-    echo "  Gemini MCP 설치 중..."
+# Gemini MCP (코어)
+echo ""
+echo "  Gemini MCP 설치 중... [코어]"
+if true; then
     if command -v gemini >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-gemini.js" ]; then
             node "$SCRIPT_DIR/install-mcp-gemini.js" --all && GEMINI_MCP_RESULT="설치 완료" || GEMINI_MCP_RESULT="설치 실패"
@@ -690,8 +657,6 @@ if [ "$HAS_MCP" = "1" ]; then
         GEMINI_MCP_RESULT="스킵(gemini CLI 없음)"
     fi
     echo "      MCP: $GEMINI_MCP_RESULT"
-else
-    GEMINI_MCP_RESULT="건너뜀: mcp 미선택"
 fi
 
 # Gemini Orchestrator MCP (필수 설치)
@@ -747,9 +712,9 @@ if [ "$HAS_CLAUDE" = "1" ]; then
     else
         echo "  - Skills: $CLAUDE_DIR/skills/"
     fi
-    [ "$HAS_ALL_BUNDLES" = "1" ] && echo "  - Agents: $CLAUDE_DIR/agents/"
+    echo "  - Agents: $CLAUDE_DIR/agents/"
     echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
-    [ "$HAS_MCP" = "1" ] && echo "  - MCP 서버 설치 완료"
+    echo "  - MCP 서버 설치 완료"
     echo "  - Orchestrator MCP 등록 완료"
 fi
 if [ "$HAS_CODEX" = "1" ]; then
