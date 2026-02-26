@@ -320,7 +320,15 @@ if "%MODE%"=="link" (
             set "skill_name=%%~nxD"
             set "INSTALL_SKILL=0"
             if "!HAS_ALL_BUNDLES!"=="1" set "INSTALL_SKILL=1"
-            if /i "!skill_name!"=="zephermine" if "!HAS_ZEPHERMINE!"=="1" set "INSTALL_SKILL=1"
+            REM 필수 스킬: 항상 설치 (mnemo, zephermine, orchestrator, qpassenger, zeus)
+            if /i "!skill_name!"=="mnemo" set "INSTALL_SKILL=1"
+            if /i "!skill_name!"=="codex-mnemo" set "INSTALL_SKILL=1"
+            if /i "!skill_name!"=="gemini-mnemo" set "INSTALL_SKILL=1"
+            if /i "!skill_name!"=="zephermine" set "INSTALL_SKILL=1"
+            if /i "!skill_name!"=="orchestrator" set "INSTALL_SKILL=1"
+            if /i "!skill_name!"=="qpassenger" set "INSTALL_SKILL=1"
+            if /i "!skill_name!"=="zeus" set "INSTALL_SKILL=1"
+            REM 선택적 스킬: 번들 선택 시에만
             if /i "!skill_name!"=="agent-team" if "!HAS_AGENT_TEAM!"=="1" set "INSTALL_SKILL=1"
             if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
             if "!INSTALL_SKILL!"=="1" (
@@ -366,13 +374,10 @@ if "%MODE%"=="link" (
     )
     echo       완료!
 
-    REM Hooks 링크 - 훅 번들이 있으면 전체 링크 (settings.json이 활성 훅 필터링)
+    REM Hooks 링크 - mnemo 필수이므로 항상 링크
     echo.
-    echo [3/7] Hooks 링크 중... - 글로벌, Junction
-    set "NEED_HOOKS=0"
-    if "!HAS_MNEMO!"=="1" set "NEED_HOOKS=1"
-    if "!HAS_ORCHESTRATOR!"=="1" set "NEED_HOOKS=1"
-    if "!HAS_ALL_BUNDLES!"=="1" set "NEED_HOOKS=1"
+    echo [3/7] Hooks 링크 중... - 글로벌, Junction [mnemo 필수]
+    set "NEED_HOOKS=1"
     if "!NEED_HOOKS!"=="1" (
         if exist "%SCRIPT_DIR%hooks" (
             set "target=%CLAUDE_DIR%\hooks"
@@ -402,7 +407,15 @@ if exist "%SCRIPT_DIR%skills" (
         set "skill_name=%%~nxD"
         set "INSTALL_SKILL=0"
         if "!HAS_ALL_BUNDLES!"=="1" set "INSTALL_SKILL=1"
-        if /i "!skill_name!"=="zephermine" if "!HAS_ZEPHERMINE!"=="1" set "INSTALL_SKILL=1"
+        REM 필수 스킬: 항상 설치 (mnemo, zephermine, orchestrator, qpassenger, zeus)
+        if /i "!skill_name!"=="mnemo" set "INSTALL_SKILL=1"
+        if /i "!skill_name!"=="codex-mnemo" set "INSTALL_SKILL=1"
+        if /i "!skill_name!"=="gemini-mnemo" set "INSTALL_SKILL=1"
+        if /i "!skill_name!"=="zephermine" set "INSTALL_SKILL=1"
+        if /i "!skill_name!"=="orchestrator" set "INSTALL_SKILL=1"
+        if /i "!skill_name!"=="qpassenger" set "INSTALL_SKILL=1"
+        if /i "!skill_name!"=="zeus" set "INSTALL_SKILL=1"
+        REM 선택적 스킬: 번들 선택 시에만
         if /i "!skill_name!"=="agent-team" if "!HAS_AGENT_TEAM!"=="1" set "INSTALL_SKILL=1"
         if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
         if "!INSTALL_SKILL!"=="1" (
@@ -442,13 +455,10 @@ if "!HAS_ALL_BUNDLES!"=="1" (
     echo       [건너뜀] 개별 번들 모드 - 에이전트 미설치
 )
 
-REM Hooks 설치 (글로벌, 번들 기반 필터링)
+REM Hooks 설치 (글로벌, mnemo 필수이므로 항상 설치)
 echo.
-echo [3/7] Hooks 설치 중... (글로벌)
-set "NEED_HOOKS=0"
-if "!HAS_MNEMO!"=="1" set "NEED_HOOKS=1"
-if "!HAS_ORCHESTRATOR!"=="1" set "NEED_HOOKS=1"
-if "!HAS_ALL_BUNDLES!"=="1" set "NEED_HOOKS=1"
+echo [3/7] Hooks 설치 중... (글로벌) [mnemo 필수]
+set "NEED_HOOKS=1"
 if "!NEED_HOOKS!"=="1" (
     if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
     if exist "%SCRIPT_DIR%hooks" (
@@ -494,14 +504,10 @@ echo.
 echo [4/7] settings.json 훅 설정 중... (Claude)
 node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%/hooks" "%CLAUDE_DIR%\settings.json" --windows --components !BUNDLES! --llms !LLMS!
 
-REM CLAUDE.md 장기기억 규칙 설치 (mnemo 번들)
+REM CLAUDE.md 장기기억 규칙 설치 (mnemo: 필수 설치)
 echo.
-if "!HAS_MNEMO!"=="1" (
-    echo [5/7] CLAUDE.md 장기기억 규칙 설치 중... - Claude
-    node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
-) else (
-    echo [5/7] CLAUDE.md 장기기억 규칙 [건너뜀] - mnemo 번들 미선택
-)
+echo [5/7] CLAUDE.md 장기기억 규칙 설치 중... - Claude [필수]
+node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
 REM MCP 서버 자동 설치 (mcp 번들)
 echo.
@@ -520,10 +526,10 @@ if "!HAS_MCP!"=="1" (
     echo [6/7] MCP 서버 [건너뜀] - mcp 번들 미선택
 )
 
-REM Orchestrator MCP 서버 등록 (orchestrator 번들)
+REM Orchestrator MCP 서버 등록 (필수 설치)
 echo.
-if "!HAS_ORCHESTRATOR!"=="1" (
-    echo [7/7] Orchestrator MCP 서버 등록 중... - Claude
+echo [7/7] Orchestrator MCP 서버 등록 중... - Claude [필수]
+if 1==1 (
     set "ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
     set "NEED_ORCH_BUILD=0"
@@ -541,8 +547,24 @@ if "!HAS_ORCHESTRATOR!"=="1" (
     ) else (
         echo       [경고] MCP 서버 빌드 실패, 건너뜀
     )
+)
+
+REM Mnemo 헬스체크 + 실패 시 자동 복구 (Claude)
+echo.
+echo   [Mnemo 검증] Claude 장기기억 시스템 확인 중...
+node "%SCRIPT_DIR%skills\mnemo\install.js" --check >nul 2>nul
+if !errorlevel! neq 0 (
+    echo       [복구] 문제 발견 - Mnemo 재설치 시도...
+    node "%SCRIPT_DIR%skills\mnemo\install.js"
+    node "%SCRIPT_DIR%skills\mnemo\install.js" --check >nul 2>nul
+    if !errorlevel! neq 0 (
+        echo       [경고] Mnemo 복구 실패! 수동 확인 필요:
+        echo              node "%SCRIPT_DIR%skills\mnemo\install.js" --check
+    ) else (
+        echo       [복구 완료] Mnemo 정상 확인
+    )
 ) else (
-    echo [7/7] Orchestrator MCP [건너뜀] - orchestrator 번들 미선택
+    echo       Mnemo 정상
 )
 
 REM ============================================
@@ -553,35 +575,28 @@ if "!HAS_CODEX!"=="0" goto :phase_gemini
 echo.
 echo   --- Codex CLI ---
 
-REM Codex-Mnemo (mnemo 번들)
-if "!HAS_MNEMO!"=="1" (
-    echo.
-    echo   Codex-Mnemo 설치 중...
-    if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
+REM Codex-Mnemo (필수 설치 + 실패 시 재시도)
+echo.
+echo   Codex-Mnemo 설치 중... [필수]
+if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
+    node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
+    if !errorlevel! neq 0 (
+        echo       [재시도] 첫 번째 시도 실패, 재설치...
         node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
         if !errorlevel! equ 0 (
-            set "CODEX_MNEMO_RESULT=설치 완료"
+            set "CODEX_MNEMO_RESULT=재시도 후 설치 완료"
         ) else (
-            set "CODEX_MNEMO_RESULT=설치 실패"
+            set "CODEX_MNEMO_RESULT=설치 실패 (재시도 포함)"
         )
     ) else (
-        set "CODEX_MNEMO_RESULT=스킵: install.js 없음"
+        set "CODEX_MNEMO_RESULT=설치 완료"
     )
-    echo       !CODEX_MNEMO_RESULT!
 ) else (
-    set "CODEX_MNEMO_RESULT=건너뜀: mnemo 미선택"
+    set "CODEX_MNEMO_RESULT=스킵: install.js 없음"
 )
+echo       !CODEX_MNEMO_RESULT!
 
-REM Codex Skills/Agents 동기화 (all 번들 또는 zephermine)
-if "!HAS_ALL_BUNDLES!"=="1" (
-    goto :codex_sync
-)
-if "!HAS_ZEPHERMINE!"=="1" (
-    goto :codex_sync
-)
-set "CODEX_SYNC_RESULT=건너뜀: 관련 번들 미선택"
-goto :codex_after_sync
-:codex_sync
+REM Codex Skills/Agents 동기화 (zephermine 필수이므로 항상 실행)
 echo.
 echo   Codex Skills/Agents 동기화 중...
 if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
@@ -599,7 +614,6 @@ if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
     set "CODEX_SYNC_RESULT=스킵: sync 스크립트 없음"
 )
 echo       !CODEX_SYNC_RESULT!
-:codex_after_sync
 
 REM Codex MCP (mcp 번들)
 if "!HAS_MCP!"=="1" (
@@ -633,10 +647,10 @@ if "!HAS_MCP!"=="1" (
     set "CODEX_MULTI_AGENT_RESULT=건너뜀: mcp 미선택"
 )
 
-REM Codex Orchestrator MCP (orchestrator 번들)
-if "!HAS_ORCHESTRATOR!"=="1" (
-    echo.
-    echo   Codex Orchestrator MCP 등록 중...
+REM Codex Orchestrator MCP (필수 설치)
+echo.
+echo   Codex Orchestrator MCP 등록 중... [필수]
+if 1==1 (
     set "CODEX_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "CODEX_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
     set "NEED_CODEX_ORCH_BUILD=0"
@@ -668,8 +682,6 @@ if "!HAS_ORCHESTRATOR!"=="1" (
         set "CODEX_ORCH_RESULT=스킵: codex CLI 없음"
     )
     echo       !CODEX_ORCH_RESULT!
-) else (
-    set "CODEX_ORCH_RESULT=건너뜀: orchestrator 미선택"
 )
 
 REM ============================================
@@ -680,38 +692,28 @@ if "!HAS_GEMINI!"=="0" goto :install_done
 echo.
 echo   --- Gemini CLI ---
 
-REM Gemini-Mnemo (mnemo 번들) — AGENTS.md 규칙 + save-turn 훅 + context.fileName
-if "!HAS_MNEMO!"=="1" (
-    echo.
-    echo   Gemini-Mnemo 설치 중...
-    if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
+REM Gemini-Mnemo (필수 설치 + 실패 시 재시도) — AGENTS.md 규칙 + save-turn 훅 + context.fileName
+echo.
+echo   Gemini-Mnemo 설치 중... [필수]
+if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
+    node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
+    if !errorlevel! neq 0 (
+        echo       [재시도] 첫 번째 시도 실패, 재설치...
         node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
         if !errorlevel! equ 0 (
-            set "GEMINI_MNEMO_RESULT=설치 완료"
+            set "GEMINI_MNEMO_RESULT=재시도 후 설치 완료"
         ) else (
-            set "GEMINI_MNEMO_RESULT=설치 실패"
+            set "GEMINI_MNEMO_RESULT=설치 실패 (재시도 포함)"
         )
     ) else (
-        set "GEMINI_MNEMO_RESULT=스킵: install.js 없음"
+        set "GEMINI_MNEMO_RESULT=설치 완료"
     )
-    echo       !GEMINI_MNEMO_RESULT!
 ) else (
-    set "GEMINI_MNEMO_RESULT=건너뜀: mnemo 미선택"
+    set "GEMINI_MNEMO_RESULT=스킵: install.js 없음"
 )
+echo       !GEMINI_MNEMO_RESULT!
 
-REM Gemini Skills/Agents/Hooks 동기화 (all 또는 zephermine)
-if "!HAS_ALL_BUNDLES!"=="1" (
-    goto :gemini_sync
-)
-if "!HAS_ZEPHERMINE!"=="1" (
-    goto :gemini_sync
-)
-if "!HAS_AGENT_TEAM!"=="1" (
-    goto :gemini_sync
-)
-set "GEMINI_SYNC_RESULT=건너뜀: 관련 번들 미선택"
-goto :gemini_after_sync
-:gemini_sync
+REM Gemini Skills/Agents/Hooks 동기화 (zephermine 필수이므로 항상 실행)
 echo.
 echo   Gemini Skills/Agents/Hooks 동기화 중...
 if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
@@ -729,14 +731,10 @@ if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
     set "GEMINI_SYNC_RESULT=스킵: sync 스크립트 없음"
 )
 echo       !GEMINI_SYNC_RESULT!
-:gemini_after_sync
 
-REM Gemini settings.json 훅 설정 (컴포넌트 기반 필터링)
+REM Gemini settings.json 훅 설정 (mnemo 필수이므로 항상 설정)
 set "GEMINI_DIR=%USERPROFILE%\.gemini"
-set "NEED_GEMINI_HOOKS=0"
-if "!HAS_MNEMO!"=="1" set "NEED_GEMINI_HOOKS=1"
-if "!HAS_ORCHESTRATOR!"=="1" set "NEED_GEMINI_HOOKS=1"
-if "!HAS_ALL_BUNDLES!"=="1" set "NEED_GEMINI_HOOKS=1"
+set "NEED_GEMINI_HOOKS=1"
 if "!NEED_GEMINI_HOOKS!"=="1" (
     echo.
     echo   Gemini settings.json 훅 설정 중...
@@ -778,10 +776,10 @@ if "!HAS_MCP!"=="1" (
     set "GEMINI_MCP_RESULT=건너뜀: mcp 미선택"
 )
 
-REM Gemini Orchestrator MCP (orchestrator 번들)
-if "!HAS_ORCHESTRATOR!"=="1" (
-    echo.
-    echo   Gemini Orchestrator MCP 등록 중...
+REM Gemini Orchestrator MCP (필수 설치)
+echo.
+echo   Gemini Orchestrator MCP 등록 중... [필수]
+if 1==1 (
     set "GEMINI_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "GEMINI_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
     set "NEED_GEMINI_ORCH_BUILD=0"
@@ -810,8 +808,6 @@ if "!HAS_ORCHESTRATOR!"=="1" (
         set "GEMINI_ORCH_RESULT=스킵: gemini CLI 없음"
     )
     echo       !GEMINI_ORCH_RESULT!
-) else (
-    set "GEMINI_ORCH_RESULT=건너뜀: orchestrator 미선택"
 )
 
 :install_done
@@ -838,9 +834,9 @@ if "!HAS_CLAUDE!"=="1" (
         echo   - Skills: %CLAUDE_DIR%\skills\
     )
     if "!HAS_ALL_BUNDLES!"=="1" echo   - Agents: %CLAUDE_DIR%\agents\
-    if "!HAS_MNEMO!"=="1" echo   - CLAUDE.md 장기기억 규칙 등록 완료
+    echo   - CLAUDE.md 장기기억 규칙 등록 완료
     if "!HAS_MCP!"=="1" echo   - MCP 서버 설치 완료
-    if "!HAS_ORCHESTRATOR!"=="1" echo   - Orchestrator MCP 등록 완료
+    echo   - Orchestrator MCP 등록 완료
 )
 if "!HAS_CODEX!"=="1" (
     echo   [Codex]

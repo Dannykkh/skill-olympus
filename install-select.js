@@ -5,6 +5,10 @@
 // UI는 stderr로 출력 (stdout은 결과 전용)
 
 const ALL_LLMS = ["claude", "codex", "gemini"];
+
+// 필수 번들: 어떤 선택을 하든 항상 포함 (--skip도 무시)
+const MANDATORY_BUNDLES = ["mnemo", "zephermine", "orchestrator"];
+
 const ALL_BUNDLES = [
   "zephermine",
   "agent-team",
@@ -20,12 +24,10 @@ const LLM_ITEMS = [
   { id: "gemini", desc: "Gemini CLI" },
 ];
 
+// 필수 번들은 선택 UI에서 제외 (항상 포함됨)
 const BUNDLE_ITEMS = [
   { id: "all", desc: "전체 기능" },
-  { id: "zephermine", desc: "설계 워크플로우" },
   { id: "agent-team", desc: "병렬 실행 (Agent Teams)" },
-  { id: "mnemo", desc: "장기기억" },
-  { id: "orchestrator", desc: "PM-Worker 병렬 작업" },
   { id: "mcp", desc: "무료 MCP 서버" },
 ];
 
@@ -71,7 +73,12 @@ function parseArgs() {
   if (skipBundles) bundles = ALL_BUNDLES.filter((b) => !skipBundles.includes(b));
 
   if (llms || bundles) {
-    return { llms: llms || ALL_LLMS, bundles: bundles || ALL_BUNDLES };
+    // 필수 번들: skip으로 제외되더라도 항상 포함
+    const finalBundles = bundles || ALL_BUNDLES;
+    for (const mb of MANDATORY_BUNDLES) {
+      if (!finalBundles.includes(mb)) finalBundles.push(mb);
+    }
+    return { llms: llms || ALL_LLMS, bundles: finalBundles };
   }
   return null; // 인터랙티브 모드
 }
@@ -198,12 +205,18 @@ async function main() {
   );
   if (!llms || llms.length === 0) process.exit(0);
 
+  const selectableBundles = ALL_BUNDLES.filter((b) => !MANDATORY_BUNDLES.includes(b));
   const bundles = await selectMenu(
-    "설치할 컴포넌트를 선택하세요",
+    "설치할 컴포넌트를 선택하세요 (젭마인/므네모/오케스트레이터는 필수)",
     BUNDLE_ITEMS,
-    ALL_BUNDLES
+    selectableBundles
   );
   if (!bundles || bundles.length === 0) process.exit(0);
+
+  // 필수 번들: 선택하지 않아도 항상 포함
+  for (const mb of MANDATORY_BUNDLES) {
+    if (!bundles.includes(mb)) bundles.push(mb);
+  }
 
   console.log(llms.join(","));
   console.log(bundles.join(","));

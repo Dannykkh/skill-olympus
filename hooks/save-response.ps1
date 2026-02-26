@@ -13,11 +13,32 @@ $transcriptPath = $json.transcript_path
 
 if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
 
-# 대화 파일 확인
+# 대화 파일 경로 결정
 $ConvDir = Join-Path $PWD.Path "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today-claude.md"
-if (-not (Test-Path $ConvFile)) { exit 0 }
+
+# conversations 폴더 자동 생성
+if (-not (Test-Path $ConvDir)) {
+    New-Item -ItemType Directory -Path $ConvDir -Force | Out-Null
+}
+
+# 파일 없으면 헤더 자동 생성 (save-conversation이 아직 안 돌았을 수 있음)
+if (-not (Test-Path $ConvFile)) {
+    $ProjectName = Split-Path $PWD.Path -Leaf
+    $Header = @"
+---
+date: $Today
+project: $ProjectName
+keywords: []
+summary: ""
+---
+
+# $Today
+
+"@
+    [System.IO.File]::WriteAllText($ConvFile, $Header, [System.Text.Encoding]::UTF8)
+}
 
 # JSONL 파일 끝에서 역방향으로 assistant text 메시지 찾기
 # Get-Content -Tail은 파일 전체를 읽으므로, 대용량 JSONL(수백MB)에서 느림
@@ -44,8 +65,12 @@ try {
         $chunkLines = $chunk -split "`n"
         $remainder = $chunkLines[0]  # 첫 줄은 잘렸을 수 있으므로 다음 청크에 이월
         for ($i = $chunkLines.Count - 1; $i -ge 1; $i--) {
-            if ($chunkLines[$i] -match '"type"\s*:\s*"assistant"' -and $chunkLines[$i] -match '"type"\s*:\s*"text"') {
-                $lastTextLine = $chunkLines[$i]
+            $line = $chunkLines[$i]
+            # assistant 메시지 중 text 블록이 포함된 줄 찾기
+            # Claude Code JSONL은 "type":"assistant"과 "type":"text"가 같은 줄에 있음
+            # 공백 유무에 관계없이 매칭
+            if ($line -match '"type"\s*:\s*"assistant"' -and $line -match '"type"\s*:\s*"text"') {
+                $lastTextLine = $line
                 break
             }
         }

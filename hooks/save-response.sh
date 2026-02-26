@@ -11,12 +11,30 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
     exit 0
 fi
 
-# 대화 파일 확인
+# 대화 파일 경로 결정
 CONV_DIR="$PWD/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-claude.md"
+
+# conversations 폴더 자동 생성
+if [ ! -d "$CONV_DIR" ]; then
+    mkdir -p "$CONV_DIR"
+fi
+
+# 파일 없으면 헤더 자동 생성 (save-conversation이 아직 안 돌았을 수 있음)
 if [ ! -f "$CONV_FILE" ]; then
-    exit 0
+    PROJECT_NAME=$(basename "$PWD")
+    cat > "$CONV_FILE" << HEADER
+---
+date: $TODAY
+project: $PROJECT_NAME
+keywords: []
+summary: ""
+---
+
+# $TODAY
+
+HEADER
 fi
 
 # JSONL 마지막 500줄에서 assistant text 메시지 찾기

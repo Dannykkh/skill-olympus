@@ -67,7 +67,11 @@ function hookEntry(matcher, command) {
   };
 }
 
+// 필수 훅: 컴포넌트 선택과 무관하게 항상 설치
+const MANDATORY_HOOKS = ["save-conversation", "save-response", "save-turn", "orchestrator-detector"];
+
 // 훅 → 번들 매핑 (어떤 번들이 어떤 훅을 필요로 하는지)
+// 필수 훅(MANDATORY_HOOKS)은 shouldIncludeHook에서 항상 true 반환
 const HOOK_BUNDLE_MAP = {
   "save-conversation": ["mnemo"],
   "orchestrator-detector": ["orchestrator"],
@@ -82,6 +86,8 @@ const HOOK_BUNDLE_MAP = {
 
 // 해당 훅이 선택된 컴포넌트에 포함되는지 확인
 function shouldIncludeHook(hookName) {
+  // 필수 훅은 항상 설치
+  if (MANDATORY_HOOKS.includes(hookName)) return true;
   if (!components) return true; // 전체 설치
   const bundles = HOOK_BUNDLE_MAP[hookName] || ["all-only"];
   // all-only 훅: 전체 번들이 모두 선택된 경우에만
