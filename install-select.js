@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 // install-select.js
-// 2단계 컴포넌트 선택: LLM 대상 → 기능 번들
-// stdout: line1 = LLMs, line2 = Bundles (comma-separated)
+// LLM 대상만 선택 (스킬/에이전트/훅/MCP는 전부 코어 설치)
+// stdout: line1 = LLMs, line2 = Bundles (항상 전체)
 // UI는 stderr로 출력 (stdout은 결과 전용)
 
 const ALL_LLMS = ["claude", "codex", "gemini"];
 
-// 필수 번들: 어떤 선택을 하든 항상 포함 (--skip도 무시)
-const MANDATORY_BUNDLES = ["mnemo", "zephermine", "orchestrator"];
-
+// 모든 번들은 코어 설치 (선택 불필요)
 const ALL_BUNDLES = [
   "zephermine",
   "agent-team",
@@ -24,15 +22,8 @@ const LLM_ITEMS = [
   { id: "gemini", desc: "Gemini CLI" },
 ];
 
-// 필수 번들은 선택 UI에서 제외 (항상 포함됨)
-const BUNDLE_ITEMS = [
-  { id: "all", desc: "전체 기능" },
-  { id: "agent-team", desc: "병렬 실행 (Agent Teams)" },
-  { id: "mcp", desc: "무료 MCP 서버" },
-];
-
 // install.bat/sh가 %*로 전달하므로 무관한 플래그 무시
-const IGNORE_FLAGS = ["--link", "--unlink", "--copy"];
+const IGNORE_FLAGS = ["--link", "--unlink", "--copy", "--with-open-websearch"];
 
 // --- CLI 파싱 ---
 function parseArgs() {
@@ -40,8 +31,6 @@ function parseArgs() {
   const args = raw.filter((a) => !IGNORE_FLAGS.includes(a));
 
   let llms = null;
-  let bundles = null;
-  let skipBundles = null;
   let isAll = false;
 
   for (let i = 0; i < args.length; i++) {
@@ -54,32 +43,17 @@ function parseArgs() {
           ?.split(",")
           .map((s) => s.trim().toLowerCase());
         break;
+      // --only, --skip은 하위 호환용으로 파싱하되 무시
       case "--only":
-        bundles = args[++i]
-          ?.split(",")
-          .map((s) => s.trim().toLowerCase());
-        break;
       case "--skip":
-        skipBundles = args[++i]
-          ?.split(",")
-          .map((s) => s.trim().toLowerCase());
+        i++; // 값 건너뜀
         break;
     }
   }
 
   if (isAll) return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
   if (llms?.includes("all")) llms = [...ALL_LLMS];
-  if (bundles?.includes("all")) bundles = [...ALL_BUNDLES];
-  if (skipBundles) bundles = ALL_BUNDLES.filter((b) => !skipBundles.includes(b));
-
-  if (llms || bundles) {
-    // 필수 번들: skip으로 제외되더라도 항상 포함
-    const finalBundles = bundles || ALL_BUNDLES;
-    for (const mb of MANDATORY_BUNDLES) {
-      if (!finalBundles.includes(mb)) finalBundles.push(mb);
-    }
-    return { llms: llms || ALL_LLMS, bundles: finalBundles };
-  }
+  if (llms) return { llms, bundles: ALL_BUNDLES };
   return null; // 인터랙티브 모드
 }
 
@@ -113,7 +87,7 @@ function selectMenu(title, items, allIds) {
         write(`\x1b[2K  ${arrow} [${check}] ${id} ${items[i].desc}\n`);
       }
       write("\x1b[2K\n");
-      write("\x1b[2K  \u2191\u2193 \uc774\ub3d9  Space \ud1a0\uae00  a \uc804\uccb4  Enter \ud655\uc778\n");
+      write("\x1b[2K  ↑↓ 이동  Space 토글  a 전체  Enter 확인\n");
     }
 
     function cleanup() {
@@ -197,7 +171,7 @@ async function main() {
     return;
   }
 
-  // 인터랙티브 모드: 2단계 순차 선택
+  // 인터랙티브 모드: LLM 선택만 (번들은 전부 코어 설치)
   const llms = await selectMenu(
     "대상 AI CLI를 선택하세요",
     LLM_ITEMS,
@@ -205,21 +179,8 @@ async function main() {
   );
   if (!llms || llms.length === 0) process.exit(0);
 
-  const selectableBundles = ALL_BUNDLES.filter((b) => !MANDATORY_BUNDLES.includes(b));
-  const bundles = await selectMenu(
-    "설치할 컴포넌트를 선택하세요 (젭마인/므네모/오케스트레이터는 필수)",
-    BUNDLE_ITEMS,
-    selectableBundles
-  );
-  if (!bundles || bundles.length === 0) process.exit(0);
-
-  // 필수 번들: 선택하지 않아도 항상 포함
-  for (const mb of MANDATORY_BUNDLES) {
-    if (!bundles.includes(mb)) bundles.push(mb);
-  }
-
   console.log(llms.join(","));
-  console.log(bundles.join(","));
+  console.log(ALL_BUNDLES.join(","));
 }
 
 main().catch((err) => {

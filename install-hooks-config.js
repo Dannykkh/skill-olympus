@@ -84,17 +84,10 @@ const HOOK_BUNDLE_MAP = {
   "save-turn": ["mnemo"], // Gemini 전용: AfterAgent에서 User+Assistant 한 번에 저장
 };
 
-// 해당 훅이 선택된 컴포넌트에 포함되는지 확인
+// 해당 훅이 설치되어야 하는지 확인
+// 모든 번들이 코어 설치이므로 항상 true 반환
 function shouldIncludeHook(hookName) {
-  // 필수 훅은 항상 설치
-  if (MANDATORY_HOOKS.includes(hookName)) return true;
-  if (!components) return true; // 전체 설치
-  const bundles = HOOK_BUNDLE_MAP[hookName] || ["all-only"];
-  // all-only 훅: 전체 번들이 모두 선택된 경우에만
-  if (bundles.includes("all-only")) {
-    return !components || components.length >= 5; // 5개 번들 전부
-  }
-  return bundles.some((b) => components.includes(b));
+  return true;
 }
 
 // ── Claude 훅 설정 빌드 ──
