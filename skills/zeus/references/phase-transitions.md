@@ -36,6 +36,9 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 
 ## 전환 규칙
 
+핵심 원칙: Planning/Implementation/Testing 3단계는 **skip 금지**, 실패 시에도 폴백 경로로 최소 1회 실행 시도.
+질문 처리 원칙: AskUserQuestion은 호출하지 않고 `(Recommended)` 옵션 우선 자동선택, 미존재 시 fallback 사용.
+
 ### Phase 0 → Phase 1 (Parsing → Planning)
 
 **전환 조건:**
@@ -66,8 +69,8 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 5. `orchestrator_spawn_workers` 호출
 
 **실패 시:**
-- plan 파일 미생성 → zeus-log.md에 기록 + Phase 2 건너뜀 → Phase 4 (리포트)
-- sections 미생성 → plan 전체를 단일 task로 생성
+- plan 파일 미생성 → zeus-log.md에 기록 + 최소 plan 자동 생성 후 진행
+- sections 미생성 → 통합 섹션 1개를 생성해 단일 task로 진행
 
 ---
 
@@ -83,8 +86,8 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 3. Playwright 설치 확인 (미설치 시 `npx playwright install`)
 
 **실패 시:**
-- 전체 task 실패 → zeus-log.md에 기록 + Phase 3 건너뜀
-- 서버 시작 불가 → Phase 3 건너뜀 (리포트에 "테스트 건너뜀" 기록)
+- 전체 task 실패 → zeus-log.md에 기록 + 단일 구현 task로 폴백 실행
+- 서버 시작 불가 → qpassenger `--api-only` 폴백 실행
 
 ---
 
@@ -92,7 +95,6 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 
 **전환 조건:**
 - qpassenger 완료 (PASS/CONDITIONAL/FAIL 무관)
-- 또는 Phase 3 건너뜀
 
 **전환 액션:**
 1. 전체 결과 집계
@@ -125,9 +127,9 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 | 등급 | 예시 | 대응 |
 |------|------|------|
 | **FATAL** | 디스크 쓰기 불가, 메모리 부족 | 즉시 중단 + 에러 메시지 |
-| **PHASE_SKIP** | plan 미생성, 서버 시작 불가 | 해당 phase 건너뜀 + 로그 |
-| **STEP_SKIP** | 개별 task 실패, 테스트 실패 | 해당 step 건너뜀 + 로그 |
-| **RECOVERABLE** | 네트워크 타임아웃, 임시 파일 오류 | 1회 재시도 후 skip |
+| **PHASE_FALLBACK** | plan 미생성, 서버 시작 불가 | 해당 phase 폴백 경로 실행 + 로그 |
+| **STEP_RETRY** | 개별 task 실패, 테스트 실패 | 1회 재시도 + 실패 내역 기록 |
+| **RECOVERABLE** | 네트워크 타임아웃, 임시 파일 오류 | 1회 재시도 후 폴백 |
 
 ---
 

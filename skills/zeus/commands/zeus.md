@@ -4,7 +4,7 @@ description: >
   Zero-interaction full pipeline. 한 줄 설명으로 설계→구현→테스트 전자동 완료.
   "쇼핑몰 만들어줘. React+Spring Boot" 같은 입력만으로 전체 파이프라인 실행.
   제우스.
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch, AskUserQuestion
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch
 ---
 
 # /zeus — Zero-Interaction Full Pipeline
@@ -25,9 +25,10 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch, A
 
 ### 핵심 원칙
 
-1. **AskUserQuestion 절대 호출 금지** — 모든 결정은 SKILL.md의 자동 응답 테이블로 처리
+1. **AskUserQuestion 절대 호출 금지** — 모든 결정은 SKILL.md의 자동선택 규칙으로 처리 (`Recommended` 우선, 없으면 fallback)
 2. **절대 멈추지 않는다** — 에러 발생 시 zeus-log.md에 기록하고 다음 단계로 진행
 3. **[ZEUS-AUTO] 태그** — 자동 결정에는 반드시 태그 표시
+4. **핵심 3단계 강제 실행** — Planning(zephermine) / Implementation(workpm) / Testing(qpassenger)은 실패해도 반드시 최소 1회 실행 시도
 
 ### Phase 순서 — 자동 루프
 
@@ -50,8 +51,15 @@ LOOP:
 
 **CRITICAL**: 각 Phase 사이에 사용자에게 "다음 단계를 진행합니다" 같은 확인을 구하지 마세요. 바로 다음 Phase 코드를 실행하세요. 중간에 멈추는 것은 zeus의 목적에 반합니다.
 
+### 실행 완료 체크리스트 (종료 전 필수 확인)
+
+- `zephermine` 단계 산출물 존재: `claude-plan.md`
+- `workpm` 단계 실행 흔적 존재: `zeus-log.md`에 task 생성/worker 실행 기록
+- `qpassenger` 단계 실행 흔적 존재: `zeus-log.md` 또는 QA 결과 파일에 테스트 실행 기록
+- 위 3개 중 하나라도 없으면 **종료하지 말고 해당 Phase 재시도**
+
 ### 재개
 
 이전 실행이 중단된 경우, `/zeus`를 다시 실행하면 zeus-state.json에서 마지막 완료 지점부터 자동 재개합니다.
 
-Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 4 without stopping.
+Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 4 without stopping. If any phase fails, apply fallback and continue; do not skip Planning/Implementation/Testing.

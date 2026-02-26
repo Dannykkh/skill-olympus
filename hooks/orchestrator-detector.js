@@ -182,13 +182,14 @@ function buildZeusContext() {
 Read skills/zeus/SKILL.md and follow the workflow.
 
 CRITICAL RULES:
-- NEVER call AskUserQuestion — 모든 결정은 자동 응답 테이블로 처리
+- NEVER call AskUserQuestion — 모든 결정은 자동선택 규칙으로 처리 (Recommended 우선, 없으면 fallback)
 - Phase 0→1→2→3→4를 연속 실행 — 중간에 "다음을 진행합니다" 같은 보고 후 멈추지 않는다
-- zephermine SKILL.md를 읽되, AskUserQuestion 지점은 자동 응답으로 대체
+- zephermine SKILL.md를 읽되, AskUserQuestion 지점은 자동선택으로 대체
 - 인터뷰(Step 6)는 합성 트랜스크립트로 자동 생성
 - Planning 완료 → 즉시 workpm으로 구현 시작
 - 구현 완료 → 즉시 qpassenger로 테스트 시작
 - 테스트 완료 → 즉시 zeus-report.md 생성
+- Planning/Implementation/Testing phase skip 금지 (실패 시 폴백 경로 실행)
 - 에러 시 zeus-log.md에 기록하고 계속 진행
 - 절대 멈추지 않는다
 
