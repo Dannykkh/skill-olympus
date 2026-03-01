@@ -154,7 +154,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (73 Skills)
+### Custom Skills (74 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -162,7 +162,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
-| 🛠️ **Development** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | Dev tools & deployment |
+| 🛠️ **Development** | docker-deploy, docker-db-backup, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | Dev tools & deployment |
 | 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
@@ -300,6 +300,7 @@ claude-code-customizations/
 │   ├── datadog-cli/
 │   ├── dependency-updater/
 │   ├── design-system-starter/
+│   ├── docker-db-backup/
 │   ├── docker-deploy/
 │   ├── domain-name-brainstormer/
 │   ├── draw-io/

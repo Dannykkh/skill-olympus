@@ -190,6 +190,7 @@
     { "id": "openapi-to-typescript", "tags": ["typescript", "nestjs", "nodejs"], "priority": "optional" },
     { "id": "python-backend-fastapi", "tags": ["python", "fastapi"], "priority": "essential" },
     { "id": "docker-deploy", "tags": ["docker"], "priority": "essential" },
+    { "id": "docker-db-backup", "tags": ["docker", "postgresql", "mysql"], "priority": "optional" },
     { "id": "database-schema-designer", "tags": ["postgresql", "mysql", "prisma"], "priority": "recommended" },
     { "id": "supabase-postgres-best-practices", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },

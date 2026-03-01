@@ -154,7 +154,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (73개)
+### 커스텀 스킬 (74개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -162,7 +162,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검증 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
-| 🛠️ **개발** | docker-deploy, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | 개발 도구 & 배포 |
+| 🛠️ **개발** | docker-deploy, docker-db-backup, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | 개발 도구 & 배포 |
 | 🎯 **계획** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | 계획 & 요구사항 (zeus: 전자동 파이프라인, zephermine: 스펙 검증) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
@@ -300,6 +300,7 @@ claude-code-customizations/
 │   ├── datadog-cli/
 │   ├── dependency-updater/
 │   ├── design-system-starter/
+│   ├── docker-db-backup/
 │   ├── docker-deploy/
 │   ├── domain-name-brainstormer/
 │   ├── draw-io/

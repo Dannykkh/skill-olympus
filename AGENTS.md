@@ -19,6 +19,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |React/Next.js|agents/react-best-practices.md,agents/react-useeffect-guidelines.md|
 |Code Review|agents/code-review-checklist.md,skills/code-reviewer/SKILL.md|
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
+|Docker DB Backup|skills/docker-db-backup/SKILL.md|
 |API Testing|agents/api-tester.md|
 |Documentation|agents/documentation.md,agents/writing-guidelines.md|
 |FastAPI|agents/python-fastapi-guidelines.md|
@@ -91,7 +92,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (73개)
+### Skills (74개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -100,7 +101,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
-| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
+| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner, qpassenger | 테스트/리뷰 |
