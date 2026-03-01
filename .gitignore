@@ -31,6 +31,9 @@ CLAUDE.md
 # Codex CLI - 자동 생성 (sync-codex-assets.js)
 .agents/
 
+# Gemini CLI - 자동 생성 (install-mcp-gemini.js)
+.gemini/
+
 # Orchestrator state (auto-generated)
 .orchestrator/
 
