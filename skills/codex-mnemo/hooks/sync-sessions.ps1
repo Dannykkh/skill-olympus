@@ -62,7 +62,6 @@ function Normalize-AssistantText([string]$text) {
     if (-not $text) { return "" }
     $t = $text.Trim()
     if ($t.Length -lt 5) { return "" }
-    if ($t.Length -gt 4000) { $t = $t.Substring(0, 4000) + "..." }
     return $t
 }
 
