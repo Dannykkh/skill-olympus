@@ -58,9 +58,6 @@ if [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; then
     exit 0
 fi
 
-# 코드 블록 제거 (```...``` 사이의 내용을 [code block] 으로 대체)
-RESPONSE=$(echo "$RESPONSE" | perl -0777 -pe 's/```[^\n]*\n.*?```/[code block]/gs' 2>/dev/null || echo "$RESPONSE")
-
 # 2000자 제한
 if [ ${#RESPONSE} -gt 2000 ]; then
     RESPONSE="${RESPONSE:0:2000}..."

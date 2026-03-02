@@ -100,9 +100,6 @@ try {
 # 빈 응답이면 스킵
 if (-not $response -or $response.Length -lt 5) { exit 0 }
 
-# 코드 블록 제거 (```...``` 사이의 내용을 [code block] 으로 대체)
-$response = [regex]::Replace($response, '(?s)```[^\n]*\n.*?```', '[code block]')
-
 # 2000자 제한
 if ($response.Length -gt 2000) {
     $response = $response.Substring(0, 2000) + "..."
