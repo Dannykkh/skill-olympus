@@ -7,6 +7,7 @@
 //   전체 설치:     node install-mcp.js --all
 //   특정 설치:     node install-mcp.js context7 playwright
 //   특정 제거:     node install-mcp.js --uninstall context7
+//   강제 재설치:   node install-mcp.js --all --force
 //   스코프 지정:   node install-mcp.js --scope local context7
 
 const fs = require("fs");
@@ -18,6 +19,7 @@ const args = process.argv.slice(2);
 const isListMode = args.includes("--list");
 const isAllMode = args.includes("--all");
 const isUninstall = args.includes("--uninstall");
+const isForce = args.includes("--force");
 
 // --scope 옵션 파싱 (기본: user)
 const scopeIdx = args.indexOf("--scope");
@@ -197,6 +199,7 @@ if (isAllMode) {
       "  node install-mcp.js --all                    무료 MCP 전부 설치\n" +
       "  node install-mcp.js context7 playwright      특정 MCP 설치\n" +
       "  node install-mcp.js --uninstall context7     특정 MCP 제거\n" +
+      "  node install-mcp.js --all --force            이미 설치된 MCP도 강제 재설치\n" +
       "  node install-mcp.js --scope local context7   스코프 지정 (기본: user)\n"
   );
   process.exit(0);
@@ -244,17 +247,19 @@ for (const cfg of toInstall) {
       configMismatch.push(`args 불일치(${state.args} -> ${desiredArgs})`);
     }
 
-    if (configMismatch.length === 0) {
-      // 설정이 올바르면 연결 상태와 무관하게 건너뜀
-      // 연결 상태(failedToConnect)는 판단하지 않음 — 서버가 미실행일 뿐, 설정 오류 아님
+    if (configMismatch.length === 0 && !isForce) {
+      // 설정이 올바르면 건너뜀 (--force 시 강제 재설치)
       console.log(`  ⏭️  ${cfg.name} (이미 설정됨, 건너뜀)`);
       skipped++;
       continue;
     }
 
-    // 설정 불일치 시에만 제거→재설치
+    // 설정 불일치 또는 --force 시 제거→재설치
     const removeScope = state.scope || scope;
-    console.log(`  🔧 ${cfg.name} 설정 업데이트: ${configMismatch.join(", ")}`);
+    const reason = configMismatch.length > 0
+      ? `설정 업데이트: ${configMismatch.join(", ")}`
+      : "강제 재설치";
+    console.log(`  🔧 ${cfg.name} ${reason}`);
     // 1차: 감지된 scope로 제거
     let removed = runClaude(`mcp remove "${cfg.name}" -s ${removeScope}`) !== null;
     // 2차: scope 미지정 (자동 탐색)
