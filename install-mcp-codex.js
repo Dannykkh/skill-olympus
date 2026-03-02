@@ -57,9 +57,13 @@ function runCodex(cmdArgs) {
   }
 }
 
+// 설치 여부를 캐시하여 동일 MCP를 여러 번 체크하지 않음
+const _mcpInstalledCache = new Map();
 function isMcpInstalled(name) {
-  const result = runCodex(`mcp get ${shellQuote(name)}`);
-  return result !== null;
+  if (_mcpInstalledCache.has(name)) return _mcpInstalledCache.get(name);
+  const result = runCodex(`mcp get ${shellQuote(name)}`) !== null;
+  _mcpInstalledCache.set(name, result);
+  return result;
 }
 
 function resolveEnvValue(rawValue) {

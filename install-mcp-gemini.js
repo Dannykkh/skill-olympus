@@ -38,11 +38,11 @@ function shellQuote(value) {
   return `"${s.replace(/(["\\$`])/g, "\\$1")}"`;
 }
 
-function runGemini(cmdArgs) {
+function runGemini(cmdArgs, timeoutMs = 15000) {
   try {
     return execSync(`gemini ${cmdArgs}`, {
       encoding: "utf-8",
-      timeout: 30000,
+      timeout: timeoutMs,
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
   } catch {
@@ -50,11 +50,17 @@ function runGemini(cmdArgs) {
   }
 }
 
-function isMcpInstalled(name) {
-  // gemini mcp list로 설치 여부 확인
+// gemini mcp list를 한 번만 호출하여 캐시
+let _mcpListCache = null;
+function getInstalledMcpList() {
+  if (_mcpListCache !== null) return _mcpListCache;
   const result = runGemini("mcp list");
-  if (result === null) return false;
-  return result.toLowerCase().includes(name.toLowerCase());
+  _mcpListCache = result ? result.toLowerCase() : "";
+  return _mcpListCache;
+}
+
+function isMcpInstalled(name) {
+  return getInstalledMcpList().includes(name.toLowerCase());
 }
 
 function resolveEnvValue(rawValue) {
