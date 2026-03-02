@@ -88,18 +88,11 @@ function getMcpState(name) {
   const scopeLine = (output.match(/^\s*Scope:\s*(.+)$/m) || [])[1] || "";
   const commandLine = (output.match(/^\s*Command:\s*(.+)$/m) || [])[1] || "";
   const argsLine = (output.match(/^\s*Args:\s*(.*)$/m) || [])[1] || "";
-  const statusLine = (output.match(/^\s*Status:\s*(.+)$/m) || [])[1] || "";
-  const connected = /connected/i.test(statusLine) && !/[✗x]/i.test(statusLine);
-  const failedToConnect = /failed to connect/i.test(statusLine);
-
   return {
     installed: true,
-    connected,
-    failedToConnect,
     scope: parseScope(scopeLine),
     command: normalizeSpace(commandLine),
     args: normalizeSpace(argsLine),
-    raw: output,
   };
 }
 
@@ -242,30 +235,47 @@ for (const cfg of toInstall) {
   let repairedThisServer = false;
 
   if (state.installed) {
-    const reasons = [];
-    if (state.failedToConnect) reasons.push("연결 실패");
+    // command/args가 일치하는지 확인 (설정이 올바른지)
+    const configMismatch = [];
     if (desiredCommand && state.command && state.command !== desiredCommand) {
-      reasons.push(`command 불일치(${state.command} -> ${desiredCommand})`);
+      configMismatch.push(`command 불일치(${state.command} -> ${desiredCommand})`);
     }
     if (desiredArgs && state.args && state.args !== desiredArgs) {
-      reasons.push(`args 불일치(${state.args} -> ${desiredArgs})`);
+      configMismatch.push(`args 불일치(${state.args} -> ${desiredArgs})`);
     }
 
-    if (reasons.length > 0) {
-      const removeScope = state.scope || scope;
-      console.log(`  🔧 ${cfg.name} 기존 설정 복구: ${reasons.join(", ")}`);
-      const removedResult = runClaude(`mcp remove "${cfg.name}" -s ${removeScope}`);
-      if (removedResult === null) {
-        console.log(`  ❌ ${cfg.name} 기존 설정 제거 실패 (scope: ${removeScope})`);
-        continue;
-      }
-      repairedThisServer = true;
-      needsInstall = true;
-    } else {
-      console.log(`  ⏭️  ${cfg.name} (이미 정상 설정, 건너뜀)`);
+    if (configMismatch.length === 0) {
+      // 설정이 올바르면 연결 상태와 무관하게 건너뜀
+      // 연결 상태(failedToConnect)는 판단하지 않음 — 서버가 미실행일 뿐, 설정 오류 아님
+      console.log(`  ⏭️  ${cfg.name} (이미 설정됨, 건너뜀)`);
       skipped++;
       continue;
     }
+
+    // 설정 불일치 시에만 제거→재설치
+    const removeScope = state.scope || scope;
+    console.log(`  🔧 ${cfg.name} 설정 업데이트: ${configMismatch.join(", ")}`);
+    // 1차: 감지된 scope로 제거
+    let removed = runClaude(`mcp remove "${cfg.name}" -s ${removeScope}`) !== null;
+    // 2차: scope 미지정 (자동 탐색)
+    if (!removed) {
+      removed = runClaude(`mcp remove "${cfg.name}"`) !== null;
+    }
+    // 3차: 모든 scope 순회
+    if (!removed) {
+      for (const fallbackScope of ["user", "local", "project"]) {
+        if (fallbackScope === removeScope) continue;
+        if (runClaude(`mcp remove "${cfg.name}" -s ${fallbackScope}`) !== null) {
+          removed = true;
+          break;
+        }
+      }
+    }
+    if (!removed) {
+      console.log(`  ⚠️  ${cfg.name} 기존 설정 제거 실패, 덮어쓰기 시도`);
+    }
+    repairedThisServer = true;
+    needsInstall = true;
   }
 
   // claude mcp add 명령 구성
