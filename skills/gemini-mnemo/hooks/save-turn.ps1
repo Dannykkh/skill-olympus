@@ -72,12 +72,9 @@ if ($userText -and $userText.Length -ge 1) {
 
 # Assistant 응답 처리
 if ($response -and $response.Length -ge 5) {
-    # 코드 블록 제거 (```...``` 사이의 내용을 [code block] 으로 대체)
-    $response = [regex]::Replace($response, '(?s)```[^\n]*\n.*?```', '[code block]')
-
-    # 2000자 제한
-    if ($response.Length -gt 2000) {
-        $response = $response.Substring(0, 2000) + "..."
+    # 4000자 제한 (코드 블록 포함 시 충분한 여유)
+    if ($response.Length -gt 4000) {
+        $response = $response.Substring(0, 4000) + "..."
     }
 
     $entry += "`n## [$ts] Assistant`n`n$response`n"

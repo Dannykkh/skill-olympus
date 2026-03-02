@@ -73,7 +73,7 @@ Gemini CLI 대화
     → prompt → User 입력 추출
     → prompt_response → Assistant 응답 추출
     → settings.json의 context.fileName으로 AGENTS.md 로드 보장
-    → 코드 블록 제거 + 2000자 제한
+    → 4000자 제한
     → conversations/YYYY-MM-DD-gemini.md에 append
     → 타임스탬프 기반 중복 방지
 ```

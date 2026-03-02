@@ -10,7 +10,10 @@ append_assistant_entry() {
     fi
 
     local text="$response"
-    text="$(echo "$text" | perl -0777 -pe 's/```.*?```/[code block]/gs' 2>/dev/null || echo "$text")"
+    # 4000자 제한
+    if [ ${#text} -gt 4000 ]; then
+        text="${text:0:4000}..."
+    fi
 
     echo -e "\n## [$timestamp] Assistant\n\n$text\n" >> "$conv_file"
 }
