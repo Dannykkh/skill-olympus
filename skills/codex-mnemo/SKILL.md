@@ -74,7 +74,7 @@ Codex CLI 대화
     → JSON 페이로드 수신 (argv/stdin/파일경로)
     → save-turn(오케스트레이터)에서 역할 분리 호출
       → append-user: User 입력 저장
-      → append-assistant: Assistant 응답 저장(4000자 제한)
+      → append-assistant: Assistant 응답 저장(전체)
     → conversations/YYYY-MM-DD-codex.md에 append
     → turn-id 기반 중복 방지
 ```
