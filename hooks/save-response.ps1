@@ -100,9 +100,9 @@ try {
 # 빈 응답이면 스킵
 if (-not $response -or $response.Length -lt 5) { exit 0 }
 
-# 2000자 제한
-if ($response.Length -gt 2000) {
-    $response = $response.Substring(0, 2000) + "..."
+# 4000자 제한 (코드 블록 포함 시 충분한 여유)
+if ($response.Length -gt 4000) {
+    $response = $response.Substring(0, 4000) + "..."
 }
 
 # 중복 방지: 타임스탬프 + 응답 내용 fingerprint 이중 체크

@@ -58,9 +58,9 @@ if [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; then
     exit 0
 fi
 
-# 2000자 제한
-if [ ${#RESPONSE} -gt 2000 ]; then
-    RESPONSE="${RESPONSE:0:2000}..."
+# 4000자 제한 (코드 블록 포함 시 충분한 여유)
+if [ ${#RESPONSE} -gt 4000 ]; then
+    RESPONSE="${RESPONSE:0:4000}..."
 fi
 
 # 중복 방지: 타임스탬프 + 응답 내용 fingerprint 이중 체크
