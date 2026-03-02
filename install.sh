@@ -2,7 +2,7 @@
 # ============================================
 #   Claude Code Customizations Installer
 #   Skills, Agents, Hooks + MCP 자동 설치
-#   사용법: install.sh [--link | --unlink] [--all] [--llm ...] [--only ...] [--skip ...]
+#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...]
 # ============================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -22,17 +22,14 @@ GEMINI_HOOKS_RESULT="미실행"
 MODE="copy"
 for arg in "$@"; do
     case "$arg" in
-        --link) MODE="link" ;;
-        --unlink) MODE="unlink" ;;
+        --uninstall) MODE="uninstall" ;;
     esac
 done
 
 echo ""
 echo "============================================"
-if [ "$MODE" = "link" ]; then
-    echo "  Claude Code Customizations Installer [LINK]"
-elif [ "$MODE" = "unlink" ]; then
-    echo "  Claude Code Customizations Unlinker"
+if [ "$MODE" = "uninstall" ]; then
+    echo "  Claude Code Customizations Uninstaller"
 else
     echo "  Claude Code Customizations Installer"
 fi
@@ -47,60 +44,25 @@ if [ ! -d "$CLAUDE_DIR" ]; then
 fi
 
 # ============================================
-#   --unlink 모드: 심볼릭 링크 제거 + settings.json 정리
+#   --uninstall 모드: 설정 정리 (MCP, Mnemo, Hooks, Codex, Gemini)
 # ============================================
-if [ "$MODE" = "unlink" ]; then
-    echo "[1/15] Skills 링크 제거 중..."
-    if [ -d "$SCRIPT_DIR/skills" ]; then
-        for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-            if [ -d "$skill_dir" ]; then
-                skill_name=$(basename "$skill_dir")
-                target="$CLAUDE_DIR/skills/$skill_name"
-                if [ -L "$target" ]; then
-                    echo "      - $skill_name [링크 제거]"
-                    rm "$target"
-                else
-                    echo "      - $skill_name [링크 아님, 건너뜀]"
-                fi
-            fi
-        done
-    fi
-    echo "      완료!"
-
-    echo ""
-    echo "[2/15] Agents 링크 제거 중..."
-    if [ -L "$CLAUDE_DIR/agents" ]; then
-        echo "      - agents [링크 제거]"
-        rm "$CLAUDE_DIR/agents"
-    else
-        echo "      - agents [링크 아님, 건너뜀]"
-    fi
-    echo "      완료!"
-
-    echo ""
-    echo "[3/15] Hooks 링크 제거 + settings.json 정리 중..."
-    if [ -L "$CLAUDE_DIR/hooks" ]; then
-        echo "      - hooks [링크 제거]"
-        rm "$CLAUDE_DIR/hooks"
-    else
-        echo "      - hooks [링크 아님, 건너뜀]"
-    fi
-    # settings.json에서 hooks 설정 제거
+if [ "$MODE" = "uninstall" ]; then
+    echo "[1/12] settings.json 훅 설정 제거 중..."
     node "$SCRIPT_DIR/install-hooks-config.js" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/settings.json" --uninstall
     echo "      완료!"
 
     echo ""
-    echo "[4/15] CLAUDE.md 장기기억 규칙 제거 중..."
+    echo "[2/12] CLAUDE.md 장기기억 규칙 제거 중..."
     node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md" --uninstall
     echo "      완료!"
 
     echo ""
-    echo "[5/15] MCP 서버 설정은 별도 관리됩니다."
+    echo "[3/12] MCP 서버 설정은 별도 관리됩니다."
     echo "      제거: node \"$SCRIPT_DIR/install-mcp.js\" --uninstall <이름>"
     echo "      완료!"
 
     echo ""
-    echo "[6/15] Orchestrator MCP 제거 중..."
+    echo "[4/12] Orchestrator MCP 제거 중..."
     SAVE_CLAUDECODE="${CLAUDECODE:-}"
     unset CLAUDECODE
     claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
@@ -110,7 +72,7 @@ if [ "$MODE" = "unlink" ]; then
     echo "      완료!"
 
     echo ""
-    echo "[7/15] Codex-Mnemo 제거 중..."
+    echo "[5/12] Codex-Mnemo 제거 중..."
     if [ -f "$SCRIPT_DIR/skills/codex-mnemo/install.js" ]; then
         if node "$SCRIPT_DIR/skills/codex-mnemo/install.js" --uninstall; then
             CODEX_MNEMO_RESULT="제거 완료"
@@ -125,8 +87,7 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo ""
-    echo "[8/15] Codex Skills/Agents 동기화 해제 중..."
+    echo "[6/12] Codex Skills/Agents 동기화 해제 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
         if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --unlink; then
             CODEX_SYNC_RESULT="해제 완료"
@@ -141,7 +102,7 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo "[9/15] Codex MCP(무료 세트) 제거 중..."
+    echo "[7/12] Codex MCP 제거 중..."
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
             if node "$SCRIPT_DIR/install-mcp-codex.js" --uninstall context7 fetch playwright sequential-thinking; then
@@ -161,7 +122,7 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo "[10/15] Codex Orchestrator MCP 제거 중..."
+    echo "[8/12] Codex Orchestrator MCP 제거 중..."
     if command -v codex >/dev/null 2>&1; then
         if codex mcp remove orchestrator >/dev/null 2>&1; then
             CODEX_ORCH_RESULT="제거 완료"
@@ -176,7 +137,7 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo "[11/15] Gemini-Mnemo 제거 중..."
+    echo "[9/12] Gemini-Mnemo 제거 중..."
     if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/install.js" ]; then
         if node "$SCRIPT_DIR/skills/gemini-mnemo/install.js" --uninstall; then
             GEMINI_MNEMO_RESULT="제거 완료"
@@ -191,7 +152,7 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo "[12/15] Gemini Skills/Agents/Hooks 동기화 해제 중..."
+    echo "[10/12] Gemini Skills/Agents/Hooks 동기화 해제 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-gemini-assets.js" ]; then
         if node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" --unlink; then
             echo "      완료!"
@@ -204,7 +165,7 @@ if [ "$MODE" = "unlink" ]; then
 
     echo ""
     GEMINI_DIR="$HOME/.gemini"
-    echo "[13/15] Gemini settings.json 훅 제거 중..."
+    echo "[11/12] Gemini settings.json 훅 제거 중..."
     if [ -f "$GEMINI_DIR/settings.json" ]; then
         node "$SCRIPT_DIR/install-hooks-config.js" "$GEMINI_DIR/hooks" "$GEMINI_DIR/settings.json" --uninstall
         echo "      완료!"
@@ -213,21 +174,11 @@ if [ "$MODE" = "unlink" ]; then
     fi
 
     echo ""
-    echo "[14/15] Gemini MCP 제거 중..."
+    echo "[12/12] Gemini MCP/Orchestrator 제거 중..."
     if command -v gemini >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-gemini.js" ]; then
             node "$SCRIPT_DIR/install-mcp-gemini.js" --uninstall context7 fetch playwright sequential-thinking
-            echo "      완료!"
-        else
-            echo "      [경고] install-mcp-gemini.js 없음, 건너뜀"
         fi
-    else
-        echo "      [경고] gemini CLI 없음, 건너뜀"
-    fi
-
-    echo ""
-    echo "[15/15] Gemini Orchestrator MCP 제거 중..."
-    if command -v gemini >/dev/null 2>&1; then
         gemini mcp remove orchestrator >/dev/null 2>&1 || true
         echo "      완료!"
     else
@@ -236,12 +187,10 @@ if [ "$MODE" = "unlink" ]; then
 
     echo ""
     echo "============================================"
-    echo "  링크 제거 완료!"
+    echo "  제거 완료!"
     echo "============================================"
     echo ""
-    echo "  원본 파일은 그대로 유지됩니다."
-    echo "  복사 모드로 재설치하려면: ./install.sh"
-    echo "  링크 모드로 재설치하려면: ./install.sh --link"
+    echo "  재설치하려면: ./install.sh"
     echo ""
     exit 0
 fi
@@ -287,73 +236,8 @@ echo "  번들: $BUNDLES"
 echo ""
 
 # ============================================
-#   --link 모드: 심볼릭 링크 생성
+#   복사 모드: Skills/Agents/Hooks 설치
 # ============================================
-if [ "$MODE" = "link" ]; then
-    # Skills 링크 (코어 설치)
-    echo "[1/7] Skills 링크 중... (글로벌, symlink) [코어]"
-    if [ -d "$SCRIPT_DIR/skills" ]; then
-        mkdir -p "$CLAUDE_DIR/skills"
-        for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-            if [ -d "$skill_dir" ]; then
-                skill_name=$(basename "$skill_dir")
-                INSTALL_SKILL=1
-                # Codex 전용 스킬은 Claude에 설치하지 않음
-                [ "$skill_name" = "agent-team-codex" ] && INSTALL_SKILL=0
-                if [ "$INSTALL_SKILL" = "1" ]; then
-                    target="$CLAUDE_DIR/skills/$skill_name"
-                    [ -L "$target" ] && rm "$target"
-                    [ -d "$target" ] && rm -rf "$target"
-                    ln -s "$skill_dir" "$target"
-                    echo "      - $skill_name [linked]"
-                else
-                    echo "      - $skill_name [건너뜀]"
-                fi
-            fi
-        done
-    fi
-    echo "      완료!"
-
-    # Agents 링크 (코어 설치)
-    echo ""
-    echo "[2/7] Agents 링크 중... (글로벌, symlink) [코어]"
-    if [ -d "$SCRIPT_DIR/agents" ]; then
-        target="$CLAUDE_DIR/agents"
-        [ -L "$target" ] && rm "$target"
-        [ -d "$target" ] && rm -rf "$target"
-        ln -s "$SCRIPT_DIR/agents" "$target"
-        echo "      - agents [linked]"
-    else
-        mkdir -p "$CLAUDE_DIR/agents"
-    fi
-    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-        if [ -d "${skill_dir}agents" ]; then
-            skill_name=$(basename "$skill_dir")
-            for agent_file in "${skill_dir}agents"/*.md; do
-                [ -f "$agent_file" ] && echo "      - $(basename "$agent_file") [$skill_name, copied]" && cp "$agent_file" "$CLAUDE_DIR/agents/"
-            done
-        fi
-    done
-    echo "      완료!"
-
-    # Hooks 링크 (mnemo 필수이므로 항상 링크)
-    echo ""
-    echo "[3/7] Hooks 링크 중... (글로벌, symlink) [mnemo 필수]"
-    NEED_HOOKS=1
-    if [ "$NEED_HOOKS" = "1" ] && [ -d "$SCRIPT_DIR/hooks" ]; then
-        target="$CLAUDE_DIR/hooks"
-        [ -L "$target" ] && rm "$target"
-        [ -d "$target" ] && rm -rf "$target"
-        ln -s "$SCRIPT_DIR/hooks" "$target"
-        echo "      - hooks [linked]"
-    else
-        echo "      [건너뜀] 훅 번들 미선택"
-    fi
-    echo "      완료!"
-else
-    # ============================================
-    #   기본 모드: 복사 (번들 기반 필터링)
-    # ============================================
 
     # Skills 설치 (코어 설치)
     echo "[1/7] Skills 설치 중... (글로벌) [코어]"
@@ -416,7 +300,6 @@ else
     else
         echo "      [건너뜀] 훅 번들 미선택"
     fi
-fi
 
 # CLAUDECODE 환경변수 임시 해제 (claude CLI 중첩 세션 방지)
 SAVE_CLAUDECODE="${CLAUDECODE:-}"
@@ -520,11 +403,7 @@ if true; then
     echo ""
     echo "  Codex Skills/Agents 동기화 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
-        if [ "$MODE" = "link" ]; then
-            node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --link && CODEX_SYNC_RESULT="동기화 완료" || CODEX_SYNC_RESULT="동기화 실패"
-        else
-            node "$SCRIPT_DIR/scripts/sync-codex-assets.js" && CODEX_SYNC_RESULT="동기화 완료" || CODEX_SYNC_RESULT="동기화 실패"
-        fi
+        node "$SCRIPT_DIR/scripts/sync-codex-assets.js" && CODEX_SYNC_RESULT="동기화 완료" || CODEX_SYNC_RESULT="동기화 실패"
     else
         CODEX_SYNC_RESULT="스킵(sync 스크립트 없음)"
     fi
@@ -612,11 +491,7 @@ if true; then
     echo ""
     echo "  Gemini Skills/Agents/Hooks 동기화 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-gemini-assets.js" ]; then
-        if [ "$MODE" = "link" ]; then
-            node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" --link && GEMINI_SYNC_RESULT="동기화 완료" || GEMINI_SYNC_RESULT="동기화 실패"
-        else
-            node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" && GEMINI_SYNC_RESULT="동기화 완료" || GEMINI_SYNC_RESULT="동기화 실패"
-        fi
+        node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" && GEMINI_SYNC_RESULT="동기화 완료" || GEMINI_SYNC_RESULT="동기화 실패"
     else
         GEMINI_SYNC_RESULT="스킵(sync 스크립트 없음)"
     fi
@@ -695,11 +570,7 @@ fi
 
 echo ""
 echo "============================================"
-if [ "$MODE" = "link" ]; then
-    echo "  설치 완료! [LINK]"
-else
-    echo "  설치 완료!"
-fi
+echo "  설치 완료!"
 echo "============================================"
 echo ""
 echo "  LLM: $LLMS"
@@ -707,11 +578,7 @@ echo "  번들: $BUNDLES"
 echo ""
 if [ "$HAS_CLAUDE" = "1" ]; then
     echo "  [Claude]"
-    if [ "$MODE" = "link" ]; then
-        echo "  - Skills: $CLAUDE_DIR/skills/ (링크)"
-    else
-        echo "  - Skills: $CLAUDE_DIR/skills/"
-    fi
+    echo "  - Skills: $CLAUDE_DIR/skills/"
     echo "  - Agents: $CLAUDE_DIR/agents/"
     echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
     echo "  - MCP 서버 설치 완료"

@@ -7,7 +7,6 @@ const path = require("path");
 
 const args = process.argv.slice(2);
 const isUnlink = args.includes("--unlink");
-const isLinkMode = args.includes("--link");
 
 const repoRoot = path.resolve(__dirname, "..");
 const skillsSrcDir = path.join(repoRoot, "skills");
@@ -55,21 +54,9 @@ function listDirectories(dirPath) {
     .sort((a, b) => a.localeCompare(b));
 }
 
-function linkDir(src, dest) {
-  if (process.platform === "win32") {
-    fs.symlinkSync(src, dest, "junction");
-  } else {
-    fs.symlinkSync(src, dest, "dir");
-  }
-}
-
-function installDir(src, dest, useLink) {
+function installDir(src, dest) {
   safeRm(dest);
-  if (useLink) {
-    linkDir(src, dest);
-  } else {
-    fs.cpSync(src, dest, { recursive: true, force: true });
-  }
+  fs.cpSync(src, dest, { recursive: true, force: true });
 }
 
 function collectAgentFiles() {
@@ -149,7 +136,7 @@ function syncSkills(destDir, skillNames, mode) {
       safeRm(dest);
       continue;
     }
-    installDir(src, dest, mode === "link");
+    installDir(src, dest);
   }
 }
 
@@ -233,7 +220,7 @@ function run() {
     process.exit(1);
   }
 
-  const mode = isUnlink ? "unlink" : isLinkMode ? "link" : "copy";
+  const mode = isUnlink ? "unlink" : "copy";
   const previous = loadPreviousManaged();
   const skillNames = listDirectories(skillsSrcDir);
   const agentFiles = collectAgentFiles();

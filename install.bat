@@ -5,7 +5,7 @@ setlocal enabledelayedexpansion
 REM ============================================
 REM   Claude Code Customizations Installer
 REM   Skills, Agents, Hooks + MCP 자동 설치
-REM   사용법: install.bat [--link | --unlink] [--with-open-websearch] [--all] [--llm ...] [--only ...] [--skip ...]
+REM   사용법: install.bat [--uninstall] [--with-open-websearch] [--all] [--llm ...] [--only ...] [--skip ...]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -27,18 +27,15 @@ set "LEGACY_MCP_SERVERS=open-websearch sequential-thinking"
 REM 모드 결정 (인자 전체 스캔)
 set "MODE=copy"
 for %%A in (%*) do (
-    if /i "%%A"=="--link" set "MODE=link"
-    if /i "%%A"=="--unlink" set "MODE=unlink"
+    if /i "%%A"=="--uninstall" set "MODE=uninstall"
     if /i "%%A"=="--with-open-websearch" set "INCLUDE_OPEN_WEBSEARCH=1"
 )
 if "!INCLUDE_OPEN_WEBSEARCH!"=="1" set "DEFAULT_MCP_SERVERS=!DEFAULT_MCP_SERVERS! open-websearch"
 
 echo.
 echo ============================================
-if "%MODE%"=="link" (
-    echo   Claude Code Customizations Installer [LINK]
-) else if "%MODE%"=="unlink" (
-    echo   Claude Code Customizations Unlinker
+if "%MODE%"=="uninstall" (
+    echo   Claude Code Customizations Uninstaller
 ) else (
     echo   Claude Code Customizations Installer
 )
@@ -54,62 +51,25 @@ if not exist "%CLAUDE_DIR%" (
 )
 
 REM ============================================
-REM   --unlink 모드: Junction 제거 + settings.json 정리
+REM   --uninstall 모드: 설정 정리 (MCP, Mnemo, Hooks, Codex, Gemini)
 REM ============================================
-if "%MODE%"=="unlink" (
-    echo [1/15] Skills 링크 제거 중...
-    if exist "%SCRIPT_DIR%skills" (
-        for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-            set "skill_name=%%~nxD"
-            set "target=%CLAUDE_DIR%\skills\!skill_name!"
-            REM Junction인지 확인
-            fsutil reparsepoint query "!target!" >nul 2>nul
-            if !errorlevel! equ 0 (
-                echo       - !skill_name! [링크 제거]
-                rmdir "!target!"
-            ) else (
-                echo       - !skill_name! [링크 아님, 건너뜀]
-            )
-        )
-    )
-    echo       완료!
-
-    echo.
-    echo [2/15] Agents 링크 제거 중...
-    fsutil reparsepoint query "%CLAUDE_DIR%\agents" >nul 2>nul
-    if !errorlevel! equ 0 (
-        echo       - agents [링크 제거]
-        rmdir "%CLAUDE_DIR%\agents"
-    ) else (
-        echo       - agents [링크 아님, 건너뜀]
-    )
-    echo       완료!
-
-    echo.
-    echo [3/15] Hooks 링크 제거 + settings.json 정리 중...
-    fsutil reparsepoint query "%CLAUDE_DIR%\hooks" >nul 2>nul
-    if !errorlevel! equ 0 (
-        echo       - hooks [링크 제거]
-        rmdir "%CLAUDE_DIR%\hooks"
-    ) else (
-        echo       - hooks [링크 아님, 건너뜀]
-    )
-    REM settings.json에서 hooks 설정 제거
+if "%MODE%"=="uninstall" (
+    echo [1/12] settings.json 훅 설정 제거 중...
     node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%\hooks" "%CLAUDE_DIR%\settings.json" --uninstall
     echo       완료!
 
     echo.
-    echo [4/15] CLAUDE.md 장기기억 규칙 제거 중...
+    echo [2/12] CLAUDE.md 장기기억 규칙 제거 중...
     node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
     echo       완료!
 
     echo.
-    echo [5/15] MCP 서버 설정은 별도 관리됩니다.
+    echo [3/12] MCP 서버 설정은 별도 관리됩니다.
     echo       제거: node "%SCRIPT_DIR%install-mcp.js" --uninstall ^<이름^>
     echo       완료!
 
     echo.
-    echo [6/15] Orchestrator MCP 제거 중...
+    echo [4/12] Orchestrator MCP 제거 중...
     set "SAVE_CLAUDECODE=!CLAUDECODE!"
     set "CLAUDECODE="
     claude mcp remove orchestrator -s user >nul 2>nul
@@ -117,7 +77,7 @@ if "%MODE%"=="unlink" (
     echo       완료!
 
     echo.
-    echo [7/15] Codex-Mnemo 제거 중...
+    echo [5/12] Codex-Mnemo 제거 중...
     if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
         node "%SCRIPT_DIR%skills\codex-mnemo\install.js" --uninstall
         if !errorlevel! equ 0 (
@@ -133,7 +93,7 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [8/15] Codex Skills/Agents 동기화 해제 중...
+    echo [6/12] Codex Skills/Agents 동기화 해제 중...
     if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-codex-assets.js" --unlink
         if !errorlevel! equ 0 (
@@ -149,7 +109,7 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [9/15] Codex MCP 기본/레거시 세트 제거 중...
+    echo [7/12] Codex MCP 기본/레거시 세트 제거 중...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
@@ -171,7 +131,7 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [10/15] Codex Orchestrator MCP 제거 중...
+    echo [8/12] Codex Orchestrator MCP 제거 중...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         call codex mcp remove orchestrator >nul 2>nul
@@ -188,7 +148,7 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [11/15] Gemini-Mnemo 제거 중...
+    echo [9/12] Gemini-Mnemo 제거 중...
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
         node "%SCRIPT_DIR%skills\gemini-mnemo\install.js" --uninstall
         if !errorlevel! equ 0 (
@@ -204,7 +164,7 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [12/15] Gemini Skills/Agents/Hooks 동기화 해제 중...
+    echo [10/12] Gemini Skills/Agents/Hooks 동기화 해제 중...
     if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-gemini-assets.js" --unlink
         if !errorlevel! equ 0 (
@@ -217,7 +177,7 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [13/15] Gemini settings.json 훅 제거 중...
+    echo [11/12] Gemini settings.json 훅 제거 중...
     set "GEMINI_DIR=%USERPROFILE%\.gemini"
     if exist "!GEMINI_DIR!\settings.json" (
         node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!\hooks" "!GEMINI_DIR!\settings.json" --uninstall
@@ -227,23 +187,12 @@ if "%MODE%"=="unlink" (
     )
 
     echo.
-    echo [14/15] Gemini MCP 제거 중...
+    echo [12/12] Gemini MCP/Orchestrator 제거 중...
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
             node "%SCRIPT_DIR%install-mcp-gemini.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
-            echo       완료!
-        ) else (
-            echo       [경고] install-mcp-gemini.js 없음, 건너뜀
         )
-    ) else (
-        echo       [경고] gemini CLI 없음, 건너뜀
-    )
-
-    echo.
-    echo [15/15] Gemini Orchestrator MCP 제거 중...
-    where gemini >nul 2>nul
-    if !errorlevel! equ 0 (
         call gemini mcp remove orchestrator >nul 2>nul
         echo       완료!
     ) else (
@@ -252,12 +201,10 @@ if "%MODE%"=="unlink" (
 
     echo.
     echo ============================================
-    echo   링크 제거 완료!
+    echo   제거 완료!
     echo ============================================
     echo.
-    echo   원본 파일은 그대로 유지됩니다.
-    echo   복사 모드로 재설치하려면: install.bat
-    echo   링크 모드로 재설치하려면: install.bat --link
+    echo   재설치하려면: install.bat
     echo.
     endlocal
     pause
@@ -307,80 +254,6 @@ if "!HAS_ZEPHERMINE!!HAS_AGENT_TEAM!!HAS_MNEMO!!HAS_ORCHESTRATOR!!HAS_MCP!"=="11
 echo   LLM: !LLMS!
 echo   번들: !BUNDLES!
 echo.
-
-REM ============================================
-REM   --link 모드: Junction 생성
-REM ============================================
-if "%MODE%"=="link" (
-    REM Skills 링크 - 전체 코어 설치
-    echo [1/7] Skills 링크 중... - 글로벌, Junction [코어]
-    if exist "%SCRIPT_DIR%skills" (
-        if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
-        for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-            set "skill_name=%%~nxD"
-            set "INSTALL_SKILL=1"
-            REM Codex 전용 스킬은 Claude에 설치하지 않음
-            if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
-            if "!INSTALL_SKILL!"=="1" (
-                set "target=%CLAUDE_DIR%\skills\!skill_name!"
-                if exist "!target!" (
-                    fsutil reparsepoint query "!target!" >nul 2>nul
-                    if !errorlevel! equ 0 ( rmdir "!target!" ) else ( rmdir /s /q "!target!" )
-                )
-                mklink /J "!target!" "%%D" >nul
-                echo       - !skill_name! [linked]
-            ) else (
-                echo       - !skill_name! [건너뜀]
-            )
-        )
-    )
-    echo       완료!
-
-    REM Agents 링크 - 코어 설치
-    echo.
-    echo [2/7] Agents 링크 중... - 글로벌, Junction [코어]
-    if exist "%SCRIPT_DIR%agents" (
-        set "target=%CLAUDE_DIR%\agents"
-        if exist "!target!" (
-            fsutil reparsepoint query "!target!" >nul 2>nul
-            if !errorlevel! equ 0 ( rmdir "!target!" ) else ( rmdir /s /q "!target!" )
-        )
-        mklink /J "!target!" "%SCRIPT_DIR%agents" >nul
-        echo       - agents [linked]
-    ) else (
-        if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
-    )
-    for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-        if exist "%%D\agents" (
-            for %%F in ("%%D\agents\*.md") do (
-                echo       - %%~nxF [%%~nxD, copied]
-                copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
-            )
-        )
-    )
-    echo       완료!
-
-    REM Hooks 링크 - mnemo 필수이므로 항상 링크
-    echo.
-    echo [3/7] Hooks 링크 중... - 글로벌, Junction [mnemo 필수]
-    set "NEED_HOOKS=1"
-    if "!NEED_HOOKS!"=="1" (
-        if exist "%SCRIPT_DIR%hooks" (
-            set "target=%CLAUDE_DIR%\hooks"
-            if exist "!target!" (
-                fsutil reparsepoint query "!target!" >nul 2>nul
-                if !errorlevel! equ 0 ( rmdir "!target!" ) else ( rmdir /s /q "!target!" )
-            )
-            mklink /J "!target!" "%SCRIPT_DIR%hooks" >nul
-            echo       - hooks [linked]
-        )
-    ) else (
-        echo       [건너뜀] 훅 번들 미선택
-    )
-    echo       완료!
-
-    goto :configure_hooks
-)
 
 REM ============================================
 REM   기본 모드: 복사 (번들 기반 필터링)
@@ -459,8 +332,6 @@ if "!NEED_HOOKS!"=="1" (
 ) else (
     echo       [건너뜀] 훅 번들 미선택
 )
-
-:configure_hooks
 
 REM CLAUDECODE 환경변수 임시 해제 (claude CLI 중첩 세션 방지)
 set "SAVE_CLAUDECODE=!CLAUDECODE!"
@@ -570,11 +441,7 @@ REM Codex Skills/Agents 동기화 (zephermine 필수이므로 항상 실행)
 echo.
 echo   Codex Skills/Agents 동기화 중...
 if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
-    if "%MODE%"=="link" (
-        node "%SCRIPT_DIR%scripts\sync-codex-assets.js" --link
-    ) else (
-        node "%SCRIPT_DIR%scripts\sync-codex-assets.js"
-    )
+    node "%SCRIPT_DIR%scripts\sync-codex-assets.js"
     if !errorlevel! equ 0 (
         set "CODEX_SYNC_RESULT=동기화 완료"
     ) else (
@@ -684,11 +551,7 @@ REM Gemini Skills/Agents/Hooks 동기화 (zephermine 필수이므로 항상 실�
 echo.
 echo   Gemini Skills/Agents/Hooks 동기화 중...
 if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
-    if "%MODE%"=="link" (
-        node "%SCRIPT_DIR%scripts\sync-gemini-assets.js" --link
-    ) else (
-        node "%SCRIPT_DIR%scripts\sync-gemini-assets.js"
-    )
+    node "%SCRIPT_DIR%scripts\sync-gemini-assets.js"
     if !errorlevel! equ 0 (
         set "GEMINI_SYNC_RESULT=동기화 완료"
     ) else (
@@ -781,11 +644,7 @@ set "CLAUDECODE=!SAVE_CLAUDECODE!"
 
 echo.
 echo ============================================
-if "%MODE%"=="link" (
-    echo   설치 완료! [LINK]
-) else (
-    echo   설치 완료!
-)
+echo   설치 완료!
 echo ============================================
 echo.
 echo   LLM: !LLMS!
@@ -793,11 +652,7 @@ echo   번들: !BUNDLES!
 echo.
 if "!HAS_CLAUDE!"=="1" (
     echo   [Claude]
-    if "%MODE%"=="link" (
-        echo   - Skills: %CLAUDE_DIR%\skills\ ^(링크^)
-    ) else (
-        echo   - Skills: %CLAUDE_DIR%\skills\
-    )
+    echo   - Skills: %CLAUDE_DIR%\skills\
     echo   - Agents: %CLAUDE_DIR%\agents\
     echo   - CLAUDE.md 장기기억 규칙 등록 완료
     echo   - MCP 서버 설치 완료
