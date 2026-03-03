@@ -44,6 +44,59 @@ auto_apply:
 |API 호출 패턴 필요|`json-server` 또는 `msw` (Mock Service Worker)|
 |인증 필요|더미 토큰 + localStorage|
 
+## Phase 2: Performance & Quality Audit
+
+화면 완성 후 배포 전 성능 측정 + 품질 검증을 수행한다.
+
+|단계|작업|방법|
+|---|---|---|
+|1. 성능 측정|Web Vitals 측정|PreviewPanel CDP 내장 (포트 충돌 없음)|
+|2. 번들 분석|초기 로드 크기 확인|빌드 후 출력 크기 분석|
+|3. 반응형|뷰포트별 레이아웃 확인|CDP Emulation으로 375/768/1024/1440px 전환|
+|4. SEO|메타/OG/sitemap|랜딩/홈페이지 프로젝트에서만 적용|
+
+**자동 수정 루프**: 페이지 로드 시 CDP 자동 측정 → 기준 미달 시 AI CLI에 전달 → 수정.
+
+**기준**: LCP < 2.5s, CLS < 0.1, INP < 200ms, FCP < 1.8s.
+
+## GSAP Quick Reference
+
+웹 프리뷰 모드에서 애니메이션을 구현할 때 GSAP를 기본으로 사용한다.
+
+### 설치 및 임포트
+
+```bash
+npm install gsap
+```
+
+```ts
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { Flip } from 'gsap/Flip'
+import { TextPlugin } from 'gsap/TextPlugin'
+gsap.registerPlugin(ScrollTrigger, Flip, TextPlugin)
+```
+
+### Quick Reference Table
+
+|패턴|코드|
+|---|---|
+|Fade in|`gsap.from(el, { autoAlpha: 0, y: 40, duration: 0.6, ease: 'power3.out' })`|
+|Scroll trigger|`gsap.from(el, { y: 40, autoAlpha: 0, scrollTrigger: { trigger: el, start: 'top 85%' } })`|
+|Stagger|`gsap.from('.items > *', { autoAlpha: 0, y: 20, stagger: 0.08 })`|
+|Parallax|`gsap.to('.bg', { yPercent: -20, scrollTrigger: { scrub: true } })`|
+|Hover scale|`gsap.to(card, { scale: 1.03, duration: 0.3 })`|
+|Flip layout|`const state = Flip.getState(items); /* 변경 */ Flip.from(state, { duration: 0.5 })`|
+|Text reveal|`gsap.to(el, { text: { value: '텍스트' }, duration: 1, ease: 'none' })`|
+
+### 5가지 규칙
+
+1. **Context cleanup 필수**: React에서 `gsap.context()` + `ctx.revert()` 패턴을 항상 사용. 언마운트 시 애니메이션 잔여물을 남기지 않는다.
+2. **Reduced motion 존중**: `prefers-reduced-motion: reduce` 미디어 쿼리 감지 시 `gsap.globalTimeline.timeScale(20)`으로 모션을 즉시 완료 처리한다.
+3. **autoAlpha 우선**: `opacity: 0` 대신 `autoAlpha: 0`을 사용해 `visibility: hidden`도 함께 처리한다. 스크린 리더 접근성과 GPU 최적화에 유리하다.
+4. **Scale > Position**: 레이아웃 애니메이션에서 `width/height` 변경보다 `scale`을 우선 사용. GPU 합성으로 리플로우가 발생하지 않는다.
+5. **플러그인 목록 숙지**: ScrollTrigger(스크롤 연동), Flip(레이아웃 전환), TextPlugin(타이핑), Observer(제스처). 유료: MorphSVG, DrawSVG, SplitText.
+
 ## 적용 조건
 
 - 채팅 모드에서 웹 프리뷰가 활성화된 경우에만 적용
