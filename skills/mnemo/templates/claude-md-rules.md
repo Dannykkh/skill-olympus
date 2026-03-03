@@ -121,22 +121,55 @@ MEMORY.md는 프로젝트 루트에 위치한 **컨텍스트 트리 구조** 장
 - 사용자가 "핸드오프", "핸즈오프", "세션 넘기기", "정리해줘" 등 언급
 
 **핸드오프 실행 절차:**
-1. 현재 작업 중단 지점 정리
-2. MEMORY.md 업데이트 (이번 세션의 결정사항, 새 패턴)
-3. 핸드오프 요약을 대화 파일에 기록:
 
-```
-## 핸드오프 요약
-- **진행 중 작업**: [현재 하고 있던 일]
-- **완료된 작업**: [이번 세션에서 끝낸 일]
-- **수정된 파일**: [변경된 파일 목록]
-- **다음 할 일**: [새 세션에서 이어서 할 것]
-- **주의사항**: [다음 세션에서 알아야 할 것]
+1. **MEMORY.md 업데이트** — 이번 세션의 결정사항, 새 패턴을 적절한 섹션에 추가
+2. **핸드오프 파일 생성** — `.claude/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 아래 형식으로 작성:
+
+```markdown
+# Handoff: {작업 제목}
+
+## Session Metadata
+- Created: {타임스탬프}
+- Project: {프로젝트 경로}
+- Branch: {git 브랜치}
+
+## Current State Summary
+{한 문단: 무엇을 하고 있었고, 어디까지 진행되었는지}
+
+## Work Completed
+- [x] 완료한 작업 1
+- [x] 완료한 작업 2
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| path/to/file | 변경 내용 |
+
+### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| A를 선택 | B보다 나은 이유 |
+
+## Pending Work
+### Immediate Next Steps
+1. 가장 먼저 할 일
+2. 두 번째 우선순위
+
+### Blockers/Open Questions
+- [ ] 미해결 사항
+
+## Context for Resuming
+### Important Context
+{다음 세션이 반드시 알아야 할 핵심 정보}
+
+### Potential Gotchas
+- {다음 세션에서 주의할 점}
 ```
 
-4. 사용자에게 안내:
+3. **사용자에게 안내:**
 > "컨텍스트가 한도에 가까워져 핸드오프를 준비했습니다.
-> MEMORY.md를 업데이트했고, 다음 세션에서 이어서 작업할 수 있습니다.
+> - 핸드오프 파일: `.claude/handoffs/{파일명}`
+> - MEMORY.md 업데이트 완료
 > 새 세션을 시작해주세요."
 
 **중요:** 100%에 도달하면 응답 자체가 불가능하므로, **여유 있을 때 미리** 실행하세요.
