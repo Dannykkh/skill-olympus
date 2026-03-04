@@ -154,7 +154,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (74개)
+### 커스텀 스킬 (75개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -166,7 +166,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🎯 **계획** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | 계획 & 요구사항 (zeus: 전자동 파이프라인, zephermine: 스펙 검증) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
-| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger | 코드 리뷰 & QA |
+| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop | 코드 리뷰 & QA & 자동 수정-검증 루프 |
 | 📦 **Git** | commit-work, deploymonitor | Git 워크플로우 & DeployMonitor 자동 배포 |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
 | 🧠 **메모리** | mnemo | 통합 메모리 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
@@ -284,12 +284,13 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (73개)
+├── skills/                    # 커스텀 스킬 (75개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
 │   ├── api-handoff/
 │   ├── api-tester/
+│   ├── auto-continue-loop/
 │   ├── code-reviewer/
 │   ├── codex/
 │   ├── command-creator/

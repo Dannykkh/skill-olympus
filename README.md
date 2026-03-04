@@ -154,7 +154,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (74 Skills)
+### Custom Skills (75 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -166,7 +166,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger | Code review & QA |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop | Code review & QA & auto fix-verify loop |
 | 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
@@ -284,12 +284,13 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (73 skills)
+├── skills/                    # Custom skills (75 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
 │   ├── api-handoff/
 │   ├── api-tester/
+│   ├── auto-continue-loop/
 │   ├── code-reviewer/
 │   ├── codex/
 │   ├── command-creator/
