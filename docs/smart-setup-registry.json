@@ -203,6 +203,7 @@
     { "id": "api-handoff", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
     { "id": "qa-test-planner", "tags": ["*"], "priority": "optional" },
     { "id": "qpassenger", "tags": ["*"], "priority": "optional" },
+    { "id": "auto-continue-loop", "tags": ["*"], "priority": "optional" },
     { "id": "mermaid-diagrams", "tags": ["*"], "priority": "optional" },
     { "id": "crafting-effective-readmes", "tags": ["*"], "priority": "optional" },
     { "id": "jira", "tags": ["*"], "priority": "optional" },

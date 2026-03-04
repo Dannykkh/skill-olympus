@@ -245,6 +245,7 @@ claude plugin install voltagent-qa-sec
 | `skills/qpassenger/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
+| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/loop) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
