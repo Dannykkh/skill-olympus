@@ -1,15 +1,15 @@
 # Codex Compatibility Report
 
-- Generated: 2026-02-18
+- Generated: 2026-03-05
 - Project: `D:/git/claude-code-agent-customizations`
 
 ## Inventory
 
-- Agents: 35
-- Skills: 70
+- Agents: 41
+- Skills: 75
 - Root hooks (Claude format): 21
 - Codex notify hooks: 7
-- MCP config presets: 5
+- MCP config presets: 6
 
 ## Agents
 
@@ -18,22 +18,21 @@
 
 ## Skills
 
-- `portable`: 57
-- `codex-ready`: 2
+- `portable`: 61
+- `codex-ready`: 1
 - `codex-ready-manual`: 1
-- `needs-adaptation`: 7
+- `needs-adaptation`: 9
 - `claude-only`: 2
 - `other-cli`: 1
 
 ### Codex Ready
 - codex-mnemo
-- agent-team-codex (Codex multi_agent 기반 병렬 실행 + Activity Logging)
 
 ### Codex Ready (Manual Setup)
-- orchestrator (Activity Log 도구 3개 추가: log_activity, get_activity_log, get_task_summary)
+- orchestrator
 
 ### Needs Adaptation
-- agent-md-refactor, api-handoff, command-creator, daily-meeting-update, draw-io, game-changing-features, zephermine
+- agent-md-refactor, api-handoff, command-creator, daily-meeting-update, draw-io, game-changing-features, manage-skills, verify-implementation, zeus
 
 ### Claude Only
 - agent-team, mnemo
@@ -54,11 +53,12 @@
 - Claude 전용 설치기 `install-mcp.js`와 별개로 Codex 전용 `install-mcp-codex.js` 추가.
 
 ### Presets
+- chrome-devtools
 - context7
 - fetch
 - github (api key required)
+- open-websearch
 - playwright
-- sequential-thinking
 
 ## Recommended Next Steps
 
