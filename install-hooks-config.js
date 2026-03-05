@@ -59,6 +59,16 @@ function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
 
+// 절대경로를 $HOME 기반 이식 가능 경로로 변환
+function toPortablePath(absolutePath) {
+  const home = normalizePath(require("os").homedir());
+  const normalized = normalizePath(absolutePath);
+  if (normalized.startsWith(home)) {
+    return "$HOME" + normalized.slice(home.length);
+  }
+  return normalized;
+}
+
 // 훅 항목 생성 헬퍼 (Claude/Gemini 공통 포맷: matcher + hooks 배열)
 function hookEntry(matcher, command) {
   return {
@@ -92,7 +102,7 @@ function shouldIncludeHook(hookName) {
 
 // ── Claude 훅 설정 빌드 ──
 function buildClaudeHooksConfig(dir, isWindows) {
-  const d = normalizePath(dir);
+  const d = toPortablePath(dir);
   const ext = isWindows ? "ps1" : "sh";
   const cmd = isWindows
     ? (script) => `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`
@@ -141,7 +151,7 @@ function buildClaudeHooksConfig(dir, isWindows) {
 // 매핑: UserPromptSubmit → BeforeAgent, PreToolUse → BeforeTool, Stop → AfterAgent
 // PostToolUse → Gemini에 미존재, BeforeTool/AfterAgent으로 대체
 function buildGeminiHooksConfig(dir, isWindows) {
-  const d = normalizePath(dir);
+  const d = toPortablePath(dir);
   const ext = isWindows ? "ps1" : "sh";
   const cmd = isWindows
     ? (script) => `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`
@@ -230,16 +240,21 @@ function main() {
     ? buildGeminiHooksConfig(hooksDir, isWindows)
     : buildClaudeHooksConfig(hooksDir, isWindows);
 
-  // hooks 키: 컴포넌트 필터링 결과 머지 (기존 훅 보존 + 새 훅 추가)
+  // hooks 키: 기존 훅 정리 + 새 훅 추가
+  // 같은 스크립트 파일명이면 경로가 달라도 교체 (PC 이식성 보장)
   if (!settings.hooks) settings.hooks = {};
   for (const [event, entries] of Object.entries(hooksConfig)) {
     if (!settings.hooks[event]) settings.hooks[event] = [];
     for (const entry of entries) {
-      // 중복 방지: 같은 command가 이미 있으면 건너뜀
-      const exists = settings.hooks[event].some(
-        (e) => e.hooks?.[0]?.command === entry.hooks[0].command
-      );
-      if (!exists) settings.hooks[event].push(entry);
+      const newCmd = entry.hooks[0].command;
+      const newFilename = newCmd.split("/").pop().replace(/"/g, "");
+      // 같은 파일명을 가진 기존 항목 제거 (경로가 달라도)
+      settings.hooks[event] = settings.hooks[event].filter((e) => {
+        const existingCmd = e.hooks?.[0]?.command || "";
+        const existingFilename = existingCmd.split("/").pop().replace(/"/g, "");
+        return existingFilename !== newFilename;
+      });
+      settings.hooks[event].push(entry);
     }
   }
 
