@@ -265,8 +265,9 @@ if exist "%SCRIPT_DIR%skills" (
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         set "skill_name=%%~nxD"
         set "INSTALL_SKILL=1"
-        REM Codex 전용 스킬은 Claude에 설치하지 않음
+        REM Codex 전용 / 내부 전용 스킬은 설치하지 않음
         if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
+        if /i "!skill_name!"=="deploymonitor" set "INSTALL_SKILL=0"
         if "!INSTALL_SKILL!"=="1" (
             echo       - !skill_name!
             if not exist "%CLAUDE_DIR%\skills\!skill_name!" mkdir "%CLAUDE_DIR%\skills\!skill_name!"

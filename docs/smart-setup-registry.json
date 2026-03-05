@@ -218,7 +218,6 @@
     { "id": "command-creator", "tags": ["*"], "priority": "optional" },
     { "id": "daily-meeting-update", "tags": ["*"], "priority": "optional" },
     { "id": "datadog-cli", "tags": ["*"], "priority": "optional" },
-    { "id": "deploymonitor", "tags": ["docker"], "priority": "optional" },
     { "id": "docx", "tags": ["*"], "priority": "optional" },
     { "id": "domain-name-brainstormer", "tags": ["*"], "priority": "optional" },
     { "id": "draw-io", "tags": ["*"], "priority": "optional" },
