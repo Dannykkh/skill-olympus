@@ -246,8 +246,9 @@ echo ""
             if [ -d "$skill_dir" ]; then
                 skill_name=$(basename "$skill_dir")
                 INSTALL_SKILL=1
-                # Codex 전용 스킬은 Claude에 설치하지 않음
+                # Codex 전용 / 내부 전용 스킬은 설치하지 않음
                 [ "$skill_name" = "agent-team-codex" ] && INSTALL_SKILL=0
+                [ "$skill_name" = "deploymonitor" ] && INSTALL_SKILL=0
                 if [ "$INSTALL_SKILL" = "1" ]; then
                     echo "      - $skill_name"
                     mkdir -p "$CLAUDE_DIR/skills/$skill_name"
