@@ -4,10 +4,11 @@
   "requiresApiKey": false,
   "config": {
     "command": "npx",
-    "args": ["-y", "open-websearch@latest"],
+    "args": ["-y", "--prefer-offline", "open-websearch@1.2.0"],
     "env": {
       "DEFAULT_SEARCH_ENGINE": "duckduckgo",
-      "MODE": "stdio"
+      "MODE": "stdio",
+      "OPEN_WEBSEARCH_PACKAGE": "open-websearch@1.2.0"
     }
   }
 }

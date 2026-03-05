@@ -126,29 +126,40 @@ MEMORY.md 업데이트는 Claude가 중요한 결정을 할 때 자동으로 진
 
 ---
 
-## 2계층 메모리 구조
+## 3계층 메모리 구조
 
 | 계층 | 파일 | 용도 | 로딩 |
 |------|------|------|------|
-| **의미기억** | MEMORY.md | 핵심 결정, 패턴, 규칙 (압축) | 항상 (`@MEMORY.md`) |
+| **인덱스** | MEMORY.md | 키워드 인덱스 + 프로젝트 목표 | 항상 (`@MEMORY.md`) |
+| **의미기억** | memory/*.md | 카테고리별 상세 항목 | 필요 시 Read |
 | **일화기억** | conversations/*.md | 상세 대화 원본 (에피소드) | 검색 시에만 |
 
-MEMORY.md는 요약본, 대화 파일은 원본 근거.
+MEMORY.md는 가벼운 인덱스, memory/*.md는 상세 항목, 대화 파일은 원본 근거.
 필요한 깊이에 따라 계층을 선택합니다.
 
-### MEMORY.md 컨텍스트 트리
+### MEMORY.md 인덱스 구조
 
 ```markdown
 ## 키워드 인덱스
-| 키워드 | 섹션 |
-|--------|------|
-| auth, jwt | #architecture/authentication |
+| 키워드 | 상세 파일 |
+|--------|-----------|
+| auth, jwt | [memory/architecture.md](memory/architecture.md) |
 
-## architecture/     ← 설계 결정
-## patterns/         ← 작업 패턴
-## tools/            ← MCP, 외부 도구
-## gotchas/          ← 주의사항, 함정
+## 카테고리 요약
+### architecture/ → memory/architecture.md
+### patterns/ → memory/patterns.md
+### tools/ → memory/tools.md
+### gotchas/ → memory/gotchas.md
 ```
+
+### memory/*.md 카테고리 파일
+
+| 파일 | 내용 |
+|------|------|
+| `memory/architecture.md` | 설계 결정, 아키텍처 선택 |
+| `memory/patterns.md` | 작업 패턴, 워크플로우 |
+| `memory/tools.md` | MCP, 외부 도구, 라이브러리 |
+| `memory/gotchas.md` | 주의사항, 함정 |
 
 ### 대화 파일 구조
 

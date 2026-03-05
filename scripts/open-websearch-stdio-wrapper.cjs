@@ -6,15 +6,19 @@ const { spawn } = require("child_process");
 const env = { ...process.env };
 if (!env.MODE) env.MODE = "stdio";
 if (!env.DEFAULT_SEARCH_ENGINE) env.DEFAULT_SEARCH_ENGINE = "duckduckgo";
+if (!env.OPEN_WEBSEARCH_PACKAGE) env.OPEN_WEBSEARCH_PACKAGE = "open-websearch@1.2.0";
+if (!env.NPM_CONFIG_UPDATE_NOTIFIER) env.NPM_CONFIG_UPDATE_NOTIFIER = "false";
+if (!env.NPM_CONFIG_FUND) env.NPM_CONFIG_FUND = "false";
+if (!env.NPM_CONFIG_AUDIT) env.NPM_CONFIG_AUDIT = "false";
 
 const child =
   process.platform === "win32"
     ? spawn(
         "cmd.exe",
-        ["/d", "/s", "/c", "npx -y open-websearch@latest"],
+        ["/d", "/s", "/c", `npx -y --prefer-offline ${env.OPEN_WEBSEARCH_PACKAGE}`],
         { env, stdio: ["pipe", "pipe", "pipe"] }
       )
-    : spawn("npx", ["-y", "open-websearch@latest"], {
+    : spawn("npx", ["-y", "--prefer-offline", env.OPEN_WEBSEARCH_PACKAGE], {
         env,
         stdio: ["pipe", "pipe", "pipe"],
       });

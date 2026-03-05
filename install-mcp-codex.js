@@ -27,7 +27,7 @@ const codexHome = process.env.CODEX_HOME
   : path.join(os.homedir(), ".codex");
 const codexConfigPath = path.join(codexHome, "config.toml");
 const FETCH_STARTUP_TIMEOUT_SEC = 30;
-const OPEN_WEBSEARCH_STARTUP_TIMEOUT_SEC = 45;
+const OPEN_WEBSEARCH_STARTUP_TIMEOUT_SEC = 90;
 
 function readJson(filePath) {
   try {

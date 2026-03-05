@@ -85,11 +85,12 @@ CLAUDE.md 규칙으로 자동 동작:
 - 중요 결정 → MEMORY.md 자동 업데이트
 - 과거 질문 → 동의어 확장 검색
 
-**2계층 메모리 구조:**
+**3계층 메모리 구조:**
 
 | 계층 | 파일 | 용도 |
 |------|------|------|
-| **의미기억** | MEMORY.md | 핵심 결정, 패턴 (항상 로드) |
+| **인덱스** | MEMORY.md | 키워드 인덱스 + 프로젝트 목표 (항상 로드) |
+| **의미기억** | memory/*.md | 카테고리별 상세 항목 (필요 시 Read) |
 | **일화기억** | conversations/*.md | 상세 대화 원본 (검색 시에만) |
 
 ---
@@ -150,4 +151,5 @@ python scripts/check_staleness.py <handoff-file>
 |------|------|
 | 대화 로그 | `conversations/YYYY-MM-DD-claude.md` |
 | 핸드오프 | `.claude/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
-| 의미기억 | `MEMORY.md` (프로젝트 루트) |
+| 인덱스 | `MEMORY.md` (프로젝트 루트) |
+| 의미기억 | `memory/*.md` (카테고리별 상세) |
