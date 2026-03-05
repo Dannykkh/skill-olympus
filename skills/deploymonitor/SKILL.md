@@ -220,7 +220,7 @@ Pushed to origin/master
 DeployMonitor will auto-deploy
 Mode: UPDATE (DB preserved)
 
-배포 상태 확인: http://211.224.63.241:8701/
+배포 상태 확인: http://211.224.63.241:5001/
 "배포중" → "정상" 변경 시 배포 완료
 ```
 
@@ -232,7 +232,7 @@ Mode: UPDATE (DB preserved)
 
 | 항목 | 값 |
 |------|-----|
-| URL | http://211.224.63.241:8701/ |
+| URL | http://211.224.63.241:5001/ |
 | 아이디 | admin |
 | 비밀번호 | admin1234 |
 
