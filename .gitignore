@@ -47,5 +47,8 @@ conversations/
 # Claude conversation logs (auto-generated)
 .claude/conversations/
 
+# Internal-only skills (회사 내부 전용)
+skills/deploymonitor/
+
 # MCP servers build artifacts
 mcp-servers/*/dist/
