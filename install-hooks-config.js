@@ -59,14 +59,9 @@ function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
 
-// Convert absolute path to portable $HOME-based path
+// Return normalized absolute path (reliable across all Windows shells)
 function toPortablePath(absolutePath) {
-  const home = normalizePath(require("os").homedir());
-  const normalized = normalizePath(absolutePath);
-  if (normalized.startsWith(home)) {
-    return "$HOME" + normalized.slice(home.length);
-  }
-  return normalized;
+  return normalizePath(absolutePath);
 }
 
 // Hook entry builder helper (shared format for Claude/Gemini: matcher + hooks array)
