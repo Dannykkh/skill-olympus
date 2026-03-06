@@ -5,7 +5,7 @@ setlocal enabledelayedexpansion
 REM ============================================
 REM   Claude Code Customizations Installer
 REM   Skills, Agents, Hooks + MCP 자동 설치
-REM   사용법: install.bat [--uninstall] [--with-open-websearch] [--all] [--llm ...] [--only ...] [--skip ...]
+REM   사용법: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -20,17 +20,14 @@ set "GEMINI_SYNC_RESULT=미실행"
 set "GEMINI_MCP_RESULT=미실행"
 set "GEMINI_ORCH_RESULT=미실행"
 set "GEMINI_HOOKS_RESULT=미실행"
-set "INCLUDE_OPEN_WEBSEARCH=0"
 set "DEFAULT_MCP_SERVERS=context7 fetch playwright chrome-devtools"
-set "LEGACY_MCP_SERVERS=open-websearch sequential-thinking"
+set "LEGACY_MCP_SERVERS=sequential-thinking"
 
 REM 모드 결정 (인자 전체 스캔)
 set "MODE=copy"
 for %%A in (%*) do (
     if /i "%%A"=="--uninstall" set "MODE=uninstall"
-    if /i "%%A"=="--with-open-websearch" set "INCLUDE_OPEN_WEBSEARCH=1"
 )
-if "!INCLUDE_OPEN_WEBSEARCH!"=="1" set "DEFAULT_MCP_SERVERS=!DEFAULT_MCP_SERVERS! open-websearch"
 
 echo.
 echo ============================================
@@ -367,7 +364,7 @@ if 1==1 (
     echo.
     node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
     echo.
-    echo       완료. 추가 설치: node "%SCRIPT_DIR%install-mcp.js" --list, 선택: open-websearch
+    echo       완료. 추가 설치: node "%SCRIPT_DIR%install-mcp.js" --list
 )
 
 REM Orchestrator MCP 서버 등록 (필수 설치)

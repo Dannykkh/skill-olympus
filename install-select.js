@@ -23,7 +23,7 @@ const LLM_ITEMS = [
 ];
 
 // install.bat/sh가 %*로 전달하므로 무관한 플래그 무시
-const IGNORE_FLAGS = ["--link", "--unlink", "--copy", "--with-open-websearch"];
+const IGNORE_FLAGS = ["--link", "--unlink", "--copy"];
 
 // --- CLI 파싱 ---
 function parseArgs() {
