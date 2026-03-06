@@ -1,6 +1,6 @@
 {
   "name": "github",
-  "description": "GitHub API 통합 - PR, Issue, Repository 관리 (API 키 필요: GITHUB_PERSONAL_ACCESS_TOKEN)",
+  "description": "GitHub API integration - PR, Issue, Repository management (API key required: GITHUB_PERSONAL_ACCESS_TOKEN)",
   "requiresApiKey": true,
   "apiKeyEnvVar": "GITHUB_PERSONAL_ACCESS_TOKEN",
   "config": {

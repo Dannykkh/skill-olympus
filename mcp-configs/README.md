@@ -1,62 +1,62 @@
-# MCP 설정 관리
+# MCP Configuration Management
 
-Claude Code/Codex에서 자주 사용하는 MCP 서버들의 사전 구성된 설정 파일입니다.
+Pre-configured MCP server settings for Claude Code/Codex/Gemini.
 
-## 사용 가능한 MCP 서버
+## Available MCP Servers
 
-| 이름 | 설명 | API 키 | 패키지 |
-|------|------|--------|--------|
-| context7 | 최신 라이브러리 문서 검색 | 불필요 | `@upstash/context7-mcp` |
-| playwright | 브라우저 자동화 및 E2E 테스트 | 불필요 | `@playwright/mcp` |
-| chrome-devtools | Chrome DevTools 연동 (네트워크/콘솔/성능) | 불필요 | `@anthropic-ai/chrome-devtools-mcp` |
-| fetch | URL 콘텐츠 가져오기 (HTML/JSON/MD) | 불필요 | `mcp-fetch-server` |
-| github | GitHub API 통합 (PR, Issue 등) | **필요** | `@modelcontextprotocol/server-github` |
+| Name | Description | API Key | Package |
+|------|-------------|---------|---------|
+| context7 | Latest library docs search | Not required | `@upstash/context7-mcp` |
+| playwright | Browser automation and E2E testing | Not required | `@playwright/mcp` |
+| chrome-devtools | Chrome DevTools integration (network/console/performance) | Not required | `@anthropic-ai/chrome-devtools-mcp` |
+| fetch | Fetch URL content (HTML/JSON/MD) | Not required | `mcp-fetch-server` |
+| github | GitHub API integration (PR, Issue, etc.) | **Required** | `@modelcontextprotocol/server-github` |
 
-## 설치 방법
+## Installation
 
-### Codex CLI (권장)
+### Codex CLI (recommended)
 
 ```bash
-# 사용 가능한 MCP 목록 표시
+# List available MCP servers
 node install-mcp-codex.js --list
 
-# 특정 MCP 설치
+# Install specific MCP
 node install-mcp-codex.js context7 playwright
 
-# 무료 MCP 전부 설치
+# Install all free MCP servers
 node install-mcp-codex.js --all
 
-# 특정 MCP 제거
+# Uninstall specific MCP
 node install-mcp-codex.js --uninstall context7
 ```
 
 ### Claude Code CLI
 
 ```bash
-# 사용 가능한 MCP 목록 표시
+# List available MCP servers
 node install-mcp.js --list
 
-# 특정 MCP 설치
+# Install specific MCP
 node install-mcp.js context7 playwright
 
-# 무료 MCP 전부 설치
+# Install all free MCP servers
 node install-mcp.js --all
 
-# 특정 MCP 제거
+# Uninstall specific MCP
 node install-mcp.js --uninstall context7
 
-# 특정 settings.json에 설치
+# Install to specific settings.json
 node install-mcp.js context7 --target ~/.claude/settings.json
 ```
 
-## 설정 파일 형식
+## Config File Format
 
-각 JSON 파일은 다음 구조를 따릅니다:
+Each JSON file follows this structure:
 
 ```json
 {
   "name": "mcp-name",
-  "description": "설명",
+  "description": "Description",
   "requiresApiKey": false,
   "config": {
     "command": "npx",
@@ -65,7 +65,7 @@ node install-mcp.js context7 --target ~/.claude/settings.json
 }
 ```
 
-API 키가 필요한 경우:
+When an API key is required:
 
 ```json
 {
@@ -79,17 +79,17 @@ API 키가 필요한 경우:
 }
 ```
 
-## 직접 설치 (수동)
+## Manual Installation
 
-`install-mcp.js`/`install-mcp-codex.js` 없이 직접 설치하려면:
+To install directly without `install-mcp.js`/`install-mcp-codex.js`:
 
 ```bash
-# Claude Code CLI 사용
+# Claude Code CLI
 claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
 claude mcp add playwright -- npx -y @playwright/mcp@latest
 claude mcp add chrome-devtools -- npx -y @anthropic-ai/chrome-devtools-mcp@latest
 claude mcp add fetch -- npx -y mcp-fetch-server@latest
-# Codex CLI 사용
+# Codex CLI
 codex mcp add context7 -- npx -y @upstash/context7-mcp@latest
 codex mcp add playwright -- npx -y @playwright/mcp@latest
 ```

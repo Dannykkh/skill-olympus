@@ -1,6 +1,6 @@
 {
   "name": "fetch",
-  "description": "URL 콘텐츠 가져오기 - HTML/JSON/Markdown 변환 (무료, API 키 불필요)",
+  "description": "Fetch URL content - HTML/JSON/Markdown conversion (free, no API key required)",
   "requiresApiKey": false,
   "config": {
     "command": "npx",
