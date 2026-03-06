@@ -4,26 +4,26 @@ setlocal enabledelayedexpansion
 
 REM ============================================
 REM   Claude Code Customizations Installer
-REM   Skills, Agents, Hooks + MCP 자동 설치
-REM   사용법: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...]
+REM   Auto-install Skills, Agents, Hooks + MCP
+REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
-set "CODEX_MNEMO_RESULT=미실행"
-set "CODEX_SYNC_RESULT=미실행"
-set "CODEX_MCP_RESULT=미실행"
-set "CODEX_MULTI_AGENT_RESULT=미실행"
-set "CODEX_ORCH_RESULT=미실행"
-set "GEMINI_MNEMO_RESULT=미실행"
-set "GEMINI_SYNC_RESULT=미실행"
-set "GEMINI_MCP_RESULT=미실행"
-set "GEMINI_ORCH_RESULT=미실행"
-set "GEMINI_HOOKS_RESULT=미실행"
+set "CODEX_MNEMO_RESULT=not-run"
+set "CODEX_SYNC_RESULT=not-run"
+set "CODEX_MCP_RESULT=not-run"
+set "CODEX_MULTI_AGENT_RESULT=not-run"
+set "CODEX_ORCH_RESULT=not-run"
+set "GEMINI_MNEMO_RESULT=not-run"
+set "GEMINI_SYNC_RESULT=not-run"
+set "GEMINI_MCP_RESULT=not-run"
+set "GEMINI_ORCH_RESULT=not-run"
+set "GEMINI_HOOKS_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 fetch playwright chrome-devtools"
 set "LEGACY_MCP_SERVERS=sequential-thinking"
 
-REM 모드 결정 (인자 전체 스캔)
+REM Determine mode (scan all arguments)
 set "MODE=copy"
 for %%A in (%*) do (
     if /i "%%A"=="--uninstall" set "MODE=uninstall"
@@ -39,169 +39,169 @@ if "%MODE%"=="uninstall" (
 echo ============================================
 echo.
 
-REM Claude 폴더 확인
+REM Check Claude directory exists
 if not exist "%CLAUDE_DIR%" (
-    echo [오류] Claude Code가 설치되어 있지 않습니다.
-    echo        %CLAUDE_DIR% 폴더를 찾을 수 없습니다.
+    echo [ERROR] Claude Code is not installed.
+    echo        %CLAUDE_DIR% directory not found.
     pause
     exit /b 1
 )
 
 REM ============================================
-REM   --uninstall 모드: 설정 정리 (MCP, Mnemo, Hooks, Codex, Gemini)
+REM   --uninstall mode: Clean up settings (MCP, Mnemo, Hooks, Codex, Gemini)
 REM ============================================
 if "%MODE%"=="uninstall" (
-    echo [1/12] settings.json 훅 설정 제거 중...
+    echo [1/12] Removing settings.json hook config...
     node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%\hooks" "%CLAUDE_DIR%\settings.json" --uninstall
-    echo       완료!
+    echo       Done!
 
     echo.
-    echo [2/12] CLAUDE.md 장기기억 규칙 제거 중...
+    echo [2/12] Removing CLAUDE.md long-term memory rules...
     node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
-    echo       완료!
+    echo       Done!
 
     echo.
-    echo [3/12] MCP 서버 설정은 별도 관리됩니다.
-    echo       제거: node "%SCRIPT_DIR%install-mcp.js" --uninstall ^<이름^>
-    echo       완료!
+    echo [3/12] MCP server settings are managed separately.
+    echo       Uninstall: node "%SCRIPT_DIR%install-mcp.js" --uninstall ^<name^>
+    echo       Done!
 
     echo.
-    echo [4/12] Orchestrator MCP 제거 중...
+    echo [4/12] Removing Orchestrator MCP...
     set "SAVE_CLAUDECODE=!CLAUDECODE!"
     set "CLAUDECODE="
     claude mcp remove orchestrator -s user >nul 2>nul
     set "CLAUDECODE=!SAVE_CLAUDECODE!"
-    echo       완료!
+    echo       Done!
 
     echo.
-    echo [5/12] Codex-Mnemo 제거 중...
+    echo [5/12] Removing Codex-Mnemo...
     if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
         node "%SCRIPT_DIR%skills\codex-mnemo\install.js" --uninstall
         if !errorlevel! equ 0 (
-            set "CODEX_MNEMO_RESULT=제거 완료"
-            echo       완료!
+            set "CODEX_MNEMO_RESULT=Removed"
+            echo       Done!
         ) else (
-            set "CODEX_MNEMO_RESULT=제거 실패"
-            echo       [경고] 제거 실패 exit: !errorlevel!
+            set "CODEX_MNEMO_RESULT=Remove failed"
+            echo       [WARN] Remove failed exit: !errorlevel!
         )
     ) else (
-        set "CODEX_MNEMO_RESULT=스킵: install.js 없음"
-        echo       [경고] install.js 없음, 건너뜀
+        set "CODEX_MNEMO_RESULT=Skip: no install.js"
+        echo       [WARN] install.js not found, skipping
     )
 
     echo.
-    echo [6/12] Codex Skills/Agents 동기화 해제 중...
+    echo [6/12] Unlinking Codex Skills/Agents sync...
     if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-codex-assets.js" --unlink
         if !errorlevel! equ 0 (
-            set "CODEX_SYNC_RESULT=해제 완료"
-            echo       완료!
+            set "CODEX_SYNC_RESULT=Unlinked"
+            echo       Done!
         ) else (
-            set "CODEX_SYNC_RESULT=해제 실패"
-            echo       [경고] 해제 실패 exit: !errorlevel!
+            set "CODEX_SYNC_RESULT=Unlink failed"
+            echo       [WARN] Unlink failed exit: !errorlevel!
         )
     ) else (
-        set "CODEX_SYNC_RESULT=스킵: sync 스크립트 없음"
-        echo       [경고] sync-codex-assets.js 없음, 건너뜀
+        set "CODEX_SYNC_RESULT=Skip: no sync script"
+        echo       [WARN] sync-codex-assets.js not found, skipping
     )
 
     echo.
-    echo [7/12] Codex MCP 기본/레거시 세트 제거 중...
+    echo [7/12] Removing Codex MCP default/legacy set...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
             node "%SCRIPT_DIR%install-mcp-codex.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
             if !errorlevel! equ 0 (
-                set "CODEX_MCP_RESULT=제거 완료"
-                echo       완료!
+                set "CODEX_MCP_RESULT=Removed"
+                echo       Done!
             ) else (
-                set "CODEX_MCP_RESULT=제거 부분 실패"
-                echo       [경고] 일부 제거 실패 exit: !errorlevel!
+                set "CODEX_MCP_RESULT=Partial remove failure"
+                echo       [WARN] Partial remove failed exit: !errorlevel!
             )
         ) else (
-            set "CODEX_MCP_RESULT=스킵: install-mcp-codex.js 없음"
-            echo       [경고] install-mcp-codex.js 없음, 건너뜀
+            set "CODEX_MCP_RESULT=Skip: no install-mcp-codex.js"
+            echo       [WARN] install-mcp-codex.js not found, skipping
         )
     ) else (
-        set "CODEX_MCP_RESULT=스킵: codex CLI 없음"
-        echo       [경고] codex CLI 없음, 건너뜀
+        set "CODEX_MCP_RESULT=Skip: codex CLI not found"
+        echo       [WARN] codex CLI not found, skipping
     )
 
     echo.
-    echo [8/12] Codex Orchestrator MCP 제거 중...
+    echo [8/12] Removing Codex Orchestrator MCP...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         call codex mcp remove orchestrator >nul 2>nul
         if !errorlevel! equ 0 (
-            set "CODEX_ORCH_RESULT=제거 완료"
-            echo       완료!
+            set "CODEX_ORCH_RESULT=Removed"
+            echo       Done!
         ) else (
-            set "CODEX_ORCH_RESULT=스킵/실패"
-            echo       [경고] 제거 실패 또는 미등록
+            set "CODEX_ORCH_RESULT=Skip/failed"
+            echo       [WARN] Remove failed or not registered
         )
     ) else (
-        set "CODEX_ORCH_RESULT=스킵: codex CLI 없음"
-        echo       [경고] codex CLI 없음, 건너뜀
+        set "CODEX_ORCH_RESULT=Skip: codex CLI not found"
+        echo       [WARN] codex CLI not found, skipping
     )
 
     echo.
-    echo [9/12] Gemini-Mnemo 제거 중...
+    echo [9/12] Removing Gemini-Mnemo...
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
         node "%SCRIPT_DIR%skills\gemini-mnemo\install.js" --uninstall
         if !errorlevel! equ 0 (
-            set "GEMINI_MNEMO_RESULT=제거 완료"
-            echo       완료!
+            set "GEMINI_MNEMO_RESULT=Removed"
+            echo       Done!
         ) else (
-            set "GEMINI_MNEMO_RESULT=제거 실패"
-            echo       [경고] 제거 실패 exit: !errorlevel!
+            set "GEMINI_MNEMO_RESULT=Remove failed"
+            echo       [WARN] Remove failed exit: !errorlevel!
         )
     ) else (
-        set "GEMINI_MNEMO_RESULT=스킵: install.js 없음"
-        echo       [경고] install.js 없음, 건너뜀
+        set "GEMINI_MNEMO_RESULT=Skip: no install.js"
+        echo       [WARN] install.js not found, skipping
     )
 
     echo.
-    echo [10/12] Gemini Skills/Agents/Hooks 동기화 해제 중...
+    echo [10/12] Unlinking Gemini Skills/Agents/Hooks sync...
     if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-gemini-assets.js" --unlink
         if !errorlevel! equ 0 (
-            echo       완료!
+            echo       Done!
         ) else (
-            echo       [경고] 해제 실패
+            echo       [WARN] Unlink failed
         )
     ) else (
-        echo       [경고] sync-gemini-assets.js 없음, 건너뜀
+        echo       [WARN] sync-gemini-assets.js not found, skipping
     )
 
     echo.
-    echo [11/12] Gemini settings.json 훅 제거 중...
+    echo [11/12] Removing Gemini settings.json hooks...
     set "GEMINI_DIR=%USERPROFILE%\.gemini"
     if exist "!GEMINI_DIR!\settings.json" (
         node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!\hooks" "!GEMINI_DIR!\settings.json" --uninstall
-        echo       완료!
+        echo       Done!
     ) else (
-        echo       [경고] Gemini settings.json 없음, 건너뜀
+        echo       [WARN] Gemini settings.json not found, skipping
     )
 
     echo.
-    echo [12/12] Gemini MCP/Orchestrator 제거 중...
+    echo [12/12] Removing Gemini MCP/Orchestrator...
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
             node "%SCRIPT_DIR%install-mcp-gemini.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
         )
         call gemini mcp remove orchestrator >nul 2>nul
-        echo       완료!
+        echo       Done!
     ) else (
-        echo       [경고] gemini CLI 없음, 건너뜀
+        echo       [WARN] gemini CLI not found, skipping
     )
 
     echo.
     echo ============================================
-    echo   제거 완료!
+    echo   Removed!
     echo ============================================
     echo.
-    echo   재설치하려면: install.bat
+    echo   To reinstall: install.bat
     echo.
     endlocal
     pause
@@ -209,7 +209,7 @@ if "%MODE%"=="uninstall" (
 )
 
 REM ============================================
-REM   컴포넌트 선택 (install-select.js)
+REM   Component selection (install-select.js)
 REM ============================================
 set "LINENUM=0"
 set "LLMS="
@@ -220,12 +220,12 @@ for /f "delims=" %%C in ('node "%SCRIPT_DIR%install-select.js" %*') do (
     if !LINENUM!==2 set "BUNDLES=%%C"
 )
 if "!LLMS!"=="" (
-    echo [취소] 설치를 취소했습니다.
+    echo [CANCEL] Installation cancelled.
     pause
     exit /b 0
 )
 
-REM LLM 플래그 파싱
+REM Parse LLM flags
 set "HAS_CLAUDE=0"
 set "HAS_CODEX=0"
 set "HAS_GEMINI=0"
@@ -233,7 +233,7 @@ echo ,!LLMS!, | findstr /i ",claude," >nul && set "HAS_CLAUDE=1"
 echo ,!LLMS!, | findstr /i ",codex," >nul && set "HAS_CODEX=1"
 echo ,!LLMS!, | findstr /i ",gemini," >nul && set "HAS_GEMINI=1"
 
-REM 번들 플래그 파싱
+REM Parse bundle flags
 set "HAS_ALL_BUNDLES=0"
 set "HAS_ZEPHERMINE=0"
 set "HAS_AGENT_TEAM=0"
@@ -245,44 +245,44 @@ echo ,!BUNDLES!, | findstr /i ",agent-team," >nul && set "HAS_AGENT_TEAM=1"
 echo ,!BUNDLES!, | findstr /i ",mnemo," >nul && set "HAS_MNEMO=1"
 echo ,!BUNDLES!, | findstr /i ",orchestrator," >nul && set "HAS_ORCHESTRATOR=1"
 echo ,!BUNDLES!, | findstr /i ",mcp," >nul && set "HAS_MCP=1"
-REM 5개 번들 모두 선택 = all
+REM All 5 bundles selected = all
 if "!HAS_ZEPHERMINE!!HAS_AGENT_TEAM!!HAS_MNEMO!!HAS_ORCHESTRATOR!!HAS_MCP!"=="11111" set "HAS_ALL_BUNDLES=1"
 
 echo   LLM: !LLMS!
-echo   번들: !BUNDLES!
+echo   Bundles: !BUNDLES!
 echo.
 
 REM ============================================
-REM   기본 모드: 복사 (번들 기반 필터링)
+REM   Default mode: copy (bundle-based filtering)
 REM ============================================
 
-REM 이전 install-link.bat에서 생성된 깨진 심볼릭 링크 정리
-node -e "const fs=require('fs'),p=require('path');['skills','agents','hooks'].forEach(function(d){var t=p.join(process.argv[1],d);try{if(fs.lstatSync(t).isSymbolicLink()){try{fs.rmdirSync(t)}catch(e2){fs.unlinkSync(t)};console.log('      [정리] broken symlink removed: '+d)}}catch(e){}})" "%CLAUDE_DIR%"
+REM Clean up broken symlinks from previous install-link.bat
+node -e "const fs=require('fs'),p=require('path');['skills','agents','hooks'].forEach(function(d){var t=p.join(process.argv[1],d);try{if(fs.lstatSync(t).isSymbolicLink()){try{fs.rmdirSync(t)}catch(e2){fs.unlinkSync(t)};console.log('      [cleanup] broken symlink removed: '+d)}}catch(e){}})" "%CLAUDE_DIR%"
 
-REM Skills 설치 (글로벌, 번들 필터링)
-echo [1/7] Skills 설치 중... (글로벌) [코어]
+REM Install Skills (global, bundle filtering)
+echo [1/7] Installing Skills... (global) [core]
 if exist "%SCRIPT_DIR%skills" (
     for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         set "skill_name=%%~nxD"
         set "INSTALL_SKILL=1"
-        REM Codex 전용 / 내부 전용 스킬은 설치하지 않음
+        REM Skip Codex-only / internal-only skills
         if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
         if /i "!skill_name!"=="deploymonitor" set "INSTALL_SKILL=0"
         if "!INSTALL_SKILL!"=="1" (
             echo       - !skill_name!
             node -e "const fs=require('fs');fs.mkdirSync(process.argv[2],{recursive:true});fs.cpSync(process.argv[1],process.argv[2],{recursive:true,force:true})" "%%D" "%CLAUDE_DIR%\skills\!skill_name!"
         ) else (
-            echo       - !skill_name! [건너뜀]
+            echo       - !skill_name! [skipped]
         )
     )
-    echo       완료!
+    echo       Done!
 ) else (
-    echo       스킬 없음
+    echo       No skills found
 )
 
-REM Agents 설치 (글로벌, 코어)
+REM Install Agents (global, core)
 echo.
-echo [2/7] Agents 설치 중... (글로벌) [코어]
+echo [2/7] Installing Agents... (global) [core]
 node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "%CLAUDE_DIR%\agents"
 if exist "%SCRIPT_DIR%agents" (
     for %%F in ("%SCRIPT_DIR%agents\*.md") do (
@@ -298,18 +298,18 @@ for /d %%D in ("%SCRIPT_DIR%skills\*") do (
         )
     )
 )
-echo       완료!
+echo       Done!
 
-REM Hooks 설치 (글로벌, mnemo 필수이므로 항상 설치)
+REM Install Hooks (global, always installed for mnemo)
 echo.
-echo [3/7] Hooks 설치 중... (글로벌) [mnemo 필수]
+echo [3/7] Installing Hooks... (global) [mnemo required]
 set "NEED_HOOKS=1"
 if "!NEED_HOOKS!"=="1" (
     node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "%CLAUDE_DIR%\hooks"
     if exist "%SCRIPT_DIR%hooks" (
         for %%F in ("%SCRIPT_DIR%hooks\*.ps1") do (
             echo %%~nxF | findstr /i "debug" >nul && (
-                echo       - %%~nxF [스킵: 디버그]
+                echo       - %%~nxF [skip: debug]
             ) || (
                 echo       - %%~nxF
                 node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
@@ -317,7 +317,7 @@ if "!NEED_HOOKS!"=="1" (
         )
         for %%F in ("%SCRIPT_DIR%hooks\*.sh") do (
             echo %%~nxF | findstr /i "debug" >nul && (
-                echo       - %%~nxF [스킵: 디버그]
+                echo       - %%~nxF [skip: debug]
             ) || (
                 echo       - %%~nxF
                 node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
@@ -328,12 +328,12 @@ if "!NEED_HOOKS!"=="1" (
             node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
         )
     )
-    echo       완료!
+    echo       Done!
 ) else (
-    echo       [건너뜀] 훅 번들 미선택
+    echo       [skipped] hook bundle not selected
 )
 
-REM CLAUDECODE 환경변수 임시 해제 (claude CLI 중첩 세션 방지)
+REM Temporarily unset CLAUDECODE env var (prevent nested claude CLI session)
 set "SAVE_CLAUDECODE=!CLAUDECODE!"
 set "CLAUDECODE="
 
@@ -342,34 +342,34 @@ REM   Phase 1: Claude (settings.json + CLAUDE.md + MCP + Orchestrator)
 REM ============================================
 if "!HAS_CLAUDE!"=="0" goto :phase_codex
 
-REM settings.json 훅 설정 (컴포넌트 기반 필터링)
+REM Hook config for settings.json (component-based filtering)
 echo.
-echo [4/7] settings.json 훅 설정 중... (Claude)
+echo [4/7] Configuring settings.json hooks... (Claude)
 node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%/hooks" "%CLAUDE_DIR%\settings.json" --windows --components !BUNDLES! --llms !LLMS!
 
-REM CLAUDE.md 장기기억 규칙 설치 (mnemo: 필수 설치)
+REM Install CLAUDE.md long-term memory rules (mnemo: required)
 echo.
-echo [5/7] CLAUDE.md 장기기억 규칙 설치 중... - Claude [필수]
+echo [5/7] Installing CLAUDE.md memory rules... - Claude [required]
 node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
-REM MCP 서버 자동 설치 (코어)
+REM Auto-install MCP servers (core)
 echo.
-echo [6/7] MCP 서버 설치 중... - Claude 기본 안정 세트 [코어]
+echo [6/7] Installing MCP servers... - Claude default stable set [core]
 if 1==1 (
     echo.
-    echo       사용 가능한 MCP 서버:
+    echo       Available MCP servers:
     node "%SCRIPT_DIR%install-mcp.js" --list
     echo.
-    echo       기본 MCP 자동 설치를 시작합니다: !DEFAULT_MCP_SERVERS!
+    echo       Starting default MCP auto-install: !DEFAULT_MCP_SERVERS!
     echo.
     node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
     echo.
-    echo       완료. 추가 설치: node "%SCRIPT_DIR%install-mcp.js" --list
+    echo       Done. Additional install: node "%SCRIPT_DIR%install-mcp.js" --list
 )
 
-REM Orchestrator MCP 서버 등록 (필수 설치)
+REM Register Orchestrator MCP server (required)
 echo.
-echo [7/7] Orchestrator MCP 서버 등록 중... - Claude [필수]
+echo [7/7] Registering Orchestrator MCP... - Claude [required]
 if 1==1 (
     set "ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
@@ -377,35 +377,35 @@ if 1==1 (
     if not exist "!ORCH_DIST!" set "NEED_ORCH_BUILD=1"
     if not exist "!ORCH_SDK!" set "NEED_ORCH_BUILD=1"
     if "!NEED_ORCH_BUILD!"=="1" (
-        echo       MCP 서버 빌드 중...
+        echo       Building MCP server...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
     if exist "!ORCH_DIST!" (
         claude mcp remove orchestrator -s user >nul 2>nul
         claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
-        echo       Orchestrator MCP 등록 완료
+        echo       Orchestrator MCP registered
     ) else (
-        echo       [경고] MCP 서버 빌드 실패, 건너뜀
+        echo       [WARN] MCP server build failed, skipping
     )
 )
 
-REM Mnemo 헬스체크 + 실패 시 자동 복구 (Claude)
+REM Mnemo healthcheck + auto-repair on failure (Claude)
 echo.
-echo   [Mnemo 검증] Claude 장기기억 시스템 확인 중...
+echo   [Mnemo check] Verifying Claude long-term memory system...
 node "%SCRIPT_DIR%skills\mnemo\install.js" --check >nul 2>nul
 if !errorlevel! neq 0 (
-    echo       [복구] 문제 발견 - Mnemo 재설치 시도...
+    echo       [repair] Issue found - retrying Mnemo install...
     node "%SCRIPT_DIR%skills\mnemo\install.js"
     node "%SCRIPT_DIR%skills\mnemo\install.js" --check >nul 2>nul
     if !errorlevel! neq 0 (
-        echo       [경고] Mnemo 복구 실패! 수동 확인 필요:
+        echo       [WARN] Mnemo repair failed! Manual check required:
         echo              node "%SCRIPT_DIR%skills\mnemo\install.js" --check
     ) else (
-        echo       [복구 완료] Mnemo 정상 확인
+        echo       [repair done] Mnemo verified OK
     )
 ) else (
-    echo       Mnemo 정상
+    echo       Mnemo OK
 )
 
 REM ============================================
@@ -416,74 +416,74 @@ if "!HAS_CODEX!"=="0" goto :phase_gemini
 echo.
 echo   --- Codex CLI ---
 
-REM Codex-Mnemo (필수 설치 + 실패 시 재시도)
+REM Codex-Mnemo (required + retry on failure)
 echo.
-echo   Codex-Mnemo 설치 중... [필수]
+echo   Installing Codex-Mnemo... [required]
 if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
     node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
     if !errorlevel! neq 0 (
-        echo       [재시도] 첫 번째 시도 실패, 재설치...
+        echo       [retry] First attempt failed, reinstalling...
         node "%SCRIPT_DIR%skills\codex-mnemo\install.js"
         if !errorlevel! equ 0 (
-            set "CODEX_MNEMO_RESULT=재시도 후 설치 완료"
+            set "CODEX_MNEMO_RESULT=Installed after retry"
         ) else (
-            set "CODEX_MNEMO_RESULT=설치 실패 (재시도 포함)"
+            set "CODEX_MNEMO_RESULT=Install failed (including retry)"
         )
     ) else (
-        set "CODEX_MNEMO_RESULT=설치 완료"
+        set "CODEX_MNEMO_RESULT=Installed"
     )
 ) else (
-    set "CODEX_MNEMO_RESULT=스킵: install.js 없음"
+    set "CODEX_MNEMO_RESULT=Skip: no install.js"
 )
 echo       !CODEX_MNEMO_RESULT!
 
-REM Codex Skills/Agents 동기화 (zephermine 필수이므로 항상 실행)
+REM Sync Codex Skills/Agents (always runs, required for zephermine)
 echo.
-echo   Codex Skills/Agents 동기화 중...
+echo   Syncing Codex Skills/Agents...
 if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
     node "%SCRIPT_DIR%scripts\sync-codex-assets.js"
     if !errorlevel! equ 0 (
-        set "CODEX_SYNC_RESULT=동기화 완료"
+        set "CODEX_SYNC_RESULT=Sync complete"
     ) else (
-        set "CODEX_SYNC_RESULT=동기화 실패"
+        set "CODEX_SYNC_RESULT=Sync failed"
     )
 ) else (
-    set "CODEX_SYNC_RESULT=스킵: sync 스크립트 없음"
+    set "CODEX_SYNC_RESULT=Skip: no sync script"
 )
 echo       !CODEX_SYNC_RESULT!
 
-REM Codex MCP (코어)
+REM Codex MCP (core)
 echo.
-echo   Codex MCP 설치 중... [코어]
+echo   Installing Codex MCP... [core]
 if 1==1 (
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
             node "%SCRIPT_DIR%install-mcp-codex.js" !DEFAULT_MCP_SERVERS!
             if !errorlevel! equ 0 (
-                set "CODEX_MCP_RESULT=설치 완료"
+                set "CODEX_MCP_RESULT=Installed"
             ) else (
-                set "CODEX_MCP_RESULT=설치 실패"
+                set "CODEX_MCP_RESULT=Install failed"
             )
         ) else (
-            set "CODEX_MCP_RESULT=스킵: install-mcp-codex.js 없음"
+            set "CODEX_MCP_RESULT=Skip: no install-mcp-codex.js"
         )
         call codex features enable multi_agent >nul 2>nul
         if !errorlevel! equ 0 (
-            set "CODEX_MULTI_AGENT_RESULT=활성화 완료"
+            set "CODEX_MULTI_AGENT_RESULT=Enabled"
         ) else (
-            set "CODEX_MULTI_AGENT_RESULT=활성화 실패"
+            set "CODEX_MULTI_AGENT_RESULT=Enable failed"
         )
     ) else (
-        set "CODEX_MCP_RESULT=스킵: codex CLI 없음"
-        set "CODEX_MULTI_AGENT_RESULT=스킵: codex CLI 없음"
+        set "CODEX_MCP_RESULT=Skip: codex CLI not found"
+        set "CODEX_MULTI_AGENT_RESULT=Skip: codex CLI not found"
     )
     echo       MCP: !CODEX_MCP_RESULT!, multi_agent: !CODEX_MULTI_AGENT_RESULT!
 )
 
-REM Codex Orchestrator MCP (필수 설치)
+REM Codex Orchestrator MCP (required)
 echo.
-echo   Codex Orchestrator MCP 등록 중... [필수]
+echo   Registering Codex Orchestrator MCP... [required]
 if 1==1 (
     set "CODEX_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "CODEX_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
@@ -491,7 +491,7 @@ if 1==1 (
     if not exist "!CODEX_ORCH_DIST!" set "NEED_CODEX_ORCH_BUILD=1"
     if not exist "!CODEX_ORCH_SDK!" set "NEED_CODEX_ORCH_BUILD=1"
     if "!NEED_CODEX_ORCH_BUILD!"=="1" (
-        echo       MCP 서버 빌드 중...
+        echo       Building MCP server...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
@@ -505,15 +505,15 @@ if 1==1 (
             call codex mcp remove orchestrator >nul 2>nul
             call codex mcp add --env ORCHESTRATOR_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT! --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
             if !errorlevel! equ 0 (
-                set "CODEX_ORCH_RESULT=등록 완료"
+                set "CODEX_ORCH_RESULT=Registered"
             ) else (
-                set "CODEX_ORCH_RESULT=등록 실패"
+                set "CODEX_ORCH_RESULT=Register failed"
             )
         ) else (
-            set "CODEX_ORCH_RESULT=스킵: 빌드 실패"
+            set "CODEX_ORCH_RESULT=Skip: build failed"
         )
     ) else (
-        set "CODEX_ORCH_RESULT=스킵: codex CLI 없음"
+        set "CODEX_ORCH_RESULT=Skip: codex CLI not found"
     )
     echo       !CODEX_ORCH_RESULT!
 )
@@ -526,49 +526,49 @@ if "!HAS_GEMINI!"=="0" goto :install_done
 echo.
 echo   --- Gemini CLI ---
 
-REM Gemini-Mnemo (필수 설치 + 실패 시 재시도) — AGENTS.md 규칙 + save-turn 훅 + context.fileName
+REM Gemini-Mnemo (required + retry on failure) - AGENTS.md rules + save-turn hook + context.fileName
 echo.
-echo   Gemini-Mnemo 설치 중... [필수]
+echo   Installing Gemini-Mnemo... [required]
 if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
     node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
     if !errorlevel! neq 0 (
-        echo       [재시도] 첫 번째 시도 실패, 재설치...
+        echo       [retry] First attempt failed, reinstalling...
         node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
         if !errorlevel! equ 0 (
-            set "GEMINI_MNEMO_RESULT=재시도 후 설치 완료"
+            set "GEMINI_MNEMO_RESULT=Installed after retry"
         ) else (
-            set "GEMINI_MNEMO_RESULT=설치 실패 (재시도 포함)"
+            set "GEMINI_MNEMO_RESULT=Install failed (including retry)"
         )
     ) else (
-        set "GEMINI_MNEMO_RESULT=설치 완료"
+        set "GEMINI_MNEMO_RESULT=Installed"
     )
 ) else (
-    set "GEMINI_MNEMO_RESULT=스킵: install.js 없음"
+    set "GEMINI_MNEMO_RESULT=Skip: no install.js"
 )
 echo       !GEMINI_MNEMO_RESULT!
 
-REM Gemini Skills/Agents/Hooks 동기화 (zephermine 필수이므로 항상 실행)
+REM Sync Gemini Skills/Agents/Hooks (always runs, required for zephermine)
 echo.
-echo   Gemini Skills/Agents/Hooks 동기화 중...
+echo   Syncing Gemini Skills/Agents/Hooks...
 if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
     node "%SCRIPT_DIR%scripts\sync-gemini-assets.js"
     if !errorlevel! equ 0 (
-        set "GEMINI_SYNC_RESULT=동기화 완료"
+        set "GEMINI_SYNC_RESULT=Sync complete"
     ) else (
-        set "GEMINI_SYNC_RESULT=동기화 실패"
+        set "GEMINI_SYNC_RESULT=Sync failed"
     )
 ) else (
-    set "GEMINI_SYNC_RESULT=스킵: sync 스크립트 없음"
+    set "GEMINI_SYNC_RESULT=Skip: no sync script"
 )
 echo       !GEMINI_SYNC_RESULT!
 
-REM Gemini settings.json 훅 설정 (mnemo 필수이므로 항상 설정)
+REM Gemini settings.json hook config (always set, required for mnemo)
 set "GEMINI_DIR=%USERPROFILE%\.gemini"
 set "NEED_GEMINI_HOOKS=1"
 if "!NEED_GEMINI_HOOKS!"=="1" (
     echo.
-    echo   Gemini settings.json 훅 설정 중...
-    REM save-turn 훅을 gemini hooks 디렉토리에 복사
+    echo   Configuring Gemini settings.json hooks...
+    REM Copy save-turn hook to gemini hooks directory
     node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "!GEMINI_DIR!\hooks"
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" (
         node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" "!GEMINI_DIR!\hooks\save-turn.ps1"
@@ -577,36 +577,36 @@ if "!NEED_GEMINI_HOOKS!"=="1" (
         node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" "!GEMINI_DIR!\hooks\save-turn.sh"
     )
     node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!/hooks" "!GEMINI_DIR!\settings.json" --windows --components !BUNDLES! --llms !LLMS! --target gemini
-    set "GEMINI_HOOKS_RESULT=설정 완료"
+    set "GEMINI_HOOKS_RESULT=Configured"
 ) else (
-    set "GEMINI_HOOKS_RESULT=건너뜀: 훅 번들 미선택"
+    set "GEMINI_HOOKS_RESULT=Skipped: hook bundle not selected"
 )
 
-REM Gemini MCP (코어)
+REM Gemini MCP (core)
 echo.
-echo   Gemini MCP 설치 중... [코어]
+echo   Installing Gemini MCP... [core]
 if 1==1 (
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
             node "%SCRIPT_DIR%install-mcp-gemini.js" !DEFAULT_MCP_SERVERS!
             if !errorlevel! equ 0 (
-                set "GEMINI_MCP_RESULT=설치 완료"
+                set "GEMINI_MCP_RESULT=Installed"
             ) else (
-                set "GEMINI_MCP_RESULT=설치 실패"
+                set "GEMINI_MCP_RESULT=Install failed"
             )
         ) else (
-            set "GEMINI_MCP_RESULT=스킵: install-mcp-gemini.js 없음"
+            set "GEMINI_MCP_RESULT=Skip: no install-mcp-gemini.js"
         )
     ) else (
-        set "GEMINI_MCP_RESULT=스킵: gemini CLI 없음"
+        set "GEMINI_MCP_RESULT=Skip: gemini CLI not found"
     )
     echo       MCP: !GEMINI_MCP_RESULT!
 )
 
-REM Gemini Orchestrator MCP (필수 설치)
+REM Gemini Orchestrator MCP (required)
 echo.
-echo   Gemini Orchestrator MCP 등록 중... [필수]
+echo   Registering Gemini Orchestrator MCP... [required]
 if 1==1 (
     set "GEMINI_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "GEMINI_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
@@ -614,7 +614,7 @@ if 1==1 (
     if not exist "!GEMINI_ORCH_DIST!" set "NEED_GEMINI_ORCH_BUILD=1"
     if not exist "!GEMINI_ORCH_SDK!" set "NEED_GEMINI_ORCH_BUILD=1"
     if "!NEED_GEMINI_ORCH_BUILD!"=="1" (
-        echo       MCP 서버 빌드 중...
+        echo       Building MCP server...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
@@ -625,38 +625,38 @@ if 1==1 (
             call gemini mcp remove orchestrator >nul 2>nul
             call gemini mcp add orchestrator node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
             if !errorlevel! equ 0 (
-                set "GEMINI_ORCH_RESULT=등록 완료"
+                set "GEMINI_ORCH_RESULT=Registered"
             ) else (
-                set "GEMINI_ORCH_RESULT=등록 실패"
+                set "GEMINI_ORCH_RESULT=Register failed"
             )
         ) else (
-            set "GEMINI_ORCH_RESULT=스킵: 빌드 실패"
+            set "GEMINI_ORCH_RESULT=Skip: build failed"
         )
     ) else (
-        set "GEMINI_ORCH_RESULT=스킵: gemini CLI 없음"
+        set "GEMINI_ORCH_RESULT=Skip: gemini CLI not found"
     )
     echo       !GEMINI_ORCH_RESULT!
 )
 
 :install_done
-REM CLAUDECODE 환경변수 복원
+REM Restore CLAUDECODE env var
 set "CLAUDECODE=!SAVE_CLAUDECODE!"
 
 echo.
 echo ============================================
-echo   설치 완료!
+echo   Installation complete!
 echo ============================================
 echo.
 echo   LLM: !LLMS!
-echo   번들: !BUNDLES!
+echo   Bundles: !BUNDLES!
 echo.
 if "!HAS_CLAUDE!"=="1" (
     echo   [Claude]
     echo   - Skills: %CLAUDE_DIR%\skills\
     echo   - Agents: %CLAUDE_DIR%\agents\
-    echo   - CLAUDE.md 장기기억 규칙 등록 완료
-    echo   - MCP 서버 설치 완료
-    echo   - Orchestrator MCP 등록 완료
+    echo   - CLAUDE.md memory rules registered
+    echo   - MCP servers installed
+    echo   - Orchestrator MCP registered
 )
 if "!HAS_CODEX!"=="1" (
     echo   [Codex]
@@ -675,7 +675,7 @@ if "!HAS_GEMINI!"=="1" (
     echo   - Orchestrator: !GEMINI_ORCH_RESULT!
 )
 echo.
-echo   CLI를 재시작하면 적용됩니다.
+echo   Restart CLI to apply changes.
 echo.
 
 endlocal
