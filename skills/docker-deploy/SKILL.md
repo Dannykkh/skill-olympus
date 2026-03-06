@@ -25,10 +25,12 @@ Docker 이미지 기반 배포 파일을 자동 생성하는 스킬입니다.
 - `frontend/Dockerfile` - Frontend 멀티스테이지 빌드
 - `docker-build-images.bat` - 이미지 빌드 + tar 저장 스크립트
 - `docker-images/docker-compose.yml` - 배포용 (pre-built 이미지)
+- `docker-images/backup-entrypoint.sh` - DB 백업 스케줄/보관 스크립트 (선택)
 - `docker-images/install.bat` - 처음 설치
 - `docker-images/update.bat` - 이미지만 업데이트 (DB 유지)
 - `docker-images/reset.bat` - 완전 초기화 (데이터 삭제)
 - `docker-images/.env` - 환경변수 (기본값 포함)
+- `.gitattributes` - 줄바꿈 정책 (`*.sh text eol=lf`)
 - `docker-images/logs.bat` - 로그 보기
 - `docker-images/seed-data.sql` - 초기 데이터 (선택)
 - `deploy.bat` - Git Deploy Monitor 연동용 자동 배포 스크립트
@@ -80,6 +82,7 @@ AskUserQuestion 도구로 다음을 확인:
 - MySQL/PostgreSQL 선택에 따른 DB 서비스 설정
 - healthcheck + depends_on condition으로 시작 순서 보장
 - named volume 사용 (bind mount 금지)
+- 운영 백업이 필요하면 `db-backup` 서비스 추가 (`postgres:alpine` + cron + `pg_dump|gzip`)
 
 ### 6~8. 배치 스크립트 생성
 
@@ -148,6 +151,12 @@ SECRET_KEY=change-this-secret-key-in-production
 - TABLE_COUNT 대신 USER_COUNT로 판단 (빈 테이블 오판 방지)
 
 ### 12. .deploy-mode는 .gitignore에 추가 필수
+
+### 13. DB backup shell 스크립트는 LF 고정 (CRLF 금지)
+- `docker-images/backup-entrypoint.sh` 같은 `.sh` 파일은 Linux 컨테이너에서 실행되므로 LF 필수
+- CRLF가 섞이면 `/entrypoint.sh: line N: \r: not found`, `set: illegal option -`로 재시작 루프 발생
+- 반드시 `.gitattributes`에 `*.sh text eol=lf` 추가
+- 생성/수정 직후 `git ls-files --eol docker-images/backup-entrypoint.sh`로 `w/lf` 확인
 
 ---
 
