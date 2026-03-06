@@ -257,7 +257,7 @@ REM   기본 모드: 복사 (번들 기반 필터링)
 REM ============================================
 
 REM 이전 install-link.bat에서 생성된 깨진 심볼릭 링크 정리
-node -e "const fs=require('fs'),p=require('path');['skills','agents','hooks'].forEach(function(d){var t=p.join(process.argv[1],d);try{if(fs.lstatSync(t).isSymbolicLink()){fs.unlinkSync(t);console.log('      [정리] broken symlink removed: '+d)}}catch(e){}})" "%CLAUDE_DIR%"
+node -e "const fs=require('fs'),p=require('path');['skills','agents','hooks'].forEach(function(d){var t=p.join(process.argv[1],d);try{if(fs.lstatSync(t).isSymbolicLink()){try{fs.rmdirSync(t)}catch(e2){fs.unlinkSync(t)};console.log('      [정리] broken symlink removed: '+d)}}catch(e){}})" "%CLAUDE_DIR%"
 
 REM Skills 설치 (글로벌, 번들 필터링)
 echo [1/7] Skills 설치 중... (글로벌) [코어]
