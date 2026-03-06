@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // install-select.js
-// LLM 대상만 선택 (스킬/에이전트/훅/MCP는 전부 코어 설치)
-// stdout: line1 = LLMs, line2 = Bundles (항상 전체)
-// UI는 stderr로 출력 (stdout은 결과 전용)
+// Select target LLMs only (skills/agents/hooks/MCP are all core-installed)
+// stdout: line1 = LLMs, line2 = Bundles (always all)
+// UI is written to stderr (stdout is for results only)
 
 const ALL_LLMS = ["claude", "codex", "gemini"];
 
-// 모든 번들은 코어 설치 (선택 불필요)
+// All bundles are core-installed (no selection needed)
 const ALL_BUNDLES = [
   "zephermine",
   "agent-team",
@@ -16,16 +16,16 @@ const ALL_BUNDLES = [
 ];
 
 const LLM_ITEMS = [
-  { id: "all", desc: "전체 (Claude + Codex + Gemini)" },
+  { id: "all", desc: "All (Claude + Codex + Gemini)" },
   { id: "claude", desc: "Claude Code" },
   { id: "codex", desc: "Codex CLI" },
   { id: "gemini", desc: "Gemini CLI" },
 ];
 
-// install.bat/sh가 %*로 전달하므로 무관한 플래그 무시
+// Ignore irrelevant flags passed through from install.bat/sh via %*
 const IGNORE_FLAGS = ["--link", "--unlink", "--copy"];
 
-// --- CLI 파싱 ---
+// --- CLI Parsing ---
 function parseArgs() {
   const raw = process.argv.slice(2);
   const args = raw.filter((a) => !IGNORE_FLAGS.includes(a));
@@ -43,10 +43,10 @@ function parseArgs() {
           ?.split(",")
           .map((s) => s.trim().toLowerCase());
         break;
-      // --only, --skip은 하위 호환용으로 파싱하되 무시
+      // --only, --skip are parsed for backward compat but ignored
       case "--only":
       case "--skip":
-        i++; // 값 건너뜀
+        i++; // skip value
         break;
     }
   }
@@ -54,14 +54,14 @@ function parseArgs() {
   if (isAll) return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
   if (llms?.includes("all")) llms = [...ALL_LLMS];
   if (llms) return { llms, bundles: ALL_BUNDLES };
-  return null; // 인터랙티브 모드
+  return null; // interactive mode
 }
 
-// --- 인터랙티브 메뉴 ---
+// --- Interactive Menu ---
 function selectMenu(title, items, allIds) {
   const write = (s) => process.stderr.write(s);
 
-  // non-TTY: 전체 선택
+  // non-TTY: select all
   if (!process.stdin.isTTY) {
     return Promise.resolve([...allIds]);
   }
@@ -75,7 +75,7 @@ function selectMenu(title, items, allIds) {
     function render() {
       if (!firstRender) write(`\x1b[${totalLines}A`);
       firstRender = false;
-      write("\x1b[?25l"); // 커서 숨김
+      write("\x1b[?25l"); // hide cursor
       write("\x1b[2K\n");
       write(`\x1b[2K  ${title}\n`);
       write(`\x1b[2K  ${"─".repeat(44)}\n`);
@@ -87,14 +87,14 @@ function selectMenu(title, items, allIds) {
         write(`\x1b[2K  ${arrow} [${check}] ${id} ${items[i].desc}\n`);
       }
       write("\x1b[2K\n");
-      write("\x1b[2K  ↑↓ 이동  Space 토글  a 전체  Enter 확인\n");
+      write("\x1b[2K  Up/Down Move  Space Toggle  a All  Enter Confirm\n");
     }
 
     function cleanup() {
       write(`\x1b[${totalLines}A`);
       for (let i = 0; i < totalLines; i++) write("\x1b[2K\n");
       write(`\x1b[${totalLines}A`);
-      write("\x1b[?25h"); // 커서 표시
+      write("\x1b[?25h"); // show cursor
       process.stdin.setRawMode(false);
       process.stdin.pause();
       process.stdin.removeAllListeners("data");
@@ -135,25 +135,25 @@ function selectMenu(title, items, allIds) {
         cleanup();
         process.exit(0);
       }
-      // Enter: 확인
+      // Enter: confirm
       if (key === "\r" || key === "\n") {
         const result = [...selected].filter((id) => id !== "all");
         if (result.length === 0) {
           render();
           return;
-        } // 최소 1개 필수
+        } // at least 1 required
         cleanup();
         resolve(result);
         return;
       }
-      // Space: 토글
+      // Space: toggle
       if (key === " ") toggleItem(items[cursor].id);
-      // a/A: 전체 토글
+      // a/A: toggle all
       if (key === "a" || key === "A") toggleAll();
-      // 위 화살표
+      // Up arrow
       if (key === "\x1b[A" || key === "\x1bOA")
         cursor = (cursor - 1 + items.length) % items.length;
-      // 아래 화살표
+      // Down arrow
       if (key === "\x1b[B" || key === "\x1bOB")
         cursor = (cursor + 1) % items.length;
       render();
@@ -161,7 +161,7 @@ function selectMenu(title, items, allIds) {
   });
 }
 
-// --- 메인 ---
+// --- Main ---
 async function main() {
   const parsed = parseArgs();
 
@@ -171,9 +171,9 @@ async function main() {
     return;
   }
 
-  // 인터랙티브 모드: LLM 선택만 (번들은 전부 코어 설치)
+  // Interactive mode: LLM selection only (bundles are all core-installed)
   const llms = await selectMenu(
-    "대상 AI CLI를 선택하세요",
+    "Select target AI CLI",
     LLM_ITEMS,
     ALL_LLMS
   );
@@ -184,6 +184,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  process.stderr.write(`오류: ${err.message}\n`);
+  process.stderr.write(`Error: ${err.message}\n`);
   process.exit(1);
 });

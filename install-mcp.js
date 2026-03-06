@@ -1,41 +1,41 @@
 #!/usr/bin/env node
-// MCP 서버 설정 자동 설치/제거 스크립트
-// `claude mcp add/remove` CLI를 사용하여 공식 방식으로 MCP 등록
+// MCP server config auto install/uninstall script
+// Registers MCP officially via `claude mcp add/remove` CLI
 //
-// 사용법:
-//   목록 표시:     node install-mcp.js --list
-//   전체 설치:     node install-mcp.js --all
-//   특정 설치:     node install-mcp.js context7 playwright
-//   특정 제거:     node install-mcp.js --uninstall context7
-//   강제 재설치:   node install-mcp.js --all --force
-//   스코프 지정:   node install-mcp.js --scope local context7
+// Usage:
+//   List servers:     node install-mcp.js --list
+//   Install all:      node install-mcp.js --all
+//   Install specific: node install-mcp.js context7 playwright
+//   Uninstall:        node install-mcp.js --uninstall context7
+//   Force reinstall:  node install-mcp.js --all --force
+//   Set scope:        node install-mcp.js --scope local context7
 
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-// ── 인자 파싱 ──
+// ── Argument parsing ──
 const args = process.argv.slice(2);
 const isListMode = args.includes("--list");
 const isAllMode = args.includes("--all");
 const isUninstall = args.includes("--uninstall");
 const isForce = args.includes("--force");
 
-// --scope 옵션 파싱 (기본: user)
+// --scope option parsing (default: user)
 const scopeIdx = args.indexOf("--scope");
 const scope = scopeIdx !== -1 && args[scopeIdx + 1] ? args[scopeIdx + 1] : "user";
 
-// 옵션이 아닌 인자 추출 (MCP 이름들)
+// Extract non-option arguments (MCP names)
 const mcpNames = args.filter(
   (a, i) =>
     !a.startsWith("--") && (scopeIdx === -1 || i !== scopeIdx + 1)
 );
 
-// ── 경로 설정 ──
+// ── Path settings ──
 const scriptDir = path.resolve(__dirname);
 const mcpConfigsDir = path.join(scriptDir, "mcp-configs");
 
-// ── 유틸리티 ──
+// ── Utilities ──
 function readJson(filePath) {
   try {
     return JSON.parse(fs.readFileSync(filePath, "utf-8"));
@@ -44,7 +44,7 @@ function readJson(filePath) {
   }
 }
 
-// claude mcp 명령 실행 (CLAUDECODE 환경변수 제거하여 중첩 세션 방지)
+// Run claude mcp command (remove CLAUDECODE env var to prevent nested sessions)
 function runClaude(cmdArgs) {
   try {
     const env = { ...process.env };
@@ -98,12 +98,12 @@ function getMcpState(name) {
   };
 }
 
-// 사용 가능한 MCP 설정 로드
+// Load available MCP configs
 function loadAvailableConfigs() {
   const configs = [];
   if (!fs.existsSync(mcpConfigsDir)) {
     console.error(
-      `[오류] mcp-configs 디렉토리를 찾을 수 없습니다: ${mcpConfigsDir}`
+      `[Error] mcp-configs directory not found: ${mcpConfigsDir}`
     );
     process.exit(1);
   }
@@ -118,32 +118,32 @@ function loadAvailableConfigs() {
   return configs;
 }
 
-// ── --list 모드 ──
+// ── --list mode ──
 if (isListMode) {
   const configs = loadAvailableConfigs();
-  console.log("\n사용 가능한 MCP 서버:");
+  console.log("\nAvailable MCP servers:");
   console.log("━".repeat(70));
 
   for (const cfg of configs) {
     const installed = getMcpState(cfg.name).installed;
-    const status = installed ? "✅ 설치됨" : "  미설치";
-    const apiKey = cfg.requiresApiKey ? "🔑 API 키 필요" : "🆓 무료";
+    const status = installed ? "✅ installed" : "  not installed";
+    const apiKey = cfg.requiresApiKey ? "🔑 API key required" : "🆓 free";
     console.log(
       `  ${status}  ${cfg.name.padEnd(22)} ${apiKey}  ${cfg.description}`
     );
   }
 
-  console.log("\n설치: node install-mcp.js <이름1> <이름2> ...");
-  console.log("전체: node install-mcp.js --all");
-  console.log("제거: node install-mcp.js --uninstall <이름>\n");
+  console.log("\nInstall: node install-mcp.js <name1> <name2> ...");
+  console.log("All:     node install-mcp.js --all");
+  console.log("Remove:  node install-mcp.js --uninstall <name>\n");
   process.exit(0);
 }
 
-// ── --uninstall 모드 ──
+// ── --uninstall mode ──
 if (isUninstall) {
   if (mcpNames.length === 0) {
-    console.error("[오류] 제거할 MCP 이름을 지정해주세요.");
-    console.error("  예: node install-mcp.js --uninstall context7");
+    console.error("[Error] Please specify the MCP name(s) to uninstall.");
+    console.error("  e.g.: node install-mcp.js --uninstall context7");
     process.exit(1);
   }
 
@@ -151,79 +151,79 @@ if (isUninstall) {
   for (const name of mcpNames) {
     const state = getMcpState(name);
     if (!state.installed) {
-      console.log(`  ⚠️  ${name} 은(는) 설치되어 있지 않습니다.`);
+      console.log(`  ⚠️  ${name} is not installed.`);
       continue;
     }
     const result = runClaude(`mcp remove "${name}" -s ${scope}`);
     if (result !== null) {
-      console.log(`  ✅ ${name} 제거됨`);
+      console.log(`  ✅ ${name} removed`);
       removed++;
     } else {
-      console.log(`  ❌ ${name} 제거 실패`);
+      console.log(`  ❌ ${name} removal failed`);
     }
   }
 
   if (removed > 0) {
-    console.log(`\n${removed}개 MCP 제거 완료.`);
+    console.log(`\n${removed} MCP server(s) removed.`);
   }
   process.exit(0);
 }
 
-// ── 설치 모드 ──
+// ── Install mode ──
 const configs = loadAvailableConfigs();
 
-// 설치 대상 결정
+// Determine install targets
 let toInstall = [];
 if (isAllMode) {
-  // --all: API 키 불필요한 것만 자동 설치
+  // --all: auto-install only those that don't require an API key
   toInstall = configs.filter((c) => !c.requiresApiKey);
-  console.log("\n🔧 무료 MCP 서버 전체 설치 모드");
+  console.log("\n🔧 Installing all free MCP servers");
 } else if (mcpNames.length > 0) {
-  // 특정 MCP 지정
+  // Specific MCP names provided
   for (const name of mcpNames) {
     const found = configs.find((c) => c.name === name);
     if (found) {
       toInstall.push(found);
     } else {
       console.error(
-        `  ⚠️  '${name}' 설정을 찾을 수 없습니다. --list로 확인해주세요.`
+        `  ⚠️  '${name}' config not found. Use --list to check available servers.`
       );
     }
   }
 } else {
-  // 인자 없음: 사용법 표시
+  // No arguments: show usage
   console.log(
-    "\nMCP 서버 설치 스크립트 (claude mcp CLI 사용)\n\n" +
-      "사용법:\n" +
-      "  node install-mcp.js --list                   사용 가능한 MCP 목록\n" +
-      "  node install-mcp.js --all                    무료 MCP 전부 설치\n" +
-      "  node install-mcp.js context7 playwright      특정 MCP 설치\n" +
-      "  node install-mcp.js --uninstall context7     특정 MCP 제거\n" +
-      "  node install-mcp.js --all --force            이미 설치된 MCP도 강제 재설치\n" +
-      "  node install-mcp.js --scope local context7   스코프 지정 (기본: user)\n"
+    "\nMCP Server Install Script (using claude mcp CLI)\n\n" +
+      "Usage:\n" +
+      "  node install-mcp.js --list                   List available MCP servers\n" +
+      "  node install-mcp.js --all                    Install all free MCP servers\n" +
+      "  node install-mcp.js context7 playwright      Install specific MCP servers\n" +
+      "  node install-mcp.js --uninstall context7     Uninstall specific MCP server\n" +
+      "  node install-mcp.js --all --force            Force reinstall (even if already installed)\n" +
+      "  node install-mcp.js --scope local context7   Set scope (default: user)\n"
   );
   process.exit(0);
 }
 
 if (toInstall.length === 0) {
-  console.log("설치할 MCP가 없습니다.");
+  console.log("No MCP servers to install.");
   process.exit(0);
 }
 
-console.log(`\n스코프: ${scope}\n`);
+console.log(`\nScope: ${scope}\n`);
 
 let installed = 0;
 let skipped = 0;
 let repaired = 0;
 
 for (const cfg of toInstall) {
-  // API 키 경고
+  // API key warning
   if (cfg.requiresApiKey) {
     const envVar = cfg.apiKeyEnvVar || "API_KEY";
     const envValue = process.env[envVar];
     if (!envValue) {
-      console.log(`  ⚠️  ${cfg.name}: ${envVar} 환경변수가 설정되지 않았습니다.`);
-      console.log(`       설치 후 환경변수를 설정해주세요.`);
+      console.log(`  ⚠️  ${cfg.name}: ${envVar} environment variable is not set.`);
+      console.log(`       Please set the environment variable after installation.`);
     }
   }
 
@@ -238,35 +238,35 @@ for (const cfg of toInstall) {
   let repairedThisServer = false;
 
   if (state.installed) {
-    // command/args가 일치하는지 확인 (설정이 올바른지)
+    // Check if command/args match (verify config is correct)
     const configMismatch = [];
     if (desiredCommand && state.command && state.command !== desiredCommand) {
-      configMismatch.push(`command 불일치(${state.command} -> ${desiredCommand})`);
+      configMismatch.push(`command mismatch(${state.command} -> ${desiredCommand})`);
     }
     if (desiredArgs && state.args && state.args !== desiredArgs) {
-      configMismatch.push(`args 불일치(${state.args} -> ${desiredArgs})`);
+      configMismatch.push(`args mismatch(${state.args} -> ${desiredArgs})`);
     }
 
     if (configMismatch.length === 0 && !isForce) {
-      // 설정이 올바르면 건너뜀 (--force 시 강제 재설치)
-      console.log(`  ⏭️  ${cfg.name} (이미 설정됨, 건너뜀)`);
+      // Config is correct, skip (unless --force for forced reinstall)
+      console.log(`  ⏭️  ${cfg.name} (already configured, skipped)`);
       skipped++;
       continue;
     }
 
-    // 설정 불일치 또는 --force 시 제거→재설치
+    // Config mismatch or --force: remove then reinstall
     const removeScope = state.scope || scope;
     const reason = configMismatch.length > 0
-      ? `설정 업데이트: ${configMismatch.join(", ")}`
-      : "강제 재설치";
+      ? `config update: ${configMismatch.join(", ")}`
+      : "force reinstall";
     console.log(`  🔧 ${cfg.name} ${reason}`);
-    // 1차: 감지된 scope로 제거
+    // 1st attempt: remove with detected scope
     let removed = runClaude(`mcp remove "${cfg.name}" -s ${removeScope}`) !== null;
-    // 2차: scope 미지정 (자동 탐색)
+    // 2nd attempt: no scope specified (auto-detect)
     if (!removed) {
       removed = runClaude(`mcp remove "${cfg.name}"`) !== null;
     }
-    // 3차: 모든 scope 순회
+    // 3rd attempt: try all scopes
     if (!removed) {
       for (const fallbackScope of ["user", "local", "project"]) {
         if (fallbackScope === removeScope) continue;
@@ -277,28 +277,28 @@ for (const cfg of toInstall) {
       }
     }
     if (!removed) {
-      console.log(`  ⚠️  ${cfg.name} 기존 설정 제거 실패, 덮어쓰기 시도`);
+      console.log(`  ⚠️  ${cfg.name} failed to remove existing config, attempting overwrite`);
     }
     repairedThisServer = true;
     needsInstall = true;
   }
 
-  // claude mcp add 명령 구성
+  // Build claude mcp add command
   const { env } = cfg.config;
   const { command, args: cfgArgs } = resolvedRuntime;
   let cmdParts = [`mcp add --scope ${scope}`];
 
-  // 환경변수 (-e KEY=value)
+  // Environment variables (-e KEY=value)
   if (env) {
     for (const [key, value] of Object.entries(env)) {
-      // ${VAR} 패턴을 실제 환경변수로 치환
+      // Replace ${VAR} patterns with actual environment variable values
       const match = value.match(/^\$\{(\w+)\}$/);
       const resolvedValue = match ? process.env[match[1]] || value : value;
       cmdParts.push(`-e ${key}=${resolvedValue}`);
     }
   }
 
-  // 이름 + -- + 명령어 + 인자
+  // name + -- + command + args
   cmdParts.push(`"${cfg.name}" -- ${command}`);
   if (cfgArgs && cfgArgs.length > 0) {
     cmdParts.push(cfgArgs.join(" "));
@@ -310,20 +310,20 @@ for (const cfg of toInstall) {
   if (result !== null) {
     if (repairedThisServer) {
       repaired++;
-      console.log(`  ✅ ${cfg.name} 복구 완료`);
+      console.log(`  ✅ ${cfg.name} repaired`);
     } else if (needsInstall) {
-      console.log(`  ✅ ${cfg.name} 설치됨`);
+      console.log(`  ✅ ${cfg.name} installed`);
     } else {
-      console.log(`  ✅ ${cfg.name} 적용됨`);
+      console.log(`  ✅ ${cfg.name} applied`);
     }
     installed++;
   } else {
-    console.log(`  ❌ ${cfg.name} 설치 실패`);
+    console.log(`  ❌ ${cfg.name} installation failed`);
   }
 }
 
-console.log(`\n완료: ${installed}개 설치/복구 (${repaired}개 복구), ${skipped}개 건너뜀`);
+console.log(`\nDone: ${installed} installed/repaired (${repaired} repaired), ${skipped} skipped`);
 
 if (installed > 0) {
-  console.log("Claude Code를 재시작하면 적용됩니다.\n");
+  console.log("Restart Claude Code to apply changes.\n");
 }

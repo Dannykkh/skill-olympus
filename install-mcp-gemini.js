@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Gemini MCP 서버 설정 자동 설치/제거 스크립트
-// `gemini mcp add/remove` CLI를 사용해 Gemini 전역 MCP를 등록합니다.
+// Gemini MCP server auto install/uninstall script
+// Registers global MCP servers using `gemini mcp add/remove` CLI.
 //
-// 사용법:
-//   목록 표시:     node install-mcp-gemini.js --list
-//   전체 설치:     node install-mcp-gemini.js --all
-//   특정 설치:     node install-mcp-gemini.js context7 playwright
-//   특정 제거:     node install-mcp-gemini.js --uninstall context7
+// Usage:
+//   List servers:     node install-mcp-gemini.js --list
+//   Install all:      node install-mcp-gemini.js --all
+//   Install specific: node install-mcp-gemini.js context7 playwright
+//   Uninstall:        node install-mcp-gemini.js --uninstall context7
 
 const fs = require("fs");
 const path = require("path");
@@ -50,7 +50,7 @@ function runGemini(cmdArgs, timeoutMs = 15000) {
   }
 }
 
-// gemini mcp list를 한 번만 호출하여 캐시
+// Call gemini mcp list once and cache the result
 let _mcpListCache = null;
 function getInstalledMcpList() {
   if (_mcpListCache !== null) return _mcpListCache;
@@ -74,7 +74,7 @@ function loadAvailableConfigs() {
   const configs = [];
   if (!fs.existsSync(mcpConfigsDir)) {
     console.error(
-      `[오류] mcp-configs 디렉토리를 찾을 수 없습니다: ${mcpConfigsDir}`
+      `[Error] mcp-configs directory not found: ${mcpConfigsDir}`
     );
     process.exit(1);
   }
@@ -92,7 +92,7 @@ function loadAvailableConfigs() {
 function buildAddCommand(cfg) {
   const parts = ["mcp add"];
 
-  // 환경변수
+  // Environment variables
   if (cfg.config.env) {
     for (const [key, rawValue] of Object.entries(cfg.config.env)) {
       const resolved = resolveEnvValue(rawValue);
@@ -102,19 +102,19 @@ function buildAddCommand(cfg) {
 
   parts.push(shellQuote(cfg.name));
 
-  // URL 기반 (SSE)
+  // URL-based (SSE)
   if (cfg.config.url) {
     parts.push(`--url ${shellQuote(cfg.config.url)}`);
     return parts.join(" ");
   }
 
-  // command 기반 (stdio)
+  // Command-based (stdio)
   if (!cfg.config.command) {
     return null;
   }
 
   const cmdArgs = Array.isArray(cfg.config.args) ? cfg.config.args : [];
-  // Gemini CLI는 Claude와 달리 '--' 구분자 없이 command를 직접 전달
+  // Gemini CLI passes the command directly without '--' separator (unlike Claude)
   parts.push(shellQuote(cfg.config.command));
   for (const arg of cmdArgs) {
     parts.push(shellQuote(arg));
@@ -123,7 +123,7 @@ function buildAddCommand(cfg) {
   return parts.join(" ");
 }
 
-// gemini CLI 존재 확인
+// Check if gemini CLI is available
 function checkGeminiCli() {
   try {
     execSync("gemini --version", {
@@ -138,35 +138,35 @@ function checkGeminiCli() {
 }
 
 if (!checkGeminiCli()) {
-  console.error("[오류] gemini CLI가 설치되어 있지 않습니다.");
-  console.error("       npm install -g @anthropic-ai/gemini-cli 또는 해당 패키지를 설치해주세요.");
+  console.error("[Error] gemini CLI is not installed.");
+  console.error("       Please install it via npm install -g @anthropic-ai/gemini-cli or the appropriate package.");
   process.exit(1);
 }
 
 if (isListMode) {
   const configs = loadAvailableConfigs();
-  console.log("\n사용 가능한 MCP 서버 (Gemini):");
+  console.log("\nAvailable MCP servers (Gemini):");
   console.log("━".repeat(70));
 
   for (const cfg of configs) {
     const installed = isMcpInstalled(cfg.name);
-    const status = installed ? "✅ 설치됨" : "  미설치";
-    const apiKey = cfg.requiresApiKey ? "🔑 API 키 필요" : "🆓 무료";
+    const status = installed ? "✅ installed" : "  not installed";
+    const apiKey = cfg.requiresApiKey ? "🔑 API key required" : "🆓 free";
     console.log(
       `  ${status}  ${cfg.name.padEnd(22)} ${apiKey}  ${cfg.description}`
     );
   }
 
-  console.log("\n설치: node install-mcp-gemini.js <이름1> <이름2> ...");
-  console.log("전체: node install-mcp-gemini.js --all");
-  console.log("제거: node install-mcp-gemini.js --uninstall <이름>\n");
+  console.log("\nInstall: node install-mcp-gemini.js <name1> <name2> ...");
+  console.log("All:     node install-mcp-gemini.js --all");
+  console.log("Remove:  node install-mcp-gemini.js --uninstall <name>\n");
   process.exit(0);
 }
 
 if (isUninstall) {
   if (mcpNames.length === 0) {
-    console.error("[오류] 제거할 MCP 이름을 지정해주세요.");
-    console.error("  예: node install-mcp-gemini.js --uninstall context7");
+    console.error("[Error] Please specify the MCP name(s) to uninstall.");
+    console.error("  e.g.: node install-mcp-gemini.js --uninstall context7");
     process.exit(1);
   }
 
@@ -174,15 +174,15 @@ if (isUninstall) {
   for (const name of mcpNames) {
     const result = runGemini(`mcp remove ${shellQuote(name)}`);
     if (result !== null) {
-      console.log(`  ✅ ${name} 제거됨`);
+      console.log(`  ✅ ${name} removed`);
       removed++;
     } else {
-      console.log(`  ❌ ${name} 제거 실패 (미등록 또는 오류)`);
+      console.log(`  ❌ ${name} removal failed (not registered or error)`);
     }
   }
 
   if (removed > 0) {
-    console.log(`\n${removed}개 MCP 제거 완료.`);
+    console.log(`\n${removed} MCP server(s) removed.`);
   }
   process.exit(0);
 }
@@ -192,7 +192,7 @@ const configs = loadAvailableConfigs();
 let toInstall = [];
 if (isAllMode) {
   toInstall = configs.filter((c) => !c.requiresApiKey);
-  console.log("\n🔧 무료 MCP 서버 전체 설치 모드 (Gemini)");
+  console.log("\n🔧 Installing all free MCP servers (Gemini)");
 } else if (mcpNames.length > 0) {
   for (const name of mcpNames) {
     const found = configs.find((c) => c.name === name);
@@ -200,24 +200,24 @@ if (isAllMode) {
       toInstall.push(found);
     } else {
       console.error(
-        `  ⚠️  '${name}' 설정을 찾을 수 없습니다. --list로 확인해주세요.`
+        `  ⚠️  '${name}' config not found. Use --list to see available servers.`
       );
     }
   }
 } else {
   console.log(
-    "\nGemini MCP 서버 설치 스크립트\n\n" +
-      "사용법:\n" +
-      "  node install-mcp-gemini.js --list                   사용 가능한 MCP 목록\n" +
-      "  node install-mcp-gemini.js --all                    무료 MCP 전부 설치\n" +
-      "  node install-mcp-gemini.js context7 playwright      특정 MCP 설치\n" +
-      "  node install-mcp-gemini.js --uninstall context7     특정 MCP 제거\n"
+    "\nGemini MCP Server Install Script\n\n" +
+      "Usage:\n" +
+      "  node install-mcp-gemini.js --list                   List available MCP servers\n" +
+      "  node install-mcp-gemini.js --all                    Install all free MCP servers\n" +
+      "  node install-mcp-gemini.js context7 playwright      Install specific MCP servers\n" +
+      "  node install-mcp-gemini.js --uninstall context7     Uninstall specific MCP server\n"
   );
   process.exit(0);
 }
 
 if (toInstall.length === 0) {
-  console.log("설치할 MCP가 없습니다.");
+  console.log("No MCP servers to install.");
   process.exit(0);
 }
 
@@ -228,32 +228,32 @@ for (const cfg of toInstall) {
   if (cfg.requiresApiKey) {
     const envVar = cfg.apiKeyEnvVar || "API_KEY";
     if (!process.env[envVar]) {
-      console.log(`  ⚠️  ${cfg.name}: ${envVar} 환경변수가 설정되지 않았습니다.`);
+      console.log(`  ⚠️  ${cfg.name}: ${envVar} environment variable is not set.`);
     }
   }
 
   if (isMcpInstalled(cfg.name)) {
-    console.log(`  ⏭️  ${cfg.name} (이미 설치됨, 건너뜀)`);
+    console.log(`  ⏭️  ${cfg.name} (already installed, skipped)`);
     skipped++;
     continue;
   }
 
   const addCmd = buildAddCommand(cfg);
   if (!addCmd) {
-    console.log(`  ❌ ${cfg.name} 설치 실패 (config.command 누락)`);
+    console.log(`  ❌ ${cfg.name} install failed (config.command missing)`);
     continue;
   }
 
   const result = runGemini(addCmd);
   if (result !== null) {
-    console.log(`  ✅ ${cfg.name} 설치됨`);
+    console.log(`  ✅ ${cfg.name} installed`);
     installed++;
   } else {
-    console.log(`  ❌ ${cfg.name} 설치 실패`);
+    console.log(`  ❌ ${cfg.name} install failed`);
   }
 }
 
-console.log(`\n완료: ${installed}개 설치, ${skipped}개 건너뜀`);
+console.log(`\nDone: ${installed} installed, ${skipped} skipped`);
 if (installed > 0) {
-  console.log("Gemini CLI를 재시작하면 안정적으로 반영됩니다.\n");
+  console.log("Restart Gemini CLI for changes to take effect.\n");
 }
