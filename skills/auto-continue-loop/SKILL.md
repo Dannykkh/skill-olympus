@@ -3,10 +3,12 @@ name: auto-continue-loop
 description: >
   Use when the user repeatedly says "next", "continue", "다음 진행", "계속 진행"
   and wants iterative code review and bug-fix cycles without re-planning each turn.
-  Runs a loop of review, fix, verify, and report until stop criteria are met.
-  /auto-continue-loop 또는 /loop로 실행.
+  Delegates the entire loop to a subagent for uninterrupted execution.
+  /auto-continue-loop 또는 /loop 또는 /cloloop로 실행. Also known as 클로루프.
 triggers:
   - "auto-continue-loop"
+  - "cloloop"
+  - "클로루프"
   - "loop"
   - "다음 진행"
   - "계속 진행"
@@ -19,18 +21,23 @@ triggers:
 auto_apply: false
 ---
 
-# Auto Continue Loop
+# Cloloop (클로루프)
 
-> 한 번 시작하면 멈출 때까지 계속: 이슈 찾기 → 수정 → 검증 → 다음 이슈.
+> **Clotho**(클로토: 운명의 실을 잣는 여신) + **Loop**.
+> 실을 끊지 않고 계속 잣는다 — 멈추지 않는 자율 루프.
+
+서브에이전트가 자율적으로 이슈 찾기 → 수정 → 검증을 반복합니다.
+매 사이클의 진행 상황은 `.cloloop-log.md`에 실시간 기록됩니다.
 
 ---
 
 ## Overview
 
-반복적인 "다음 진행" 요청을 하나의 자율 루프로 처리합니다.
-매 사이클마다: 가장 중요한 이슈 탐색 → 최소 패치 → 검증 → 즉시 다음으로.
+반복적인 "다음 진행" 요청을 **서브에이전트 위임**으로 처리합니다.
+메인 컨텍스트는 스코프만 확정하고, 전체 루프를 서브에이전트에 넘깁니다.
+서브에이전트가 자기 컨텍스트 안에서 자율적으로 FIND → FIX → VERIFY를 반복합니다.
 
-**사용자 개입 없이 자동 진행합니다. 절대 "계속할까요?"라고 묻지 마세요.**
+**사용자 개입 0회. "다음" 입력 불필요.**
 
 ---
 
@@ -48,9 +55,27 @@ auto_apply: false
 
 ---
 
-## Phase 0: 스코프 확인 (최초 1회만)
+## CLI별 실행 모드
 
-루프 시작 전 스코프를 확정합니다.
+| CLI | 실행 방식 | 서브에이전트 도구 |
+|-----|----------|-----------------|
+| **Claude** | Agent 서브에이전트 위임 | `Agent({ subagent_type, prompt })` |
+| **Codex** | spawn_agent 서브에이전트 위임 | `spawn_agent` → `send_message` → `wait` → `close_agent` |
+| **Gemini** | 사전 정의 서브에이전트 호출 | `.gemini/agents/cloloop-worker.md` → 메인이 자동 위임 |
+
+### CLI 감지 방법
+
+Phase 0 시작 시 자동 판별:
+- `Agent` 도구 사용 가능 → **Claude 모드** (Phase 1-A)
+- `spawn_agent` 도구 사용 가능 → **Codex 모드** (Phase 1-B)
+- `cloloop-worker` 서브에이전트 사용 가능 → **Gemini 모드** (Phase 1-C)
+- 모두 없음 → **Direct 모드** (Phase 1-D: 직접 루프)
+
+---
+
+## Phase 0: 스코프 확인 (메인 컨텍스트)
+
+루프 시작 전 스코프를 확정합니다. 이 단계만 메인 컨텍스트에서 실행.
 
 ### 0-1. 스코프 결정
 
@@ -58,166 +83,311 @@ auto_apply: false
 
 없으면 아래 순서로 자동 감지:
 1. 현재 세션에서 이미 작업 중인 디렉토리/파일 패턴
-2. git diff로 최근 변경된 파일 영역
+2. `git diff --name-only`로 최근 변경된 파일 영역
 3. 프로젝트 루트 전체
 
+### 0-2. 테스트 프레임워크 감지
+
+스코프 내에서 사용 가능한 검증 명령을 파악합니다:
+
 ```
-스코프 확정: {디렉토리/파일 목록}
-우선순위: 보안 > 데이터 무결성 > 버그 > 스코프 격리 > 코드 품질
+package.json → npm test / npx jest / npx vitest
+pytest.ini / pyproject.toml → pytest
+pom.xml → mvn test
+*.csproj → dotnet test
+tsconfig.json → npx tsc --noEmit
+없음 → "수동 확인 필요" 모드
 ```
 
-### 0-2. 이슈 목록 초기 스캔
+### 0-3. 사용자에게 시작 알림
 
-스코프 내에서 코드를 읽고 잠재적 이슈를 심각도 순으로 정렬합니다.
-**목록을 출력하지 마세요.** 바로 Cycle 1로 진입합니다.
+```
+클로루프(Cloloop) 시작
+스코프: {디렉토리/파일 목록}
+검증: {감지된 테스트 명령}
+로그: .cloloop-log.md (실시간 확인 가능)
+
+서브에이전트에 위임합니다. 완료되면 최종 보고서를 보여드립니다.
+진행 상황은 다른 터미널에서 확인 가능:
+  tail -f .cloloop-log.md        # Linux/Mac
+  Get-Content .cloloop-log.md -Wait  # Windows PowerShell
+```
 
 ---
 
-## Loop Contract (반복 사이클)
+## Phase 1-A: 서브에이전트 위임 (Claude)
 
-**⚠️ CRITICAL: 이 루프는 Stop Condition에 도달할 때까지 자동으로 반복합니다.**
-**매 사이클 후 멈추지 말고 즉시 다음 사이클로 진입하세요.**
-
-### 각 사이클에서 수행하는 4단계:
+`Agent` 도구가 사용 가능할 때 이 경로로 진행합니다.
 
 ```
-┌─────────────────────────────────────────┐
-│  Cycle N                                │
-│                                         │
-│  1. FIND: 남은 이슈 중 최고 심각도 선택  │
-│       ↓                                 │
-│  2. FIX: 최소 안전 패치 적용             │
-│       ↓                                 │
-│  3. VERIFY: 관련 테스트/빌드 실행        │
-│       ↓                                 │
-│  4. REPORT: 간결한 결과 출력             │
-│       ↓                                 │
-│  → 즉시 Cycle N+1로 진입               │
-└─────────────────────────────────────────┘
+Agent({
+  subagent_type: "general-purpose",
+  description: "클로루프 이슈 수정 루프",
+  prompt: <아래 공통 루프 프롬프트를 {변수} 치환하여 전달>
+})
 ```
 
-### Step 1: FIND — 이슈 탐색
-
-- 스코프 내에서 아직 수정하지 않은 가장 심각한 이슈를 **1개** 선택
-- 심각도 순서: Critical(보안) > High(버그/데이터) > Medium(스코프/구조) > Low(스타일)
-- 이전 사이클에서 수정한 이슈는 건너뜀
-
-### Step 2: FIX — 최소 안전 패치
-
-- **최소 변경 원칙**: 이슈 해결에 필요한 최소한의 코드만 변경
-- 관련 없는 리팩토링/개선은 하지 않음
-- Edit 도구로 정확한 변경 적용
-
-### Step 3: VERIFY — 검증
-
-변경에 맞는 검증을 실행합니다:
-
-| 변경 유형 | 검증 명령 |
-|-----------|-----------|
-| Backend (Java/Spring) | 관련 `mvn test` 타겟 |
-| Backend (Python) | 관련 `pytest` 타겟 |
-| Backend (Node) | 관련 `npm test` 타겟 |
-| Frontend (React/TS) | `npm run typecheck` + 관련 테스트 |
-| Frontend (빌드) | `npm run build` |
-| 보안/스코프 수정 | 네거티브 경로 테스트 포함 |
-| 설정/인프라 | 해당 검증 도구 |
-
-**검증 실패 시:**
-- 즉시 수정 시도 (같은 사이클 내)
-- 3회 실패하면 해당 이슈를 SKIP 처리하고 다음으로 진행
-- SKIP된 이슈는 최종 보고서에 포함
-
-### Step 4: REPORT — 간결한 결과
-
-매 사이클 출력 형식 (이것만 출력, 그 외 설명 금지):
-
-```
-── Cycle {N} ──────────────────────────
-Issue: {무엇을 발견했는지 1줄}
-Fix:   {무엇을 변경했는지 1줄} ({파일:라인})
-Verify: {실행한 명령} → {PASS/FAIL}
-Next:  {다음에 처리할 이슈 1줄}
-────────────────────────────────────────
-```
-
-**출력 후 멈추지 않고 바로 다음 사이클 시작.**
+서브에이전트 완료 후 → Phase 2로 이동.
 
 ---
 
-## Stop Conditions
+## Phase 1-B: 서브에이전트 위임 (Codex)
 
-**아래 중 하나라도 해당하면 루프를 멈추세요:**
-
-1. **사용자 중지**: `중지`, `멈춰`, `pause`, `stop`, `그만` 등 사용자가 명시적으로 중단
-2. **이슈 소진**: 스코프 내 High/Medium 이상 이슈가 더 이상 없음
-3. **환경 차단**: 빌드/테스트 환경 문제로 안전한 진행이 불가 (정확한 차단 사유 보고)
-
-### 루프 종료 시 최종 보고서
+`spawn_agent` 도구가 사용 가능할 때 이 경로로 진행합니다.
 
 ```
-══ Loop Complete ══════════════════════
+1. spawn_agent로 서브에이전트 생성
+2. send_message로 공통 루프 프롬프트 전달
+3. wait로 완료 대기 (timeout_ms: 작업 규모에 비례하여 설정)
+4. 결과 수신
+5. close_agent로 서브에이전트 종료
+```
+
+**Codex 서브에이전트 지시 시 추가 규칙:**
+- "다른 에이전트가 없으니 자유롭게 작업해도 됨"
+- "서브에이전트를 추가로 생성하지 마 (무한 재귀 방지)"
+- "완료 시 최종 보고를 메시지로 반환해"
+
+서브에이전트 완료 후 → Phase 2로 이동.
+
+---
+
+## Phase 1-C: 서브에이전트 위임 (Gemini)
+
+Gemini CLI의 서브에이전트 시스템을 활용합니다.
+사전에 `.gemini/agents/cloloop-worker.md` 파일이 설치되어 있어야 합니다.
+
+**Gemini 서브에이전트는 선언적 방식** — 파일로 정의해두면 메인 에이전트가 description을 보고 자동 호출합니다.
+
+메인 에이전트가 할 일:
+```
+"cloloop-worker에게 위임해. 스코프: {스코프}, 검증 명령: {명령}.
+모든 High/Medium 이슈를 수정하고 .cloloop-log.md에 기록해."
+```
+
+**전제 조건:**
+- `settings.json`에 `"experimental": { "enableAgents": true }` 설정
+- `.gemini/agents/cloloop-worker.md` 파일 존재 (설치 스크립트로 자동 생성)
+
+서브에이전트 완료 후 → Phase 2로 이동.
+
+### cloloop-worker.md (Gemini 서브에이전트 정의)
+
+설치 시 `~/.gemini/agents/cloloop-worker.md`에 생성되는 파일:
+
+```markdown
+---
+name: cloloop-worker
+description: >
+  코드 이슈를 자동으로 찾아 수정하는 루프 에이전트.
+  "이슈 수정", "버그 수정 루프", "cloloop", "클로루프" 요청 시 호출.
+  스코프 내에서 FIND → FIX → VERIFY를 반복하고 .cloloop-log.md에 기록.
+kind: local
+tools:
+  - read_file
+  - edit_file
+  - grep_search
+  - list_directory
+  - run_shell_command
+model: gemini-2.5-pro
+temperature: 0.2
+max_turns: 50
+---
+
+(공통 루프 프롬프트 내용이 여기에 포함됨)
+```
+
+---
+
+## Phase 1-D: 직접 루프 (폴백)
+
+서브에이전트 도구가 모두 없을 때 최후 수단으로 진행합니다.
+메인 컨텍스트에서 직접 루프를 실행합니다.
+
+**아래 공통 루프 프롬프트의 규칙을 그대로 따르되, 자기 자신이 루프를 실행합니다.**
+
+⚠️ **CRITICAL: 사이클 사이에 절대 멈추지 마세요.**
+- 사용자 확인을 요청하지 않음
+- 중간 보고 출력 후 대기하지 않음
+- 로그 파일에만 기록하고 즉시 다음 사이클 진입
+- 종료 조건에 도달할 때까지 연속 실행
+
+루프 완료 후 → Phase 2로 이동.
+
+---
+
+## 공통 루프 프롬프트
+
+Phase 1-A에서는 서브에이전트에 전달하고, Phase 1-B에서는 자기 자신이 따릅니다.
+`{변수}` 부분을 Phase 0에서 수집한 정보로 채웁니다.
+
+```
+너는 클로루프(Cloloop) — 코드 이슈를 자동으로 찾아 수정하는 루프 에이전트야.
+아래 규칙에 따라 모든 이슈를 처리할 때까지 자율적으로 반복해.
+
+## 스코프
+{Phase 0에서 확정한 디렉토리/파일 목록}
+
+## 검증 명령
+{Phase 0에서 감지한 테스트 명령}
+
+## 로그 파일
+매 사이클 완료 시 `.cloloop-log.md`에 결과를 **append** 해.
+사용자가 다른 터미널에서 실시간으로 확인한다.
+
+로그 기록 방법 (Bash):
+  echo '── Cycle N ──────────────────────────' >> .cloloop-log.md
+  echo 'Issue: ...' >> .cloloop-log.md
+  echo 'Fix:   ...' >> .cloloop-log.md
+  echo 'Verify: ... → PASS' >> .cloloop-log.md
+  echo '────────────────────────────────────────' >> .cloloop-log.md
+
+첫 사이클 시작 전 로그 파일 초기화:
+  echo '# Cloloop Log' > .cloloop-log.md
+  echo "Started: $(date -Iseconds)" >> .cloloop-log.md
+  echo 'Scope: {스코프}' >> .cloloop-log.md
+  echo '' >> .cloloop-log.md
+
+## 우선순위
+Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) > Low(스타일)
+
+## 사이클 규칙
+
+매 사이클에서 4단계를 수행해:
+
+1. FIND: 스코프 내에서 아직 수정하지 않은 가장 심각한 이슈 1개 선택
+2. FIX: 최소 변경 원칙 — 이슈 해결에 필요한 최소한의 코드만 수정
+3. VERIFY: 검증 명령 실행. 실패 시 즉시 수정 재시도 (같은 사이클 내 최대 3회)
+   - 3회 실패 → SKIP 처리하고 다음 이슈로
+4. LOG: .cloloop-log.md에 append (위 형식 준수)
+
+로그 기록 후 멈추지 말고 즉시 다음 사이클 시작.
+
+## 종료 조건
+
+아래 중 하나라도 해당하면 루프 종료:
+- High/Medium 이상 이슈가 더 이상 없음
+- 환경 문제로 진행 불가 (DB 미연결, 포트 충돌 등)
+
+## 금지 사항
+- AskUserQuestion 호출 금지 (사용자에게 묻지 않음)
+- 전체 이슈 목록 나열 금지
+- 한 번에 여러 이슈 동시 수정 금지
+- 관련 없는 리팩토링 금지
+- scope 밖 파일 수정 금지
+- 사이클 사이에 멈추거나 대기 금지
+
+## 최종 보고
+
+루프 종료 시 .cloloop-log.md에 최종 요약을 append하고, 같은 내용을 반환해:
+
+══ Cloloop Complete ══════════════════
 Total cycles: {N}
-Fixed: {수정 완료 수}건
-Skipped: {건너뛴 수}건
-Remaining: {남은 Low 이슈 수}건
+Fixed: {N}건
+Skipped: {N}건
+Remaining: {N}건 (Low)
 
 Fixed Issues:
-  ✅ {이슈1} ({파일})
-  ✅ {이슈2} ({파일})
+  ✅ {이슈} ({파일})
+  ...
 
-Skipped Issues (수동 확인 필요):
-  ⚠️ {이슈} — 사유: {왜 건너뛰었는지}
+Skipped Issues:
+  ⚠️ {이슈} — 사유: {왜}
+  ...
 
 Remaining Low-priority:
-  ℹ️ {이슈} — 자동 수정 범위 밖
+  ℹ️ {이슈}
+  ...
 ═══════════════════════════════════════
 ```
 
 ---
 
-## Quality Gates
+## Phase 2: 결과 수신 (메인 컨텍스트)
 
-**절대 검증 없이 완료를 주장하지 마세요:**
+최종 보고서를 사용자에게 표시합니다.
+- Phase 1-A (Claude): Agent 서브에이전트가 반환한 결과
+- Phase 1-B (Codex): spawn_agent 서브에이전트가 반환한 결과
+- Phase 1-C (Gemini): cloloop-worker 서브에이전트가 반환한 결과
+- Phase 1-D (폴백): 직접 루프 완료 후 로그에서 요약
 
-- 변경 후 반드시 관련 테스트 또는 빌드 실행
-- 보안/스코프 수정은 네거티브 경로 어서션 포함
-- 테스트 명령어가 없는 프로젝트: `typecheck` 또는 `build`라도 실행
-- 아무 검증 도구도 없으면: 수동 확인 필요로 표시
+추가 작업이 필요하면 사용자가 판단:
+- "다시 돌려줘" → Phase 1 재실행
+- "Low도 처리해줘" → 우선순위를 Low로 낮춰서 재실행
+- "SKIP된 거 보자" → 해당 이슈 상세 설명
 
 ---
 
-## Anti-Patterns (하지 말 것)
+## 실시간 모니터링
 
-| 금지 | 이유 |
-|------|------|
-| "계속할까요?" 질문 | 루프의 존재 이유를 무효화 |
-| 전체 이슈 목록 나열 | 시간 낭비, 바로 수정 |
-| 이전 작업 재설명 | 사용자가 이미 봄 |
-| 한 번에 여러 이슈 수정 | 검증이 어려워짐 |
-| 관련 없는 리팩토링 | 최소 변경 원칙 위반 |
-| AskUserQuestion 호출 | 루프 중단 금지 |
+서브에이전트가 작업하는 동안 다른 터미널에서 진행 상황을 확인할 수 있습니다:
+
+```bash
+# Linux/Mac
+tail -f .cloloop-log.md
+
+# Windows PowerShell
+Get-Content .cloloop-log.md -Wait
+
+# 또는 VS Code에서 .cloloop-log.md 열기 (자동 갱신)
+```
+
+로그 파일 예시:
+```markdown
+# Cloloop Log
+Started: 2026-03-06 14:30:00
+Scope: src/backend/
+
+── Cycle 1 ──────────────────────────
+Issue: SQL injection in UserService.ts:42
+Fix:   parameterized query로 교체 (src/backend/UserService.ts:42)
+Verify: npm test → PASS
+────────────────────────────────────────
+── Cycle 2 ──────────────────────────
+Issue: missing null check in OrderController.ts:78
+Fix:   early return 추가 (src/backend/OrderController.ts:78)
+Verify: npm test → PASS
+────────────────────────────────────────
+── Cycle 3 ──────────────────────────
+Issue: unhandled promise rejection in PaymentService.ts:103
+Fix:   try-catch 추가 (src/backend/PaymentService.ts:103)
+Verify: npm test → FAIL → 수정 재시도 → PASS
+────────────────────────────────────────
+
+══ Cloloop Complete ══════════════════
+Total cycles: 3
+Fixed: 3건
+Skipped: 0건
+Remaining: 2건 (Low)
+
+Fixed Issues:
+  ✅ SQL injection (UserService.ts:42)
+  ✅ missing null check (OrderController.ts:78)
+  ✅ unhandled promise rejection (PaymentService.ts:103)
+
+Remaining Low-priority:
+  ℹ️ console.log 제거 (UserService.ts:15)
+  ℹ️ 미사용 import (OrderController.ts:3)
+═══════════════════════════════════════
+```
 
 ---
 
 ## Usage Examples
 
 ```
-# 기본 사용 — 현재 작업 영역에서 루프 시작
-/loop
+# 기본 사용 — 자동 스코프 감지
+/cloloop
 
 # 특정 디렉토리 대상
-/loop src/backend/
+/cloloop src/backend/
 
-# 특정 패턴
-/loop "보안 이슈 위주로"
+# 특정 지시
+/cloloop "보안 이슈 위주로"
 
-# 프론트엔드만
+# 기존 명령어도 호환
+/loop
 /loop src/components/
-
-# 이미 진행 중인 세션에서 계속
-계속 진행
-다음
-next
 ```
 
 ---

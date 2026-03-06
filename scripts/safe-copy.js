@@ -96,11 +96,34 @@ switch (mode) {
     break;
   }
   case "dir": {
+    // 기존 심볼릭 링크/정션이 있으면 제거 후 복사 (install-link.bat 잔존 대응)
+    try {
+      const s = fs.lstatSync(arg2);
+      if (s.isSymbolicLink()) {
+        fs.unlinkSync(arg2);
+      } else if (!s.isDirectory()) {
+        fs.unlinkSync(arg2);
+      } else {
+        // 일반 디렉토리 — src와 같은 경로인지 확인
+        const realSrc = fs.realpathSync(arg1);
+        const realDest = fs.realpathSync(arg2);
+        if (realSrc === realDest) {
+          // 이미 같은 경로 (정션 등) — 삭제 후 복사
+          fs.rmSync(arg2, { recursive: true, force: true });
+        }
+      }
+    } catch (e) {
+      // 존재하지 않으면 무시
+    }
     ensureDir(arg2);
     fs.cpSync(arg1, arg2, { recursive: true, force: true });
     break;
   }
   case "file": {
+    // 기존 심볼릭 링크가 있으면 제거
+    try {
+      if (fs.lstatSync(arg2).isSymbolicLink()) fs.unlinkSync(arg2);
+    } catch (e) { /* 존재하지 않으면 무시 */ }
     ensureDir(path.dirname(arg2));
     fs.copyFileSync(arg1, arg2);
     break;

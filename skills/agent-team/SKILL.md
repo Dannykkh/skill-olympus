@@ -1,6 +1,6 @@
 ---
 name: agent-team
-description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. 네이티브 Agent Teams(Opus 4.6) 활용.
+description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. Claude Agent Teams + Codex spawn_agent 지원.
 triggers:
   - "agent-team"
   - "팀 실행"
@@ -10,15 +10,36 @@ auto_apply: false
 
 # Agent Team — Zephermine 섹션 병렬 실행
 
-> **실험적 기능**: Claude Code Agent Teams (Research Preview) 기반.
-> `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 환경변수가 필요합니다.
+> **대니즈팀(Dannys Team)**: Claude와 Codex 모두 네이티브 멀티에이전트를 지원합니다.
 
 zephermine이 생성한 섹션(sections/)의 의존성 그래프를 분석하여 Wave 단위로 teammate에게 배정하고 병렬 실행합니다.
 
+## CLI별 실행 모드
+
+| CLI | 실행 방식 | 도구 |
+|-----|----------|------|
+| **Claude** | Agent Teams (네이티브) | `TeamCreate` / `SendMessage` / `TaskCreate` / `TaskUpdate` |
+| **Codex** | spawn_agent (네이티브) | `spawn_agent` / `send_message` / `wait` / `close_agent` |
+| **Gemini** | orchestrator MCP 폴백 | `workpm-mcp` (동적 에이전트 생성 미지원) |
+
+### CLI 감지 방법
+
+Phase 0 시작 시 자동 판별:
+- `TeamCreate` 도구 사용 가능 → **Claude 모드**
+- `spawn_agent` 도구 사용 가능 → **Codex 모드**
+- 둘 다 없음 → 사용자에게 `workpm-mcp` (orchestrator) 안내
+
 ## Prerequisites
 
+### Claude 모드
 - Agent Teams 활성화: `settings.json`에 `"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}`
 - `"teammateMode": "in-process"` 또는 `"tmux"` 설정
+
+### Codex 모드
+- Codex CLI 설치 (`codex` 명령어 사용 가능)
+- full-auto 모드 권장 (`codex --approval-mode full-auto`)
+
+### 공통
 - zephermine 계획 산출물 (sections/index.md + section-NN-*.md 파일들)
 
 ## Team Name
@@ -154,6 +175,8 @@ AskUserQuestion으로 확인:
 
 ### Step 3: Create Tasks
 
+#### Claude 모드 (TaskCreate)
+
 모든 섹션을 TaskCreate로 등록하고 blockedBy 관계를 설정:
 
 ```
@@ -173,14 +196,31 @@ TaskCreate({
 TaskUpdate({ taskId: "4", addBlockedBy: ["1", "3"] })
 ```
 
-**핵심 규칙:**
-- teammate는 lead의 대화 히스토리를 상속하지 않음
-- 따라서 `description`에 섹션 파일 전체 내용을 임베딩해야 함
-- 파일 소유권(Files to Create/Modify)도 description에 포함
+#### Codex 모드 (spawn_agent)
+
+Wave 단위로 agent를 spawn합니다. Codex는 Task 시스템이 없으므로 agent 자체가 태스크:
+
+```
+# Wave 1 — 각 섹션마다 agent spawn
+agent_01 = spawn_agent({
+  prompt: "너는 대니즈팀의 풀스택 담당이야.\n\n[section-01 파일 전체 내용]\n\n담당 파일: src/core/**\n⚠️ 다른 파일은 절대 수정하지 마.\n완료 후 결과를 요약해서 보고해."
+})
+
+agent_02 = spawn_agent({
+  prompt: "너는 대니즈팀의 풀스택 담당이야.\n\n[section-02 파일 전체 내용]\n\n담당 파일: src/config/**\n⚠️ 다른 파일은 절대 수정하지 마.\n완료 후 결과를 요약해서 보고해."
+})
+```
+
+#### 공통 핵심 규칙
+- teammate/agent는 lead의 대화 히스토리를 상속하지 않음
+- 따라서 `description`/`prompt`에 섹션 파일 전체 내용을 임베딩해야 함
+- 파일 소유권(Files to Create/Modify)도 포함
 
 ### Step 4: Execute Waves
 
 See [wave-executor.md](references/wave-executor.md)
+
+#### Claude 모드 (TeamCreate + TaskList 폴링)
 
 ```
 for each wave:
@@ -217,6 +257,65 @@ Task #{taskId}를 TaskGet으로 읽어서 상세 내용을 확인해.
 - Lead(나)는 Shift+Tab으로 Delegate 모드 진입
 - 코드 작성은 teammate에게만 위임
 - Lead는 조율과 모니터링에만 집중
+
+#### Codex 모드 (spawn_agent + wait)
+
+```
+for each wave:
+  1. 이전 Wave의 모든 agent가 완료되었는지 확인
+  2. Wave에 속한 각 섹션마다 spawn_agent 호출
+  3. 모든 agent에 send_message로 시작 신호 (prompt에 포함된 경우 생략 가능)
+  4. wait로 각 agent 완료 대기
+  5. 완료된 agent의 결과를 수집
+  6. close_agent로 리소스 해제
+  7. 다음 Wave에 선행 결과를 전달
+```
+
+**agent 생성 + 실행:**
+
+```
+# Wave 1 — 병렬 spawn
+agents = []
+for section in wave.sections:
+  agent = spawn_agent({
+    prompt: build_section_prompt(section)  # 섹션 내용 + 파일 소유권 + 전문가 역할
+  })
+  agents.append(agent)
+
+# Wave 1 — 모든 agent 완료 대기
+results = []
+for agent in agents:
+  result = wait(agent)        # agent 작업 완료까지 대기
+  results.append(result)
+  close_agent(agent)          # 리소스 해제
+
+# Wave 2 — 선행 결과 포함하여 spawn
+for section in wave2.sections:
+  predecessor_results = get_results_for_deps(section, results)
+  agent = spawn_agent({
+    prompt: build_section_prompt(section) + "\n\n## 선행 작업 결과\n" + predecessor_results
+  })
+```
+
+**Codex agent prompt 형식:**
+
+```
+"너는 대니즈팀의 **{전문가 역할}** 담당이야.
+agents/{agent-file}.md의 규칙을 참조해서 작업해.
+
+Section NN: {name}을 구현해줘.
+아래 섹션 내용을 읽고 구현해:
+
+{section 파일 전체 내용}
+
+담당 파일: {file_list}
+⚠️ 다른 agent의 파일은 절대 수정하지 마.
+완료 후 생성/수정한 파일 목록과 구현 요약을 보고해."
+```
+
+**모니터링:**
+- `wait`이 블로킹이므로 agent 완료 시 자동 진행
+- agent가 에러를 반환하면: 에러 로그 확인 → 1회 재spawn → 실패 시 사용자 보고
 
 ### Step 5: Verify Results
 
@@ -288,18 +387,19 @@ Agent Team: 실행 완료
 
 | 측면 | agent-team (이 스킬) | orchestrator (기존) |
 |------|---------------------|---------------------|
-| 설치 | 불필요 (env var만) | MCP 서버 빌드 필요 |
-| 외부 AI | Claude만 | Claude + Codex + Gemini |
+| 설치 | 불필요 (env var / CLI 내장) | MCP 서버 빌드 필요 |
+| 지원 CLI | Claude + Codex (네이티브) | Claude + Codex + Gemini (MCP) |
 | 파일 충돌 방지 | 소유권 규칙 (soft) | MCP lock_file (hard) |
-| 태스크 관리 | TaskCreate/Update (네이티브) | orchestrator MCP 도구 |
-| Plan approval | 네이티브 지원 | 미지원 |
-| 사용 조건 | zephermine 섹션 필요 | 어떤 계획이든 가능 |
-| 팀원 간 대화 | 지원 (mailbox) | 미지원 |
+| 태스크 관리 | Claude: TaskCreate, Codex: spawn_agent | orchestrator MCP 도구 |
+| Plan approval | 네이티브 지원 (Claude) | 미지원 |
+| 사용 조건 | zephermine 섹션 또는 자유 모드 | 어떤 계획이든 가능 |
+| 팀원 간 대화 | Claude: mailbox, Codex: send_message | 미지원 |
+| 검증 루프 | 각 teammate/agent 내부 | pmworker 내장 (3회 룰) |
 
 **공존 원칙:**
 - zephermine 섹션 기반 → agent-team 권장
-- 외부 AI(Codex, Gemini) 필요 → orchestrator 사용
-- 기존 orchestrator는 fallback으로 유지
+- Gemini 단독 실행 필요 → orchestrator 사용
+- 기존 orchestrator는 Gemini 폴백 + 고급 파일 락 필요 시 유지
 
 ---
 
@@ -320,9 +420,11 @@ Step {N} complete: {summary}
 |------|------|
 | SECTION_MANIFEST 파싱 실패 | 사용자에게 index.md 형식 확인 요청 |
 | 순환 의존성 발견 | 경고 출력 + 관련 섹션 목록 표시 |
-| teammate 실패/타임아웃 | 해당 Task 로그 확인 → 재시도 1회 → 실패 시 사용자 보고 |
-| 파일 충돌 감지 | 두 teammate가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
+| teammate/agent 실패 | Claude: Task 로그 확인 → 재시도 1회, Codex: 재spawn 1회 → 실패 시 사용자 보고 |
+| 파일 충돌 감지 | 두 teammate/agent가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
 | 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → 사용자에게 새 세션에서 재개 안내 |
+| spawn_agent 실패 (Codex) | Codex CLI 설치/권한 확인 → full-auto 모드 권장 → 재시도 |
+| agent wait 타임아웃 (Codex) | close_agent 후 재spawn → 섹션 범위 축소 고려 |
 
 ---
 
