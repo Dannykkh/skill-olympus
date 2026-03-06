@@ -27,7 +27,7 @@ const codexHome = process.env.CODEX_HOME
   : path.join(os.homedir(), ".codex");
 const codexConfigPath = path.join(codexHome, "config.toml");
 const FETCH_STARTUP_TIMEOUT_SEC = 30;
-const OPEN_WEBSEARCH_STARTUP_TIMEOUT_SEC = 90;
+
 
 function readJson(filePath) {
   try {
@@ -116,22 +116,6 @@ function buildAddCommand(cfg) {
 
   if (!cfg.config.command) {
     return null;
-  }
-
-  // open-websearch는 서버 배너를 stdout으로 출력해 MCP stdio handshake를 깨뜨릴 수 있어
-  // Codex에서는 wrapper를 통해 배너를 stderr로 우회합니다.
-  if (cfg.name === "open-websearch") {
-    const wrapperPath = path.join(
-      scriptDir,
-      "scripts",
-      "open-websearch-stdio-wrapper.cjs"
-    );
-    if (fs.existsSync(wrapperPath)) {
-      parts.push("--");
-      parts.push(shellQuote("node"));
-      parts.push(shellQuote(wrapperPath.replace(/\\/g, "/")));
-      return parts.join(" ");
-    }
   }
 
   const cmdArgs = Array.isArray(cfg.config.args) ? cfg.config.args : [];
@@ -295,13 +279,6 @@ if (toInstall.some((cfg) => cfg.name === "fetch")) {
     timeoutSec: FETCH_STARTUP_TIMEOUT_SEC,
   });
 }
-if (toInstall.some((cfg) => cfg.name === "open-websearch")) {
-  serverTimeoutTargets.push({
-    name: "open-websearch",
-    timeoutSec: OPEN_WEBSEARCH_STARTUP_TIMEOUT_SEC,
-  });
-}
-
 for (const cfg of toInstall) {
   if (cfg.requiresApiKey) {
     const envVar = cfg.apiKeyEnvVar || "API_KEY";
