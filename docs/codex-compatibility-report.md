@@ -9,7 +9,7 @@
 - Skills: 75
 - Root hooks (Claude format): 21
 - Codex notify hooks: 7
-- MCP config presets: 6
+- MCP config presets: 5
 
 ## Agents
 
@@ -57,7 +57,6 @@
 - context7
 - fetch
 - github (api key required)
-- open-websearch
 - playwright
 
 ## Recommended Next Steps
