@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 // install-hooks-config.js
-// settings.json에 훅 설정을 자동 등록/제거하는 헬퍼 스크립트
+// Helper script to auto-register/remove hook settings in settings.json
 //
-// 사용법:
+// Usage:
 //   node install-hooks-config.js <hooks-dir> <settings-path> --windows [--components ...] [--llms ...] [--target ...]
 //   node install-hooks-config.js <hooks-dir> <settings-path> --bash [--components ...] [--llms ...] [--target ...]
 //   node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 //
-// --components: 설치할 번들 (쉼표 구분: mnemo,orchestrator,agent-team 등)
-//               미지정 시 전체 (all과 동일)
-// --llms: 대상 LLM (쉼표 구분: claude,codex,gemini)
-//         미지정 시 전체
-// --target: 설정 대상 CLI (claude 또는 gemini, 기본: claude)
-//           gemini: Gemini 이벤트명(BeforeAgent, BeforeTool, AfterAgent) 사용
+// --components: bundles to install (comma-separated: mnemo,orchestrator,agent-team, etc.)
+//               if omitted, installs all (same as 'all')
+// --llms: target LLMs (comma-separated: claude,codex,gemini)
+//         if omitted, targets all
+// --target: target CLI (claude or gemini, default: claude)
+//           gemini: uses Gemini event names (BeforeAgent, BeforeTool, AfterAgent)
 
 const fs = require("fs");
 const path = require("path");
@@ -20,7 +20,7 @@ const path = require("path");
 const args = process.argv.slice(2);
 if (args.length < 3) {
   console.error(
-    "사용법: node install-hooks-config.js <hooks-dir> <settings-path> [--windows|--bash|--uninstall] [--components ...] [--llms ...] [--target ...]"
+    "Usage: node install-hooks-config.js <hooks-dir> <settings-path> [--windows|--bash|--uninstall] [--components ...] [--llms ...] [--target ...]"
   );
   process.exit(1);
 }
@@ -29,10 +29,10 @@ const hooksDir = args[0].replace(/\\/g, "/");
 const settingsPath = args[1];
 const mode = args[2]; // --windows, --bash, --uninstall
 
-// 선택적 컴포넌트/LLM/타겟 파싱
-let components = null; // null = 전체
-let llms = null; // null = 전체
-let target = "claude"; // 기본: claude
+// Parse optional component/LLM/target arguments
+let components = null; // null = all
+let llms = null; // null = all
+let target = "claude"; // default: claude
 for (let i = 3; i < args.length; i++) {
   if (args[i] === "--components" && args[i + 1]) {
     components = args[++i].split(",").map((s) => s.trim().toLowerCase());
@@ -54,12 +54,12 @@ function hasLlm(name) {
   return !llms || llms.includes(name);
 }
 
-// 절대경로를 슬래시로 통일
+// Normalize path separators to forward slashes
 function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
 
-// 절대경로를 $HOME 기반 이식 가능 경로로 변환
+// Convert absolute path to portable $HOME-based path
 function toPortablePath(absolutePath) {
   const home = normalizePath(require("os").homedir());
   const normalized = normalizePath(absolutePath);
@@ -69,7 +69,7 @@ function toPortablePath(absolutePath) {
   return normalized;
 }
 
-// 훅 항목 생성 헬퍼 (Claude/Gemini 공통 포맷: matcher + hooks 배열)
+// Hook entry builder helper (shared format for Claude/Gemini: matcher + hooks array)
 function hookEntry(matcher, command) {
   return {
     matcher: matcher,
@@ -77,30 +77,30 @@ function hookEntry(matcher, command) {
   };
 }
 
-// 필수 훅: 컴포넌트 선택과 무관하게 항상 설치
+// Mandatory hooks: always installed regardless of component selection
 const MANDATORY_HOOKS = ["save-conversation", "save-response", "save-turn", "orchestrator-detector"];
 
-// 훅 → 번들 매핑 (어떤 번들이 어떤 훅을 필요로 하는지)
-// 필수 훅(MANDATORY_HOOKS)은 shouldIncludeHook에서 항상 true 반환
+// Hook-to-bundle mapping (which bundle requires which hook)
+// Mandatory hooks (MANDATORY_HOOKS) always return true in shouldIncludeHook
 const HOOK_BUNDLE_MAP = {
   "save-conversation": ["mnemo"],
   "orchestrator-detector": ["orchestrator"],
-  "check-new-file": ["all-only"], // all 번들에서만 설치
+  "check-new-file": ["all-only"], // only installed with the 'all' bundle
   "protect-files": ["all-only"],
   "validate-code": ["all-only"],
   "validate-docs": ["all-only"],
   "validate-api": ["all-only"],
   "save-response": ["mnemo"],
-  "save-turn": ["mnemo"], // Gemini 전용: AfterAgent에서 User+Assistant 한 번에 저장
+  "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
 };
 
-// 해당 훅이 설치되어야 하는지 확인
-// 모든 번들이 코어 설치이므로 항상 true 반환
+// Check whether the given hook should be installed
+// All bundles are core installs, so always returns true
 function shouldIncludeHook(hookName) {
   return true;
 }
 
-// ── Claude 훅 설정 빌드 ──
+// ── Build Claude hooks config ──
 function buildClaudeHooksConfig(dir, isWindows) {
   const d = toPortablePath(dir);
   const ext = isWindows ? "ps1" : "sh";
@@ -146,10 +146,10 @@ function buildClaudeHooksConfig(dir, isWindows) {
   return config;
 }
 
-// ── Gemini 훅 설정 빌드 ──
-// Gemini CLI 이벤트: BeforeAgent, BeforeTool, AfterModel, AfterAgent
-// 매핑: UserPromptSubmit → BeforeAgent, PreToolUse → BeforeTool, Stop → AfterAgent
-// PostToolUse → Gemini에 미존재, BeforeTool/AfterAgent으로 대체
+// ── Build Gemini hooks config ──
+// Gemini CLI events: BeforeAgent, BeforeTool, AfterModel, AfterAgent
+// Mapping: UserPromptSubmit → BeforeAgent, PreToolUse → BeforeTool, Stop → AfterAgent
+// PostToolUse → not available in Gemini, replaced with BeforeTool/AfterAgent
 function buildGeminiHooksConfig(dir, isWindows) {
   const d = toPortablePath(dir);
   const ext = isWindows ? "ps1" : "sh";
@@ -160,8 +160,8 @@ function buildGeminiHooksConfig(dir, isWindows) {
 
   const config = {};
 
-  // BeforeAgent (← UserPromptSubmit 매핑)
-  // Gemini BeforeAgent 페이로드: {"prompt": "..."} — Claude와 동일
+  // BeforeAgent (← mapped from UserPromptSubmit)
+  // Gemini BeforeAgent payload: {"prompt": "..."} — same as Claude
   const ba = [];
   if (shouldIncludeHook("save-conversation"))
     ba.push(hookEntry("", cmd(`save-conversation.${ext}`)));
@@ -169,8 +169,8 @@ function buildGeminiHooksConfig(dir, isWindows) {
     ba.push(hookEntry("", nodeCmd("orchestrator-detector.js")));
   if (ba.length > 0) config.BeforeAgent = ba;
 
-  // BeforeTool (← PreToolUse 매핑)
-  // Gemini BeforeTool 페이로드 형식이 다를 수 있으나 시도
+  // BeforeTool (← mapped from PreToolUse)
+  // Gemini BeforeTool payload format may differ, but attempting anyway
   const bt = [];
   if (shouldIncludeHook("check-new-file"))
     bt.push(hookEntry("", cmd(`check-new-file.${ext}`)));
@@ -178,10 +178,10 @@ function buildGeminiHooksConfig(dir, isWindows) {
     bt.push(hookEntry("", cmd(`protect-files.${ext}`)));
   if (bt.length > 0) config.BeforeTool = bt;
 
-  // AfterAgent (← Stop + PostToolUse 대체)
-  // Gemini AfterAgent 페이로드: {"prompt": "...", "prompt_response": "..."}
-  // save-turn: User+Assistant 한 번에 저장 (gemini-mnemo의 기존 훅)
-  // validate 훅들: 파일 기반 검증은 AfterAgent에서 실행 (최종 체크)
+  // AfterAgent (← replaces Stop + PostToolUse)
+  // Gemini AfterAgent payload: {"prompt": "...", "prompt_response": "..."}
+  // save-turn: saves User+Assistant together (existing gemini-mnemo hook)
+  // validate hooks: file-based validation runs in AfterAgent (final check)
   const aa = [];
   if (shouldIncludeHook("save-turn"))
     aa.push(hookEntry("", cmd(`save-turn.${ext}`)));
@@ -196,7 +196,7 @@ function buildGeminiHooksConfig(dir, isWindows) {
   return config;
 }
 
-// 기존 settings.json 읽기 (없으면 빈 객체)
+// Read existing settings.json (returns empty object if not found)
 function readSettings(filePath) {
   try {
     const content = fs.readFileSync(filePath, "utf8");
@@ -206,7 +206,7 @@ function readSettings(filePath) {
   }
 }
 
-// settings.json 저장
+// Write settings.json
 function writeSettings(filePath, data) {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
@@ -215,7 +215,7 @@ function writeSettings(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
-// env → 번들 매핑 (Claude 전용)
+// env → bundle mapping (Claude only)
 const CLAUDE_ENV_BUNDLE_MAP = {
   CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: ["agent-team"],
 };
@@ -224,14 +224,14 @@ const CLAUDE_ENV_DEFAULTS = {
   CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: "1",
 };
 
-// 메인 로직
+// Main logic
 function main() {
   const settings = readSettings(settingsPath);
 
   if (mode === "--uninstall") {
     delete settings.hooks;
     writeSettings(settingsPath, settings);
-    console.log("      settings.json에서 hooks 설정 제거 완료");
+    console.log("      Removed hooks config from settings.json");
     return;
   }
 
@@ -240,15 +240,15 @@ function main() {
     ? buildGeminiHooksConfig(hooksDir, isWindows)
     : buildClaudeHooksConfig(hooksDir, isWindows);
 
-  // hooks 키: 기존 훅 정리 + 새 훅 추가
-  // 같은 스크립트 파일명이면 경로가 달라도 교체 (PC 이식성 보장)
+  // hooks key: clean up existing hooks + add new ones
+  // Replace entries with the same script filename even if paths differ (cross-PC portability)
   if (!settings.hooks) settings.hooks = {};
   for (const [event, entries] of Object.entries(hooksConfig)) {
     if (!settings.hooks[event]) settings.hooks[event] = [];
     for (const entry of entries) {
       const newCmd = entry.hooks[0].command;
       const newFilename = newCmd.split("/").pop().replace(/"/g, "");
-      // 같은 파일명을 가진 기존 항목 제거 (경로가 달라도)
+      // Remove existing entries with the same filename (even if paths differ)
       settings.hooks[event] = settings.hooks[event].filter((e) => {
         const existingCmd = e.hooks?.[0]?.command || "";
         const existingFilename = existingCmd.split("/").pop().replace(/"/g, "");
@@ -259,12 +259,12 @@ function main() {
   }
 
   if (isGemini) {
-    // Gemini 전용 설정
-    // enableAgents: 에이전트 사용 활성화
+    // Gemini-specific settings
+    // enableAgents: enable agent usage
     if (hasComponent("agent-team") || hasComponent("orchestrator")) {
       settings.enableAgents = true;
     }
-    // context.fileName: AGENTS.md 로드 보장
+    // context.fileName: ensure AGENTS.md is loaded
     if (!settings.context) settings.context = {};
     const currentFileNames = Array.isArray(settings.context.fileName)
       ? settings.context.fileName
@@ -280,8 +280,8 @@ function main() {
       }
     }
   } else {
-    // Claude 전용 설정
-    // env 키 머지 (기존 값 보존, 번들 필터링 적용)
+    // Claude-specific settings
+    // Merge env keys (preserve existing values, apply bundle filtering)
     if (!settings.env) settings.env = {};
     let envAdded = 0;
     for (const [key, value] of Object.entries(CLAUDE_ENV_DEFAULTS)) {
@@ -295,7 +295,7 @@ function main() {
       }
     }
 
-    // teammateMode: agent-team 번들 선택 시에만
+    // teammateMode: only when agent-team bundle is selected
     if (hasComponent("agent-team") && !settings.teammateMode) {
       settings.teammateMode = isWindows ? "in-process" : "tmux";
     }
@@ -309,10 +309,10 @@ function main() {
     0
   );
   const targetLabel = isGemini ? "Gemini" : "Claude";
-  const parts = [`${targetLabel}`, `${platform}`, `${hookCount}개 훅`];
+  const parts = [`${targetLabel}`, `${platform}`, `${hookCount} hooks`];
   if (isGemini && settings.enableAgents) parts.push("enableAgents");
   if (!isGemini && settings.teammateMode) parts.push(`teammateMode: ${settings.teammateMode}`);
-  console.log(`      settings.json 설정 완료 (${parts.join(", ")})`);
+  console.log(`      settings.json configured (${parts.join(", ")})`);
 }
 
 main();

@@ -1,52 +1,52 @@
 #!/usr/bin/env node
-// Orchestrator(PM-Worker 병렬 처리)를 설치/제거하는 스크립트
+// Script to install/uninstall Orchestrator (PM-Worker parallel processing)
 //
-// 사용법:
-//   전역 설치:  node install.js --global
-//   전역 제거:  node install.js --global --uninstall
-//   로컬 설치:  node install.js <target-project-path>
-//   로컬 제거:  node install.js <target-project-path> --uninstall
+// Usage:
+//   Global install:  node install.js --global
+//   Global uninstall:  node install.js --global --uninstall
+//   Local install:  node install.js <target-project-path>
+//   Local uninstall:  node install.js <target-project-path> --uninstall
 
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { execSync } = require("child_process");
 
-// ── 인자 파싱 ──
+// ── Argument parsing ──
 const args = process.argv.slice(2);
 const isGlobal = args.includes("--global");
 const isUninstall = args.includes("--uninstall");
 
-// 인자에서 옵션 제외한 경로 추출
+// Extract path from arguments (excluding options)
 const pathArg = args.find((a) => !a.startsWith("--"));
 
 if (!isGlobal && !pathArg) {
   console.error(
-    "사용법:\n" +
-      "  전역 설치:  node install.js --global\n" +
-      "  전역 제거:  node install.js --global --uninstall\n" +
-      "  로컬 설치:  node install.js <target-project-path>\n" +
-      "  로컬 제거:  node install.js <target-project-path> --uninstall"
+    "Usage:\n" +
+      "  Global install:  node install.js --global\n" +
+      "  Global uninstall:  node install.js --global --uninstall\n" +
+      "  Local install:  node install.js <target-project-path>\n" +
+      "  Local uninstall:  node install.js <target-project-path> --uninstall"
   );
   process.exit(1);
 }
 
-// 경로 설정
+// Path configuration
 const homeDir = os.homedir();
 const globalClaudeDir = path.join(homeDir, ".claude");
 const targetDir = isGlobal ? globalClaudeDir : path.resolve(pathArg);
 
-// 소스 레포 경로 (이 스크립트가 위치한 디렉토리)
+// Source repo path (directory where this script is located)
 const sourceDir = path.resolve(__dirname);
 const mcpServerDir = path.join(sourceDir, "mcp-server");
 const isWindows = process.platform === "win32";
 
-// 경로를 슬래시로 통일
+// Normalize paths to use forward slashes
 function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
 
-// JSON 파일 읽기 (없으면 빈 객체)
+// Read JSON file (returns empty object if not found)
 function readJson(filePath) {
   try {
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -55,7 +55,7 @@ function readJson(filePath) {
   }
 }
 
-// JSON 파일 저장
+// Write JSON file
 function writeJson(filePath, data) {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
@@ -64,7 +64,7 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
-// 파일 복사 헬퍼
+// File copy helper
 function copyFile(src, dest) {
   const dir = path.dirname(dest);
   if (!fs.existsSync(dir)) {
@@ -73,59 +73,59 @@ function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
 }
 
-// 파일 삭제 헬퍼 (없으면 무시)
+// File delete helper (ignores if not found)
 function removeFile(filePath) {
   try {
     fs.unlinkSync(filePath);
   } catch {
-    // 파일이 없으면 무시
+    // Ignore if file doesn't exist
   }
 }
 
-// 훅 스크립트 소스 경로 (이 레포의 hooks 폴더)
+// Hook script source path (hooks folder in this repo)
 const hooksSourceDir = path.join(sourceDir, "..", "..", "hooks");
 
-// ── 전역 설치 ──
+// ── Global install ──
 function installGlobal() {
-  console.log(`\nOrchestrator 전역 설치: ${globalClaudeDir}\n`);
+  console.log(`\nOrchestrator global install: ${globalClaudeDir}\n`);
 
-  // [1/5] MCP 서버 의존성 및 빌드 확인
-  console.log("[1/5] MCP 서버 의존성 및 빌드 확인...");
+  // [1/5] Check MCP server dependencies and build
+  console.log("[1/5] Checking MCP server dependencies and build...");
   const nodeModulesDir = path.join(mcpServerDir, "node_modules");
   const distIndex = path.join(mcpServerDir, "dist", "index.js");
 
   if (!fs.existsSync(nodeModulesDir)) {
-    console.log("      node_modules 없음 → npm install 실행");
+    console.log("      node_modules not found -> running npm install");
     try {
       execSync("npm install", { cwd: mcpServerDir, stdio: "inherit" });
     } catch (e) {
-      console.error("      npm install 실패:", e.message);
+      console.error("      npm install failed:", e.message);
       process.exit(1);
     }
   }
 
   if (!fs.existsSync(distIndex)) {
-    console.log("      dist/index.js 없음 → npm run build 실행");
+    console.log("      dist/index.js not found -> running npm run build");
     try {
       execSync("npm run build", { cwd: mcpServerDir, stdio: "inherit" });
     } catch (e) {
-      console.error("      빌드 실패:", e.message);
+      console.error("      Build failed:", e.message);
       process.exit(1);
     }
   }
-  console.log("      의존성 및 빌드 확인 완료");
+  console.log("      Dependencies and build check complete");
 
-  // [2/5] 훅 스크립트 복사
-  console.log("[2/5] 훅 스크립트 복사...");
+  // [2/5] Copy hook scripts
+  console.log("[2/5] Copying hook scripts...");
   const hooksDir = path.join(globalClaudeDir, "hooks");
   copyFile(
     path.join(hooksSourceDir, "orchestrator-detector.js"),
     path.join(hooksDir, "orchestrator-detector.js")
   );
-  console.log("      orchestrator-detector.js 복사 완료");
+  console.log("      orchestrator-detector.js copied");
 
-  // [3/5] 명령어 파일 복사
-  console.log("[3/5] 명령어 파일 복사...");
+  // [3/5] Copy command files
+  console.log("[3/5] Copying command files...");
   const commandsDir = path.join(globalClaudeDir, "commands");
   copyFile(
     path.join(sourceDir, "commands", "workpm.md"),
@@ -135,32 +135,32 @@ function installGlobal() {
     path.join(sourceDir, "commands", "pmworker.md"),
     path.join(commandsDir, "pmworker.md")
   );
-  console.log("      workpm.md, pmworker.md 복사 완료");
+  console.log("      workpm.md, pmworker.md copied");
 
-  // [4/5] spawn 스크립트 복사
-  console.log("[4/5] spawn 스크립트 복사...");
+  // [4/5] Copy spawn scripts
+  console.log("[4/5] Copying spawn scripts...");
   const scriptsDir = path.join(globalClaudeDir, "scripts");
   if (isWindows) {
     copyFile(
       path.join(mcpServerDir, "scripts", "spawn-worker.ps1"),
       path.join(scriptsDir, "spawn-worker.ps1")
     );
-    console.log("      spawn-worker.ps1 복사 완료");
+    console.log("      spawn-worker.ps1 copied");
   } else {
     copyFile(
       path.join(mcpServerDir, "scripts", "spawn-worker.sh"),
       path.join(scriptsDir, "spawn-worker.sh")
     );
     fs.chmodSync(path.join(scriptsDir, "spawn-worker.sh"), 0o755);
-    console.log("      spawn-worker.sh 복사 완료 (chmod +x)");
+    console.log("      spawn-worker.sh copied (chmod +x)");
   }
 
-  // [5/5] settings.json 머지 (전역)
-  console.log("[5/5] settings.json 머지 (전역)...");
+  // [5/5] Merge settings.json (global)
+  console.log("[5/5] Merging settings.json (global)...");
   const settingsPath = path.join(globalClaudeDir, "settings.json");
   const settings = readJson(settingsPath);
 
-  // mcpServers에 orchestrator 추가 (PROJECT_ROOT 생략 → process.cwd() 사용)
+  // Add orchestrator to mcpServers (PROJECT_ROOT omitted -> uses process.cwd())
   settings.mcpServers = settings.mcpServers || {};
   settings.mcpServers.orchestrator = {
     command: "node",
@@ -170,13 +170,13 @@ function installGlobal() {
     },
   };
 
-  // hooks에 orchestrator-detector 추가 (스크립트 방식, matcher 없음)
+  // Add orchestrator-detector to hooks (script-based, no matcher)
   settings.hooks = settings.hooks || {};
   settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
 
   const hookCommand = `node "${normalizePath(path.join(hooksDir, "orchestrator-detector.js"))}"`;
 
-  // 중복 확인 후 추가
+  // Check for duplicates before adding
   const hasOrchestratorHook = settings.hooks.UserPromptSubmit.some(
     (h) => h.hooks && h.hooks.some((hook) => hook.command && hook.command.includes("orchestrator-detector"))
   );
@@ -187,22 +187,22 @@ function installGlobal() {
   }
 
   writeJson(settingsPath, settings);
-  console.log("      settings.json 머지 완료");
+  console.log("      settings.json merge complete");
 
-  console.log("\n전역 설치 완료!\n");
-  console.log("사용법:");
-  console.log('  아무 프로젝트에서 "workpm" 입력 → PM 모드 시작');
-  console.log('  Worker 자동 생성: orchestrator_spawn_workers { "count": 2 }');
-  console.log("  또는 다른 터미널에서 \"pmworker\" 입력\n");
-  console.log("참고: .orchestrator/ 폴더가 현재 작업 디렉토리에 생성됩니다.\n");
+  console.log("\nGlobal install complete!\n");
+  console.log("Usage:");
+  console.log('  Type "workpm" in any project -> starts PM mode');
+  console.log('  Auto-spawn workers: orchestrator_spawn_workers { "count": 2 }');
+  console.log("  Or type \"pmworker\" in another terminal\n");
+  console.log("Note: .orchestrator/ folder will be created in the current working directory.\n");
 }
 
-// ── 전역 제거 ──
+// ── Global uninstall ──
 function uninstallGlobal() {
-  console.log(`\nOrchestrator 전역 제거: ${globalClaudeDir}\n`);
+  console.log(`\nOrchestrator global uninstall: ${globalClaudeDir}\n`);
 
-  // [1/4] settings.json에서 mcpServers.orchestrator 및 훅 제거
-  console.log("[1/4] settings.json에서 MCP 및 훅 설정 제거...");
+  // [1/4] Remove mcpServers.orchestrator and hooks from settings.json
+  console.log("[1/4] Removing MCP and hook config from settings.json...");
   const settingsPath = path.join(globalClaudeDir, "settings.json");
   const settings = readJson(settingsPath);
 
@@ -213,7 +213,7 @@ function uninstallGlobal() {
     }
   }
 
-  // hooks에서 orchestrator-detector 제거
+  // Remove orchestrator-detector from hooks
   if (settings.hooks && settings.hooks.UserPromptSubmit) {
     settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
       (h) => {
@@ -234,90 +234,90 @@ function uninstallGlobal() {
   }
 
   writeJson(settingsPath, settings);
-  console.log("      settings.json 정리 완료");
+  console.log("      settings.json cleanup complete");
 
-  // [2/4] 훅 스크립트 삭제
-  console.log("[2/4] 훅 스크립트 삭제...");
+  // [2/4] Delete hook scripts
+  console.log("[2/4] Deleting hook scripts...");
   const hooksDir = path.join(globalClaudeDir, "hooks");
   removeFile(path.join(hooksDir, "orchestrator-detector.js"));
-  console.log("      훅 스크립트 삭제 완료");
+  console.log("      Hook scripts deleted");
 
-  // [3/4] 명령어 파일 삭제
-  console.log("[3/4] 명령어 파일 삭제...");
+  // [3/4] Delete command files
+  console.log("[3/4] Deleting command files...");
   const commandsDir = path.join(globalClaudeDir, "commands");
   removeFile(path.join(commandsDir, "workpm.md"));
   removeFile(path.join(commandsDir, "pmworker.md"));
-  console.log("      명령어 파일 삭제 완료");
+  console.log("      Command files deleted");
 
-  // [4/4] spawn 스크립트 삭제
-  console.log("[4/4] spawn 스크립트 삭제...");
+  // [4/4] Delete spawn scripts
+  console.log("[4/4] Deleting spawn scripts...");
   const scriptsDir = path.join(globalClaudeDir, "scripts");
   removeFile(path.join(scriptsDir, "spawn-worker.ps1"));
   removeFile(path.join(scriptsDir, "spawn-worker.sh"));
-  console.log("      spawn 스크립트 삭제 완료");
+  console.log("      Spawn scripts deleted");
 
-  console.log("\n전역 제거 완료!\n");
+  console.log("\nGlobal uninstall complete!\n");
 }
 
-// ── 로컬 설치 ──
+// ── Local install ──
 function installLocal() {
-  console.log(`\nOrchestrator 로컬 설치: ${targetDir}\n`);
+  console.log(`\nOrchestrator local install: ${targetDir}\n`);
 
-  // [1/5] MCP 서버 의존성 및 빌드 확인
-  console.log("[1/5] MCP 서버 의존성 및 빌드 확인...");
+  // [1/5] Check MCP server dependencies and build
+  console.log("[1/5] Checking MCP server dependencies and build...");
   const nodeModulesDir = path.join(mcpServerDir, "node_modules");
   const distIndex = path.join(mcpServerDir, "dist", "index.js");
 
   if (!fs.existsSync(nodeModulesDir)) {
-    console.log("      node_modules 없음 → npm install 실행");
+    console.log("      node_modules not found -> running npm install");
     try {
       execSync("npm install", { cwd: mcpServerDir, stdio: "inherit" });
     } catch (e) {
-      console.error("      npm install 실패:", e.message);
+      console.error("      npm install failed:", e.message);
       process.exit(1);
     }
   }
 
   if (!fs.existsSync(distIndex)) {
-    console.log("      dist/index.js 없음 → npm run build 실행");
+    console.log("      dist/index.js not found -> running npm run build");
     try {
       execSync("npm run build", { cwd: mcpServerDir, stdio: "inherit" });
     } catch (e) {
-      console.error("      빌드 실패:", e.message);
+      console.error("      Build failed:", e.message);
       process.exit(1);
     }
   }
-  console.log("      의존성 및 빌드 확인 완료");
+  console.log("      Dependencies and build check complete");
 
-  // [2/5] 훅 스크립트 복사 (스크립트 방식)
-  console.log("[2/5] 훅 스크립트 복사...");
+  // [2/5] Copy hook scripts (script-based)
+  console.log("[2/5] Copying hook scripts...");
   const hooksDir = path.join(targetDir, "hooks");
   copyFile(
     path.join(hooksSourceDir, "orchestrator-detector.js"),
     path.join(hooksDir, "orchestrator-detector.js")
   );
-  console.log("      orchestrator-detector.js 복사 완료");
+  console.log("      orchestrator-detector.js copied");
 
-  // [3/5] Worker spawn 스크립트 복사
-  console.log("[3/5] Worker spawn 스크립트 복사...");
+  // [3/5] Copy worker spawn scripts
+  console.log("[3/5] Copying worker spawn scripts...");
   const scriptsDir = path.join(targetDir, ".claude", "scripts");
   if (isWindows) {
     copyFile(
       path.join(mcpServerDir, "scripts", "spawn-worker.ps1"),
       path.join(scriptsDir, "spawn-worker.ps1")
     );
-    console.log("      spawn-worker.ps1 복사 완료");
+    console.log("      spawn-worker.ps1 copied");
   } else {
     copyFile(
       path.join(mcpServerDir, "scripts", "spawn-worker.sh"),
       path.join(scriptsDir, "spawn-worker.sh")
     );
     fs.chmodSync(path.join(scriptsDir, "spawn-worker.sh"), 0o755);
-    console.log("      spawn-worker.sh 복사 완료 (chmod +x)");
+    console.log("      spawn-worker.sh copied (chmod +x)");
   }
 
-  // [4/5] 명령어 파일 복사
-  console.log("[4/5] 명령어 파일 복사...");
+  // [4/5] Copy command files
+  console.log("[4/5] Copying command files...");
   const commandsDir = path.join(targetDir, ".claude", "commands");
   copyFile(
     path.join(sourceDir, "commands", "workpm.md"),
@@ -327,14 +327,14 @@ function installLocal() {
     path.join(sourceDir, "commands", "pmworker.md"),
     path.join(commandsDir, "pmworker.md")
   );
-  console.log("      workpm.md, pmworker.md 복사 완료");
+  console.log("      workpm.md, pmworker.md copied");
 
-  // [5/5] settings.local.json 머지
-  console.log("[5/5] settings.local.json 머지...");
+  // [5/5] Merge settings.local.json
+  console.log("[5/5] Merging settings.local.json...");
   const settingsPath = path.join(targetDir, ".claude", "settings.local.json");
   const settings = readJson(settingsPath);
 
-  // mcpServers에 orchestrator 추가 (기존 MCP 보존)
+  // Add orchestrator to mcpServers (preserving existing MCP entries)
   settings.mcpServers = settings.mcpServers || {};
   settings.mcpServers.orchestrator = {
     command: "node",
@@ -345,14 +345,14 @@ function installLocal() {
     },
   };
 
-  // hooks.UserPromptSubmit에 orchestrator-detector 추가 (스크립트 방식)
+  // Add orchestrator-detector to hooks.UserPromptSubmit (script-based)
   settings.hooks = settings.hooks || {};
   settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
 
   const hooksDirNorm = normalizePath(hooksDir);
   const hookCommand = `node "${hooksDirNorm}/orchestrator-detector.js"`;
 
-  // 기존 matcher 기반 훅 제거 (이전 버전 호환)
+  // Remove old matcher-based hooks (backward compatibility)
   settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
     (h) => {
       if (typeof h.matcher === "string") {
@@ -367,7 +367,7 @@ function installLocal() {
     }
   );
 
-  // 중복 확인 후 추가
+  // Check for duplicates before adding
   const hasOrchestratorHook = settings.hooks.UserPromptSubmit.some(
     (h) => h.hooks && h.hooks.some((hook) => hook.command && hook.command.includes("orchestrator-detector"))
   );
@@ -378,20 +378,20 @@ function installLocal() {
   }
 
   writeJson(settingsPath, settings);
-  console.log("      settings.local.json 머지 완료");
+  console.log("      settings.local.json merge complete");
 
-  console.log("\n로컬 설치 완료!\n");
-  console.log("사용법:");
-  console.log('  PM 모드:     프롬프트에 "workpm" 입력');
-  console.log('  Worker 모드: 다른 터미널에서 "pmworker" 입력\n');
+  console.log("\nLocal install complete!\n");
+  console.log("Usage:");
+  console.log('  PM mode:     Type "workpm" in the prompt');
+  console.log('  Worker mode: Type "pmworker" in another terminal\n');
 }
 
-// ── 로컬 제거 ──
+// ── Local uninstall ──
 function uninstallLocal() {
-  console.log(`\nOrchestrator 로컬 제거: ${targetDir}\n`);
+  console.log(`\nOrchestrator local uninstall: ${targetDir}\n`);
 
-  // [1/5] settings.local.json에서 mcpServers.orchestrator 제거
-  console.log("[1/5] settings.local.json에서 MCP 설정 제거...");
+  // [1/5] Remove mcpServers.orchestrator from settings.local.json
+  console.log("[1/5] Removing MCP config from settings.local.json...");
   const settingsPath = path.join(targetDir, ".claude", "settings.local.json");
   const settings = readJson(settingsPath);
 
@@ -402,16 +402,16 @@ function uninstallLocal() {
     }
   }
 
-  // [2/5] hooks에서 orchestrator-detector 및 이전 훅 항목 제거
-  console.log("[2/5] settings.local.json에서 훅 설정 제거...");
+  // [2/5] Remove orchestrator-detector and legacy hook entries from hooks
+  console.log("[2/5] Removing hook config from settings.local.json...");
   if (settings.hooks && settings.hooks.UserPromptSubmit) {
     settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
       (h) => {
-        // 이전 matcher 기반 훅 제거
+        // Remove legacy matcher-based hooks
         if (typeof h.matcher === "string") {
           if (/workpm|pmworker/i.test(h.matcher)) return false;
         }
-        // 스크립트 기반 훅 제거
+        // Remove script-based hooks
         if (h.hooks && Array.isArray(h.hooks)) {
           const hasOldHook = h.hooks.some(
             (hook) => hook.command && /workpm|pmworker/i.test(hook.command)
@@ -433,49 +433,49 @@ function uninstallLocal() {
   }
 
   writeJson(settingsPath, settings);
-  console.log("      settings.local.json 정리 완료");
+  console.log("      settings.local.json cleanup complete");
 
-  // [3/5] 훅 스크립트 삭제
-  console.log("[3/5] 훅 스크립트 삭제...");
+  // [3/5] Delete hook scripts
+  console.log("[3/5] Deleting hook scripts...");
   const hooksDir = path.join(targetDir, "hooks");
-  // 새 스크립트 삭제
+  // Delete new script
   removeFile(path.join(hooksDir, "orchestrator-detector.js"));
-  // 이전 버전 파일도 삭제 (호환성)
+  // Also delete legacy version files (backward compatibility)
   removeFile(path.join(hooksDir, "workpm-hook.ps1"));
   removeFile(path.join(hooksDir, "workpm-hook.sh"));
   removeFile(path.join(hooksDir, "pmworker-hook.ps1"));
   removeFile(path.join(hooksDir, "pmworker-hook.sh"));
-  console.log("      훅 스크립트 삭제 완료");
+  console.log("      Hook scripts deleted");
 
-  // [4/5] spawn 스크립트 삭제
-  console.log("[4/5] spawn 스크립트 삭제...");
+  // [4/5] Delete spawn scripts
+  console.log("[4/5] Deleting spawn scripts...");
   const scriptsDir = path.join(targetDir, ".claude", "scripts");
   removeFile(path.join(scriptsDir, "spawn-worker.ps1"));
   removeFile(path.join(scriptsDir, "spawn-worker.sh"));
-  console.log("      spawn 스크립트 삭제 완료");
+  console.log("      Spawn scripts deleted");
 
-  // [5/5] 명령어 파일 삭제
-  console.log("[5/5] 명령어 파일 삭제...");
+  // [5/5] Delete command files
+  console.log("[5/5] Deleting command files...");
   const commandsDir = path.join(targetDir, ".claude", "commands");
   removeFile(path.join(commandsDir, "workpm.md"));
   removeFile(path.join(commandsDir, "pmworker.md"));
-  console.log("      명령어 파일 삭제 완료");
+  console.log("      Command files deleted");
 
-  console.log("\n로컬 제거 완료!\n");
+  console.log("\nLocal uninstall complete!\n");
 }
 
-// ── 실행 ──
+// ── Execute ──
 if (isGlobal) {
-  // 전역 설치/제거
+  // Global install/uninstall
   if (isUninstall) {
     uninstallGlobal();
   } else {
     installGlobal();
   }
 } else {
-  // 로컬 설치/제거
+  // Local install/uninstall
   if (!fs.existsSync(targetDir)) {
-    console.error(`대상 디렉토리가 존재하지 않습니다: ${targetDir}`);
+    console.error(`Target directory does not exist: ${targetDir}`);
     process.exit(1);
   }
 

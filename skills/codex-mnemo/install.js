@@ -1,30 +1,30 @@
 #!/usr/bin/env node
-// Codex-Mnemo (장기기억 시스템) 설치/제거 스크립트
+// Codex-Mnemo (long-term memory system) install/uninstall script
 //
-// 사용법:
-//   node skills/codex-mnemo/install.js              # 설치
-//   node skills/codex-mnemo/install.js --uninstall  # 제거
+// Usage:
+//   node skills/codex-mnemo/install.js              # install
+//   node skills/codex-mnemo/install.js --uninstall  # uninstall
 //
-// Codex-Mnemo 핵심 구성요소:
-//   - 훅: save-turn (notify 이벤트로 User+Assistant 대화 자동 저장)
-//   - AGENTS.md 규칙: 응답 태그, 과거 대화 검색
+// Codex-Mnemo core components:
+//   - Hook: save-turn (auto-save User+Assistant conversations via notify event)
+//   - AGENTS.md rules: response tags, past conversation search
 
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// ── 설정 ──
+// ── Config ──
 const args = process.argv.slice(2);
 const isUninstall = args.includes("--uninstall");
 const isWindows = process.platform === "win32";
 
-// 소스 디렉토리 (이 스크립트 위치)
+// Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
 
-// Codex 글로벌 디렉토리
+// Codex global directory
 const codexDir = path.join(os.homedir(), ".codex");
 
-// ── 유틸리티 함수 ──
+// ── Utility functions ──
 function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
@@ -49,7 +49,7 @@ function removeFile(filePath) {
   }
 }
 
-// ── AGENTS.md 규칙 머지 ──
+// ── AGENTS.md rules merge ──
 const MARKER_START = "<!-- CODEX-MNEMO:START -->";
 const MARKER_END = "<!-- CODEX-MNEMO:END -->";
 
@@ -63,14 +63,14 @@ function installAgentsMdRules(agentsMdPath, templatePath) {
 
   const template = fs.readFileSync(templatePath, "utf8");
 
-  // 기존 Codex-Mnemo 규칙 제거
+  // Remove existing Codex-Mnemo rules
   const regex = new RegExp(
     `\\n?${escapeRegex(MARKER_START)}[\\s\\S]*?${escapeRegex(MARKER_END)}\\n?`,
     "g"
   );
   content = content.replace(regex, "").trim();
 
-  // 새 규칙 추가
+  // Append new rules
   const rulesBlock = `\n\n${MARKER_START}\n${template}\n${MARKER_END}`;
   content = content + rulesBlock + "\n";
 
@@ -97,8 +97,8 @@ function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// ── TOML config.toml 처리 ──
-// 외부 라이브러리 없이 단순 문자열 조작으로 notify 설정 관리
+// ── TOML config.toml handling ──
+// Manage notify settings via simple string manipulation without external libraries
 
 function buildNotifyCommand(hooksDir) {
   const d = normalizePath(hooksDir);
@@ -141,12 +141,12 @@ function removeNotifyAssignmentsEverywhere(content) {
         continue;
       }
 
-      // notify = [ ... ] 단일 라인
+      // notify = [ ... ] single line
       if (/\]/.test(line)) {
         continue;
       }
 
-      // notify = [ ... ] 멀티 라인 블록 제거
+      // Remove notify = [ ... ] multi-line block
       while (i + 1 < lines.length) {
         i += 1;
         if (/\]/.test(lines[i])) {
@@ -207,7 +207,7 @@ function installTomlNotify(configPath, notifyArgs) {
 
   const newLine = stringifyNotify(notifyArgs);
   const hadNotify = /^\s*notify\s*=/m.test(content);
-  console.log(hadNotify ? "      기존 notify 설정을 codex-mnemo 형식으로 교체" : "      notify 설정 추가");
+  console.log(hadNotify ? "      Replacing existing notify config with codex-mnemo format" : "      Adding notify config");
 
   content = removeNotifyAssignmentsEverywhere(content);
   content = insertRootLine(content, newLine);
@@ -236,12 +236,12 @@ function removeTomlNotify(configPath) {
   }
 }
 
-// ── 설치 ──
+// ── Install ──
 function install() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  CODEX-MNEMO: Codex CLI 장기기억 시스템 설치                   ║
-║  기억의 여신 Mnemosyne에서 유래                                ║
+║  CODEX-MNEMO: Codex CLI Long-Term Memory System Install       ║
+║  Named after Mnemosyne, goddess of memory                     ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 
@@ -249,8 +249,8 @@ function install() {
   const configPath = path.join(codexDir, "config.toml");
   const agentsMdPath = path.join(codexDir, "AGENTS.md");
 
-  // [1/3] 훅 파일 복사
-  console.log("[1/3] 훅 파일 설치 중...");
+  // [1/3] Copy hook files
+  console.log("[1/3] Installing hook files...");
   ensureDir(hooksDir);
 
   const hookFiles = isWindows
@@ -262,7 +262,7 @@ function install() {
     const dest = path.join(hooksDir, hookFile);
 
     if (!fs.existsSync(src)) {
-      console.error(`      오류: ${src} 파일을 찾을 수 없습니다.`);
+      console.error(`      Error: File not found: ${src}`);
       process.exit(1);
     }
 
@@ -272,49 +272,49 @@ function install() {
     }
     console.log(`      - ${hookFile}`);
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [2/3] config.toml notify 설정
-  console.log("\n[2/3] config.toml notify 설정 중...");
+  // [2/3] config.toml notify settings
+  console.log("\n[2/3] Configuring config.toml notify...");
   const notifyArgs = buildNotifyCommand(hooksDir);
   installTomlNotify(configPath, notifyArgs);
   console.log(`      ${stringifyNotify(notifyArgs)}`);
   console.log("      tui.notifications = true");
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [3/3] AGENTS.md 규칙 설치
-  console.log("\n[3/3] AGENTS.md 장기기억 규칙 설치 중...");
+  // [3/3] Install AGENTS.md rules
+  console.log("\n[3/3] Installing AGENTS.md long-term memory rules...");
   const templatePath = path.join(sourceDir, "templates", "agents-md-rules.md");
   if (fs.existsSync(templatePath)) {
     installAgentsMdRules(agentsMdPath, templatePath);
-    console.log("      완료!");
+    console.log("      Done!");
   } else {
-    console.log("      템플릿 없음, 건너뜀");
+    console.log("      Template not found, skipping");
   }
 
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  CODEX-MNEMO 설치 완료!                                        ║
+║  CODEX-MNEMO installation complete!                           ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  설치된 구성요소:                                              ║
-║  - 훅: save-turn (notify로 대화 자동 저장)                    ║
-║  - AGENTS.md: 응답 태그, 과거 검색 규칙                       ║
+║  Installed components:                                        ║
+║  - Hook: save-turn (auto-save conversations via notify)       ║
+║  - AGENTS.md: response tags, past conversation search rules   ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  사용법:                                                       ║
-║  - 대화는 자동으로 conversations/에 저장됩니다                 ║
-║  - 응답 끝에 #tags를 추가하면 자동으로 캡처됩니다             ║
-║  - "이전에 ~했었지?" 라고 물으면 자동 검색됩니다              ║
+║  Usage:                                                       ║
+║  - Conversations are automatically saved to conversations/    ║
+║  - #tags at the end of responses are captured automatically   ║
+║  - Ask "what did we do before?" for automatic search          ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  Codex CLI를 재시작하면 적용됩니다.                            ║
+║  Restart Codex CLI to apply changes.                          ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 }
 
-// ── 제거 ──
+// ── Uninstall ──
 function uninstall() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  CODEX-MNEMO: Codex CLI 장기기억 시스템 제거                   ║
+║  CODEX-MNEMO: Codex CLI Long-Term Memory System Uninstall     ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 
@@ -322,8 +322,8 @@ function uninstall() {
   const configPath = path.join(codexDir, "config.toml");
   const agentsMdPath = path.join(codexDir, "AGENTS.md");
 
-  // [1/3] 훅 파일 제거
-  console.log("[1/3] 훅 파일 제거 중...");
+  // [1/3] Remove hook files
+  console.log("[1/3] Removing hook files...");
   const hookFiles = [
     "save-turn.ps1",
     "append-user.ps1",
@@ -335,40 +335,40 @@ function uninstall() {
   ];
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {
-      console.log(`      - ${file} 제거됨`);
+      console.log(`      - ${file} removed`);
     }
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [2/3] config.toml notify 설정 제거
-  console.log("\n[2/3] config.toml notify 설정 제거 중...");
+  // [2/3] Remove config.toml notify settings
+  console.log("\n[2/3] Removing config.toml notify settings...");
   if (removeTomlNotify(configPath)) {
-    console.log("      제거됨");
+    console.log("      Removed");
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [3/3] AGENTS.md 규칙 제거
-  console.log("\n[3/3] AGENTS.md 장기기억 규칙 제거 중...");
+  // [3/3] Remove AGENTS.md rules
+  console.log("\n[3/3] Removing AGENTS.md long-term memory rules...");
   if (uninstallAgentsMdRules(agentsMdPath)) {
-    console.log("      제거됨");
+    console.log("      Removed");
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  CODEX-MNEMO 제거 완료!                                        ║
+║  CODEX-MNEMO uninstall complete!                              ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  참고: 대화 기록 (conversations/)은 보존됩니다.                ║
-║  완전히 삭제하려면 수동으로 삭제하세요.                        ║
+║  Note: Conversation history (conversations/) is preserved.    ║
+║  Delete manually if you want to remove it entirely.           ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  Codex CLI를 재시작하면 적용됩니다.                            ║
+║  Restart Codex CLI to apply changes.                          ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 }
 
-// ── 실행 ──
+// ── Run ──
 if (!fs.existsSync(codexDir)) {
-  console.log(`참고: ${codexDir} 폴더가 없어 생성합니다.`);
+  console.log(`Note: ${codexDir} directory not found, creating it.`);
   ensureDir(codexDir);
 }
 

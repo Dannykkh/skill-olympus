@@ -1,32 +1,32 @@
 #!/usr/bin/env node
-// Mnemo (장기기억 시스템) 설치/제거 스크립트
+// Mnemo (Long-Term Memory System) Install/Uninstall Script
 //
-// 사용법:
-//   node skills/mnemo/install.js              # 설치
-//   node skills/mnemo/install.js --check      # 헬스체크 (설치 상태 확인)
-//   node skills/mnemo/install.js --uninstall  # 제거
+// Usage:
+//   node skills/mnemo/install.js              # Install
+//   node skills/mnemo/install.js --check      # Health check (verify install status)
+//   node skills/mnemo/install.js --uninstall  # Uninstall
 //
-// Mnemo 핵심 구성요소:
-//   - 훅: save-conversation, save-response (대화 자동 저장)
-//   - CLAUDE.md 규칙: 응답 태그, 과거 대화 검색, MEMORY.md 자동 업데이트
+// Mnemo Core Components:
+//   - Hooks: save-conversation, save-response (auto-save conversations)
+//   - CLAUDE.md Rules: response tags, past conversation search, MEMORY.md auto-update
 
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// ── 설정 ──
+// ── Config ──
 const args = process.argv.slice(2);
 const isUninstall = args.includes("--uninstall");
 const isCheck = args.includes("--check");
 const isWindows = process.platform === "win32";
 
-// 소스 디렉토리 (이 스크립트 위치)
+// Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
 
-// Claude 글로벌 디렉토리
+// Claude global directory
 const claudeDir = path.join(os.homedir(), ".claude");
 
-// ── 유틸리티 함수 ──
+// ── Utility Functions ──
 function normalizePath(p) {
   return p.replace(/\\/g, "/");
 }
@@ -64,7 +64,7 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
-// ── CLAUDE.md 규칙 머지 ──
+// ── CLAUDE.md Rules Merge ──
 const MARKER_START = "<!-- MNEMO:START -->";
 const MARKER_END = "<!-- MNEMO:END -->";
 
@@ -78,11 +78,11 @@ function installClaudeMdRules(claudeMdPath, templatePath) {
 
   const template = fs.readFileSync(templatePath, "utf8");
 
-  // 기존 Mnemo 규칙 제거
+  // Remove existing Mnemo rules
   const regex = new RegExp(`\\n?${MARKER_START}[\\s\\S]*?${MARKER_END}\\n?`, "g");
   content = content.replace(regex, "").trim();
 
-  // 새 규칙 추가
+  // Append new rules
   const rulesBlock = `\n\n${MARKER_START}\n${template}\n${MARKER_END}`;
   content = content + rulesBlock + "\n";
 
@@ -102,7 +102,7 @@ function uninstallClaudeMdRules(claudeMdPath) {
   }
 }
 
-// ── 훅 설정 ──
+// ── Hooks Config ──
 function buildHooksConfig(hooksDir) {
   const d = normalizePath(hooksDir);
 
@@ -134,19 +134,19 @@ function mergeHooksConfig(settingsPath, hooksConfig) {
   const settings = readJson(settingsPath);
   settings.hooks = settings.hooks || {};
 
-  // Mnemo 훅 추가 (기존 훅 보존)
+  // Add Mnemo hooks (preserve existing hooks)
   for (const [event, hooks] of Object.entries(hooksConfig)) {
     settings.hooks[event] = settings.hooks[event] || [];
 
-    // 중복 체크 후 추가 (각 훅을 개별적으로 확인)
+    // Check for duplicates before adding (verify each hook individually)
     for (const hook of hooks) {
-      // 추가하려는 훅의 커맨드에서 고유 식별자 추출
+      // Extract unique identifier from the hook command to add
       const newCmd = hook.hooks?.[0]?.command || hook.command || "";
       const hookId = newCmd.includes("save-conversation") ? "save-conversation"
                    : newCmd.includes("save-response") ? "save-response"
                    : newCmd;
 
-      // 같은 식별자를 가진 훅이 이미 있는지 확인
+      // Check if a hook with the same identifier already exists
       const exists = settings.hooks[event].some(h => {
         const existingCmd = h.hooks?.[0]?.command || h.command || "";
         return existingCmd.includes(hookId);
@@ -183,12 +183,12 @@ function removeHooksConfig(settingsPath) {
   writeJson(settingsPath, settings);
 }
 
-// ── 설치 ──
+// ── Install ──
 function install() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  MNEMO: 장기기억 시스템 설치                                   ║
-║  기억의 여신 Mnemosyne에서 유래                                ║
+║  MNEMO: Long-Term Memory System Install                       ║
+║  Named after Mnemosyne, goddess of memory                     ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 
@@ -196,8 +196,8 @@ function install() {
   const settingsPath = path.join(claudeDir, "settings.json");
   const claudeMdPath = path.join(claudeDir, "CLAUDE.md");
 
-  // [1/3] 훅 파일 복사
-  console.log("[1/3] 훅 파일 설치 중...");
+  // [1/3] Copy hook files
+  console.log("[1/3] Installing hook files...");
   ensureDir(hooksDir);
 
   const hookFiles = isWindows
@@ -205,7 +205,7 @@ function install() {
     : ["save-conversation.sh", "save-response.sh"];
 
   for (const file of hookFiles) {
-    // 훅 파일 소스 탐색: skills/mnemo/hooks/ → 루트 hooks/ 순서로 시도
+    // Search for hook file source: skills/mnemo/hooks/ → root hooks/ fallback
     const srcLocal = path.join(sourceDir, "hooks", file);
     const srcRoot = path.join(sourceDir, "..", "..", "hooks", file);
     const src = fs.existsSync(srcLocal) ? srcLocal : fs.existsSync(srcRoot) ? srcRoot : null;
@@ -217,43 +217,43 @@ function install() {
       }
       console.log(`      - ${file}`);
     } else {
-      console.log(`      ⚠ ${file} 소스를 찾을 수 없음 (skills/mnemo/hooks/ 및 루트 hooks/ 확인)`);
+      console.log(`      ⚠ ${file} source not found (checked skills/mnemo/hooks/ and root hooks/)`);
     }
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [2/3] settings.json 훅 설정
-  console.log("\n[2/3] settings.json 훅 설정 중...");
+  // [2/3] Configure settings.json hooks
+  console.log("\n[2/3] Configuring settings.json hooks...");
   const hooksConfig = buildHooksConfig(hooksDir);
   mergeHooksConfig(settingsPath, hooksConfig);
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [3/3] CLAUDE.md 규칙 설치
-  console.log("\n[3/3] CLAUDE.md 장기기억 규칙 설치 중...");
+  // [3/3] Install CLAUDE.md rules
+  console.log("\n[3/3] Installing CLAUDE.md long-term memory rules...");
   const templatePath = path.join(sourceDir, "templates", "claude-md-rules.md");
   if (fs.existsSync(templatePath)) {
     installClaudeMdRules(claudeMdPath, templatePath);
-    console.log("      완료!");
+    console.log("      Done!");
   } else {
-    console.log("      템플릿 없음, 건너뜀");
+    console.log("      Template not found, skipping");
   }
 
-  // [검증] 설치 결과 확인
-  console.log("\n[검증] 설치 상태 확인 중...");
+  // [Verify] Check install results
+  console.log("\n[Verify] Checking install status...");
   let allOk = true;
 
-  // 훅 파일 존재 확인
+  // Verify hook files exist
   for (const file of hookFiles) {
     const dest = path.join(hooksDir, file);
     if (fs.existsSync(dest)) {
       console.log(`      ✅ ${file}`);
     } else {
-      console.log(`      ❌ ${file} - 파일 없음!`);
+      console.log(`      ❌ ${file} - file missing!`);
       allOk = false;
     }
   }
 
-  // settings.json Stop 훅 확인
+  // Check settings.json Stop hook
   const settingsCheck = readJson(settingsPath);
   const hasStopHook = settingsCheck.hooks?.Stop?.some(h =>
     h.hooks?.[0]?.command?.includes("save-response") ||
@@ -265,61 +265,61 @@ function install() {
   );
 
   if (hasStopHook) {
-    console.log("      ✅ settings.json Stop 훅 (save-response)");
+    console.log("      ✅ settings.json Stop hook (save-response)");
   } else {
-    console.log("      ❌ settings.json Stop 훅 (save-response) 미등록!");
+    console.log("      ❌ settings.json Stop hook (save-response) not registered!");
     allOk = false;
   }
   if (hasSubmitHook) {
-    console.log("      ✅ settings.json UserPromptSubmit 훅 (save-conversation)");
+    console.log("      ✅ settings.json UserPromptSubmit hook (save-conversation)");
   } else {
-    console.log("      ❌ settings.json UserPromptSubmit 훅 (save-conversation) 미등록!");
+    console.log("      ❌ settings.json UserPromptSubmit hook (save-conversation) not registered!");
     allOk = false;
   }
 
-  // CLAUDE.md 규칙 확인
+  // Check CLAUDE.md rules
   try {
     const claudeMdContent = fs.readFileSync(claudeMdPath, "utf8");
     if (claudeMdContent.includes(MARKER_START)) {
-      console.log("      ✅ CLAUDE.md 장기기억 규칙");
+      console.log("      ✅ CLAUDE.md long-term memory rules");
     } else {
-      console.log("      ❌ CLAUDE.md 장기기억 규칙 미삽입!");
+      console.log("      ❌ CLAUDE.md long-term memory rules not inserted!");
       allOk = false;
     }
   } catch {
-    console.log("      ❌ CLAUDE.md 파일 없음!");
+    console.log("      ❌ CLAUDE.md file missing!");
     allOk = false;
   }
 
   if (!allOk) {
-    console.log("\n      ⚠️  일부 항목이 올바르게 설치되지 않았습니다.");
-    console.log("      install.bat 또는 install.sh를 사용하면 더 안정적으로 설치됩니다.");
+    console.log("\n      ⚠️  Some items were not installed correctly.");
+    console.log("      Using install.bat or install.sh may provide a more reliable install.");
   }
 
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  MNEMO 설치 완료!                                              ║
+║  MNEMO Install Complete!                                      ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  설치된 구성요소:                                              ║
-║  - 훅: save-conversation, save-response (대화 자동 저장)      ║
-║  - CLAUDE.md: 응답 태그, 과거 검색, MEMORY.md 자동 업데이트   ║
+║  Installed Components:                                        ║
+║  - Hooks: save-conversation, save-response (auto-save chats) ║
+║  - CLAUDE.md: response tags, past search, MEMORY.md update   ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  사용법:                                                       ║
-║  - 대화는 자동으로 conversations/에 저장됩니다                ║
-║  - Claude가 응답 끝에 #tags를 자동으로 추가합니다             ║
-║  - "이전에 ~했었지?" 라고 물으면 자동 검색됩니다              ║
-║  - 중요한 결정은 MEMORY.md에 자동으로 기록됩니다              ║
+║  Usage:                                                       ║
+║  - Conversations are auto-saved to conversations/             ║
+║  - Claude auto-appends #tags at the end of responses          ║
+║  - Ask "didn't we do ~ before?" for automatic search          ║
+║  - Important decisions are auto-recorded in MEMORY.md         ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  Claude Code를 재시작하면 적용됩니다.                          ║
+║  Restart Claude Code to apply changes.                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 }
 
-// ── 헬스체크 ──
+// ── Health Check ──
 function check() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  MNEMO: 헬스체크                                               ║
+║  MNEMO: Health Check                                          ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 
@@ -328,8 +328,8 @@ function check() {
   const claudeMdPath = path.join(claudeDir, "CLAUDE.md");
   let issues = 0;
 
-  // 1. 훅 파일 존재
-  console.log("[1/3] 훅 파일 확인...");
+  // 1. Hook files exist
+  console.log("[1/3] Checking hook files...");
   const hookFiles = isWindows
     ? ["save-conversation.ps1", "save-response.ps1"]
     : ["save-conversation.sh", "save-response.sh"];
@@ -340,17 +340,17 @@ function check() {
       const stat = fs.statSync(dest);
       console.log(`      ✅ ${file} (${stat.size} bytes)`);
     } else {
-      console.log(`      ❌ ${file} - 파일 없음!`);
-      console.log(`         → 수정: node skills/mnemo/install.js  (재설치)`);
+      console.log(`      ❌ ${file} - file missing!`);
+      console.log(`         → Fix: node skills/mnemo/install.js  (reinstall)`);
       issues++;
     }
   }
 
-  // 2. settings.json 훅 등록
-  console.log("\n[2/3] settings.json 훅 등록 확인...");
+  // 2. settings.json hook registration
+  console.log("\n[2/3] Checking settings.json hook registration...");
   const settings = readJson(settingsPath);
 
-  // Stop 훅 (save-response)
+  // Stop hook (save-response)
   const stopHooks = settings.hooks?.Stop || [];
   const hasStop = stopHooks.some(h => {
     const cmd = h.hooks?.[0]?.command || h.command || "";
@@ -361,25 +361,25 @@ function check() {
     const cmdStr = cmd?.hooks?.[0]?.command || cmd?.command || "";
     console.log(`      ✅ Stop → save-response`);
     console.log(`         ${cmdStr}`);
-    // 경로에 있는 파일이 실제로 존재하는지 확인
+    // Verify the referenced file actually exists at the path
     const match = cmdStr.match(/-File\s+"([^"]+)"|bash\s+"([^"]+)"/);
     if (match) {
       const filePath = match[1] || match[2];
       const normalizedPath = filePath.replace(/\//g, path.sep);
       if (fs.existsSync(normalizedPath)) {
-        console.log(`         ✅ 파일 존재 확인`);
+        console.log(`         ✅ File exists`);
       } else {
-        console.log(`         ❌ 파일 없음: ${normalizedPath}`);
-        console.log(`         → settings.json에 경로는 등록됐지만 실제 파일이 없습니다!`);
+        console.log(`         ❌ File missing: ${normalizedPath}`);
+        console.log(`         → Path is registered in settings.json but the actual file is missing!`);
         issues++;
       }
     }
   } else {
-    console.log(`      ❌ Stop 훅 미등록 (save-response 없음)`);
+    console.log(`      ❌ Stop hook not registered (save-response missing)`);
     issues++;
   }
 
-  // UserPromptSubmit 훅 (save-conversation)
+  // UserPromptSubmit hook (save-conversation)
   const upsHooks = settings.hooks?.UserPromptSubmit || [];
   const hasUps = upsHooks.some(h => {
     const cmd = h.hooks?.[0]?.command || h.command || "";
@@ -388,44 +388,44 @@ function check() {
   if (hasUps) {
     console.log(`      ✅ UserPromptSubmit → save-conversation`);
   } else {
-    console.log(`      ❌ UserPromptSubmit 훅 미등록 (save-conversation 없음)`);
+    console.log(`      ❌ UserPromptSubmit hook not registered (save-conversation missing)`);
     issues++;
   }
 
-  // 3. CLAUDE.md 규칙
-  console.log("\n[3/3] CLAUDE.md 장기기억 규칙 확인...");
+  // 3. CLAUDE.md rules
+  console.log("\n[3/3] Checking CLAUDE.md long-term memory rules...");
   try {
     const claudeMdContent = fs.readFileSync(claudeMdPath, "utf8");
     if (claudeMdContent.includes(MARKER_START) && claudeMdContent.includes(MARKER_END)) {
-      console.log("      ✅ Mnemo 규칙 블록 존재");
+      console.log("      ✅ Mnemo rules block present");
     } else {
-      console.log("      ❌ Mnemo 규칙 블록 없음");
+      console.log("      ❌ Mnemo rules block missing");
       issues++;
     }
   } catch {
-    console.log("      ❌ CLAUDE.md 파일 없음");
+    console.log("      ❌ CLAUDE.md file missing");
     issues++;
   }
 
-  // 결과
+  // Results
   console.log("");
   if (issues === 0) {
-    console.log("  ✅ 모든 항목 정상! Mnemo가 올바르게 설치되어 있습니다.");
+    console.log("  ✅ All checks passed! Mnemo is correctly installed.");
   } else {
-    console.log(`  ❌ ${issues}개 문제 발견. 재설치를 권장합니다:`);
+    console.log(`  ❌ ${issues} issue(s) found. Reinstall recommended:`);
     console.log("     node skills/mnemo/install.js");
-    console.log("     또는: install.bat / install.sh");
+    console.log("     or: install.bat / install.sh");
   }
   console.log("");
 
   process.exit(issues > 0 ? 1 : 0);
 }
 
-// ── 제거 ──
+// ── Uninstall ──
 function uninstall() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  MNEMO: 장기기억 시스템 제거                                   ║
+║  MNEMO: Long-Term Memory System Uninstall                     ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 
@@ -433,47 +433,47 @@ function uninstall() {
   const settingsPath = path.join(claudeDir, "settings.json");
   const claudeMdPath = path.join(claudeDir, "CLAUDE.md");
 
-  // [1/3] 훅 파일 제거
-  console.log("[1/3] 훅 파일 제거 중...");
+  // [1/3] Remove hook files
+  console.log("[1/3] Removing hook files...");
   const hookFiles = [
     "save-conversation.ps1", "save-conversation.sh",
     "save-response.ps1", "save-response.sh"
   ];
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {
-      console.log(`      - ${file} 제거됨`);
+      console.log(`      - ${file} removed`);
     }
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [2/3] settings.json 훅 설정 제거
-  console.log("\n[2/3] settings.json 훅 설정 제거 중...");
+  // [2/3] Remove settings.json hook config
+  console.log("\n[2/3] Removing settings.json hook config...");
   removeHooksConfig(settingsPath);
-  console.log("      완료!");
+  console.log("      Done!");
 
-  // [3/3] CLAUDE.md 규칙 제거
-  console.log("\n[3/3] CLAUDE.md 장기기억 규칙 제거 중...");
+  // [3/3] Remove CLAUDE.md rules
+  console.log("\n[3/3] Removing CLAUDE.md long-term memory rules...");
   if (uninstallClaudeMdRules(claudeMdPath)) {
-    console.log("      제거됨");
+    console.log("      Removed");
   }
-  console.log("      완료!");
+  console.log("      Done!");
 
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  MNEMO 제거 완료!                                              ║
+║  MNEMO Uninstall Complete!                                    ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  참고: 대화 기록 (conversations/)은 보존됩니다.               ║
-║  완전히 삭제하려면 수동으로 삭제하세요.                        ║
+║  Note: Conversation logs (conversations/) are preserved.      ║
+║  Delete them manually if you want full removal.               ║
 ╠═══════════════════════════════════════════════════════════════╣
-║  Claude Code를 재시작하면 적용됩니다.                          ║
+║  Restart Claude Code to apply changes.                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
 }
 
-// ── 실행 ──
+// ── Run ──
 if (!fs.existsSync(claudeDir)) {
-  console.error(`오류: Claude Code가 설치되어 있지 않습니다.`);
-  console.error(`      ${claudeDir} 폴더를 찾을 수 없습니다.`);
+  console.error(`Error: Claude Code is not installed.`);
+  console.error(`       ${claudeDir} directory not found.`);
   process.exit(1);
 }
 
