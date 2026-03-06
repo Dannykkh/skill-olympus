@@ -256,8 +256,8 @@ REM ============================================
 REM   Default mode: copy (bundle-based filtering)
 REM ============================================
 
-REM Clean up broken symlinks from previous install-link.bat
-node -e "const fs=require('fs'),p=require('path');['skills','agents','hooks'].forEach(function(d){var t=p.join(process.argv[1],d);try{if(fs.lstatSync(t).isSymbolicLink()){try{fs.rmdirSync(t)}catch(e2){fs.unlinkSync(t)};console.log('      [cleanup] broken symlink removed: '+d)}}catch(e){}})" "%CLAUDE_DIR%"
+REM Clean up broken symlinks/junctions from previous install-link.bat
+node "%SCRIPT_DIR%scripts\safe-copy.js" cleanup "%CLAUDE_DIR%"
 
 REM Install Skills (global, bundle filtering)
 echo [1/7] Installing Skills... (global) [core]
@@ -270,7 +270,7 @@ if exist "%SCRIPT_DIR%skills" (
         if /i "!skill_name!"=="deploymonitor" set "INSTALL_SKILL=0"
         if "!INSTALL_SKILL!"=="1" (
             echo       - !skill_name!
-            node -e "const fs=require('fs');fs.mkdirSync(process.argv[2],{recursive:true});fs.cpSync(process.argv[1],process.argv[2],{recursive:true,force:true})" "%%D" "%CLAUDE_DIR%\skills\!skill_name!"
+            node "%SCRIPT_DIR%scripts\safe-copy.js" dir "%%D" "%CLAUDE_DIR%\skills\!skill_name!"
         ) else (
             echo       - !skill_name! [skipped]
         )
@@ -283,18 +283,18 @@ if exist "%SCRIPT_DIR%skills" (
 REM Install Agents (global, core)
 echo.
 echo [2/7] Installing Agents... (global) [core]
-node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "%CLAUDE_DIR%\agents"
+node "%SCRIPT_DIR%scripts\safe-copy.js" mkdir "%CLAUDE_DIR%\agents"
 if exist "%SCRIPT_DIR%agents" (
     for %%F in ("%SCRIPT_DIR%agents\*.md") do (
         echo       - %%~nxF
-        node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+        node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
     )
 )
 for /d %%D in ("%SCRIPT_DIR%skills\*") do (
     if exist "%%D\agents" (
         for %%F in ("%%D\agents\*.md") do (
             echo       - %%~nxF [%%~nxD]
-            node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+            node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
         )
     )
 )
@@ -305,14 +305,14 @@ echo.
 echo [3/7] Installing Hooks... (global) [mnemo required]
 set "NEED_HOOKS=1"
 if "!NEED_HOOKS!"=="1" (
-    node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "%CLAUDE_DIR%\hooks"
+    node "%SCRIPT_DIR%scripts\safe-copy.js" mkdir "%CLAUDE_DIR%\hooks"
     if exist "%SCRIPT_DIR%hooks" (
         for %%F in ("%SCRIPT_DIR%hooks\*.ps1") do (
             echo %%~nxF | findstr /i "debug" >nul && (
                 echo       - %%~nxF [skip: debug]
             ) || (
                 echo       - %%~nxF
-                node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
+                node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
             )
         )
         for %%F in ("%SCRIPT_DIR%hooks\*.sh") do (
@@ -320,12 +320,12 @@ if "!NEED_HOOKS!"=="1" (
                 echo       - %%~nxF [skip: debug]
             ) || (
                 echo       - %%~nxF
-                node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
+                node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
             )
         )
         for %%F in ("%SCRIPT_DIR%hooks\*.js") do (
             echo       - %%~nxF
-            node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
+            node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
         )
     )
     echo       Done!
@@ -569,12 +569,12 @@ if "!NEED_GEMINI_HOOKS!"=="1" (
     echo.
     echo   Configuring Gemini settings.json hooks...
     REM Copy save-turn hook to gemini hooks directory
-    node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "!GEMINI_DIR!\hooks"
+    node "%SCRIPT_DIR%scripts\safe-copy.js" mkdir "!GEMINI_DIR!\hooks"
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" (
-        node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" "!GEMINI_DIR!\hooks\save-turn.ps1"
+        node "%SCRIPT_DIR%scripts\safe-copy.js" file "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" "!GEMINI_DIR!\hooks\save-turn.ps1"
     )
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" (
-        node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" "!GEMINI_DIR!\hooks\save-turn.sh"
+        node "%SCRIPT_DIR%scripts\safe-copy.js" file "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" "!GEMINI_DIR!\hooks\save-turn.sh"
     )
     node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!/hooks" "!GEMINI_DIR!\settings.json" --windows --components !BUNDLES! --llms !LLMS! --target gemini
     set "GEMINI_HOOKS_RESULT=Configured"
