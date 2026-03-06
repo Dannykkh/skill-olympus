@@ -259,6 +259,9 @@ REM ============================================
 REM   기본 모드: 복사 (번들 기반 필터링)
 REM ============================================
 
+REM 이전 install-link.bat에서 생성된 깨진 심볼릭 링크 정리
+node -e "const fs=require('fs'),p=require('path');['skills','agents','hooks'].forEach(function(d){var t=p.join(process.argv[1],d);try{if(fs.lstatSync(t).isSymbolicLink()){fs.unlinkSync(t);console.log('      [정리] broken symlink removed: '+d)}}catch(e){}})" "%CLAUDE_DIR%"
+
 REM Skills 설치 (글로벌, 번들 필터링)
 echo [1/7] Skills 설치 중... (글로벌) [코어]
 if exist "%SCRIPT_DIR%skills" (
@@ -288,10 +291,6 @@ if exist "%SCRIPT_DIR%agents" (
     for %%F in ("%SCRIPT_DIR%agents\*.md") do (
         echo       - %%~nxF
         node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
-    )
-    REM agents/ 하위 디렉토리도 동기화 (references/ 등)
-    for /d %%D in ("%SCRIPT_DIR%agents\*") do (
-        node -e "const fs=require('fs');fs.mkdirSync(process.argv[2],{recursive:true});fs.cpSync(process.argv[1],process.argv[2],{recursive:true,force:true})" "%%D" "%CLAUDE_DIR%\agents\%%~nxD"
     )
 )
 for /d %%D in ("%SCRIPT_DIR%skills\*") do (
