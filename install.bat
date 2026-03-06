@@ -270,8 +270,7 @@ if exist "%SCRIPT_DIR%skills" (
         if /i "!skill_name!"=="deploymonitor" set "INSTALL_SKILL=0"
         if "!INSTALL_SKILL!"=="1" (
             echo       - !skill_name!
-            if not exist "%CLAUDE_DIR%\skills\!skill_name!" mkdir "%CLAUDE_DIR%\skills\!skill_name!"
-            xcopy /s /y /q "%%D\*" "%CLAUDE_DIR%\skills\!skill_name!\" >nul
+            node -e "const fs=require('fs');fs.mkdirSync(process.argv[2],{recursive:true});fs.cpSync(process.argv[1],process.argv[2],{recursive:true,force:true})" "%%D" "%CLAUDE_DIR%\skills\!skill_name!"
         ) else (
             echo       - !skill_name! [건너뜀]
         )
@@ -284,18 +283,22 @@ if exist "%SCRIPT_DIR%skills" (
 REM Agents 설치 (글로벌, 코어)
 echo.
 echo [2/7] Agents 설치 중... (글로벌) [코어]
-if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
+node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "%CLAUDE_DIR%\agents"
 if exist "%SCRIPT_DIR%agents" (
     for %%F in ("%SCRIPT_DIR%agents\*.md") do (
         echo       - %%~nxF
-        copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
+        node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+    )
+    REM agents/ 하위 디렉토리도 동기화 (references/ 등)
+    for /d %%D in ("%SCRIPT_DIR%agents\*") do (
+        node -e "const fs=require('fs');fs.mkdirSync(process.argv[2],{recursive:true});fs.cpSync(process.argv[1],process.argv[2],{recursive:true,force:true})" "%%D" "%CLAUDE_DIR%\agents\%%~nxD"
     )
 )
 for /d %%D in ("%SCRIPT_DIR%skills\*") do (
     if exist "%%D\agents" (
         for %%F in ("%%D\agents\*.md") do (
             echo       - %%~nxF [%%~nxD]
-            copy /y "%%F" "%CLAUDE_DIR%\agents\" >nul
+            node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
         )
     )
 )
@@ -306,14 +309,14 @@ echo.
 echo [3/7] Hooks 설치 중... (글로벌) [mnemo 필수]
 set "NEED_HOOKS=1"
 if "!NEED_HOOKS!"=="1" (
-    if not exist "%CLAUDE_DIR%\hooks" mkdir "%CLAUDE_DIR%\hooks"
+    node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "%CLAUDE_DIR%\hooks"
     if exist "%SCRIPT_DIR%hooks" (
         for %%F in ("%SCRIPT_DIR%hooks\*.ps1") do (
             echo %%~nxF | findstr /i "debug" >nul && (
                 echo       - %%~nxF [스킵: 디버그]
             ) || (
                 echo       - %%~nxF
-                copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+                node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
             )
         )
         for %%F in ("%SCRIPT_DIR%hooks\*.sh") do (
@@ -321,12 +324,12 @@ if "!NEED_HOOKS!"=="1" (
                 echo       - %%~nxF [스킵: 디버그]
             ) || (
                 echo       - %%~nxF
-                copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+                node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
             )
         )
         for %%F in ("%SCRIPT_DIR%hooks\*.js") do (
             echo       - %%~nxF
-            copy /y "%%F" "%CLAUDE_DIR%\hooks\" >nul
+            node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%%F" "%CLAUDE_DIR%\hooks\%%~nxF"
         )
     )
     echo       완료!
@@ -570,12 +573,12 @@ if "!NEED_GEMINI_HOOKS!"=="1" (
     echo.
     echo   Gemini settings.json 훅 설정 중...
     REM save-turn 훅을 gemini hooks 디렉토리에 복사
-    if not exist "!GEMINI_DIR!\hooks" mkdir "!GEMINI_DIR!\hooks"
+    node -e "require('fs').mkdirSync(process.argv[1],{recursive:true})" "!GEMINI_DIR!\hooks"
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" (
-        copy /y "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" "!GEMINI_DIR!\hooks\" >nul
+        node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" "!GEMINI_DIR!\hooks\save-turn.ps1"
     )
     if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" (
-        copy /y "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" "!GEMINI_DIR!\hooks\" >nul
+        node -e "require('fs').copyFileSync(process.argv[1],process.argv[2])" "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" "!GEMINI_DIR!\hooks\save-turn.sh"
     )
     node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!/hooks" "!GEMINI_DIR!\settings.json" --windows --components !BUNDLES! --llms !LLMS! --target gemini
     set "GEMINI_HOOKS_RESULT=설정 완료"
