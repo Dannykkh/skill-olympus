@@ -40,7 +40,6 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |--------|------|------|
 | **Codex CLI** | OpenAI Codex CLI (GPT-5.2) 통합 | [상세](./codex-cli.md) |
 | **Gemini CLI** | Google Gemini 3 Pro CLI 통합 | [상세](./gemini-cli.md) |
-| **Perplexity Skill** | Perplexity AI 웹 검색 통합 | [상세](./perplexity-skill.md) |
 | **Humanizer Skill** | AI 글쓰기 패턴 제거 (24개 패턴) | [상세](./humanizer-skill.md) |
 
 ### Multi-Agent & Orchestration

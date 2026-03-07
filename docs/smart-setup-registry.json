@@ -235,7 +235,6 @@
     { "id": "nano-banana", "tags": ["*"], "priority": "optional" },
     { "id": "orchestrator", "tags": ["*"], "priority": "recommended" },
     { "id": "pdf", "tags": ["*"], "priority": "optional" },
-    { "id": "perplexity", "tags": ["*"], "priority": "optional" },
     { "id": "plugin-forge", "tags": ["*"], "priority": "optional" },
     { "id": "ppt-generator", "tags": ["*"], "priority": "optional" },
     { "id": "professional-communication", "tags": ["*"], "priority": "optional" },

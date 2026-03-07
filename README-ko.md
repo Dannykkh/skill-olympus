@@ -154,11 +154,11 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (75개)
+### 커스텀 스킬 (74개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 **AI 도구** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
+| 🤖 **AI 도구** | codex, gemini, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검증 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
@@ -238,7 +238,6 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 |--------|------|------|
 | **Codex CLI** | OpenAI Codex CLI (GPT-5.2) 통합 | [상세](docs/resources/codex-cli.md) |
 | **Gemini CLI** | Google Gemini 3 Pro CLI 통합 | [상세](docs/resources/gemini-cli.md) |
-| **Perplexity 스킬** | Perplexity AI 웹 검색 통합 | [상세](docs/resources/perplexity-skill.md) |
 | **Humanizer 스킬** | AI 글쓰기 패턴 제거 (24개 패턴) | [상세](docs/resources/humanizer-skill.md) |
 
 ### Multi-LLM 통합
@@ -256,7 +255,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | [claude-flow](https://github.com/ruvnet/claude-flow) | Agent | Multi-agent 스웜, LLM 간 자동 전환 | `npm install claude-flow` |
 
 **Skill vs Agent 분류**:
-- **Skills** (on-demand): codex, gemini, perplexity - 사용자 트리거로 외부 LLM 호출
+- **Skills** (on-demand): codex, gemini - 사용자 트리거로 외부 LLM 호출
 - **Agents** (passive): 가이드라인, 모범 사례 - 항상 컨텍스트에 존재
 
 ### MCP 서버
@@ -284,7 +283,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (75개)
+├── skills/                    # 커스텀 스킬 (74개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
@@ -323,7 +322,6 @@ claude-code-customizations/
 │   ├── multi-ai-orchestration/
 │   ├── naming-analyzer/
 │   ├── openapi-to-typescript/
-│   ├── perplexity/
 │   ├── plugin-forge/
 │   ├── ppt-generator/
 │   ├── professional-communication/

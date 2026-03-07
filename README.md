@@ -154,11 +154,11 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (75 Skills)
+### Custom Skills (74 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| 🤖 **AI Tools** | codex, gemini, perplexity, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
+| 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
@@ -238,7 +238,6 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 |----------|-------------|------|
 | **Codex CLI** | OpenAI Codex CLI (GPT-5.2) integration | [상세](docs/resources/codex-cli.md) |
 | **Gemini CLI** | Google Gemini 3 Pro CLI integration | [상세](docs/resources/gemini-cli.md) |
-| **Perplexity Skill** | Perplexity AI web search integration | [상세](docs/resources/perplexity-skill.md) |
 | **Humanizer Skill** | AI writing pattern removal (24 patterns) | [상세](docs/resources/humanizer-skill.md) |
 
 ### Multi-LLM Integration
@@ -256,7 +255,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | [claude-flow](https://github.com/ruvnet/claude-flow) | Agent | Multi-agent 스웜, LLM 간 자동 전환 | `npm install claude-flow` |
 
 **Skill vs Agent 분류**:
-- **Skills** (on-demand): codex, gemini, perplexity - 사용자 트리거로 외부 LLM 호출
+- **Skills** (on-demand): codex, gemini - 사용자 트리거로 외부 LLM 호출
 - **Agents** (passive): 가이드라인, 모범 사례 - 항상 컨텍스트에 존재
 
 ### MCP Servers
@@ -284,7 +283,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (75 skills)
+├── skills/                    # Custom skills (74 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
@@ -323,7 +322,6 @@ claude-code-customizations/
 │   ├── multi-ai-orchestration/
 │   ├── naming-analyzer/
 │   ├── openapi-to-typescript/
-│   ├── perplexity/
 │   ├── plugin-forge/
 │   ├── ppt-generator/
 │   ├── professional-communication/

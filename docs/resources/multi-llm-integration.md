@@ -84,7 +84,6 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp
 **이 프로젝트의 LLM Skills**:
 - `codex` - GPT-5.2 코드 분석/리팩토링
 - `gemini` - Gemini 3 Pro 대규모 컨텍스트 분석
-- `perplexity` - 웹 검색 및 최신 정보 조사
 
 ### Agents로 분류 (passive)
 
