@@ -188,9 +188,9 @@ CRITICAL RULES:
 - 인터뷰(Step 6)는 합성 트랜스크립트로 자동 생성
 - Planning 완료 → 즉시 workpm으로 구현 시작
 - 구현 완료 → 즉시 qpassenger로 테스트 시작
-- 테스트 완료 → 즉시 zeus-report.md 생성
+- 테스트 완료 → 즉시 docs/zeus/zeus-report.md 생성
 - Planning/Implementation/Testing phase skip 금지 (실패 시 폴백 경로 실행)
-- 에러 시 zeus-log.md에 기록하고 계속 진행
+- 에러 시 docs/zeus/zeus-log.md에 기록하고 계속 진행
 - 절대 멈추지 않는다
 
 Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 4 without stopping.

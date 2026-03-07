@@ -140,7 +140,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | **Phase 1** | Planning (zephermine 24 steps) — synthetic interview, spec, sections |
 | **Phase 2** | Implementation (workpm) — PM creates tasks, workers build in parallel |
 | **Phase 3** | Testing (qpassenger) — Playwright E2E tests + Healer loop |
-| **Phase 4** | Final report — `zeus-report.md` with pass/fail summary |
+| **Phase 4** | Final report — `docs/zeus/zeus-report.md` with pass/fail summary |
 
 ```
 /zeus "쇼핑몰 만들어줘. React+Spring Boot"

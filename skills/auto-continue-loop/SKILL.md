@@ -27,7 +27,7 @@ auto_apply: false
 > 실을 끊지 않고 계속 잣는다 — 멈추지 않는 자율 루프.
 
 서브에이전트가 자율적으로 이슈 찾기 → 수정 → 검증을 반복합니다.
-매 사이클의 진행 상황은 `.cloloop-log.md`에 실시간 기록됩니다.
+매 사이클의 진행 상황은 `docs/cloloop/cloloop-log.md`에 실시간 기록됩니다.
 
 ---
 
@@ -105,12 +105,12 @@ tsconfig.json → npx tsc --noEmit
 클로루프(Cloloop) 시작
 스코프: {디렉토리/파일 목록}
 검증: {감지된 테스트 명령}
-로그: .cloloop-log.md (실시간 확인 가능)
+로그: docs/cloloop/cloloop-log.md (실시간 확인 가능)
 
 서브에이전트에 위임합니다. 완료되면 최종 보고서를 보여드립니다.
 진행 상황은 다른 터미널에서 확인 가능:
-  tail -f .cloloop-log.md        # Linux/Mac
-  Get-Content .cloloop-log.md -Wait  # Windows PowerShell
+  tail -f docs/cloloop/cloloop-log.md        # Linux/Mac
+  Get-Content docs/cloloop/cloloop-log.md -Wait  # Windows PowerShell
 ```
 
 ---
@@ -162,7 +162,7 @@ Gemini CLI의 서브에이전트 시스템을 활용합니다.
 메인 에이전트가 할 일:
 ```
 "cloloop-worker에게 위임해. 스코프: {스코프}, 검증 명령: {명령}.
-모든 High/Medium 이슈를 수정하고 .cloloop-log.md에 기록해."
+모든 High/Medium 이슈를 수정하고 docs/cloloop/cloloop-log.md에 기록해."
 ```
 
 **전제 조건:**
@@ -181,7 +181,7 @@ name: cloloop-worker
 description: >
   코드 이슈를 자동으로 찾아 수정하는 루프 에이전트.
   "이슈 수정", "버그 수정 루프", "cloloop", "클로루프" 요청 시 호출.
-  스코프 내에서 FIND → FIX → VERIFY를 반복하고 .cloloop-log.md에 기록.
+  스코프 내에서 FIND → FIX → VERIFY를 반복하고 docs/cloloop/cloloop-log.md에 기록.
 kind: local
 tools:
   - read_file
@@ -232,21 +232,22 @@ Phase 1-A에서는 서브에이전트에 전달하고, Phase 1-B에서는 자기
 {Phase 0에서 감지한 테스트 명령}
 
 ## 로그 파일
-매 사이클 완료 시 `.cloloop-log.md`에 결과를 **append** 해.
+매 사이클 완료 시 `docs/cloloop/cloloop-log.md`에 결과를 **append** 해.
 사용자가 다른 터미널에서 실시간으로 확인한다.
 
 로그 기록 방법 (Bash):
-  echo '── Cycle N ──────────────────────────' >> .cloloop-log.md
-  echo 'Issue: ...' >> .cloloop-log.md
-  echo 'Fix:   ...' >> .cloloop-log.md
-  echo 'Verify: ... → PASS' >> .cloloop-log.md
-  echo '────────────────────────────────────────' >> .cloloop-log.md
+  echo '── Cycle N ──────────────────────────' >> docs/cloloop/cloloop-log.md
+  echo 'Issue: ...' >> docs/cloloop/cloloop-log.md
+  echo 'Fix:   ...' >> docs/cloloop/cloloop-log.md
+  echo 'Verify: ... → PASS' >> docs/cloloop/cloloop-log.md
+  echo '────────────────────────────────────────' >> docs/cloloop/cloloop-log.md
 
-첫 사이클 시작 전 로그 파일 초기화:
-  echo '# Cloloop Log' > .cloloop-log.md
-  echo "Started: $(date -Iseconds)" >> .cloloop-log.md
-  echo 'Scope: {스코프}' >> .cloloop-log.md
-  echo '' >> .cloloop-log.md
+첫 사이클 시작 전 디렉토리 생성 + 로그 파일 초기화:
+  mkdir -p docs/cloloop
+  echo '# Cloloop Log' > docs/cloloop/cloloop-log.md
+  echo "Started: $(date -Iseconds)" >> docs/cloloop/cloloop-log.md
+  echo 'Scope: {스코프}' >> docs/cloloop/cloloop-log.md
+  echo '' >> docs/cloloop/cloloop-log.md
 
 ## 우선순위
 Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) > Low(스타일)
@@ -259,7 +260,7 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 2. FIX: 최소 변경 원칙 — 이슈 해결에 필요한 최소한의 코드만 수정
 3. VERIFY: 검증 명령 실행. 실패 시 즉시 수정 재시도 (같은 사이클 내 최대 3회)
    - 3회 실패 → SKIP 처리하고 다음 이슈로
-4. LOG: .cloloop-log.md에 append (위 형식 준수)
+4. LOG: docs/cloloop/cloloop-log.md에 append (위 형식 준수)
 
 로그 기록 후 멈추지 말고 즉시 다음 사이클 시작.
 
@@ -279,7 +280,7 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 
 ## 최종 보고
 
-루프 종료 시 .cloloop-log.md에 최종 요약을 append하고, 같은 내용을 반환해:
+루프 종료 시 docs/cloloop/cloloop-log.md에 최종 요약을 append하고, 같은 내용을 반환해:
 
 ══ Cloloop Complete ══════════════════
 Total cycles: {N}
@@ -324,12 +325,12 @@ Remaining Low-priority:
 
 ```bash
 # Linux/Mac
-tail -f .cloloop-log.md
+tail -f docs/cloloop/cloloop-log.md
 
 # Windows PowerShell
-Get-Content .cloloop-log.md -Wait
+Get-Content docs/cloloop/cloloop-log.md -Wait
 
-# 또는 VS Code에서 .cloloop-log.md 열기 (자동 갱신)
+# 또는 VS Code에서 docs/cloloop/cloloop-log.md 열기 (자동 갱신)
 ```
 
 로그 파일 예시:

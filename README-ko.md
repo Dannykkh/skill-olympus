@@ -140,7 +140,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | **Phase 1** | 설계 (zephermine 24단계) — 합성 인터뷰, 스펙, 섹션 생성 |
 | **Phase 2** | 구현 (workpm) — PM이 태스크 분배, Workers가 병렬 구현 |
 | **Phase 3** | 테스트 (qpassenger) — Playwright E2E 테스트 + Healer 루프 |
-| **Phase 4** | 최종 보고서 — `zeus-report.md` 통과/실패 요약 |
+| **Phase 4** | 최종 보고서 — `docs/zeus/zeus-report.md` 통과/실패 요약 |
 
 ```
 /zeus "쇼핑몰 만들어줘. React+Spring Boot"

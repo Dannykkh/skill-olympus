@@ -4,9 +4,9 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 
 ---
 
-## 상태 파일: zeus-state.json
+## 상태 파일: docs/zeus/zeus-state.json
 
-`<planning_dir>/zeus-state.json`에 저장. 중단 후 재개 시 마지막 완료 지점부터 진행.
+`<planning_dir>/docs/zeus/zeus-state.json`에 저장. 중단 후 재개 시 마지막 완료 지점부터 진행.
 
 ```json
 {
@@ -27,7 +27,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
     "plan": "claude-plan.md",
     "sections": "sections/",
     "qaScenarios": "claude-qa-scenarios.md",
-    "report": "zeus-report.md"
+    "report": "docs/zeus/zeus-report.md"
   }
 }
 ```
@@ -45,7 +45,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 - 파싱 결과 객체가 유효 (industry, techStack, features 존재)
 
 **전환 액션:**
-1. 파싱 결과를 zeus-state.json에 저장
+1. 파싱 결과를 docs/zeus/zeus-state.json에 저장
 2. zephermine SKILL.md 읽기
 3. 합성 인터뷰 생성 (auto-interview-generator.md)
 
@@ -69,7 +69,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 5. `orchestrator_spawn_workers` 호출
 
 **실패 시:**
-- plan 파일 미생성 → zeus-log.md에 기록 + 최소 plan 자동 생성 후 진행
+- plan 파일 미생성 → docs/zeus/zeus-log.md에 기록 + 최소 plan 자동 생성 후 진행
 - sections 미생성 → 통합 섹션 1개를 생성해 단일 task로 진행
 
 ---
@@ -86,7 +86,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 3. Playwright 설치 확인 (미설치 시 `npx playwright install`)
 
 **실패 시:**
-- 전체 task 실패 → zeus-log.md에 기록 + 단일 구현 task로 폴백 실행
+- 전체 task 실패 → docs/zeus/zeus-log.md에 기록 + 단일 구현 task로 폴백 실행
 - 서버 시작 불가 → qpassenger `--api-only` 폴백 실행
 
 ---
@@ -98,8 +98,8 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 
 **전환 액션:**
 1. 전체 결과 집계
-2. `zeus-report.md` 생성
-3. zeus-state.json status 업데이트
+2. `docs/zeus/zeus-report.md` 생성
+3. docs/zeus/zeus-state.json status 업데이트
 
 **실패 시:**
 - 리포트 생성 불가 → 콘솔에 최소 요약 출력
@@ -111,7 +111,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 `/zeus` 재실행 시:
 
 ```
-1. zeus-state.json 존재 확인
+1. docs/zeus/zeus-state.json 존재 확인
 2. 존재하면:
    a. 현재 phase 확인
    b. "이전 Zeus 실행이 {phase}에서 중단되었습니다. 이어서 진행합니다." 출력
@@ -133,7 +133,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 
 ---
 
-## zeus-log.md 형식
+## docs/zeus/zeus-log.md 형식
 
 ```markdown
 # Zeus Execution Log
