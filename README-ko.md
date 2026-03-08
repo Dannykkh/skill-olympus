@@ -154,7 +154,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (74개)
+### 커스텀 스킬 (75개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -169,7 +169,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop | 코드 리뷰 & QA & 자동 수정-검증 루프 |
 | 📦 **Git** | commit-work, deploymonitor | Git 워크플로우 & DeployMonitor 자동 배포 |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
-| 🧠 **메모리** | mnemo | 통합 메모리 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
+| 🧠 **메모리/세션** | mnemo, memory-compact | 통합 메모리 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
@@ -283,8 +283,9 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (74개)
+├── skills/                    # 커스텀 스킬 (75개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
+│   ├── memory-compact/        # 🧠 메모리 크기 점검 및 압축
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
 │   ├── agent-md-refactor/
 │   ├── api-handoff/

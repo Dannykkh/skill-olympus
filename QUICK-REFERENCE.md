@@ -264,6 +264,7 @@ claude plugin install voltagent-qa-sec
 | `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS |
 | `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 (패시브 에이전트) |
 | `agents/ai-ml.md` | LLM API 최신 모델/SDK + RAG + Vector DB |
+| `skills/memory-compact/` | MEMORY.md 크기 점검 및 압축 — 비대해진 메모리 정리 (/memory-compact) |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
 

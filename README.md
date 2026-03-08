@@ -154,7 +154,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (74 Skills)
+### Custom Skills (75 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -169,7 +169,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop | Code review & QA & auto fix-verify loop |
 | 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
-| 🧠 **Memory** | mnemo | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) |
+| 🧠 **Memory/Session** | mnemo, memory-compact | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) + Memory size check & compaction |
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
@@ -283,8 +283,9 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (74 skills)
+├── skills/                    # Custom skills (75 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
+│   ├── memory-compact/        # 🧠 Memory size check & compaction
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
 │   ├── agent-md-refactor/
 │   ├── api-handoff/

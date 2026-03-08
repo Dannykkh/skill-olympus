@@ -195,6 +195,7 @@
     { "id": "supabase-postgres-best-practices", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
     { "id": "mnemo", "tags": ["*"], "priority": "recommended" },
+    { "id": "memory-compact", "tags": ["*"], "priority": "optional" },
     { "id": "commit-work", "tags": ["*"], "priority": "optional" },
     { "id": "dependency-updater", "tags": ["*"], "priority": "optional" },
     { "id": "naming-analyzer", "tags": ["*"], "priority": "optional" },

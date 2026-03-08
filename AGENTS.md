@@ -93,7 +93,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (74개)
+### Skills (75개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -108,7 +108,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop | 테스트/리뷰/자동 수정 루프 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
-| 🧠 Memory | mnemo | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) |
+| 🧠 Memory/Session | mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
 
 ### Agents (38개)
 
