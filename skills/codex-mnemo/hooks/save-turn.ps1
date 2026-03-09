@@ -168,6 +168,99 @@ function Get-Sha1([string]$text) {
     }
 }
 
+function Ensure-MemoryScaffold([string]$BaseDir) {
+    if (-not $BaseDir) { return }
+
+    $memoryDir = Join-Path $BaseDir "memory"
+    $projectName = Split-Path $BaseDir -Leaf
+    $today = Get-Date -Format "yyyy-MM-dd"
+
+    if (-not (Test-Path $memoryDir)) {
+        New-Item -ItemType Directory -Path $memoryDir -Force | Out-Null
+    }
+
+    $memoryFile = Join-Path $BaseDir "MEMORY.md"
+    if (-not (Test-Path $memoryFile)) {
+        $memoryContent = @"
+# MEMORY.md - 프로젝트 장기기억
+
+## 프로젝트 목표
+
+| 목표 | 상태 |
+|------|------|
+| $projectName 핵심 작업 추적 | 진행 중 |
+
+---
+
+## 키워드 인덱스
+
+| 키워드 | 상세 파일 |
+|--------|-----------|
+| 프로젝트, 생성일 | #meta |
+
+---
+
+## architecture/
+- [memory/architecture.md](memory/architecture.md)
+
+## patterns/
+- [memory/patterns.md](memory/patterns.md)
+
+## tools/
+- [memory/tools.md](memory/tools.md)
+
+## gotchas/
+- [memory/gotchas.md](memory/gotchas.md)
+
+---
+
+## meta/
+- **프로젝트**: $projectName
+- **생성일**: $today
+- **마지막 업데이트**: $today
+"@
+        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), [System.Text.Encoding]::UTF8)
+    }
+
+    $categoryFiles = @{
+        "architecture.md" = @"
+# Architecture - 설계 결정
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+"@
+        "patterns.md" = @"
+# Patterns - 작업 패턴, 워크플로우
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+"@
+        "tools.md" = @"
+# Tools - MCP 서버, 외부 도구, 라이브러리
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+"@
+        "gotchas.md" = @"
+# Gotchas - 주의사항, 함정
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+"@
+    }
+
+    foreach ($fileName in $categoryFiles.Keys) {
+        $filePath = Join-Path $memoryDir $fileName
+        if (-not (Test-Path $filePath)) {
+            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), [System.Text.Encoding]::UTF8)
+        }
+    }
+}
+
 $helperUser = Join-Path $PSScriptRoot "append-user.ps1"
 $helperAssistant = Join-Path $PSScriptRoot "append-assistant.ps1"
 if (-not (Test-Path $helperUser) -or -not (Test-Path $helperAssistant)) {
@@ -278,6 +371,8 @@ if (-not $baseDir -and $env:CODEX_WORKSPACE_ROOT -and (Test-Path $env:CODEX_WORK
 if (-not $baseDir) {
     $baseDir = $PWD.Path
 }
+
+Ensure-MemoryScaffold $baseDir
 
 $convDir = Join-Path $baseDir "conversations"
 $today = Get-Date -Format "yyyy-MM-dd"

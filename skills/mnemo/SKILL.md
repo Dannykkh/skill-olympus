@@ -82,6 +82,7 @@ Claude 응답 (끝에 #tags 포함)
 ## 기능 2: MEMORY.md 관리
 
 CLAUDE.md 규칙으로 자동 동작:
+- 첫 저장 턴에서 `MEMORY.md` + `memory/*.md` 기본 scaffold 자동 생성
 - 중요 결정 → MEMORY.md 자동 업데이트
 - 과거 질문 → 동의어 확장 검색
 
