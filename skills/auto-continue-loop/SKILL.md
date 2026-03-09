@@ -1,8 +1,10 @@
 ---
 name: auto-continue-loop
 description: >
-  Use when the user repeatedly says "next", "continue", "다음 진행", "계속 진행"
-  and wants iterative code review and bug-fix cycles without re-planning each turn.
+  Use when the user wants uninterrupted "continue automatically" execution without
+  repeatedly saying "next", "continue", "다음 진행", or "계속 진행". If a next-step
+  recommendation or priority response appears, Chronos must treat the top actionable
+  item as the next cycle automatically.
   Delegates the entire loop to a subagent for uninterrupted execution.
   /auto-continue-loop 또는 /loop 또는 /chronos로 실행. Also known as 크로노스.
 triggers:
@@ -18,6 +20,9 @@ triggers:
   - "continue fixing"
   - "keep going"
   - "끝까지 진행"
+  - "끝까지 알아서"
+  - "우선순위대로 진행"
+  - "추천 나오면 계속"
 auto_apply: false
 ---
 
@@ -39,6 +44,20 @@ auto_apply: false
 
 **사용자 개입 0회. "다음" 입력 불필요.**
 
+추천/우선순위/다음 작업 같은 응답은 **최종 응답 후보가 아니라 내부 작업 큐**로 취급합니다.
+즉, 크로노스는 "다음으로 이것을 하세요"라고 말하는 대신 **그 항목을 바로 다음 사이클에서 수행**해야 합니다.
+
+---
+
+## Auto-Continuation Contract
+
+- `다음 작업 추천`, `우선순위`, `남은 작업`, `Recommended next step` 같은 내용이 나오려는 순간, 가장 위의 actionable item을 **즉시 다음 사이클로 승격**합니다.
+- 현재 scope 안에 있고 외부 승인/비밀값/수동 조작 없이 진행 가능한 작업이면 **사용자에게 다시 묻지 않고 계속 진행**합니다.
+- 사용자에게 다시 넘기는 경우는 다음 3가지뿐입니다:
+  - 더 이상 실행 가능한 in-scope 작업이 없음
+  - 남은 작업이 전부 blocked / out-of-scope / manual-only
+  - 사용자가 처음부터 우선순위 범위를 제한함 (예: "보안만", "High까지만")
+
 ---
 
 ## Trigger Rules
@@ -46,6 +65,7 @@ auto_apply: false
 ### 이 스킬을 사용하는 경우:
 - 사용자가 `다음 진행`, `계속 진행`, `진행하자`, `next`, `continue` 등을 반복
 - 사용자가 "끝까지 해줘", "다 고쳐줘", "루프로 진행" 등 루프 실행을 요청
+- 사용자가 "끝까지 알아서", "우선순위대로 계속", "추천 나오면 바로 진행"처럼 **반복 입력 없는 자동 연속 실행**을 원함
 - 사용자가 코드 리뷰/버그 수정을 반복적으로 요청
 
 ### 이 스킬을 사용하지 않는 경우:
@@ -111,6 +131,8 @@ tsconfig.json → npx tsc --noEmit
 진행 상황은 다른 터미널에서 확인 가능:
   tail -f docs/chronos/chronos-log.md        # Linux/Mac
   Get-Content docs/chronos/chronos-log.md -Wait  # Windows PowerShell
+
+추천/우선순위 응답은 내부 큐로 처리하며, 사용자에게 다시 "다음"을 입력받지 않습니다.
 ```
 
 ---
@@ -155,47 +177,29 @@ Agent({
 ## Phase 1-C: 서브에이전트 위임 (Gemini)
 
 Gemini CLI의 서브에이전트 시스템을 활용합니다.
-사전에 `.gemini/agents/chronos-worker.md` 파일이 설치되어 있어야 합니다.
+사전에 `.gemini/agents/chronos-worker.md` 파일이 정의되어 있어야 합니다.
 
 **Gemini 서브에이전트는 선언적 방식** — 파일로 정의해두면 메인 에이전트가 description을 보고 자동 호출합니다.
 
 메인 에이전트가 할 일:
 ```
 "chronos-worker에게 위임해. 스코프: {스코프}, 검증 명령: {명령}.
-모든 High/Medium 이슈를 수정하고 docs/chronos/chronos-log.md에 기록해."
+현재 scope 안의 actionable 이슈를 우선순위 순으로 수정하고 docs/chronos/chronos-log.md에 기록해."
 ```
 
 **전제 조건:**
 - `settings.json`에 `"experimental": { "enableAgents": true }` 설정
-- `.gemini/agents/chronos-worker.md` 파일 존재 (설치 스크립트로 자동 생성)
+- `.gemini/agents/chronos-worker.md` 파일 존재 (전역 동기화 시 자동 설치되는 로컬 에이전트 정의)
 
 서브에이전트 완료 후 → Phase 2로 이동.
 
 ### chronos-worker.md (Gemini 서브에이전트 정의)
 
-설치 시 `~/.gemini/agents/chronos-worker.md`에 생성되는 파일:
+전역 설치 시 `~/.gemini/agents/chronos-worker.md`로 동기화되는 원본 파일:
 
-```markdown
----
-name: chronos-worker
-description: >
-  코드 이슈를 자동으로 찾아 수정하는 루프 에이전트.
-  "이슈 수정", "버그 수정 루프", "chronos", "크로노스" 요청 시 호출.
-  스코프 내에서 FIND → FIX → VERIFY를 반복하고 docs/chronos/chronos-log.md에 기록.
-kind: local
-tools:
-  - read_file
-  - edit_file
-  - grep_search
-  - list_directory
-  - run_shell_command
-model: gemini-2.5-pro
-temperature: 0.2
-max_turns: 50
----
+`skills/auto-continue-loop/agents/chronos-worker.md`
 
-(공통 루프 프롬프트 내용이 여기에 포함됨)
-```
+이 파일은 동일한 자동 연장 규칙을 사용하며, 추천/우선순위 응답을 내부 다음 사이클로 승격합니다.
 
 ---
 
@@ -252,11 +256,19 @@ Phase 1-A에서는 서브에이전트에 전달하고, Phase 1-B에서는 자기
 ## 우선순위
 Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) > Low(스타일)
 
+## 자동 연장 규칙
+
+- `다음 작업 추천`, `우선순위`, `권장 순서`, `남은 작업`을 사용자에게 보여주고 멈추지 마.
+- 그런 응답을 만들려는 순간, 가장 위의 actionable item을 **즉시 다음 FIND 대상으로 승격**해.
+- 추천 항목이 현재 scope 안이고 외부 승인/비밀값/브라우저 수동 조작 없이 수행 가능하면 즉시 다음 cycle로 들어가.
+- 추천 항목이 blocked / out-of-scope / manual-only일 때만 최종 보고에 남겨.
+- 사용자가 `"보안만"`, `"High까지만"`처럼 범위를 명시했다면 그 범위 밖 이슈는 remaining으로만 기록하고 종료할 수 있어.
+
 ## 사이클 규칙
 
 매 사이클에서 4단계를 수행해:
 
-1. FIND: 스코프 내에서 아직 수정하지 않은 가장 심각한 이슈 1개 선택
+1. FIND: 스코프 내에서 아직 수정하지 않은 가장 심각한 이슈 1개, 또는 직전 사이클에서 승격된 next-action 1개 선택
 2. FIX: 최소 변경 원칙 — 이슈 해결에 필요한 최소한의 코드만 수정
 3. VERIFY: 검증 명령 실행. 실패 시 즉시 수정 재시도 (같은 사이클 내 최대 3회)
    - 3회 실패 → SKIP 처리하고 다음 이슈로
@@ -267,7 +279,8 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 ## 종료 조건
 
 아래 중 하나라도 해당하면 루프 종료:
-- High/Medium 이상 이슈가 더 이상 없음
+- 현재 scope 안에서 실행 가능한 이슈가 더 이상 없음
+- 남은 이슈가 전부 blocked / out-of-scope / manual-only
 - 환경 문제로 진행 불가 (DB 미연결, 포트 충돌 등)
 
 ## 금지 사항
@@ -277,6 +290,8 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 - 관련 없는 리팩토링 금지
 - scope 밖 파일 수정 금지
 - 사이클 사이에 멈추거나 대기 금지
+- "다음으로는 X를 추천합니다" 같은 문장으로 마무리 금지
+- 사용자에게 "계속할까요?" 또는 "다음 진행하실래요?" 묻기 금지
 
 ## 최종 보고
 
@@ -286,7 +301,7 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 Total cycles: {N}
 Fixed: {N}건
 Skipped: {N}건
-Remaining: {N}건 (Low)
+Remaining: {N}건 (blocked / out-of-scope / optional)
 
 Fixed Issues:
   ✅ {이슈} ({파일})
@@ -296,8 +311,8 @@ Skipped Issues:
   ⚠️ {이슈} — 사유: {왜}
   ...
 
-Remaining Low-priority:
-  ℹ️ {이슈}
+Remaining:
+  ℹ️ {이슈} — 사유: {왜}
   ...
 ═══════════════════════════════════════
 ```
@@ -312,10 +327,10 @@ Remaining Low-priority:
 - Phase 1-C (Gemini): chronos-worker 서브에이전트가 반환한 결과
 - Phase 1-D (폴백): 직접 루프 완료 후 로그에서 요약
 
-추가 작업이 필요하면 사용자가 판단:
-- "다시 돌려줘" → Phase 1 재실행
-- "Low도 처리해줘" → 우선순위를 Low로 낮춰서 재실행
-- "SKIP된 거 보자" → 해당 이슈 상세 설명
+중요:
+- 현재 scope 안에서 실행 가능한 다음 작업이 있으면 **Phase 1로 즉시 되돌아가 계속 진행**합니다.
+- 최종 보고에는 사용자가 다시 `"다음 진행"`을 입력해야만 할 것 같은 추천 문구를 넣지 않습니다.
+- 사용자는 중단, 범위 변경, 우선순위 제한 같은 override만 지시합니다.
 
 ---
 

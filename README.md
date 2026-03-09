@@ -113,9 +113,9 @@ PM distributes tasks, Workers (Claude + Codex + Gemini) execute in parallel with
 | Component | Description |
 |-----------|-------------|
 | MCP Server | Task queue, file locks, dependency resolution |
-| `workpm` | PM mode (Claude Agent Teams) - real-time team communication |
-| `workpm-mcp` | PM mode (MCP only) - works on Claude, Codex, Gemini |
-| `pmworker` | Worker mode - claim task, lock files, execute, report (all CLIs) |
+| `workpm` | Unified PM entrypoint. Claude uses Agent Teams; Codex/Gemini route to MCP-only mode |
+| `workpm-mcp` | Explicit MCP-only PM entrypoint - works on Claude, Codex, Gemini |
+| `pmworker` | Unified Worker entrypoint - claim task, lock files, execute, report (all CLIs) |
 
 ```
 Terminal 1 (PM):     workpm → analyze → create 3 tasks
@@ -138,7 +138,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 |-------|-------------|
 | **Phase 0** | Parse description — extract industry, tech stack, features |
 | **Phase 1** | Planning (zephermine 24 steps) — synthetic interview, spec, sections |
-| **Phase 2** | Implementation (workpm) — PM creates tasks, workers build in parallel |
+| **Phase 2** | Implementation (workpm) — unified PM entrypoint creates tasks, workers build in parallel |
 | **Phase 3** | Testing (qpassenger) — Playwright E2E tests + Healer loop |
 | **Phase 4** | Final report — `docs/zeus/zeus-report.md` with pass/fail summary |
 
@@ -154,11 +154,11 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (75 Skills)
+### Custom Skills (78 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
+| 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, workpm, workpm-mcp, pmworker, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + unified PM/Worker entrypoints + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
@@ -173,7 +173,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (38 Agents)
+### Custom Agents (42 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
@@ -189,7 +189,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | **Migration** | migration-helper, explore-agent | Legacy modernization |
 | **Planning** | feature-tracker | Feature tracking |
 | **Communication** | communication-excellence-coach | Email & presentation coaching |
-| **General** | general-purpose, codebase-pattern-finder | Multi-purpose agents |
+| **General** | general-purpose, codebase-pattern-finder, chronos-worker | Multi-purpose agents + Chronos loop worker |
 
 > **Full list**: See `agents/` directory or [AGENTS.md](AGENTS.md) for complete agent descriptions.
 
@@ -283,10 +283,13 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (75 skills)
+├── skills/                    # Custom skills (78 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── memory-compact/        # 🧠 Memory size check & compaction
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
+│   ├── workpm/                # 🤖 Unified PM entrypoint wrapper
+│   ├── workpm-mcp/            # 🤖 Explicit MCP-only PM wrapper
+│   ├── pmworker/              # 🤖 Unified Worker entrypoint wrapper
 │   ├── agent-md-refactor/
 │   ├── api-handoff/
 │   ├── api-tester/

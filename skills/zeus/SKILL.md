@@ -3,6 +3,7 @@ name: zeus
 description: >
   Zero-interaction full pipeline skill. 사용자가 한 줄 설명만 제공하면
   설계(zephermine) → 구현(workpm) → 테스트(qpassenger) 전체를 자동 완료.
+  workpm은 CLI에 맞게 Agent Teams 또는 MCP-only 경로로 자동 라우팅.
   AskUserQuestion 절대 호출 금지. /zeus로 실행. 제우스.
 ---
 
@@ -24,7 +25,7 @@ Phase 0: Description Parsing ─── 산업군, 기술스택, 기능 추출
 Phase 1: Planning (zephermine) ─ 합성 인터뷰 → 24단계 설계 자동 완료
     │
     ▼
-Phase 2: Implementation (workpm) ─ PM이 task 분해 → workers 병렬 구현
+Phase 2: Implementation (workpm) ─ 통합 PM 엔트리포인트로 task 분해 → workers 병렬 구현
     │
     ▼
 Phase 3: Testing (qpassenger) ─ E2E 테스트 + Healer 루프
@@ -178,7 +179,10 @@ AskUserQuestion 대신 합성 인터뷰를 자동 생성:
 
 ## Phase 2: Implementation (workpm — Orchestrator PM-Worker)
 
-zephermine이 생성한 plan을 workpm(Orchestrator)으로 구현.
+zephermine이 생성한 plan을 `workpm` 통합 엔트리포인트로 구현합니다.
+
+- Claude: Agent Teams 기반 `workpm`
+- Codex/Gemini: MCP-only `workpm-mcp` 경로로 자동 라우팅
 
 ### 연결 흐름
 
