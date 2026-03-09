@@ -45,7 +45,7 @@ LOOP:
 
 0. **Description Parsing** — 산업군, 기술스택, 기능 추출
 1. **Planning** — zephermine 24단계 자동 실행 (인터뷰는 합성 생성)
-2. **Implementation** — workpm으로 병렬 구현 (orchestrator MCP)
+2. **Implementation** — `workpm` 통합 엔트리포인트로 병렬 구현 (Claude는 Agent Teams, 그 외 CLI는 MCP)
 3. **Testing** — qpassenger로 E2E 테스트
 4. **Report** — docs/zeus/zeus-report.md 최종 보고서
 

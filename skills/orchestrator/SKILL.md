@@ -43,21 +43,22 @@ orchestrator/
 
 ## 사용법
 
-### CLI별 PM 모드
+### CLI별 진입점
 
-| CLI | 명령어 | 특징 |
-|-----|--------|------|
+| CLI | 권장 엔트리포인트 | 실제 동작 |
+|-----|-------------------|-------------|
 | **Claude** | `workpm` | Agent Teams 활용, 실시간 팀원 통신 |
-| **Codex** | `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
-| **Gemini** | `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
+| **Codex** | `workpm` 또는 `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
+| **Gemini** | `workpm` 또는 `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
 
-- `workpm`: Claude 전용. TeamCreate/SendMessage로 팀원과 실시간 대화
-- `workpm-mcp`: 모든 CLI에서 동작. orchestrator_* MCP 도구만 사용
+- `workpm`: 통합 PM 엔트리포인트. Claude에서는 Agent Teams 모드, Codex/Gemini에서는 `workpm-mcp` 경로로 라우팅
+- `workpm-mcp`: 명시적 MCP-only PM 엔트리포인트. 모든 CLI에서 동작
 
 ### Worker 모드 (모든 CLI 공통)
 ```
 pmworker
 ```
+- 통합 Worker 엔트리포인트
 - 가용 태스크 확인 및 수행
 - 파일 락 및 완료 보고
 - MCP 도구만 사용하므로 Claude/Codex/Gemini 모두 동작

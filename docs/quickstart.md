@@ -22,13 +22,13 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-설치하면 **68개 스킬**, **35개 에이전트**, **훅**, **장기기억 시스템**이 활성화됩니다.
+설치하면 **78개 스킬**, **42개 에이전트**, **훅**, **장기기억 시스템**이 활성화됩니다.
 
 ---
 
 ## 2. 이렇게 씁니다
 
-설치 후 Claude Code에서 슬래시 명령어로 사용합니다.
+설치 후 슬래시 명령어와 오케스트레이터 엔트리포인트로 사용합니다.
 
 ### 메인 파이프라인
 
@@ -73,7 +73,7 @@ chmod +x install.sh && ./install.sh
 | `/zeus` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동 |
 | `/zephermine` | 심층 인터뷰 → 설계 스펙 생성 |
 | `/agent-team` | Agent Teams 병렬 구현 (Claude 네이티브) |
-| `workpm` | Multi-AI 병렬 구현 (Claude + Codex + Gemini) |
+| `workpm` | Multi-AI 병렬 구현. Claude는 커맨드, Codex/Gemini는 스킬 별칭으로 동작 |
 | `/qpassenger` | QA 시나리오 → Playwright 테스트 → 자동 수정 루프 |
 
 ### 코드 품질

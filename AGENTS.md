@@ -93,11 +93,11 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (75개)
+### Skills (78개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, multi-ai-orchestration, orchestrator, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
+| 🤖 AI Tools | codex, gemini, multi-ai-orchestration, orchestrator, workpm, workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 통합 PM/Worker 엔트리포인트 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검색/검증 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
@@ -110,7 +110,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 🧠 Memory/Session | mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
 
-### Agents (38개)
+### Agents (42개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -152,6 +152,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | **Communication** | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
 | **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
+| | chronos-worker | auto-continue-loop용 Gemini 로컬 루프 에이전트 |
 
 ## Creating a New Skill
 
