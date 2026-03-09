@@ -16,6 +16,7 @@ const args = process.argv.slice(2);
 const isListMode = args.includes("--list");
 const isAllMode = args.includes("--all");
 const isUninstall = args.includes("--uninstall");
+const AUTO_INSTALL_EXCLUDES = new Set(["fetch"]);
 
 const mcpNames = args.filter((a) => !a.startsWith("--"));
 
@@ -191,8 +192,10 @@ const configs = loadAvailableConfigs();
 
 let toInstall = [];
 if (isAllMode) {
-  toInstall = configs.filter((c) => !c.requiresApiKey);
-  console.log("\n🔧 Installing all free MCP servers (Gemini)");
+  toInstall = configs.filter(
+    (c) => !c.requiresApiKey && !AUTO_INSTALL_EXCLUDES.has(c.name)
+  );
+  console.log("\n🔧 Installing all free MCP servers (Gemini, excluding fetch)");
 } else if (mcpNames.length > 0) {
   for (const name of mcpNames) {
     const found = configs.find((c) => c.name === name);

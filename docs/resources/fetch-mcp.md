@@ -7,7 +7,7 @@
 | 항목 | 내용 |
 |------|------|
 | **저장소** | [github.com/anthropics/mcp-server-fetch](https://github.com/anthropics/mcp-server-fetch) |
-| **NPM** | [@anthropic-ai/mcp-server-fetch](https://www.npmjs.com/package/@anthropic-ai/mcp-server-fetch) |
+| **실행 방식** | `uvx mcp-server-fetch` |
 | **제작자** | Anthropic (공식) |
 | **분류** | MCP 서버 |
 | **API 키** | 불필요 |
@@ -50,8 +50,11 @@ User-Agent, Accept 등 커스텀 헤더 설정 가능.
 ## 설치 방법
 
 ```bash
-claude mcp add fetch -- npx -y @anthropic-ai/mcp-server-fetch
+claude mcp add fetch -- uvx mcp-server-fetch
 ```
+
+> 현재 이 저장소의 기본 자동설치(`install.bat --all`, `node install-mcp*.js --all`)에는 `fetch`를 포함하지 않습니다.
+> 이유: `fetch`는 `uv`/`uvx` 런타임 전제가 있어 기본 번들에 넣기 어렵기 때문입니다.
 
 ### 설정 확인
 

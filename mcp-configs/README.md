@@ -9,7 +9,7 @@ Pre-configured MCP server settings for Claude Code/Codex/Gemini.
 | context7 | Latest library docs search | Not required | `@upstash/context7-mcp` |
 | playwright | Browser automation and E2E testing | Not required | `@playwright/mcp` |
 | chrome-devtools | Chrome DevTools integration (network/console/performance) | Not required | `@anthropic-ai/chrome-devtools-mcp` |
-| fetch | Fetch URL content (HTML/JSON/MD) | Not required | `mcp-fetch-server` |
+| fetch | Fetch URL content (HTML/JSON/MD) | Not required | `uvx mcp-server-fetch` |
 | github | GitHub API integration (PR, Issue, etc.) | **Required** | `@modelcontextprotocol/server-github` |
 
 ## Installation
@@ -24,6 +24,7 @@ node install-mcp-codex.js --list
 node install-mcp-codex.js context7 playwright
 
 # Install all free MCP servers
+# Note: auto-install excludes fetch because it requires uv/uvx
 node install-mcp-codex.js --all
 
 # Uninstall specific MCP
@@ -40,6 +41,7 @@ node install-mcp.js --list
 node install-mcp.js context7 playwright
 
 # Install all free MCP servers
+# Note: auto-install excludes fetch because it requires uv/uvx
 node install-mcp.js --all
 
 # Uninstall specific MCP
@@ -88,7 +90,7 @@ To install directly without `install-mcp.js`/`install-mcp-codex.js`:
 claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
 claude mcp add playwright -- npx -y @playwright/mcp@latest
 claude mcp add chrome-devtools -- npx -y @anthropic-ai/chrome-devtools-mcp@latest
-claude mcp add fetch -- npx -y mcp-fetch-server@latest
+claude mcp add fetch -- uvx mcp-server-fetch
 # Codex CLI
 codex mcp add context7 -- npx -y @upstash/context7-mcp@latest
 codex mcp add playwright -- npx -y @playwright/mcp@latest

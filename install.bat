@@ -20,7 +20,7 @@ set "GEMINI_SYNC_RESULT=not-run"
 set "GEMINI_MCP_RESULT=not-run"
 set "GEMINI_ORCH_RESULT=not-run"
 set "GEMINI_HOOKS_RESULT=not-run"
-set "DEFAULT_MCP_SERVERS=context7 fetch playwright chrome-devtools"
+set "DEFAULT_MCP_SERVERS=context7 playwright chrome-devtools"
 set "LEGACY_MCP_SERVERS=sequential-thinking"
 
 REM Determine mode (scan all arguments)

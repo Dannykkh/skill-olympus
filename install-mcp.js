@@ -20,6 +20,7 @@ const isListMode = args.includes("--list");
 const isAllMode = args.includes("--all");
 const isUninstall = args.includes("--uninstall");
 const isForce = args.includes("--force");
+const AUTO_INSTALL_EXCLUDES = new Set(["fetch"]);
 
 // --scope option parsing (default: user)
 const scopeIdx = args.indexOf("--scope");
@@ -176,8 +177,10 @@ const configs = loadAvailableConfigs();
 let toInstall = [];
 if (isAllMode) {
   // --all: auto-install only those that don't require an API key
-  toInstall = configs.filter((c) => !c.requiresApiKey);
-  console.log("\n🔧 Installing all free MCP servers");
+  toInstall = configs.filter(
+    (c) => !c.requiresApiKey && !AUTO_INSTALL_EXCLUDES.has(c.name)
+  );
+  console.log("\n🔧 Installing all free MCP servers (excluding fetch)");
 } else if (mcpNames.length > 0) {
   // Specific MCP names provided
   for (const name of mcpNames) {

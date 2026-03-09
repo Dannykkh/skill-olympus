@@ -3,7 +3,7 @@
   "description": "Fetch URL content - HTML/JSON/Markdown conversion (free, no API key required)",
   "requiresApiKey": false,
   "config": {
-    "command": "npx",
-    "args": ["-y", "mcp-fetch-server@latest"]
+    "command": "uvx",
+    "args": ["mcp-server-fetch"]
   }
 }
