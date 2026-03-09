@@ -73,6 +73,7 @@ Codex CLI 대화
 [notify: agent-turn-complete]
     → JSON 페이로드 수신 (argv/stdin/파일경로)
     → save-turn(오케스트레이터)에서 역할 분리 호출
+      → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
       → append-user: User 입력 저장
       → append-assistant: Assistant 응답 저장(전체)
     → conversations/YYYY-MM-DD-codex.md에 append

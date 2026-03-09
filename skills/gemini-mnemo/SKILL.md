@@ -72,6 +72,7 @@ Gemini CLI 대화
     → stdin JSON 페이로드 수신
     → prompt → User 입력 추출
     → prompt_response → Assistant 응답 추출
+    → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
     → settings.json의 context.fileName으로 AGENTS.md 로드 보장
     → 4000자 제한
     → conversations/YYYY-MM-DD-gemini.md에 append

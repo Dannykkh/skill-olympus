@@ -3,6 +3,99 @@
 # transcript_path에서 마지막 assistant 메시지를 추출하여 append
 # AI 호출 없음 = 빠름
 
+ensure_memory_scaffold() {
+    local base_dir="$1"
+    local memory_dir="$base_dir/memory"
+    local project_name
+    local today
+
+    project_name="$(basename "$base_dir")"
+    today="$(date +%Y-%m-%d)"
+
+    mkdir -p "$memory_dir"
+
+    if [ ! -f "$base_dir/MEMORY.md" ]; then
+        cat > "$base_dir/MEMORY.md" << EOF
+# MEMORY.md - 프로젝트 장기기억
+
+## 프로젝트 목표
+
+| 목표 | 상태 |
+|------|------|
+| $project_name 핵심 작업 추적 | 진행 중 |
+
+---
+
+## 키워드 인덱스
+
+| 키워드 | 상세 파일 |
+|--------|-----------|
+| 프로젝트, 생성일 | #meta |
+
+---
+
+## architecture/
+- [memory/architecture.md](memory/architecture.md)
+
+## patterns/
+- [memory/patterns.md](memory/patterns.md)
+
+## tools/
+- [memory/tools.md](memory/tools.md)
+
+## gotchas/
+- [memory/gotchas.md](memory/gotchas.md)
+
+---
+
+## meta/
+- **프로젝트**: $project_name
+- **생성일**: $today
+- **마지막 업데이트**: $today
+EOF
+    fi
+
+    if [ ! -f "$memory_dir/architecture.md" ]; then
+        cat > "$memory_dir/architecture.md" << 'EOF'
+# Architecture - 설계 결정
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+EOF
+    fi
+
+    if [ ! -f "$memory_dir/patterns.md" ]; then
+        cat > "$memory_dir/patterns.md" << 'EOF'
+# Patterns - 작업 패턴, 워크플로우
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+EOF
+    fi
+
+    if [ ! -f "$memory_dir/tools.md" ]; then
+        cat > "$memory_dir/tools.md" << 'EOF'
+# Tools - MCP 서버, 외부 도구, 라이브러리
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+EOF
+    fi
+
+    if [ ! -f "$memory_dir/gotchas.md" ]; then
+        cat > "$memory_dir/gotchas.md" << 'EOF'
+# Gotchas - 주의사항, 함정
+
+> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.
+
+---
+EOF
+    fi
+}
+
 INPUT=$(cat)
 
 # transcript_path 추출
@@ -15,6 +108,8 @@ fi
 CONV_DIR="$PWD/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-claude.md"
+
+ensure_memory_scaffold "$PWD"
 
 # conversations 폴더 자동 생성
 if [ ! -d "$CONV_DIR" ]; then
