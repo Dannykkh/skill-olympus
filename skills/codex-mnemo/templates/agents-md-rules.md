@@ -147,7 +147,7 @@ MEMORY.md는 프로젝트 루트에 위치한 **3계층 장기기억** 인덱스
 **핸드오프 실행 절차:**
 
 1. **MEMORY.md 업데이트** — 이번 세션의 결정사항, 새 패턴을 적절한 memory/*.md에 추가 + 인덱스 업데이트
-2. **핸드오프 파일 생성** — `.claude/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 아래 형식으로 작성:
+2. **핸드오프 파일 생성** — 공통 프로젝트 핸드오프 디렉터리인 `.claude/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 아래 형식으로 작성:
 
 ```markdown
 # Handoff: {작업 제목}
@@ -192,7 +192,7 @@ MEMORY.md는 프로젝트 루트에 위치한 **3계층 장기기억** 인덱스
 
 3. **사용자에게 안내:**
 > "컨텍스트가 한도에 가까워져 핸드오프를 준비했습니다.
-> - 핸드오프 파일: `.claude/handoffs/{파일명}`
+> - 공통 핸드오프 파일: `.claude/handoffs/{파일명}`
 > - MEMORY.md 업데이트 완료
 > 새 세션을 시작해주세요."
 
