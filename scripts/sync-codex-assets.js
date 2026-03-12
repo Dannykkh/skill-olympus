@@ -12,6 +12,7 @@ const repoRoot = path.resolve(__dirname, "..");
 const skillsSrcDir = path.join(repoRoot, "skills");
 const agentsSrcDir = path.join(repoRoot, "agents");
 const hooksSrcDir = path.join(repoRoot, "hooks");
+const codexMnemoHooksSrcDir = path.join(skillsSrcDir, "codex-mnemo", "hooks");
 
 const codexHome = process.env.CODEX_HOME
   ? path.resolve(process.env.CODEX_HOME)
@@ -99,6 +100,20 @@ function collectHookFiles() {
   return files;
 }
 
+function collectCodexNotifyHookFiles() {
+  const files = new Map();
+  if (!fs.existsSync(codexMnemoHooksSrcDir)) return files;
+
+  const allowedExt = new Set([".ps1", ".sh", ".js"]);
+  for (const name of fs.readdirSync(codexMnemoHooksSrcDir).sort()) {
+    const src = path.join(codexMnemoHooksSrcDir, name);
+    if (!fs.statSync(src).isFile()) continue;
+    if (!allowedExt.has(path.extname(name).toLowerCase())) continue;
+    files.set(name, src);
+  }
+  return files;
+}
+
 function readManifest(manifestPath) {
   try {
     return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -114,6 +129,7 @@ function loadPreviousManaged() {
     skills: toArray(manifest.managedSkills),
     agents: toArray(manifest.managedAgents),
     hooks: toArray(manifest.managedHooks),
+    codexNotifyHooks: toArray(manifest.managedCodexNotifyHooks),
   };
 }
 
@@ -187,7 +203,7 @@ function syncHooks(destDir, hookFiles, mode) {
   }
 }
 
-function writeManifest(mode, skillNames, agentNames, hookNames) {
+function writeManifest(mode, skillNames, agentNames, hookNames, codexNotifyHookNames) {
   const manifest = {
     mode,
     syncedAt: new Date().toISOString(),
@@ -203,6 +219,7 @@ function writeManifest(mode, skillNames, agentNames, hookNames) {
     managedSkills: skillNames,
     managedAgents: agentNames,
     managedHooks: hookNames,
+    managedCodexNotifyHooks: codexNotifyHookNames,
   };
 
   const projectManifest = manifestPaths.project;
@@ -225,8 +242,10 @@ function run() {
   const skillNames = listDirectories(skillsSrcDir);
   const agentFiles = collectAgentFiles();
   const hookFiles = collectHookFiles();
+  const codexNotifyHookFiles = collectCodexNotifyHookFiles();
   const agentNames = Array.from(agentFiles.keys()).sort((a, b) => a.localeCompare(b));
   const hookNames = Array.from(hookFiles.keys()).sort((a, b) => a.localeCompare(b));
+  const codexNotifyHookNames = Array.from(codexNotifyHookFiles.keys()).sort((a, b) => a.localeCompare(b));
 
   const targetMatrix = [
     { key: "skills", dest: targets.projectSkills },
@@ -235,12 +254,14 @@ function run() {
     { key: "agents", dest: targets.codexAgents },
     { key: "hooks", dest: targets.projectHooks },
     { key: "hooks", dest: targets.codexHooks },
+    { key: "codexNotifyHooks", dest: targets.codexHooks },
   ];
 
   const currentByKey = {
     skills: mode === "unlink" ? [] : skillNames,
     agents: mode === "unlink" ? [] : agentNames,
     hooks: mode === "unlink" ? [] : hookNames,
+    codexNotifyHooks: mode === "unlink" ? [] : codexNotifyHookNames,
   };
 
   for (const item of targetMatrix) {
@@ -256,18 +277,20 @@ function run() {
   syncAgents(targets.codexAgents, agentFiles, mode);
   syncHooks(targets.projectHooks, hookFiles, mode);
   syncHooks(targets.codexHooks, hookFiles, mode);
+  syncHooks(targets.codexHooks, codexNotifyHookFiles, mode);
 
   if (mode === "unlink") {
     safeRm(path.join(repoRoot, ".agents", ".codex-sync-manifest.json"));
     safeRm(path.join(codexHome, ".codex-sync-manifest.json"));
   } else {
-    writeManifest(mode, skillNames, agentNames, hookNames);
+    writeManifest(mode, skillNames, agentNames, hookNames, codexNotifyHookNames);
   }
 
   console.log(`[codex-sync] mode=${mode}`);
   console.log(`[codex-sync] skills=${skillNames.length}`);
   console.log(`[codex-sync] agents=${agentNames.length}`);
   console.log(`[codex-sync] hooks=${hookNames.length}`);
+  console.log(`[codex-sync] codex_notify_hooks=${codexNotifyHookNames.length}`);
   console.log(`[codex-sync] project_skills=${targets.projectSkills}`);
   console.log(`[codex-sync] project_hooks=${targets.projectHooks}`);
   console.log(`[codex-sync] codex_skills=${targets.codexSkills}`);

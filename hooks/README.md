@@ -52,6 +52,7 @@ Claude Code 훅 스크립트 모음입니다.
 |------|------|--------|
 | save-conversation | 사용자 입력 저장 | UserPromptSubmit |
 | save-response | Assistant 응답 저장 (코드 블록 제거, 2000자) | Stop |
+| loop-stop | Chronos 강제 루프 가드 (Claude 전용) | Stop |
 | orchestrator-detector.js | PM/Worker 모드 감지 | UserPromptSubmit |
 | protect-files | 중요 파일 보호 | PreToolUse (Write/Edit) |
 | check-new-file | 새 파일 생성 검토 | PreToolUse (Write) |

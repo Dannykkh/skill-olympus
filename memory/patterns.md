@@ -144,3 +144,39 @@
 
 - 스킬이나 에이전트 훅 mcp를 변경하면 codex, gemini도 각각에 맞게 변경되어야 함
 - readme, docs 등 사용방법도 잘 작성되어야 함
+
+### chronos, codex, notify, auto-continue-loop
+`tags: chronos, codex, notify, auto-continue-loop`
+`date: 2026-03-12`
+`source: codex`
+
+- Claude의 Stop 훅 기반 Chronos를 Codex에 그대로 이식하지 않고, `skills/codex-mnemo/hooks/save-turn.*` 뒤에 `continue-loop.*`를 체인해서 `codex exec resume --last`로 background 재개.
+- `loop-state.md`에 `last_turn_id`를 저장해 Codex notify 중복 재개를 막고, Git Bash/WSL 경로 차이를 흡수하도록 `continue-loop.sh`에 Windows 경로 정규화를 추가.
+- **참조**: [대화 링크](conversations/2026-03-12-codex.md)
+
+### ddingdong-noti, codex, notify, sync
+`tags: ddingdong-noti, codex, notify, sync`
+`date: 2026-03-12`
+`source: codex`
+
+- Claude `Stop` 훅인 `hooks/ddingdong-noti.*`는 Codex에서 직접 실행되지 않으므로 `skills/codex-mnemo/hooks/save-turn.*` notify 오케스트레이터 안에서 fan-out 호출하도록 연결.
+- `scripts/sync-codex-assets.js`가 `skills/codex-mnemo/hooks/*`를 `~/.codex/hooks/`에도 함께 동기화하도록 확장해, save-turn 수정이 다음 sync에서 즉시 실설치 경로에 반영되게 함.
+- **참조**: [대화 링크](conversations/2026-03-12-codex.md)
+
+### codex-audit, config-toml, compatibility-report
+`tags: codex-audit, config-toml, compatibility-report`
+`date: 2026-03-13`
+`source: codex`
+
+- `scripts/audit-codex-compatibility.js`로 repo sync 상태, `~/.codex/config.toml`, global `AGENTS.md`, Claude 전용 마커가 남은 skill/agent를 한 번에 점검하고 `docs/codex-compatibility-report.md`를 재생성.
+- Codex 점검은 “복사됐는가”와 “실제로 `notify -> save-turn`/MCP에 배선됐는가”를 분리해서 봐야 하며, 특히 root hooks와 orchestrator 경로 drift를 별도로 확인해야 함.
+- **참조**: [대화 링크](conversations/2026-03-13-codex.md)
+
+### single-source, generated-install, mnemo-family
+`tags: single-source, generated-install, mnemo-family`
+`date: 2026-03-13`
+`source: codex`
+
+- Claude/Codex/Gemini 공용 `skills/`, `agents/`, 문서 자산은 repo를 단일 원본으로 두고 link/sync로 배포하고, `config.toml`/`settings.json`, MCP 등록, runtime hooks는 CLI별 설치 자산으로 분리하는 하이브리드가 기본 전략.
+- `mnemo`는 공통 기억 시스템 개념이고 `mnemo`(Claude), `codex-mnemo`, `gemini-mnemo`는 각 CLI의 훅/설정 모델에 맞춘 어댑터로 봐야 하며, shared memory와 CLI별 conversation 로그를 구분해서 관리.
+- **참조**: [대화 링크](conversations/2026-03-13-codex.md)

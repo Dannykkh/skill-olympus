@@ -2,7 +2,7 @@
   "$schema": "smart-setup-registry",
   "version": "1.0.0",
   "description": "기술 태그별 리소스 매핑 데이터 (Single Source of Truth). /smart-setup 커맨드에서 사용.",
-  "lastUpdated": "2026-02-19",
+  "lastUpdated": "2026-03-13",
 
   "detection-rules": [
     { "file": "package.json", "match": "\"react\"", "tags": ["react"] },
@@ -256,7 +256,12 @@
     { "id": "zeus", "tags": ["*"], "priority": "optional" },
     { "id": "zephermine", "tags": ["*"], "priority": "recommended" },
     { "id": "manage-skills", "tags": ["*"], "priority": "optional" },
-    { "id": "verify-implementation", "tags": ["*"], "priority": "optional" }
+    { "id": "verify-implementation", "tags": ["*"], "priority": "optional" },
+    { "id": "seo-audit", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
+    { "id": "reddit-researcher", "tags": ["*"], "priority": "optional" },
+    { "id": "ui-ux-auditor", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
+    { "id": "video-maker", "tags": ["react", "nextjs"], "priority": "optional" },
+    { "id": "flow-verifier", "tags": ["*"], "priority": "optional" }
   ],
 
   "internal-agents": [
@@ -310,6 +315,8 @@
     { "id": "format-code", "tags": ["typescript", "react", "nextjs", "nestjs", "nodejs", "vue", "angular"], "priority": "recommended" },
     { "id": "validate-api", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify"], "priority": "optional" },
     { "id": "save-response", "tags": ["*"], "priority": "recommended" },
-    { "id": "orchestrator-detector", "tags": ["*"], "priority": "optional" }
+    { "id": "orchestrator-detector", "tags": ["*"], "priority": "optional" },
+    { "id": "loop-stop", "tags": ["*"], "priority": "optional" },
+    { "id": "ddingdong-noti", "tags": ["*"], "priority": "optional" }
   ]
 }

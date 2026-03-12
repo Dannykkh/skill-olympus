@@ -11,6 +11,17 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_FILE" 2>/dev/null || true
 }
 
+run_notification_hook() {
+    local notify_hook="$HOME/.codex/hooks/ddingdong-noti.sh"
+    if [ ! -f "$notify_hook" ]; then
+        return 0
+    fi
+
+    if ! AGENT_NOTIFY_TITLE="Codex CLI" AGENT_NOTIFY_MESSAGE="작업이 완료되었습니다" bash "$notify_hook"; then
+        debug_log "notify-chain-failed: $notify_hook"
+    fi
+}
+
 ensure_memory_scaffold() {
     local base_dir="$1"
     local memory_dir="$base_dir/memory"
@@ -258,3 +269,11 @@ if [ -n "$TURN_ID" ]; then
 fi
 
 debug_log "saved: baseDir=$BASE_DIR, file=$CONV_FILE, userLen=${#USER_TEXT}, respLen=${#RESPONSE}, turnId=$TURN_ID"
+run_notification_hook
+
+CHRONOS_CONTINUE="$HOME/.codex/skills/auto-continue-loop/scripts/continue-loop.sh"
+if [ -x "$CHRONOS_CONTINUE" ]; then
+    if ! printf '%s' "$PAYLOAD" | "$CHRONOS_CONTINUE"; then
+        debug_log "chronos-chain-failed: $CHRONOS_CONTINUE"
+    fi
+fi

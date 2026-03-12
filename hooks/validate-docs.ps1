@@ -1,4 +1,4 @@
-# validate-docs.ps1
+﻿# validate-docs.ps1
 # 마크다운 문서 작성 후 AI 글쓰기 패턴 검출 (PostToolUse 훅)
 # 기반: Wikipedia "Signs of AI writing" + humanizer 스킬
 

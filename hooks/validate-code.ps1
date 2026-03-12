@@ -1,4 +1,4 @@
-# validate-code.ps1
+﻿# validate-code.ps1
 # 코드 파일 수정 후 자동 검증 (PostToolUse 훅)
 # 트리거: Edit, Write 도구 사용 후 (*.py, *.ts, *.tsx, *.jsx, *.java)
 

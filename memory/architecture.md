@@ -72,3 +72,13 @@
 - Flow 항상 존재 (단순 위임도 통일성 우선)
 - 프론트 Feature-based + TanStack Query 3계층
 - Java/Spring Boot 12개 코딩 규칙 포함 (@Transactional, DTO 변환, 예외 처리 등)
+
+### global-install, codex-parity, mnemo-name
+`tags: global-install, codex-parity, mnemo-name`
+`date: 2026-03-13`
+`source: codex`
+
+- Codex runtime의 source of truth는 repo-local이 아니라 전역 설치본(`~/.codex`, Roaming 설치 경로)으로 유지하고, repo 변경은 sync/install을 통해 반영.
+- 원칙상 Claude에서 제공하는 skills, agents, hooks, rules, MCP 기능은 Codex에서도 동일 기능 parity를 목표로 맞추며, 단순 복사가 아니라 Codex 실행 모델에 맞는 bridge/adapter까지 포함해 구현.
+- 사용자 호출명도 CLI 간 동일하게 유지하고, 우선 고정 호출명은 `/zephermine`, `/zeus`, `workpm`, `/chronos`, `/qpassenger`, `/agent-team`으로 관리한다. parity 판단은 "파일이 복사됐는가"가 아니라 "전역 설치본에서 실제 같은 이름으로 호출되고 동작하는가" 기준으로 한다.
+- `mnemo` 명칭은 유지하고 `codex-mnemo`, `gemini-mnemo`는 CLI별 어댑터 이름으로 계속 사용.

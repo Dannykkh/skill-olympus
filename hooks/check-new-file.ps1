@@ -1,4 +1,4 @@
-# check-new-file.ps1
+﻿# check-new-file.ps1
 # 새 파일 생성 전 reducing-entropy 원칙 확인 (PreToolUse 훅)
 # 트리거: Write 도구 사용 전 (새 파일 생성 시)
 

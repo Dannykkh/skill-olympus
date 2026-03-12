@@ -1,6 +1,6 @@
 ---
 name: daily-meeting-update
-description: "Interactive daily standup/meeting update generator. Use when user says 'daily', 'standup', 'scrum update', 'status update', 'what did I do yesterday', 'prepare for meeting', 'morning update', or 'team sync'. Pulls activity from GitHub, Jira, and Claude Code session history. Conducts 4-question interview (yesterday, today, blockers, discussion topics) and generates formatted Markdown update."
+description: "Interactive daily standup/meeting update generator. Use when user says 'daily', 'standup', 'scrum update', 'status update', 'what did I do yesterday', 'prepare for meeting', 'morning update', or 'team sync'. Pulls activity from GitHub, Jira, and available AI session history (Claude `.claude/projects` or project `conversations/*-codex.md`). Conducts 4-question interview (yesterday, today, blockers, discussion topics) and generates formatted Markdown update."
 user-invocable: true
 ---
 
@@ -49,6 +49,7 @@ Check for available integrations **silently** (suppress errors, don't show to us
 | Integration | Detection |
 |-------------|-----------|
 | **Claude Code History** | `~/.claude/projects` directory exists with `.jsonl` files |
+| **Codex/Gemini Project History** | `conversations/*-codex.md` or `conversations/*-gemini.md` exists |
 | GitHub CLI | `gh auth status` succeeds |
 | Jira CLI | `jira` command exists |
 | Atlassian MCP | `mcp__atlassian__*` tools available |
@@ -56,7 +57,8 @@ Check for available integrations **silently** (suppress errors, don't show to us
 
 ### Step 2: Offer GitHub/Jira Integrations (if available)
 
-> **Claude Code users:** Use `AskUserQuestionTool` tool for all questions in this phase.
+> Claude Code: use `AskUserQuestionTool` when available.
+> Codex/Gemini: use plain-text questions and concise numbered options.
 
 **GitHub/Git:**
 
@@ -103,7 +105,7 @@ Options:
 
 **Key insight**: Store results to use as context in Phase 2 interview.
 
-### Step 4: Offer Claude Code History
+### Step 4: Offer AI Session History
 
 This integration captures everything you worked on with Claude Code — useful for recalling work that isn't in git or Jira.
 
@@ -149,6 +151,12 @@ Options (multiSelect):
 - User says they'll provide everything manually
 - `~/.claude/projects` directory doesn't exist
 
+**Codex/Gemini fallback:**
+
+- If Claude history is unavailable but `conversations/*-codex.md` or `conversations/*-gemini.md` exists, read the previous day's project conversation file directly.
+- Summarize relevant work items from that file in plain text.
+- Ask the user to confirm which items belong in the standup; do not require multiSelect UI.
+
 **If digest script fails:**
 - Fallback: Skip Claude Code integration silently, proceed with interview
 - Common issues: Python not installed, no sessions from yesterday, permission errors
@@ -158,7 +166,8 @@ Options (multiSelect):
 
 ## Phase 2: Interview (with insights)
 
-> **Claude Code users:** Use `AskUserQuestionTool` tool to conduct the interview. This provides a better UX with structured options.
+> Claude Code: use `AskUserQuestionTool` for structured UX.
+> Codex/Gemini: ask the same questions in plain text and keep options short.
 
 **Use pulled data as context** to make questions smarter.
 
@@ -284,7 +293,7 @@ Combine all information into clean Markdown:
 | 2. Interview | Ask 4 questions with insights | AskUserQuestionTool* |
 | 3. Generate | Format Markdown | Output text |
 
-*Claude Code only: Use `AskUserQuestionTool` tool for structured questions.
+*Claude Code only: `AskUserQuestionTool` is an optional UX enhancement, not a requirement for the workflow.
 
 ### Claude Code Digest Script
 

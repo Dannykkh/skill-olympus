@@ -1,4 +1,4 @@
-# save-turn.ps1 - Codex notify orchestrator
+﻿# save-turn.ps1 - Codex notify orchestrator
 # Role split:
 # - append-user.ps1: persist user message
 # - append-assistant.ps1: persist assistant message
@@ -165,6 +165,25 @@ function Get-Sha1([string]$text) {
         return ([BitConverter]::ToString($hash) -replace "-", "").ToLowerInvariant()
     } finally {
         $sha.Dispose()
+    }
+}
+
+function Invoke-NotificationHook {
+    $notifyHook = Join-Path $HOME ".codex\hooks\ddingdong-noti.ps1"
+    if (-not (Test-Path $notifyHook)) { return }
+
+    $prevTitle = $env:AGENT_NOTIFY_TITLE
+    $prevMessage = $env:AGENT_NOTIFY_MESSAGE
+
+    try {
+        $env:AGENT_NOTIFY_TITLE = "Codex CLI"
+        $env:AGENT_NOTIFY_MESSAGE = "작업이 완료되었습니다"
+        & $notifyHook
+    } catch {
+        Write-DebugLog "notify-chain-failed: $($_.Exception.Message)"
+    } finally {
+        if ($null -ne $prevTitle) { $env:AGENT_NOTIFY_TITLE = $prevTitle } else { Remove-Item Env:AGENT_NOTIFY_TITLE -ErrorAction SilentlyContinue }
+        if ($null -ne $prevMessage) { $env:AGENT_NOTIFY_MESSAGE = $prevMessage } else { Remove-Item Env:AGENT_NOTIFY_MESSAGE -ErrorAction SilentlyContinue }
     }
 }
 
@@ -427,3 +446,13 @@ if ($turnId) {
 }
 
 Write-DebugLog "saved: baseDir=$baseDir, file=$convFile, userLen=$($userText.Length), respLen=$($response.Length), turnId=$turnId"
+Invoke-NotificationHook
+
+$chronosContinue = Join-Path $HOME ".codex\skills\auto-continue-loop\scripts\continue-loop.ps1"
+if (Test-Path $chronosContinue) {
+    try {
+        ($payload | ConvertTo-Json -Compress -Depth 20) | & $chronosContinue
+    } catch {
+        Write-DebugLog "chronos-chain-failed: $($_.Exception.Message)"
+    }
+}

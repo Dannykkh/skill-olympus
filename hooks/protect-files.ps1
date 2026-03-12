@@ -1,4 +1,4 @@
-# protect-files.ps1
+﻿# protect-files.ps1
 # 중요 파일 수정 방지 (PreToolUse 훅)
 
 # Claude Code는 stdin으로 JSON을 전달함
