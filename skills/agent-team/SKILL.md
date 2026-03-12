@@ -1,8 +1,10 @@
 ---
 name: agent-team
-description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. Claude Agent Teams + Codex spawn_agent 지원.
+description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. Claude Agent Teams + Codex spawn_agent 지원. /agent-team으로 실행. 대니즈팀.
 triggers:
   - "agent-team"
+  - "대니즈팀"
+  - "dannys team"
   - "팀 실행"
   - "agent team"
 auto_apply: false
@@ -46,6 +48,8 @@ Phase 0 시작 시 자동 판별:
 
 팀 이름은 **대니즈팀(Dannys Team)**으로 고정합니다.
 teammate 생성 시 이 팀명을 사용하세요.
+
+**공식 호출명:** `/agent-team` (별칭: `대니즈팀`, `Dannys Team`)
 
 ## CRITICAL: First Actions
 

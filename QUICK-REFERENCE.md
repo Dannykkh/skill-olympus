@@ -2,6 +2,17 @@
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
 
+## 고정 호출명
+
+| 기능 | 호출명 |
+|------|--------|
+| 젭마인 | `/zephermine` |
+| 제우스 | `/zeus` |
+| WorkPM | `workpm` |
+| 크로노스 | `/chronos` |
+| 큐패신저 | `/qpassenger` |
+| 대니즈팀 | `/agent-team` |
+
 ---
 
 ## 기술 스택별 추천
@@ -245,7 +256,12 @@ claude plugin install voltagent-qa-sec
 | `skills/qpassenger/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
-| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/loop) |
+| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/loop, /chronos) |
+| `skills/seo-audit/` | SEO 감사 — robots.txt, 사이트맵, 메타태그, JSON-LD, 이미지, 링크, 성능 (7영역) |
+| `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
+| `skills/ui-ux-auditor/` | UI/UX 8영역 감사 + 자동 수정 — 다크모드, 반응형, 접근성, 로딩, 폼, 네비, 타이포, 애니메이션 |
+| `skills/video-maker/` | Remotion 기반 React 코드 영상 제작 — 제품 소개, 데모, SNS 숏폼, 데이터 시각화 |
+| `skills/flow-verifier/` | 프로세스 다이어그램 생성 → 구현 후 코드 흐름 검증 (mermaid-diagrams 연동, Chronos 통합) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
@@ -288,4 +304,4 @@ https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/mast
 ---
 
 **저장소:** https://github.com/Dannykkh/claude-code-agent-customizations
-**마지막 업데이트:** 2026-02-19
+**마지막 업데이트:** 2026-03-13

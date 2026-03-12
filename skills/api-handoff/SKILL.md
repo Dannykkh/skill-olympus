@@ -25,7 +25,7 @@ description: API handoff documentation between backend and frontend teams. Suppo
 ### Workflow
 
 1. **Collect context** — feature, endpoints, DTOs, auth, edge cases 확인
-2. **Create handoff file** — `.claude/docs/ai/<feature-name>/api-handoff.md`
+2. **Create handoff file** — `docs/ai/<feature-name>/api-handoff.md`
 3. **Fill template** — 모든 섹션 작성
 4. **Double-check** — 페이로드, auth, validation 검증
 

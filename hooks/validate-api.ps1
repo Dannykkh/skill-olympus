@@ -1,4 +1,4 @@
-# validate-api.ps1
+﻿# validate-api.ps1
 # API 엔드포인트 파일 수정 시 유효성 검사
 
 # Claude Code는 stdin으로 JSON을 전달함

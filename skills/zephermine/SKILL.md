@@ -1,6 +1,12 @@
 ---
 name: zephermine
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. Also known as 젭마인, 제퍼마인, 제퍼미네.
+description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. /zephermine로 실행. Also known as 젭마인, 제퍼마인, 제퍼미네.
+triggers:
+  - "zephermine"
+  - "젭마인"
+  - "제퍼마인"
+  - "제퍼미네"
+auto_apply: false
 ---
 
 # Zephermine

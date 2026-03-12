@@ -1,4 +1,4 @@
-# save-turn.ps1 - Gemini CLI AfterAgent 훅: User+Assistant 턴을 대화 파일에 저장
+﻿# save-turn.ps1 - Gemini CLI AfterAgent 훅: User+Assistant 턴을 대화 파일에 저장
 # Gemini는 stdin으로 JSON 페이로드를 전달함 (prompt + prompt_response)
 # AI 호출 없음 = 빠름
 

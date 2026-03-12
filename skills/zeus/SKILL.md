@@ -5,6 +5,10 @@ description: >
   설계(zephermine) → 구현(workpm) → 테스트(qpassenger) 전체를 자동 완료.
   workpm은 CLI에 맞게 Agent Teams 또는 MCP-only 경로로 자동 라우팅.
   AskUserQuestion 절대 호출 금지. /zeus로 실행. 제우스.
+triggers:
+  - "zeus"
+  - "제우스"
+auto_apply: false
 ---
 
 # Zeus (제우스) — Zero-Interaction Full Pipeline

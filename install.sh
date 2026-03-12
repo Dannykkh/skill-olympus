@@ -87,7 +87,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[6/12] Codex Skills/Agents 동기화 해제 중..."
+    echo "[6/12] Codex Skills/Agents/Hooks 동기화 해제 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
         if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --unlink; then
             CODEX_SYNC_RESULT="해제 완료"
@@ -399,10 +399,10 @@ else
 fi
 echo "      $CODEX_MNEMO_RESULT"
 
-# Codex Skills/Agents 동기화 (zephermine 필수이므로 항상 실행)
+# Codex Skills/Agents/Hooks 동기화 (zephermine 필수이므로 항상 실행)
 if true; then
     echo ""
-    echo "  Codex Skills/Agents 동기화 중..."
+    echo "  Codex Skills/Agents/Hooks 동기화 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
         node "$SCRIPT_DIR/scripts/sync-codex-assets.js" && CODEX_SYNC_RESULT="동기화 완료" || CODEX_SYNC_RESULT="동기화 실패"
     else
@@ -588,7 +588,7 @@ fi
 if [ "$HAS_CODEX" = "1" ]; then
     echo "  [Codex]"
     echo "  - Mnemo: $CODEX_MNEMO_RESULT"
-    echo "  - Skills/Agents: $CODEX_SYNC_RESULT"
+    echo "  - Skills/Agents/Hooks: $CODEX_SYNC_RESULT"
     echo "  - MCP: $CODEX_MCP_RESULT"
     echo "  - multi_agent: $CODEX_MULTI_AGENT_RESULT"
     echo "  - Orchestrator: $CODEX_ORCH_RESULT"
@@ -596,7 +596,7 @@ fi
 if [ "$HAS_GEMINI" = "1" ]; then
     echo "  [Gemini]"
     echo "  - Mnemo: $GEMINI_MNEMO_RESULT"
-    echo "  - Skills/Agents: $GEMINI_SYNC_RESULT"
+    echo "  - Skills/Agents/Hooks: $GEMINI_SYNC_RESULT"
     echo "  - Hooks: $GEMINI_HOOKS_RESULT"
     echo "  - MCP: $GEMINI_MCP_RESULT"
     echo "  - Orchestrator: $GEMINI_ORCH_RESULT"

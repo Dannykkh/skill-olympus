@@ -1,6 +1,6 @@
 ---
 name: qpassenger
-description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프 (큐패신저). qa-writer → 코드 생성 → 실행 → 수정 반복.
+description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프 (큐패신저). qa-writer → 코드 생성 → 실행 → 수정 반복. /qpassenger로 실행.
 triggers:
   - "qpassenger"
   - "큐패신저"
@@ -23,6 +23,8 @@ QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트
 /qpassenger --api-only                # API 테스트만
 /qpassenger --ui-only                 # UI 테스트만
 ```
+
+**공식 호출명:** `/qpassenger` (별칭: `큐패신저`)
 
 ## 워크플로우 (5단계)
 

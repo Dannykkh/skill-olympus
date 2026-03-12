@@ -90,7 +90,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [6/12] Unlinking Codex Skills/Agents sync...
+    echo [6/12] Unlinking Codex Skills/Agents/Hooks sync...
     if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-codex-assets.js" --unlink
         if !errorlevel! equ 0 (
@@ -437,9 +437,9 @@ if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
 )
 echo       !CODEX_MNEMO_RESULT!
 
-REM Sync Codex Skills/Agents (always runs, required for zephermine)
+REM Sync Codex Skills/Agents/Hooks (always runs, required for zephermine)
 echo.
-echo   Syncing Codex Skills/Agents...
+echo   Syncing Codex Skills/Agents/Hooks...
 if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
     node "%SCRIPT_DIR%scripts\sync-codex-assets.js"
     if !errorlevel! equ 0 (
@@ -661,7 +661,7 @@ if "!HAS_CLAUDE!"=="1" (
 if "!HAS_CODEX!"=="1" (
     echo   [Codex]
     echo   - Mnemo: !CODEX_MNEMO_RESULT!
-    echo   - Skills/Agents: !CODEX_SYNC_RESULT!
+    echo   - Skills/Agents/Hooks: !CODEX_SYNC_RESULT!
     echo   - MCP: !CODEX_MCP_RESULT!
     echo   - multi_agent: !CODEX_MULTI_AGENT_RESULT!
     echo   - Orchestrator: !CODEX_ORCH_RESULT!
@@ -669,7 +669,7 @@ if "!HAS_CODEX!"=="1" (
 if "!HAS_GEMINI!"=="1" (
     echo   [Gemini]
     echo   - Mnemo: !GEMINI_MNEMO_RESULT!
-    echo   - Skills/Agents: !GEMINI_SYNC_RESULT!
+    echo   - Skills/Agents/Hooks: !GEMINI_SYNC_RESULT!
     echo   - Hooks: !GEMINI_HOOKS_RESULT!
     echo   - MCP: !GEMINI_MCP_RESULT!
     echo   - Orchestrator: !GEMINI_ORCH_RESULT!

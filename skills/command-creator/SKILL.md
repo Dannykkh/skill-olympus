@@ -1,11 +1,15 @@
 ---
 name: command-creator
-description: This skill should be used when creating a Claude Code slash command. Use when users ask to "create a command", "make a slash command", "add a command", or want to document a workflow as a reusable command. Essential for creating optimized, agent-executable slash commands with proper structure and best practices.
+description: This skill should be used when creating a Claude Code slash command. Use when users ask to "create a command", "make a slash command", "add a command", or want to document a workflow as a reusable command. If running outside Claude, explain the limitation and redirect to a reusable skill or prompt recipe instead of `.claude/commands/`.
 ---
 
 # Command Creator
 
 This skill guides the creation of Claude Code slash commands - reusable workflows that can be invoked with `/command-name` in Claude Code conversations.
+
+> Codex/Gemini note: slash commands are Claude-specific. If the runtime is not Claude Code, do not create `.claude/commands/` automatically. Instead propose either:
+> - a reusable skill under `skills/<name>/SKILL.md`
+> - a prompt recipe under `docs/prompts/<name>.md`
 
 ## About Slash Commands
 
@@ -54,6 +58,11 @@ argument-hint: <placeholder> (optional, if command takes arguments)
 ## Command Creation Workflow
 
 ### Step 1: Determine Location
+
+**First decide whether the target runtime is Claude Code.**
+
+- If the user explicitly wants a Claude slash command, continue with the workflow below.
+- If the user wants a reusable workflow for Codex/Gemini, stop the slash-command flow and create a skill/prompt artifact instead.
 
 **Auto-detect the appropriate location:**
 

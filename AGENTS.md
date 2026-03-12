@@ -54,8 +54,10 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |코드 리뷰 종합|code-reviewer → security-reviewer → reducing-entropy|
 |리팩토링|explore-agent → reducing-entropy → code-reviewer|
 |보안 감사|security-reviewer → code-review-checklist|
+|UI/UX 품질 점검|ui-ux-auditor → ui-ux-designer (필요 시 디자인 조언)|
 |QA 자동화|qpassenger (시나리오 자동 생성 → Playwright → Healer)|
 |반복 수정 루프|auto-continue-loop (이슈 탐색 → 수정 → 검증 → 다음, 자동 반복)|
+|다이어그램 기반 구현 검증|flow-verifier plan → 구현 → flow-verifier verify (코드 흐름 ↔ 다이어그램 대조)|
 
 > 상세 가이드: [docs/workflow-guide.md](docs/workflow-guide.md)
 
@@ -70,6 +72,16 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Security|OWASP Top 10|Check SQL injection, XSS, CSRF|
 |Type safety|Required|Add type hints (Python) / TypeScript|
 |DRY principle|No duplication|Extract reusable components|
+
+---
+
+## Cross-CLI Compatibility
+
+- Claude Code에서 제공하는 skills, agents, hooks, MCP 기능은 Codex에서도 동일 기능 parity를 목표로 유지합니다.
+- 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/seo-audit`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다.
+- 내부 구현은 CLI별 실행 모델 차이를 반영해 달라질 수 있지만, 사용자 인터페이스와 핵심 결과는 맞춰야 합니다.
+- 단순 파일 복사만으로 parity를 판단하지 말고, 전역 설치본에서 실제로 동작하는지까지 검증합니다.
+- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `workpm`, `/chronos`(크로노스), `/qpassenger`(큐패신저), `/agent-team`(대니즈팀)
 
 ---
 
@@ -93,7 +105,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (78개)
+### Skills (83개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -101,13 +113,15 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검색/검증 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
-| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/디자인/Stitch UI 생성 |
+| 🎨 Frontend | design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | React/TypeScript/디자인/Stitch UI 생성 + SEO 감사 + UI/UX 8영역 감사 |
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop | 테스트/리뷰/자동 수정 루프 |
+| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier | 테스트/리뷰/자동 수정 루프/플로우 검증 |
 | 📦 Git | commit-work | Git 워크플로우 |
+| 🎬 Media | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
+| 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
 | 🧠 Memory/Session | mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
 
 ### Agents (42개)
@@ -145,7 +159,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | **Design** | ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
 | | ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
 | | stitch-developer | Stitch MCP UI/웹사이트 생성 전문가 |
-| **Security** | security-reviewer | 보안 취약점 전문 분석 (OWASP Top 10) |
+| **Security** | security-reviewer | 보안 취약점 전문 분석 (8대 카테고리: 인증, 입력검증, 데이터보안, 의존성, Rate Limit, 파일업로드, Prompt Injection, 정보노출) |
 | **Migration** | migration-helper | 레거시→모던 마이그레이션 가이드 |
 | | explore-agent | 레거시 코드 분석 |
 | **Planning** | feature-tracker | 기능 목록 및 진행 상황 관리 |
@@ -297,6 +311,8 @@ Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-
 |save-conversation.sh|UserPromptSubmit|모든 입력|사용자 입력을 대화 파일에 저장|
 |save-response.sh|Stop|세션 종료|Assistant 응답을 대화 파일에 저장|
 |orchestrator-detector.js|UserPromptSubmit|workpm/pmworker 입력|PM/Worker 모드 감지|
+|loop-stop.sh|Stop|Chronos 루프 활성 시|세션 종료 가로채서 프롬프트 재투입 (자동 반복)|
+|ddingdong-noti.sh|Stop|세션 종료|OS 네이티브 알림 (Windows BurntToast, macOS osascript, Linux notify-send)|
 
 ### 3-Layer Architecture
 

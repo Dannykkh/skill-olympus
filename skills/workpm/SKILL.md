@@ -25,6 +25,7 @@ auto_apply: false
 - `workpm` is the preferred user-facing name across all CLIs.
 - On Codex and Gemini, this wrapper intentionally routes to the portable `workpm-mcp` path.
 - Hooks may add extra context, but hooks do not register callable skills by themselves.
+- Canonical invocation name: `workpm` (keep this exact name on Claude, Codex, and Gemini).
 
 ## Start
 

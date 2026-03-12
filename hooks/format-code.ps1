@@ -1,4 +1,4 @@
-# format-code.ps1
+﻿# format-code.ps1
 # 파일 저장 후 자동 포맷팅 (PostToolUse 훅)
 
 param(

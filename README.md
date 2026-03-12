@@ -117,6 +117,8 @@ PM distributes tasks, Workers (Claude + Codex + Gemini) execute in parallel with
 | `workpm-mcp` | Explicit MCP-only PM entrypoint - works on Claude, Codex, Gemini |
 | `pmworker` | Unified Worker entrypoint - claim task, lock files, execute, report (all CLIs) |
 
+**Canonical cross-CLI invocation names:** `/zephermine`, `/zeus`, `workpm`, `/chronos`, `/qpassenger`, `/agent-team`
+
 ```
 Terminal 1 (PM):     workpm → analyze → create 3 tasks
 Terminal 2 (Worker): pmworker → claim task-1 → execute → complete
@@ -154,21 +156,23 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (78 Skills)
+### Custom Skills (83 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
 | 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, workpm, workpm-mcp, pmworker, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + unified PM/Worker entrypoints + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
-| 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react | React/TypeScript/Design/Stitch UI generation |
+| 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | React/TypeScript/Design/Stitch UI generation + SEO audit + UI/UX 8-area audit |
 | 🛠️ **Development** | docker-deploy, docker-db-backup, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | Dev tools & deployment |
 | 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop | Code review & QA & auto fix-verify loop |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier | Code review & QA & auto fix-verify loop & flow verification |
 | 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
+| 🎬 **Media** | video-maker | Remotion-based React video creation (product intro, demo, social media) |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
+| 📊 **Research** | reddit-researcher | Reddit market research + lead scoring + pain point classification |
 | 🧠 **Memory/Session** | mnemo, memory-compact | Unified memory system (conversation saving + tagging + search + MEMORY.md + session handoff) + Memory size check & compaction |
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
@@ -185,7 +189,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
 | **Documentation** | documentation, mermaid-diagram-specialist | Docs & diagrams |
 | **Design** | ascii-ui-mockup-generator, ui-ux-designer, stitch-developer | UI/UX design & Stitch UI generation |
-| **Security** | security-reviewer | Security vulnerability analysis (OWASP Top 10) |
+| **Security** | security-reviewer | Security vulnerability analysis (8 categories: Auth, Input, Data, Dependencies, Rate Limit, File Upload, Prompt Injection, Info Disclosure) |
 | **Migration** | migration-helper, explore-agent | Legacy modernization |
 | **Planning** | feature-tracker | Feature tracking |
 | **Communication** | communication-excellence-coach | Email & presentation coaching |
@@ -206,6 +210,8 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | protect-files.sh | PreToolUse | Protect critical files from modification |
 | format-code.sh | PostToolUse | Auto-format code (Python/TS/JS/Java/CSS) |
 | validate-api.sh | PostToolUse | Validate API files after modification |
+| loop-stop.sh | Stop | Chronos loop: intercept session end & re-inject prompt for auto-iteration |
+| ddingdong-noti.sh | Stop | OS-native notification on session end (Windows/macOS/Linux) |
 
 ### Mnemo & Orchestrator
 
@@ -283,7 +289,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (78 skills)
+├── skills/                    # Custom skills (83 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── memory-compact/        # 🧠 Memory size check & compaction
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
@@ -353,6 +359,11 @@ claude-code-customizations/
 │   ├── wrangler/
 │   ├── docx/
 │   ├── pdf/
+│   ├── seo-audit/
+│   ├── reddit-researcher/
+│   ├── ui-ux-auditor/
+│   ├── video-maker/
+│   ├── flow-verifier/
 │   └── writing-clearly-and-concisely/
 ├── agents/                    # Custom subagents (35 + skills/*/agents/ 2 = 37 agents)
 │   ├── architect.md
@@ -388,7 +399,7 @@ claude-code-customizations/
 │   ├── stitch-developer.md
 │   ├── ui-ux-designer.md
 │   └── writing-guidelines.md
-├── hooks/                     # Global hooks (9 hooks)
+├── hooks/                     # Global hooks (11 hooks)
 │   ├── save-conversation.sh/.ps1
 │   ├── save-response.sh/.ps1
 │   ├── orchestrator-detector.js
@@ -397,7 +408,9 @@ claude-code-customizations/
 │   ├── protect-files.sh/.ps1
 │   ├── validate-api.sh/.ps1
 │   ├── validate-code.sh/.ps1
-│   └── validate-docs.sh/.ps1
+│   ├── validate-docs.sh/.ps1
+│   ├── loop-stop.sh/.ps1
+│   └── ddingdong-noti.sh/.ps1
 ├── mcp-servers/               # MCP server guides
 │   └── README.md
 ├── mcp-configs/               # MCP server preset configs (Claude + Codex)
@@ -497,4 +510,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-02-19
+**Last Updated:** 2026-03-12

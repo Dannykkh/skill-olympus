@@ -40,7 +40,7 @@ node skills/codex-mnemo/install.js --uninstall  # 제거
 
 | 원칙 | 설명 |
 |------|------|
-| **빠르게** | 훅에서 AI 호출 금지 |
+| **빠르게** | 기본은 훅에서 AI 호출 금지. 단, Chronos auto-continue는 예외 체인 |
 | **단순하게** | 파일 기반, DB 없음 |
 | **검색 가능하게** | 키워드 + 동의어 확장 |
 
@@ -53,10 +53,10 @@ codex-mnemo/
 ├── SKILL.md                     # 이 파일
 ├── install.js                   # 설치/제거 스크립트
 ├── hooks/
-│   ├── save-turn.ps1            # Windows notify 오케스트레이터
+│   ├── save-turn.ps1            # Windows notify 오케스트레이터 (+ Chronos optional chain)
 │   ├── append-user.ps1          # User 저장 전담
 │   ├── append-assistant.ps1     # Assistant 저장 전담
-│   ├── save-turn.sh             # Linux/Mac notify 오케스트레이터
+│   ├── save-turn.sh             # Linux/Mac notify 오케스트레이터 (+ Chronos optional chain)
 │   ├── append-user.sh           # User 저장 전담
 │   └── append-assistant.sh      # Assistant 저장 전담
 └── templates/
@@ -76,8 +76,12 @@ Codex CLI 대화
       → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
       → append-user: User 입력 저장
       → append-assistant: Assistant 응답 저장(전체)
+      → (optional) ddingdong-noti: Codex 완료 알림
     → conversations/YYYY-MM-DD-codex.md에 append
     → turn-id 기반 중복 방지
+    → (optional) auto-continue-loop 설치 시 continue-loop 호출
+      → loop-state.md 확인
+      → 미완료면 background `codex exec resume --last`
 ```
 
 ---

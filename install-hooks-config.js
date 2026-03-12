@@ -87,6 +87,8 @@ const HOOK_BUNDLE_MAP = {
   "validate-api": ["all-only"],
   "save-response": ["mnemo"],
   "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
+  "loop-stop": ["all-only"], // Chronos 루프 Stop 훅 (loop-state.md 없으면 자동 통과)
+  "ddingdong-noti": ["all-only"], // OS 네이티브 알림 훅
 };
 
 // Check whether the given hook should be installed
@@ -136,6 +138,10 @@ function buildClaudeHooksConfig(dir, isWindows) {
   const stop = [];
   if (shouldIncludeHook("save-response"))
     stop.push(hookEntry("", cmd(`save-response.${ext}`)));
+  if (shouldIncludeHook("loop-stop"))
+    stop.push(hookEntry("", cmd(`loop-stop.${ext}`)));
+  if (shouldIncludeHook("ddingdong-noti"))
+    stop.push(hookEntry("", cmd(`ddingdong-noti.${ext}`)));
   if (stop.length > 0) config.Stop = stop;
 
   return config;
@@ -186,6 +192,10 @@ function buildGeminiHooksConfig(dir, isWindows) {
     aa.push(hookEntry("", cmd(`validate-docs.${ext}`)));
   if (shouldIncludeHook("validate-api"))
     aa.push(hookEntry("", cmd(`validate-api.${ext}`)));
+  if (shouldIncludeHook("loop-stop"))
+    aa.push(hookEntry("", cmd(`loop-stop.${ext}`)));
+  if (shouldIncludeHook("ddingdong-noti"))
+    aa.push(hookEntry("", cmd(`ddingdong-noti.${ext}`)));
   if (aa.length > 0) config.AfterAgent = aa;
 
   return config;

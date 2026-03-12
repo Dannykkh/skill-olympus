@@ -74,7 +74,7 @@ description: 프로젝트의 모든 verify 스킬을 순차 실행하여 통합 
 
 #### 2a. 스킬 SKILL.md 읽기
 
-해당 스킬의 `.claude/skills/verify-<name>/SKILL.md`를 읽고 다음 섹션을 파싱합니다:
+해당 스킬의 `skills/verify-<name>/SKILL.md`를 읽고 다음 섹션을 파싱합니다:
 
 - **Workflow** — 실행할 검사 단계와 탐지 명령어
 - **Exceptions** — 위반이 아닌 것으로 간주되는 패턴
@@ -152,7 +152,9 @@ Workflow 섹션에 정의된 각 검사를 순서대로 실행합니다:
 
 ### Step 4: 사용자 액션 확인
 
-이슈가 발견된 경우 `AskUserQuestion`을 사용하여 사용자에게 확인합니다:
+이슈가 발견된 경우 `AskUserQuestion`을 사용하여 사용자에게 확인합니다.
+
+`AskUserQuestion`이 없으면 동일한 선택지를 일반 대화로 제시하고 사용자 응답을 받습니다:
 
 ```markdown
 ---
@@ -185,7 +187,7 @@ X개 수정 완료.
 
 **"개별 수정" 선택 시:**
 
-각 이슈마다 수정 내용을 보여주고 `AskUserQuestion`으로 승인 여부를 확인합니다.
+각 이슈마다 수정 내용을 보여주고 `AskUserQuestion` 또는 일반 대화로 승인 여부를 확인합니다.
 
 ### Step 6: 수정 후 재검증
 
@@ -231,5 +233,5 @@ X개 수정 완료.
 
 | File | Purpose |
 |------|---------|
-| `.claude/skills/manage-skills/SKILL.md` | 스킬 유지보수 (이 파일의 실행 대상 스킬 목록을 관리) |
-| `CLAUDE.md` | 프로젝트 지침 |
+| `skills/manage-skills/SKILL.md` | 스킬 유지보수 (이 파일의 실행 대상 스킬 목록을 관리) |
+| `AGENTS.md` | 프로젝트 지침 |
