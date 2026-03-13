@@ -1,0 +1,7 @@
+interface:
+  display_name: "QPassenger"
+  short_description: "Generate tests and heal failures until pass."
+  default_prompt: "Use $qpassenger to turn these QA scenarios into Playwright tests and keep fixing failures until they pass."
+
+policy:
+  allow_implicit_invocation: true

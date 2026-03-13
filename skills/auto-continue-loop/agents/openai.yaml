@@ -1,0 +1,7 @@
+interface:
+  display_name: "Chronos"
+  short_description: "Keep fixing and verifying until done."
+  default_prompt: "Use $auto-continue-loop to keep iterating on the highest-priority issue until the completion condition is met."
+
+policy:
+  allow_implicit_invocation: true

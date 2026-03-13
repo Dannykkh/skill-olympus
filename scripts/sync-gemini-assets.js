@@ -227,6 +227,79 @@ function ensureAgentsEnabled() {
   }
 }
 
+// SKILL.md에서 description 추출 (YAML 멀티라인 지원)
+function extractSkillDescription(skillDir) {
+  const skillMd = path.join(skillDir, "SKILL.md");
+  if (!fs.existsSync(skillMd)) return "";
+  try {
+    const content = fs.readFileSync(skillMd, "utf8");
+    const lines = content.split("\n");
+
+    // frontmatter description: 필드 찾기
+    for (let i = 0; i < lines.length && i < 30; i++) {
+      const line = lines[i];
+      const match = line.match(/^description:\s*(.*)/);
+      if (!match) continue;
+
+      const value = match[1].trim().replace(/^["']|["']$/g, "");
+      // 단일 라인 description
+      if (value && value !== ">" && value !== "|") {
+        return value.replace(/\|/g, "／").slice(0, 120);
+      }
+      // 멀티라인 (> 또는 |): 다음 들여쓰기 줄들을 수집
+      const descLines = [];
+      for (let j = i + 1; j < lines.length && j < i + 10; j++) {
+        const next = lines[j];
+        if (/^\s+\S/.test(next)) {
+          descLines.push(next.trim());
+        } else {
+          break;
+        }
+      }
+      if (descLines.length > 0) {
+        return descLines.join(" ").replace(/\|/g, "／").slice(0, 120);
+      }
+    }
+
+    // fallback: 첫 번째 # 제목
+    const headingMatch = content.match(/^#\s+(.+)$/m);
+    if (headingMatch) return headingMatch[1].trim().replace(/\|/g, "／").slice(0, 120);
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+// 스킬 카탈로그 파일 생성 (~/.gemini/SKILLS-CATALOG.md)
+function generateSkillsCatalog(destHome, skillNames) {
+  const lines = [
+    "# 사용 가능한 글로벌 스킬 카탈로그",
+    "",
+    "> 이 파일은 sync-gemini-assets.js에 의해 자동 생성됩니다.",
+    "> 사용자가 `/스킬명`으로 호출하면, 해당 스킬의 SKILL.md를 읽어 워크플로우를 따르세요.",
+    "",
+    `총 ${skillNames.length}개 스킬이 설치되어 있습니다.`,
+    "",
+    "| 스킬 | 설명 | 경로 |",
+    "|------|------|------|",
+  ];
+
+  for (const name of skillNames) {
+    const srcDir = path.join(skillsSrcDir, name);
+    const desc = extractSkillDescription(srcDir);
+    lines.push(`| ${name} | ${desc} | skills/${name}/SKILL.md |`);
+  }
+
+  lines.push("");
+  lines.push(`_생성 시각: ${new Date().toISOString()}_`);
+  lines.push("");
+
+  const catalogPath = path.join(destHome, "SKILLS-CATALOG.md");
+  ensureDir(path.dirname(catalogPath));
+  fs.writeFileSync(catalogPath, lines.join("\n"), "utf8");
+  return catalogPath;
+}
+
 function run() {
   if (!fs.existsSync(skillsSrcDir)) {
     console.error(`[error] skills directory not found: ${skillsSrcDir}`);
@@ -265,10 +338,14 @@ function run() {
 
   if (mode === "unlink") {
     safeRm(manifestPath);
+    safeRm(path.join(geminiHome, "SKILLS-CATALOG.md"));
   } else {
     writeManifest(mode, skillNames, agentNames, hookNames);
     // 에이전트 사용을 위해 enableAgents 설정
     ensureAgentsEnabled();
+    // 스킬 카탈로그 생성
+    const catalogPath = generateSkillsCatalog(geminiHome, skillNames);
+    console.log(`[gemini-sync] catalog=${catalogPath}`);
   }
 
   console.log(`[gemini-sync] mode=${mode}`);

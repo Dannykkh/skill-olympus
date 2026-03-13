@@ -105,11 +105,11 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (83개)
+### Skills (84개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, multi-ai-orchestration, orchestrator, workpm, workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 통합 PM/Worker 엔트리포인트 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
+| 🤖 AI Tools | codex, gemini, multi-ai-orchestration, orchestrator, workpm (다이달로스), workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검색/검증 도구 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
@@ -117,7 +117,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier | 테스트/리뷰/자동 수정 루프/플로우 검증 |
+| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사) |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🎬 Media | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |

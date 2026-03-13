@@ -26,18 +26,20 @@ QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트
 
 **공식 호출명:** `/qpassenger` (별칭: `큐패신저`)
 
-## 워크플로우 (5단계)
+## 워크플로우 (6단계)
 
 ```
 Step 1: 시나리오 수집
   ↓
 Step 2: Playwright 코드 생성
   ↓
-Step 3: 테스트 실행
+Step 3: 서버 준비 (자동 감지 + 실행)
   ↓
-Step 4: Healer Loop (실패 → 수정 → 재실행, max 5회)
+Step 4: 테스트 실행
   ↓
-Step 5: 결과 보고
+Step 5: Healer Loop (실패 → 수정 → 재실행, max 5회)
+  ↓
+Step 6: 결과 보고 + 서버 정리
 ```
 
 ---
@@ -115,7 +117,93 @@ tests/
 
 ---
 
-## Step 3: 테스트 실행
+## Step 3: 서버 준비 (자동 감지 + 실행)
+
+테스트 전에 앱 서버를 자동으로 준비합니다. 사용자 개입 없이 진행합니다.
+
+### 3-1. 서버 환경 감지
+
+```
+판단 순서:
+1. docker-compose.yml (또는 docker-compose.yaml, compose.yml) 존재?
+   → Docker 모드 (DB, 백엔드, 프론트 통합 실행)
+2. package.json의 "dev" 또는 "start" 스크립트 존재?
+   → Dev Server 모드
+3. manage.py 존재? (Django)
+   → python manage.py runserver
+4. 전부 없음 → 사용자에게 안내
+```
+
+### 3-2. 포트 정리
+
+**타겟 포트를 확인하고, 점유 중이면 해당 프로세스를 종료합니다.**
+새 포트로 열리면 baseURL이 꼬이므로 반드시 지정 포트로 실행해야 합니다.
+
+```
+타겟 포트 결정:
+1. playwright.config.ts의 baseURL에서 포트 추출
+2. .env 또는 .env.test의 PORT 값
+3. docker-compose.yml의 ports 매핑
+4. 기본값: 3000 (프론트), 8080 (백엔드)
+```
+
+**포트 점유 프로세스 종료 (Bash):**
+- **Windows**: `powershell -Command "Get-NetTCPConnection -LocalPort {PORT} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"`
+- **Linux/Mac**: `lsof -ti:{PORT} | xargs kill -9 2>/dev/null`
+
+### 3-3. 서버 실행
+
+#### Docker 모드 (우선)
+
+```bash
+# 기존 컨테이너 정리 + 빌드 + 실행
+docker compose down --remove-orphans 2>/dev/null
+docker compose up -d --build
+
+# 헬스체크 대기 (최대 120초)
+# docker-compose.yml에 healthcheck가 있으면 그것을 사용
+# 없으면 baseURL에 HTTP 요청으로 확인
+```
+
+장점:
+- DB (PostgreSQL, MySQL 등)가 함께 올라옴
+- Redis, 큐 등 인프라 의존성 해결
+- 프로덕션과 동일한 환경에서 테스트
+
+#### Dev Server 모드 (fallback)
+
+```bash
+# 백그라운드로 dev 서버 실행
+npm run dev &    # 또는 yarn dev, pnpm dev
+DEV_SERVER_PID=$!
+
+# 헬스체크 대기 (최대 60초, 2초 간격)
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -w "%{http_code}" http://localhost:{PORT} | grep -q "200\|301\|302" && break
+  sleep 2
+done
+```
+
+### 3-4. 헬스체크
+
+```
+baseURL에 HTTP GET 요청:
+├── 200/301/302 → ✅ 서버 준비 완료
+├── 타임아웃 (120초 초과) → ❌ 실패 보고 후 테스트 중단
+└── 연결 거부 → 재시도 (2초 간격)
+```
+
+헬스체크 통과 시 표시:
+```
+🚀 서버 준비 완료
+  모드: {Docker / Dev Server}
+  URL: http://localhost:{PORT}
+  DB: {PostgreSQL 15 / MySQL 8 / 없음}
+```
+
+---
+
+## Step 4: 테스트 실행
 
 ### Worker 수 제한 (CPU 보호)
 
@@ -140,7 +228,7 @@ npx playwright test tests/e2e/auth.spec.ts --workers=50%
 
 ### 사전 조건 확인
 
-테스트 실행 전 **머신 상태를 감지하여 사용자에게 보여주고** workers 수를 확인합니다.
+테스트 실행 전 **머신 상태를 감지하여 사용자에게 보여줍니다**.
 
 **CPU 코어 감지 (Bash):**
 - **Windows**: `powershell -Command "(Get-CimInstance Win32_Processor).NumberOfLogicalProcessors"`
@@ -154,33 +242,20 @@ npx playwright test tests/e2e/auth.spec.ts --workers=50%
   CPU: {감지된 코어}코어 (논리 프로세서)
   Workers (50%): {코어/2}개 동시 실행
   예상 RAM: ~{코어/2 * 200}MB (Worker당 ~200MB)
-
-  Workers 수를 조정하시겠습니까?
-  [50% 유지 (Recommended)] [25%로 줄이기] [직접 입력]
 ```
 
 추가 사전 조건:
 
 ```
-1. 앱 서버 실행 중인지 확인 (baseURL 접근 가능)
+1. 서버 실행 확인 (Step 3에서 완료)
 2. DB 시드 데이터 필요 여부
 3. 환경 변수 (.env.test) 설정
 4. Playwright 브라우저 설치 여부
 ```
 
-서버가 실행 중이지 않으면 사용자에게 알립니다:
-
-```
-⚠️ 앱 서버가 실행되지 않았습니다.
-다른 터미널에서 서버를 실행해주세요:
-  npm run dev (또는 프로젝트에 맞는 명령어)
-
-서버가 준비되면 Enter를 눌러주세요.
-```
-
 ---
 
-## Step 4: Healer Loop
+## Step 5: Healer Loop
 
 테스트 실패 시 자동으로 원인을 분석하고 수정을 반복합니다.
 
@@ -223,7 +298,7 @@ IF retry >= max_retries:
 
 ---
 
-## Step 5: 결과 보고
+## Step 6: 결과 보고 + 서버 정리
 
 ### 결과 보고서 생성
 
@@ -292,17 +367,33 @@ IF retry >= max_retries:
 | 리소스 | 역할 | 연결 |
 |--------|------|------|
 | qa-writer (에이전트) | 테스트 시나리오 작성 | Step 1 입력 |
-| qa-engineer (에이전트) | 품질 판정 기준 | Step 5 판정 |
+| qa-engineer (에이전트) | 품질 판정 기준 | Step 6 판정 |
 | qa-test-planner (스킬) | 테스트 계획 수립 | 선행 스킬 |
 | zephermine (스킬) | claude-qa-scenarios.md 생성 | Step 1 입력 |
+
+---
+
+### 서버 정리
+
+테스트 완료 후 Step 3에서 실행한 서버를 정리합니다:
+
+```
+Docker 모드:
+  → docker compose down (컨테이너 중지 + 제거)
+  → 볼륨은 유지 (다음 테스트에서 재사용)
+
+Dev Server 모드:
+  → $DEV_SERVER_PID 프로세스 종료
+  → kill $DEV_SERVER_PID 2>/dev/null
+```
 
 ---
 
 ## 주의사항
 
 - Playwright가 설치되어 있어야 합니다 (`npx playwright install`)
-- 앱 서버가 실행 중이어야 UI 테스트가 가능합니다
-- API 테스트는 서버 URL이 필요합니다 (baseURL 설정)
+- Step 3에서 서버를 자동 실행합니다 (수동 실행 불필요)
+- 포트 충돌 시 기존 프로세스를 종료하고 해당 포트로 실행합니다
 - Healer는 구현 코드를 수정할 수 있으므로, 커밋되지 않은 변경사항이 있으면 주의하세요
 - 외부 의존성(메일, 결제 등)이 필요한 테스트는 mock으로 대체를 권장합니다
 

@@ -174,7 +174,7 @@ Task({
 
 ---
 
-## 2단계 워크플로우
+## 3단계 워크플로우
 
 ### Phase 1: 리서치 & 제안
 
@@ -206,12 +206,53 @@ Task({
 6. AskUserQuestion으로 사용자에게 제안서 제시
 7. 승인 결과를 activity log에 decision으로 기록
 
+### Phase 1.5: 프로세스 도면 확보 (설계도)
+
+> **PM은 설계도 없이 공사하지 않는다.**
+> 이 도면이 Phase 2의 **공정 기준선**이 된다.
+
+```
+사용자 승인 완료
+  ↓
+리더: planning_dir에서 flow-diagrams/ 존재 여부 확인
+  ├─ ✅ 젭마인 도면 있음 → 도면 읽고 제안서와 정합성 확인
+  │    ├─ 정합 → 그대로 사용
+  │    └─ 불일치 → 팀원에게 도면 보완 위임
+  └─ ❌ 도면 없음 → 팀원 1명에게 새로 생성 위임
+       → "skills/flow-verifier/SKILL.md의 plan 모드를 참조하여
+          승인된 제안서의 핵심 흐름을 Mermaid flowchart로 작성하라"
+  ↓
+팀원: {planning_dir}/flow-diagrams/{feature-name}.mmd 생성 또는 보완
+  → 정상 경로(happy path) + 에러 경로 + 분기 조건 포함
+  ↓
+리더: 다이어그램 검토
+  → 노드가 승인된 제안서의 구현 사항과 1:1 매핑되는지 확인
+  ↓
+리더: 도면 확정 → activity log에 기록
+  → orchestrator_log_activity({
+       type: "milestone",
+       message: "프로세스 도면 확정: flow-diagrams/{name}.mmd | 노드 N개, 분기 M개",
+       tags: ["flow-diagram", "blueprint"]
+     })
+```
+
+**Phase 1.5 리더 체크리스트:**
+1. `<planning_dir>/flow-diagrams/index.md` 존재 여부 확인
+2. **도면 있음**: 제안서와 비교하여 누락/불일치 노드가 있는지 검토
+3. **도면 없음**: Phase 1 팀원 중 1명에게 생성 지시 (SendMessage)
+   - `skills/flow-verifier/SKILL.md` 참조 + `skills/mermaid-diagrams/SKILL.md` 문법 참조 지시
+4. 생성/보완된 `.mmd` 파일이 제안서의 모든 주요 단계를 포함하는지 검토
+5. 분기(if/else)의 모든 경로가 있는지 확인
+6. 도면 확정 → activity log milestone 기록
+7. Phase 1 팀원 전원 해고 (SendMessage shutdown_request)
+
 ### Phase 2: 구현 & 검증
 
 ```
-리더: Phase 1 팀원 전원 해고 (SendMessage shutdown_request)
-  ↓
 리더: 새 팀원 4명 투입 (구현 담당, 새 이름)
+  ↓
+리더: 각 팀원에게 도면 경로 전달
+  → "{planning_dir}/flow-diagrams/{name}.mmd를 읽고, 네 담당 노드에 해당하는 코드를 구현하라"
   ↓
 각 팀원: 심부름꾼 호출해서 구현
   → 최대 ~30명 동시 구현
@@ -220,19 +261,60 @@ Task({
   ↓
 각 팀원: 리더에게 보고
   ↓
-리더: 최종 검토 + 자기검증 3질문
+리더: 자재검사 (코드리뷰) 실행
+  → 리뷰 전문가(code-reviewer) 팀원을 투입하여 구현 결과물 검수
+  ├─ ✅ 통과 → Phase 2.5로 진행
+  └─ ❌ 미통과 → 해당 구현 팀원에게 수정 지시 → 재리뷰
   ↓
-리더: 사용자에게 최종 보고 (= 버그 없음)
+리더: Phase 2.5 실행 (공정 점검)
 ```
 
 **Phase 2 리더 체크리스트:**
-1. Phase 1 팀원 전원 shutdown_request
-2. 새 팀원 4명 spawn (구현 전문, 새 이름 필수)
-3. 승인된 제안서 + 태스크 배분 (SendMessage)
-4. 태스크별 담당 파일 영역 명시 (충돌 방지)
-5. 팀원 보고 수신 및 검토
-6. 최종 보고서 작성 → 사용자에게 전달
-7. 팀원 전원 해고 + TeamDelete
+1. 새 팀원 4명 spawn (구현 전문, 새 이름 필수)
+2. 승인된 제안서 + **도면 경로** + 태스크 배분 (SendMessage)
+3. 태스크별 담당 파일 영역 명시 (충돌 방지)
+4. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
+5. 팀원 보고 수신
+6. **자재검사**: 리뷰 전문가(`code-reviewer`) 팀원 1명 투입
+   - `skills/code-reviewer/SKILL.md`를 참조하여 구현 결과물 검수
+   - 500줄 제한, 보안, 타입, SRP, DRY 체크
+   - 미통과 시 → 구현 팀원에게 수정 지시 → 수정 후 재리뷰 (최대 2회)
+7. 자재검사 통과 → Phase 2.5 공정 점검 실행
+
+### Phase 2.5: 공정 점검 (준공 검사)
+
+> **공사가 설계도대로 진행되었는지 확인한다.**
+> 다이어그램의 모든 노드/분기가 실제 코드에 구현되었는지 검증한다.
+
+```
+구현 완료
+  ↓
+리더: 팀원 1명에게 플로우 검증 위임
+  → "skills/flow-verifier/SKILL.md의 verify 모드를 참조하여
+     docs/flow-diagrams/{name}.mmd와 실제 코드를 대조하라"
+  ↓
+팀원: 검증 리포트 작성
+  → 노드 매칭, 분기 완전성, 경로 순서, 에러 처리, 누락 경로
+  ↓
+리더: 검증 결과 판단
+  ├─ ✅ FULL MATCH → 최종 보고로 진행
+  ├─ ⚠️ PARTIAL MATCH → 누락된 노드를 팀원에게 추가 구현 지시
+  └─ ❌ MISMATCH → 원인 분석 후 수정 또는 다이어그램 업데이트
+  ↓
+리더: 최종 보고서 작성 (검증 결과 포함) → 사용자에게 전달
+  ↓
+팀원 전원 해고 + TeamDelete
+```
+
+**Phase 2.5 리더 체크리스트:**
+1. 구현 팀원 중 1명 또는 리뷰 전문가(`code-reviewer`)에게 검증 위임
+2. `skills/flow-verifier/SKILL.md` verify 모드 참조 지시
+3. 검증 리포트 수신 → 판정 확인
+4. PARTIAL MATCH인 경우 → 누락 노드를 남은 팀원에게 추가 구현 지시
+5. 재검증 → FULL MATCH 달성 시 최종 보고
+6. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
+7. activity log에 최종 검증 결과 기록
+8. 팀원 전원 해고 + TeamDelete
 
 ---
 
@@ -253,8 +335,10 @@ Task({
 
 4. **Phase 1 실행** → 리서치 & 제안
 5. **사용자 승인 대기** → AskUserQuestion
-6. **Phase 2 실행** → 구현 & 검증
-7. **최종 보고** → 사용자에게 결과 전달
+6. **Phase 1.5 실행** → 프로세스 도면 작성 (설계도)
+7. **Phase 2 실행** → 구현 (도면 기반)
+8. **Phase 2.5 실행** → 공정 점검 (준공 검사)
+9. **최종 보고** → 사용자에게 결과 전달 (검증 결과 포함)
 
 ---
 
@@ -310,19 +394,37 @@ zephermine(`/zephermine`)로 설계한 프로젝트는 planning 디렉토리에 
 ### 탐색 순서
 
 1. **구현 계획** — `orchestrator_read_plan({ path: "<planning_dir>/claude-plan.md" })`
-2. **섹션 목록** — `orchestrator_read_plan({ path: "<planning_dir>/sections/index.md" })`
-3. **개별 섹션** — 태스크 1개 = 섹션 1개로 매핑
+2. **공정 도면** — `<planning_dir>/flow-diagrams/index.md` → 개별 `.mmd` 파일
+3. **섹션 목록** — `orchestrator_read_plan({ path: "<planning_dir>/sections/index.md" })`
+4. **개별 섹션** — 태스크 1개 = 섹션 1개로 매핑
 
 ### 산출물 → 태스크 매핑
 
 | zephermine 파일 | PM 활용법 |
 |-------------|-----------|
 | `claude-plan.md` | 전체 작업 분해의 기준 (필수 읽기) |
+| `flow-diagrams/index.md` | **공정 도면 인덱스 — Phase 1.5/2.5의 기준선** |
+| `flow-diagrams/*.mmd` | **프로세스별 공정 도면 — 노드별 태스크 배분 근거** |
 | `sections/index.md` | 섹션 간 의존성 → `depends_on` 설정 |
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
 | `claude-spec.md` | 요구사항 확인 필요 시 참조 |
 | `claude-api-spec.md` | API 계약서 참조 |
 | `claude-db-schema.md` | DB 스키마 참조 |
+
+### 공정 도면 활용 흐름
+
+```
+zephermine이 그린 도면 (flow-diagrams/*.mmd)
+  ↓
+Phase 1.5: PM이 도면 확인
+  ├─ 도면이 있으면 → 그대로 사용 (추가/수정 여부만 판단)
+  └─ 도면이 없으면 → 팀원에게 새로 생성 위임
+  ↓
+Phase 2: 각 Worker에게 담당 도면 노드 배분
+  → "flow-diagrams/user-auth.mmd의 FindUser~CheckPwd 노드를 구현하라"
+  ↓
+Phase 2.5: 도면 vs 실제 코드 대조 (공정 점검)
+```
 
 ---
 

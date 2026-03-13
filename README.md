@@ -156,11 +156,11 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (83 Skills)
+### Custom Skills (84 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
-| 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, workpm, workpm-mcp, pmworker, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + unified PM/Worker entrypoints + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
+| 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, workpm (Daedalus), workpm-mcp, pmworker, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + Daedalus (site PM) + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | React/TypeScript/Design/Stitch UI generation + SEO audit + UI/UX 8-area audit |
@@ -168,7 +168,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier | Code review & QA & auto fix-verify loop & flow verification |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos | Code review & QA & auto fix-verify loop & flow verification & Argos inspection |
 | 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
 | 🎬 **Media** | video-maker | Remotion-based React video creation (product intro, demo, social media) |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
@@ -299,6 +299,7 @@ claude-code-customizations/
 │   ├── agent-md-refactor/
 │   ├── api-handoff/
 │   ├── api-tester/
+│   ├── argos/                  # 🔍 Verification/inspection (감리)
 │   ├── auto-continue-loop/
 │   ├── code-reviewer/
 │   ├── codex/

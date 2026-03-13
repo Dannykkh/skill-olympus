@@ -4,6 +4,15 @@
 
 ---
 
+### windows-bat, utf8, chcp65001
+`tags: windows-bat, utf8, chcp65001`
+`date: 2026-03-13`
+`source: codex`
+
+- tracked `.bat`/`.js` 점검 결과 BOM 문제는 없었고, Windows 쪽 실제 위험 요소는 BOM보다 **비ASCII 문자가 들어간 `.bat`에서 `chcp 65001 >nul`이 빠진 경우**였다.
+- `.js`는 Node가 UTF-8 no-BOM을 정상 처리하므로 line ending/LF 자체는 주 원인이 아니고, `.bat`는 한글 echo/comment가 있으면 UTF-8 codepage를 먼저 고정하는 편이 안전하다.
+- **참조**: [대화 링크](conversations/2026-03-13-codex.md)
+
 ### duplication, skill, agent
 `tags: duplication, skill, agent`
 `date: 2026-01-31`

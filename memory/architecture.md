@@ -73,6 +73,23 @@
 - 프론트 Feature-based + TanStack Query 3계층
 - Java/Spring Boot 12개 코딩 규칙 포함 (@Transactional, DTO 변환, 예외 처리 등)
 
+### flow-diagrams, 공정도면, zephermine-workpm, pipeline
+`tags: flow-diagrams, 공정도면, zephermine, workpm, flow-verifier, qpassenger, pipeline`
+`date: 2026-03-13`
+`source: claude`
+
+- 파이프라인 = 건축 프로세스 비유: 설계사(젭마인) → 현장감독(다이달로스/workpm) → 감리(아르고스) → 실사(큐패신저), 크로노스는 횡단 자율수리 도구
+- 자재검사(code-reviewer)는 시공 중 자동 실행, 준공검사(argos)는 시공 후 수동 호출
+- workpm의 신화 이름: 다이달로스(Daedalus) — 미궁을 지은 전설적 건축가/장인
+- **MCP vs 네이티브 결정 (2026-03-13)**: 기본은 네이티브 Agent Teams, `--mcp`로 대규모 모드. MCP의 고유 가치: 독립 터미널 모니터링, hard 파일 락, 크래시 복원, 크로스-CLI 혼합. 일반 프로젝트(3~6섹션)는 네이티브가 가볍고 충분.
+- **문제**: 젭마인이 시방서(spec, sections)만 주고 공정 도면(flow-diagrams)은 생성하지 않았음 → workpm이 도면 없이 시공 → 설계 의도에서 벗어남
+- **해결**: 젭마인 Step 15.5에서 `flow-diagrams/*.mmd` 생성, workpm Phase 1.5/2.5에서 도면 기반 시공
+- **감리 분리**: verify-protocol을 젭마인에서 분리 → `/argos` 독립 스킬 (설계사≠감리 원칙)
+- **도면 흐름**: 젭마인이 그림 → workpm이 재사용 (없으면 새로 생성) → argos Phase 5에서 도면 대조
+- **역할별 도면 참조**: PM(✅ 해석·배분) → Worker(❌ 지시만) → 자재검사(❌ 품질만) → 감리(✅ 대조) → 실사(❌ 시나리오만)
+- **Why**: 설계→시공 사이에 공정 기준선이 없으면 구현이 설계에서 drift하는 문제 방지
+- **참조**: workpm.md Phase 1.5/2.5, workpm-mcp.md Phase 1.5/2.5, zephermine SKILL.md Step 15.5, argos/SKILL.md
+
 ### global-install, codex-parity, mnemo-name
 `tags: global-install, codex-parity, mnemo-name`
 `date: 2026-03-13`
@@ -80,5 +97,17 @@
 
 - Codex runtime의 source of truth는 repo-local이 아니라 전역 설치본(`~/.codex`, Roaming 설치 경로)으로 유지하고, repo 변경은 sync/install을 통해 반영.
 - 원칙상 Claude에서 제공하는 skills, agents, hooks, rules, MCP 기능은 Codex에서도 동일 기능 parity를 목표로 맞추며, 단순 복사가 아니라 Codex 실행 모델에 맞는 bridge/adapter까지 포함해 구현.
-- 사용자 호출명도 CLI 간 동일하게 유지하고, 우선 고정 호출명은 `/zephermine`, `/zeus`, `workpm`, `/chronos`, `/qpassenger`, `/agent-team`으로 관리한다. parity 판단은 "파일이 복사됐는가"가 아니라 "전역 설치본에서 실제 같은 이름으로 호출되고 동작하는가" 기준으로 한다.
+- 사용자 호출명도 CLI 간 동일하게 유지하고, 우선 고정 호출명은 `/zephermine`, `/zeus`, `/daedalus`(workpm), `/argos`, `/chronos`, `/qpassenger`, `/agent-team`으로 관리한다. parity 판단은 "파일이 복사됐는가"가 아니라 "전역 설치본에서 실제 같은 이름으로 호출되고 동작하는가" 기준으로 한다.
 - `mnemo` 명칭은 유지하고 `codex-mnemo`, `gemini-mnemo`는 CLI별 어댑터 이름으로 계속 사용.
+
+### qpassenger-server-auto, zeus-docker-phase, codex-skill-discovery
+`tags: qpassenger, 서버자동실행, zeus, docker-deploy, codex, 스킬발견`
+`date: 2026-03-13`
+`source: claude`
+
+- **큐패신저 6단계**: Step 3 "서버 준비" 추가 — docker-compose 우선, dev server fallback, 포트 점유 kill 후 같은 포트로 실행
+- **제우스 Phase 2.7**: Docker Setup (docker-deploy) 추가 — argos 감리 후, qpassenger 전에 Docker 환경 구성 + 포트 충돌 해결 + 컨테이너 실행
+- **다이달로스는 docker-deploy 안 함** — Docker 환경 구성은 제우스가 테스트 직전에 담당
+- **install-select.js 기본값**: all로 변경 (Claude+Codex+Gemini 전부 설치)
+- **Codex 스킬 발견 문제**: 파일은 `~/.codex/skills/`에 복사되지만, Codex AI가 스킬 존재를 모름. `instructions.md` 없음. 다음 세션에서 해결 필요
+- **memory 폴더 통합 검토**: 비용 대비 이점 부족 → 현재 구조 유지 결정

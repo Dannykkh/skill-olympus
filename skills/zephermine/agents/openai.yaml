@@ -1,0 +1,7 @@
+interface:
+  display_name: "Zephermine"
+  short_description: "Plan features through interview and spec synthesis."
+  default_prompt: "Use $zephermine to research this feature, interview the requirements, and produce a sectionized implementation plan."
+
+policy:
+  allow_implicit_invocation: true

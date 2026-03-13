@@ -54,7 +54,8 @@ function parseArgs() {
   if (isAll) return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
   if (llms?.includes("all")) llms = [...ALL_LLMS];
   if (llms) return { llms, bundles: ALL_BUNDLES };
-  return null; // interactive mode
+  // 기본값: 전체 설치 (Claude + Codex + Gemini)
+  return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
 }
 
 // --- Interactive Menu ---

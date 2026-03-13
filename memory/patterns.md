@@ -180,3 +180,12 @@
 - Claude/Codex/Gemini 공용 `skills/`, `agents/`, 문서 자산은 repo를 단일 원본으로 두고 link/sync로 배포하고, `config.toml`/`settings.json`, MCP 등록, runtime hooks는 CLI별 설치 자산으로 분리하는 하이브리드가 기본 전략.
 - `mnemo`는 공통 기억 시스템 개념이고 `mnemo`(Claude), `codex-mnemo`, `gemini-mnemo`는 각 CLI의 훅/설정 모델에 맞춘 어댑터로 봐야 하며, shared memory와 CLI별 conversation 로그를 구분해서 관리.
 - **참조**: [대화 링크](conversations/2026-03-13-codex.md)
+
+### codex-slash-alias, skill-invocation, global-agents
+`tags: codex-slash-alias, skill-invocation, global-agents`
+`date: 2026-03-13`
+`source: codex`
+
+- Codex는 Claude처럼 custom slash command registry를 직접 제공하지 않을 수 있으므로, Claude 호환 호출명은 global `~/.codex/AGENTS.md` 규칙으로 `/skill-name`을 explicit skill invocation으로 해석하게 만드는 방식이 필요.
+- `skills/codex-mnemo/templates/agents-md-rules.md`에 alias 매핑(`/chronos`→`auto-continue-loop`, `/agent-team`→`agent-team`, exact match `/seo-audit` 등)을 넣고 `node skills/codex-mnemo/install.js`로 재주입하면 새 Codex 프로세스에서 매핑이 반영된다.
+- **참조**: [대화 링크](conversations/2026-03-13-codex.md)

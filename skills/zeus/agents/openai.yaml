@@ -1,0 +1,7 @@
+interface:
+  display_name: "Zeus"
+  short_description: "Run the full design-build-test pipeline."
+  default_prompt: "Use $zeus to take this one-line product idea through planning, implementation, and testing automatically."
+
+policy:
+  allow_implicit_invocation: true

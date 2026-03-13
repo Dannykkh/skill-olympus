@@ -8,6 +8,7 @@ This step assumes `sections/index.md` already exists.
 
 - `<planning_dir>/claude-plan.md` - implementation details
 - `<planning_dir>/sections/index.md` - section definitions and dependencies
+- `<planning_dir>/flow-diagrams/*.mmd` - process flow diagrams (있는 경우)
 
 ## Output
 
@@ -66,6 +67,7 @@ Task(
   Inputs:
   - <planning_dir>/claude-plan.md
   - <planning_dir>/sections/index.md
+  - <planning_dir>/flow-diagrams/index.md (있으면 참조 — 이 섹션의 담당 노드 확인)
 
   Output: <planning_dir>/sections/section-01-foundation.md
 
@@ -120,6 +122,18 @@ Include all necessary background, requirements, and implementation details withi
 
 - Requires: {list of prior sections that must be complete}
 - Blocks: {list of sections that depend on this one}
+
+## Flow Diagram Nodes
+
+> 이 섹션이 구현하는 프로세스 다이어그램 노드. workpm이 공정 점검 시 이 매핑을 기준으로 검증합니다.
+> flow-diagrams/가 없는 프로젝트는 이 섹션 생략.
+
+- **Diagram**: `flow-diagrams/{process-name}.mmd`
+- **Nodes**: {이 섹션이 담당하는 노드 ID 목록}
+  - `{NodeId}` — {노드 설명}
+  - `{NodeId}` — {노드 설명}
+- **Branches**: {이 섹션이 구현하는 분기}
+  - `{DecisionNodeId}` — Yes: {경로}, No: {경로}
 
 ## Reference Libraries
 
@@ -186,6 +200,7 @@ Include all necessary background, requirements, and implementation details withi
 - [ ] 기존 테스트가 깨지지 않음 (회귀 없음)
 - [ ] Dependencies의 선행 섹션이 모두 완료됨
 - [ ] 새로 추가한 API가 `claude-api-spec.md`에 등록됨 (해당 시)
+- [ ] Flow Diagram Nodes의 모든 노드에 대응하는 코드가 존재함 (해당 시)
 
 ## Risk & Rollback
 
