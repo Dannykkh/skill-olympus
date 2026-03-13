@@ -1,6 +1,6 @@
 ---
 name: zephermine
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Verifies implementation against spec after coding. Use when planning features that need thorough pre-implementation analysis. /zephermine로 실행. Also known as 젭마인, 제퍼마인, 제퍼미네.
+description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Use when planning features that need thorough pre-implementation analysis. /zephermine로 실행. Also known as 젭마인, 제퍼마인, 제퍼미네.
 triggers:
   - "zephermine"
   - "젭마인"
@@ -26,7 +26,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Plan → External Review → DB Schema → Sections → Operation Scenarios → QA Scenarios → Skill Discovery → Verify
+순서: Research → Interview → Spec → Team Review → Plan → External Review → DB Schema → API Spec → Flow Diagrams → Sections → Operation Scenarios → QA Scenarios → Skill Discovery
 ```
 
 ### 2. Resolve Spec File Path
@@ -84,6 +84,7 @@ Determine session state by checking existing files:
    - `claude-qa-scenarios.md`
    - `team-reviews/` directory (domain-research.md, 개별 분석 파일)
    - `reviews/` directory
+   - `flow-diagrams/` directory (프로세스 공정 도면)
    - `sections/` directory
 
 6. Determine mode and resume point:
@@ -99,10 +100,11 @@ Determine session state by checking existing files:
 | + reviews | resume | Step 12 (integrate) |
 | + integration-notes | resume | Step 13 (user review) |
 | + claude-db-schema.md | resume | Step 15 (API spec) |
-| + sections/index.md | resume | Step 16 (write sections) |
+| + claude-api-spec.md | resume | Step 15.5 (flow diagrams) |
+| + flow-diagrams/ | resume | Step 16 (section index) |
+| + sections/index.md | resume | Step 17 (write sections) |
 | all sections complete | resume | Step 17 (execution files) |
-| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | resume | Step 24 (verify) |
-| + claude-verify-report.md | complete | Done |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | complete | Done |
 
 7. Create TODO list with TodoWrite based on current state
 
@@ -361,6 +363,67 @@ See [api-spec-guide.md](references/api-spec-guide.md)
 **구현 중 새 API 추가 시 반드시 이 문서에도 추가** (drift 방지).
 API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀.
 
+### 15.5. Generate Process Flow Diagrams (공정 도면)
+
+> **설계사는 시방서(sections) 전에 공정 흐름도를 먼저 그린다.**
+> 이 도면이 섹션 분할의 근거이자, 현장감독(workpm)의 공정 점검 기준선이 된다.
+
+`claude-plan.md` + `claude-api-spec.md` + `team-reviews/domain-process-analysis.md`에서 핵심 프로세스 흐름을 추출하여 Mermaid flowchart로 작성합니다.
+
+**절차:**
+
+1. **핵심 프로세스 식별**: Plan에서 독립적인 비즈니스/기술 프로세스 추출
+   - 예: 사용자 인증, 주문 처리, 결제 프로세스, 데이터 동기화
+   - 기준: "사용자 또는 시스템이 시작~종료까지 거치는 완결된 흐름" 1개 = 다이어그램 1개
+   - 프로세스 수: 핵심 3~8개 (너무 많으면 상위 레벨로 통합)
+
+2. **서브에이전트 위임**: 각 프로세스별 다이어그램 생성
+   ```
+   Task(subagent_type=Explore, prompt="""
+   skills/flow-verifier/SKILL.md의 plan 모드와 skills/mermaid-diagrams/SKILL.md를 읽고 참조하세요.
+
+   다음 프로세스의 Mermaid flowchart를 작성하세요:
+   프로세스: {process_name}
+   컨텍스트: {plan에서 추출한 해당 프로세스 설명}
+   API 엔드포인트: {관련 API 목록}
+
+   규칙:
+   - 노드 ID: 영문 camelCase
+   - 분기(decision): 모든 경로(Yes/No, 에러) 포함
+   - 정상 경로(happy path) + 에러 경로 + 엣지 케이스
+   - 노드 20개 이하
+   - 각 노드에 관련 API 엔드포인트 또는 함수명 주석
+
+   결과만 반환하세요 (파일 작성 금지).
+   """)
+   ```
+
+3. **파일 저장**: 서브에이전트 결과를 수집하여 `<planning_dir>/flow-diagrams/` 에 저장
+   - 파일명: `{process-name}.mmd` (kebab-case)
+   - 인덱스: `<planning_dir>/flow-diagrams/index.md` 생성
+
+**인덱스 파일 형식** (`flow-diagrams/index.md`):
+
+```markdown
+# Process Flow Diagrams
+
+| 프로세스 | 파일 | 노드 수 | 관련 섹션 |
+|----------|------|---------|-----------|
+| 사용자 인증 | user-auth.mmd | 12 | section-02 |
+| 주문 처리 | order-process.mmd | 15 | section-03, section-04 |
+| 결제 프로세스 | payment.mmd | 10 | section-05 |
+
+## 의존성
+user-auth → order-process → payment
+```
+
+**workpm 연계**: 이 도면들은 workpm의 공정 기준선이 됩니다:
+- workpm Phase 1.5: 이 도면을 읽어서 추가/수정 여부 판단
+- workpm Phase 2: 각 Worker에게 담당 다이어그램 노드 배분
+- workpm Phase 2.5: 구현 후 이 도면과 코드를 대조 검증
+
+**건너뛰기 조건**: 프로세스가 1개뿐인 단순 프로젝트(CLI 도구, 단일 함수 라이브러리)는 자동 건너뜀.
+
 ### 16. Create Section Index
 
 See [section-index.md](references/section-index.md)
@@ -451,6 +514,7 @@ QA 시나리오의 근거가 되는 문서 — 운영 시나리오 없이 QA 시
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
+- `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (프로세스가 2개 이상인 프로젝트)
 - `claude-api-spec.md` (API가 있는 프로젝트)
 - `claude-db-schema.md` (DB가 있는 프로젝트)
 - `claude-design-system.md` (UI가 있는 프로젝트)
@@ -471,13 +535,13 @@ ZEPHERMINE: Planning Complete
 Generated: claude-research/interview/spec/team-review/plan/api-spec/db-schema/
            design-system/integration-notes/ralph-loop-prompt/ralphy-prd/
            operation-scenarios/qa-scenarios.md
-           + team-reviews/ + reviews/ + sections/
+           + team-reviews/ + reviews/ + flow-diagrams/ + sections/
 
 Implementation options:
   A. Manual: sections/index.md → 순서대로 구현
   B. ralph-loop: /ralph-loop @claude-ralph-loop-prompt.md
   C. Ralphy: ralphy --prd claude-ralphy-prd.md
-  D. Verify: /zephermine @spec.md (계획 파일 있으면 자동 verify)
+  D. Verify: /argos <planning_dir> (감리 — 설계 대비 구현 검증)
   E. Agent Teams: /agent-team <planning_dir> (병렬 실행, 권장)
 ```
 
@@ -497,41 +561,18 @@ Implementation options:
 
 > 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.
 
-### 24. Verify Implementation
+### 24. 감리 안내
 
-See [verify-protocol.md](references/verify-protocol.md)
+설계가 완료되면 사용자에게 감리(검증) 단계를 안내합니다:
 
-구현 완료 후 claude-spec.md + claude-api-spec.md + claude-operation-scenarios.md + claude-qa-scenarios.md 대비 검증.
-사용자가 `/zephermine @spec.md` 재실행 시 모든 계획 파일이 존재하면 자동 진입.
+```
+✅ 젭마인 설계 완료!
 
-**Phase 1 — 정적 검증** (서브에이전트 2개 병렬):
-1. 기능 검증 (Explore) — 요구사항 vs 실제 코드
-2. 품질 검증 (Explore) — 비기능 요구사항 + 코드 품질
+📐 구현 후 감리가 필요하면:
+  /argos <planning_dir>    → 아르고스 감리 (설계 대비 준공검사)
+```
 
-**Phase 2 — 런타임 검증** (빌드/테스트 실행):
-3. 빌드 검증 — `npm run build`, `mvn compile` 등 자동 감지
-4. 단위 테스트 — `npm test`, `pytest` 등 실행 + 결과 파싱
-5. E2E 테스트 — Playwright/Cypress 감지 시 실행 (미감지 시 건너뜀)
-
-**Phase 3 — API 일치 검증** (claude-api-spec.md 있는 경우):
-6. 코드의 실제 API 라우트 vs api-spec 문서 대조
-7. 문서에 없는 새 API → ❌ 미등록 경고
-8. 문서에는 있지만 미구현 API → ❌ 누락 경고
-9. 이름/경로 중복 API 탐지 (같은 기능, 다른 이름)
-
-**Phase 4 — QA 시나리오 검증**:
-10. `claude-qa-scenarios.md`의 각 체크박스를 코드/테스트 결과 기반으로 ✅/❌ 마킹
-11. 통과율 집계 (단위/통합/에러/엣지 케이스별)
-
-결과 → `<planning_dir>/claude-verify-report.md` (API 일치 + QA 통과율 포함)
-
-### 25. Verification Report
-
-검증 결과를 사용자에게 표시.
-
-AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 23 반복
-- "승인" → 완료
+> **참고:** 검증(감리)은 이전에는 zephermine에 포함되어 있었으나, 설계사와 감리의 역할 분리 원칙에 따라 `/argos`로 독립되었습니다.
 
 ---
 

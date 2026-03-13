@@ -224,6 +224,24 @@ docs/
 
 ---
 
+## workpm 통합
+
+workpm(`/workpm`) PM 모드에서 프로세스 도면(설계도)과 공정 점검(준공 검사)에 활용됩니다.
+
+**workpm 내 동작:**
+
+```
+Phase 1:   리서치 & 제안 → 사용자 승인
+Phase 1.5: [도면 작성] /flow-verifier plan → .mmd 생성
+Phase 2:   구현 (도면의 노드별 태스크 배분)
+Phase 2.5: [공정 점검] /flow-verifier verify → 매칭 검증
+           ├─ FULL MATCH → 최종 보고
+           ├─ PARTIAL → 누락 노드 추가 구현 → 재검증
+           └─ MISMATCH → 수정 후 재검증
+```
+
+---
+
 ## Related Files
 
 | 파일 | 역할 |
@@ -231,4 +249,6 @@ docs/
 | `skills/mermaid-diagrams/SKILL.md` | Mermaid 문법 가이드 (다이어그램 생성 시 참조) |
 | `agents/mermaid-diagram-specialist.md` | 다이어그램 전문 에이전트 (복잡한 다이어그램 위임) |
 | `skills/auto-continue-loop/SKILL.md` | Chronos 루프 (--flow-verify 연동) |
+| `skills/orchestrator/commands/workpm.md` | PM Agent Teams 모드 (Phase 1.5/2.5 연동) |
+| `skills/orchestrator/commands/workpm-mcp.md` | PM MCP 모드 (Phase 1.5/2.5 연동) |
 | `skills/code-reviewer/SKILL.md` | 코드 리뷰 (검증 결과 참조 가능) |

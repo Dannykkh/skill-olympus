@@ -261,7 +261,8 @@
     { "id": "reddit-researcher", "tags": ["*"], "priority": "optional" },
     { "id": "ui-ux-auditor", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
     { "id": "video-maker", "tags": ["react", "nextjs"], "priority": "optional" },
-    { "id": "flow-verifier", "tags": ["*"], "priority": "optional" }
+    { "id": "flow-verifier", "tags": ["*"], "priority": "optional" },
+    { "id": "argos", "tags": ["*"], "priority": "optional" }
   ],
 
   "internal-agents": [

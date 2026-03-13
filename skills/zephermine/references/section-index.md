@@ -5,6 +5,7 @@ Create `<planning_dir>/sections/index.md` to define implementation sections.
 ## Input Files
 
 - `<planning_dir>/claude-plan.md` - implementation plan
+- `<planning_dir>/flow-diagrams/index.md` - process flow diagrams (있는 경우)
 
 ## Output
 
@@ -66,6 +67,21 @@ Which sections can run in parallel:
 3. section-04-api (requires section-02 AND section-03)
 ```
 
+### Flow Diagram Mapping
+
+`flow-diagrams/`가 존재하면, 각 섹션이 어떤 프로세스 다이어그램의 노드를 구현하는지 매핑:
+
+```markdown
+| Section | Flow Diagram | Nodes |
+|---------|-------------|-------|
+| section-01-foundation | - | (인프라, 다이어그램 해당 없음) |
+| section-02-auth | user-auth.mmd | Start → Validate → FindUser → CheckPwd |
+| section-03-auth-token | user-auth.mmd | GenJWT → GenRefresh → SaveToken → Response |
+| section-04-order | order-process.mmd | CreateOrder → ValidateStock → CalcPrice |
+```
+
+> 이 매핑은 workpm이 태스크별로 도면 노드를 배분하고 공정 점검하는 데 사용됩니다.
+
 ### Section Summaries
 
 Brief description of each section:
@@ -107,6 +123,16 @@ END_MANIFEST -->
 | section-03-api-layer | 02 | 05 | Yes |
 | section-04-frontend | 02 | 05 | Yes |
 | section-05-integration | 03, 04 | - | No |
+
+## Flow Diagram Mapping
+
+| Section | Flow Diagram | Nodes |
+|---------|-------------|-------|
+| section-01-foundation | - | (인프라) |
+| section-02-core-libs | - | (공통 라이브러리) |
+| section-03-api-layer | user-auth.mmd | Validate → FindUser → CheckPwd → GenJWT |
+| section-04-frontend | user-auth.mmd | LoginForm → SubmitLogin → HandleResponse |
+| section-05-integration | order-process.mmd | CreateOrder → ProcessPayment → Confirm |
 
 ## Execution Order
 

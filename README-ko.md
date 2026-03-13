@@ -156,11 +156,11 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (83개)
+### 커스텀 스킬 (84개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 **AI 도구** | codex, gemini, multi-ai-orchestration, orchestrator, workpm, workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 통합 PM/Worker 엔트리포인트 + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
+| 🤖 **AI 도구** | codex, gemini, multi-ai-orchestration, orchestrator, workpm (다이달로스), workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
 | 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검증 도구 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | React/TypeScript/디자인/Stitch UI 생성 + SEO 감사 + UI/UX 8영역 감사 |
@@ -168,7 +168,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🎯 **계획** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | 계획 & 요구사항 (zeus: 전자동 파이프라인, zephermine: 스펙 검증) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
-| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier | 코드 리뷰 & QA & 자동 수정-검증 루프 & 플로우 검증 |
+| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스) | 코드 리뷰 & QA & 자동 수정-검증 루프 & 플로우 검증 & 감리(준공검사) |
 | 📦 **Git** | commit-work, deploymonitor | Git 워크플로우 & DeployMonitor 자동 배포 |
 | 🎬 **미디어** | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
@@ -299,6 +299,7 @@ claude-code-customizations/
 │   ├── agent-md-refactor/
 │   ├── api-handoff/
 │   ├── api-tester/
+│   ├── argos/                  # 🔍 감리/검증 (아르고스)
 │   ├── auto-continue-loop/
 │   ├── code-reviewer/
 │   ├── codex/

@@ -1,0 +1,7 @@
+interface:
+  display_name: "WorkPM"
+  short_description: "Run the unified PM workflow across CLIs."
+  default_prompt: "Use $workpm to analyze this plan, split the work, and orchestrate workers across the available tools."
+
+policy:
+  allow_implicit_invocation: true

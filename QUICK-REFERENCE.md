@@ -8,7 +8,8 @@
 |------|--------|
 | 젭마인 | `/zephermine` |
 | 제우스 | `/zeus` |
-| WorkPM | `workpm` |
+| 다이달로스 | `/daedalus` (workpm) |
+| 아르고스 | `/argos` |
 | 크로노스 | `/chronos` |
 | 큐패신저 | `/qpassenger` |
 | 대니즈팀 | `/agent-team` |
@@ -254,6 +255,7 @@ claude plugin install voltagent-qa-sec
 | `skills/zeus/` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동화 (/zeus) |
 | `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
 | `skills/qpassenger/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) |
+| `skills/argos/` | 감리/검증 — 정적·런타임·API·도면 대조 5단계 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/loop, /chronos) |

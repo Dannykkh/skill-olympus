@@ -1,16 +1,22 @@
 ---
 name: orchestrator
-description: PM-Worker 패턴의 Multi-AI 오케스트레이션. 병렬 작업 분배 및 파일 락 관리.
+description: PM-Worker 패턴의 Multi-AI 오케스트레이션 (MCP 기반). 대규모/크로스-CLI 프로젝트용. /daedalus --mcp로 실행. 일반 프로젝트는 네이티브 모드 권장.
 triggers:
   - "workpm"
+  - "daedalus"
+  - "다이달로스"
   - "pmworker"
   - "orchestrator"
 auto_apply: false
 ---
 
-# Orchestrator - Multi-AI 병렬 작업 시스템
+# Orchestrator - Multi-AI 병렬 작업 시스템 (MCP 대규모 모드)
 
 PM (Project Manager)이 태스크를 분배하고, Worker들이 병렬로 수행합니다.
+
+> **참고:** 일반 프로젝트는 `/daedalus` (네이티브 모드)를 권장합니다.
+> 이 MCP 모드는 대규모(섹션 10+), 크로스-CLI 혼합, 장시간 작업에 적합합니다.
+> `/daedalus --mcp`로 진입합니다.
 
 ## 설치
 

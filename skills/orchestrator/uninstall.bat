@@ -1,4 +1,6 @@
 @echo off
+chcp 65001 >nul
+setlocal
 REM Orchestrator Global Uninstaller
 REM 사용법: uninstall.bat (더블클릭)
 
@@ -22,4 +24,5 @@ if %ERRORLEVEL% EQU 0 (
     echo [ERROR] 제거 중 오류가 발생했습니다.
 )
 
+endlocal
 pause

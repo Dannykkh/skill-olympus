@@ -1,0 +1,7 @@
+interface:
+  display_name: "Dannys Team"
+  short_description: "Run section-based multi-agent parallel execution."
+  default_prompt: "Use $agent-team to execute this sectionized plan with a parallel team and report the results."
+
+policy:
+  allow_implicit_invocation: true

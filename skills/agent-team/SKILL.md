@@ -122,6 +122,16 @@ See [section-parser.md](references/section-parser.md)
 
 **출력:** 섹션 목록 + 의존성 맵 + 파일 소유권(각 섹션의 "Files to Create/Modify")
 
+#### 프로세스 도면 매핑
+
+`sections/index.md`에 **Flow Diagram Mapping** 테이블이 있으면:
+1. 각 섹션이 담당하는 `flow-diagrams/*.mmd` 파일과 노드 ID를 추출
+2. 이 매핑을 Step 2 Wave Plan 출력과 Step 4 teammate 지시에 포함
+3. `<planning_dir>/flow-diagrams/` 디렉토리 존재 여부 확인
+
+**도면이 있으면:** teammate에게 담당 노드 구현을 지시 (분기 완전성 포함)
+**도면이 없으면:** 기존 방식대로 섹션 파일만으로 진행
+
 #### 전문가 매칭
 
 See [expert-matching.md](references/expert-matching.md)
@@ -162,7 +172,7 @@ Wave 1 (병렬 3개):
   - section-03-types [풀스택] (파일: src/types/**)
 
 Wave 2 (병렬 2개):
-  - section-04-api [백엔드 전문가] (→ 01, 03 완료 후) (파일: src/api/**)
+  - section-04-api [백엔드 전문가] (→ 01, 03 완료 후) (파일: src/api/**) 📐 user-auth.mmd [Validate→CheckPwd]
   - section-05-database [DB 전문가] (→ 01, 02 완료 후) (파일: src/db/**)
 
 Wave 3 (순차 1개):
@@ -249,7 +259,11 @@ Task #{taskId}를 TaskGet으로 읽어서 상세 내용을 확인해.
 구현 완료 후 TaskUpdate로 completed 처리해.
 
 담당 파일: {file_list}
-⚠️ 다른 teammate의 파일은 절대 수정하지 마."
+⚠️ 다른 teammate의 파일은 절대 수정하지 마.
+
+📐 프로세스 도면: {diagram_path} (노드: {node_ids})
+  - 해당 .mmd 파일을 Read로 읽고, 담당 노드의 로직을 구현해.
+  - 분기(decision) 노드는 모든 경로(Yes/No/에러)를 빠짐없이 구현해."
 ```
 
 **모니터링:**
@@ -314,6 +328,11 @@ Section NN: {name}을 구현해줘.
 
 담당 파일: {file_list}
 ⚠️ 다른 agent의 파일은 절대 수정하지 마.
+
+📐 프로세스 도면: {diagram_path} (노드: {node_ids})
+  - 해당 .mmd 파일을 Read로 읽고, 담당 노드의 로직을 구현해.
+  - 분기(decision) 노드는 모든 경로(Yes/No/에러)를 빠짐없이 구현해.
+
 완료 후 생성/수정한 파일 목록과 구현 요약을 보고해."
 ```
 
@@ -321,15 +340,32 @@ Section NN: {name}을 구현해줘.
 - `wait`이 블로킹이므로 agent 완료 시 자동 진행
 - agent가 에러를 반환하면: 에러 로그 확인 → 1회 재spawn → 실패 시 사용자 보고
 
+### Step 4.5: Code Review Gate (자재검사)
+
+각 Wave 완료 후, 다음 Wave 진행 전 코드리뷰를 실행합니다.
+
+#### Claude 모드
+- `code-reviewer` 타입 teammate 1명을 투입
+- 완료된 Wave의 구현 결과물을 `skills/code-reviewer/SKILL.md` 기준으로 검수
+- 미통과 시 → 해당 구현 teammate에게 수정 지시 → 재리뷰 (최대 2회)
+
+#### Codex 모드
+- code review용 agent를 spawn하여 검수
+- 미통과 시 → 수정 agent 재spawn → 재리뷰 (최대 2회)
+
+**검수 항목:** 500줄 제한, 보안 취약점, 타입, SRP, DRY
+**통과 후:** 다음 Wave 또는 Step 5로 진행
+
 ### Step 5: Verify Results
 
 See [verification-protocol.md](references/verification-protocol.md)
 
-모든 Wave 완료 후 검증:
+모든 Wave 완료 + 자재검사 통과 후 검증:
 
 1. **파일 존재 검증**: 각 섹션의 "Files to Create/Modify"에 명시된 파일이 실제로 존재하는지
 2. **Acceptance Criteria 검증**: 각 섹션의 체크리스트 항목 확인
 3. **파일 소유권 검증**: 다른 teammate가 수정하면 안 되는 파일을 수정했는지
+4. **도면 노드 검증** (flow-diagrams 존재 시): 각 섹션의 담당 노드가 코드에 구현되었는지 확인
 
 검증 실패 시:
 - 해당 섹션의 Task를 다시 생성
