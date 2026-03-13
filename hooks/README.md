@@ -61,6 +61,20 @@ Claude Code 훅 스크립트 모음입니다.
 | validate-docs | 문서 AI 패턴 검출 | PostToolUse (Write) |
 | format-code | 자동 코드 포맷팅 (Python/TS/JS/Java/CSS) | PostToolUse (Write/Edit) |
 
+## Codex 브리지
+
+Codex는 Claude처럼 `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` 훅을 모두 노출하지 않습니다.
+대신 `notify -> save-turn` 경로에서 현재 턴의 session JSONL을 읽어 수정 파일을 복원한 뒤 아래 훅을 fan-out합니다.
+
+- `check-new-file`
+- `protect-files`
+- `format-code`
+- `validate-code`
+- `validate-docs`
+- `validate-api`
+
+`orchestrator-detector`는 같은 턴 사전 개입이 필요하므로 Codex에서는 `AGENTS.md` explicit invocation 규칙으로 대체합니다.
+
 ## 예시 설정 파일
 
 | 환경 | 파일 |

@@ -12,14 +12,112 @@ debug_log() {
 }
 
 run_notification_hook() {
+    local title="${1:-Codex CLI}"
+    local message="${2:-작업이 완료되었습니다}"
     local notify_hook="$HOME/.codex/hooks/ddingdong-noti.sh"
     if [ ! -f "$notify_hook" ]; then
         return 0
     fi
 
-    if ! AGENT_NOTIFY_TITLE="Codex CLI" AGENT_NOTIFY_MESSAGE="작업이 완료되었습니다" bash "$notify_hook"; then
+    if ! AGENT_NOTIFY_TITLE="$title" AGENT_NOTIFY_MESSAGE="$message" bash "$notify_hook"; then
         debug_log "notify-chain-failed: $notify_hook"
     fi
+}
+
+get_node_cmd() {
+    if command -v node >/dev/null 2>&1; then
+        command -v node
+        return 0
+    fi
+    if command -v node.exe >/dev/null 2>&1; then
+        command -v node.exe
+        return 0
+    fi
+    return 1
+}
+
+run_hook_bridge() {
+    local base_dir="$1"
+    local bridge="$SCRIPT_DIR/codex-hook-bridge.js"
+    local node_cmd=""
+    local output=""
+
+    if [ ! -f "$bridge" ]; then
+        printf '%s' '{"warnings":0,"errors":0,"touchedFiles":[],"newFiles":[],"messages":[]}'
+        return 0
+    fi
+
+    node_cmd="$(get_node_cmd || true)"
+    if [ -z "$node_cmd" ]; then
+        debug_log "hook-bridge-skip: node not found"
+        printf '%s' '{"warnings":0,"errors":0,"touchedFiles":[],"newFiles":[],"messages":[]}'
+        return 0
+    fi
+
+    if ! output="$(printf '%s' "$PAYLOAD" | "$node_cmd" "$bridge" "--base-dir=$base_dir" 2>&1)"; then
+        debug_log "hook-bridge-failed: $output"
+        printf '%s' '{"warnings":0,"errors":0,"touchedFiles":[],"newFiles":[],"messages":[]}'
+        return 0
+    fi
+
+    if [ -z "$output" ]; then
+        printf '%s' '{"warnings":0,"errors":0,"touchedFiles":[],"newFiles":[],"messages":[]}'
+        return 0
+    fi
+
+    printf '%s' "$output"
+}
+
+summary_field() {
+    local json="$1"
+    local field="$2"
+
+    if command -v jq >/dev/null 2>&1; then
+        printf '%s' "$json" | jq -r ".$field // 0" 2>/dev/null
+        return 0
+    fi
+
+    if command -v python3 >/dev/null 2>&1; then
+        SUMMARY_JSON="$json" python3 - "$field" <<'PY'
+import json
+import os
+import sys
+
+text = os.environ.get("SUMMARY_JSON", "")
+field = sys.argv[1]
+try:
+    data = json.loads(text)
+except Exception:
+    print(0)
+    sys.exit(0)
+
+value = data.get(field, 0)
+if isinstance(value, list):
+    print(len(value))
+else:
+    print(value)
+PY
+        return 0
+    fi
+
+    local node_cmd=""
+    node_cmd="$(get_node_cmd || true)"
+    if [ -n "$node_cmd" ]; then
+        SUMMARY_JSON="$json" "$node_cmd" - "$field" <<'JS'
+const text = process.env.SUMMARY_JSON || "";
+const field = process.argv[2];
+try {
+  const data = JSON.parse(text);
+  const value = data[field] ?? 0;
+  process.stdout.write(String(Array.isArray(value) ? value.length : value));
+} catch {
+  process.stdout.write("0");
+}
+JS
+        return 0
+    fi
+
+    printf '0'
 }
 
 ensure_memory_scaffold() {
@@ -269,7 +367,24 @@ if [ -n "$TURN_ID" ]; then
 fi
 
 debug_log "saved: baseDir=$BASE_DIR, file=$CONV_FILE, userLen=${#USER_TEXT}, respLen=${#RESPONSE}, turnId=$TURN_ID"
-run_notification_hook
+HOOK_SUMMARY="$(run_hook_bridge "$BASE_DIR")"
+HOOK_WARNINGS="$(summary_field "$HOOK_SUMMARY" "warnings" | tr -d '\r\n')"
+HOOK_ERRORS="$(summary_field "$HOOK_SUMMARY" "errors" | tr -d '\r\n')"
+HOOK_WARNINGS="${HOOK_WARNINGS:-0}"
+HOOK_ERRORS="${HOOK_ERRORS:-0}"
+
+NOTIFY_TITLE="Codex CLI"
+NOTIFY_MESSAGE="작업이 완료되었습니다"
+if [ "$HOOK_ERRORS" -gt 0 ] 2>/dev/null; then
+    NOTIFY_TITLE="Codex Hook Alert"
+    NOTIFY_MESSAGE="작업 완료, hook 오류 ${HOOK_ERRORS}개"
+    if [ "$HOOK_WARNINGS" -gt 0 ] 2>/dev/null; then
+        NOTIFY_MESSAGE="${NOTIFY_MESSAGE} / 경고 ${HOOK_WARNINGS}개"
+    fi
+elif [ "$HOOK_WARNINGS" -gt 0 ] 2>/dev/null; then
+    NOTIFY_MESSAGE="작업 완료, hook 경고 ${HOOK_WARNINGS}개"
+fi
+run_notification_hook "$NOTIFY_TITLE" "$NOTIFY_MESSAGE"
 
 CHRONOS_CONTINUE="$HOME/.codex/skills/auto-continue-loop/scripts/continue-loop.sh"
 if [ -x "$CHRONOS_CONTINUE" ]; then

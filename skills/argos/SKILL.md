@@ -46,7 +46,7 @@ auto_apply: false
 계획 산출물 디렉토리를 찾습니다:
 
 1. `$ARGUMENTS`로 전달된 경로
-2. `docs/plan/*/claude-spec.md` 패턴으로 자동 탐색 (Glob)
+2. `docs/plan/*/spec.md` 패턴으로 자동 탐색 (Glob)
 3. 못 찾으면 → AskUserQuestion으로 경로 요청
 
 ### 3. Scan Artifacts
@@ -55,26 +55,26 @@ auto_apply: false
 
 ```
 필수:
-  claude-spec.md              → Phase 1 (정적 검증)
+  spec.md              → Phase 1 (정적 검증)
 
 선택 (있으면 해당 Phase 실행):
-  claude-api-spec.md          → Phase 3 (API 일치)
-  claude-qa-scenarios.md      → Phase 4 (QA 시나리오)
+  api-spec.md          → Phase 3 (API 일치)
+  qa-scenarios.md      → Phase 4 (QA 시나리오)
   flow-diagrams/index.md      → Phase 5 (도면 대조)
 ```
 
-**claude-spec.md조차 없으면:** 에러 메시지 출력 후 종료.
+**spec.md조차 없으면:** 에러 메시지 출력 후 종료.
 ```
-❌ 검증 대상 없음: claude-spec.md를 찾을 수 없습니다.
+❌ 검증 대상 없음: spec.md를 찾을 수 없습니다.
    /zephermine으로 설계를 먼저 완료하세요.
 ```
 
 상태 출력:
 ```
 📋 검증 대상:
-  ✅ claude-spec.md           → Phase 1, 2
-  ✅ claude-api-spec.md       → Phase 3
-  ✅ claude-qa-scenarios.md   → Phase 4
+  ✅ spec.md           → Phase 1, 2
+  ✅ api-spec.md       → Phase 3
+  ✅ qa-scenarios.md   → Phase 4
   ✅ flow-diagrams/ (3개)     → Phase 5
 ```
 
@@ -88,7 +88,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 1
 
 서브에이전트(subagent_type="Explore") **2개를 병렬 실행**:
 
-1. **기능 검증 에이전트**: claude-spec.md의 기능적 요구사항 vs 실제 코드
+1. **기능 검증 에이전트**: spec.md의 기능적 요구사항 vs 실제 코드
    - 각 요구사항별 구현 여부 (✅/❌)
    - 누락된 기능 구체적 명시
    - 엣지 케이스 처리 확인
@@ -114,7 +114,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 2
 
 ### Phase 3: API 일치 검증
 
-`claude-api-spec.md`가 있는 경우만 실행.
+`api-spec.md`가 있는 경우만 실행.
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 3
 
@@ -127,12 +127,12 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 3
 
 ### Phase 4: QA 시나리오 검증
 
-`claude-qa-scenarios.md`가 있는 경우만 실행.
+`qa-scenarios.md`가 있는 경우만 실행.
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 4
 
 1. 각 테스트 케이스를 코드/테스트 결과 기반으로 판정
-2. `claude-qa-scenarios.md`의 체크박스를 ✅/❌ 마킹
+2. `qa-scenarios.md`의 체크박스를 ✅/❌ 마킹
 3. 통과율 집계 (정상/에러/엣지 케이스별)
 
 ### Phase 5: 프로세스 도면 검증
@@ -155,7 +155,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 5
 
 ## 검증 보고서
 
-Phase 1~5 결과를 합쳐 `<planning_dir>/claude-verify-report.md`로 작성.
+Phase 1~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ### 보고서 구조
 

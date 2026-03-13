@@ -10,13 +10,13 @@
 
 ## 입력
 
-- `claude-interview.md` — Category B 답변 (톤/무드, 벤치마킹, 색상, 레이아웃, 아트 디렉션, 안티 패턴)
-- `claude-spec.md` — 기능 요구사항 (UI 컴포넌트 도출용)
-- `claude-research.md` — 벤치마킹 사이트 분석 결과 (있는 경우)
+- `interview.md` — Category B 답변 (톤/무드, 벤치마킹, 색상, 레이아웃, 아트 디렉션, 안티 패턴)
+- `spec.md` — 기능 요구사항 (UI 컴포넌트 도출용)
+- `research.md` — 벤치마킹 사이트 분석 결과 (있는 경우)
 
 ## 출력
 
-`<planning_dir>/claude-design-system.md`
+`<planning_dir>/design-system.md`
 
 ## Template
 
@@ -148,7 +148,7 @@
 
 ## 섹션 파일 연동
 
-`claude-design-system.md`가 생성되면:
+`design-system.md`가 생성되면:
 - Section File Template의 **Implementation Details**에서 이 문서를 참조하도록 안내
-- UI 관련 섹션의 **Requirements**에 "claude-design-system.md의 디자인 토큰 사용" 명시
+- UI 관련 섹션의 **Requirements**에 "design-system.md의 디자인 토큰 사용" 명시
 - 각 섹션의 **Reference Libraries**에 UI 프레임워크(MUI, Tailwind 등) 포함

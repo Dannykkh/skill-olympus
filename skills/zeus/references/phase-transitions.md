@@ -23,10 +23,10 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
   },
   "errors": [],
   "artifacts": {
-    "interview": "claude-interview.md",
-    "plan": "claude-plan.md",
+    "interview": "interview.md",
+    "plan": "plan.md",
     "sections": "sections/",
-    "qaScenarios": "claude-qa-scenarios.md",
+    "qaScenarios": "qa-scenarios.md",
     "report": "docs/zeus/zeus-report.md"
   }
 }
@@ -58,11 +58,11 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 ### Phase 1 → Phase 2 (Planning → Implementation)
 
 **전환 조건:**
-- `claude-plan.md` 파일 존재
+- `plan.md` 파일 존재
 - `sections/` 디렉토리에 1개 이상 섹션 파일 존재
 
 **전환 액션:**
-1. `claude-plan.md` → `.claude/plans/zeus-{projectName}.md` 복사
+1. `plan.md` → `.claude/plans/zeus-{projectName}.md` 복사
 2. `orchestrator_detect_providers` 호출
 3. `orchestrator_analyze_codebase` 호출
 4. sections/ 파싱 → `orchestrator_create_task` 반복 호출
@@ -81,7 +81,7 @@ Zeus 파이프라인의 4단계 전환 규칙과 상태 관리.
 - `orchestrator_get_progress`에서 전체 완료 확인
 
 **전환 액션:**
-1. `claude-qa-scenarios.md` 존재 확인
+1. `qa-scenarios.md` 존재 확인
 2. package.json 또는 build 파일에서 서버 시작 스크립트 감지
 3. Playwright 설치 확인 (미설치 시 `npx playwright install`)
 

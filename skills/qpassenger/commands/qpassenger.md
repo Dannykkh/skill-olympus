@@ -22,7 +22,7 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
 
 ```
 /qpassenger                           # 자동 감지
-/qpassenger @claude-qa-scenarios.md   # 특정 QA 문서
+/qpassenger @qa-scenarios.md   # 특정 QA 문서
 /qpassenger --api-only                # API 테스트만
 /qpassenger --ui-only                 # UI 테스트만
 /qpassenger --max-retries 3           # 최대 3회 반복

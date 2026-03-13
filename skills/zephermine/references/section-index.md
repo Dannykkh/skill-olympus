@@ -4,7 +4,7 @@ Create `<planning_dir>/sections/index.md` to define implementation sections.
 
 ## Input Files
 
-- `<planning_dir>/claude-plan.md` - implementation plan
+- `<planning_dir>/plan.md` - implementation plan
 - `<planning_dir>/flow-diagrams/index.md` - process flow diagrams (있는 경우)
 
 ## Output

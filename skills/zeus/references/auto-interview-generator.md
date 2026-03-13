@@ -6,7 +6,7 @@ Zeus가 zephermine Step 6 인터뷰를 자동 생성하는 로직.
 
 ## 개요
 
-사용자 대신 AI가 인터뷰 질문에 답변하여 `claude-interview.md`를 합성 생성.
+사용자 대신 AI가 인터뷰 질문에 답변하여 `interview.md`를 합성 생성.
 모든 답변에 `[ZEUS-AUTO]` 태그를 붙여 자동 생성임을 명시.
 
 ---
@@ -148,7 +148,7 @@ API 설계는 확장 가능하게 (RESTful, 버저닝).
 
 ---
 
-### Step 3: claude-interview.md 저장
+### Step 3: interview.md 저장
 
 ```markdown
 ---

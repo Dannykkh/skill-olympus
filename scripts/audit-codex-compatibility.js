@@ -18,9 +18,14 @@ const codexHome = process.env.CODEX_HOME
   ? path.resolve(process.env.CODEX_HOME)
   : path.join(os.homedir(), ".codex");
 
-const manifestPath = path.join(repoRoot, ".agents", ".codex-sync-manifest.json");
+const manifestPath = path.join(
+  repoRoot,
+  ".agents",
+  ".codex-sync-manifest.json",
+);
 const codexConfigPath = path.join(codexHome, "config.toml");
 const codexAgentsPath = path.join(codexHome, "AGENTS.md");
+const codexHooksDir = path.join(codexHome, "hooks");
 
 const skillsDir = path.join(repoRoot, "skills");
 const agentsDir = path.join(repoRoot, "agents");
@@ -65,7 +70,9 @@ const prioritySkillReasons = {
 };
 
 function normalizePath(p) {
-  return String(p || "").replace(/\\/g, "/").toLowerCase();
+  return String(p || "")
+    .replace(/\\/g, "/")
+    .toLowerCase();
 }
 
 function readText(filePath) {
@@ -220,15 +227,18 @@ function getTomlSection(content, sectionName) {
 
 function parseTomlAudit() {
   const content = readText(codexConfigPath);
-  const orchestratorSection = getTomlSection(content, "mcp_servers.orchestrator");
+  const orchestratorSection = getTomlSection(
+    content,
+    "mcp_servers.orchestrator",
+  );
   const orchestratorEnvSection = getTomlSection(
     content,
-    "mcp_servers.orchestrator.env"
+    "mcp_servers.orchestrator.env",
   );
 
   const pathMatch = orchestratorSection.match(/args\s*=\s*\["([^"]+)"/);
   const projectRootMatch = orchestratorEnvSection.match(
-    /ORCHESTRATOR_PROJECT_ROOT\s*=\s*"([^"]+)"/
+    /ORCHESTRATOR_PROJECT_ROOT\s*=\s*"([^"]+)"/,
   );
 
   const orchestratorPath = pathMatch ? pathMatch[1] : "";
@@ -241,13 +251,20 @@ function parseTomlAudit() {
   return {
     hasConfig: Boolean(content),
     hasNotify: /(?:^|\n)notify\s*=/.test(content),
-    notifyUsesSaveTurn: /notify\s*=\s*\[[\s\S]*save-turn\.(ps1|sh)/.test(content),
+    notifyUsesSaveTurn: /notify\s*=\s*\[[\s\S]*save-turn\.(ps1|sh)/.test(
+      content,
+    ),
     hasMultiAgent: /multi_agent\s*=\s*true/.test(content),
     hasContext7: /\[mcp_servers\.context7\]/.test(content),
     hasPlaywright: /\[mcp_servers\.playwright\]/.test(content),
     hasChromeDevtools: /\[mcp_servers\.chrome-devtools\]/.test(content),
     hasOrchestrator: /\[mcp_servers\.orchestrator\]/.test(content),
-    windowsSandboxElevated: /\[windows\][\s\S]*sandbox\s*=\s*"elevated"/.test(content),
+    windowsSandboxElevated: /\[windows\][\s\S]*sandbox\s*=\s*"elevated"/.test(
+      content,
+    ),
+    hasHookBridgeInstalled: safeExists(
+      path.join(codexHooksDir, "codex-hook-bridge.js"),
+    ),
     orchestratorPath,
     orchestratorProjectRoot,
     orchestratorTracksRepo:
@@ -288,29 +305,40 @@ function buildMarkdown() {
   const managedHooks = Array.isArray(manifest.managedHooks)
     ? manifest.managedHooks.length
     : 0;
-  const managedCodexNotifyHooks = Array.isArray(manifest.managedCodexNotifyHooks)
+  const managedCodexNotifyHooks = Array.isArray(
+    manifest.managedCodexNotifyHooks,
+  )
     ? manifest.managedCodexNotifyHooks.length
     : 0;
 
   const repoSkills = listDirectories(skillsDir).length;
-  const repoAgents = countFiles(agentsDir, (name) => name.toLowerCase().endsWith(".md"));
-  const repoHooks = countFiles(hooksDir, (name) =>
-    [".ps1", ".sh", ".js"].includes(path.extname(name).toLowerCase())
+  const repoAgents = countFiles(agentsDir, (name) =>
+    name.toLowerCase().endsWith(".md"),
   );
-  const installedCodexSkills = listDirectories(path.join(codexHome, "skills")).length;
+  const repoHooks = countFiles(hooksDir, (name) =>
+    [".ps1", ".sh", ".js"].includes(path.extname(name).toLowerCase()),
+  );
+  const installedCodexSkills = listDirectories(
+    path.join(codexHome, "skills"),
+  ).length;
   const installedCodexAgents = countFiles(
     path.join(codexHome, "agents"),
-    (name) => name.toLowerCase().endsWith(".md")
+    (name) => name.toLowerCase().endsWith(".md"),
   );
   const installedCodexHooks = countFiles(
     path.join(codexHome, "hooks"),
-    () => true
+    () => true,
   );
 
   const globalAgentsText = readText(codexAgentsPath);
   const hasMnemoRules = /<!-- CODEX-MNEMO:START -->/.test(globalAgentsText);
   const hasTagRules = /응답 키워드 규칙/.test(globalAgentsText);
-  const hasConversationSearchRules = /과거 대화 검색 규칙/.test(globalAgentsText);
+  const hasConversationSearchRules = /과거 대화 검색 규칙/.test(
+    globalAgentsText,
+  );
+  const hasOrchestratorModeRules = /오케스트레이터 모드 자동 해석/.test(
+    globalAgentsText,
+  );
 
   const lines = [];
   lines.push("# Codex Compatibility Report");
@@ -335,44 +363,49 @@ function buildMarkdown() {
   lines.push("## Working Well");
   lines.push("");
   lines.push(
-    "- Skills/agents/hooks are syncing into `.agents/` and `~/.codex/` via `scripts/sync-codex-assets.js`."
+    "- Skills/agents/hooks are syncing into `.agents/` and `~/.codex/` via `scripts/sync-codex-assets.js`.",
   );
   lines.push(
-    "- `config.toml` is wired to `notify = ... save-turn.ps1`, so Codex-Mnemo runs automatically each turn."
+    "- `config.toml` is wired to `notify = ... save-turn.ps1`, so Codex-Mnemo runs automatically each turn.",
   );
   lines.push(
-    "- `save-turn` fans out to `ddingdong-noti` and Chronos `continue-loop`, so Codex has memory + notification + auto-resume chaining."
+    "- `save-turn` fans out to `ddingdong-noti`, Chronos `continue-loop`, and the Codex hook bridge, so Codex has memory + notification + auto-resume + file-hook enforcement chaining.",
   );
   lines.push(
-    "- Global `~/.codex/AGENTS.md` already contains Codex-Mnemo rules (`#tags`, past conversation search, MEMORY.md handling)."
+    "- Global `~/.codex/AGENTS.md` already contains Codex-Mnemo rules (`#tags`, past conversation search, MEMORY.md handling).",
   );
   lines.push("");
   lines.push("## config.toml Audit");
   lines.push("");
   lines.push(`- notify configured: ${tomlAudit.hasNotify ? "yes" : "no"}`);
   lines.push(
-    `- notify uses save-turn hook: ${tomlAudit.notifyUsesSaveTurn ? "yes" : "no"}`
+    `- notify uses save-turn hook: ${tomlAudit.notifyUsesSaveTurn ? "yes" : "no"}`,
   );
-  lines.push(`- multi_agent enabled: ${tomlAudit.hasMultiAgent ? "yes" : "no"}`);
+  lines.push(
+    `- multi_agent enabled: ${tomlAudit.hasMultiAgent ? "yes" : "no"}`,
+  );
   lines.push(`- context7 MCP present: ${tomlAudit.hasContext7 ? "yes" : "no"}`);
   lines.push(
-    `- playwright MCP present: ${tomlAudit.hasPlaywright ? "yes" : "no"}`
+    `- playwright MCP present: ${tomlAudit.hasPlaywright ? "yes" : "no"}`,
   );
   lines.push(
-    `- chrome-devtools MCP present: ${tomlAudit.hasChromeDevtools ? "yes" : "no"}`
+    `- chrome-devtools MCP present: ${tomlAudit.hasChromeDevtools ? "yes" : "no"}`,
   );
   lines.push(
-    `- orchestrator MCP present: ${tomlAudit.hasOrchestrator ? "yes" : "no"}`
+    `- orchestrator MCP present: ${tomlAudit.hasOrchestrator ? "yes" : "no"}`,
   );
   lines.push(
-    `- windows sandbox elevated: ${tomlAudit.windowsSandboxElevated ? "yes" : "no"}`
+    `- windows sandbox elevated: ${tomlAudit.windowsSandboxElevated ? "yes" : "no"}`,
+  );
+  lines.push(
+    `- codex hook bridge installed: ${tomlAudit.hasHookBridgeInstalled ? "yes" : "no"}`,
   );
   if (tomlAudit.orchestratorPath) {
     lines.push(`- orchestrator path: \`${tomlAudit.orchestratorPath}\``);
   }
   if (tomlAudit.orchestratorProjectRoot) {
     lines.push(
-      `- orchestrator project root: \`${tomlAudit.orchestratorProjectRoot}\``
+      `- orchestrator project root: \`${tomlAudit.orchestratorProjectRoot}\``,
     );
   }
   lines.push(
@@ -380,35 +413,43 @@ function buildMarkdown() {
       tomlAudit.orchestratorTracksRepo && tomlAudit.orchestratorRootTracksRepo
         ? "yes"
         : "no"
-    }`
+    }`,
   );
   lines.push("");
   lines.push("## Gaps");
   lines.push("");
   lines.push(
-    "1. Claude root hooks are copied into `~/.codex/hooks`, but Codex does not execute `UserPromptSubmit / PreToolUse / PostToolUse / Stop` directly."
+    "1. Codex does not expose Claude's native `UserPromptSubmit / PreToolUse / PostToolUse / Stop` lifecycle directly.",
   );
   lines.push(
-    "   Only `notify -> save-turn` is actually wired in `config.toml`, so Claude-style automatic enforcement is not fully reproduced."
+    "   File-oriented hooks are now bridged via `notify -> save-turn -> codex-hook-bridge`, but the timing still differs from Claude and true pre-write blocking is not identical.",
+  );
+  if (
+    !(tomlAudit.orchestratorTracksRepo && tomlAudit.orchestratorRootTracksRepo)
+  ) {
+    lines.push(
+      "2. `orchestrator` currently points outside this repo when `config.toml` references another installation root.",
+    );
+    lines.push(
+      "   That is safe at runtime, but changes in this repo will not affect Codex until the MCP entry is re-registered from this repo.",
+    );
+  } else {
+    lines.push(
+      "2. `orchestrator` is correctly wired to this repo, but Codex parity still depends on keeping AGENTS rules, hooks, and sync outputs aligned after each resource change.",
+    );
+  }
+  lines.push(
+    `3. ${skillFlags.length} skills and ${agentFlags.length} top-level agents still contain Claude-specific markers (.claude, CLAUDE.md, hook event names, or AskUserQuestion).`,
   );
   lines.push(
-    "2. `orchestrator` currently points outside this repo when `config.toml` references another installation root."
-  );
-  lines.push(
-    "   That is safe at runtime, but changes in this repo will not affect Codex until the MCP entry is re-registered from this repo."
-  );
-  lines.push(
-    `3. ${skillFlags.length} skills and ${agentFlags.length} top-level agents still contain Claude-specific markers (.claude, CLAUDE.md, hook event names, or AskUserQuestion).`
-  );
-  lines.push(
-    "   This does not always mean broken behavior, but it does mean the documentation and workflows are not cleanly portable yet."
+    "   This does not always mean broken behavior, but it does mean the documentation and workflows are not cleanly portable yet.",
   );
   lines.push("");
   lines.push("## Highest-Priority Skill Adaptations");
   lines.push("");
   for (const item of priorityList) {
     lines.push(
-      `- \`${item.name}\` — ${item.reason} (\`${item.path}\`, flags: ${item.flags.join(", ")})`
+      `- \`${item.name}\` — ${item.reason} (\`${item.path}\`, flags: ${item.flags.join(", ")})`,
     );
   }
   if (priorityList.length === 0) {
@@ -418,38 +459,45 @@ function buildMarkdown() {
   lines.push("## Portable or Already Adapted Examples");
   lines.push("");
   lines.push(
-    "- `codex-mnemo` — Codex-specific notify workflow and global AGENTS rules."
+    "- `codex-mnemo` — Codex-specific notify workflow and global AGENTS rules.",
   );
   lines.push(
-    "- `auto-continue-loop` — Codex notify chain using `save-turn -> continue-loop -> codex exec resume --last`."
+    "- `auto-continue-loop` — Codex notify chain using `save-turn -> continue-loop -> codex exec resume --last`.",
   );
   lines.push(
-    "- `agent-team` — explicitly documents Codex `spawn_agent` mode alongside Claude Agent Teams."
+    "- `agent-team` — explicitly documents Codex `spawn_agent` mode alongside Claude Agent Teams.",
   );
   lines.push("");
   lines.push("## Rule Coverage");
   lines.push("");
-  lines.push(`- Mnemo block present in global AGENTS.md: ${hasMnemoRules ? "yes" : "no"}`);
+  lines.push(
+    `- Mnemo block present in global AGENTS.md: ${hasMnemoRules ? "yes" : "no"}`,
+  );
   lines.push(`- Response tag rules present: ${hasTagRules ? "yes" : "no"}`);
   lines.push(
     `- Past conversation search rules present: ${
       hasConversationSearchRules ? "yes" : "no"
-    }`
+    }`,
+  );
+  lines.push(
+    `- Orchestrator mode auto-interpretation rules present: ${
+      hasOrchestratorModeRules ? "yes" : "no"
+    }`,
   );
   lines.push("");
   lines.push("## Recommended Next Steps");
   lines.push("");
   lines.push(
-    "1. Re-register `orchestrator` from this repo if this workspace should be the active Codex source of truth."
+    "1. Keep the Codex hook bridge installed and treat `save-turn` as the single notify entrypoint for parity work.",
   );
   lines.push(
-    "2. Keep Codex runtime on `notify -> save-turn`, but document clearly that root Claude hooks are sync-only assets unless bridged explicitly."
+    "2. Keep Codex runtime on `notify -> save-turn`, but document clearly which hook behaviors are native and which are bridged.",
   );
   lines.push(
-    "3. Adapt the top-priority Claude-centric skills first: `command-creator`, `daily-meeting-update`, `manage-skills`, `mnemo`, `verify-implementation`."
+    "3. Adapt the remaining Claude-centric skills first: `command-creator`, `daily-meeting-update`, `mnemo`, and any skill still hardcoding `.claude` paths or AskUserQuestion-only flows.",
   );
   lines.push(
-    "4. Re-run this audit after major skill/agent/hook changes to keep the report current."
+    "4. Re-run this audit after major skill/agent/hook changes to keep the report current.",
   );
 
   return `${lines.join("\n")}\n`;

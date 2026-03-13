@@ -66,7 +66,7 @@ function installAgentsMdRules(agentsMdPath, templatePath) {
   // Remove existing Codex-Mnemo rules
   const regex = new RegExp(
     `\\n?${escapeRegex(MARKER_START)}[\\s\\S]*?${escapeRegex(MARKER_END)}\\n?`,
-    "g"
+    "g",
   );
   content = content.replace(regex, "").trim();
 
@@ -83,7 +83,7 @@ function uninstallAgentsMdRules(agentsMdPath) {
     let content = fs.readFileSync(agentsMdPath, "utf8");
     const regex = new RegExp(
       `\\n?${escapeRegex(MARKER_START)}[\\s\\S]*?${escapeRegex(MARKER_END)}\\n?`,
-      "g"
+      "g",
     );
     content = content.replace(regex, "").trim();
     fs.writeFileSync(agentsMdPath, content + "\n", "utf8");
@@ -207,7 +207,11 @@ function installTomlNotify(configPath, notifyArgs) {
 
   const newLine = stringifyNotify(notifyArgs);
   const hadNotify = /^\s*notify\s*=/m.test(content);
-  console.log(hadNotify ? "      Replacing existing notify config with codex-mnemo format" : "      Adding notify config");
+  console.log(
+    hadNotify
+      ? "      Replacing existing notify config with codex-mnemo format"
+      : "      Adding notify config",
+  );
 
   content = removeNotifyAssignmentsEverywhere(content);
   content = insertRootLine(content, newLine);
@@ -254,8 +258,18 @@ function install() {
   ensureDir(hooksDir);
 
   const hookFiles = isWindows
-    ? ["save-turn.ps1", "append-user.ps1", "append-assistant.ps1"]
-    : ["save-turn.sh", "append-user.sh", "append-assistant.sh"];
+    ? [
+        "save-turn.ps1",
+        "append-user.ps1",
+        "append-assistant.ps1",
+        "codex-hook-bridge.js",
+      ]
+    : [
+        "save-turn.sh",
+        "append-user.sh",
+        "append-assistant.sh",
+        "codex-hook-bridge.js",
+      ];
 
   for (const hookFile of hookFiles) {
     const src = path.join(sourceDir, "hooks", hookFile);
@@ -328,6 +342,7 @@ function uninstall() {
     "save-turn.ps1",
     "append-user.ps1",
     "append-assistant.ps1",
+    "codex-hook-bridge.js",
     "sync-sessions.ps1",
     "save-turn.sh",
     "append-user.sh",

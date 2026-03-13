@@ -169,6 +169,11 @@ function Get-Sha1([string]$text) {
 }
 
 function Invoke-NotificationHook {
+    param(
+        [string]$Title = "Codex CLI",
+        [string]$Message = "작업이 완료되었습니다"
+    )
+
     $notifyHook = Join-Path $HOME ".codex\hooks\ddingdong-noti.ps1"
     if (-not (Test-Path $notifyHook)) { return }
 
@@ -176,14 +181,90 @@ function Invoke-NotificationHook {
     $prevMessage = $env:AGENT_NOTIFY_MESSAGE
 
     try {
-        $env:AGENT_NOTIFY_TITLE = "Codex CLI"
-        $env:AGENT_NOTIFY_MESSAGE = "작업이 완료되었습니다"
+        $env:AGENT_NOTIFY_TITLE = $Title
+        $env:AGENT_NOTIFY_MESSAGE = $Message
         & $notifyHook
     } catch {
         Write-DebugLog "notify-chain-failed: $($_.Exception.Message)"
     } finally {
         if ($null -ne $prevTitle) { $env:AGENT_NOTIFY_TITLE = $prevTitle } else { Remove-Item Env:AGENT_NOTIFY_TITLE -ErrorAction SilentlyContinue }
         if ($null -ne $prevMessage) { $env:AGENT_NOTIFY_MESSAGE = $prevMessage } else { Remove-Item Env:AGENT_NOTIFY_MESSAGE -ErrorAction SilentlyContinue }
+    }
+}
+
+function Get-NodeCommand {
+    foreach ($candidate in @("node", "node.exe")) {
+        $command = Get-Command $candidate -ErrorAction SilentlyContinue
+        if ($command) { return $command.Source }
+    }
+    return ""
+}
+
+function New-EmptyHookSummary {
+    return @{
+        warnings = 0
+        errors = 0
+        touchedFiles = @()
+        newFiles = @()
+        messages = @()
+    }
+}
+
+function Invoke-CodexHookBridge {
+    param(
+        [Parameter(Mandatory = $true)][string]$BaseDir,
+        [Parameter(Mandatory = $true)][object]$PayloadObject
+    )
+
+    $bridge = Join-Path $PSScriptRoot "codex-hook-bridge.js"
+    if (-not (Test-Path $bridge)) {
+        return (New-EmptyHookSummary)
+    }
+
+    $nodeCommand = Get-NodeCommand
+    if (-not $nodeCommand) {
+        Write-DebugLog "hook-bridge-skip: node not found"
+        return (New-EmptyHookSummary)
+    }
+
+    try {
+        $payloadJson = "{}"
+        if ($null -ne $PayloadObject) {
+            $payloadJson = $PayloadObject | ConvertTo-Json -Compress -Depth 30
+        }
+
+        $raw = $payloadJson | & $nodeCommand $bridge "--base-dir=$BaseDir" 2>&1
+        $text = (($raw | ForEach-Object { "$_" }) -join "`n").Trim()
+        if (-not $text) {
+            return (New-EmptyHookSummary)
+        }
+
+        $summary = Parse-JsonSafe $text
+        if (-not $summary) {
+            Write-DebugLog "hook-bridge-unparsed: $text"
+            return (New-EmptyHookSummary)
+        }
+
+        $touchedCount = 0
+        try { $touchedCount = $summary.touchedFiles.Count } catch {}
+        $warningCount = 0
+        try { $warningCount = [int]$summary.warnings } catch {}
+        $errorCount = 0
+        try { $errorCount = [int]$summary.errors } catch {}
+        Write-DebugLog "hook-bridge: files=$touchedCount warnings=$warningCount errors=$errorCount"
+
+        try {
+            foreach ($message in $summary.messages) {
+                if ($message) {
+                    Write-DebugLog "hook-bridge> $message"
+                }
+            }
+        } catch {}
+
+        return $summary
+    } catch {
+        Write-DebugLog "hook-bridge-failed: $($_.Exception.Message)"
+        return (New-EmptyHookSummary)
     }
 }
 
@@ -446,7 +527,24 @@ if ($turnId) {
 }
 
 Write-DebugLog "saved: baseDir=$baseDir, file=$convFile, userLen=$($userText.Length), respLen=$($response.Length), turnId=$turnId"
-Invoke-NotificationHook
+$hookSummary = Invoke-CodexHookBridge -BaseDir $baseDir -PayloadObject $payload
+$hookWarnings = 0
+$hookErrors = 0
+try { $hookWarnings = [int]$hookSummary.warnings } catch {}
+try { $hookErrors = [int]$hookSummary.errors } catch {}
+
+$notifyTitle = "Codex CLI"
+$notifyMessage = "작업이 완료되었습니다"
+if ($hookErrors -gt 0) {
+    $notifyTitle = "Codex Hook Alert"
+    $notifyMessage = "작업 완료, hook 오류 $hookErrors개"
+    if ($hookWarnings -gt 0) {
+        $notifyMessage += " / 경고 $hookWarnings개"
+    }
+} elseif ($hookWarnings -gt 0) {
+    $notifyMessage = "작업 완료, hook 경고 $hookWarnings개"
+}
+Invoke-NotificationHook -Title $notifyTitle -Message $notifyMessage
 
 $chronosContinue = Join-Path $HOME ".codex\skills\auto-continue-loop\scripts\continue-loop.ps1"
 if (Test-Path $chronosContinue) {

@@ -12,7 +12,7 @@ zephermine resume 시 모든 계획 파일이 존재하고 사용자가 "구현 
 
 **Phase 1: 정적 검증** — Task(subagent_type="Explore") 2개 병렬 실행:
 
-1. **기능 검증 에이전트**: claude-spec.md의 기능적 요구사항 vs 실제 코드
+1. **기능 검증 에이전트**: spec.md의 기능적 요구사항 vs 실제 코드
    - 각 요구사항별 구현 여부 (✅/❌)
    - 누락된 기능 구체적 명시
    - 엣지 케이스 처리 확인
@@ -29,9 +29,9 @@ zephermine resume 시 모든 계획 파일이 존재하고 사용자가 "구현 
 Task(
   subagent_type="Explore",
   prompt="""
-  기능 검증: claude-spec.md 대비 구현 상태 확인
+  기능 검증: spec.md 대비 구현 상태 확인
 
-  1. <planning_dir>/claude-spec.md를 읽고 기능적 요구사항 목록 추출
+  1. <planning_dir>/spec.md를 읽고 기능적 요구사항 목록 추출
   2. 코드베이스에서 각 요구사항의 구현 여부 확인
   3. 결과를 다음 형식으로 반환:
 
@@ -50,7 +50,7 @@ Task(
   prompt="""
   품질 검증: 비기능 요구사항 + 코드 품질 확인
 
-  1. <planning_dir>/claude-spec.md에서 비기능 요구사항 추출
+  1. <planning_dir>/spec.md에서 비기능 요구사항 추출
   2. 코드베이스에서 다음 항목 확인:
      - 성능/보안/접근성 요구사항 충족 여부
      - 테스트 커버리지 (테스트 파일 존재 여부)
@@ -98,7 +98,7 @@ Bash: {detected_build_command}
 - python -m py_compile src/**/*.py
 ```
 
-빌드 실패 시: 에러 로그를 `claude-verify-report.md`에 기록하고 사용자에게 보고.
+빌드 실패 시: 에러 로그를 `verify-report.md`에 기록하고 사용자에게 보고.
 
 #### 2-3. 단위 테스트 실행
 
@@ -157,9 +157,9 @@ Bash: {detected_e2e_command}
 
 ---
 
-**Phase 3: API 일치 검증** — claude-api-spec.md 기반 (API 프로젝트만)
+**Phase 3: API 일치 검증** — api-spec.md 기반 (API 프로젝트만)
 
-`<planning_dir>/claude-api-spec.md`가 존재하면 실행.
+`<planning_dir>/api-spec.md`가 존재하면 실행.
 
 #### 3-1. 실제 API 라우트 추출
 
@@ -205,13 +205,13 @@ Bash: {detected_e2e_command}
 
 ---
 
-**Phase 4: QA 시나리오 검증** — claude-qa-scenarios.md 기반 통과 체크
+**Phase 4: QA 시나리오 검증** — qa-scenarios.md 기반 통과 체크
 
 계획 단계에서 정의한 입출력 기대값을 실제 구현과 대조합니다.
 
 #### 3-1. QA 시나리오 문서 로드
 
-`<planning_dir>/claude-qa-scenarios.md`를 읽어 모든 테스트 케이스 추출.
+`<planning_dir>/qa-scenarios.md`를 읽어 모든 테스트 케이스 추출.
 
 #### 3-2. 시나리오별 통과 판정
 
@@ -225,7 +225,7 @@ Bash: {detected_e2e_command}
 
 #### 3-3. QA 시나리오 결과 마킹
 
-`claude-qa-scenarios.md`의 체크박스를 업데이트:
+`qa-scenarios.md`의 체크박스를 업데이트:
 
 ```markdown
 ## Section 01: User API
@@ -295,7 +295,7 @@ Bash: {detected_e2e_command}
 
 ---
 
-Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 결과를 합쳐 `<planning_dir>/claude-verify-report.md`로 작성.
+Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ### Step 23: 검증 결과 보고
 

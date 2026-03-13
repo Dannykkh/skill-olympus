@@ -19,7 +19,7 @@ QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트
 
 ```
 /qpassenger                           # 자동 감지 (qa-scenarios.md 또는 docs/qa/)
-/qpassenger @claude-qa-scenarios.md   # 특정 QA 문서 지정
+/qpassenger @qa-scenarios.md   # 특정 QA 문서 지정
 /qpassenger --api-only                # API 테스트만
 /qpassenger --ui-only                 # UI 테스트만
 ```
@@ -49,7 +49,7 @@ Step 6: 결과 보고 + 서버 정리
 QA 시나리오를 수집합니다. 우선순위 순으로 탐색:
 
 1. `$ARGUMENTS`로 전달된 QA 문서 경로
-2. `claude-qa-scenarios.md` (zephermine 산출물)
+2. `qa-scenarios.md` (zephermine 산출물)
 3. `docs/qa/*.md` (qa-writer 산출물)
 4. 위 모두 없으면 → qa-writer 패턴으로 현장 생성
 
@@ -73,7 +73,7 @@ QA 문서에서 테스트 케이스 테이블을 추출합니다:
 1. 프로젝트 구조 분석 (Glob으로 라우트/API 탐색)
 2. CRUD 엔드포인트 식별
 3. 기능별 정상/에러/엣지 케이스 TC 작성
-4. claude-qa-scenarios.md로 저장
+4. qa-scenarios.md로 저장
 ```
 
 ---
@@ -369,7 +369,7 @@ IF retry >= max_retries:
 | qa-writer (에이전트) | 테스트 시나리오 작성 | Step 1 입력 |
 | qa-engineer (에이전트) | 품질 판정 기준 | Step 6 판정 |
 | qa-test-planner (스킬) | 테스트 계획 수립 | 선행 스킬 |
-| zephermine (스킬) | claude-qa-scenarios.md 생성 | Step 1 입력 |
+| zephermine (스킬) | qa-scenarios.md 생성 | Step 1 입력 |
 
 ---
 

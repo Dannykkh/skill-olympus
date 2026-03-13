@@ -6,7 +6,7 @@ The interview runs directly in this skill (not subagent) because `AskUserQuestio
 
 The interview should be informed by:
 - **Initial spec** (always available)
-- **Research findings** (if step 5 produced `claude-research.md`)
+- **Research findings** (if step 5 produced `research.md`)
 
 If research was done, use it to:
 - Skip questions already answered by research
@@ -148,7 +148,7 @@ If the user predominantly answers with "I don't know" or "Up to you" to most que
 
 ## Saving the Transcript
 
-After the interview, save the full Q&A to `<planning_dir>/claude-interview.md`:
+After the interview, save the full Q&A to `<planning_dir>/interview.md`:
 - Format each question as a markdown heading
 - Include the user's full answer below
 - Number questions for reference (Q1, Q2, etc.)

@@ -4,7 +4,7 @@
 
 ---
 
-## 출력 형식: claude-db-schema.md
+## 출력 형식: db-schema.md
 
 ```markdown
 # Database Schema
@@ -85,7 +85,7 @@ DB 특성이 테이블 구조 자체를 결정함:
 3. 해당 DB용 DDL + ERD 출력
 
 **DB 감지 순서:**
-1. `claude-plan.md`에서 기술 스택 명시 확인
+1. `plan.md`에서 기술 스택 명시 확인
 2. 기존 프로젝트라면 코드베이스에서 DB 감지 (package.json, pom.xml, .env 등)
 3. 미결정 시 AskUserQuestion으로 질문
 

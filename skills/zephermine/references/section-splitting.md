@@ -6,7 +6,7 @@ This step assumes `sections/index.md` already exists.
 
 ## Input Files
 
-- `<planning_dir>/claude-plan.md` - implementation details
+- `<planning_dir>/plan.md` - implementation details
 - `<planning_dir>/sections/index.md` - section definitions and dependencies
 - `<planning_dir>/flow-diagrams/*.mmd` - process flow diagrams (있는 경우)
 
@@ -65,7 +65,7 @@ Task(
   Write section file: section-01-foundation
 
   Inputs:
-  - <planning_dir>/claude-plan.md
+  - <planning_dir>/plan.md
   - <planning_dir>/sections/index.md
   - <planning_dir>/flow-diagrams/index.md (있으면 참조 — 이 섹션의 담당 노드 확인)
 
@@ -83,7 +83,7 @@ Task(
 # ... one Task per section
 ```
 
-**Why parallel?** Each section is independent - they all read from the same source files (`claude-plan.md`, `index.md`) but write to different output files.
+**Why parallel?** Each section is independent - they all read from the same source files (`plan.md`, `index.md`) but write to different output files.
 
 ### Resume Handling
 
@@ -95,15 +95,15 @@ If some sections already exist:
 
 **CRITICAL: Each section file must be completely self-contained.**
 
-The implementer reading a section file should NOT need to reference `claude-plan.md` or any other document. They should be able to:
+The implementer reading a section file should NOT need to reference `plan.md` or any other document. They should be able to:
 1. Read the single section file
 2. Create a TODO list
 3. Start implementing immediately
 
 Include all necessary background, requirements, and implementation details within each section.
 
-**API가 있는 프로젝트**: `claude-api-spec.md`의 해당 엔드포인트를 섹션에 포함.
-구현 중 새 API를 추가하면 반드시 `claude-api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
+**API가 있는 프로젝트**: `api-spec.md`의 해당 엔드포인트를 섹션에 포함.
+구현 중 새 API를 추가하면 반드시 `api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
 
 ### Section File Template
 
@@ -199,7 +199,7 @@ Include all necessary background, requirements, and implementation details withi
 - [ ] 빌드 에러 없음 (`npm run build` / `mvn compile` 등)
 - [ ] 기존 테스트가 깨지지 않음 (회귀 없음)
 - [ ] Dependencies의 선행 섹션이 모두 완료됨
-- [ ] 새로 추가한 API가 `claude-api-spec.md`에 등록됨 (해당 시)
+- [ ] 새로 추가한 API가 `api-spec.md`에 등록됨 (해당 시)
 - [ ] Flow Diagram Nodes의 모든 노드에 대응하는 코드가 존재함 (해당 시)
 
 ## Risk & Rollback

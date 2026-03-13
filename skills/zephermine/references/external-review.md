@@ -1,6 +1,6 @@
 # External Review Protocol
 
-`claude-plan.md`를 외부 LLM에게 독립적 리뷰를 받는 단계.
+`plan.md`를 외부 LLM에게 독립적 리뷰를 받는 단계.
 
 ## 실행 순서
 
@@ -21,7 +21,7 @@ which codex 2>/dev/null && echo "codex: OK" || echo "codex: NOT FOUND"
 mkdir -p "<planning_dir>/reviews"
 cat > "<planning_dir>/reviews/review-prompt.txt" << 'EOF'
 You are a senior software architect reviewing an implementation plan.
-Read the file at: <planning_dir>/claude-plan.md
+Read the file at: <planning_dir>/plan.md
 
 Identify:
 - Potential footguns and edge cases
@@ -43,7 +43,7 @@ TWO Bash tool calls in a single message. **timeout 3분 설정.**
 ```bash
 gemini -m gemini-3-pro-preview --approval-mode yolo \
   "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
-  @<planning_dir>/claude-plan.md
+  @<planning_dir>/plan.md
 ```
 
 **Codex** — stdin으로 프롬프트 전달 + 파일 읽기는 Codex가 직접:

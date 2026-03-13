@@ -6,7 +6,7 @@
 
 ```
 Phase A (병렬):
-claude-spec.md ──┬──→ UX Agent (Claude) ─────────→ ux-analysis.md
+spec.md ──┬──→ UX Agent (Claude) ─────────→ ux-analysis.md
                  ├──→ Architecture Agent (Claude) → architecture-analysis.md
                  ├──→ Red Team Agent (Claude) ────→ redteam-analysis.md
                  └──→ Domain Researcher (Claude)  → domain-research.md
@@ -19,7 +19,7 @@ Phase B (domain-research.md 활용):
                       (Gemini / Codex / Claude)
                                     │
                                     ▼
-                            claude-team-review.md (통합)
+                            team-review.md (통합)
 ```
 
 ## 에이전트 구성
@@ -60,12 +60,12 @@ Phase B (domain-research.md 활용):
 
 ### 1단계: 입력 파일 준비 + 산업군 식별
 
-1. `<planning_dir>/claude-interview.md`에서 `[Industry: {산업군}]` 태그 추출
+1. `<planning_dir>/interview.md`에서 `[Industry: {산업군}]` 태그 추출
 2. 태그가 없으면 인터뷰 내용에서 산업군 추론, 없으면 "범용" 사용
 3. 입력 파일 목록 확인:
-   - `claude-spec.md` (필수)
-   - `claude-interview.md` (필수)
-   - `claude-research.md` (있으면 포함)
+   - `spec.md` (필수)
+   - `interview.md` (필수)
+   - `research.md` (있으면 포함)
 
 ### 2단계: 도메인 전문가 페르소나 결정
 
@@ -118,9 +118,9 @@ Task(
   You are a **UX Expert** — 사용자 경험 전문가 (15년 경력).
 
   Read these files:
-  - <planning_dir>/claude-spec.md
-  - <planning_dir>/claude-interview.md
-  - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/spec.md
+  - <planning_dir>/interview.md
+  - <planning_dir>/research.md (if exists)
 
   Also explore the existing codebase for context.
 
@@ -146,9 +146,9 @@ Task(
   You are a **Technical Architecture Expert** — 시스템 아키텍처 전문가 (15년 경력).
 
   Read these files:
-  - <planning_dir>/claude-spec.md
-  - <planning_dir>/claude-interview.md
-  - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/spec.md
+  - <planning_dir>/interview.md
+  - <planning_dir>/research.md (if exists)
 
   Also explore the existing codebase for context.
 
@@ -174,9 +174,9 @@ Task(
   You are a **Red Team Agent** (악마의 변호인) — 모든 가정에 의문을 제기하는 전문가.
 
   Read these files:
-  - <planning_dir>/claude-spec.md
-  - <planning_dir>/claude-interview.md
-  - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/spec.md
+  - <planning_dir>/interview.md
+  - <planning_dir>/research.md (if exists)
 
   Also explore the existing codebase for context.
 
@@ -204,8 +204,8 @@ Task(
   You are a **Domain Industry Researcher** for {산업군}.
 
   Read these files for context:
-  - <planning_dir>/claude-spec.md
-  - <planning_dir>/claude-interview.md
+  - <planning_dir>/spec.md
+  - <planning_dir>/interview.md
 
   Then use **WebSearch** to find current technologies, frameworks, standards, and solutions
   relevant to building a {산업군} system.
@@ -251,9 +251,9 @@ Task(
   {산업군}의 전체 비즈니스 프로세스와 업무 흐름을 깊이 이해하고 있습니다.
 
   Read these files:
-  - <planning_dir>/claude-spec.md
-  - <planning_dir>/claude-interview.md
-  - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/spec.md
+  - <planning_dir>/interview.md
+  - <planning_dir>/research.md (if exists)
   - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치)
 
   Use the domain-research.md findings to ground your analysis with real technologies and solutions.
@@ -308,9 +308,9 @@ Task(
   {산업군}에서 핵심적으로 필요한 기술, 표준, 규격을 깊이 이해하고 있습니다.
 
   Read these files:
-  - <planning_dir>/claude-spec.md
-  - <planning_dir>/claude-interview.md
-  - <planning_dir>/claude-research.md (if exists)
+  - <planning_dir>/spec.md
+  - <planning_dir>/interview.md
+  - <planning_dir>/research.md (if exists)
   - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치)
 
   Use the domain-research.md findings to ground your analysis with real technologies and solutions.
@@ -477,11 +477,11 @@ PROMPT_EOF
 ```bash
 echo "$(cat '<planning_dir>/team-reviews/domain-process-prompt.txt')
 
-===== claude-spec.md =====
-$(cat '<planning_dir>/claude-spec.md')
+===== spec.md =====
+$(cat '<planning_dir>/spec.md')
 
-===== claude-interview.md =====
-$(cat '<planning_dir>/claude-interview.md')
+===== interview.md =====
+$(cat '<planning_dir>/interview.md')
 
 ===== domain-research.md (산업별 기술/솔루션 리서치) =====
 $(cat '<planning_dir>/team-reviews/domain-research.md')" \
@@ -498,8 +498,8 @@ $(cat '<planning_dir>/team-reviews/domain-research.md')" \
 ```bash
 gemini -m gemini-3-pro-preview --approval-mode yolo \
   "$(cat '<planning_dir>/team-reviews/domain-technical-prompt.txt')" \
-  @<planning_dir>/claude-spec.md \
-  @<planning_dir>/claude-interview.md \
+  @<planning_dir>/spec.md \
+  @<planning_dir>/interview.md \
   @<planning_dir>/team-reviews/domain-research.md \
   > "<planning_dir>/team-reviews/domain-technical-analysis.md"
 ```
@@ -530,7 +530,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 
 ### 7단계: 통합 리뷰 작성
 
-6개 분석 결과(리서치 1 + 고정 3 + 도메인 2)를 읽고 `<planning_dir>/claude-team-review.md` 작성.
+6개 분석 결과(리서치 1 + 고정 3 + 도메인 2)를 읽고 `<planning_dir>/team-review.md` 작성.
 
 **통합 기준:**
 - **Critical**: 다수 팀 공통 지적 + 레드팀 고위험 + 도메인 전문가 🔴필수 지적

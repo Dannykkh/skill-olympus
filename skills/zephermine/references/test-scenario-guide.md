@@ -13,7 +13,7 @@
 
 | 시점 | 파일 | 내용 |
 |------|------|------|
-| **Step 8 (Spec Synthesis)** | claude-spec.md | 전체 기능별 입출력 시나리오 |
+| **Step 8 (Spec Synthesis)** | spec.md | 전체 기능별 입출력 시나리오 |
 | **Step 15 (Section Files)** | section-NN-*.md | 해당 섹션 기능의 상세 테스트 케이스 |
 
 ## 시나리오 유형

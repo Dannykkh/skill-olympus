@@ -1,6 +1,6 @@
 ---
 name: daily-meeting-update
-description: "Interactive daily standup/meeting update generator. Use when user says 'daily', 'standup', 'scrum update', 'status update', 'what did I do yesterday', 'prepare for meeting', 'morning update', or 'team sync'. Pulls activity from GitHub, Jira, and available AI session history (Claude `.claude/projects` or project `conversations/*-codex.md`). Conducts 4-question interview (yesterday, today, blockers, discussion topics) and generates formatted Markdown update."
+description: "Interactive daily standup/meeting update generator. Use when user says 'daily', 'standup', 'scrum update', 'status update', 'what did I do yesterday', 'prepare for meeting', 'morning update', or 'team sync'. Pulls activity from GitHub, Jira, and available AI session history (Claude `.claude/projects` or project `conversations/*-codex.md` / `*-gemini.md`). Conducts 4-question interview (yesterday, today, blockers, discussion topics) and generates formatted Markdown update."
 user-invocable: true
 ---
 
@@ -57,7 +57,7 @@ Check for available integrations **silently** (suppress errors, don't show to us
 
 ### Step 2: Offer GitHub/Jira Integrations (if available)
 
-> Claude Code: use `AskUserQuestionTool` when available.
+> Claude Code: use a structured question UI when available.
 > Codex/Gemini: use plain-text questions and concise numbered options.
 
 **GitHub/Git:**
@@ -124,15 +124,17 @@ Options:
 - "No, I have everything I need"
 ```
 
-**If yes, run the digest script:**
+**If yes, run the digest script. Prefer the project-local skill path first, then installed skill path:**
 
 ```bash
+python3 skills/daily-meeting-update/scripts/claude_digest.py --format json
+# fallback if running from an installed Claude skill location:
 python3 ~/.claude/skills/daily-meeting-update/scripts/claude_digest.py --format json
 ```
 
 **Then present sessions with multiSelect:**
 
-Use `AskUserQuestionTool` with `multiSelect: true` to let user pick relevant items:
+Use a structured multi-select UI if the runtime provides one; otherwise list the items in plain text and ask the user to reply with the relevant numbers:
 
 ```
 "Here are your Claude Code sessions from yesterday. Select the ones relevant to your standup:"
@@ -166,7 +168,7 @@ Options (multiSelect):
 
 ## Phase 2: Interview (with insights)
 
-> Claude Code: use `AskUserQuestionTool` for structured UX.
+> Claude Code: use a structured question UI for better UX.
 > Codex/Gemini: ask the same questions in plain text and keep options short.
 
 **Use pulled data as context** to make questions smarter.
@@ -289,23 +291,23 @@ Combine all information into clean Markdown:
 
 | Phase | Action | Tool |
 |-------|--------|------|
-| 1. Detect & Offer | Check gh/jira/claude history, ask user, pull data | Bash (silent), AskUserQuestionTool* |
-| 2. Interview | Ask 4 questions with insights | AskUserQuestionTool* |
+| 1. Detect & Offer | Check gh/jira/claude history, ask user, pull data | Bash (silent), structured question UI* |
+| 2. Interview | Ask 4 questions with insights | structured question UI* |
 | 3. Generate | Format Markdown | Output text |
 
-*Claude Code only: `AskUserQuestionTool` is an optional UX enhancement, not a requirement for the workflow.
+*Structured question UI is an optional UX enhancement, not a requirement for the workflow.
 
 ### Claude Code Digest Script
 
 ```bash
 # Get yesterday's sessions as JSON
-python3 ~/.claude/skills/daily-meeting-update/scripts/claude_digest.py --format json
+python3 skills/daily-meeting-update/scripts/claude_digest.py --format json
 
 # Get today's sessions
-python3 ~/.claude/skills/daily-meeting-update/scripts/claude_digest.py --date today --format json
+python3 skills/daily-meeting-update/scripts/claude_digest.py --date today --format json
 
 # Filter to specific project
-python3 ~/.claude/skills/daily-meeting-update/scripts/claude_digest.py --project ~/my-app --format json
+python3 skills/daily-meeting-update/scripts/claude_digest.py --project ~/my-app --format json
 ```
 
 ---

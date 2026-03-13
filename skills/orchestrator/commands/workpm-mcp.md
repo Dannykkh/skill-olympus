@@ -387,14 +387,14 @@ while (미완료_태스크_존재) {
 
 | zephermine 파일 | PM 활용법 |
 |-------------|-----------|
-| `claude-plan.md` | 전체 작업 분해의 기준 (필수 읽기) |
+| `plan.md` | 전체 작업 분해의 기준 (필수 읽기) |
 | `flow-diagrams/index.md` | **공정 도면 인덱스 — Phase 1.5/2.5의 기준선** |
 | `flow-diagrams/*.mmd` | **프로세스별 공정 도면 — 노드별 태스크 배분 근거** |
 | `sections/index.md` | 섹션 간 의존성 → `depends_on` 설정 |
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
-| `claude-spec.md` | 요구사항 확인 필요 시 참조 |
-| `claude-api-spec.md` | API 계약서 참조 |
-| `claude-db-schema.md` | DB 스키마 참조 |
+| `spec.md` | 요구사항 확인 필요 시 참조 |
+| `api-spec.md` | API 계약서 참조 |
+| `db-schema.md` | DB 스키마 참조 |
 
 ### 공정 도면 활용 흐름
 

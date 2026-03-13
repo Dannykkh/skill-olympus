@@ -15,7 +15,7 @@ This document defines the research decision and execution flow.
 │                                                             │
 │  Step 5: Execute research (parallel if multiple selected)   │
 │    - Subagents return results                               │
-│    - Main Claude combines and writes claude-research.md     │
+│    - Main Claude combines and writes research.md     │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -114,7 +114,7 @@ If user selects no codebase AND no web research AND no GitHub research, skip ste
 │    (codebase patterns)     │                                │
 │                            ├──→ Main Claude combines       │
 │  Task 2: Explore ──────────┤    and writes single          │
-│    (web best practices)    │    claude-research.md         │
+│    (web best practices)    │    research.md         │
 │                            │                                │
 │  Task 3: Explore ──────────┘                                │
 │    (GitHub similar projects)                                │
@@ -227,7 +227,7 @@ Wait for all to complete, then combine results.
 
 ### 5.5 Combine Results and Write File
 
-After collecting results from all subagents, combine them into `<planning_dir>/claude-research.md`.
+After collecting results from all subagents, combine them into `<planning_dir>/research.md`.
 
 Structure the file however makes sense for the findings.
 

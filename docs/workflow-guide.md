@@ -122,7 +122,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | zephermine | 24단계 워크플로우 (인터뷰→리서치→도메인분석→스펙→DB스키마→섹션→스킬탐색) |
+| **스킬** | zephermine | 23단계 워크플로우 (인터뷰→리서치→도메인분석→스펙→DB스키마→섹션→스킬탐색) |
 | **에이전트** | spec-interviewer | 심층 인터뷰 진행 (A~G 카테고리) |
 | **에이전트** | explore-agent | 기존 코드베이스 분석 |
 | **에이전트** | Domain Process Expert | 업무 흐름표 작성 (기능별 역할/CRUD 권한/입출력/예외) |
@@ -135,13 +135,13 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 | 파일 | 내용 | 다음 Phase에서 소비 |
 |------|------|-------------------|
-| `claude-ralph.md` | 설계 스펙 (기능, 비기능, 제약사항) | architect, 개발자 |
-| `claude-ralphy.md` | 섹션별 구현 계획 | agent-team |
+| `spec.md` | 설계 스펙 (기능, 비기능, 제약사항) | architect, 개발자 |
+| `plan.md` | 구현 계획 (섹션 분할 근거) | agent-team, workpm |
 | `domain-process-analysis.md` | 업무 흐름표 (역할/CRUD/입출력/예외) | 개발자 (API 설계 근거) |
 | `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | architect, 개발자 |
-| `claude-qa-scenarios.md` | QA 테스트 시나리오 | qpassenger |
-| `claude-db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | architect, 개발자, api-spec |
-| `claude-api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, qpassenger |
+| `qa-scenarios.md` | QA 테스트 시나리오 | qpassenger |
+| `db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | architect, 개발자, api-spec |
+| `api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, qpassenger |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
 
 ### 건너뛸 때
@@ -158,7 +158,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 ```
 이 스펙 기반으로 아키텍처 설계해줘
-@claude-ralph.md
+@spec.md
 ```
 
 ### 사용되는 리소스
@@ -175,7 +175,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 - ADR (Architecture Decision Record)
 - 기술 스택 평가 매트릭스
 - 시스템 아키텍처 다이어그램
-- `claude-db-schema.md` (ERD + DDL + 설계 근거)
+- `db-schema.md` (ERD + DDL + 설계 근거)
 
 ### 건너뛸 때
 
@@ -239,7 +239,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 ```
 /qpassenger                           # 자동 감지
-/qpassenger @claude-qa-scenarios.md   # 젭마인 QA 문서 지정
+/qpassenger @qa-scenarios.md   # 젭마인 QA 문서 지정
 /qpassenger --api-only                # API 테스트만
 /qpassenger --fix-test-only           # 구현 코드 수정 금지
 ```
@@ -257,7 +257,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 ### 입력 소스 (우선순위)
 
 1. `$ARGUMENTS`로 전달된 파일
-2. `claude-qa-scenarios.md` (젭마인 산출물)
+2. `qa-scenarios.md` (젭마인 산출물)
 3. `docs/qa/*.md` (qa-writer 산출물)
 4. 없으면 프로젝트 분석해서 현장 생성
 
@@ -393,7 +393,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 # 사용: spec-interviewer, Tavily, Exa
 
 # 2. 아키텍처
-# architect 에이전트에게 @claude-ralph.md 전달
+# architect 에이전트에게 @spec.md 전달
 # → Next.js + Spring Boot + PostgreSQL 결정
 # 사용: architect, mermaid-diagrams, database-schema-designer
 
@@ -404,7 +404,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 # 4. 검증
 /qpassenger
-# → claude-qa-scenarios.md 45개 시나리오 → Playwright 실행
+# → qa-scenarios.md 45개 시나리오 → Playwright 실행
 # → Healer 2회 수정 → PASS (43/45 즉시 통과, 2개 수정 후 통과)
 # 사용: qa-engineer, Playwright MCP
 

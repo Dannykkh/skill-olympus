@@ -14,9 +14,9 @@
 | 정적 사이트 (API 없음) | ❌ 건너뜀 |
 | 데스크톱 앱 (로컬 전용) | ❌ 건너뜀 |
 
-**판단 기준**: `claude-plan.md`에서 HTTP 엔드포인트, API 라우트, 서버-클라이언트 통신이 언급되면 생성.
+**판단 기준**: `plan.md`에서 HTTP 엔드포인트, API 라우트, 서버-클라이언트 통신이 언급되면 생성.
 
-## claude-api-spec.md 템플릿
+## api-spec.md 템플릿
 
 ```markdown
 # API Specification
@@ -144,7 +144,7 @@
 
 ```
 구현 중 새 API를 추가하거나 기존 API를 변경하면:
-1. claude-api-spec.md에 해당 엔드포인트를 추가/수정
+1. api-spec.md에 해당 엔드포인트를 추가/수정
 2. 기존 API와 중복되지 않는지 확인 (같은 기능, 다른 이름 방지)
 3. Frontend Caller도 함께 업데이트
 

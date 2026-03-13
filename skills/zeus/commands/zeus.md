@@ -53,7 +53,7 @@ LOOP:
 
 ### 실행 완료 체크리스트 (종료 전 필수 확인)
 
-- `zephermine` 단계 산출물 존재: `claude-plan.md`
+- `zephermine` 단계 산출물 존재: `plan.md`
 - `workpm` 단계 실행 흔적 존재: `docs/zeus/zeus-log.md`에 task 생성/worker 실행 기록
 - `qpassenger` 단계 실행 흔적 존재: `docs/zeus/zeus-log.md` 또는 QA 결과 파일에 테스트 실행 기록
 - 위 3개 중 하나라도 없으면 **종료하지 말고 해당 Phase 재시도**
