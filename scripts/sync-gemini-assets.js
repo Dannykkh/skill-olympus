@@ -300,6 +300,73 @@ function generateSkillsCatalog(destHome, skillNames) {
   return catalogPath;
 }
 
+// .md 파일에서 frontmatter description 추출 (에이전트용)
+function extractAgentDescription(filePath) {
+  if (!fs.existsSync(filePath)) return "";
+  try {
+    const content = fs.readFileSync(filePath, "utf8");
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length && i < 30; i++) {
+      const line = lines[i];
+      const match = line.match(/^description:\s*(.*)/);
+      if (!match) continue;
+
+      const value = match[1].trim().replace(/^["']|["']$/g, "");
+      if (value && value !== ">" && value !== "|") {
+        return value.replace(/\|/g, "／").slice(0, 120);
+      }
+      const descLines = [];
+      for (let j = i + 1; j < lines.length && j < i + 10; j++) {
+        const next = lines[j];
+        if (/^\s+\S/.test(next)) {
+          descLines.push(next.trim());
+        } else {
+          break;
+        }
+      }
+      if (descLines.length > 0) {
+        return descLines.join(" ").replace(/\|/g, "／").slice(0, 120);
+      }
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+// 에이전트 카탈로그 파일 생성 (~/.gemini/AGENTS-CATALOG.md)
+function generateAgentsCatalog(destHome, agentFiles) {
+  const entries = Array.from(agentFiles.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const lines = [
+    "# 사용 가능한 글로벌 에이전트 카탈로그",
+    "",
+    "> 이 파일은 sync-gemini-assets.js에 의해 자동 생성됩니다.",
+    "> 에이전트는 특정 작업 유형에 최적화된 전문가 모드입니다.",
+    "> 작업에 맞는 에이전트가 있으면 해당 에이전트의 .md 파일을 읽어 지침을 따르세요.",
+    "",
+    `총 ${entries.length}개 에이전트가 설치되어 있습니다.`,
+    "",
+    "| 에이전트 | 설명 | 경로 |",
+    "|----------|------|------|",
+  ];
+
+  for (const [name, srcPath] of entries) {
+    const agentName = name.replace(/\.md$/i, "");
+    const desc = extractAgentDescription(srcPath);
+    lines.push(`| ${agentName} | ${desc} | agents/${name} |`);
+  }
+
+  lines.push("");
+  lines.push(`_생성 시각: ${new Date().toISOString()}_`);
+  lines.push("");
+
+  const catalogPath = path.join(destHome, "AGENTS-CATALOG.md");
+  ensureDir(path.dirname(catalogPath));
+  fs.writeFileSync(catalogPath, lines.join("\n"), "utf8");
+  return catalogPath;
+}
+
 function run() {
   if (!fs.existsSync(skillsSrcDir)) {
     console.error(`[error] skills directory not found: ${skillsSrcDir}`);
@@ -339,13 +406,16 @@ function run() {
   if (mode === "unlink") {
     safeRm(manifestPath);
     safeRm(path.join(geminiHome, "SKILLS-CATALOG.md"));
+    safeRm(path.join(geminiHome, "AGENTS-CATALOG.md"));
   } else {
     writeManifest(mode, skillNames, agentNames, hookNames);
     // 에이전트 사용을 위해 enableAgents 설정
     ensureAgentsEnabled();
-    // 스킬 카탈로그 생성
-    const catalogPath = generateSkillsCatalog(geminiHome, skillNames);
-    console.log(`[gemini-sync] catalog=${catalogPath}`);
+    // 스킬 + 에이전트 카탈로그 생성
+    const skillsCatalog = generateSkillsCatalog(geminiHome, skillNames);
+    const agentsCatalog = generateAgentsCatalog(geminiHome, agentFiles);
+    console.log(`[gemini-sync] skills_catalog=${skillsCatalog}`);
+    console.log(`[gemini-sync] agents_catalog=${agentsCatalog}`);
   }
 
   console.log(`[gemini-sync] mode=${mode}`);
