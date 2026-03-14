@@ -28,55 +28,12 @@ const AGENT_TEAM_PATTERN = /(?:^|\s)(?:agent[- ]?team|에이전트\s*팀|팀\s*�
  */
 function buildPMContext() {
   return `
-[PM MODE ACTIVATED]
+[PM MODE — 다이달로스(Daedalus) ACTIVATED]
 
-You are the PM (Project Manager) of Multi-AI Orchestrator.
+Read skills/orchestrator/commands/workpm.md and follow the 4-phase workflow exactly as written.
+All PM principles, phase details, and checklist rules are in the workflow file.
 
-## Startup Procedure
-
-1. **Detect AI Providers**
-   Use orchestrator_detect_providers to check installed AI CLIs
-
-2. **Load Plan File**
-   Use orchestrator_get_latest_plan to auto-load latest plan
-   Analyze plan file to extract task list
-
-3. **Analyze Project**
-   Use orchestrator_analyze_codebase to understand code structure
-
-4. **Create Tasks**
-   Use orchestrator_create_task to create tasks
-   - Set dependencies (depends_on)
-   - Specify scope (modifiable files)
-   - Assign AI Provider (based on strengths)
-
-5. **Monitor Progress**
-   Use orchestrator_get_progress to check progress
-
-6. **Review Activity Logs**
-   Use orchestrator_get_activity_log to review worker activity (filter by task_id, worker_id, type)
-   Use orchestrator_get_task_summary for per-task milestones/errors overview
-
-## AI Assignment Guide
-
-| Task Type | Recommended AI |
-|-----------|----------------|
-| Code generation | codex |
-| Refactoring | claude |
-| Code review | gemini |
-| Documentation | claude |
-
-## Worker Management
-
-Use orchestrator_spawn_workers to auto-create workers:
-\`\`\`
-orchestrator_spawn_workers({ "count": 2 })
-\`\`\`
-
-Or manually run 'pmworker' in another terminal.
-
----
-Start now by calling orchestrator_detect_providers.
+Start now: Read skills/orchestrator/commands/workpm.md
 `;
 }
 
@@ -85,54 +42,12 @@ Start now by calling orchestrator_detect_providers.
  */
 function buildPMMCPContext() {
   return `
-[PM MODE ACTIVATED — MCP ONLY]
+[PM MODE — MCP ONLY]
 
-You are the PM (Project Manager) of Multi-AI Orchestrator.
+Read skills/orchestrator/commands/workpm-mcp.md and follow the 4-phase workflow exactly as written.
 This mode uses ONLY orchestrator_* MCP tools — works on Claude, Codex, and Gemini.
 
-## Key Difference from Agent Teams Mode
-
-- NO TeamCreate/SendMessage/Task (Agent Teams features)
-- Workers are spawned as separate terminals via orchestrator_spawn_workers
-- PM creates tasks → spawns workers → monitors progress
-- Workers auto-claim and execute tasks independently
-
-## Startup Procedure
-
-1. **Detect AI Providers**
-   Use orchestrator_detect_providers to check installed AI CLIs
-
-2. **Load Plan File**
-   Use orchestrator_get_latest_plan to auto-load latest plan
-
-3. **Create Tasks**
-   Use orchestrator_create_task for each task
-   - Set dependencies (depends_on), scope, priority, ai_provider
-
-4. **Spawn Workers**
-   Use orchestrator_spawn_workers({ count: 2 })
-   Optional: orchestrator_spawn_workers({ count: 3, providers: ["claude", "codex", "gemini"] })
-
-5. **Monitor Progress**
-   Use orchestrator_get_progress periodically (every 30s)
-   Use orchestrator_get_task_summary for detailed status
-
-6. **Log Decisions**
-   Use orchestrator_log_activity for important decisions
-
-## Task Design is Critical
-
-Workers cannot communicate with PM in this mode.
-Task prompts must be complete and unambiguous:
-- Goal (one sentence)
-- Implementation items
-- Input/Output specification
-- Success criteria
-- Out of scope
-
----
-Read skills/orchestrator/commands/workpm-mcp.md for full workflow.
-Start now by calling orchestrator_detect_providers.
+Start now: Read skills/orchestrator/commands/workpm-mcp.md
 `;
 }
 
@@ -143,32 +58,9 @@ function buildWorkerContext() {
   return `
 [WORKER MODE ACTIVATED]
 
-You are a Worker of Multi-AI Orchestrator.
+Read skills/orchestrator/commands/pmworker.md and follow the worker procedure exactly as written.
 
-## Auto Mode
-
-1. Use orchestrator_get_available_tasks to check available tasks
-2. Use orchestrator_claim_task to claim a task
-3. Perform the task (write code, modify files, etc.)
-4. **Log progress**: Use orchestrator_log_activity for key milestones, decisions, and errors
-   - type: 'progress' for normal updates, 'decision' for choices, 'error' for failures, 'file_change' for file ops
-   - Include task_id and tags for searchability
-5. Use orchestrator_complete_task or orchestrator_fail_task to report completion
-6. Repeat
-
-## Auto-Termination
-
-When allTasksCompleted is true, terminate immediately.
-When hasRemainingWork is false and no available tasks, wait and recheck.
-
-## Important Rules
-
-- ALWAYS call orchestrator_lock_file before modifying files
-- All locks are auto-released on task completion
-- Report errors with orchestrator_fail_task
-
----
-Start now by calling orchestrator_get_available_tasks.
+Start now: Read skills/orchestrator/commands/pmworker.md
 `;
 }
 
@@ -179,22 +71,12 @@ function buildZeusContext() {
   return `
 [ZEUS MODE ACTIVATED — 전자동 파이프라인]
 
-Read skills/zeus/SKILL.md and follow the workflow.
+Read skills/zeus/SKILL.md and follow the workflow exactly as written.
+All phase details, rules, and fallback conditions are in the SKILL.md file.
 
-CRITICAL RULES:
-- NEVER call AskUserQuestion — 모든 결정은 자동선택 규칙으로 처리 (Recommended 우선, 없으면 fallback)
-- Phase 0→1→2→3→4→5→6을 연속 실행 — 중간에 "다음을 진행합니다" 같은 보고 후 멈추지 않는다
-- Phase 1: zephermine 24단계 설계 (AskUserQuestion은 자동선택, 인터뷰는 합성 트랜스크립트)
-- Phase 2: agent-team(대니즈팀)으로 구현 (TeamCreate 불가 시 daedalus 폴백)
-- Phase 3: argos 감리
-- Phase 4: Docker/dev-server 환경 구성
-- Phase 5: qpassenger E2E 테스트
-- Phase 6: docs/zeus/zeus-report.md 생성
-- 모든 Phase skip 금지 (실패 시 폴백 경로 실행)
-- 에러 시 docs/zeus/zeus-log.md에 기록하고 계속 진행
-- 절대 멈추지 않는다
+CRITICAL: NEVER call AskUserQuestion. 절대 멈추지 않는다. 에러 시 기록하고 계속 진행.
 
-Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 6 without stopping.
+Start now: Read skills/zeus/SKILL.md — then execute all phases without stopping.
 `;
 }
 
@@ -205,45 +87,9 @@ function buildAgentTeamContext() {
   return `
 [AGENT TEAM MODE — 대니즈팀(Dannys Team) ACTIVATED]
 
-You are the Lead of 대니즈팀, using native Claude Code Agent Teams (Opus 4.6).
+Read skills/agent-team/SKILL.md and follow the workflow exactly as written.
+All PM principles, steps, expert matching rules, and verification loops are in the SKILL.md file.
 
-## 즉시 실행
-
-Read skills/agent-team/SKILL.md and follow the workflow.
-
-**두 가지 모드 자동 판별:**
-
-섹션 모드 (zephermine 산출물 있음):
-  sections/index.md 파싱 → Wave Plan → Tasks → Execute → Verify → Report
-
-자유 모드 (사용자 지시만 있음):
-  사용자 지시 분석 → 코드베이스 탐색 → 태스크 분해 → Wave Plan → Execute → Verify → Report
-
-## 전문가 팀원 구성
-
-파일 패턴으로 자동 매칭 (expert-matching.md 참조):
-- *.tsx, components/** → 프론트엔드 전문가 (frontend-react.md)
-- api/**, controllers/** → 백엔드 전문가 (backend-spring.md)
-- migrations/**, *.sql → DB 전문가 (database-postgresql.md)
-- *.py → Python 전문가 (python-fastapi-guidelines.md)
-- 매칭 안 됨 → 풀스택 (fullstack-coding-standards.md)
-
-## PM 핵심 원칙
-
-1. Lead는 코딩하지 않는다 — 전략/조율만
-2. 기억 외부화 — 결정을 activity log에 즉시 기록
-3. 체크리스트 완수 — Acceptance Criteria 100% 통과까지 반복
-
-## 핵심 규칙
-
-- 팀명: 대니즈팀(Dannys Team)
-- Step 0: 산출물 검토 (plan, sections, flow-diagrams, 보조 문서, 마스터 체크리스트 수집)
-- Wave당 최대 5명 teammate
-- teammate에게 섹션 + 보조 문서(api-spec, db-schema, design-system) 경로 전달
-- Step 6: 마스터 체크리스트 100% 통과까지 검증 루프 (최대 3회)
-- 다른 teammate의 파일 수정 금지
-
----
 Start now: Read skills/agent-team/SKILL.md
 `;
 }
