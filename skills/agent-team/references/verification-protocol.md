@@ -57,7 +57,38 @@ git diff --name-only HEAD~{N}  # 변경된 파일 목록
 
 각 변경 파일이 어떤 섹션의 소유인지 매핑하여 교차 수정 감지.
 
-### 4단계: 빌드/타입 체크 (선택적)
+### 4단계: 도면 노드 검증 (flow-diagrams 존재 시)
+
+`<planning_dir>/flow-diagrams/` 디렉토리가 존재하면 실행:
+
+각 섹션의 담당 도면 노드가 실제 코드에 구현되었는지 확인:
+
+```
+for each section with diagram:
+  1. Read flow-diagrams/{diagram}.mmd
+  2. 담당 노드 목록 (section-parser에서 추출)과 코드 대조
+  3. 각 노드에 대응하는 함수/메서드/조건문이 코드에 존재하는지 Grep
+  4. 분기(decision) 노드의 모든 경로(Yes/No/에러)가 구현되었는지 확인
+```
+
+**검증 방법:**
+- 다이어그램 노드 ID (예: `FindUser`, `CheckPwd`)를 코드에서 Grep
+- 분기 노드의 Yes/No 경로가 if/else 또는 switch로 구현되었는지 확인
+- 에러 경로 노드 (예: `Error401`)에 대응하는 예외 처리가 있는지 확인
+
+**결과 형식:**
+```
+📐 도면 검증: section-02-auth (user-auth.mmd)
+  ✅ Validate — src/auth/login.ts:15
+  ✅ FindUser — src/auth/auth.service.ts:32
+  ✅ CheckPwd — src/auth/auth.service.ts:38
+  ❌ GenRefresh — 미구현
+  매칭률: 75% (3/4)
+```
+
+**실패 시:** 누락된 노드를 재시도 Task의 description에 포함.
+
+### 5단계: 빌드/타입 체크 (선택적)
 
 프로젝트에 빌드 도구가 있는 경우:
 

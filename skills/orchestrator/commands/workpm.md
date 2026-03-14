@@ -14,6 +14,7 @@ allowed-tools:
   - orchestrator_log_activity
   - orchestrator_get_activity_log
   - orchestrator_get_task_summary
+  - orchestrator_check_worker_logs
   - Read
   - Glob
   - Grep
@@ -174,7 +175,7 @@ Task({
 
 ---
 
-## 3단계 워크플로우
+## 4단계 워크플로우
 
 ### Phase 1: 리서치 & 제안
 
@@ -206,10 +207,10 @@ Task({
 6. AskUserQuestion으로 사용자에게 제안서 제시
 7. 승인 결과를 activity log에 decision으로 기록
 
-### Phase 1.5: 프로세스 도면 확보 (설계도)
+### Phase 2: 프로세스 도면 확보 (설계도)
 
 > **PM은 설계도 없이 공사하지 않는다.**
-> 이 도면이 Phase 2의 **공정 기준선**이 된다.
+> 이 도면이 Phase 3의 **공정 기준선**이 된다.
 
 ```
 사용자 승인 완료
@@ -236,7 +237,7 @@ Task({
      })
 ```
 
-**Phase 1.5 리더 체크리스트:**
+**Phase 2 리더 체크리스트:**
 1. `<planning_dir>/flow-diagrams/index.md` 존재 여부 확인
 2. **도면 있음**: 제안서와 비교하여 누락/불일치 노드가 있는지 검토
 3. **도면 없음**: Phase 1 팀원 중 1명에게 생성 지시 (SendMessage)
@@ -246,7 +247,7 @@ Task({
 6. 도면 확정 → activity log milestone 기록
 7. Phase 1 팀원 전원 해고 (SendMessage shutdown_request)
 
-### Phase 2: 구현 & 검증
+### Phase 3: 구현 & 검증
 
 ```
 리더: 새 팀원 4명 투입 (구현 담당, 새 이름)
@@ -263,13 +264,13 @@ Task({
   ↓
 리더: 자재검사 (코드리뷰) 실행
   → 리뷰 전문가(code-reviewer) 팀원을 투입하여 구현 결과물 검수
-  ├─ ✅ 통과 → Phase 2.5로 진행
+  ├─ ✅ 통과 → Phase 4로 진행
   └─ ❌ 미통과 → 해당 구현 팀원에게 수정 지시 → 재리뷰
   ↓
-리더: Phase 2.5 실행 (공정 점검)
+리더: Phase 4 실행 (공정 점검)
 ```
 
-**Phase 2 리더 체크리스트:**
+**Phase 3 리더 체크리스트:**
 1. 새 팀원 4명 spawn (구현 전문, 새 이름 필수)
 2. 승인된 제안서 + **도면 경로** + 태스크 배분 (SendMessage)
 3. 태스크별 담당 파일 영역 명시 (충돌 방지)
@@ -279,9 +280,9 @@ Task({
    - `skills/code-reviewer/SKILL.md`를 참조하여 구현 결과물 검수
    - 500줄 제한, 보안, 타입, SRP, DRY 체크
    - 미통과 시 → 구현 팀원에게 수정 지시 → 수정 후 재리뷰 (최대 2회)
-7. 자재검사 통과 → Phase 2.5 공정 점검 실행
+7. 자재검사 통과 → Phase 4 공정 점검 실행
 
-### Phase 2.5: 공정 점검 (준공 검사)
+### Phase 4: 공정 점검 (준공 검사)
 
 > **공사가 설계도대로 진행되었는지 확인한다.**
 > 다이어그램의 모든 노드/분기가 실제 코드에 구현되었는지 검증한다.
@@ -306,7 +307,7 @@ Task({
 팀원 전원 해고 + TeamDelete
 ```
 
-**Phase 2.5 리더 체크리스트:**
+**Phase 4 리더 체크리스트:**
 1. 구현 팀원 중 1명 또는 리뷰 전문가(`code-reviewer`)에게 검증 위임
 2. `skills/flow-verifier/SKILL.md` verify 모드 참조 지시
 3. 검증 리포트 수신 → 판정 확인
@@ -335,9 +336,9 @@ Task({
 
 4. **Phase 1 실행** → 리서치 & 제안
 5. **사용자 승인 대기** → AskUserQuestion
-6. **Phase 1.5 실행** → 프로세스 도면 작성 (설계도)
-7. **Phase 2 실행** → 구현 (도면 기반)
-8. **Phase 2.5 실행** → 공정 점검 (준공 검사)
+6. **Phase 2 실행** → 프로세스 도면 확보 (설계도)
+7. **Phase 3 실행** → 구현 (도면 기반)
+8. **Phase 4 실행** → 공정 점검 (준공 검사)
 9. **최종 보고** → 사용자에게 결과 전달 (검증 결과 포함)
 
 ---
@@ -403,7 +404,7 @@ zephermine(`/zephermine`)로 설계한 프로젝트는 planning 디렉토리에 
 | zephermine 파일 | PM 활용법 |
 |-------------|-----------|
 | `plan.md` | 전체 작업 분해의 기준 (필수 읽기) |
-| `flow-diagrams/index.md` | **공정 도면 인덱스 — Phase 1.5/2.5의 기준선** |
+| `flow-diagrams/index.md` | **공정 도면 인덱스 — Phase 2/4의 기준선** |
 | `flow-diagrams/*.mmd` | **프로세스별 공정 도면 — 노드별 태스크 배분 근거** |
 | `sections/index.md` | 섹션 간 의존성 → `depends_on` 설정 |
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
@@ -416,14 +417,14 @@ zephermine(`/zephermine`)로 설계한 프로젝트는 planning 디렉토리에 
 ```
 zephermine이 그린 도면 (flow-diagrams/*.mmd)
   ↓
-Phase 1.5: PM이 도면 확인
+Phase 2: PM이 도면 확인
   ├─ 도면이 있으면 → 그대로 사용 (추가/수정 여부만 판단)
   └─ 도면이 없으면 → 팀원에게 새로 생성 위임
   ↓
 Phase 2: 각 Worker에게 담당 도면 노드 배분
   → "flow-diagrams/user-auth.mmd의 FindUser~CheckPwd 노드를 구현하라"
   ↓
-Phase 2.5: 도면 vs 실제 코드 대조 (공정 점검)
+Phase 4: 도면 vs 실제 코드 대조 (공정 점검)
 ```
 
 ---

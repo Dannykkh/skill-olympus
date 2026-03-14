@@ -15,6 +15,7 @@ allowed-tools:
   - orchestrator_log_activity
   - orchestrator_get_activity_log
   - orchestrator_get_task_summary
+  - orchestrator_check_worker_logs
   - orchestrator_reset
   - Read
   - Glob
@@ -81,7 +82,7 @@ Worker끼리 대화할 수 없으므로, **태스크 설계가 품질의 90%를 
 
 ---
 
-## 3단계 워크플로우
+## 4단계 워크플로우
 
 ### Phase 1: 리서치 & 제안
 
@@ -114,7 +115,7 @@ PM: 승인 결과를 activity log에 기록
 7. 3가지 제안서 작성 → AskUserQuestion
 8. 승인 결과 기록 (`orchestrator_log_activity`)
 
-### Phase 1.5: 프로세스 도면 확보 (설계도)
+### Phase 2: 프로세스 도면 확보 (설계도)
 
 > **PM은 설계도 없이 공사하지 않는다.**
 > 이 도면이 Phase 2의 **공정 기준선**이 된다.
@@ -149,7 +150,7 @@ PM: 도면 확정 → activity log 기록
      })
 ```
 
-**Phase 1.5 체크리스트:**
+**Phase 2 체크리스트:**
 1. `<planning_dir>/flow-diagrams/index.md` 존재 여부 확인 (Read)
 2. **도면 있음**: 제안서와 비교하여 누락/불일치 노드 검토
 3. **도면 없음**: 생성 태스크 생성 — `skills/flow-verifier/SKILL.md` + `skills/mermaid-diagrams/SKILL.md` 참조 지시
@@ -159,7 +160,7 @@ PM: 도면 확정 → activity log 기록
 7. 분기(if/else)의 모든 경로가 있는지 확인
 8. 도면 확정 → activity log milestone 기록
 
-### Phase 2: 구현 (도면 기반)
+### Phase 3: 구현 (도면 기반)
 
 ```
 PM: 구현 태스크 생성 (orchestrator_create_task × N)
@@ -183,13 +184,13 @@ PM: 전체 완료 확인 → 자재검사 (코드리뷰)
      })
   ↓
 PM: Worker 생성 → 리뷰 실행
-  ├─ ✅ 통과 → Phase 2.5로 진행
+  ├─ ✅ 통과 → Phase 4로 진행
   └─ ❌ 미통과 → 수정 태스크 생성 → 재리뷰 (최대 2회)
   ↓
-PM: Phase 2.5 실행
+PM: Phase 4 실행
 ```
 
-**Phase 2 체크리스트:**
+**Phase 3 체크리스트:**
 1. 승인된 제안서 기반 태스크 분해
 2. `orchestrator_create_task` — prompt에 **도면 경로** 포함, scope, depends_on 설정
 3. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
@@ -199,9 +200,9 @@ PM: Phase 2.5 실행
 7. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
    - `skills/code-reviewer/SKILL.md` 참조 지시
    - 미통과 시 수정 태스크 생성 → 수정 후 재리뷰 (최대 2회)
-8. 자재검사 통과 → Phase 2.5 공정 점검으로 진행
+8. 자재검사 통과 → Phase 4 공정 점검으로 진행
 
-### Phase 2.5: 공정 점검 (준공 검사)
+### Phase 4: 공정 점검 (준공 검사)
 
 > **공사가 설계도대로 진행되었는지 확인한다.**
 > 다이어그램의 모든 노드/분기가 실제 코드에 구현되었는지 검증한다.
@@ -231,7 +232,7 @@ PM: 판정
 PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
 ```
 
-**Phase 2.5 체크리스트:**
+**Phase 4 체크리스트:**
 1. 플로우 검증 태스크 생성 — `skills/flow-verifier/SKILL.md` verify 모드 참조 지시
 2. Worker 생성 → 완료 모니터링
 3. 검증 리포트 수신 → 판정 확인
@@ -260,9 +261,9 @@ PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
 
 4. **Phase 1 실행** → 리서치 & 제안
 5. **사용자 승인 대기** → AskUserQuestion
-6. **Phase 1.5 실행** → 프로세스 도면 작성 (설계도)
-7. **Phase 2 실행** → 구현 (도면 기반)
-8. **Phase 2.5 실행** → 공정 점검 (준공 검사)
+6. **Phase 2 실행** → 프로세스 도면 확보 (설계도)
+7. **Phase 3 실행** → 구현 (도면 기반)
+8. **Phase 4 실행** → 공정 점검 (준공 검사)
 9. **최종 보고** → 사용자에게 결과 전달 (검증 결과 포함)
 
 ---
@@ -371,14 +372,34 @@ orchestrator_spawn_workers({ count: 3, providers: ["claude", "codex", "gemini"] 
 
 ### 모니터링 루프
 
-Worker 생성 후 **30초 간격**으로 진행 상황 확인:
+Worker 생성 후 진행 상황 확인:
 ```
-while (미완료_태스크_존재) {
-  orchestrator_get_progress()
-  // 실패 태스크 → 원인 분석 → 재생성 또는 스킵
-  // 전체 완료 → 다음 Phase로
-  wait(30초)
-}
+1. orchestrator_check_worker_logs()  // Worker가 실제로 시작됐는지 확인
+   ├─ status: "error" → 로그 확인 후 재시도 또는 사용자에게 보고
+   ├─ status: "running" → 정상, 진행 모니터링으로
+   └─ status: "spawned" (오래 지속) → CLI 시작 실패 가능성
+
+2. while (미완료_태스크_존재) {
+     orchestrator_get_progress()
+     // 실패 태스크 → 원인 분석 → 재생성 또는 스킵
+     // 전체 완료 → 다음 Phase로
+     wait(30초)
+   }
+```
+
+### Worker 문제 진단
+
+Worker가 시작되지 않으면:
+```
+orchestrator_check_worker_logs()
+→ 에러 로그 확인 (.orchestrator/logs/)
+→ 흔한 원인:
+   - CLI(claude/codex/gemini) 명령을 찾을 수 없음
+   - 프로젝트 경로가 잘못됨
+   - PowerShell 실행 정책 차단
+→ 해결: 사용자에게 별도 터미널에서 수동 Worker 실행 안내
+   cd <project-root>
+   claude -p "pmworker" --dangerously-skip-permissions
 ```
 
 ---
@@ -388,7 +409,7 @@ while (미완료_태스크_존재) {
 | zephermine 파일 | PM 활용법 |
 |-------------|-----------|
 | `plan.md` | 전체 작업 분해의 기준 (필수 읽기) |
-| `flow-diagrams/index.md` | **공정 도면 인덱스 — Phase 1.5/2.5의 기준선** |
+| `flow-diagrams/index.md` | **공정 도면 인덱스 — Phase 2/4의 기준선** |
 | `flow-diagrams/*.mmd` | **프로세스별 공정 도면 — 노드별 태스크 배분 근거** |
 | `sections/index.md` | 섹션 간 의존성 → `depends_on` 설정 |
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
@@ -401,14 +422,14 @@ while (미완료_태스크_존재) {
 ```
 zephermine이 그린 도면 (flow-diagrams/*.mmd)
   ↓
-Phase 1.5: PM이 도면 확인
+Phase 2: PM이 도면 확인
   ├─ 도면이 있으면 → 그대로 사용 (추가/수정 여부만 판단)
   └─ 도면이 없으면 → Worker 태스크로 새로 생성
   ↓
-Phase 2: 태스크 prompt에 담당 도면 노드 명시
+Phase 3: 태스크 prompt에 담당 도면 노드 명시
   → "flow-diagrams/user-auth.mmd의 FindUser~CheckPwd 노드를 구현하라"
   ↓
-Phase 2.5: 도면 vs 실제 코드 대조 (공정 점검)
+Phase 4: 도면 vs 실제 코드 대조 (공정 점검)
 ```
 
 ---

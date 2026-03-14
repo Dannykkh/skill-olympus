@@ -28,8 +28,8 @@ auto_apply: false
 ## 파이프라인 위치
 
 ```
-/zephermine (설계사)  →  /daedalus (현장감독)  →  /argos (감리)  →  /qpassenger (실사)
-     도면 생성               시공 관리            준공검사          런타임 테스트
+/zephermine (설계사)  →  /agent-team (대니즈팀)  →  /argos (감리)  →  /qpassenger (실사)
+     도면 생성               섹션 기반 구현           준공검사          런타임 테스트
 ```
 
 ## CRITICAL: First Actions
@@ -230,7 +230,8 @@ AskUserQuestion:
 |------|------|------|
 | zephermine | 설계 산출물 생성 | 검증 대상 (spec, api-spec, qa-scenarios, flow-diagrams) |
 | flow-verifier | 프로세스 도면 검증 | Phase 5에서 활용 |
-| daedalus (workpm) / agent-team | 구현 수행 | 검증 전 선행 단계 |
+| agent-team (대니즈팀) | 구현 수행 | 검증 전 선행 단계 (젭마인 산출물 기반) |
+| daedalus (다이달로스) | 구현 수행 | 검증 전 선행 단계 (젭마인 없이 직접 진행) |
 | qpassenger | Playwright 실사 테스트 | 검증 후 후행 단계 |
 | code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할, 시공 중 자동 실행 |
 

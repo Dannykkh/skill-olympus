@@ -378,6 +378,16 @@ const TOOLS = [
             },
             required: ['task_id']
         }
+    },
+    {
+        name: 'orchestrator_check_worker_logs',
+        description: 'Worker spawn 로그를 확인합니다. Worker가 실제로 시작되었는지, 에러가 발생했는지 진단합니다. (PM 전용)',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                worker_id: { type: 'string', description: '특정 Worker ID의 로그만 확인 (미지정 시 전체)' }
+            }
+        }
     }
 ];
 // ============================================================================
@@ -489,6 +499,11 @@ async function spawnWorkers(count, autoTerminate, providers) {
     const scriptDir = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..', 'scripts');
     const scriptName = isWindows ? 'spawn-worker.ps1' : 'spawn-worker.sh';
     const scriptPath = path.join(scriptDir, scriptName);
+    // 에러 로그 디렉토리
+    const logDir = path.join(PROJECT_ROOT, '.orchestrator', 'logs');
+    if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+    }
     // 스크립트 존재 확인
     if (!fs.existsSync(scriptPath)) {
         return {
@@ -503,23 +518,41 @@ async function spawnWorkers(count, autoTerminate, providers) {
     for (let i = 0; i < count; i++) {
         const provider = providers && providers[i] ? providers[i] : 'claude';
         const workerId = `${provider}-worker-${Date.now()}-${i + 1}`;
+        const logFile = path.join(logDir, `${workerId}.log`);
         try {
             if (isWindows) {
                 // Windows: PowerShell로 새 터미널에서 스크립트 실행
-                const psCommand = `Start-Process powershell -ArgumentList '-ExecutionPolicy', 'Bypass', '-File', '${scriptPath.replace(/\\/g, '\\\\')}', '-WorkerId', '${workerId}', '-ProjectRoot', '${PROJECT_ROOT.replace(/\\/g, '\\\\')}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}', '-AIProvider', '${provider}'`;
-                spawn('powershell', ['-Command', psCommand], {
+                // *> 로 모든 출력(stdout+stderr)을 로그 파일에도 기록 (Tee-Object)
+                const escapedScript = scriptPath.replace(/\\/g, '\\\\');
+                const escapedRoot = PROJECT_ROOT.replace(/\\/g, '\\\\');
+                const escapedLog = logFile.replace(/\\/g, '\\\\');
+                const psCommand = `Start-Process powershell -ArgumentList '-ExecutionPolicy', 'Bypass', '-File', '${escapedScript}', '-WorkerId', '${workerId}', '-ProjectRoot', '${escapedRoot}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}', '-AIProvider', '${provider}', '-LogFile', '${escapedLog}'`;
+                const child = spawn('powershell', ['-Command', psCommand], {
                     detached: true,
-                    stdio: 'ignore'
-                }).unref();
+                    stdio: ['ignore', 'pipe', 'pipe']
+                });
+                // stderr 캡처 — Start-Process 자체의 에러 감지
+                let stderrData = '';
+                child.stderr?.on('data', (data) => { stderrData += data.toString(); });
+                child.on('error', (err) => {
+                    const msg = `Spawn process error for ${workerId}: ${err.message}`;
+                    errors.push(msg);
+                    fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`);
+                });
+                child.on('exit', (code) => {
+                    if (code !== 0) {
+                        const msg = `Spawn launcher exited with code ${code} for ${workerId}. stderr: ${stderrData}`;
+                        fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`);
+                    }
+                });
+                child.unref();
             }
             else {
                 // Mac/Linux: 새 터미널에서 스크립트 실행
-                // macOS: Terminal.app 또는 iTerm2
-                // Linux: gnome-terminal, xterm 등
                 const isMac = process.platform === 'darwin';
                 if (isMac) {
                     // macOS: osascript로 Terminal.app에서 실행
-                    const appleScript = `tell application "Terminal" to do script "bash '${scriptPath}' '${workerId}' '${PROJECT_ROOT}' '${autoTerminate ? '1' : '0'}' '${provider}'"`;
+                    const appleScript = `tell application "Terminal" to do script "bash '${scriptPath}' '${workerId}' '${PROJECT_ROOT}' '${autoTerminate ? '1' : '0'}' '${provider}' '${logFile}'"`;
                     spawn('osascript', ['-e', appleScript], {
                         detached: true,
                         stdio: 'ignore'
@@ -527,10 +560,11 @@ async function spawnWorkers(count, autoTerminate, providers) {
                 }
                 else {
                     // Linux: 다양한 터미널 에뮬레이터 시도
+                    const termArgs = [workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider, logFile];
                     const terminals = [
-                        { cmd: 'gnome-terminal', args: ['--', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider] },
-                        { cmd: 'konsole', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider] },
-                        { cmd: 'xterm', args: ['-e', 'bash', scriptPath, workerId, PROJECT_ROOT, autoTerminate ? '1' : '0', provider] }
+                        { cmd: 'gnome-terminal', args: ['--', 'bash', scriptPath, ...termArgs] },
+                        { cmd: 'konsole', args: ['-e', 'bash', scriptPath, ...termArgs] },
+                        { cmd: 'xterm', args: ['-e', 'bash', scriptPath, ...termArgs] }
                     ];
                     let spawned = false;
                     for (const term of terminals) {
@@ -554,19 +588,43 @@ async function spawnWorkers(count, autoTerminate, providers) {
                 }
             }
             spawnedWorkers.push({ id: workerId, status: 'spawned', provider });
+            // 로그 파일에 시작 기록
+            fs.appendFileSync(logFile, `[${new Date().toISOString()}] Worker ${workerId} spawn initiated (provider: ${provider})\n`);
             // 터미널 간 약간의 딜레이
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             errors.push(`Failed to spawn worker ${workerId}: ${errorMsg}`);
+            fs.appendFileSync(logFile, `[${new Date().toISOString()}] FATAL: ${errorMsg}\n`);
         }
     }
+    // Health check: 2초 후 로그 파일에서 에러 확인
+    if (spawnedWorkers.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        for (const w of spawnedWorkers) {
+            const wLog = path.join(logDir, `${w.id}.log`);
+            if (fs.existsSync(wLog)) {
+                const logContent = fs.readFileSync(wLog, 'utf-8');
+                if (logContent.includes('FATAL') || logContent.includes('ERROR')) {
+                    w.status = 'error';
+                    errors.push(`Worker ${w.id} failed to start. Check log: ${wLog}`);
+                }
+                else if (logContent.includes('CLI_STARTED')) {
+                    w.status = 'running';
+                }
+            }
+        }
+    }
+    const runningCount = spawnedWorkers.filter(w => w.status === 'running').length;
+    const errorCount = spawnedWorkers.filter(w => w.status === 'error').length;
     return {
-        success: spawnedWorkers.length > 0,
-        message: spawnedWorkers.length === count
-            ? `Successfully spawned ${count} worker(s)`
-            : `Spawned ${spawnedWorkers.length}/${count} worker(s)`,
+        success: spawnedWorkers.length > 0 && errorCount < spawnedWorkers.length,
+        message: errorCount > 0
+            ? `Spawned ${spawnedWorkers.length} worker(s), but ${errorCount} failed to start. Check logs: ${logDir}`
+            : runningCount > 0
+                ? `Successfully started ${runningCount}/${count} worker(s)`
+                : `Spawned ${spawnedWorkers.length}/${count} worker(s) — waiting for CLI startup`,
         spawnedWorkers,
         errors: errors.length > 0 ? errors : undefined
     };
@@ -751,6 +809,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             case 'orchestrator_get_task_summary': {
                 const parsed = GetTaskActivitySummarySchema.parse(args);
                 result = stateManager.getTaskActivitySummary(parsed.task_id);
+                break;
+            }
+            case 'orchestrator_check_worker_logs': {
+                const logDir = path.join(PROJECT_ROOT, '.orchestrator', 'logs');
+                const workerId = args.worker_id;
+                if (!fs.existsSync(logDir)) {
+                    result = { error: 'No log directory found. Workers may not have been spawned yet.', logDir };
+                    break;
+                }
+                const logFiles = fs.readdirSync(logDir).filter(f => f.endsWith('.log'));
+                if (logFiles.length === 0) {
+                    result = { error: 'No worker log files found.', logDir };
+                    break;
+                }
+                const workerLogs = [];
+                for (const file of logFiles) {
+                    const wid = file.replace('.log', '');
+                    if (workerId && wid !== workerId)
+                        continue;
+                    const logPath = path.join(logDir, file);
+                    const content = fs.readFileSync(logPath, 'utf-8');
+                    const lines = content.split('\n').filter(l => l.trim());
+                    let status = 'unknown';
+                    if (lines.some(l => l.includes('CLI_STARTED')))
+                        status = 'running';
+                    else if (lines.some(l => l.includes('ERROR') || l.includes('FATAL')))
+                        status = 'error';
+                    else if (lines.some(l => l.includes('spawn initiated')))
+                        status = 'spawned';
+                    if (lines.some(l => l.includes('finished successfully')))
+                        status = 'completed';
+                    workerLogs.push({
+                        workerId: wid,
+                        status,
+                        lastLines: lines.slice(-10),
+                        logFile: logPath
+                    });
+                }
+                const summary = {
+                    total: workerLogs.length,
+                    running: workerLogs.filter(w => w.status === 'running').length,
+                    error: workerLogs.filter(w => w.status === 'error').length,
+                    completed: workerLogs.filter(w => w.status === 'completed').length,
+                    spawned: workerLogs.filter(w => w.status === 'spawned').length,
+                };
+                result = { summary, workers: workerLogs, logDir };
                 break;
             }
             default:
