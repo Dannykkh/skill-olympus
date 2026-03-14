@@ -245,7 +245,7 @@ AskUserQuestion 대신 합성 인터뷰를 자동 생성:
 Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
     ▼
 TeamCreate 도구 사용 가능?
-  ├── ✅ → 대니즈팀(agent-team) — 섹션 기반 병렬 구현
+  ├── ✅ → 대니즈팀(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
   └── ❌ → 다이달로스(daedalus) — PM이 직접 리서치 없이 구현 관리
 ```
 
@@ -253,7 +253,10 @@ TeamCreate 도구 사용 가능?
 
 ### 경로 A: 대니즈팀 (TeamCreate 사용 가능)
 
-`skills/agent-team/SKILL.md`를 읽고 Step 0~8을 실행합니다.
+- Claude/기타 TeamCreate 환경: `skills/agent-team/SKILL.md`
+- Codex 환경: `skills/agent-team-codex/SKILL.md`
+
+현재 CLI에 맞는 스킬을 읽고 Step 0~8을 실행합니다.
 
 ```
 Step 0: 산출물 검토 (PM 게이트) — 마스터 체크리스트 수집
@@ -527,7 +530,8 @@ Phase 6을 시작하기 전에 **반드시** 아래 증거를 확인하세요:
 | `skills/zeus/references/auto-interview-generator.md` | 합성 인터뷰 생성 |
 | `skills/zeus/references/phase-transitions.md` | 상태 전환/재개 규칙 |
 | `skills/zephermine/SKILL.md` | Phase 1에서 호출 (설계) |
-| `skills/agent-team/SKILL.md` | Phase 2 경로 A (대니즈팀 — TeamCreate 가능 시) |
+| `skills/agent-team/SKILL.md` | Phase 2 경로 A (Claude TeamCreate 환경) |
+| `skills/agent-team-codex/SKILL.md` | Phase 2 경로 A (Codex multi_agent 환경) |
 | `skills/orchestrator/commands/workpm.md` | Phase 2 경로 B (다이달로스 — TeamCreate 불가 시) |
 | `skills/docker-deploy/SKILL.md` | Phase 4에서 호출 (Docker 환경 구성) |
 | `skills/qpassenger/SKILL.md` | Phase 5에서 호출 (테스트) |

@@ -36,25 +36,26 @@ fi
 echo "============================================"
 echo ""
 
-# Claude 폴더 확인
-if [ ! -d "$CLAUDE_DIR" ]; then
-    echo "[오류] Claude Code가 설치되어 있지 않습니다."
-    echo "       $CLAUDE_DIR 폴더를 찾을 수 없습니다."
-    exit 1
-fi
-
 # ============================================
 #   --uninstall 모드: 설정 정리 (MCP, Mnemo, Hooks, Codex, Gemini)
 # ============================================
 if [ "$MODE" = "uninstall" ]; then
     echo "[1/12] settings.json 훅 설정 제거 중..."
-    node "$SCRIPT_DIR/install-hooks-config.js" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/settings.json" --uninstall
-    echo "      완료!"
+    if [ -f "$CLAUDE_DIR/settings.json" ]; then
+        node "$SCRIPT_DIR/install-hooks-config.js" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/settings.json" --uninstall
+        echo "      완료!"
+    else
+        echo "      [경고] Claude settings.json 없음, 건너뜀"
+    fi
 
     echo ""
     echo "[2/12] CLAUDE.md 장기기억 규칙 제거 중..."
-    node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md" --uninstall
-    echo "      완료!"
+    if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
+        node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md" --uninstall
+        echo "      완료!"
+    else
+        echo "      [경고] Claude CLAUDE.md 없음, 건너뜀"
+    fi
 
     echo ""
     echo "[3/12] MCP 서버 설정은 별도 관리됩니다."
@@ -65,11 +66,15 @@ if [ "$MODE" = "uninstall" ]; then
     echo "[4/12] Orchestrator MCP 제거 중..."
     SAVE_CLAUDECODE="${CLAUDECODE:-}"
     unset CLAUDECODE
-    claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
+    if command -v claude >/dev/null 2>&1; then
+        claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
+        echo "      완료!"
+    else
+        echo "      [경고] claude CLI 없음, 건너뜀"
+    fi
     if [ -n "$SAVE_CLAUDECODE" ]; then
         export CLAUDECODE="$SAVE_CLAUDECODE"
     fi
-    echo "      완료!"
 
     echo ""
     echo "[5/12] Codex-Mnemo 제거 중..."
@@ -235,10 +240,17 @@ echo "  LLM: $LLMS"
 echo "  번들: $BUNDLES"
 echo ""
 
+if [ "$HAS_CLAUDE" = "1" ] && [ ! -d "$CLAUDE_DIR" ]; then
+    echo "[오류] Claude가 선택되었지만 설치되어 있지 않습니다."
+    echo "       $CLAUDE_DIR 폴더를 찾을 수 없습니다."
+    exit 1
+fi
+
 # ============================================
 #   복사 모드: Skills/Agents/Hooks 설치
 # ============================================
 
+if [ "$HAS_CLAUDE" = "1" ]; then
     # Skills 설치 (코어 설치)
     echo "[1/7] Skills 설치 중... (글로벌) [코어]"
     if [ -d "$SCRIPT_DIR/skills" ]; then
@@ -301,6 +313,13 @@ echo ""
     else
         echo "      [건너뜀] 훅 번들 미선택"
     fi
+else
+    echo "[1/7] Claude 글로벌 Skills 설치 건너뜀... (Claude 미선택)"
+    echo ""
+    echo "[2/7] Claude 글로벌 Agents 설치 건너뜀... (Claude 미선택)"
+    echo ""
+    echo "[3/7] Claude 글로벌 Hooks 설치 건너뜀... (Claude 미선택)"
+fi
 
 # CLAUDECODE 환경변수 임시 해제 (claude CLI 중첩 세션 방지)
 SAVE_CLAUDECODE="${CLAUDECODE:-}"

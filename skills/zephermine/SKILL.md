@@ -574,7 +574,7 @@ Implementation options:
 📦 산출물: operation-scenarios.md, qa-scenarios.md, sections/
 
 👉 다음 단계 (선택):
-  /agent-team          → 섹션 기반 병렬 구현 (권장)
+  /agent-team          → 섹션 기반 병렬 구현 (Codex에서는 agent-team-codex로 해석, 권장)
   /chronos             → 자율 반복 구현 루프
   수동 구현             → 직접 코딩
 

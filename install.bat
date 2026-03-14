@@ -39,26 +39,26 @@ if "%MODE%"=="uninstall" (
 echo ============================================
 echo.
 
-REM Check Claude directory exists
-if not exist "%CLAUDE_DIR%" (
-    echo [ERROR] Claude Code is not installed.
-    echo        %CLAUDE_DIR% directory not found.
-    pause
-    exit /b 1
-)
-
 REM ============================================
 REM   --uninstall mode: Clean up settings (MCP, Mnemo, Hooks, Codex, Gemini)
 REM ============================================
 if "%MODE%"=="uninstall" (
     echo [1/12] Removing settings.json hook config...
-    node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%\hooks" "%CLAUDE_DIR%\settings.json" --uninstall
-    echo       Done!
+    if exist "%CLAUDE_DIR%\settings.json" (
+        node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%\hooks" "%CLAUDE_DIR%\settings.json" --uninstall
+        echo       Done!
+    ) else (
+        echo       [WARN] Claude settings.json not found, skipping
+    )
 
     echo.
     echo [2/12] Removing CLAUDE.md long-term memory rules...
-    node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
-    echo       Done!
+    if exist "%CLAUDE_DIR%\CLAUDE.md" (
+        node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
+        echo       Done!
+    ) else (
+        echo       [WARN] Claude CLAUDE.md not found, skipping
+    )
 
     echo.
     echo [3/12] MCP server settings are managed separately.
@@ -69,9 +69,14 @@ if "%MODE%"=="uninstall" (
     echo [4/12] Removing Orchestrator MCP...
     set "SAVE_CLAUDECODE=!CLAUDECODE!"
     set "CLAUDECODE="
-    claude mcp remove orchestrator -s user >nul 2>nul
+    where claude >nul 2>nul
+    if !errorlevel! equ 0 (
+        claude mcp remove orchestrator -s user >nul 2>nul
+        echo       Done!
+    ) else (
+        echo       [WARN] claude CLI not found, skipping
+    )
     set "CLAUDECODE=!SAVE_CLAUDECODE!"
-    echo       Done!
 
     echo.
     echo [5/12] Removing Codex-Mnemo...
@@ -252,9 +257,20 @@ echo   LLM: !LLMS!
 echo   Bundles: !BUNDLES!
 echo.
 
+if "!HAS_CLAUDE!"=="1" (
+    if not exist "%CLAUDE_DIR%" (
+        echo [ERROR] Claude was selected but is not installed.
+        echo        %CLAUDE_DIR% directory not found.
+        pause
+        exit /b 1
+    )
+)
+
 REM ============================================
 REM   Default mode: copy (bundle-based filtering)
 REM ============================================
+
+if "!HAS_CLAUDE!"=="0" goto :skip_claude_assets
 
 REM Clean up broken symlinks/junctions from previous install-link.bat
 node "%SCRIPT_DIR%scripts\safe-copy.js" cleanup "%CLAUDE_DIR%"
@@ -332,6 +348,16 @@ if "!NEED_HOOKS!"=="1" (
 ) else (
     echo       [skipped] hook bundle not selected
 )
+goto :after_claude_assets
+
+:skip_claude_assets
+echo [1/7] Skipping Claude global skills install... (Claude not selected)
+echo.
+echo [2/7] Skipping Claude global agents install... (Claude not selected)
+echo.
+echo [3/7] Skipping Claude global hooks install... (Claude not selected)
+
+:after_claude_assets
 
 REM Temporarily unset CLAUDECODE env var (prevent nested claude CLI session)
 set "SAVE_CLAUDECODE=!CLAUDECODE!"
