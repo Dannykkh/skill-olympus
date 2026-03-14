@@ -9,6 +9,17 @@ This skill guides creation of distinctive, production-grade frontend interfaces 
 
 The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
 
+## Design System First
+
+Before making aesthetic choices, check if the project already has a design system:
+
+1. `design-system.md` (젭마인 산출물) — 디자인 토큰, 색상, 타이포그래피, 톤/무드 정의
+2. `DESIGN.md` (Stitch 산출물) — 디자인 DNA, 토큰, 컴포넌트 규칙
+3. `tailwind.config.*` / `theme.ts` / CSS 변수 — 기존 테마 설정
+
+**있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드를 존중하되, 더 대담하게 표현.
+**없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:
