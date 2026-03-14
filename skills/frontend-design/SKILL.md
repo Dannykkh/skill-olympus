@@ -53,6 +53,30 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
 
+## Design Skills Workflow (디자인 스킬 조합)
+
+```
+설계 단계 ──────────────────────────────────────────────
+  /design-system-starter    → 디자인 토큰, 색상, 폰트, 간격 정의
+  젭마인 Step 8             → design-system.md 자동 생성
+  /stitch-design-md         → Stitch 프로젝트 DESIGN.md 생성
+
+구현 단계 ──────────────────────────────────────────────
+  frontend-design (이 스킬) → auto_apply로 미학 자동 적용
+  /stitch-loop              → Stitch MCP로 멀티페이지 생성
+  /stitch-react             → HTML → React 변환
+
+리뷰 단계 ──────────────────────────────────────────────
+  ui-ux-designer 에이전트   → "이 디자인 괜찮아?" 비평/조언
+  /ui-ux-auditor            → 다크모드, 반응형, 접근성 등 8영역 감사
+  /web-design-guidelines    → Web Interface Guidelines 준수 체크
+```
+
+**조합 예시:**
+1. `/design-system-starter` → design-system.md 생성
+2. 이 스킬(auto_apply)이 design-system.md를 감지 → 토큰 기반 미학 적용
+3. 구현 완료 후 `/ui-ux-auditor` → 8영역 감사로 품질 검증
+
 ## Usage Patterns (3단계 활용법)
 
 ### 1단계: 기본 생성
