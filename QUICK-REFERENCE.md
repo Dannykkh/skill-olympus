@@ -259,7 +259,7 @@ claude plugin install voltagent-qa-sec
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/loop, /chronos) |
-| `skills/seo-audit/` | SEO 감사 — robots.txt, 사이트맵, 메타태그, JSON-LD, 이미지, 링크, 성능 (7영역) |
+| `skills/seo-audit/` | SEO+AEO+GEO 감사 — robots.txt, 사이트맵, 메타태그, JSON-LD, 이미지, 링크, 성능, AI크롤러, 답변엔진, 생성형AI (10영역) |
 | `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
 | `skills/ui-ux-auditor/` | UI/UX 8영역 감사 + 자동 수정 — 다크모드, 반응형, 접근성, 로딩, 폼, 네비, 타이포, 애니메이션 |
 | `skills/video-maker/` | Remotion 기반 React 코드 영상 제작 — 제품 소개, 데모, SNS 숏폼, 데이터 시각화 |
