@@ -183,17 +183,18 @@ Read skills/zeus/SKILL.md and follow the workflow.
 
 CRITICAL RULES:
 - NEVER call AskUserQuestion — 모든 결정은 자동선택 규칙으로 처리 (Recommended 우선, 없으면 fallback)
-- Phase 0→1→2→3→4를 연속 실행 — 중간에 "다음을 진행합니다" 같은 보고 후 멈추지 않는다
-- zephermine SKILL.md를 읽되, AskUserQuestion 지점은 자동선택으로 대체
-- 인터뷰(Step 6)는 합성 트랜스크립트로 자동 생성
-- Planning 완료 → 즉시 workpm으로 구현 시작
-- 구현 완료 → 즉시 qpassenger로 테스트 시작
-- 테스트 완료 → 즉시 docs/zeus/zeus-report.md 생성
-- Planning/Implementation/Testing phase skip 금지 (실패 시 폴백 경로 실행)
+- Phase 0→1→2→3→4→5→6을 연속 실행 — 중간에 "다음을 진행합니다" 같은 보고 후 멈추지 않는다
+- Phase 1: zephermine 24단계 설계 (AskUserQuestion은 자동선택, 인터뷰는 합성 트랜스크립트)
+- Phase 2: agent-team(대니즈팀)으로 구현 (TeamCreate 불가 시 daedalus 폴백)
+- Phase 3: argos 감리
+- Phase 4: Docker/dev-server 환경 구성
+- Phase 5: qpassenger E2E 테스트
+- Phase 6: docs/zeus/zeus-report.md 생성
+- 모든 Phase skip 금지 (실패 시 폴백 경로 실행)
 - 에러 시 docs/zeus/zeus-log.md에 기록하고 계속 진행
 - 절대 멈추지 않는다
 
-Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 4 without stopping.
+Start now: Read skills/zeus/SKILL.md — then execute Phase 0 through Phase 6 without stopping.
 `;
 }
 
@@ -227,12 +228,19 @@ Read skills/agent-team/SKILL.md and follow the workflow.
 - *.py → Python 전문가 (python-fastapi-guidelines.md)
 - 매칭 안 됨 → 풀스택 (fullstack-coding-standards.md)
 
+## PM 핵심 원칙
+
+1. Lead는 코딩하지 않는다 — 전략/조율만
+2. 기억 외부화 — 결정을 activity log에 즉시 기록
+3. 체크리스트 완수 — Acceptance Criteria 100% 통과까지 반복
+
 ## 핵심 규칙
 
 - 팀명: 대니즈팀(Dannys Team)
+- Step 0: 산출물 검토 (plan, sections, flow-diagrams, 보조 문서, 마스터 체크리스트 수집)
 - Wave당 최대 5명 teammate
-- teammate에게 섹션 전체 내용 + 전문가 역할 + 파일 소유권 전달
-- Delegate 모드 권장 (Lead는 조율만, 코드는 teammate가 작성)
+- teammate에게 섹션 + 보조 문서(api-spec, db-schema, design-system) 경로 전달
+- Step 6: 마스터 체크리스트 100% 통과까지 검증 루프 (최대 3회)
 - 다른 teammate의 파일 수정 금지
 
 ---
