@@ -85,7 +85,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 2. 실패 원인을 한 번에 하나씩 재시도
 3. 3회 이상 반복 실패 시 아키텍처 이슈로 분류 후 사용자 보고
 
-### Step 4.5: Activity Log Summary
+### Step 5: Activity Log Summary
 
 통합 전 활동 로그 요약:
 
@@ -94,7 +94,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 3. Orchestrator MCP 사용 시 `orchestrator_get_activity_log`로 JSONL 로그도 확인
 4. 요약을 최종 보고에 포함
 
-### Step 5: 통합 및 검증
+### Step 6: 통합 및 검증
 
 1. 파일 충돌 여부 확인
 2. 필수 테스트 실행

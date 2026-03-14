@@ -65,15 +65,23 @@ QA 문서에서 테스트 케이스 테이블을 추출합니다:
 | TC-002 | 로그인 실패 | invalid@email.com / wrong | 에러 메시지 | P0 |
 ```
 
+### 보충 시나리오 소스
+
+`qa-scenarios.md`의 테스트 케이스가 부족하면 추가 소스를 참조합니다:
+
+1. `operation-scenarios.md` (운영 시나리오) — qa-scenarios의 근거 문서. 메뉴별/업무별 흐름에서 누락된 테스트 케이스를 보충
+2. `api-spec.md` — API 엔드포인트 중 qa-scenarios에 없는 것을 추가
+
 ### 시나리오 없을 때 현장 생성
 
-프로젝트를 분석하여 기본 시나리오를 생성합니다:
+qa-scenarios.md가 전혀 없으면 프로젝트를 분석하여 기본 시나리오를 생성합니다:
 
 ```
-1. 프로젝트 구조 분석 (Glob으로 라우트/API 탐색)
-2. CRUD 엔드포인트 식별
-3. 기능별 정상/에러/엣지 케이스 TC 작성
-4. qa-scenarios.md로 저장
+1. operation-scenarios.md 존재 시 → 업무 시나리오 기반으로 TC 작성 (우선)
+2. 없으면 → 프로젝트 구조 분석 (Glob으로 라우트/API 탐색)
+3. CRUD 엔드포인트 식별
+4. 기능별 정상/에러/엣지 케이스 TC 작성
+5. qa-scenarios.md로 저장
 ```
 
 ---
@@ -369,7 +377,7 @@ IF retry >= max_retries:
 | qa-writer (에이전트) | 테스트 시나리오 작성 | Step 1 입력 |
 | qa-engineer (에이전트) | 품질 판정 기준 | Step 6 판정 |
 | qa-test-planner (스킬) | 테스트 계획 수립 | 선행 스킬 |
-| zephermine (스킬) | qa-scenarios.md 생성 | Step 1 입력 |
+| zephermine (스킬) | qa-scenarios.md + operation-scenarios.md 생성 | Step 1 입력 |
 
 ---
 

@@ -12,9 +12,68 @@ auto_apply: false
 
 # Agent Team — Zephermine 섹션 병렬 실행
 
-> **대니즈팀(Dannys Team)**: Claude와 Codex 모두 네이티브 멀티에이전트를 지원합니다.
+> **대니즈팀(Dannys Team)**: 젭마인 산출물을 받아 체계적으로 구현합니다.
 
 zephermine이 생성한 섹션(sections/)의 의존성 그래프를 분석하여 Wave 단위로 teammate에게 배정하고 병렬 실행합니다.
+
+## 다이달로스 vs 대니즈팀
+
+| 상황 | 사용할 도구 |
+|------|-----------|
+| **젭마인 없이** 바로 구현 시작 | **다이달로스** (`/daedalus`) — 직접 리서치 → 제안 → 구현 |
+| **젭마인 산출물**(sections/) 기반 구현 | **대니즈팀** (`/agent-team`) — 섹션 파싱 → Wave → 구현 |
+
+## Lead(PM) 핵심 원칙
+
+> 다이달로스의 PM 철학을 대니즈팀 Lead에도 적용합니다.
+
+### 1. 작업 외주화 — Lead는 코딩하지 않는다
+
+Lead의 기억 공간이 전체 작전을 기억하는 **유일한 곳**이다.
+코드까지 짜면 기억이 순식간에 꽉 찬다.
+**Lead는 전략만. 코딩/리서치는 전부 teammate에게.**
+
+### 2. 기억 외부화 — 기억력을 믿지 마라
+
+대화가 길어지면 오래된 내용이 자동 압축된다.
+**중요한 결정이 나올 때마다 activity log에 즉시 기록한다.**
+
+### 3. 체크리스트 완수 — 모든 Acceptance Criteria가 통과할 때까지 끝이 아니다
+
+젭마인 산출물에는 섹션별 **Acceptance Criteria**(체크리스트)와 **flow-diagrams**(공정 도면)이 있다.
+teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조하여 **모든 항목이 통과할 때까지 반복**한다.
+한 번 구현하고 끝내는 것은 PM이 아니라 실행자다.
+
+### Lead 운영 규율
+
+**Lead가 직접 하는 것:**
+- 젭마인 산출물 검토 (plan, sections, flow-diagrams, acceptance criteria)
+- teammate 보고 수신 및 체크리스트 대조
+- 의사결정 + activity log 기록
+- teammate 배정/교체
+- 미통과 항목 → teammate에게 재지시
+
+**Lead가 절대 안 하는 것:**
+- ❌ 코드 작성, 파일 수정
+- ❌ 리서치, 코드베이스 탐색
+- ❌ 테스트 실행
+- (teammate에게 시킬 수 있으면 무조건 시킴)
+
+**자기검증 3질문** — Wave 완료 보고 시 반드시 자문:
+1. 가장 어려운 결정이 뭐였나?
+2. Acceptance Criteria 중 위험한 항목은?
+3. 도면과 실제 구현이 일치하는가?
+
+### 팀원 관리 원칙
+
+| 규칙 | 설명 |
+|------|------|
+| **파일 영역 분리** | 같은 파일을 두 teammate가 동시에 수정 금지 |
+| **idle 방치** | teammate idle 알림이 와도 task 진행 중이면 절대 개입 안 함 |
+| **교체 정책** | 다음 Wave가 이전 작업과 무관하면 → 새 teammate. 연장선이면 유지 |
+| **이름 규칙** | 교체 시 같은 이름 재사용 불가 |
+
+---
 
 ## CLI별 실행 모드
 
@@ -61,8 +120,8 @@ teammate 생성 시 이 팀명을 사용하세요.
 
 모드 판별 후 표시:
 ```
-[섹션 모드] 순서: Parse Sections → Wave Plan → Tasks → Execute → Verify → Report
-[자유 모드] 순서: Analyze → Wave Plan → Tasks → Execute → Verify → Report
+[섹션 모드] 순서: 산출물 검토 → Parse → Wave Plan → Tasks → Execute → Review → Verify(반복) → Report
+[자유 모드] 순서: Analyze → Wave Plan → Tasks → Execute → Review → Verify(반복) → Report
 ```
 
 ### 2. Determine Mode
@@ -109,6 +168,67 @@ teammate 생성 시 이 팀명을 사용하세요.
 ---
 
 ## Workflow
+
+### Step 0: 산출물 검토 (PM 게이트)
+
+> **Lead는 설계 도면을 확인하지 않고 공사를 시작하지 않는다.**
+
+젭마인 산출물을 PM 관점에서 검토합니다. teammate에게 넘기기 전에 Lead가 직접 확인.
+
+**필수 확인 항목 (planning_dir 기준):**
+
+1. **plan.md** 읽기 — 전체 구현 방향 파악
+2. **sections/index.md** — SECTION_MANIFEST + 의존성 그래프 확인
+3. **flow-diagrams/** — 공정 도면 존재 여부 확인
+   - ✅ 있으면 → `flow-diagrams/index.md` 읽어서 섹션↔도면 매핑 확인
+   - ❌ 없으면 → 사용자에게 경고: "젭마인 Step 16에서 도면이 생성되지 않았습니다. 도면 없이 진행하시겠습니까?"
+4. **보조 문서 존재 확인** — 있으면 teammate에게 전달할 레퍼런스로 등록:
+   - `api-spec.md` — API 엔드포인트 계약서 → API/백엔드 섹션 teammate에게 전달
+   - `db-schema.md` — ERD + DDL → 데이터베이스 섹션 teammate에게 전달
+   - `design-system.md` — 디자인 토큰/규칙 → 프론트엔드 섹션 teammate에게 전달
+   - `spec.md` — 요구사항 원본 → 모호한 부분 참조용으로 Lead가 보유
+   - `operation-scenarios.md` — 운영 시나리오 → 통합/E2E 섹션 teammate에게 전달
+   - `qa-scenarios.md` — 테스트 케이스 → 테스트 작성 시 teammate에게 전달
+5. **각 section-NN-*.md의 Acceptance Criteria** — 전체 체크리스트 수집
+   - 모든 섹션의 Acceptance Criteria를 하나의 마스터 체크리스트로 통합
+   - 이 체크리스트가 **최종 완료 기준**이 됨
+
+**보조 문서 → teammate 매핑:**
+
+| 보조 문서 | 전달 대상 | 전달 방법 |
+|----------|----------|----------|
+| `api-spec.md` | API/백엔드 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
+| `db-schema.md` | 데이터베이스 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
+| `design-system.md` | 프론트엔드 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
+| `operation-scenarios.md` | 통합/E2E 담당 teammate | description에 경로 전달 |
+| `qa-scenarios.md` | 테스트 작성 담당 teammate | description에 경로 전달 |
+
+> **전체 내용 임베딩 X** — teammate가 필요할 때 Read로 직접 읽도록 경로만 전달 (컨텍스트 절약)
+
+**마스터 체크리스트 구성:**
+
+```
+═══════════════════════════════════════
+마스터 체크리스트 (N개 섹션, 총 M개 항목)
+═══════════════════════════════════════
+section-01-foundation:
+  [ ] BaseModule 클래스가 init()과 destroy() 메서드를 가짐
+  [ ] AppConfig 인터페이스가 필수 필드를 정의함
+  [ ] 단위 테스트가 존재함
+
+section-02-api:
+  [ ] POST /api/auth/login 엔드포인트 동작
+  [ ] JWT 토큰 발급 및 검증
+  ...
+═══════════════════════════════════════
+```
+
+**Activity Log 기록:**
+```
+orchestrator_log_activity 또는 conversations/ 기록:
+type: "milestone"
+message: "산출물 검토 완료. 섹션 N개, 체크리스트 M개, 도면 K개 확인"
+```
 
 ### Step 1: Parse Sections
 
@@ -340,7 +460,7 @@ Section NN: {name}을 구현해줘.
 - `wait`이 블로킹이므로 agent 완료 시 자동 진행
 - agent가 에러를 반환하면: 에러 로그 확인 → 1회 재spawn → 실패 시 사용자 보고
 
-### Step 4.5: Code Review Gate (자재검사)
+### Step 5: Code Review Gate (자재검사)
 
 각 Wave 완료 후, 다음 Wave 진행 전 코드리뷰를 실행합니다.
 
@@ -354,24 +474,62 @@ Section NN: {name}을 구현해줘.
 - 미통과 시 → 수정 agent 재spawn → 재리뷰 (최대 2회)
 
 **검수 항목:** 500줄 제한, 보안 취약점, 타입, SRP, DRY
-**통과 후:** 다음 Wave 또는 Step 5로 진행
+**통과 후:** 다음 Wave 또는 Step 6로 진행
 
-### Step 5: Verify Results
+### Step 6: Verify Results — 마스터 체크리스트 대조
 
 See [verification-protocol.md](references/verification-protocol.md)
 
-모든 Wave 완료 + 자재검사 통과 후 검증:
+> **체크리스트가 100% 통과할 때까지 이 Step을 반복한다.**
 
-1. **파일 존재 검증**: 각 섹션의 "Files to Create/Modify"에 명시된 파일이 실제로 존재하는지
-2. **Acceptance Criteria 검증**: 각 섹션의 체크리스트 항목 확인
-3. **파일 소유권 검증**: 다른 teammate가 수정하면 안 되는 파일을 수정했는지
-4. **도면 노드 검증** (flow-diagrams 존재 시): 각 섹션의 담당 노드가 코드에 구현되었는지 확인
+모든 Wave 완료 + 자재검사 통과 후, **Lead가 직접** 마스터 체크리스트를 대조합니다.
 
-검증 실패 시:
-- 해당 섹션의 Task를 다시 생성
-- 실패 원인을 description에 포함하여 재실행
+**검증 루프:**
 
-### Step 5.5: Activity Log Summary
+```
+while (마스터 체크리스트 미통과 항목 존재):
+  1. 파일 존재 검증 — Files to Create/Modify 전수 확인
+  2. Acceptance Criteria 대조 — Step 0에서 수집한 마스터 체크리스트 항목별 확인
+     - 파일 Read/Grep으로 코드 존재 여부 확인
+     - 통과 → [x], 미통과 → [ ] + 원인 기록
+  3. 도면 노드 검증 — flow-diagrams 존재 시 노드별 코드 대조
+  4. 파일 소유권 검증 — 교차 수정 감지
+
+  미통과 항목이 있으면:
+    → 해당 섹션 teammate에게 재지시 (미통과 사유 + 구체적 요구사항 포함)
+    → teammate 작업 완료 대기
+    → 다시 검증 루프 시작 (최대 3회)
+
+  3회 반복 후에도 미통과:
+    → 사용자에게 보고 + 수동 개입 요청
+```
+
+**마스터 체크리스트 업데이트:**
+
+```
+═══════════════════════════════════════
+마스터 체크리스트 (검증 결과)
+═══════════════════════════════════════
+section-01-foundation:
+  [x] BaseModule 클래스가 init()과 destroy() 메서드를 가짐
+  [x] AppConfig 인터페이스가 필수 필드를 정의함
+  [ ] 단위 테스트가 존재함 ← 미통과 (재지시 필요)
+
+section-02-api:
+  [x] POST /api/auth/login 엔드포인트 동작
+  [x] JWT 토큰 발급 및 검증
+
+통과율: 85% (17/20) — 미통과 3개 → 재지시 진행
+═══════════════════════════════════════
+```
+
+**Activity Log 기록:**
+```
+type: "decision"
+message: "검증 1회차: 17/20 통과. section-01 테스트 누락 → teammate에 재지시"
+```
+
+### Step 7: Activity Log Summary
 
 모든 Wave 완료 후, Verify 전에 활동 로그를 요약합니다:
 
@@ -383,7 +541,7 @@ See [verification-protocol.md](references/verification-protocol.md)
 
 ```
 ═══════════════════════════════════════
-STEP 5.5/7: ACTIVITY LOG SUMMARY
+STEP 7/9: ACTIVITY LOG SUMMARY
 ═══════════════════════════════════════
 teammate-1 (section-01): 기록 5건, 에러 0건, 파일 3개
 teammate-2 (section-02): 기록 4건, 에러 1건 (해결됨), 파일 2개
@@ -392,28 +550,24 @@ Activity log: conversations/2026-02-18-team-dannys.md
 ───────────────────────────────────────────────────────
 ```
 
-### Step 6: Final Report
+### Step 8: Final Report
 
 ```
 ═══════════════════════════════════════
-Agent Team: 실행 완료
+대니즈팀: 실행 완료
 ═══════════════════════════════════════
 
-✅ 성공: N개 섹션
-❌ 실패: N개 섹션 (있는 경우)
-⏱️ 총 Wave: N개
+📋 마스터 체크리스트: M/N 통과 (XX%)
+📐 도면 매칭: K개 노드 중 J개 구현 (YY%)
+⏱️ 총 Wave: W개 | 검증 루프: R회
 
 섹션별 결과:
-  ✅ section-01-foundation — 파일 3개 생성
-  ✅ section-02-config — 파일 2개 생성
-  ✅ section-03-types — 파일 4개 생성
-  ✅ section-04-api — 파일 5개 생성
-  ✅ section-05-database — 파일 3개 생성
-  ✅ section-06-integration — 파일 2개 생성
+  ✅ section-01-foundation — 체크 3/3, 파일 3개
+  ✅ section-02-config — 체크 2/2, 파일 2개
+  ⚠️ section-03-api — 체크 4/5, 파일 5개 (테스트 1건 미통과)
+  ...
 
-다음 단계:
-  - /zephermine @spec.md 로 구현 검증 (Option D)
-  - git diff로 변경사항 확인
+Lead 의사결정 로그: conversations/{date}-team-dannys.md
 ═══════════════════════════════════════
 ```
 
@@ -447,7 +601,7 @@ Agent Team: 실행 완료
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/6: {STEP_NAME}
+STEP {N}/9: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}

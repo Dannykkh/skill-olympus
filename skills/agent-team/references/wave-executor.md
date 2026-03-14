@@ -40,6 +40,11 @@ description에 구현해야 할 전체 내용이 있어.
 - src/core/foundation.ts
 - src/core/types.ts
 
+📐 프로세스 도면: {diagram_path} (노드: {node_ids})
+  - 해당 .mmd 파일을 Read로 읽고, 담당 노드의 로직을 구현해.
+  - 분기(decision) 노드는 모든 경로(Yes/No/에러)를 빠짐없이 구현해.
+  (도면이 없는 섹션이면 이 블록 생략)
+
 ⚠️ 규칙:
 1. 위 파일만 생성/수정할 것
 2. 다른 teammate의 파일은 절대 수정 금지

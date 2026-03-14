@@ -375,7 +375,22 @@ function run() {
 
   const mode = isUnlink ? "unlink" : "copy";
   const previous = loadPreviousManaged();
-  const skillNames = listDirectories(skillsSrcDir);
+
+  // Claude 전용 스킬 제외 — Gemini에서 사용 불가한 도구(TeamCreate, SendMessage)에 의존하는 스킬
+  const GEMINI_EXCLUDE_SKILLS = [
+    "agent-team",      // Claude Agent Teams 전용 (TeamCreate/SendMessage)
+    "mnemo",           // Claude 전용 장기기억. Gemini용은 gemini-mnemo
+    "codex-mnemo",     // Codex 전용 장기기억
+    "agent-team-codex", // Codex 전용 에이전트팀
+  ];
+  const allSkillNames = listDirectories(skillsSrcDir);
+  const skillNames = allSkillNames.filter((name) => !GEMINI_EXCLUDE_SKILLS.includes(name));
+  if (GEMINI_EXCLUDE_SKILLS.length > 0) {
+    const excluded = allSkillNames.filter((name) => GEMINI_EXCLUDE_SKILLS.includes(name));
+    if (excluded.length > 0) {
+      console.log(`[gemini-sync] excluded (cli-specific): ${excluded.join(", ")}`);
+    }
+  }
   const agentFiles = collectAgentFiles();
   const hookFiles = collectHookFiles();
   const agentNames = Array.from(agentFiles.keys()).sort((a, b) => a.localeCompare(b));

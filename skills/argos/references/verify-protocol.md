@@ -8,7 +8,7 @@ zephermine resume 시 모든 계획 파일이 존재하고 사용자가 "구현 
 
 ## 검증 프로세스
 
-### Step 21: 서브에이전트 검증 실행
+### 서브에이전트 검증 실행
 
 **Phase 1: 정적 검증** — Task(subagent_type="Explore") 2개 병렬 실행:
 
@@ -297,7 +297,7 @@ Bash: {detected_e2e_command}
 
 Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
-### Step 23: 검증 결과 보고
+### 검증 결과 보고
 
 사용자에게 결과 제시:
 - 전체 충족률 (%)
@@ -306,13 +306,13 @@ Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 결과를 합쳐 `<planning_dir>
 - 누락 항목 목록
 
 AskUserQuestion으로 다음 선택:
-- "수정 후 재검증" → Step 22 반복
+- "수정 후 재검증" → 검증 재실행
 - "현재 상태 승인" → 완료
 
 ```
 AskUserQuestion:
   question: "검증 결과를 확인했습니다. 어떻게 하시겠습니까?"
   options:
-    - "수정 후 재검증" (누락 항목 수정 후 Step 22 재실행)
+    - "수정 후 재검증" (누락 항목 수정 후 재실행)
     - "현재 상태 승인" (검증 완료, 종료)
 ```

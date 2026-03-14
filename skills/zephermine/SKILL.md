@@ -98,10 +98,10 @@ Determine session state by checking existing files:
 | + reviews | resume | Step 12 (integrate) |
 | + integration-notes | resume | Step 13 (user review) |
 | + db-schema.md | resume | Step 15 (API spec) |
-| + api-spec.md | resume | Step 15.5 (flow diagrams) |
-| + flow-diagrams/ | resume | Step 16 (section index) |
-| + sections/index.md | resume | Step 17 (write sections) |
-| all sections complete | resume | Step 19 (operation scenarios) |
+| + api-spec.md | resume | Step 16 (flow diagrams) |
+| + flow-diagrams/ | resume | Step 17 (section index) |
+| + sections/index.md | resume | Step 18 (write sections) |
+| all sections complete | resume | Step 20 (operation scenarios) |
 
 7. Create TODO list with TodoWrite based on current state
 
@@ -123,7 +123,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/23: {STEP_NAME}
+STEP {N}/24: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
@@ -360,10 +360,10 @@ See [api-spec-guide.md](references/api-spec-guide.md)
 **구현 중 새 API 추가 시 반드시 이 문서에도 추가** (drift 방지).
 API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀.
 
-### 15.5. Generate Process Flow Diagrams (공정 도면)
+### 16. Generate Process Flow Diagrams (공정 도면) — MANDATORY
 
-> **설계사는 시방서(sections) 전에 공정 흐름도를 먼저 그린다.**
-> 이 도면이 섹션 분할의 근거이자, 현장감독(workpm)의 공정 점검 기준선이 된다.
+> **⚠️ 이 단계는 건너뛸 수 없습니다.** 공정 도면이 없으면 다이달로스(workpm)가 기준선 없이 시공하게 됩니다.
+> 설계사는 시방서(sections) 전에 공정 흐름도를 먼저 그린다.
 
 `plan.md` + `api-spec.md` + `team-reviews/domain-process-analysis.md`에서 핵심 프로세스 흐름을 추출하여 Mermaid flowchart로 작성합니다.
 
@@ -373,6 +373,7 @@ API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀.
    - 예: 사용자 인증, 주문 처리, 결제 프로세스, 데이터 동기화
    - 기준: "사용자 또는 시스템이 시작~종료까지 거치는 완결된 흐름" 1개 = 다이어그램 1개
    - 프로세스 수: 핵심 3~8개 (너무 많으면 상위 레벨로 통합)
+   - **단일 프로세스 프로젝트(CLI, 라이브러리)라도 최소 1개의 메인 흐름도를 생성**
 
 2. **서브에이전트 위임**: 각 프로세스별 다이어그램 생성
    ```
@@ -415,13 +416,16 @@ user-auth → order-process → payment
 ```
 
 **workpm 연계**: 이 도면들은 workpm의 공정 기준선이 됩니다:
-- workpm Phase 1.5: 이 도면을 읽어서 추가/수정 여부 판단
+- workpm Phase 2: 이 도면을 읽어서 추가/수정 여부 판단
 - workpm Phase 2: 각 Worker에게 담당 다이어그램 노드 배분
-- workpm Phase 2.5: 구현 후 이 도면과 코드를 대조 검증
+- workpm Phase 4: 구현 후 이 도면과 코드를 대조 검증
 
-**건너뛰기 조건**: 프로세스가 1개뿐인 단순 프로젝트(CLI 도구, 단일 함수 라이브러리)는 자동 건너뜀.
+### 17. Create Section Index
 
-### 16. Create Section Index
+**⚠️ GATE CHECK — 이 단계 진입 전 반드시 확인:**
+- `<planning_dir>/flow-diagrams/index.md` 파일이 존재하는가?
+- 존재하지 않으면 → **Step 16으로 돌아가서 공정 도면을 먼저 생성**
+- 존재하면 → 진행
 
 See [section-index.md](references/section-index.md)
 
@@ -431,7 +435,7 @@ Read `plan.md`. Identify natural section boundaries and create `<planning_dir>/s
 
 Write `index.md` before proceeding to section file creation.
 
-### 17. Write Section Files — Parallel Subagents
+### 18. Write Section Files — Parallel Subagents
 
 See [section-splitting.md](references/section-splitting.md)
 
@@ -442,7 +446,7 @@ See [section-splitting.md](references/section-splitting.md)
 
 Wait for ALL subagents to complete before proceeding.
 
-### 18. Generate Operation Scenarios — Subagent
+### 19. Generate Operation Scenarios — Subagent
 
 운영 시나리오를 정의하여 `<planning_dir>/operation-scenarios.md` 생성.
 QA 시나리오의 근거가 되는 문서 — 운영 시나리오 없이 QA 시나리오는 만들 수 없음.
@@ -484,7 +488,7 @@ QA 시나리오의 근거가 되는 문서 — 운영 시나리오 없이 QA 시
 - 도메인 프로세스 분석(team-reviews)의 업무 흐름표를 적극 활용
 - spec에 없지만 유사 프로젝트(research.md)에서 발견된 공통 기능 → 💡 누락 후보로 표시
 
-### 19. Generate QA Scenarios Document — Subagent
+### 20. Generate QA Scenarios Document — Subagent
 
 **운영 시나리오를 기반으로** QA 테스트 케이스를 생성하여 `<planning_dir>/qa-scenarios.md` 작성.
 
@@ -498,11 +502,11 @@ QA 시나리오의 근거가 되는 문서 — 운영 시나리오 없이 QA 시
 
 **매핑 규칙:** 운영 시나리오 1개 → QA 테스트 케이스 N개 (정상 1 + 예외 N-1)
 
-### 20. Final Status
+### 21. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
-- `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (프로세스가 2개 이상인 프로젝트)
+- `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 16 미실행)
 - `api-spec.md` (API가 있는 프로젝트)
 - `db-schema.md` (DB가 있는 프로젝트)
 - `design-system.md` (UI가 있는 프로젝트)
@@ -512,7 +516,7 @@ Verify all files were created successfully:
 - `team-reviews/domain-process-analysis.md` (업무 흐름표)
 - `team-reviews/domain-technical-analysis.md` (기술 스택 매핑)
 
-### 21. Output Summary
+### 22. Output Summary
 
 Print generated files list and implementation options:
 ```
@@ -523,14 +527,13 @@ Generated: research/interview/spec/team-review/plan/api-spec/db-schema/
            + team-reviews/ + reviews/ + flow-diagrams/ + sections/
 
 Implementation options:
-  A. Manual: sections/index.md → 순서대로 구현
-  B. Agent Teams: /agent-team <planning_dir> (병렬 실행, 권장)
-  C. Daedalus: /workpm <planning_dir> (멀티AI 병렬 구현)
-  D. Chronos: /chronos <planning_dir> (자율 반복 루프)
-  E. Verify: /argos <planning_dir> (감리 — 설계 대비 구현 검증)
+  A. /agent-team <planning_dir> → 섹션 기반 병렬 구현 (권장)
+  B. /chronos <planning_dir>    → 자율 반복 구현 루프
+  C. Manual: sections/index.md  → 순서대로 수동 구현
+  D. /argos <planning_dir>      → 감리 (설계 대비 구현 검증)
 ```
 
-### 22. Discover Implementation Skills
+### 23. Discover Implementation Skills
 
 구현 시작 전, 프로젝트에 도움될 외부 스킬을 탐색합니다.
 
@@ -546,7 +549,7 @@ Implementation options:
 
 > 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.
 
-### 23. 감리 안내
+### 24. 감리 안내
 
 설계가 완료되면 사용자에게 감리(검증) 단계를 안내합니다:
 
@@ -571,8 +574,7 @@ Implementation options:
 📦 산출물: operation-scenarios.md, qa-scenarios.md, sections/
 
 👉 다음 단계 (선택):
-  /agent-team          → 섹션 기반 병렬 구현 (Claude 네이티브, 권장)
-  /workpm              → 멀티AI 병렬 구현 (Codex/Gemini 혼합)
+  /agent-team          → 섹션 기반 병렬 구현 (권장)
   /chronos             → 자율 반복 구현 루프
   수동 구현             → 직접 코딩
 

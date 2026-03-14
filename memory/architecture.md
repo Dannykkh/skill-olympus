@@ -81,14 +81,16 @@
 - 파이프라인 = 건축 프로세스 비유: 설계사(젭마인) → 현장감독(다이달로스/workpm) → 감리(아르고스) → 실사(큐패신저), 크로노스는 횡단 자율수리 도구
 - 자재검사(code-reviewer)는 시공 중 자동 실행, 준공검사(argos)는 시공 후 수동 호출
 - workpm의 신화 이름: 다이달로스(Daedalus) — 미궁을 지은 전설적 건축가/장인
-- **MCP vs 네이티브 결정 (2026-03-13)**: 기본은 네이티브 Agent Teams, `--mcp`로 대규모 모드. MCP의 고유 가치: 독립 터미널 모니터링, hard 파일 락, 크래시 복원, 크로스-CLI 혼합. 일반 프로젝트(3~6섹션)는 네이티브가 가볍고 충분.
+- ❌ SUPERSEDED: ~~MCP vs 네이티브 결정 (2026-03-13)~~ → superseded-by: #daedalus-native-only
+- ✅ CURRENT (2026-03-14) #daedalus-native-only: 다이달로스는 네이티브 Agent Teams 전용. MCP 모드는 state.json race condition, Worker spawn 실패 무감지, 크래시 복원 미구현 등 프로토타입 수준으로 판명. 크로스-CLI는 젭마인이 Bash로 직접 처리하므로 구현 단계에서 불필요.
+- **다이달로스 vs 대니즈팀 역할 분리 (2026-03-14)**: 다이달로스는 "젭마인 없이 바로 구현" (리서치→제안→도면→구현→검증), 대니즈팀은 "젭마인 산출물 기반 구현" (섹션 파싱→Wave→전문가 매칭→구현→검증). 젭마인 Output Summary에서 대니즈팀만 권장.
 - **문제**: 젭마인이 시방서(spec, sections)만 주고 공정 도면(flow-diagrams)은 생성하지 않았음 → workpm이 도면 없이 시공 → 설계 의도에서 벗어남
-- **해결**: 젭마인 Step 15.5에서 `flow-diagrams/*.mmd` 생성, workpm Phase 1.5/2.5에서 도면 기반 시공
+- **해결**: 젭마인 Step 16 (MANDATORY)에서 `flow-diagrams/*.mmd` 생성, workpm Phase 2/4에서 도면 기반 시공. `.5` 넘버링은 스킵 유발하여 모든 스킬에서 정수 번호로 통일 (2026-03-14)
 - **감리 분리**: verify-protocol을 젭마인에서 분리 → `/argos` 독립 스킬 (설계사≠감리 원칙)
 - **도면 흐름**: 젭마인이 그림 → workpm이 재사용 (없으면 새로 생성) → argos Phase 5에서 도면 대조
 - **역할별 도면 참조**: PM(✅ 해석·배분) → Worker(❌ 지시만) → 자재검사(❌ 품질만) → 감리(✅ 대조) → 실사(❌ 시나리오만)
 - **Why**: 설계→시공 사이에 공정 기준선이 없으면 구현이 설계에서 drift하는 문제 방지
-- **참조**: workpm.md Phase 1.5/2.5, workpm-mcp.md Phase 1.5/2.5, zephermine SKILL.md Step 15.5, argos/SKILL.md
+- **참조**: workpm.md Phase 2/4, workpm-mcp.md Phase 2/4, zephermine SKILL.md Step 16 (MANDATORY), argos/SKILL.md
 
 ### global-install, codex-parity, mnemo-name
 `tags: global-install, codex-parity, mnemo-name`

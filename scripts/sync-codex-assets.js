@@ -379,7 +379,20 @@ function run() {
 
   const mode = isUnlink ? "unlink" : "copy";
   const previous = loadPreviousManaged();
-  const skillNames = listDirectories(skillsSrcDir);
+
+  // Claude 전용 스킬 제외 — Codex에서 사용 불가한 도구(TeamCreate, SendMessage)에 의존하는 스킬
+  const CODEX_EXCLUDE_SKILLS = [
+    "agent-team",      // Claude Agent Teams 전용 (TeamCreate/SendMessage). Codex용은 agent-team-codex
+    "mnemo",           // Claude 전용 장기기억. Codex용은 codex-mnemo
+  ];
+  const allSkillNames = listDirectories(skillsSrcDir);
+  const skillNames = allSkillNames.filter((name) => !CODEX_EXCLUDE_SKILLS.includes(name));
+  if (CODEX_EXCLUDE_SKILLS.length > 0) {
+    const excluded = allSkillNames.filter((name) => CODEX_EXCLUDE_SKILLS.includes(name));
+    if (excluded.length > 0) {
+      console.log(`[codex-sync] excluded (claude-only): ${excluded.join(", ")}`);
+    }
+  }
   const agentFiles = collectAgentFiles();
   const hookFiles = collectHookFiles();
   const codexNotifyHookFiles = collectCodexNotifyHookFiles();

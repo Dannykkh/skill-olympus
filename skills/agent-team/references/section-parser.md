@@ -52,7 +52,39 @@ Glob("sections/section-NN-*.md")
 ⚠️ section-03-parser.md 파일이 없습니다. 이 섹션은 실행할 수 없습니다.
 ```
 
-### 4. 파일 소유권 추출
+### 4. Flow Diagram Mapping 추출
+
+`sections/index.md`에 **Flow Diagram Mapping** 테이블이 있는지 확인:
+
+```markdown
+## Flow Diagram Mapping
+
+| Section | Diagram | Nodes |
+|---------|---------|-------|
+| section-02-auth | user-auth.mmd | Validate → FindUser → CheckPwd → GenJWT |
+| section-03-order | order-process.mmd | CreateOrder → ValidateStock → CalcTotal |
+```
+
+**파싱 규칙:**
+- `## Flow Diagram Mapping` 헤딩 아래의 테이블 파싱
+- 각 섹션이 담당하는 `.mmd` 파일명과 노드 ID 목록을 추출
+- `<planning_dir>/flow-diagrams/` 디렉토리 존재 여부 확인 (Glob)
+- 각 `.mmd` 파일이 실제로 존재하는지 확인
+
+**테이블이 없는 경우:**
+- `<planning_dir>/flow-diagrams/index.md`가 있으면 → 그 인덱스에서 섹션↔도면 매핑 추론
+- `flow-diagrams/` 자체가 없으면 → 도면 없이 진행 (기존 방식)
+
+**출력에 추가:**
+```
+sections:
+  - name: section-02-auth
+    diagram: user-auth.mmd
+    diagramNodes: [Validate, FindUser, CheckPwd, GenJWT]
+    ...
+```
+
+### 5. 파일 소유권 추출
 
 각 `section-NN-*.md` 파일에서 "Files to Create/Modify" 섹션 파싱:
 
@@ -68,7 +100,7 @@ Glob("sections/section-NN-*.md")
 - 백틱 안의 파일 경로 추출
 - glob 패턴도 지원 (`src/core/**`)
 
-### 5. 출력 형식
+### 6. 출력 형식
 
 파싱 결과를 내부 데이터 구조로 구성:
 
@@ -78,12 +110,16 @@ sections:
     dependsOn: []
     blocks: [section-02-config, section-03-parser]
     files: [src/core/foundation.ts, src/core/types.ts]
+    diagram: null
+    diagramNodes: []
     fileExists: true
 
-  - name: section-02-config
+  - name: section-02-auth
     dependsOn: [section-01-foundation]
     blocks: [section-04-api]
-    files: [src/config/index.ts]
+    files: [src/auth/login.ts, src/auth/jwt.ts]
+    diagram: user-auth.mmd
+    diagramNodes: [Validate, FindUser, CheckPwd, GenJWT]
     fileExists: true
 ```
 
