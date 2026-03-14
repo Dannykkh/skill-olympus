@@ -52,3 +52,17 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+## Usage Patterns (3단계 활용법)
+
+### 1단계: 기본 생성
+먼저 기능에 집중하여 페이지/컴포넌트를 만든다. 디자인은 신경쓰지 않는다.
+
+### 2단계: 스킬 적용 (레퍼런스 없이)
+"use the frontend design skill to improve the design" — 이 스킬의 미학 가이드라인만으로 재디자인.
+
+### 3단계: 레퍼런스 참조 재디자인 (최고 품질)
+Dribbble, Behance, Awwwards 등에서 원하는 스타일의 스크린샷을 찾아 첨부:
+"use the frontend design skill to improve the design following the attached screenshot"
+
+> **3단계가 가장 효과적.** 레퍼런스 이미지가 있으면 톤/색상/레이아웃을 정확하게 매칭할 수 있다.
