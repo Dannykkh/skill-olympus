@@ -41,17 +41,24 @@ auto_apply: false
 - `https://youtu.be/VIDEO_ID`
 - `VIDEO_ID` (11자리 영숫자)
 
-### 2. yt-dlp 설치 확인
+### 2. yt-dlp 설치 확인 + 자동 설치
 
 ```bash
 yt-dlp --version
 ```
 
-미설치 시 설치 안내:
+미설치 시 **자동 설치** (pip 사용 가능하면):
+
+```bash
+pip install yt-dlp
 ```
-yt-dlp가 설치되어 있지 않습니다.
-설치: pip install yt-dlp
-```
+
+pip도 없으면 플랫폼별 안내:
+- Windows: `winget install yt-dlp`
+- Mac: `brew install yt-dlp`
+- Linux: `sudo apt install yt-dlp` 또는 `pip install yt-dlp`
+
+설치 후 다시 `yt-dlp --version`으로 확인하고 진행.
 
 ### 3. 자막 언어 확인
 
