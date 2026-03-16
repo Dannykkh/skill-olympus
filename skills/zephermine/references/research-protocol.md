@@ -12,6 +12,8 @@ This document defines the research decision and execution flow.
 │    - Codebase research? (existing patterns/conventions)     │
 │    - Web research? (best practices, SOTA approaches)        │
 │    - GitHub research? (similar projects, reference impl.)   │
+│    - Academic research? (papers, algorithms, approaches)    │
+│    - Competitor analysis? (features, menus, UX patterns)    │
 │                                                             │
 │  Step 5: Execute research (parallel if multiple selected)   │
 │    - Subagents return results                               │
@@ -94,7 +96,52 @@ options:
 
 If user selects "Other", follow up to get custom topics.
 
-### 4.5 Handle "No Research" Case
+### 4.5 Ask About Academic Paper Research
+
+Use AskUserQuestion:
+
+```
+question: "관련 논문이나 알고리즘을 조사할까요?"
+header: "Academic Research"
+options:
+  - label: "Yes, search papers & algorithms"
+    description: "관련 논문, 알고리즘, 데이터 구조, 구현 패턴을 조사합니다 (Google Scholar, arXiv 등)"
+  - label: "No, skip"
+    description: "논문 조사 불필요"
+```
+
+If user selects yes, auto-generate search queries from spec:
+- `"{core_algorithm} algorithm paper"` (예: "recommendation system collaborative filtering paper")
+- `"{domain} state of the art {year}"` (예: "real-time chat architecture 2025")
+- `"{feature} benchmark comparison"` (예: "vector search performance comparison")
+
+### 4.6 Ask About Competitor Analysis
+
+Use AskUserQuestion:
+
+```
+question: "경쟁 서비스/제품을 조사할까요?"
+header: "Competitor Analysis"
+options:
+  - label: "Yes, analyze competitors"
+    description: "경쟁 서비스의 기능, 메뉴 구조, UX 패턴, 차별점을 분석합니다"
+  - label: "No, skip"
+    description: "경쟁 분석 불필요"
+```
+
+If user selects yes, ask follow-up:
+
+```
+question: "알고 있는 경쟁 서비스가 있나요? (없으면 자동 검색합니다)"
+header: "Competitors"
+options:
+  - label: "직접 입력"
+    description: "경쟁사 이름이나 URL을 알려주세요"
+  - label: "자동 검색"
+    description: "스펙 기반으로 유사 서비스를 찾아보겠습니다"
+```
+
+### 4.7 Handle "No Research" Case
 
 If user selects no codebase AND no web research AND no GitHub research, skip step 5 entirely.
 
@@ -112,12 +159,18 @@ If user selects no codebase AND no web research AND no GitHub research, skip ste
 │                                                             │
 │  Task 1: Explore ──────────┐                                │
 │    (codebase patterns)     │                                │
-│                            ├──→ Main Claude combines       │
-│  Task 2: Explore ──────────┤    and writes single          │
-│    (web best practices)    │    research.md         │
 │                            │                                │
-│  Task 3: Explore ──────────┘                                │
-│    (GitHub similar projects)                                │
+│  Task 2: Explore ──────────┤                                │
+│    (web best practices)    ├──→ Main Claude combines       │
+│                            │    and writes single          │
+│  Task 3: Explore ──────────┤    research.md         │
+│    (GitHub similar projects)│                                │
+│                            │                                │
+│  Task 4: Explore ──────────┤                                │
+│    (academic papers)       │                                │
+│                            │                                │
+│  Task 5: Explore ──────────┘                                │
+│    (competitor analysis)                                    │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -212,7 +265,93 @@ Task tool:
     DO NOT write to any files. Return findings in your response.
 ```
 
-### 5.4 Parallel Execution
+### 5.4 Academic Paper Research (if selected)
+
+Launch Task tool with `subagent_type=Explore`:
+
+```
+Task tool:
+  subagent_type: Explore
+  description: "Research academic papers and algorithms"
+  prompt: |
+    Research academic papers, algorithms, and implementation approaches for:
+    {project_description_from_spec}
+
+    Search queries to try:
+    {auto_generated_queries}
+
+    For each search:
+    1. Use WebSearch to find papers, articles, blog posts about algorithms and approaches
+    2. Use WebFetch on promising results to extract key information
+    3. Focus on: algorithm design, data structures, performance characteristics,
+       implementation trade-offs, benchmark comparisons
+
+    For each relevant paper/approach found, provide:
+    - **Title**: paper/article title
+    - **Source**: URL or citation
+    - **Algorithm/Approach**: core algorithm or method described
+    - **Key Insight**: what makes this approach notable
+    - **Implementation Notes**: practical considerations (complexity, libraries, patterns)
+    - **Relevance**: how this applies to our project
+
+    Also identify:
+    - Common patterns across papers (consensus approaches)
+    - Trade-offs between different approaches (speed vs accuracy, simplicity vs features)
+    - Recommended implementation order (which to try first)
+
+    Return your findings as markdown.
+    DO NOT write to any files. Return findings in your response.
+```
+
+### 5.5 Competitor Analysis (if selected)
+
+Launch Task tool with `subagent_type=Explore`:
+
+```
+Task tool:
+  subagent_type: Explore
+  description: "Analyze competitor products"
+  prompt: |
+    Analyze competitor products/services for:
+    {project_description_from_spec}
+
+    Known competitors (if any): {user_provided_competitors}
+
+    1. Use WebSearch to find competing products/services
+       - "{domain} software comparison {year}"
+       - "{feature} alternatives"
+       - "best {domain} tools"
+    2. Use WebFetch on each competitor's website to extract:
+       - Feature list / pricing page
+       - Menu structure / navigation
+       - Key differentiators
+
+    For each competitor (top 5), provide:
+    - **Name**: product/service name (URL)
+    - **Target Audience**: who they serve
+    - **Core Features**: feature list (categorized)
+    - **Menu/Navigation Structure**: sitemap or menu tree
+    - **UX Patterns**: notable UI/UX decisions
+    - **Strengths**: what they do well
+    - **Weaknesses**: gaps, complaints, missing features (check review sites)
+    - **Pricing Model**: free/freemium/paid tiers
+
+    Then provide:
+    ## Competitive Landscape Summary
+    | Feature | Us (planned) | Competitor A | Competitor B | Competitor C |
+    |---------|-------------|-------------|-------------|-------------|
+    | {feature} | ✅/❌/💡 | ✅/❌ | ✅/❌ | ✅/❌ |
+
+    ## Differentiation Opportunities
+    - Features competitors lack that we can offer
+    - UX patterns we should adopt
+    - UX anti-patterns we should avoid
+
+    Return your findings as markdown.
+    DO NOT write to any files. Return findings in your response.
+```
+
+### 5.6 Parallel Execution
 
 If multiple research types are needed, launch **all Task tools in a single message**.
 
@@ -221,6 +360,8 @@ If multiple research types are needed, launch **all Task tools in a single messa
 [Task tool call 1: Explore subagent for codebase]
 [Task tool call 2: Explore subagent for web research]
 [Task tool call 3: Explore subagent for GitHub projects]
+[Task tool call 4: Explore subagent for academic papers]
+[Task tool call 5: Explore subagent for competitor analysis]
 ```
 
 Wait for all to complete, then combine results.
