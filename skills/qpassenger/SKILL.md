@@ -74,14 +74,18 @@ QA 문서에서 테스트 케이스 테이블을 추출합니다:
 
 ### 시나리오 없을 때 현장 생성
 
-qa-scenarios.md가 전혀 없으면 프로젝트를 분석하여 기본 시나리오를 생성합니다:
+qa-scenarios.md가 전혀 없으면 `qa-test-planner` 스킬을 활용하여 시나리오를 생성합니다:
 
 ```
-1. operation-scenarios.md 존재 시 → 업무 시나리오 기반으로 TC 작성 (우선)
-2. 없으면 → 프로젝트 구조 분석 (Glob으로 라우트/API 탐색)
-3. CRUD 엔드포인트 식별
-4. 기능별 정상/에러/엣지 케이스 TC 작성
-5. qa-scenarios.md로 저장
+1. qa-test-planner 스킬의 SKILL.md를 읽고 테스트 계획 프레임워크 참조
+2. operation-scenarios.md 존재 시 → 업무 시나리오 기반으로 TC 작성 (우선)
+3. 없으면 → 프로젝트 구조 분석 (Glob으로 라우트/API 탐색)
+4. qa-test-planner의 템플릿 적용:
+   - references/test_case_templates.md → 테스트 케이스 형식
+   - references/regression_testing.md → 회귀 테스트 구성
+5. CRUD 엔드포인트 식별
+6. 기능별 정상/에러/엣지 케이스 TC 작성 (qa-test-planner 기준: 우선순위, 전제조건, 테스트 데이터 포함)
+7. qa-scenarios.md로 저장
 ```
 
 ---
