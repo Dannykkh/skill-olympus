@@ -83,20 +83,28 @@ Closer(클로저) — 마무리투수 등판
   흐름도:            {N개 | 없음}
 ```
 
-### 3. Create Output Directory
+### 3. Archive Previous & Create Output Directory
 
-산출물 디렉토리를 생성합니다:
+**기존 산출물이 있으면 아카이브 후 클린 상태로 시작합니다.**
+
+1. `docs/closer/latest/` 디렉토리가 존재하는지 확인
+2. 존재하면 → `docs/closer/archive/YYYY-MM-DD-HHMMSS/`로 이동
+3. 새 `docs/closer/latest/` 디렉토리 생성
 
 ```
 docs/
 └── closer/
-    ├── flow-diagrams/          # Phase 1 산출물
-    │   ├── system-overview.mmd
-    │   └── {feature-name}.mmd
-    ├── PRD.md                  # Phase 2 산출물
-    ├── TECHNICAL.md            # Phase 2 산출물
-    ├── USER-MANUAL.md          # Phase 2 산출물
-    └── FINAL-REPORT.md         # Phase 3 산출물
+    ├── latest/                     # 항상 최신본 (여기를 참조)
+    │   ├── flow-diagrams/          # Phase 1 산출물
+    │   │   ├── system-overview.mmd
+    │   │   └── {feature-name}.mmd
+    │   ├── PRD.md                  # Phase 2 산출물
+    │   ├── TECHNICAL.md            # Phase 2 산출물
+    │   ├── USER-MANUAL.md          # Phase 2 산출물
+    │   └── FINAL-REPORT.md         # Phase 3 산출물
+    └── archive/                    # 이전 실행 이력
+        ├── 2026-03-16-143000/
+        └── 2026-03-10-091500/
 ```
 
 ---
@@ -118,7 +126,7 @@ docs/
    - 흐름별 Mermaid flowchart 생성
 
 3. **다이어그램 파일 저장**
-   - `docs/closer/flow-diagrams/{feature-name}.mmd`
+   - `docs/closer/latest/flow-diagrams/{feature-name}.mmd`
    - 전체 시스템 개요 다이어그램: `system-overview.mmd`
 
 4. **기존 흐름도와 비교** (있는 경우)
@@ -149,7 +157,7 @@ docs/
 `documentation` 에이전트 패턴을 참조하여 생성.
 
 **입력:** 소스 코드 분석 결과 + 흐름도 + 기존 spec (있으면)
-**출력:** `docs/closer/PRD.md`
+**출력:** `docs/closer/latest/PRD.md`
 
 포함 항목:
 - 기능 개요 (소스에서 추출한 실제 기능)
@@ -162,7 +170,7 @@ docs/
 ### 2-2. 기술 문서 (Technical Document)
 
 **입력:** 소스 코드 구조 + 흐름도 + 의존성
-**출력:** `docs/closer/TECHNICAL.md`
+**출력:** `docs/closer/latest/TECHNICAL.md`
 
 포함 항목:
 - 시스템 아키텍처 개요 (Mermaid C4 또는 컴포넌트 다이어그램)
@@ -176,7 +184,7 @@ docs/
 ### 2-3. 사용자 매뉴얼 초안 (User Manual Draft)
 
 **입력:** UI 코드 분석 + API 엔드포인트 + 흐름도
-**출력:** `docs/closer/USER-MANUAL.md`
+**출력:** `docs/closer/latest/USER-MANUAL.md`
 
 포함 항목:
 - 주요 기능별 사용법
@@ -201,7 +209,7 @@ docs/
 
 모든 Phase 결과 + 기존 검증 결과(argos, qpassenger)를 통합한 최종 보고서를 생성합니다.
 
-**출력:** `docs/closer/FINAL-REPORT.md`
+**출력:** `docs/closer/latest/FINAL-REPORT.md`
 
 ```markdown
 # Closer — 최종 보고서
@@ -246,12 +254,14 @@ docs/
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Closer 완투! 마무리 완료.
 
-📁 산출물 위치: docs/closer/
+📁 산출물 위치: docs/closer/latest/
   FINAL-REPORT.md   — 최종 보고서 (파이프라인 결과 통합)
   flow-diagrams/    — 프로세스 흐름도 (소스 기반)
   PRD.md            — 제품 요구사항 문서
   TECHNICAL.md      — 기술 문서
   USER-MANUAL.md    — 사용자 매뉴얼
+
+📂 이전 이력: docs/closer/archive/
 
 👉 다음 단계:
   /commit              → 산출물 커밋
@@ -267,7 +277,7 @@ docs/
 |------|------|--------|
 | `--docs-only` | Phase 2~3만 실행 (문서 생성만) | false |
 | `--flow-only` | Phase 1만 실행 (흐름도만) | false |
-| `--output-dir` | 산출물 디렉토리 변경 | `docs/closer/` |
+| `--output-dir` | 산출물 디렉토리 변경 | `docs/closer/latest/` |
 
 ---
 
