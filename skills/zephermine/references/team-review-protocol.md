@@ -206,6 +206,13 @@ Task(
   Read these files for context:
   - <planning_dir>/spec.md
   - <planning_dir>/interview.md
+  - <planning_dir>/research.md (있으면 — Step 5에서 수행한 초기 리서치)
+
+  Step 5에서 이미 논문/알고리즘 조사, 경쟁사 분석, 웹 리서치를 수행했을 수 있습니다.
+  research.md가 있으면 **중복 조사하지 말고**, 거기서 발견한 내용을 기반으로 **심화 조사**하세요:
+  - 초기 리서치에서 유망했던 기술/솔루션을 더 깊게 파기
+  - 인터뷰에서 확정된 방향에 맞춰 구체적 구현 옵션 탐색
+  - 초기에 못 찾았던 산업 특화 기술/규제 추가 조사
 
   Then use **WebSearch** to find current technologies, frameworks, standards, and solutions
   relevant to building a {산업군} system.
