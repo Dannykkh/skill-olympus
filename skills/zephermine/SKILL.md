@@ -591,6 +591,9 @@ Implementation options:
   B. /chronos <planning_dir>    → 자율 반복 구현 루프
   C. Manual: sections/index.md  → 순서대로 수동 구현
   D. /argos <planning_dir>      → 감리 (설계 대비 구현 검증)
+
+Other options:
+  /estimate <planning_dir>      → 개발 견적서 (비용 산정이 필요한 경우)
 ```
 
 ### 23. Discover Implementation Skills
