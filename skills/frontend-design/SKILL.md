@@ -20,14 +20,49 @@ Before making aesthetic choices, check if the project already has a design syste
 **있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드를 존중하되, 더 대담하게 표현.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
 
-## Tunable Design Parameters
+## Design Style Presets
 
-3가지 슬라이더로 디자인 방향을 조정합니다. 사용자가 채팅으로 오버라이드 가능.
+프론트엔드 생성/재디자인 시 **사용자에게 디자인 스타일을 질문**합니다.
+
+AskUserQuestion:
 
 ```
-DESIGN_VARIANCE: 6   (1=완벽한 대칭 ↔ 10=비대칭 실험적)
-MOTION_INTENSITY: 5   (1=정적 ↔ 10=시네마틱 물리)
-VISUAL_DENSITY: 4     (1=갤러리/여유 ↔ 10=대시보드/빽빽)
+question: "어떤 느낌으로 만들까요?"
+header: "디자인 스타일"
+options:
+  - label: "깔끔하게"
+    description: "정돈된 기업 사이트, 안정적인 레이아웃"
+  - label: "럭셔리하게"
+    description: "여백 많고 프리미엄한 느낌, 고급 브랜드"
+  - label: "대담하게"
+    description: "비대칭, 애니메이션, 눈에 띄는 디자인"
+  - label: "미니멀하게"
+    description: "차분하고 절제된, 군더더기 없는"
+  - label: "대시보드"
+    description: "데이터 중심, 빽빽하고 효율적"
+  - label: "매거진"
+    description: "에디토리얼, 사진 중심, 읽는 재미"
+  - label: "직접 설정"
+    description: "VARIANCE/MOTION/DENSITY 숫자로 직접 조정"
+```
+
+### 프리셋 → 파라미터 매핑
+
+| 프리셋 | VARIANCE | MOTION | DENSITY | 느낌 |
+|--------|----------|--------|---------|------|
+| **깔끔하게** | 3 | 3 | 5 | 정돈된 그리드, 최소 애니메이션 |
+| **럭셔리하게** | 5 | 5 | 2 | 넉넉한 여백, 프리미엄 타이포 |
+| **대담하게** | 8 | 7 | 5 | 비대칭 레이아웃, 스크롤 트리거 |
+| **미니멀하게** | 4 | 2 | 3 | 절제된 색상, 여유 있는 간격 |
+| **대시보드** | 2 | 3 | 8 | 촘촘한 데이터, 모노스페이스 |
+| **매거진** | 7 | 5 | 3 | 오프셋 이미지, 타이포 중심 |
+
+### Tunable Parameters (직접 설정 시)
+
+```
+DESIGN_VARIANCE: 1~10  (1=완벽한 대칭 ↔ 10=비대칭 실험적)
+MOTION_INTENSITY: 1~10  (1=정적 ↔ 10=시네마틱 물리)
+VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 ```
 
 | 파라미터 | 1~3 | 4~7 | 8~10 |
@@ -35,12 +70,6 @@ VISUAL_DENSITY: 4     (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | **DESIGN_VARIANCE** | 센터 정렬, 대칭 그리드, 균일 패딩 | 오프셋 마진, 비대칭 비율, 좌측 정렬 헤더 | 매소닉, CSS Grid fr, 거대한 빈 공간 |
 | **MOTION_INTENSITY** | CSS `:hover`/`:active`만 | `transition: all 0.3s cubic-bezier(0.16,1,0.3,1)`, 캐스케이드 | Framer Motion, 스크롤 트리거, 패럴랙스 |
 | **VISUAL_DENSITY** | 여유 여백, 큰 섹션 간격, 럭셔리 | 일반 웹앱 간격 | 촘촘한 패딩, 1px 구분선, 숫자엔 모노스페이스 |
-
-**사용 예시:**
-```
-"DESIGN_VARIANCE 8, MOTION_INTENSITY 3으로 만들어줘" → 비대칭이지만 차분한 디자인
-"VISUAL_DENSITY 1로 럭셔리하게" → 갤러리 모드, 넉넉한 여백
-```
 
 > Credits: Tunable parameters inspired by [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT)
 
