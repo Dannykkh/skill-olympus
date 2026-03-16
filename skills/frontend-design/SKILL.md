@@ -20,6 +20,30 @@ Before making aesthetic choices, check if the project already has a design syste
 **있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드를 존중하되, 더 대담하게 표현.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
 
+## Tunable Design Parameters
+
+3가지 슬라이더로 디자인 방향을 조정합니다. 사용자가 채팅으로 오버라이드 가능.
+
+```
+DESIGN_VARIANCE: 6   (1=완벽한 대칭 ↔ 10=비대칭 실험적)
+MOTION_INTENSITY: 5   (1=정적 ↔ 10=시네마틱 물리)
+VISUAL_DENSITY: 4     (1=갤러리/여유 ↔ 10=대시보드/빽빽)
+```
+
+| 파라미터 | 1~3 | 4~7 | 8~10 |
+|----------|-----|-----|------|
+| **DESIGN_VARIANCE** | 센터 정렬, 대칭 그리드, 균일 패딩 | 오프셋 마진, 비대칭 비율, 좌측 정렬 헤더 | 매소닉, CSS Grid fr, 거대한 빈 공간 |
+| **MOTION_INTENSITY** | CSS `:hover`/`:active`만 | `transition: all 0.3s cubic-bezier(0.16,1,0.3,1)`, 캐스케이드 | Framer Motion, 스크롤 트리거, 패럴랙스 |
+| **VISUAL_DENSITY** | 여유 여백, 큰 섹션 간격, 럭셔리 | 일반 웹앱 간격 | 촘촘한 패딩, 1px 구분선, 숫자엔 모노스페이스 |
+
+**사용 예시:**
+```
+"DESIGN_VARIANCE 8, MOTION_INTENSITY 3으로 만들어줘" → 비대칭이지만 차분한 디자인
+"VISUAL_DENSITY 1로 럭셔리하게" → 갤러리 모드, 넉넉한 여백
+```
+
+> Credits: Tunable parameters inspired by [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT)
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:
@@ -45,13 +69,49 @@ Focus on:
 - **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
 - **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
 
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
+## Banned Patterns (AI Slop 방지)
 
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+**Typography:**
+- `Inter` 금지 (프리미엄 디자인) → `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi` 사용
+- 대시보드/소프트웨어 UI에 Serif 금지
+- 과도한 H1 크기 금지
 
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
+**Color:**
+- "AI Purple/Blue" 미학 금지 — 보라색 글로우, 네온 그라데이션 절대 금지
+- 순수 검정(#000000) 금지 → Zinc-950 또는 Charcoal 사용
+- 채도 80% 초과 액센트 금지
+- 그라데이션 텍스트 남용 금지
+- 액센트 색상은 **최대 1개**, 나머지는 Zinc/Slate 뉴트럴
 
-Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+**Layout:**
+- `DESIGN_VARIANCE > 4`일 때 센터 정렬 Hero 섹션 금지 → 비대칭 강제
+- 3열 카드 레이아웃 반복 금지 → 지그재그, 비대칭 그리드, 가로 스크롤 활용
+- `h-screen` 금지 → `min-h-[100dvh]` 사용 (모바일 레이아웃 점프 방지)
+- `VISUAL_DENSITY > 7`일 때 카드 남용 금지 → `border-t`, `divide-y`, 여백으로 대체
+
+**Motion:**
+- `transform`과 `opacity`만 애니메이트 — `top`, `left`, `width`, `height` 애니메이트 금지
+- Spring Physics 기본: `type: "spring", stiffness: 100, damping: 20`
+- 스크롤 컨테이너에 grain/noise 필터 금지 (성능)
+- `z-index` 남발 금지 — 시스템 레이어(navbar, modal, overlay)에만
+
+**Content (스타트업 슬럽 방지):**
+- "John Doe", "Sarah Chan" 같은 제네릭 이름 금지
+- 99.99%, 50% 같은 예측 가능한 숫자 금지
+- "Elevate", "Seamless", "Unleash", "Next-Gen" 같은 AI 카피 금지
+- 이모지 금지 → Radix Icons, Phosphor Icons, 또는 커스텀 SVG 사용
+
+**Output 완성도:**
+- placeholder 코드 금지 (`// TODO`, `...`, `/* implement later */`)
+- 모든 상태 필수 구현: Loading, Empty, Error, 성공
+- `:active` 상태에 `-translate-y-[1px]` 또는 `scale-[0.98]`로 촉각 피드백
+- `shadcn/ui`는 커스터마이징 후에만 사용 (기본 상태 그대로 사용 금지)
+
+NEVER use generic AI-generated aesthetics. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices across generations.
+
+**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code. Minimalist designs need restraint and precision. Elegance comes from executing the vision well.
+
+Remember: Claude is capable of extraordinary creative work. Don't hold back.
 
 ## Design Skills Workflow (디자인 스킬 조합)
 
