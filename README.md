@@ -156,7 +156,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (86 Skills)
+### Custom Skills (87 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -289,7 +289,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (86 skills)
+├── skills/                    # Custom skills (87 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── memory-compact/        # 🧠 Memory size check & compaction
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
