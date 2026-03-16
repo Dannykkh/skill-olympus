@@ -156,7 +156,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (85개)
+### 커스텀 스킬 (86개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -169,7 +169,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
 | 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스), final-inspection (클로저) | 코드 리뷰 & QA & 자동 수정-검증 루프 & 플로우 검증 & 감리(준공검사) & 클로저(최종 산출물) |
-| 📦 **Git** | commit-work, deploymonitor | Git 워크플로우 & DeployMonitor 자동 배포 |
+| 📦 **Git** | commit-work, release-notes, deploymonitor | Git 워크플로우 & 릴리즈 노트 (버전+CHANGELOG+태그) & DeployMonitor 자동 배포 |
 | 🎬 **미디어** | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
 | 📊 **리서치** | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
@@ -289,7 +289,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (85개)
+├── skills/                    # 커스텀 스킬 (86개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── memory-compact/        # 🧠 메모리 크기 점검 및 압축
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
@@ -342,6 +342,7 @@ claude-code-customizations/
 │   ├── qpassenger/
 │   ├── react-dev/
 │   ├── reducing-entropy/
+│   ├── release-notes/            # 📋 릴리즈 노트 — 버전+CHANGELOG+태그 (/release)
 │   ├── ship-learn-next/
 │   ├── skill-judge/
 │   ├── vercel-react-best-practices/

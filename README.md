@@ -156,7 +156,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (85 Skills)
+### Custom Skills (86 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -169,7 +169,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
 | 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos, final-inspection (closer) | Code review & QA & auto fix-verify loop & flow verification & Argos inspection & Closer (final deliverables) |
-| 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
+| 📦 **Git** | commit-work, release-notes, deploymonitor | Git workflow & release notes (version+CHANGELOG+tag) & DeployMonitor auto-deploy |
 | 🎬 **Media** | video-maker | Remotion-based React video creation (product intro, demo, social media) |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
 | 📊 **Research** | reddit-researcher | Reddit market research + lead scoring + pain point classification |
@@ -289,7 +289,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (85 skills)
+├── skills/                    # Custom skills (86 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── memory-compact/        # 🧠 Memory size check & compaction
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
@@ -342,6 +342,7 @@ claude-code-customizations/
 │   ├── qpassenger/
 │   ├── react-dev/
 │   ├── reducing-entropy/
+│   ├── release-notes/            # 📋 Release notes — version+CHANGELOG+tag (/release)
 │   ├── ship-learn-next/
 │   ├── skill-judge/
 │   ├── vercel-react-best-practices/
