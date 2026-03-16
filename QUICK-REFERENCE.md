@@ -13,6 +13,7 @@
 | 크로노스 | `/chronos` |
 | 큐패신저 | `/qpassenger` |
 | 대니즈팀 | `/agent-team` |
+| 클로저 | `/closer` |
 
 ---
 
@@ -285,6 +286,7 @@ claude plugin install voltagent-qa-sec
 | `skills/memory-compact/` | MEMORY.md 크기 점검 및 압축 — 비대해진 메모리 정리 (/memory-compact) |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
+| `skills/final-inspection/` | 마무리투수(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/closer) |
 
 ---
 

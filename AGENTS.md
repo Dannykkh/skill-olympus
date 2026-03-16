@@ -105,7 +105,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (84개)
+### Skills (85개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -117,7 +117,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사) |
+| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스), final-inspection (클로저) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |
 | 📦 Git | commit-work | Git 워크플로우 |
 | 🎬 Media | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |

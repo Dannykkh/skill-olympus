@@ -156,7 +156,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (84개)
+### 커스텀 스킬 (85개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -168,7 +168,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 🎯 **계획** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | 계획 & 요구사항 (zeus: 전자동 파이프라인, zephermine: 스펙 검증) |
 | 📖 **학습** | explain | 비유 기반 코드 설명 + Mermaid 다이어그램 |
 | 👔 **비즈니스** | professional-communication, workplace-conversations | 비즈니스 커뮤니케이션 |
-| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스) | 코드 리뷰 & QA & 자동 수정-검증 루프 & 플로우 검증 & 감리(준공검사) |
+| 🧪 **테스트** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스), final-inspection (클로저) | 코드 리뷰 & QA & 자동 수정-검증 루프 & 플로우 검증 & 감리(준공검사) & 클로저(최종 산출물) |
 | 📦 **Git** | commit-work, deploymonitor | Git 워크플로우 & DeployMonitor 자동 배포 |
 | 🎬 **미디어** | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🔧 **유틸리티** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | 유틸리티 |
@@ -289,7 +289,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (83개)
+├── skills/                    # 커스텀 스킬 (85개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── memory-compact/        # 🧠 메모리 크기 점검 및 압축
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
@@ -317,6 +317,7 @@ claude-code-customizations/
 │   ├── draw-io/
 │   ├── excalidraw/
 │   ├── explain/
+│   ├── final-inspection/        # 🏁 클로저 — 파이프라인 완료 후 산출물 생성 (/closer)
 │   ├── find-skills/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/

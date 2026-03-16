@@ -156,7 +156,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ## What's Included
 
-### Custom Skills (84 Skills)
+### Custom Skills (85 Skills)
 
 | Category | Skills | Description |
 |----------|--------|-------------|
@@ -168,7 +168,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | 🎯 **Planning** | zephermine (젭마인), zeus (제우스), game-changing-features, ship-learn-next | Planning & requirements (zeus: zero-interaction full pipeline, zephermine: spec verification) |
 | 📖 **Learning** | explain | Code explanation with analogies + Mermaid diagrams |
 | 👔 **Professional** | professional-communication, workplace-conversations | Business communication |
-| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos | Code review & QA & auto fix-verify loop & flow verification & Argos inspection |
+| 🧪 **Testing** | code-reviewer, api-tester, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos, final-inspection (closer) | Code review & QA & auto fix-verify loop & flow verification & Argos inspection & Closer (final deliverables) |
 | 📦 **Git** | commit-work, deploymonitor | Git workflow & DeployMonitor auto-deploy |
 | 🎬 **Media** | video-maker | Remotion-based React video creation (product intro, demo, social media) |
 | 🔧 **Utilities** | humanizer, jira, datadog-cli, ppt-generator, excel2md, web-to-markdown, api-handoff | Utilities |
@@ -289,7 +289,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 ```
 claude-code-customizations/
-├── skills/                    # Custom skills (83 skills)
+├── skills/                    # Custom skills (85 skills)
 │   ├── mnemo/                 # 🧠 Memory system (global install)
 │   ├── memory-compact/        # 🧠 Memory size check & compaction
 │   ├── orchestrator/          # 🤖 Multi-AI orchestration (per-project)
@@ -317,6 +317,7 @@ claude-code-customizations/
 │   ├── draw-io/
 │   ├── excalidraw/
 │   ├── explain/
+│   ├── final-inspection/        # 🏁 Closer — post-pipeline deliverables (/closer)
 │   ├── find-skills/
 │   ├── fullstack-coding-standards/
 │   ├── game-changing-features/
