@@ -2,8 +2,10 @@
 name: biz-strategy
 description: >
   사업성 검토 통합 스킬. 비즈니스 모델 캔버스, 수익/가격 전략, 시장 분석(TAM/SAM/SOM),
-  GTM 전략, 북극성 지표, 코호트 분석을 한 번에 수행. /biz-strategy로 실행.
+  GTM 전략, 북극성 지표, 코호트 분석을 한 번에 수행. /hermes로 실행.
 triggers:
+  - "hermes"
+  - "헤르메스"
   - "biz-strategy"
   - "사업성"
   - "사업화"
@@ -14,25 +16,26 @@ triggers:
 auto_apply: false
 ---
 
-# Biz Strategy — 사업성 검토
+# Hermes (헤르메스) — 사업성 검토
 
+> **헤르메스(Hermes)**: 상업과 무역의 신, 메신저.
 > "이거 돈 되나?" — 프로젝트 시작 전, 사업성을 6개 영역으로 분석합니다.
 
 ## Quick Start
 
 ```
-/biz-strategy                       # 전체 6개 영역 분석
-/biz-strategy "온라인 교육 플랫폼"   # 주제 지정
-/biz-strategy --canvas-only          # 비즈니스 모델 캔버스만
-/biz-strategy --market-only          # 시장 분석만
+/hermes                       # 전체 6개 영역 분석
+/hermes "온라인 교육 플랫폼"   # 주제 지정
+/hermes --canvas-only          # 비즈니스 모델 캔버스만
+/hermes --market-only          # 시장 분석만
 ```
 
-**공식 호출명:** `/biz-strategy` (별칭: `사업성`, `사업화`, `비즈니스 모델`)
+**공식 호출명:** `/hermes` (별칭: `헤르메스`, `사업성`, `사업화`)
 
 ## 파이프라인 위치
 
 ```
-/biz-strategy → /zephermine → /agent-team → ... → /estimate
+/hermes → /zephermine → /agent-team → ... → /estimate
   사업성 검토     기술 설계      구현              견적서
 ```
 
@@ -45,7 +48,7 @@ auto_apply: false
 ### 1. Print Intro
 
 ```
-Biz Strategy — 사업성 검토
+Hermes(헤르메스) — 상업의 신이 사업성을 검토합니다
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 6개 영역: 모델 → 수익 → 시장 → GTM → 지표 → 코호트
 ```
@@ -230,9 +233,9 @@ Cohort 3  100%    42%     28%     --      --
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ 사업성 검토 완료!
+✅ Hermes 검토 완료! 상업의 신이 분석을 마쳤습니다.
 
-📁 산출물: docs/biz-strategy/{project-name}.md
+📁 산출물: docs/hermes/{project-name}.md
 
 📊 요약:
   비즈니스 모델: {유형}
@@ -256,7 +259,7 @@ Cohort 3  100%    42%     28%     --      --
 | `--canvas-only` | 비즈니스 모델 캔버스만 | false |
 | `--market-only` | 시장 분석(TAM/SAM/SOM)만 | false |
 | `--lean` | Lean Canvas 포함 | false |
-| `--output-dir` | 출력 디렉토리 | `docs/biz-strategy/` |
+| `--output-dir` | 출력 디렉토리 | `docs/hermes/` |
 
 ---
 

@@ -16,7 +16,7 @@
 | 클로저 | `/closer` |
 | 릴리즈 | `/release` |
 | 견적 | `/estimate` |
-| 사업성 | `/biz-strategy` |
+| 헤르메스 | `/hermes` |
 | OKR | `/okr` |
 
 ---
@@ -293,7 +293,7 @@ claude plugin install voltagent-qa-sec
 | `skills/final-inspection/` | 마무리투수(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/closer) |
 | `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (/release) |
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (/estimate) |
-| `skills/biz-strategy/` | 사업성 검토 — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/biz-strategy) |
+| `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
 
 ---
