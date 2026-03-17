@@ -253,11 +253,14 @@ function main() {
     for (const entry of entries) {
       const newCmd = entry.hooks[0].command;
       const newFilename = newCmd.split("/").pop().replace(/"/g, "");
-      // Remove existing entries with the same filename (even if paths differ)
+      // 확장자 제거 후 비교 — .sh/.ps1 교차 설치 시 이전 확장자 항목도 제거
+      const stripExt = (f) => f.replace(/\.(ps1|sh|js)$/, "");
+      const newBase = stripExt(newFilename);
+      // Remove existing entries with the same base name (even if extension or paths differ)
       settings.hooks[event] = settings.hooks[event].filter((e) => {
         const existingCmd = e.hooks?.[0]?.command || "";
         const existingFilename = existingCmd.split("/").pop().replace(/"/g, "");
-        return existingFilename !== newFilename;
+        return stripExt(existingFilename) !== newBase;
       });
       settings.hooks[event].push(entry);
     }
