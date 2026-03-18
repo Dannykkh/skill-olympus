@@ -267,7 +267,8 @@
     { "id": "release-notes", "tags": ["*"], "priority": "optional" },
     { "id": "estimate", "tags": ["*"], "priority": "optional" },
     { "id": "biz-strategy", "tags": ["*"], "priority": "optional" },
-    { "id": "okr", "tags": ["*"], "priority": "optional" }
+    { "id": "okr", "tags": ["*"], "priority": "optional" },
+    { "id": "design-plan", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" }
   ],
 
   "internal-agents": [

@@ -156,7 +156,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ## 포함된 내용
 
-### 커스텀 스킬 (89개)
+### 커스텀 스킬 (90개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -289,7 +289,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 ```
 claude-code-customizations/
-├── skills/                    # 커스텀 스킬 (89개)
+├── skills/                    # 커스텀 스킬 (90개)
 │   ├── mnemo/                 # 🧠 메모리 시스템 (글로벌 설치)
 │   ├── memory-compact/        # 🧠 메모리 크기 점검 및 압축
 │   ├── orchestrator/          # 🤖 Multi-AI 오케스트레이션 (프로젝트별)
