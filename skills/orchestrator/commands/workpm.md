@@ -247,12 +247,33 @@ Task({
 6. 도면 확정 → activity log milestone 기록
 7. Phase 1 팀원 전원 해고 (SendMessage shutdown_request)
 
+### Phase 2.5: 영향도 분석 (Impact Check) — 기존 코드가 있을 때만
+
+> **기존 코드가 있는 프로젝트에서 수정/추가 구현 시, 기존 동작을 깨뜨리지 않기 위해 영향도를 사전 분석한다.**
+
+```
+리더: 기존 소스 코드 존재 확인
+  ├─ ❌ 없음 (신규 프로젝트) → Phase 3으로 건너뜀
+  └─ ✅ 있음 → 영향도 분석 실행
+       ↓
+리더: 심부름꾼(subagent Explore)에게 영향도 분석 지시
+  → "도면의 각 노드가 수정할 파일을 식별하고,
+     해당 파일을 import/호출하는 의존 파일을 Grep으로 찾아라"
+       ↓
+심부름꾼 결과:
+  ⚠️ auth.service.ts 수정 예정 → user.controller.ts, middleware/auth.ts에서 사용 중
+  ✅ payment.model.ts 수정 예정 → 영향 파일 없음
+       ↓
+리더: 영향도 경고를 Phase 3 팀원 프롬프트에 포함
+  → "⚠️ 이 파일 수정 시 {의존 파일}의 기존 동작 유지 확인 필수"
+```
+
 ### Phase 3: 구현 & 검증
 
 ```
 리더: 새 팀원 4명 투입 (구현 담당, 새 이름)
   ↓
-리더: 각 팀원에게 도면 경로 전달
+리더: 각 팀원에게 도면 경로 + 영향도 경고 전달
   → "{planning_dir}/flow-diagrams/{name}.mmd를 읽고, 네 담당 노드에 해당하는 코드를 구현하라"
   ↓
 각 팀원: 심부름꾼 호출해서 구현

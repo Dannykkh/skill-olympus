@@ -192,6 +192,34 @@ teammate 생성 시 이 팀명을 사용하세요.
 5. **각 section-NN-*.md의 Acceptance Criteria** — 전체 체크리스트 수집
    - 모든 섹션의 Acceptance Criteria를 하나의 마스터 체크리스트로 통합
    - 이 체크리스트가 **최종 완료 기준**이 됨
+6. **영향도 분석 (Impact Check)** — 기존 코드가 있는 프로젝트에서만 실행
+   - `src/`, `app/`, `lib/` 등 기존 소스가 있는지 확인
+   - **없으면** (신규 프로젝트) → 건너뜀
+   - **있으면** → 서브에이전트(`subagent_type="Explore"`)로 영향도 분석:
+     - 각 섹션이 수정할 파일 목록 추출 (섹션 스펙에서 파일 경로 파싱)
+     - 해당 파일을 import/호출하는 **의존 파일** 탐색 (Grep으로 import/require 검색)
+     - 의존 파일이 다른 섹션 범위에 있으면 **교차 영향** 경고
+   - 결과를 teammate에게 전달: "이 파일 수정 시 {의존 파일}에 영향. 기존 동작 유지 확인 필요"
+
+**영향도 분석 출력:**
+```
+⚠️ 영향도 경고:
+  section-02-api: auth.service.ts 수정 예정
+    → user.controller.ts에서 import (section-03 범위)
+    → middleware/auth.ts에서 import (section-01 범위)
+    → 기존 로그인 흐름 유지 필수
+
+  section-03-user: user.model.ts 수정 예정
+    → 영향 파일 없음 ✅
+```
+
+**teammate 프롬프트에 추가:**
+```
+⚠️ 영향도 주의: 이 파일을 수정할 때 아래 파일의 기존 동작이 깨지지 않도록 확인하세요:
+- {의존 파일 1}: {어떤 함수/import를 사용 중}
+- {의존 파일 2}: {어떤 함수/import를 사용 중}
+수정 후 해당 파일도 확인하고, 필요하면 함께 수정하세요.
+```
 
 **보조 문서 → teammate 매핑:**
 
