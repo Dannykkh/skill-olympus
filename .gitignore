@@ -52,3 +52,6 @@ skills/deploymonitor/
 
 # MCP servers build artifacts
 mcp-servers/*/dist/
+
+# Reference documents (local only)
+skillmakingbook.md

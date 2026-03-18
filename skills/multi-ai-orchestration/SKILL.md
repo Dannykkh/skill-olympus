@@ -1,6 +1,6 @@
 ---
 name: multi-ai-orchestration
-description: 멀티 AI CLI 오케스트레이션 설정 및 사용 가이드. Claude, Codex, Gemini를 동시에 활용
+description: Claude+Codex+Gemini 동시 설정, 멀티 AI 환경 구축할 때 사용. 3개 CLI 오케스트레이션 설정 및 사용 가이드.
 triggers:
   - "multi ai"
   - "orchestration"

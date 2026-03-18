@@ -1,6 +1,6 @@
 ---
 name: excel2md
-description: 엑셀 파일을 JSON/마크다운으로 변환. 글/그림 분리, 시트별 파일 생성 + 임베디드 이미지 자동 추출 및 행 매핑.
+description: .xlsx 엑셀 파일을 읽거나 변환할 때 사용. JSON/마크다운 변환, 글/그림 분리, 시트별 파일 생성, 임베디드 이미지 자동 추출.
 ---
 
 # Excel to JSON/Markdown

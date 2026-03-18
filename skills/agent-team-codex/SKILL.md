@@ -1,6 +1,6 @@
 ---
 name: agent-team-codex
-description: Codex CLI의 multi_agent 기능으로 default/explorer/worker 및 사용자 정의 에이전트를 조합해 병렬 구현을 실행합니다. zephermine 섹션 모드와 자유 모드를 지원합니다.
+description: Codex CLI로 병렬 구현할 때 사용. multi_agent 기능으로 default/explorer/worker를 조합해 실행. zephermine 섹션 모드와 자유 모드 지원. /agent-team-codex로 실행.
 triggers:
   - "agent-team-codex"
   - "코덱스 에이전트팀"

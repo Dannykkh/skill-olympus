@@ -1,6 +1,6 @@
 ---
 name: ppt-generator
-description: Python python-pptx 기반 PPT 생성 스킬. 템플릿 활용, 마크다운/JSON 입력, 차트/표/이미지 지원.
+description: PPT/프레젠테이션 생성 요청 시 사용. .pptx 파일 언급 시 자동 트리거. python-pptx 기반, 템플릿 활용, 차트/표/이미지 지원.
 ---
 
 # PPT Generator

@@ -1,6 +1,6 @@
 ---
 name: docker-db-backup
-description: Docker Compose 프로젝트에 자동 DB 백업 서비스를 추가합니다. PostgreSQL, MySQL, MariaDB 지원. /docker-db-backup 명령으로 backup-entrypoint.sh 생성 + docker-compose.yml에 서비스 추가.
+description: Docker 환경에서 DB 자동 백업이 필요할 때 사용. PostgreSQL, MySQL, MariaDB 지원. /docker-db-backup으로 실행.
 license: MIT
 metadata:
   author: user

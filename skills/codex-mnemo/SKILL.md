@@ -1,6 +1,6 @@
 ---
 name: codex-mnemo
-description: Codex CLI용 장기기억 시스템. notify 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색.
+description: Codex CLI 과거 대화를 검색하거나 장기기억을 설정할 때 사용. notify 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색.
 triggers:
   - "codex 기억"
   - "codex memory"
