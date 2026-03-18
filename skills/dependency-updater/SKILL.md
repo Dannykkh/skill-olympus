@@ -1,6 +1,10 @@
 ---
 name: dependency-updater
-description: Smart dependency management for any language. Auto-detects project type, applies safe updates automatically, prompts for major versions, diagnoses and fixes dependency issues.
+description: |
+  Smart dependency management for any language. Use when user asks to
+  "update dependencies", "upgrade packages", "fix dependency issues", "check outdated",
+  or when encountering version conflicts, security vulnerabilities in packages,
+  or broken installs. Triggers on "outdated", "npm update", "패키지 업데이트".
 license: MIT
 metadata:
   version: 1.0.0

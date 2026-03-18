@@ -1,6 +1,10 @@
 ---
 name: naming-analyzer
-description: Suggest better variable, function, and class names based on context and conventions.
+description: |
+  Suggest better variable, function, and class names based on context and conventions.
+  Use when user asks "what should I call this", "better name for", "rename this",
+  "naming suggestion", or when you notice unclear abbreviations, misleading identifiers,
+  or inconsistent naming conventions in code being reviewed.
 ---
 
 # Naming Analyzer Skill

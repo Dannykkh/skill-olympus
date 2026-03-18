@@ -1,6 +1,10 @@
 ---
 name: design-system-starter
-description: Create and evolve design systems with design tokens, component architecture, accessibility guidelines, and documentation templates. Ensures consistent, scalable, and accessible UI across products.
+description: |
+  Create and evolve design systems with design tokens, component architecture,
+  and accessibility guidelines. Use when user asks to "create design system",
+  "design tokens", "component library", "style guide", or when starting a
+  frontend project that needs consistent UI foundation.
 license: MIT
 metadata:
   version: 1.0.0

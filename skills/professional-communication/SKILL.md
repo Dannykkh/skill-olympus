@@ -1,6 +1,10 @@
 ---
 name: professional-communication
-description: Guide technical communication for software developers. Covers email structure, team messaging etiquette, meeting agendas, and adapting messages for technical vs non-technical audiences. Use when drafting professional messages, preparing meeting communications, or improving written communication.
+description: |
+  Guide technical communication for software developers. Use when user asks to
+  "draft an email", "write a message to stakeholders", "prepare meeting notes",
+  "review my message", or needs help adapting technical content for non-technical
+  audiences. Triggers on "이메일 작성", "메일 초안", "회의록", "stakeholder update".
 allowed-tools: Read, Glob, Grep
 ---
 
