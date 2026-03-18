@@ -25,7 +25,7 @@ auto_apply: false
 Phase 0: Description Parsing ─── 산업군, 기술스택, 기능 추출
     │
     ▼
-Phase 1: Planning (zephermine) ─ 합성 인터뷰 → 24단계 설계 자동 완료
+Phase 1: Planning (zephermine) ─ 합성 인터뷰 → 26단계 설계 자동 완료
     │
     ▼
 Phase 2: Implementation (agent-team) ─ 대니즈팀 PM이 섹션 기반 병렬 구현
@@ -154,9 +154,9 @@ mkdir -p docs/zeus
 
 ---
 
-## Phase 1: Planning (zephermine 24단계)
+## Phase 1: Planning (zephermine 26단계)
 
-zephermine SKILL.md를 읽고 24단계를 따르되, **모든 AskUserQuestion을 자동선택으로 대체**.
+zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을 자동선택으로 대체**.
 
 ### AskUserQuestion 자동선택 규칙 (Recommended First)
 
