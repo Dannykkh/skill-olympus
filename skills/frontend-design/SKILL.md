@@ -73,6 +73,23 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 
 > Credits: Tunable parameters inspired by [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT)
 
+## Design Database (참조 데이터)
+
+프리셋 선택 후 또는 직접 디자인 시, 아래 DB에서 프로젝트에 맞는 팔레트/폰트/스타일을 검색합니다.
+
+| DB | 파일 | 항목 수 | 내용 |
+|----|------|---------|------|
+| **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 161개 | 산업별(SaaS, 이커머스, 헬스케어 등) 색상 세트 (Primary~Border 18컬럼) |
+| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 73개 | Heading+Body 조합, Google Fonts URL, Tailwind Config 포함 |
+| **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트 |
+
+**사용법:**
+1. 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트 검색
+2. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조
+3. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색
+
+> Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT)
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:
