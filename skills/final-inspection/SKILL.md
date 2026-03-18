@@ -152,47 +152,19 @@ docs/
 
 **원칙: "코드가 진실"** — 설계 문서가 아니라 최종 확정된 코드에서 문서를 추출합니다.
 
-### 2-1. PRD (Product Requirements Document)
+3종 문서의 입력/출력 경로 및 포함 항목 상세: See [document-templates.md](references/document-templates.md)
 
-`documentation` 에이전트 패턴을 참조하여 생성.
+### 2-1. PRD — `docs/closer/latest/PRD.md`
 
-**입력:** 소스 코드 분석 결과 + 흐름도 + 기존 spec (있으면)
-**출력:** `docs/closer/latest/PRD.md`
+`documentation` 에이전트 패턴을 참조하여 생성. 소스 코드 기준으로 기능 요구사항, 데이터 모델, API 목록, 화면 흐름을 추출합니다.
 
-포함 항목:
-- 기능 개요 (소스에서 추출한 실제 기능)
-- 기능 요구사항 테이블 (코드에 구현된 것 기준)
-- 비기능 요구사항 (성능, 보안 등 — 코드에서 감지된 것)
-- 데이터 모델 (Entity/DTO/Schema 분석)
-- API 엔드포인트 목록 (코드에서 추출)
-- 화면 흐름 (프론트엔드가 있는 경우)
+### 2-2. 기술 문서 — `docs/closer/latest/TECHNICAL.md`
 
-### 2-2. 기술 문서 (Technical Document)
+아키텍처 개요(Mermaid C4), 기술 스택, 핵심 모듈, 환경 설정, 빌드/배포 절차를 포함합니다.
 
-**입력:** 소스 코드 구조 + 흐름도 + 의존성
-**출력:** `docs/closer/latest/TECHNICAL.md`
+### 2-3. 사용자 매뉴얼 — `docs/closer/latest/USER-MANUAL.md`
 
-포함 항목:
-- 시스템 아키텍처 개요 (Mermaid C4 또는 컴포넌트 다이어그램)
-- 기술 스택 및 의존성
-- 디렉토리 구조 설명
-- 핵심 모듈별 설명 (역할, 인터페이스, 의존 관계)
-- 데이터 흐름 (Phase 1 흐름도 참조)
-- 환경 설정 가이드 (env, config 파일 분석)
-- 빌드/배포 절차
-
-### 2-3. 사용자 매뉴얼 초안 (User Manual Draft)
-
-**입력:** UI 코드 분석 + API 엔드포인트 + 흐름도
-**출력:** `docs/closer/latest/USER-MANUAL.md`
-
-포함 항목:
-- 주요 기능별 사용법
-- 화면별 가이드 (UI가 있는 경우)
-- API 사용 가이드 (API만 있는 경우)
-- FAQ / 트러블슈팅 (에러 처리 코드에서 추출)
-
-**UI가 없는 프로젝트:** API 레퍼런스 매뉴얼로 대체
+기능별 사용법, 화면 가이드(UI), 또는 API 레퍼런스(API only), FAQ/트러블슈팅을 포함합니다.
 
 **Phase 2 출력:**
 
@@ -211,42 +183,7 @@ docs/
 
 **출력:** `docs/closer/latest/FINAL-REPORT.md`
 
-```markdown
-# Closer — 최종 보고서
-
-## 요약
-| 항목 | 결과 |
-|------|------|
-| 점검 일시 | {YYYY-MM-DD HH:MM} |
-| 프로젝트 | {project-name} |
-| 기술 스택 | {tech-stack} |
-
-## 파이프라인 결과 요약
-| 단계 | 스킬 | 결과 |
-|------|------|------|
-| 설계 | /zephermine | {spec 위치 또는 "없음"} |
-| 구현 | /agent-team | {구현 완료} |
-| 감리 | /argos | {PASS/CONDITIONAL/FAIL 또는 "미실행"} |
-| QA | /qpassenger | {통과율 N% 또는 "미실행"} |
-| 마무리 | /closer | 본 보고서 |
-
-## Phase 1: 프로세스 흐름도
-- 생성: {N}개 다이어그램
-- 설계 대비 차이: {있음/없음}
-- [다이어그램 목록](flow-diagrams/)
-
-## Phase 2: 문서 산출물
-- [PRD.md](PRD.md)
-- [TECHNICAL.md](TECHNICAL.md)
-- [USER-MANUAL.md](USER-MANUAL.md)
-
-## 산출물 체크리스트
-- [x] 프로세스 흐름도 (Mermaid)
-- [x] PRD (제품 요구사항 문서)
-- [x] 기술 문서
-- [x] 사용자 매뉴얼
-- [x] 최종 보고서 (본 문서)
-```
+보고서 마크다운 전체 템플릿: See [report-template.md](references/report-template.md)
 
 ### 사용자에게 안내
 

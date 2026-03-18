@@ -109,7 +109,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/24: {STEP_NAME}
+STEP {N}/26: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}

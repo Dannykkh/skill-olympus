@@ -76,17 +76,9 @@ QA 문서에서 테스트 케이스 테이블을 추출합니다:
 
 qa-scenarios.md가 전혀 없으면 `qa-test-planner` 스킬을 활용하여 시나리오를 생성합니다:
 
-```
-1. qa-test-planner 스킬의 SKILL.md를 읽고 테스트 계획 프레임워크 참조
-2. operation-scenarios.md 존재 시 → 업무 시나리오 기반으로 TC 작성 (우선)
-3. 없으면 → 프로젝트 구조 분석 (Glob으로 라우트/API 탐색)
-4. qa-test-planner의 템플릿 적용:
-   - references/test_case_templates.md → 테스트 케이스 형식
-   - references/regression_testing.md → 회귀 테스트 구성
-5. CRUD 엔드포인트 식별
-6. 기능별 정상/에러/엣지 케이스 TC 작성 (qa-test-planner 기준: 우선순위, 전제조건, 테스트 데이터 포함)
-7. qa-scenarios.md로 저장
-```
+1. `operation-scenarios.md` 존재 시 → 업무 흐름 기반 TC 작성 (우선), 없으면 Glob으로 라우트/API 탐색
+2. qa-test-planner 템플릿으로 CRUD별 정상/에러/엣지 케이스 작성 (우선순위, 전제조건, 테스트 데이터 포함)
+3. `qa-scenarios.md`로 저장
 
 ---
 
@@ -105,27 +97,12 @@ package.json "playwright" → 버전 확인
 없으면 → npx playwright install 안내
 ```
 
-### 파일 생성 규칙
-
-```
-tests/
-├── e2e/
-│   ├── auth.spec.ts        # 기능 단위로 파일 분리
-│   ├── crud-users.spec.ts
-│   └── crud-posts.spec.ts
-└── api/
-    ├── auth-api.spec.ts    # API 테스트
-    └── users-api.spec.ts
-```
+파일 구조: `tests/e2e/{feature}.spec.ts` + `tests/api/{feature}-api.spec.ts` (기능 단위 분리)
 
 ### 코드 생성 원칙
 
-- 각 기능별 `describe` 블록
-- 정상/에러/엣지 케이스별 `test` 블록
-- `test.describe`에 TC-ID 주석 포함
-- Role-based selector 우선 (`getByRole`, `getByLabel`, `getByText`)
-- 하드코딩 URL 금지 → `baseURL` 사용
-- 테스트 간 독립성 보장 (`beforeEach`로 상태 초기화)
+- 각 기능별 `describe` 블록, TC-ID 주석 포함
+- Role-based selector 우선, 하드코딩 URL 금지, `beforeEach`로 상태 초기화
 
 ---
 
@@ -133,85 +110,9 @@ tests/
 
 테스트 전에 앱 서버를 자동으로 준비합니다. 사용자 개입 없이 진행합니다.
 
-### 3-1. 서버 환경 감지
+감지 순서: docker-compose.yml → Dev Server → Django → 사용자 안내
 
-```
-판단 순서:
-1. docker-compose.yml (또는 docker-compose.yaml, compose.yml) 존재?
-   → Docker 모드 (DB, 백엔드, 프론트 통합 실행)
-2. package.json의 "dev" 또는 "start" 스크립트 존재?
-   → Dev Server 모드
-3. manage.py 존재? (Django)
-   → python manage.py runserver
-4. 전부 없음 → 사용자에게 안내
-```
-
-### 3-2. 포트 정리
-
-**타겟 포트를 확인하고, 점유 중이면 해당 프로세스를 종료합니다.**
-새 포트로 열리면 baseURL이 꼬이므로 반드시 지정 포트로 실행해야 합니다.
-
-```
-타겟 포트 결정:
-1. playwright.config.ts의 baseURL에서 포트 추출
-2. .env 또는 .env.test의 PORT 값
-3. docker-compose.yml의 ports 매핑
-4. 기본값: 3000 (프론트), 8080 (백엔드)
-```
-
-**포트 점유 프로세스 종료 (Bash):**
-- **Windows**: `powershell -Command "Get-NetTCPConnection -LocalPort {PORT} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"`
-- **Linux/Mac**: `lsof -ti:{PORT} | xargs kill -9 2>/dev/null`
-
-### 3-3. 서버 실행
-
-#### Docker 모드 (우선)
-
-```bash
-# 기존 컨테이너 정리 + 빌드 + 실행
-docker compose down --remove-orphans 2>/dev/null
-docker compose up -d --build
-
-# 헬스체크 대기 (최대 120초)
-# docker-compose.yml에 healthcheck가 있으면 그것을 사용
-# 없으면 baseURL에 HTTP 요청으로 확인
-```
-
-장점:
-- DB (PostgreSQL, MySQL 등)가 함께 올라옴
-- Redis, 큐 등 인프라 의존성 해결
-- 프로덕션과 동일한 환경에서 테스트
-
-#### Dev Server 모드 (fallback)
-
-```bash
-# 백그라운드로 dev 서버 실행
-npm run dev &    # 또는 yarn dev, pnpm dev
-DEV_SERVER_PID=$!
-
-# 헬스체크 대기 (최대 60초, 2초 간격)
-for i in $(seq 1 30); do
-  curl -s -o /dev/null -w "%{http_code}" http://localhost:{PORT} | grep -q "200\|301\|302" && break
-  sleep 2
-done
-```
-
-### 3-4. 헬스체크
-
-```
-baseURL에 HTTP GET 요청:
-├── 200/301/302 → ✅ 서버 준비 완료
-├── 타임아웃 (120초 초과) → ❌ 실패 보고 후 테스트 중단
-└── 연결 거부 → 재시도 (2초 간격)
-```
-
-헬스체크 통과 시 표시:
-```
-🚀 서버 준비 완료
-  모드: {Docker / Dev Server}
-  URL: http://localhost:{PORT}
-  DB: {PostgreSQL 15 / MySQL 8 / 없음}
-```
+환경별 서버 실행, 포트 정리, 헬스체크 상세: See [server-setup.md](references/server-setup.md)
 
 ---
 
@@ -240,30 +141,11 @@ npx playwright test tests/e2e/auth.spec.ts --workers=50%
 
 ### 사전 조건 확인
 
-테스트 실행 전 **머신 상태를 감지하여 사용자에게 보여줍니다**.
+테스트 실행 전 머신 상태(CPU 코어, workers 수, 예상 RAM)를 감지하여 사용자에게 보여줍니다.
 
-**CPU 코어 감지 (Bash):**
-- **Windows**: `powershell -Command "(Get-CimInstance Win32_Processor).NumberOfLogicalProcessors"`
-- **Linux**: `nproc`
-- **Mac**: `sysctl -n hw.logicalcpu`
+CPU 감지 명령어 및 출력 형식: See [server-setup.md](references/server-setup.md)
 
-감지 결과를 기반으로 표시:
-
-```
-🖥️ 머신 상태:
-  CPU: {감지된 코어}코어 (논리 프로세서)
-  Workers (50%): {코어/2}개 동시 실행
-  예상 RAM: ~{코어/2 * 200}MB (Worker당 ~200MB)
-```
-
-추가 사전 조건:
-
-```
-1. 서버 실행 확인 (Step 3에서 완료)
-2. DB 시드 데이터 필요 여부
-3. 환경 변수 (.env.test) 설정
-4. Playwright 브라우저 설치 여부
-```
+추가 사전 조건: 서버 실행(Step 3 완료), DB 시드, `.env.test`, Playwright 브라우저 설치
 
 ---
 
@@ -314,28 +196,8 @@ IF retry >= max_retries:
 
 ### 결과 보고서 생성
 
-```markdown
-# QPassenger 결과
-
-## 요약
-- 총 시나리오: N개
-- 즉시 통과: N개
-- Healer 수정 후 통과: N개
-- 미통과 (fixme): N개
-- 통과율: N%
-- 총 Healer 반복: N회
-
-## 수정 이력
-| 회차 | 실패 테스트 | 원인 | 수정 대상 | 수정 내용 |
-|------|------------|------|----------|-----------|
-| 1 | TC-003 | 셀렉터 변경 | 테스트 | button[name] → role selector |
-| 2 | TC-007 | API 409 미처리 | 구현 | 중복 체크 로직 추가 |
-
-## 미통과 항목 (수동 확인 필요)
-| TC-ID | 에러 | 추정 원인 | 권장 조치 |
-|-------|------|----------|-----------|
-| TC-012 | timeout | 외부 API 의존 | mock 서버 도입 검토 |
-```
+요약·수정 이력·미통과 항목 3섹션으로 구성합니다.
+보고서 마크다운 템플릿 및 QA 문서 업데이트 형식: See [result-report.md](references/result-report.md)
 
 ### 판정 기준 (qa-engineer 기준 적용)
 
@@ -347,15 +209,7 @@ IF retry >= max_retries:
 
 ### QA 문서 업데이트
 
-원본 시나리오 문서에 결과를 반영합니다:
-
-```markdown
-| TC-ID | 시나리오 | 결과 | 비고 |
-|-------|---------|------|------|
-| TC-001 | 로그인 성공 | ✅ | |
-| TC-002 | 로그인 실패 | ✅ | Healer 1회 수정 |
-| TC-003 | 비밀번호 찾기 | ⚠️ fixme | 외부 메일 서버 필요 |
-```
+원본 시나리오 문서에 `✅ / ⚠️ fixme` 결과를 반영합니다.
 
 ---
 
@@ -387,27 +241,17 @@ IF retry >= max_retries:
 
 ### 서버 정리
 
-테스트 완료 후 Step 3에서 실행한 서버를 정리합니다:
+테스트 완료 후 Step 3에서 실행한 서버를 정리합니다.
 
-```
-Docker 모드:
-  → docker compose down (컨테이너 중지 + 제거)
-  → 볼륨은 유지 (다음 테스트에서 재사용)
-
-Dev Server 모드:
-  → $DEV_SERVER_PID 프로세스 종료
-  → kill $DEV_SERVER_PID 2>/dev/null
-```
+서버 정리 명령어 상세: See [server-setup.md](references/server-setup.md)
 
 ---
 
 ## 주의사항
 
-- Playwright가 설치되어 있어야 합니다 (`npx playwright install`)
-- Step 3에서 서버를 자동 실행합니다 (수동 실행 불필요)
-- 포트 충돌 시 기존 프로세스를 종료하고 해당 포트로 실행합니다
-- Healer는 구현 코드를 수정할 수 있으므로, 커밋되지 않은 변경사항이 있으면 주의하세요
-- 외부 의존성(메일, 결제 등)이 필요한 테스트는 mock으로 대체를 권장합니다
+- Playwright 미설치 시 `npx playwright install` 필요
+- Healer가 구현 코드를 수정하므로, 커밋되지 않은 변경사항이 있으면 주의
+- 외부 의존성(메일, 결제 등) 테스트는 mock 대체 권장
 
 ---
 
