@@ -18,6 +18,7 @@
 | 견적 | `/estimate` |
 | 헤르메스 | `/hermes` |
 | OKR | `/okr` |
+| 아프로디테 | `/aphrodite` |
 
 ---
 
@@ -295,6 +296,7 @@ claude plugin install voltagent-qa-sec
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (/estimate) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
+| `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 디자인시스템→DB매칭→구현→리뷰 (/aphrodite) |
 
 ---
 
