@@ -1,0 +1,6 @@
+{
+  "jira_base_url": "",
+  "default_project_key": "",
+  "default_assignee": "",
+  "preferred_issue_types": ["Story", "Bug", "Task"]
+}

@@ -149,6 +149,36 @@ class PPTGenerator:
    - 푸터 (페이지 번호, 날짜)
    - 색상 팔레트 정의
 
+## Helper Scripts
+
+이 스킬에는 재사용 가능한 헬퍼 스크립트가 포함되어 있습니다.
+SKILL.md의 `PPTGenerator` 클래스 없이 슬라이드를 빠르게 조합할 때 사용하세요.
+
+| 스크립트 | 용도 |
+|---------|------|
+| `scripts/pptx_helpers.py` | python-pptx 기반 슬라이드 생성 헬퍼 (타이틀, 불릿, 이미지, 차트, 테이블) |
+
+```bash
+# 설치
+pip install python-pptx Pillow
+
+# 직접 실행 (샘플 PPT 생성)
+python scripts/pptx_helpers.py
+```
+
+주요 함수:
+
+| 함수 | 역할 |
+|------|------|
+| `create_presentation(title, subtitle, author)` | 타이틀 슬라이드 포함 Presentation 생성 |
+| `add_title_slide(prs, title, subtitle)` | 타이틀 슬라이드 추가 |
+| `add_content_slide(prs, title, bullets)` | 불릿 목록 슬라이드 추가 (들여쓰기 지원) |
+| `add_image_slide(prs, title, image_path, caption)` | 이미지 + 캡션 슬라이드 추가 |
+| `add_chart_slide(prs, title, chart_data, chart_type)` | 막대/꺾은선/파이 차트 슬라이드 추가 |
+| `add_table_slide(prs, title, headers, rows)` | 교번 색상 테이블 슬라이드 추가 |
+
+---
+
 ## 체크리스트
 
 - [ ] python-pptx 설치됨

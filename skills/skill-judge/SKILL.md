@@ -230,17 +230,19 @@ Can an Agent actually use this Skill effectively?
 
 ---
 
-## NEVER Do When Evaluating
+## Evaluation Pitfalls
 
-- **NEVER** give high scores just because it "looks professional" or is well-formatted
-- **NEVER** ignore token waste — every redundant paragraph should result in deduction
-- **NEVER** let length impress you — a 43-line Skill can outperform a 500-line Skill
-- **NEVER** skip mentally testing the decision trees — do they actually lead to correct choices?
-- **NEVER** forgive explaining basics with "but it provides helpful context"
-- **NEVER** overlook missing anti-patterns — if there's no NEVER list, that's a significant gap
-- **NEVER** assume all procedures are valuable — distinguish domain-specific from generic
-- **NEVER** undervalue the description field — poor description = skill never gets used
-- **NEVER** put "when to use" info only in the body — Agent only sees description before loading
+Formatting and length are the most common traps when scoring Skills.
+
+- **Formatting ≠ knowledge delta.** A polished layout with headers, tables, and bold text can still be pure Redundant content. Score what the text says, not how it looks.
+- **Token waste is a real cost.** Every redundant paragraph consumes context window shared with system prompts, conversation history, and the user's actual request. A paragraph explaining "what is a unit test" costs the same tokens as a paragraph explaining a non-obvious edge case — but only one earns its place.
+- **Length can signal poor editing.** A 43-line Skill with pure Expert content outperforms a 500-line Skill diluted with basics. When length impresses you, ask: "Is this long because the domain is complex, or because the author didn't cut?"
+- **Decision trees need mental execution.** Read each branch and trace it: does following the tree actually lead to a correct outcome? A tree that looks comprehensive but leads to wrong choices is worse than no tree.
+- **"Helpful context" is often Redundant.** When content could be justified as "helpful context," ask whether Claude needs that context or already has it. If Claude already knows it, the context isn't helpful — it's noise.
+- **Missing anti-patterns are a gap.** Expert knowledge lives in what NOT to do. A Skill with no NEVER list likely hasn't captured the hard-won lessons from experience.
+- **Generic procedures and domain-specific procedures look similar but aren't.** "Open file, edit, save" is generic. "Unpack OOXML, edit XML nodes, validate schema, repack" is domain-specific. One adds value, one doesn't.
+- **Description is load-gating.** The Agent reads description before deciding to load the Skill. If description doesn't explain WHEN to use it, the Skill may never trigger — making the body irrelevant. Poor description = invisible Skill.
+- **"When to use" in the body only is a structural mistake.** The body loads only after the Skill is triggered. Trigger conditions belong in the description.
 
 ---
 

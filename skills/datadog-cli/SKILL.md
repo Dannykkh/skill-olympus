@@ -20,6 +20,37 @@ A CLI tool for AI agents to debug and triage using Datadog logs and metrics.
 - [Workflows](references/workflows.md)
 - [Dashboards](references/dashboards.md)
 
+## Setup (최초 1회)
+
+이 스킬은 `config.json`에 설정이 필요합니다.
+
+1. `config.json`을 읽는다 (`skills/datadog-cli/config.json` 또는 `~/.claude/skills/datadog-cli/config.json`)
+2. 빈 필드가 있으면 사용자에게 AskUserQuestion으로 질문한다
+3. 답변을 `config.json`에 저장한다
+4. 이후 실행 시에는 `config.json`에서 자동으로 읽는다
+
+| 항목 | 설명 | 예시 |
+|------|------|------|
+| `dd_site` | Datadog 사이트 도메인 | `datadoghq.com` / `datadoghq.eu` |
+| `default_service` | 기본 서비스명 (쿼리 자동완성에 사용) | `api-server` |
+| `default_env` | 기본 환경 | `production` / `staging` |
+| `log_index` | 기본 로그 인덱스 | `main` |
+
+**Setup 로직:**
+
+```
+config.json 읽기
+  ├─ dd_site가 기본값(datadoghq.com)이면 → "Datadog 사이트를 확인해주세요 (EU 사용자: datadoghq.eu, 맞으면 Enter)"
+  ├─ default_service 비어있음? → "주로 조회할 서비스명을 입력해주세요 (예: api-server, 건너뛰려면 Enter)"
+  ├─ default_env 비어있음? → "기본 환경을 입력해주세요 (예: production, staging)"
+  └─ 답변 수집 후 config.json에 저장 → 이후 자동 사용
+```
+
+> **모든 필드가 채워져 있으면 이 단계를 건너뜁니다.**
+> `config.json`의 `dd_site` 값은 `--site` 플래그로 자동 주입됩니다.
+
+---
+
 ## Setup
 
 ### Environment Variables (Required)

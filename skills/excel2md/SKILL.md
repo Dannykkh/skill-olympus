@@ -164,6 +164,35 @@ python skills/excel2md/excel2md.py /path/to/data.xlsx --overwrite
 - **드로잉 매핑 실패**: media 폴더 전체 추출 후 row=-1로 표시
 - **twoCellAnchor + oneCellAnchor**: 두 앵커 타입 모두 지원
 
+## Helper Scripts
+
+이 스킬에는 재사용 가능한 헬퍼 스크립트가 포함되어 있습니다.
+`excel2md.py` 의 핵심 함수를 독립적으로 호출할 때 사용하세요.
+
+| 스크립트 | 용도 |
+|---------|------|
+| `scripts/excel_parser.py` | openpyxl 기반 파싱 헬퍼 (마크다운 변환, JSON 변환, 이미지 추출, 헤더 자동 감지) |
+
+```bash
+# 설치
+pip install openpyxl
+
+# 직접 실행 (파일 파싱 결과 출력)
+python scripts/excel_parser.py data.xlsx ./output
+```
+
+주요 함수:
+
+| 함수 | 역할 |
+|------|------|
+| `read_workbook(filepath)` | openpyxl로 워크북 열기 (data_only 옵션 지원) |
+| `detect_header_row(sheet)` | 문자열 비율 기반 헤더 행 자동 감지 |
+| `sheet_to_markdown(sheet)` | 시트를 GFM 마크다운 테이블로 변환 |
+| `sheet_to_json(sheet)` | 시트를 구조화된 dict로 변환 |
+| `extract_images(filepath, output_dir)` | 임베디드 이미지 추출 + 행/열 위치 반환 |
+
+---
+
 ## 체크리스트
 
 - [ ] openpyxl 설치됨

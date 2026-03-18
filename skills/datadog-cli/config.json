@@ -1,0 +1,6 @@
+{
+  "dd_site": "datadoghq.com",
+  "default_service": "",
+  "default_env": "production",
+  "log_index": "main"
+}

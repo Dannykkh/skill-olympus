@@ -473,9 +473,40 @@ After running `comment.py` (see Step 2), add markers to document.xml. For replie
 
 ---
 
+## Helper Scripts
+
+이 스킬에는 재사용 가능한 Python 헬퍼 스크립트가 포함되어 있습니다.
+docx-js(Node.js) 대신 순수 Python으로 문서를 생성하거나 기존 문서를 편집할 때 사용하세요.
+
+| 스크립트 | 용도 |
+|---------|------|
+| `scripts/docx_helpers.py` | python-docx 기반 문서 생성 헬퍼 (목차, 테이블, 헤더/푸터, 페이지 번호, 메타데이터 저장) |
+
+```bash
+# 설치
+pip install python-docx
+
+# 직접 실행 (샘플 문서 생성)
+python scripts/docx_helpers.py
+```
+
+주요 함수:
+
+| 함수 | 역할 |
+|------|------|
+| `create_document(title, author)` | 기본 스타일(맑은 고딕, A4 여백)이 적용된 문서 생성 |
+| `add_toc(doc)` | 목차 필드 삽입 (Word에서 F9로 업데이트 필요) |
+| `add_styled_table(doc, headers, rows)` | 헤더에 파란 배경이 적용된 테이블 추가 |
+| `add_page_number(doc)` | 푸터에 '페이지 N / M' 삽입 |
+| `add_header_footer(doc, header_text, footer_text)` | 헤더/푸터 텍스트 설정 |
+| `save_with_metadata(doc, filepath, author, subject)` | 메타데이터 포함 저장 |
+
+---
+
 ## Dependencies
 
 - **pandoc**: Text extraction
 - **docx**: `npm install -g docx` (new documents)
+- **python-docx**: `pip install python-docx` (Python 기반 문서 생성)
 - **LibreOffice**: PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
 - **Poppler**: `pdftoppm` for images

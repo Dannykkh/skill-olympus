@@ -9,18 +9,6 @@ description: Use when writing prose humans will read—documentation, commit mes
 
 Write with clarity and force. This skill covers what to do (Strunk) and what not to do (AI patterns).
 
-## When to Use This Skill
-
-Use this skill whenever you write prose for humans:
-
-- Documentation, README files, technical explanations
-- Commit messages, pull request descriptions
-- Error messages, UI copy, help text, comments
-- Reports, summaries, or any explanation
-- Editing to improve clarity
-
-**If you're writing sentences for a human to read, use this skill.**
-
 ## Limited Context Strategy
 
 When context is tight:
@@ -33,37 +21,15 @@ Loading a single section (~1,000-4,500 tokens) instead of everything saves signi
 
 ## Elements of Style
 
-William Strunk Jr.'s *The Elements of Style* (1918) teaches you to write clearly and cut ruthlessly.
+William Strunk Jr.'s *The Elements of Style* (1918) is the reference. The rules most violated in practice:
 
-### Rules
+- **Use active voice** — passive buries the agent and weakens sentences
+- **Put statements in positive form** — "he was not honest" → "he was dishonest"
+- **Use definite, specific, concrete language** — vague nouns and abstract claims lose readers
+- **Omit needless words** — every word should do work
+- **Place emphatic words at end of sentence** — the last word is the most memorable position
 
-**Elementary Rules of Usage (Grammar/Punctuation)**:
-
-1. Form possessive singular by adding 's
-2. Use comma after each term in series except last
-3. Enclose parenthetic expressions between commas
-4. Comma before conjunction introducing co-ordinate clause
-5. Don't join independent clauses by comma
-6. Don't break sentences in two
-7. Participial phrase at beginning refers to grammatical subject
-
-**Elementary Principles of Composition**:
-
-8. One paragraph per topic
-9. Begin paragraph with topic sentence
-10. **Use active voice**
-11. **Put statements in positive form**
-12. **Use definite, specific, concrete language**
-13. **Omit needless words**
-14. Avoid succession of loose sentences
-15. Express co-ordinate ideas in similar form
-16. **Keep related words together**
-17. Keep to one tense in summaries
-18. **Place emphatic words at end of sentence**
-
-### Reference Files
-
-The rules above are summarized from Strunk's original text. For complete explanations with examples:
+For complete rules with examples, load the relevant section:
 
 | Section | File | ~Tokens |
 |---------|------|---------|

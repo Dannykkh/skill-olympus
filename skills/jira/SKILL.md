@@ -7,6 +7,36 @@ description: Use when the user mentions Jira issues (e.g., "PROJ-123"), asks abo
 
 Natural language interaction with Jira. Supports multiple backends.
 
+## Setup (최초 1회)
+
+이 스킬은 `config.json`에 설정이 필요합니다.
+
+1. `config.json`을 읽는다 (`skills/jira/config.json` 또는 `~/.claude/skills/jira/config.json`)
+2. 빈 필드가 있으면 사용자에게 AskUserQuestion으로 질문한다
+3. 답변을 `config.json`에 저장한다
+4. 이후 실행 시에는 `config.json`에서 자동으로 읽는다
+
+| 항목 | 설명 | 예시 |
+|------|------|------|
+| `jira_base_url` | Jira 인스턴스 URL | `https://mycompany.atlassian.net` |
+| `default_project_key` | 기본 프로젝트 키 (이슈 생성 시 자동 사용) | `PROJ` |
+| `default_assignee` | 기본 담당자 (본인 Jira 사용자명) | `john.doe` |
+| `preferred_issue_types` | 주로 사용하는 이슈 타입 목록 | `["Story", "Bug", "Task"]` |
+
+**Setup 로직:**
+
+```
+config.json 읽기
+  ├─ jira_base_url 비어있음? → "Jira 인스턴스 URL을 입력해주세요 (예: https://mycompany.atlassian.net)"
+  ├─ default_project_key 비어있음? → "기본 프로젝트 키를 입력해주세요 (예: PROJ, 건너뛰려면 Enter)"
+  ├─ default_assignee 비어있음? → "기본 담당자(본인 Jira 사용자명)를 입력해주세요 (건너뛰려면 Enter)"
+  └─ 답변 수집 후 config.json에 저장 → 이후 자동 사용
+```
+
+> **모든 필드가 채워져 있으면 이 단계를 건너뜁니다.**
+
+---
+
 ## Backend Detection
 
 **Run this check first** to determine which backend to use:

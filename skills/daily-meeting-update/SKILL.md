@@ -10,6 +10,37 @@ Generate a daily standup/meeting update through an **interactive interview**. Ne
 
 ---
 
+## Setup (최초 1회)
+
+이 스킬은 `config.json`에 설정이 필요합니다.
+
+1. `config.json`을 읽는다 (`skills/daily-meeting-update/config.json` 또는 `~/.claude/skills/daily-meeting-update/config.json`)
+2. 빈 필드가 있으면 사용자에게 AskUserQuestion으로 질문한다
+3. 답변을 `config.json`에 저장한다
+4. 이후 실행 시에는 `config.json`에서 자동으로 읽는다
+
+| 항목 | 설명 | 예시 |
+|------|------|------|
+| `github_username` | GitHub 사용자명 (GitHub 연동 시 자동 필터링에 사용) | `octocat` |
+| `jira_project_key` | 기본 Jira 프로젝트 키 | `PROJ` |
+| `slack_channel` | 스탠드업 결과를 공유할 Slack 채널 | `#daily-standup` |
+| `standup_format` | 출력 형식 (`markdown` / `plain`) | `markdown` |
+| `language` | 업데이트 생성 언어 (`ko` / `en`) | `ko` |
+
+**Setup 로직:**
+
+```
+config.json 읽기
+  ├─ github_username 비어있음? → "GitHub 사용자명을 입력해주세요 (건너뛰려면 Enter)"
+  ├─ jira_project_key 비어있음? → "기본 Jira 프로젝트 키를 입력해주세요 (예: PROJ, 없으면 Enter)"
+  ├─ slack_channel 비어있음? → "스탠드업을 공유할 Slack 채널을 입력해주세요 (예: #daily-standup, 없으면 Enter)"
+  └─ 답변 수집 후 config.json에 저장 → 이후 자동 사용
+```
+
+> **모든 필드가 채워져 있으면 이 단계를 건너뜁니다.**
+
+---
+
 ## Workflow
 
 ```

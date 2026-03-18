@@ -316,9 +316,39 @@ python estimate_generator.py
 | closer | 최종 산출물 (PRD 등) | 병렬 |
 | excel2md | 엑셀 ↔ 마크다운 변환 | 견적서 마크다운 버전 필요 시 |
 
+## Helper Scripts
+
+이 스킬에는 재사용 가능한 헬퍼 스크립트가 포함되어 있습니다.
+Phase 4(엑셀 생성) 단계에서 반복되는 openpyxl 패턴을 함수로 제공합니다.
+
+| 스크립트 | 용도 |
+|---------|------|
+| `scripts/estimate_builder.py` | openpyxl 기반 견적서 생성 헬퍼 (비용 그룹, 요약 시트, 수식 연결, 통화 형식) |
+
+```bash
+# 설치
+pip install openpyxl
+
+# 직접 실행 (샘플 견적서 생성)
+python scripts/estimate_builder.py
+```
+
+주요 함수:
+
+| 함수 | 역할 |
+|------|------|
+| `create_estimate_workbook(project_name)` | 헤더가 설정된 견적서 워크북 생성 |
+| `add_cost_group(ws, group_name, items)` | 비용 그룹 + 항목 + 소계 행 추가, 소계 셀 주소 반환 |
+| `add_summary_sheet(wb, subtotal_refs)` | 예비비/부가세/총 합계 수식이 연결된 요약 시트 생성 |
+| `format_currency(value, currency)` | 숫자 → 통화 문자열 변환 (KRW/USD/JPY) |
+| `calculate_totals(ws)` | Python 레벨 수량×단가 재계산 (수식 검증용) |
+
+---
+
 ## Related Files
 
 | 파일 | 역할 |
 |------|------|
 | `skills/zephermine/SKILL.md` | 기능 추출 원본 |
 | `skills/excel2md/SKILL.md` | 엑셀 변환 유틸리티 |
+| `skills/estimate/scripts/estimate_builder.py` | 견적서 생성 헬퍼 스크립트 |
