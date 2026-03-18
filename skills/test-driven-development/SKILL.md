@@ -1,6 +1,10 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: |
+  Test-first development methodology. Use when implementing features where
+  correctness is critical: business logic, data transformations, API contracts,
+  complex algorithms. NOT needed for simple UI tweaks, config changes, or
+  exploratory prototyping. Triggers on "TDD", "test first", "테스트 먼저".
 ---
 
 # Test-Driven Development (TDD)

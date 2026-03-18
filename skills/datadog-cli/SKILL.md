@@ -1,6 +1,10 @@
 ---
 name: datadog-cli
-description: Datadog CLI for searching logs, querying metrics, tracing requests, and managing dashboards. Use this when debugging production issues or working with Datadog observability.
+description: |
+  Datadog CLI for searching logs, querying metrics, and tracing requests.
+  Use when user mentions "Datadog", "DD logs", "production debugging",
+  "check metrics", "trace request", or needs to investigate production incidents.
+  Triggers on "datadog", "DD", "로그 검색", "메트릭 조회", "장애 조사".
 ---
 
 # Datadog CLI
