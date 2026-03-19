@@ -34,6 +34,8 @@ node skills/mnemo/install.js --uninstall  # 제거
 | **빠르게** | 훅에서 AI 호출 금지 |
 | **단순하게** | 파일 기반, DB 없음 |
 | **검색 가능하게** | 키워드 + 동의어 확장 |
+| **점진적 공개** | 필요한 깊이까지만 읽기 (Progressive Disclosure) |
+| **프라이버시** | `<private>` 태그로 민감 정보 제외 |
 
 ---
 
@@ -43,9 +45,10 @@ node skills/mnemo/install.js --uninstall  # 제거
 mnemo/
 ├── SKILL.md                    # 이 파일
 ├── install.js                  # 설치 스크립트
-├── hooks/                      # 대화 저장 훅
-│   ├── save-conversation.ps1/.sh
-│   └── save-response.ps1/.sh
+├── hooks/                      # 대화 저장 훅 (root hooks/에 위치)
+│   ├── save-conversation.ps1/.sh   # User 입력 저장
+│   ├── save-tool-use.ps1/.sh       # 도구 호출 관찰 로그
+│   └── save-response.ps1/.sh       # Assistant 응답 저장
 ├── templates/                  # CLAUDE.md 규칙
 │   └── claude-md-rules.md
 ├── scripts/                    # 핸드오프 스크립트
@@ -69,12 +72,17 @@ mnemo/
 사용자 입력
     ↓
 [UserPromptSubmit 훅] save-conversation
-    → 대화 파일에 User 입력 append
+    → 대화 파일에 User 입력 append (<private> 블록 제거)
+    ↓
+Claude 도구 호출
+    ↓
+[PostToolUse 훅] save-tool-use
+    → 도구명 + 파일경로를 toollog에 한 줄 append
     ↓
 Claude 응답 (끝에 #tags 포함)
     ↓
 [Stop 훅] save-response
-    → transcript에서 응답 추출 → 대화 파일 append
+    → transcript에서 응답 추출 → <private> 블록 제거 → 대화 파일 append
 ```
 
 ---
@@ -138,8 +146,10 @@ python scripts/check_staleness.py <handoff-file>
 | 상황 | 방법 |
 |------|------|
 | 대화 저장 | 자동 (훅) |
+| 도구 사용 기록 | 자동 (PostToolUse 훅 → toollog) |
 | 키워드 태깅 | Claude가 `#tags:` 추가 |
-| 과거 검색 | "이전에 ~했었지?" |
+| 과거 검색 | "이전에 ~했었지?" (Progressive Disclosure) |
+| 민감 정보 제외 | `<private>API키</private>` → `[PRIVATE]` |
 | 지식 축적 | 중요 결정 시 자동 |
 | 세션 전환 | `python scripts/create_handoff.py` |
 | 세션 재개 | 핸드오프 파일 읽고 이어서 |
@@ -151,6 +161,7 @@ python scripts/check_staleness.py <handoff-file>
 | 파일 | 위치 |
 |------|------|
 | 대화 로그 | `conversations/YYYY-MM-DD-claude.md` |
+| 도구 사용 로그 | `conversations/YYYY-MM-DD-toollog.md` |
 | 핸드오프 | `.claude/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 | 인덱스 | `MEMORY.md` (프로젝트 루트) |
 | 의미기억 | `memory/*.md` (카테고리별 상세) |

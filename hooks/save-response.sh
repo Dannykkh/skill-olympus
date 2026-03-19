@@ -148,6 +148,9 @@ fi
 RESPONSE=$(echo "$LAST_TEXT_LINE" | jq -r '[.message.content[] | select(.type=="text") | .text] | join("\n")' 2>/dev/null)
 RESPONSE=$(echo "$RESPONSE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
+# <private> 블록 제거 (민감 정보 보호)
+RESPONSE=$(echo "$RESPONSE" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$RESPONSE" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
+
 # 빈 응답이면 스킵
 if [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; then
     exit 0

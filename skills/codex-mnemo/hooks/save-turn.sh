@@ -310,6 +310,14 @@ if [ -z "$RESPONSE" ]; then
 fi
 RESPONSE="$(echo "$RESPONSE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
+# <private> 블록 제거 (민감 정보 보호)
+if [ -n "$USER_TEXT" ]; then
+    USER_TEXT=$(echo "$USER_TEXT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$USER_TEXT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
+fi
+if [ -n "$RESPONSE" ]; then
+    RESPONSE=$(echo "$RESPONSE" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$RESPONSE" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
+fi
+
 if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; then
     debug_log "skip: empty turn, pwd=$PWD"
     exit 0

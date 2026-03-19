@@ -194,6 +194,9 @@ try {
     exit 0
 }
 
+# <private> 블록 제거 (민감 정보 보호)
+$response = $response -replace '(?s)<private>.*?</private>', '[PRIVATE]'
+
 # 빈 응답이면 스킵
 if (-not $response -or $response.Length -lt 5) { exit 0 }
 

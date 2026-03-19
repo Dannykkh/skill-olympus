@@ -105,6 +105,11 @@ function Ensure-MemoryScaffold {
 $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $Prompt = $json.prompt
 
+# <private> 블록 제거 (민감 정보 보호)
+if ($Prompt) {
+    $Prompt = $Prompt -replace '(?s)<private>.*?</private>', '[PRIVATE]'
+}
+
 $ConvDir = Join-Path $PWD.Path "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today-claude.md"

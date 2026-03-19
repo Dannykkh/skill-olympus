@@ -44,13 +44,19 @@ RAG/벡터DB 없이 키워드 기반 파일 검색으로 동작합니다.
 프로젝트/
 ├── MEMORY.md                        # 의미기억: 핵심 결정/패턴 (항상 로드)
 ├── CLAUDE.md                        # @MEMORY.md 참조 + 메모리 규칙
+├── memory/                          # 의미기억 상세 (카테고리별)
+│   ├── architecture.md
+│   ├── patterns.md
+│   ├── tools.md
+│   └── gotchas.md
 ├── hooks/
-│   ├── save-conversation.ps1/.sh    # User 입력 자동 저장
-│   └── save-response.ps1/.sh        # Assistant 응답 자동 저장 (Stop 훅)
-└── .claude/
-    └── conversations/               # 일화기억: 대화 로그
-        ├── 2026-02-03.md
-        └── 2026-02-04.md
+│   ├── save-conversation.ps1/.sh    # User 입력 자동 저장 + <private> strip
+│   ├── save-tool-use.ps1/.sh        # 도구 호출 관찰 로그 (PostToolUse)
+│   └── save-response.ps1/.sh        # Assistant 응답 저장 + <private> strip
+└── conversations/                   # 일화기억: 대화 로그
+    ├── 2026-02-03-claude.md
+    ├── 2026-02-03-toollog.md        # 도구 사용 로그
+    └── 2026-02-04-claude.md
 ```
 
 ---
@@ -63,13 +69,21 @@ RAG/벡터DB 없이 키워드 기반 파일 검색으로 동작합니다.
 사용자 입력
     ↓
 [UserPromptSubmit 훅] save-conversation.ps1
+    → <private> 블록 제거
     → 대화 파일에 "## [HH:mm] User" append (AI 호출 없음)
+    ↓
+Claude 도구 호출
+    ↓
+[PostToolUse 훅] save-tool-use.ps1
+    → 도구명 + 파일경로를 toollog에 한 줄 append
+    → Read/Grep/Glob 등 빈번한 도구는 스킵 (노이즈 방지)
     ↓
 Claude 응답 (끝에 #tags 포함)
     ↓
 [Stop 훅] save-response.ps1
     → transcript JSONL에서 마지막 assistant text 추출
-    → 500자 제한으로 대화 파일에 append (AI 호출 없음)
+    → <private> 블록 제거
+    → 4000자 제한으로 대화 파일에 append (AI 호출 없음)
 ```
 
 ### 태깅 (자연스럽게)
@@ -201,10 +215,13 @@ install-orchestrator.js를 생성했습니다...
 
 1. **속도**: 모든 훅에서 AI 호출 제로. 기계적 처리만 (append, grep)
 2. **컨텍스트 다이어트**: MEMORY.md만 항상 로드, 대화 파일은 필요 시에만
-3. **파일 기반 단순성**: DB/RAG/MCP 불필요. `.md` 파일이라 사람이 직접 편집 가능
-4. **Git 추적**: 버전 관리, 이력 추적, 롤백 가능
-5. **이식성**: 다른 프로젝트에 복사만 하면 적용
-6. **RAG 90% 효과**: 키워드 grep + 동의어 확장으로 시맨틱 검색에 가까운 효과, 복잡도는 10%
+3. **Progressive Disclosure**: 인덱스 → 항목 목차 → 항목 상세 → 대화 원본 순서로 필요한 깊이까지만
+4. **파일 기반 단순성**: DB/RAG/MCP 불필요. `.md` 파일이라 사람이 직접 편집 가능
+5. **프라이버시**: `<private>` 태그로 민감 정보 자동 제거
+6. **도구 관찰 로그**: PostToolUse 훅으로 "어제 뭘 수정했지?" 질문에 답변 가능
+7. **Git 추적**: 버전 관리, 이력 추적, 롤백 가능
+8. **이식성**: 다른 프로젝트에 복사만 하면 적용
+9. **RAG 90% 효과**: 키워드 grep + 동의어 확장으로 시맨틱 검색에 가까운 효과, 복잡도는 10%
 
 ---
 
@@ -278,12 +295,14 @@ mkdir -p .claude/conversations
 | `MEMORY.md` | 의미기억 (컨텍스트 트리) |
 | `CLAUDE.md` | 메모리 규칙 정의 |
 | `~/.claude/CLAUDE.md` | **글로벌** 메모리 규칙 (모든 프로젝트 적용) |
-| `hooks/save-conversation.ps1/.sh` | User 입력 자동 저장 (BOM-free UTF-8) |
-| `hooks/save-response.ps1/.sh` | Assistant 응답 자동 저장 (Stop 훅, BOM-free UTF-8) |
+| `hooks/save-conversation.ps1/.sh` | User 입력 자동 저장 (BOM-free UTF-8, `<private>` strip) |
+| `hooks/save-tool-use.ps1/.sh` | 도구 호출 관찰 로그 (PostToolUse 훅) |
+| `hooks/save-response.ps1/.sh` | Assistant 응답 자동 저장 (Stop 훅, `<private>` strip) |
 | `conversations/` | 일화기억 (대화 로그, CLI별 파일 분리) |
+| `conversations/*-toollog.md` | 도구 사용 로그 (Edit, Bash, Agent 등) |
 | `skills/mnemo/templates/claude-md-rules.md` | CLAUDE.md 규칙 템플릿 |
 | `install-claude-md.js` | CLAUDE.md 규칙 머지 헬퍼 |
 
 ---
 
-**최종 업데이트:** 2026-02-04
+**최종 업데이트:** 2026-03-19

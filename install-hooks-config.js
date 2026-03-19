@@ -73,7 +73,7 @@ function hookEntry(matcher, command) {
 }
 
 // Mandatory hooks: always installed regardless of component selection
-const MANDATORY_HOOKS = ["save-conversation", "save-response", "save-turn", "orchestrator-detector"];
+const MANDATORY_HOOKS = ["save-conversation", "save-tool-use", "save-response", "save-turn", "orchestrator-detector"];
 
 // Hook-to-bundle mapping (which bundle requires which hook)
 // Mandatory hooks (MANDATORY_HOOKS) always return true in shouldIncludeHook
@@ -86,6 +86,7 @@ const HOOK_BUNDLE_MAP = {
   "validate-docs": ["all-only"],
   "validate-api": ["all-only"],
   "save-response": ["mnemo"],
+  "save-tool-use": ["mnemo"], // Claude only: PostToolUse 도구 관찰 로그
   "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
   "loop-stop": ["all-only"], // Chronos 루프 Stop 훅 (loop-state.md 없으면 자동 통과)
   "ddingdong-noti": ["all-only"], // OS 네이티브 알림 훅
@@ -126,6 +127,8 @@ function buildClaudeHooksConfig(dir, isWindows) {
 
   // PostToolUse
   const post = [];
+  if (shouldIncludeHook("save-tool-use"))
+    post.push(hookEntry(".*", cmd(`save-tool-use.${ext}`)));
   if (shouldIncludeHook("validate-code"))
     post.push(hookEntry("Edit|Write", cmd(`validate-code.${ext}`)));
   if (shouldIncludeHook("validate-docs"))

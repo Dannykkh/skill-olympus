@@ -113,6 +113,9 @@ function buildHooksConfig(hooksDir) {
       UserPromptSubmit: [
         { matcher: ".*", hooks: [{ type: "command", command: cmd("save-conversation.ps1") }] }
       ],
+      PostToolUse: [
+        { matcher: ".*", hooks: [{ type: "command", command: cmd("save-tool-use.ps1") }] }
+      ],
       Stop: [
         { matcher: "", hooks: [{ type: "command", command: cmd("save-response.ps1") }] }
       ]
@@ -122,6 +125,9 @@ function buildHooksConfig(hooksDir) {
     return {
       UserPromptSubmit: [
         { matcher: ".*", hooks: [{ type: "command", command: cmd("save-conversation.sh") }] }
+      ],
+      PostToolUse: [
+        { matcher: ".*", hooks: [{ type: "command", command: cmd("save-tool-use.sh") }] }
       ],
       Stop: [
         { matcher: "", hooks: [{ type: "command", command: cmd("save-response.sh") }] }
@@ -143,6 +149,7 @@ function mergeHooksConfig(settingsPath, hooksConfig) {
       // Extract unique identifier from the hook command to add
       const newCmd = hook.hooks?.[0]?.command || hook.command || "";
       const hookId = newCmd.includes("save-conversation") ? "save-conversation"
+                   : newCmd.includes("save-tool-use") ? "save-tool-use"
                    : newCmd.includes("save-response") ? "save-response"
                    : newCmd;
 
@@ -168,7 +175,7 @@ function removeHooksConfig(settingsPath) {
     settings.hooks[event] = settings.hooks[event].filter(h => {
       if (!h.hooks || !h.hooks[0] || !h.hooks[0].command) return true;
       const cmd = h.hooks[0].command;
-      return !cmd.includes("save-conversation") && !cmd.includes("save-response");
+      return !cmd.includes("save-conversation") && !cmd.includes("save-tool-use") && !cmd.includes("save-response");
     });
 
     if (settings.hooks[event].length === 0) {
@@ -201,8 +208,8 @@ function install() {
   ensureDir(hooksDir);
 
   const hookFiles = isWindows
-    ? ["save-conversation.ps1", "save-response.ps1"]
-    : ["save-conversation.sh", "save-response.sh"];
+    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1"]
+    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh"];
 
   for (const file of hookFiles) {
     // Search for hook file source: skills/mnemo/hooks/ → root hooks/ fallback
@@ -264,10 +271,21 @@ function install() {
     h.command?.includes?.("save-conversation")
   );
 
+  const hasToolUseHook = settingsCheck.hooks?.PostToolUse?.some(h =>
+    h.hooks?.[0]?.command?.includes("save-tool-use") ||
+    h.command?.includes?.("save-tool-use")
+  );
+
   if (hasStopHook) {
     console.log("      ✅ settings.json Stop hook (save-response)");
   } else {
     console.log("      ❌ settings.json Stop hook (save-response) not registered!");
+    allOk = false;
+  }
+  if (hasToolUseHook) {
+    console.log("      ✅ settings.json PostToolUse hook (save-tool-use)");
+  } else {
+    console.log("      ❌ settings.json PostToolUse hook (save-tool-use) not registered!");
     allOk = false;
   }
   if (hasSubmitHook) {
@@ -301,7 +319,7 @@ function install() {
 ║  MNEMO Install Complete!                                      ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Installed Components:                                        ║
-║  - Hooks: save-conversation, save-response (auto-save chats) ║
+║  - Hooks: save-conversation, save-tool-use, save-response    ║
 ║  - CLAUDE.md: response tags, past search, MEMORY.md update   ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Usage:                                                       ║
@@ -331,8 +349,8 @@ function check() {
   // 1. Hook files exist
   console.log("[1/3] Checking hook files...");
   const hookFiles = isWindows
-    ? ["save-conversation.ps1", "save-response.ps1"]
-    : ["save-conversation.sh", "save-response.sh"];
+    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1"]
+    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh"];
 
   for (const file of hookFiles) {
     const dest = path.join(hooksDir, file);
@@ -376,6 +394,19 @@ function check() {
     }
   } else {
     console.log(`      ❌ Stop hook not registered (save-response missing)`);
+    issues++;
+  }
+
+  // PostToolUse hook (save-tool-use)
+  const ptuHooks = settings.hooks?.PostToolUse || [];
+  const hasPtu = ptuHooks.some(h => {
+    const cmd = h.hooks?.[0]?.command || h.command || "";
+    return cmd.includes("save-tool-use");
+  });
+  if (hasPtu) {
+    console.log(`      ✅ PostToolUse → save-tool-use`);
+  } else {
+    console.log(`      ❌ PostToolUse hook not registered (save-tool-use missing)`);
     issues++;
   }
 
@@ -437,6 +468,7 @@ function uninstall() {
   console.log("[1/3] Removing hook files...");
   const hookFiles = [
     "save-conversation.ps1", "save-conversation.sh",
+    "save-tool-use.ps1", "save-tool-use.sh",
     "save-response.ps1", "save-response.sh"
   ];
   for (const file of hookFiles) {

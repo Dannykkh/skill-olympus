@@ -97,6 +97,11 @@ EOF
 
 INPUT_JSON=$(cat)
 PROMPT=$(echo "$INPUT_JSON" | jq -r '.prompt // empty' 2>/dev/null)
+
+# <private> 블록 제거 (민감 정보 보호)
+if [ -n "$PROMPT" ]; then
+    PROMPT=$(echo "$PROMPT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$PROMPT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
+fi
 CONV_DIR="$PWD/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-claude.md"

@@ -451,6 +451,10 @@ if ((-not $userText -or $userText.Length -lt 1) -or (-not $response -or $respons
     Write-DebugLog "fallback-used: session=$($sessionData.SessionFile), userLen=$($userText.Length), respLen=$($response.Length), prefCwd=$prefCwd"
 }
 
+# <private> 블록 제거 (민감 정보 보호)
+if ($userText) { $userText = $userText -replace '(?s)<private>.*?</private>', '[PRIVATE]' }
+if ($response) { $response = $response -replace '(?s)<private>.*?</private>', '[PRIVATE]' }
+
 if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $response.Length -lt 5)) {
     Write-DebugLog "skip: empty turn, pwd=$($PWD.Path)"
     exit 0
