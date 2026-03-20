@@ -3,6 +3,23 @@ name: database-postgresql
 description: PostgreSQL/Supabase database specialist. Schema design, RLS, query optimization, migrations. Runs on "PostgreSQL", "Supabase", "Postgres query", "RLS" requests.
 tools: Read, Write, Edit, Bash
 model: sonnet
+when_to_use: |
+  - PostgreSQL 스키마 구현 및 마이그레이션
+  - RLS(Row-Level Security) 멀티테넌시 구현
+  - PostgreSQL 쿼리 최적화 (JSONB, GIN/GiST)
+  - Supabase 통합 및 설정
+avoid_if: |
+  - 신규 스키마 설계 (database-schema-designer 먼저)
+  - MySQL 작업 (database-mysql 사용)
+  - 시스템 아키텍처 (architect 사용)
+  - API 구현 (backend 에이전트 사용)
+examples:
+  - prompt: "RLS로 멀티테넌트 격리 구현"
+    outcome: "RLS 정책, 함수, 테스트, 성능 영향 분석"
+  - prompt: "JSONB 컬럼 쿼리 최적화"
+    outcome: "GIN 인덱스, jsonpath, 성능 비교, 트레이드오프"
+  - prompt: "Supabase 마이그레이션 작성"
+    outcome: "SQL 마이그레이션, 시드 데이터, Edge Function 연동"
 ---
 
 # Database Agent (PostgreSQL / Supabase)

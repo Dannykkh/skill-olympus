@@ -2,7 +2,25 @@
 name: database-schema-designer
 description: Database schema design specialist. Entity extraction from business requirements, normalization, ERD generation, DDL writing, migration planning. DB-First approach — design adapts to target database strengths. Auto-triggers on "design schema", "create tables", "database design", "ERD" requests.
 tools: Read, Write, Edit, Bash
-model: sonnet
+model: opus
+when_to_use: |
+  - 비즈니스 요구사항에서 DB 스키마 설계
+  - 엔티티 추출 및 정규화 전략
+  - ERD 생성 및 DDL 작성
+  - 마이그레이션 계획 수립
+  - DB 기술 선택 (PostgreSQL vs MySQL vs MongoDB)
+avoid_if: |
+  - 기존 스키마 쿼리 최적화 (database-mysql/database-postgresql 사용)
+  - API 설계 (스키마 설계 후 backend 에이전트 사용)
+  - 시스템 아키텍처 (architect 먼저)
+  - 데이터 마이그레이션 실행 (database-mysql/database-postgresql 사용)
+examples:
+  - prompt: "멀티테넌트 SaaS 이커머스 스키마 설계"
+    outcome: "ERD, 정규화 전략, RLS 정책, 테넌트 격리 방식"
+  - prompt: "PostgreSQL vs MySQL 중 분석용 DB 선택"
+    outcome: "트레이드오프 분석, 추천 및 근거, 마이그레이션 경로"
+  - prompt: "제로 다운타임 스키마 마이그레이션 계획"
+    outcome: "단계별 마이그레이션, 롤백 전략, 데이터 검증 방안"
 ---
 
 # Database Schema Designer

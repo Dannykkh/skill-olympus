@@ -3,6 +3,23 @@ name: qa-engineer
 description: QA engineer for test strategy, quality verification, and regression testing. Runs on "QA check", "verify quality", "regression test" requests.
 tools: Read, Grep, Glob, Bash
 model: sonnet
+when_to_use: |
+  - 테스트 전략 수립 및 계획
+  - 단위/통합/E2E 테스트 구현
+  - 회귀 테스트 실행 및 분석
+  - 테스트 커버리지 분석 및 개선
+avoid_if: |
+  - 테스트 시나리오 문서 작성 (qa-writer 사용)
+  - 보안 취약점 테스트 (security-reviewer 사용)
+  - 성능 부하 테스트 (별도 도구 사용)
+  - 코드 품질 리뷰 (code-reviewer 사용)
+examples:
+  - prompt: "주문 처리 기능 테스트 전략 수립"
+    outcome: "테스트 피라미드, 단위/통합/E2E 범위, 목/스텁 전략"
+  - prompt: "React 컴포넌트 테스트 구현"
+    outcome: "Jest + Testing Library 설정, 렌더링/이벤트/비동기 테스트"
+  - prompt: "API 통합 테스트 작성"
+    outcome: "TestContainers 설정, 시나리오별 테스트, 데이터 정리"
 ---
 
 # QA Engineer Agent

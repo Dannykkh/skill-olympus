@@ -87,10 +87,13 @@ allowed-tools:
 | 규칙 | 설명 |
 |------|------|
 | **파일 영역 분리** | 같은 파일을 두 에이전트가 동시에 수정 금지. 태스크 배분 시 담당 영역 명시 |
+| **mode 필수** | TeamCreate 시 반드시 `mode: "bypassPermissions"` 지정. 미지정 시 팀원이 파일 쓰기 권한 대기로 무한 멈춤 |
 | **idle 방치** | 팀원 idle 알림이 와도 task 진행 중이면 절대 개입 안 함 (subagent 대기 중일 수 있음) |
+| **무응답 감지** | 팀원 스폰 후 1분 내 파일 미생성 → shutdown → `mode: "bypassPermissions"`로 재스폰 (최대 2회) |
 | **교체 정책** | 다음 태스크가 이전 작업과 무관하면 → 해고 + 새 팀원 (200K 컨텍스트 포화 방지). 연장선이면 유지 |
 | **이름 규칙** | 교체 시 같은 이름 재사용 불가. 반드시 새 이름 부여 |
 | **subagent 규칙** | subagent에게는 리서치/파일 읽기만 허용. 코드 구현 위임 금지 |
+| **TeamDelete 필수** | 작업 완료/중단/실패 시 반드시 TeamDelete 호출. rm -rf 수동 정리에 의존 금지 |
 
 ---
 
@@ -199,7 +202,7 @@ Task({
 ```
 
 **Phase 1 리더 체크리스트:**
-1. TeamCreate로 팀 생성
+1. TeamCreate로 팀 생성 (`mode: "bypassPermissions"` 필수). 실패 시 → 시작 절차 Step 1의 폴백 참조
 2. Task로 팀원 4명 spawn (리서치 전문)
 3. 각 팀원에게 리서치 영역 배분 (SendMessage)
 4. 팀원 보고 수신 대기
@@ -336,22 +339,42 @@ Task({
 5. 재검증 → FULL MATCH 달성 시 최종 보고
 6. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
 7. activity log에 최종 검증 결과 기록
-8. 팀원 전원 해고 + TeamDelete
+8. 팀원 전원 해고 + **TeamDelete 호출** (좀비 teammate 방지, 리소스 해제)
+
+⚠️ **Phase 중간에 중단되더라도 TeamDelete 필수** — 에러/컨텍스트 한도 등으로 중단 시에도 반드시 팀 정리.
 
 ---
 
 ## 시작 절차
 
-1. **AI Provider 감지**
+1. **팀 생성 가용성 확인 (필수 — Phase 1 전에 반드시)**
+
+   ```
+   TeamCreate 도구 사용 가능한가?
+     ├─ ✅ 가능 → 팀 모드로 진행
+     └─ ❌ 불가 → 폴백 모드 결정:
+          ├─ 사용자에게 안내: "Agent Teams가 비활성 상태입니다.
+          │   settings.json에 아래 설정을 확인해주세요:
+          │   - env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1'
+          │   - teammateMode: 'in-process' 또는 'tmux'"
+          └─ 사용자가 설정 불가 시 → subagent(Task) 방식으로 Phase 진행
+   ```
+
+   **팀 모드 시 TeamCreate 호출 규칙:**
+   - 반드시 `mode: "bypassPermissions"` 지정
+   - 이전 실행에서 같은 팀명이 남아있을 수 있으므로, 생성 전 TeamDelete 시도 (에러 무시)
+   - TeamCreate 실패 시: 1회 재시도 → 재실패 시 subagent 폴백
+
+2. **AI Provider 감지**
    - `orchestrator_detect_providers`로 설치된 AI CLI 확인
    - 미설치 CLI에는 절대 태스크 배정하지 않음
 
-2. **플랜 파일 로드**
+3. **플랜 파일 로드**
    $ARGUMENTS (경로가 주어진 경우 해당 파일 사용)
    - 경로 없으면 `orchestrator_get_latest_plan`으로 최신 플랜 자동 로드
    - zephermine 산출물이 있으면 [Zephermine 산출물 활용](#zephermine-산출물-활용) 참조
 
-3. **프로젝트 분석** — ⚠️ 팀원에게 위임
+4. **프로젝트 분석** — ⚠️ 팀원에게 위임
    - 리더가 직접 분석하지 않음
    - Phase 1 팀원에게 코드 구조 분석 위임
 

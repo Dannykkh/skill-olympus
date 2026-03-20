@@ -3,6 +3,24 @@ name: documentation
 description: Technical documentation specialist. Creates PRD, API docs, implementation tracking, changelogs. Runs on "write docs", "create PRD", "API documentation" requests.
 tools: Read, Write, Glob, Grep
 model: sonnet
+when_to_use: |
+  - PRD(Product Requirements Document) 작성
+  - API 문서 (OpenAPI/Swagger) 생성
+  - 구현 추적 문서 (IMPLEMENTATION.md)
+  - 변경 로그 (CHANGELOG.md) 작성
+  - ADR(Architecture Decision Record) 작성
+avoid_if: |
+  - 요구사항 수집 (spec-interviewer 사용)
+  - 코드 내 주석 작성 (해당 도메인 에이전트)
+  - UI/UX 디자인 문서 (ui-ux-designer 사용)
+  - 테스트 시나리오 (qa-writer 사용)
+examples:
+  - prompt: "이 프로젝트 PRD 작성"
+    outcome: "목적, 범위, 기능 요구사항, 비기능 요구사항, 마일스톤"
+  - prompt: "REST API 문서 생성"
+    outcome: "OpenAPI 스펙, 엔드포인트, 파라미터, 응답 스키마, 예시"
+  - prompt: "ADR 작성: 데이터베이스 선택"
+    outcome: "맥락, 결정, 대안, 결과, 트레이드오프"
 ---
 
 # Documentation Agent

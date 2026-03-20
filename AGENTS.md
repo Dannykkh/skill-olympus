@@ -162,10 +162,15 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | | ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
 | | stitch-developer | Stitch MCP UI/웹사이트 생성 전문가 |
 | **Security** | security-reviewer | 보안 취약점 전문 분석 (8대 카테고리: 인증, 입력검증, 데이터보안, 의존성, Rate Limit, 파일업로드, Prompt Injection, 정보노출) |
+| **Debugging** | debugger | 체계적 근본원인 분석 (증상수집→가설→검증→수정) |
+| **Performance** | performance-engineer | 풀스택 성능 최적화 (N+1, 메모리릭, Core Web Vitals, 부하테스트) |
+| **TDD** | tdd-coach | Red-Green-Refactor 사이클 강제, 테스트 우선 개발 |
+| **Language** | typescript-spec | TypeScript 고급 타입 시스템 (제네릭, 조건부, 매핑 타입) |
+| | python-spec | Python 3.12+ 모던 생태계 (async, uv, ruff, pydantic) |
+| **Writing** | writing-specialist | 글쓰기 통합 전문가 (사업문서, 학술, 이메일, AI패턴제거) |
 | **Migration** | migration-helper | 레거시→모던 마이그레이션 가이드 |
 | | explore-agent | 레거시 코드 분석 |
 | **Planning** | feature-tracker | 기능 목록 및 진행 상황 관리 |
-| **Communication** | communication-excellence-coach | 이메일 개선, 톤 조정, 롤플레이 |
 | **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
 | | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
 | | chronos-worker | auto-continue-loop용 Gemini 로컬 루프 에이전트 |

@@ -76,7 +76,10 @@ while (wave의 모든 Task가 completed가 아님):
   2. 각 Task 상태 확인:
      - in_progress: 정상, 대기
      - completed: 완료, 카운트 증가
-     - 변화 없음 3분 이상: teammate 상태 확인
+     - 변화 없음 1분 이상:
+       a. 담당 파일 생성 여부 직접 확인 (Glob/Read)
+       b. 파일 미생성 → teammate가 권한 대기 또는 멈춤
+       c. 해당 teammate shutdown → mode: "bypassPermissions"로 재스폰
   3. 30초 대기 후 재확인
 ```
 
@@ -119,11 +122,12 @@ Wave 2+ 실행 시, 선행 섹션의 결과를 teammate에게 전달:
 
 | 상황 | 대응 |
 |------|------|
-| teammate가 Task를 completed로 안 바꿈 | 5분 후 Lead가 직접 확인 → 리마인드 메시지 |
-| teammate 에러 발생 | 에러 로그 확인 → Task를 새로 생성하여 재시도 1회 |
-| 재시도도 실패 | 해당 섹션을 skip하고 사용자에게 보고 |
+| teammate가 Task를 completed로 안 바꿈 (1분+) | 담당 파일 생성 여부 확인 → 미생성 시 shutdown → `mode: "bypassPermissions"`로 재스폰 |
+| teammate 에러 발생 | 에러 로그 확인 → `mode: "bypassPermissions"`로 새 teammate 생성하여 재시도 1회 |
+| 재시도도 실패 (2회) | 해당 섹션을 Lead가 subagent로 직접 구현, 또는 사용자에게 보고 |
 | 파일 충돌 감지 | Lead가 git diff로 확인 → merge 또는 사용자 판단 요청 |
-| Wave 전체 실패 | 이후 Wave도 중단, 사용자에게 보고 |
+| Wave 전체 실패 | 이후 Wave도 중단, **TeamDelete 실행 후** 사용자에게 보고 |
+| 작업 완료 또는 중단 | **반드시 TeamDelete 호출** — 좀비 teammate 방지 |
 
 ## Delegate 모드 운용
 

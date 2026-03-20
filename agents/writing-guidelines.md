@@ -67,7 +67,7 @@ leverage, robust, seamless, streamline, utilize
 ## 관련 에이전트
 
 - AI 패턴 제거 상세: **humanizer-guidelines** (24개 패턴)
-- 초안 검토/톤 조정: **communication-excellence-coach** (롤플레이, 프레젠테이션 피드백)
+- 글쓰기 통합 전문가: **writing-specialist** (사업문서, 학술, 이메일, 톤 조절, 롤플레이)
 
 ## Full Documentation
 

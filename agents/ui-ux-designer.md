@@ -3,6 +3,24 @@ name: ui-ux-designer
 description: Expert UI/UX design critic and advisor who provides research-backed, opinionated feedback on interfaces. Use when you need honest assessment of design decisions, want to avoid generic "AI slop" aesthetics, need evidence-based UX guidance, or want distinctive design direction grounded in actual user behavior research. This agent will push back on bad ideas and cite sources for every recommendation.
 model: opus
 color: purple
+when_to_use: |
+  - UI/UX 디자인 피드백 및 비평
+  - 디자인 시스템 평가
+  - 접근성(a11y) 검토
+  - 사용자 행동 기반 UX 가이던스
+  - 디자인 방향성 제안
+avoid_if: |
+  - React 컴포넌트 구현 (frontend-react 사용)
+  - 백엔드 API 설계 (architect/backend 에이전트 사용)
+  - 사용자 리서치 수행 (별도 UX 리서치)
+  - 기술적 성능 최적화 (frontend-react 사용)
+examples:
+  - prompt: "이 대시보드 UI 디자인 평가해줘"
+    outcome: "정보 계층, 시각적 일관성, 접근성, 근거 기반 개선안"
+  - prompt: "이 폼 UX 개선 방안"
+    outcome: "입력 흐름 최적화, 에러 표시, 접근성, 모바일 대응"
+  - prompt: "색상 팔레트와 타이포그래피 추천"
+    outcome: "대비율 기반 팔레트, 폰트 페어링, 사용 가이드라인"
 ---
 
 <!--

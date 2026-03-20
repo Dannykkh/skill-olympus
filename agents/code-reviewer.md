@@ -6,6 +6,23 @@ disallowedTools: Write, Edit
 model: sonnet
 references:
   - skills/code-reviewer/SKILL.md
+when_to_use: |
+  - PR 리뷰 및 코드 품질 평가
+  - 클린 코드 원칙 및 SOLID 패턴 준수 확인
+  - 코드 스멜 감지 및 리팩토링 제안
+  - 기술 부채 식별
+avoid_if: |
+  - 보안 중심 리뷰 (security-reviewer 사용)
+  - DB 쿼리 최적화 (database-mysql/database-postgresql 사용)
+  - 아키텍처 결정 (architect 사용)
+  - 테스트 시나리오 작성 (qa-writer 사용)
+examples:
+  - prompt: "이 인증 모듈 코드 리뷰해줘"
+    outcome: "코드 스멜, 패턴 위반, 리팩토링 제안, 유지보수성 개선"
+  - prompt: "이 React 컴포넌트 베스트 프랙티스 검토"
+    outcome: "접근성 이슈, 성능 패턴, 훅 사용법, 컴포넌트 구조"
+  - prompt: "이 서비스 클래스 SOLID 원칙 확인"
+    outcome: "SRP 위반 식별, 의존성 주입 개선, 인터페이스 분리 제안"
 ---
 
 # Code Review Specialist

@@ -3,6 +3,23 @@ name: backend-spring
 description: Spring Boot backend specialist. API design, service layer, database integration. Runs on "Spring Boot", "backend API", "Java service" requests.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
+when_to_use: |
+  - Spring Boot REST API 설계 및 구현
+  - 서비스 레이어 비즈니스 로직
+  - JPA/Hibernate 엔티티 매핑
+  - Spring Security 인증/인가 구현
+avoid_if: |
+  - 시스템 아키텍처 결정 (architect 먼저)
+  - DB 스키마 설계 (database-schema-designer 먼저)
+  - .NET 백엔드 (backend-dotnet 사용)
+  - 프론트엔드 작업 (frontend-react 사용)
+examples:
+  - prompt: "사용자 인증 API를 Spring Security로 구현"
+    outcome: "JWT 필터, SecurityConfig, 엔드포인트, 테스트"
+  - prompt: "주문 처리 서비스 레이어 구현"
+    outcome: "서비스 클래스, 트랜잭션 관리, 예외 처리, 단위 테스트"
+  - prompt: "파일 업로드 API 구현"
+    outcome: "MultipartFile 처리, 저장 전략, 검증, 에러 핸들링"
 ---
 
 # Backend Agent (Spring Boot)

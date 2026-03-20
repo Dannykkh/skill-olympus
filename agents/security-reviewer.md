@@ -3,6 +3,25 @@ name: security-reviewer
 description: 보안 취약점 전문 분석. 코드 리뷰 시 보안 관점 심층 검토. "보안 리뷰", "security review", "취약점 분석" 요청에 자동 실행.
 tools: Read, Grep, Glob, Bash
 disallowedTools: [Write, Edit]
+model: opus
+when_to_use: |
+  - OWASP Top 10 취약점 점검
+  - 인증/인가 코드 보안 리뷰
+  - 민감 데이터 처리 검토 (PII, 암호화)
+  - API 보안 및 입력 검증 확인
+  - 의존성 보안 취약점 분석
+avoid_if: |
+  - 일반 코드 품질 리뷰 (code-reviewer 사용)
+  - 성능 최적화 (직접 프로파일링)
+  - 아키텍처 설계 (architect 사용)
+  - 규정 준수 자문 (별도 법률 전문가 필요)
+examples:
+  - prompt: "로그인 엔드포인트 보안 감사"
+    outcome: "SQL 인젝션 위험, XSS 벡터, CSRF 갭, 개선 코드 제시"
+  - prompt: "JWT 구현 보안 검토"
+    outcome: "토큰 저장 이슈, 만료 설정, 키 관리 권장사항"
+  - prompt: "파일 업로드 API 보안 점검"
+    outcome: "확장자 검증, 크기 제한, 경로 조작 방지, 악성파일 탐지"
 ---
 
 # Security Reviewer

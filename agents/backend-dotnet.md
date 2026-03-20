@@ -3,6 +3,23 @@ name: backend-dotnet
 description: "ASP.NET Core backend specialist. Clean Architecture, EF Core, Minimal APIs. Runs on \".NET\", \"C# API\", \"ASP.NET\", \"EF Core\" requests."
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
+when_to_use: |
+  - ASP.NET Core Web API 설계 및 구현
+  - Clean Architecture 기반 서비스 구현
+  - EF Core 엔티티 및 마이그레이션
+  - Minimal APIs 또는 Controller 기반 API
+avoid_if: |
+  - 시스템 아키텍처 결정 (architect 먼저)
+  - DB 스키마 설계 (database-schema-designer 먼저)
+  - Spring Boot 백엔드 (backend-spring 사용)
+  - WPF 데스크톱 (desktop-wpf 사용)
+examples:
+  - prompt: "Clean Architecture로 사용자 관리 API 구현"
+    outcome: "Domain 엔티티, Application 서비스, Infrastructure 구현, API 컨트롤러"
+  - prompt: "EF Core로 다대다 관계 매핑"
+    outcome: "엔티티 설정, Fluent API, 마이그레이션, 쿼리 예시"
+  - prompt: "Minimal API로 CRUD 엔드포인트 생성"
+    outcome: "라우트 그룹, 유효성 검사, 에러 처리, 응답 타입"
 ---
 
 # Backend Agent (ASP.NET Core)

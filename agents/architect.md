@@ -4,7 +4,24 @@ description: |
   시스템 아키텍처 설계 및 기술 의사결정 전문가. 기술 스택 평가, 확장성 설계, 아키텍처 리뷰.
   "아키텍처 설계", "기술 스택 선정", "시스템 구조" 요청에 실행.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: opus
+when_to_use: |
+  - 시스템 아키텍처 설계 및 기술 스택 선정
+  - 마이크로서비스/모놀리스 구조 결정
+  - 확장성, 가용성 설계
+  - 기술 트레이드오프 분석
+avoid_if: |
+  - 요구사항이 아직 미정 (spec-interviewer 먼저)
+  - DB 스키마 설계 (database-schema-designer 먼저)
+  - 프론트엔드 컴포넌트 구현 (frontend-react 사용)
+  - 보안 취약점 분석 (security-reviewer 사용)
+examples:
+  - prompt: "이커머스 플랫폼 아키텍처를 설계해줘"
+    outcome: "마이크로서비스 경계, 통신 패턴, 기술 스택, 확장성 전략"
+  - prompt: "모놀리스에서 마이크로서비스로 전환 계획"
+    outcome: "단계적 분리 전략, strangler fig 패턴, 데이터 분리 방안"
+  - prompt: "실시간 알림 시스템 기술 스택 추천"
+    outcome: "WebSocket vs SSE 비교, 메시지 큐 선택, 트레이드오프 분석"
 ---
 
 # Architect Agent

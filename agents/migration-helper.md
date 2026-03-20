@@ -3,6 +3,23 @@ name: migration-helper
 description: Legacy to modern stack migration guide. Provides conversion patterns and examples. Runs on "migration help", "convert legacy code" requests.
 tools: Read, Grep, Glob
 model: sonnet
+when_to_use: |
+  - 레거시 → 모던 스택 마이그레이션 가이드
+  - 서버 사이드 렌더링 → SPA 전환
+  - jQuery → React/Vue 마이그레이션
+  - 컨트롤러+템플릿 → REST API 전환
+avoid_if: |
+  - 신규 프로젝트 구현 (backend/frontend 에이전트 사용)
+  - DB 마이그레이션 (database 에이전트 사용)
+  - 아키텍처 설계 (architect 사용)
+  - 코드 리뷰 (code-reviewer 사용)
+examples:
+  - prompt: "Spring MVC + JSP를 REST API + React로 전환"
+    outcome: "컨트롤러 → API 변환 패턴, JSP → React 매핑, 점진적 전환 계획"
+  - prompt: "jQuery 기반 폼을 React 컴포넌트로"
+    outcome: "이벤트 핸들러 매핑, 상태 관리 전환, 단계별 가이드"
+  - prompt: "레거시 코드 분석 후 전환 전략 수립"
+    outcome: "의존성 맵, 전환 우선순위, 리스크 분석"
 ---
 
 # Migration Helper

@@ -3,6 +3,23 @@ name: desktop-wpf
 description: "WPF/Windows desktop specialist. MVVM, threading, memory management, GPU rendering. Runs on \"WPF\", \"MVVM\", \"desktop app\", \"Windows UI\" requests."
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
+when_to_use: |
+  - WPF 데스크톱 애플리케이션 개발
+  - MVVM 패턴 구현
+  - UI 스레딩 및 비동기 처리
+  - 커스텀 컨트롤 및 데이터 바인딩
+avoid_if: |
+  - 웹 프론트엔드 (frontend-react 사용)
+  - 백엔드 API (backend-dotnet 사용)
+  - 시스템 아키텍처 (architect 사용)
+  - 모바일 앱 개발
+examples:
+  - prompt: "WPF로 데이터 그리드 화면 구현"
+    outcome: "MVVM 구조, DataGrid 바인딩, 페이징, 필터링"
+  - prompt: "백그라운드 작업과 프로그레스바 연동"
+    outcome: "Task.Run, IProgress<T>, CancellationToken, UI 업데이트"
+  - prompt: "커스텀 UserControl 만들기"
+    outcome: "DependencyProperty, 이벤트 라우팅, 스타일 템플릿"
 ---
 
 # Desktop Agent (WPF / Windows)

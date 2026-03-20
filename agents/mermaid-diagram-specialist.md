@@ -7,6 +7,25 @@ references:
   - agents/references/mermaid-patterns.md
   - skills/mermaid-diagrams/SKILL.md
   - skills/c4-architecture/SKILL.md
+model: haiku
+when_to_use: |
+  - 플로우차트, 시퀀스 다이어그램 생성
+  - ERD(Entity Relationship Diagram) 생성
+  - C4 아키텍처 다이어그램
+  - 상태 다이어그램, 간트 차트
+  - 기술 문서용 시각화
+avoid_if: |
+  - 실제 아키텍처 설계 (architect 사용)
+  - DB 스키마 설계 (database-schema-designer 사용)
+  - 코드 구현 (해당 도메인 에이전트 사용)
+  - draw.io/Excalidraw 다이어그램 (해당 스킬 사용)
+examples:
+  - prompt: "사용자 인증 흐름 시퀀스 다이어그램"
+    outcome: "로그인/JWT 발급/갱신 시퀀스, 에러 플로우 포함"
+  - prompt: "이 DB 스키마 ERD로 시각화"
+    outcome: "테이블 관계, 카디널리티, PK/FK 표시"
+  - prompt: "마이크로서비스 C4 컨텍스트 다이어그램"
+    outcome: "시스템 경계, 외부 시스템, 사용자, 통신 경로"
 ---
 
 # Mermaid Diagram Specialist

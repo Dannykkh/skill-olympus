@@ -177,22 +177,25 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 
 > **Full list**: See `skills/` directory or [AGENTS.md](AGENTS.md) for complete skill descriptions.
 
-### Custom Agents (42 Agents)
+### Custom Agents (47 Agents)
 
 | Category | Agents | Description |
 |----------|--------|-------------|
 | **Workflow** | fullstack-development-workflow, spec-interviewer, architect | Full development cycle management & architecture design |
 | **Guidelines** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, web-preview-guide, fullstack-coding-standards | Passive rules (always applied) |
 | **Full Stack** | frontend-react, backend-spring, backend-dotnet, desktop-wpf, database-schema-designer, database-mysql, database-postgresql | React/Spring/ASP.NET Core/WPF Desktop/Schema Design/MySQL/PostgreSQL specialists |
+| **Language** | typescript-spec, python-spec | TypeScript advanced types / Python 3.12+ modern ecosystem |
 | **AI/ML** | ai-ml | LLM integration, RAG systems, Latest model/SDK coding guide |
 | **API** | api-tester, api-comparator | API testing & compatibility |
-| **QA** | qa-engineer, qa-writer, code-reviewer | Testing & code review |
+| **QA** | qa-engineer, qa-writer, code-reviewer, tdd-coach | Testing, code review & TDD red-green-refactor |
+| **Debugging** | debugger | Systematic root-cause analysis (capture→hypothesize→verify→fix) |
+| **Performance** | performance-engineer | Full-stack profiling (N+1, memory leaks, Core Web Vitals, load testing) |
 | **Documentation** | documentation, mermaid-diagram-specialist | Docs & diagrams |
 | **Design** | ascii-ui-mockup-generator, ui-ux-designer, stitch-developer | UI/UX design & Stitch UI generation |
 | **Security** | security-reviewer | Security vulnerability analysis (8 categories: Auth, Input, Data, Dependencies, Rate Limit, File Upload, Prompt Injection, Info Disclosure) |
+| **Writing** | writing-specialist | Business docs, academic writing, emails, AI pattern removal |
 | **Migration** | migration-helper, explore-agent | Legacy modernization |
 | **Planning** | feature-tracker | Feature tracking |
-| **Communication** | communication-excellence-coach | Email & presentation coaching |
 | **General** | general-purpose, codebase-pattern-finder, chronos-worker | Multi-purpose agents + Chronos loop worker |
 
 > **Full list**: See `agents/` directory or [AGENTS.md](AGENTS.md) for complete agent descriptions.
@@ -368,7 +371,7 @@ claude-code-customizations/
 │   ├── video-maker/
 │   ├── flow-verifier/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # Custom subagents (35 + skills/*/agents/ 2 = 37 agents)
+├── agents/                    # Custom subagents (47 + skills/*/agents/ 5 = 52 agents)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
@@ -378,7 +381,8 @@ claude-code-customizations/
 │   ├── codebase-pattern-finder.md
 │   ├── code-review-checklist.md
 │   ├── code-reviewer.md
-│   ├── communication-excellence-coach.md
+│   ├── debugger.md
+│   ├── writing-specialist.md
 │   ├── database-mysql.md
 │   ├── database-postgresql.md
 │   ├── database-schema-designer.md

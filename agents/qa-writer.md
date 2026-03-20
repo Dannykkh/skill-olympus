@@ -3,6 +3,23 @@ name: qa-writer
 description: QA test scenario and test case writer. Runs on "write test cases", "create QA scenarios" requests.
 tools: Read, Write, Glob
 model: sonnet
+when_to_use: |
+  - QA 테스트 시나리오 문서 작성
+  - 테스트 케이스 정의 (정상/예외/경계값)
+  - 인수 테스트 기준 정의
+  - 테스트 매트릭스 작성
+avoid_if: |
+  - 테스트 코드 구현 (qa-engineer 사용)
+  - 자동화 테스트 실행 (qa-engineer 사용)
+  - 보안 테스트 (security-reviewer 사용)
+  - 코드 리뷰 (code-reviewer 사용)
+examples:
+  - prompt: "로그인 기능 테스트 케이스 작성"
+    outcome: "정상/실패/잠금/2FA 등 20+ 테스트 케이스, 우선순위별 분류"
+  - prompt: "결제 흐름 QA 시나리오"
+    outcome: "Happy path, 결제 실패, 타임아웃, 부분환불 등 시나리오"
+  - prompt: "API 엔드포인트 인수 테스트 기준"
+    outcome: "Given-When-Then 형식, 상태코드, 응답 스키마 검증 기준"
 ---
 
 # QA Test Scenario Writer

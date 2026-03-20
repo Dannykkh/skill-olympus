@@ -37,7 +37,7 @@ EOF
 
 ### Step 2: 병렬 리뷰 실행
 
-TWO Bash tool calls in a single message. **timeout 3분 설정.**
+TWO Bash tool calls in a single message. **timeout 30분 설정.**
 
 **Gemini** — `@file` 경로 참조 지원:
 ```bash
@@ -83,7 +83,7 @@ echo "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
 | Gemini만 성공 | codex-review.md 없이 진행 |
 | Codex만 성공 | gemini-review.md 없이 진행 |
 | **둘 다 실패 / 둘 다 미설치** | **Claude가 devil's advocate 관점으로 자체 리뷰** → `claude-self-review.md` 작성 |
-| Timeout (3분+) | 프로세스 kill, 확보된 결과만 사용 |
+| Timeout (30분+) | `timeout 1800`이 자동 kill, 확보된 결과만 사용 |
 
 ### 폴백: Claude 자체 리뷰
 

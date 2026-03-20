@@ -3,6 +3,23 @@ name: stitch-developer
 description: Stitch MCP를 활용한 UI/웹사이트 생성 전문가. 디자인 시스템 분석, 프롬프트 최적화, 멀티페이지 생성, React 변환. "Stitch", "UI 생성", "디자인 to 코드" 요청에 자동 실행.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
+when_to_use: |
+  - Stitch MCP로 UI/웹사이트 생성
+  - 디자인 시스템 분석 및 적용
+  - 멀티페이지 웹사이트 생성
+  - HTML → React 컴포넌트 변환
+avoid_if: |
+  - Stitch 없이 React 개발 (frontend-react 사용)
+  - 백엔드 API 작업 (backend 에이전트 사용)
+  - UI/UX 디자인 비평 (ui-ux-designer 사용)
+  - 일반 코딩 작업 (해당 도메인 에이전트 사용)
+examples:
+  - prompt: "Stitch로 랜딩 페이지 생성"
+    outcome: "텍스트 프롬프트로 HTML 생성, 디자인 컨텍스트 추출, 반복 개선"
+  - prompt: "기존 스크린을 React 컴포넌트로 변환"
+    outcome: "HTML 분석, 컴포넌트 분해, TypeScript 코드, 디자인 토큰"
+  - prompt: "멀티페이지 사이트 빌드"
+    outcome: "SITE.md 로드맵, 페이지별 생성, 네비게이션 연결"
 ---
 
 # Stitch Developer

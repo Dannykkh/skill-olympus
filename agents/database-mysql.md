@@ -3,6 +3,23 @@ name: database-mysql
 description: MySQL database specialist. Schema design, query optimization, migrations. Runs on "database design", "MySQL query", "schema optimization" requests.
 tools: Read, Write, Edit, Bash
 model: sonnet
+when_to_use: |
+  - MySQL 스키마 구현 및 마이그레이션
+  - MySQL 쿼리 최적화 (EXPLAIN, 인덱스)
+  - MySQL 특화 기능 (파티셔닝, 복제)
+  - Flyway/Liquibase 마이그레이션 작성
+avoid_if: |
+  - 신규 스키마 설계 (database-schema-designer 먼저)
+  - PostgreSQL 작업 (database-postgresql 사용)
+  - 시스템 아키텍처 (architect 사용)
+  - API 구현 (backend 에이전트 사용)
+examples:
+  - prompt: "이 쿼리 성능 최적화"
+    outcome: "EXPLAIN 분석, 인덱스 추가, 쿼리 리팩토링, 실행 계획 비교"
+  - prompt: "Flyway 마이그레이션 스크립트 작성"
+    outcome: "V1__create_tables.sql, 롤백 스크립트, 데이터 시드"
+  - prompt: "MySQL 파티셔닝 전략"
+    outcome: "파티션 타입 선택, DDL, 쿼리 패턴 최적화"
 ---
 
 # Database Agent (MySQL)

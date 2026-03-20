@@ -106,7 +106,7 @@ generated 3 million lines of code.
 ## 관련 에이전트
 
 - 글쓰기 구조/원칙: **writing-guidelines** (Strunk 규칙, 능동태, 간결함)
-- 초안 검토/톤 조정: **communication-excellence-coach** (롤플레이, 프레젠테이션 피드백)
+- 글쓰기 통합 전문가: **writing-specialist** (사업문서, 학술, 이메일, 톤 조절, 롤플레이)
 
 ## Full Reference
 

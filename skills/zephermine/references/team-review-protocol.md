@@ -492,36 +492,61 @@ Output in markdown format.
 PROMPT_EOF
 ```
 
-**2. Codex 실행** (timeout 3분):
+**2. Codex 실행** (timeout 30분):
 
 ```bash
-echo "$(cat '<planning_dir>/team-reviews/domain-process-prompt.txt')
+timeout 1800 bash -c '
+echo "$(cat "<planning_dir>/team-reviews/domain-process-prompt.txt")
 
 ===== spec.md =====
-$(cat '<planning_dir>/spec.md')
+$(cat "<planning_dir>/spec.md")
 
 ===== interview.md =====
-$(cat '<planning_dir>/interview.md')
+$(cat "<planning_dir>/interview.md")
 
 ===== domain-research.md (산업별 기술/솔루션 리서치) =====
-$(cat '<planning_dir>/team-reviews/domain-research.md')" \
+$(cat "<planning_dir>/team-reviews/domain-research.md")" \
   | codex exec -m gpt-5.2 \
     --sandbox read-only \
     --skip-git-repo-check \
     --full-auto \
-    2>/dev/null \
-  > "<planning_dir>/team-reviews/domain-process-analysis.md"
+  > "<planning_dir>/team-reviews/domain-process-analysis.md" 2>&1
+'
+CODEX_EXIT=$?
+
+# 실패 체크: timeout(124) 또는 빈 파일
+if [ $CODEX_EXIT -eq 124 ]; then
+  echo "[WARN] Codex timeout (30분 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
+elif [ $CODEX_EXIT -ne 0 ]; then
+  echo "[WARN] Codex 종료코드: $CODEX_EXIT" >> "<planning_dir>/team-reviews/external-ai.log"
+fi
+if [ ! -s "<planning_dir>/team-reviews/domain-process-analysis.md" ]; then
+  echo "[WARN] Codex 출력 비어있음 → Claude 폴백 필요" >> "<planning_dir>/team-reviews/external-ai.log"
+fi
 ```
 
-**3. Gemini 실행** (timeout 3분):
+**3. Gemini 실행** (timeout 30분):
 
 ```bash
-gemini -m gemini-3-pro-preview --approval-mode yolo \
-  "$(cat '<planning_dir>/team-reviews/domain-technical-prompt.txt')" \
+timeout 1800 bash -c '
+gemini -m gemini-3-pro-preview --sandbox \
+  "$(cat "<planning_dir>/team-reviews/domain-technical-prompt.txt")" \
   @<planning_dir>/spec.md \
   @<planning_dir>/interview.md \
   @<planning_dir>/team-reviews/domain-research.md \
-  > "<planning_dir>/team-reviews/domain-technical-analysis.md"
+  > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>&1
+'
+GEMINI_EXIT=$?
+
+# 실패 체크: timeout(124) 또는 빈 파일
+if [ $GEMINI_EXIT -eq 124 ]; then
+  echo "[WARN] Gemini timeout (30분 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
+elif [ $GEMINI_EXIT -ne 0 ]; then
+  echo "[WARN] Gemini 종료코드: $GEMINI_EXIT" >> "<planning_dir>/team-reviews/external-ai.log"
+fi
+if [ ! -s "<planning_dir>/team-reviews/domain-technical-analysis.md" ]; then
+  echo "[WARN] Gemini 출력 비어있음 → Claude 폴백 필요" >> "<planning_dir>/team-reviews/external-ai.log"
+fi
 ```
 
 > **모드별 Bash 조합 (3단계에서 결정):**
@@ -533,7 +558,8 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 > | **Single-AI (Gemini)** | Gemini (process 프롬프트) | Gemini (technical 프롬프트) |
 > | **Claude-only** | Task(Explore) 위 그대로 | Task(Explore) 위 그대로 |
 >
-> **실패 폴백**: 외부 AI 출력 파일이 비어있거나 오류면 해당 전문가만 Claude Explore로 재실행.
+> **실패 폴백**: 실행 후 `external-ai.log`를 확인하고, 출력 파일이 비어있거나 오류면 해당 전문가만 Claude Explore로 재실행.
+> **폴백 판정**: `[ ! -s "output.md" ]` — 파일이 없거나 0바이트면 폴백 트리거.
 
 ### 6단계: 개별 결과 저장
 
@@ -595,6 +621,6 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 | 서브에이전트 3개 이상 실패 | 팀 리뷰 스킵, 로그에 경고 남기고 Step 10으로 진행 |
 | 산업군 식별 불가 | 범용 fallback 사용 (비즈니스 프로세스 분석가 + 시스템 통합 전문가) |
 | team-reviews/ 디렉토리 생성 실패 | planning_dir 루트에 직접 작성 |
-| **External AI 실행 실패** | 출력 파일이 비어있거나 오류 → 해당 전문가만 Claude Explore로 폴백 재실행 |
-| **External AI timeout (3분+)** | 프로세스 kill, 해당 전문가만 Claude Explore로 폴백 |
+| **External AI 실행 실패** | `external-ai.log` 확인, 출력 파일이 비어있거나 오류 → 해당 전문가만 Claude Explore로 폴백 재실행 |
+| **External AI timeout (30분+)** | `timeout 1800`이 자동 kill (exit 124), 해당 전문가만 Claude Explore로 폴백 |
 | **Context limit reached** | 에이전트가 파일에 쓴 결과는 보존됨. `/compact` 후 재개하면 team-reviews/ 파일을 읽어 통합 진행. Resume 테이블에서 `+ spec → Step 9` 자동 매핑 |

@@ -4,6 +4,25 @@ description: |
   SPEC.md 파일 기반 심층 인터뷰 에이전트. 기술 구현, UI/UX, 우려사항, 트레이드오프 등
   모든 측면을 심층적으로 질문하여 요구사항을 완성합니다.
 tools: Read, AskUserQuestion, Write, Edit
+model: opus
+when_to_use: |
+  - 새 프로젝트/기능 요구사항 수집
+  - SPEC.md 기반 심층 인터뷰
+  - 기술 구현 가능성 탐색
+  - UI/UX 요구사항 구체화
+  - 트레이드오프 논의 및 결정
+avoid_if: |
+  - 아키텍처 설계 (architect — 요구사항 확정 후)
+  - 코드 구현 (해당 도메인 에이전트 사용)
+  - 테스트 시나리오 작성 (qa-writer 사용)
+  - 기존 코드 분석 (explore-agent 사용)
+examples:
+  - prompt: "이 SPEC.md 기반으로 인터뷰 시작"
+    outcome: "기술/UI/UX/보안/성능 측면 심층 질문, 요구사항 보완"
+  - prompt: "결제 기능 요구사항을 구체화해줘"
+    outcome: "결제 수단, 실패 처리, 환불 정책, 보안 요건 질문 및 정리"
+  - prompt: "트레이드오프 논의: 실시간 vs 배치 처리"
+    outcome: "각 방식의 장단점, 비용, 구현 복잡도, 추천 및 근거"
 ---
 
 # SPEC Interviewer Agent

@@ -3,6 +3,23 @@ name: api-comparator
 description: 리팩토링 전후 API 비교. 레거시 API 호환성 검증. 기존 API 명세 추출
 tools: Read, Bash(curl:*), Bash(http:*), Grep, Glob
 model: sonnet
+when_to_use: |
+  - 리팩토링 전후 API 호환성 검증
+  - 레거시 → 신규 API 마이그레이션 비교
+  - API 명세 추출 및 diff 분석
+  - Breaking Change 감지
+avoid_if: |
+  - API 신규 설계 (architect/backend 에이전트 사용)
+  - API 테스트 실행 (api-tester 사용)
+  - 보안 리뷰 (security-reviewer 사용)
+  - 프론트엔드 API 연동 (frontend-react 사용)
+examples:
+  - prompt: "v1과 v2 API 호환성 비교"
+    outcome: "엔드포인트 매핑, Breaking Change 목록, 마이그레이션 가이드"
+  - prompt: "리팩토링 후 기존 API 영향도 분석"
+    outcome: "변경/삭제된 엔드포인트, 응답 스키마 차이, 클라이언트 영향"
+  - prompt: "레거시 API 명세 추출"
+    outcome: "엔드포인트 목록, 파라미터, 응답 형식, 인증 방식 문서화"
 ---
 
 당신은 API 호환성 검증 전문가입니다.

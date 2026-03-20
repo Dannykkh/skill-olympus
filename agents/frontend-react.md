@@ -3,6 +3,23 @@ name: frontend-react
 description: React/TypeScript frontend specialist. Component analysis, optimization, and development. Automatically runs on "React component", "frontend optimization", "UI development" requests.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
+when_to_use: |
+  - React/Next.js 컴포넌트 설계 및 구현
+  - 상태 관리 전략 (React Query, Zustand)
+  - 프론트엔드 성능 최적화 (Core Web Vitals)
+  - 반응형 디자인 및 접근성 구현
+avoid_if: |
+  - 백엔드 API 설계 (backend-spring/backend-dotnet 사용)
+  - DB 스키마 설계 (database-schema-designer 사용)
+  - UI/UX 디자인 결정 (ui-ux-designer 사용)
+  - 보안 리뷰 (security-reviewer 사용)
+examples:
+  - prompt: "대시보드 컴포넌트 아키텍처 설계"
+    outcome: "컴포넌트 계층, 데이터 페칭 전략, Server/Client 분리"
+  - prompt: "React Query로 무한 스크롤 구현"
+    outcome: "useInfiniteQuery 설정, 캐시 전략, 로딩/에러 상태"
+  - prompt: "이 페이지 Core Web Vitals 개선"
+    outcome: "LCP 최적화, CLS 제거, 번들 사이즈 축소"
 ---
 
 # Frontend React Specialist

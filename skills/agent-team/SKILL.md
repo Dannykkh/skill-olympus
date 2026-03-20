@@ -95,6 +95,7 @@ Phase 0 시작 시 자동 판별:
 ### Claude 모드
 - Agent Teams 활성화: `settings.json`에 `"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}`
 - `"teammateMode": "in-process"` 또는 `"tmux"` 설정
+- ⚠️ **TeamCreate 시 반드시 `mode: "bypassPermissions"` 지정** — 미지정 시 teammate가 파일 쓰기 권한 승인 대기 상태에 빠져 무한 대기
 
 ### Codex 모드
 - Codex CLI 설치 (`codex` 명령어 사용 가능)
@@ -342,11 +343,25 @@ Step {N} complete: {summary}
 |------|------|
 | SECTION_MANIFEST 파싱 실패 | 사용자에게 index.md 형식 확인 요청 |
 | 순환 의존성 발견 | 경고 출력 + 관련 섹션 목록 표시 |
-| teammate/agent 실패 | Claude: Task 로그 확인 → 재시도 1회, Codex: 재spawn 1회 → 실패 시 사용자 보고 |
+| teammate 무응답 (1분+) | 파일 생성 여부 직접 확인 → 미생성 시 해당 teammate shutdown → `mode: "bypassPermissions"`로 재스폰 |
+| teammate/agent 실패 | Claude: Task 로그 확인 → `mode: "bypassPermissions"`로 재스폰 1회, Codex: 재spawn 1회 → 실패 시 사용자 보고 |
 | 파일 충돌 감지 | 두 teammate/agent가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
 | 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → 사용자에게 새 세션에서 재개 안내 |
 | spawn_agent 실패 (Codex) | Codex CLI 설치/권한 확인 → full-auto 모드 권장 → 재시도 |
 | agent wait 타임아웃 (Codex) | close_agent 후 재spawn → 섹션 범위 축소 고려 |
+| 2회 재시도 후에도 실패 | 해당 섹션을 Lead가 직접 구현 (subagent 위임) 또는 사용자에게 보고 |
+
+## Team Cleanup (필수)
+
+**모든 Wave 완료 후 또는 중단 시 반드시 실행:**
+
+```
+1. TeamDelete 호출 → 팀 리소스 해제
+2. 좀비 teammate 방지 (idle 상태로 context 점유 차단)
+```
+
+⚠️ **중단/실패 시에도 TeamDelete 필수** — 에러로 중단되더라도 팀 정리를 반드시 수행합니다.
+rm -rf 같은 수동 정리에 의존하지 마세요.
 
 ---
 

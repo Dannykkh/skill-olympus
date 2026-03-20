@@ -177,22 +177,25 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 
 > **전체 목록**: `skills/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
 
-### 커스텀 에이전트 (42개)
+### 커스텀 에이전트 (47개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
 | **워크플로우** | fullstack-development-workflow, spec-interviewer, architect | 전체 개발 사이클 관리 + 아키텍처 설계 |
 | **가이드라인** | react-best-practices, python-fastapi-guidelines, writing-guidelines, naming-conventions, code-review-checklist, humanizer-guidelines, react-useeffect-guidelines, reducing-entropy, web-preview-guide, fullstack-coding-standards | 패시브 규칙 (항상 적용) |
 | **풀스택** | frontend-react, backend-spring, backend-dotnet, desktop-wpf, database-schema-designer, database-mysql, database-postgresql | React/Spring/ASP.NET Core/WPF 데스크톱/스키마 설계/MySQL/PostgreSQL 전문가 |
+| **언어** | typescript-spec, python-spec | TypeScript 고급 타입 / Python 3.12+ 모던 생태계 |
 | **AI/ML** | ai-ml | LLM 통합, RAG 시스템, 최신 모델/SDK 코딩 가이드 |
 | **API** | api-tester, api-comparator | API 테스트 & 호환성 |
-| **QA** | qa-engineer, qa-writer, code-reviewer | 테스트 & 코드 리뷰 |
-| **문서화** | documentation, mermaid-diagram-specialist | 문서 & 다이어그램 |
+| **QA** | qa-engineer, qa-writer, code-reviewer, tdd-coach | 테스트, 코드 리뷰 & TDD red-green-refactor |
+| **디버깅** | debugger | 체계적 근본원인 분석 (증상수집→가설→검증→수정) |
+| **성능** | performance-engineer | 풀스택 프로파일링 (N+1, 메모리릭, Core Web Vitals, 부하테스트) |
+| **문서화** | documentation, mermaid-diagram-specialist | 기술 문서 & 다이어그램 |
 | **디자인** | ascii-ui-mockup-generator, ui-ux-designer, stitch-developer | UI/UX 디자인 피드백 & Stitch UI 생성 |
 | **보안** | security-reviewer | 보안 취약점 전문 분석 (8대 카테고리: 인증, 입력검증, 데이터보안, 의존성, Rate Limit, 파일업로드, Prompt Injection, 정보노출) |
+| **글쓰기** | writing-specialist | 사업문서, 학술, 이메일, AI 패턴 제거 |
 | **마이그레이션** | migration-helper, explore-agent | 레거시 현대화 |
 | **계획** | feature-tracker | 기능 진행률 추적 |
-| **커뮤니케이션** | communication-excellence-coach | 이메일 & 프레젠테이션 코칭 |
 | **범용** | general-purpose, codebase-pattern-finder, chronos-worker | 다목적 에이전트 + Chronos 루프 워커 |
 
 > **전체 목록**: `agents/` 디렉토리 또는 [AGENTS.md](AGENTS.md) 참조
@@ -368,7 +371,7 @@ claude-code-customizations/
 │   ├── video-maker/
 │   ├── flow-verifier/
 │   └── writing-clearly-and-concisely/
-├── agents/                    # 커스텀 서브에이전트 (35 + skills/*/agents/ 2 = 37 에이전트)
+├── agents/                    # 커스텀 서브에이전트 (47 + skills/*/agents/ 5 = 52 에이전트)
 │   ├── architect.md
 │   ├── ai-ml.md
 │   ├── api-comparator.md
@@ -378,7 +381,8 @@ claude-code-customizations/
 │   ├── codebase-pattern-finder.md
 │   ├── code-review-checklist.md
 │   ├── code-reviewer.md
-│   ├── communication-excellence-coach.md
+│   ├── debugger.md
+│   ├── writing-specialist.md
 │   ├── database-mysql.md
 │   ├── database-postgresql.md
 │   ├── database-schema-designer.md
