@@ -76,17 +76,18 @@ export interface TaskActivitySummary {
     lastActivity?: ActivityEntry;
 }
 export declare class StateManager {
-    private state;
-    private stateFilePath;
-    private activityLogPath;
+    private db;
+    private dbPath;
     private workerId;
+    private projectRoot;
+    private startedAt;
     constructor(projectRoot: string, workerId: string);
-    private loadState;
-    private saveState;
-    private createInitialState;
-    private getStateProjectRootFallback;
-    private normalizeState;
-    private reloadState;
+    private initTables;
+    private initMetadata;
+    private migrateFromJson;
+    private rowToTask;
+    private normalizePath;
+    private isPathOverlap;
     private registerWorker;
     updateHeartbeat(): void;
     getWorkers(): WorkerInfo[];
@@ -132,8 +133,6 @@ export declare class StateManager {
         success: boolean;
         message: string;
     };
-    private isPathLocked;
-    private normalizePath;
     lockFile(filePath: string, reason?: string): {
         success: boolean;
         message: string;
@@ -147,9 +146,6 @@ export declare class StateManager {
     getAllTasks(): Task[];
     getStatus(): OrchestratorState;
     getProjectRoot(): string;
-    /**
-     * 활동 로그 기록 — append-only JSONL, 동시 쓰기 안전
-     */
     logActivity(type: ActivityType, message: string, options?: {
         taskId?: string;
         files?: string[];
@@ -158,32 +154,17 @@ export declare class StateManager {
         success: boolean;
         message: string;
     };
-    /**
-     * 활동 로그 조회 — JSONL 줄 단위 파싱 + 필터링
-     */
     getActivityLog(query?: ActivityQuery): {
         entries: ActivityEntry[];
         total: number;
     };
-    /**
-     * 태스크별 활동 요약 — milestones/errors/lastActivity
-     */
     getTaskActivitySummary(taskId: string): TaskActivitySummary;
     resetState(): void;
     deleteTask(taskId: string): {
         success: boolean;
         message: string;
     };
-    /**
-     * 모든 태스크가 완료되었는지 확인
-     * - 태스크가 없으면 false (아직 시작 안 함)
-     * - 모든 태스크가 completed 또는 failed면 true
-     */
     isAllTasksCompleted(): boolean;
-    /**
-     * 작업 가능한 태스크가 남아있는지 확인
-     * - pending 또는 in_progress인 태스크가 있으면 true
-     */
     hasRemainingWork(): boolean;
 }
 //# sourceMappingURL=state-manager.d.ts.map
