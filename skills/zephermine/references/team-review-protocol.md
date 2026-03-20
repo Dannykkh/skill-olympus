@@ -100,6 +100,8 @@ which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
 **⚠️ 컨텍스트 폭발 방지 — 필수 규칙:**
 각 에이전트 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
 ```
+NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+
 CRITICAL RETURN RULE: Write your FULL analysis to the file specified above.
 Your return message to the caller must be ONLY a 1-2 line summary like:
 "✅ {filename}.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -134,6 +136,8 @@ Task(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/ux-analysis.md
 
+  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ ux-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
@@ -161,6 +165,8 @@ Task(
 
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/architecture-analysis.md
+
+  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ architecture-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -191,6 +197,8 @@ Task(
   Be adversarial. Challenge EVERY assumption. If something "sounds easy", prove why it's not.
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/redteam-analysis.md
+
+  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ redteam-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -246,6 +254,8 @@ Task(
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
   Write results to: <planning_dir>/team-reviews/domain-research.md
+
+  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL research to the file above.
   Your return message must be ONLY: "✅ domain-research.md written. Technologies: N, Solutions: N, Regulations: N"
@@ -315,6 +325,8 @@ Task(
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
+  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ domain-process-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
@@ -382,6 +394,8 @@ Task(
   Write results to: <planning_dir>/team-reviews/domain-technical-analysis.md
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
+
+  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ domain-technical-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
