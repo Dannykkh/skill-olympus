@@ -18,6 +18,35 @@ GEMINI_MCP_RESULT="미실행"
 GEMINI_ORCH_RESULT="미실행"
 GEMINI_HOOKS_RESULT="미실행"
 
+# ============================================
+#   사전 조건 확인
+# ============================================
+if ! command -v node >/dev/null 2>&1; then
+    echo "[오류] Node.js가 필요하지만 설치되어 있지 않습니다."
+    echo "       https://nodejs.org/ 에서 설치하세요."
+    exit 1
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+    echo "[사전조건] jq가 없습니다. 설치 중..."
+    if command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get install -y jq 2>/dev/null
+    elif command -v brew >/dev/null 2>&1; then
+        brew install jq 2>/dev/null
+    elif command -v yum >/dev/null 2>&1; then
+        sudo yum install -y jq 2>/dev/null
+    elif command -v pacman >/dev/null 2>&1; then
+        sudo pacman -S --noconfirm jq 2>/dev/null
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "[오류] jq 설치 실패."
+        echo "       수동 설치: apt install jq / brew install jq"
+        echo "       jq는 훅 스크립트에 필요합니다."
+        exit 1
+    fi
+    echo "[사전조건] jq 설치 완료."
+fi
+
 # 모드 결정 (인자 전체 스캔)
 MODE="copy"
 for arg in "$@"; do
