@@ -1,4 +1,4 @@
-# 결과 보고 템플릿 — qpassenger Step 6
+# 결과 보고 템플릿 — qpassenger Step 7
 
 ## 결과 보고서 형식
 
@@ -23,6 +23,30 @@
 | TC-ID | 에러 | 추정 원인 | 권장 조치 |
 |-------|------|----------|-----------|
 | TC-012 | timeout | 외부 API 의존 | mock 서버 도입 검토 |
+```
+
+## 브라우저 탐색 QA 결과 (Step 5)
+
+```markdown
+## 브라우저 탐색 QA 발견 이슈
+
+### 콘솔 에러
+| URL | 에러 | 심각도 | 처리 |
+|-----|------|--------|------|
+| /dashboard | `TypeError: Cannot read 'map'` | P0 | Healer 수정 완료 |
+| /settings | `React key warning` | P1 | 기록만 |
+
+### 네트워크 실패
+| URL | 요청 | 상태 | 처리 |
+|-----|------|------|------|
+| /profile | `GET /api/avatar.png` | 404 | Healer 수정 완료 |
+
+### 시각적/UX 이슈
+| URL | 이슈 | 심각도 | 스크린샷 |
+|-----|------|--------|---------|
+| /users | 테이블 overflow (모바일) | P2 | explorer/users-overflow.png |
+
+탐색 페이지: N개 | 발견 이슈: N개 | Healer 수정: N개 | 수동 확인 필요: N개
 ```
 
 ## QA 문서 업데이트 형식

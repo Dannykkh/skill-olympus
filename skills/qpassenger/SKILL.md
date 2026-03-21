@@ -26,7 +26,7 @@ QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트
 
 **공식 호출명:** `/qpassenger` (별칭: `큐패신저`)
 
-## 워크플로우 (6단계)
+## 워크플로우 (7단계)
 
 ```
 Step 1: 시나리오 수집
@@ -37,9 +37,11 @@ Step 3: 서버 준비 (자동 감지 + 실행)
   ↓
 Step 4: 테스트 실행
   ↓
-Step 5: Healer Loop (실패 → 수정 → 재실행, max 5회)
+Step 5: 브라우저 탐색 QA (Playwright MCP로 실제 브라우저 검증)
   ↓
-Step 6: 결과 보고 + 서버 정리
+Step 6: Healer Loop (실패 → 수정 → 재실행, max 5회)
+  ↓
+Step 7: 결과 보고 + 서버 정리
 ```
 
 ---
@@ -149,9 +151,53 @@ CPU 감지 명령어 및 출력 형식: See [server-setup.md](references/server-
 
 ---
 
-## Step 5: Healer Loop
+## Step 5: 브라우저 탐색 QA
 
-테스트 실패 시 자동으로 원인을 분석하고 수정을 반복합니다.
+자동화 테스트(Step 4) 이후, Playwright MCP로 실제 브라우저를 열어 탐색적 QA를 수행합니다.
+자동화 테스트가 잡지 못하는 콘솔 에러, 네트워크 실패, 레이아웃 깨짐을 발견합니다.
+
+> 상세 프로토콜: [references/browser-explorer.md](references/browser-explorer.md)
+
+### 실행 조건
+
+- Playwright MCP가 설치되어 있을 때 기본 실행
+- `--no-explore` 옵션으로 스킵 가능
+- `--explore-only` 옵션으로 Step 2~4를 건너뛰고 이 단계만 실행 가능
+
+### 체크 항목
+
+| 체크 | Playwright MCP 도구 | 감지 대상 |
+|------|---------------------|----------|
+| 콘솔 에러 | `browser_console_messages` | JS 에러, React warnings, unhandled rejection |
+| 네트워크 실패 | `browser_network_requests` | 4xx/5xx 응답, CORS, timeout |
+| 구조 검증 | `browser_snapshot` | 빈 페이지, 접근성 누락, 깨진 구조 |
+| 시각적 확인 | `browser_take_screenshot` | 레이아웃 깨짐, overflow, 빈 화면 |
+| 인터랙션 | `browser_click`, `browser_fill_form` | 버튼 미반응, 폼 제출 실패 |
+
+### 순회 흐름
+
+```
+FOREACH page IN 라우트_목록:
+  1. browser_navigate(url)           # 페이지 이동
+  2. browser_wait_for(time: 3)       # 렌더링 대기
+  3. browser_console_messages()      # 콘솔 에러 수집
+  4. browser_network_requests()      # 실패 요청 수집
+  5. browser_snapshot()              # 접근성/구조 확인
+  6. browser_take_screenshot()       # 시각적 캡처
+  7. 주요 인터랙션 시도 (AI 판단)
+  8. 이슈 기록
+```
+
+### 발견 이슈 처리
+
+- **P0/P1 코드 수정 가능** (JS 에러, API 실패) → Healer Loop(Step 6)에 전달
+- **수동 확인 필요** (레이아웃, UX) → 결과 보고서(Step 7)에만 기록
+
+---
+
+## Step 6: Healer Loop
+
+테스트 실패(Step 4) + 브라우저 탐색 QA 발견 이슈(Step 5)를 자동으로 분석하고 수정을 반복합니다.
 
 > 상세 프로토콜: [references/healer-loop.md](references/healer-loop.md)
 
@@ -181,6 +227,8 @@ IF retry >= max_retries:
 | 타이밍 이슈 | 테스트 코드 | `waitForResponse`, `waitForSelector` 추가 |
 | 비즈니스 로직 버그 | 구현 코드 | 유효성 검증 누락 |
 | 테스트 데이터 문제 | 테스트 코드 | fixture/seed 데이터 수정 |
+| 콘솔 JS 에러 | 구현 코드 | `TypeError`, `Unhandled Rejection` (Step 5 발견) |
+| 404 리소스 | 구현 코드 | 이미지/폰트/API 경로 오류 (Step 5 발견) |
 | 인프라 문제 | 사용자 안내 | DB 연결, 포트 충돌 |
 
 ### 수정 원칙
@@ -192,20 +240,20 @@ IF retry >= max_retries:
 
 ---
 
-## Step 6: 결과 보고 + 서버 정리
+## Step 7: 결과 보고 + 서버 정리
 
 ### 결과 보고서 생성
 
-요약·수정 이력·미통과 항목 3섹션으로 구성합니다.
+요약·수정 이력·미통과 항목·브라우저 탐색 발견 이슈 4섹션으로 구성합니다.
 보고서 마크다운 템플릿 및 QA 문서 업데이트 형식: See [result-report.md](references/result-report.md)
 
 ### 판정 기준 (qa-engineer 기준 적용)
 
 | Grade | 조건 | 판정 |
 |-------|------|------|
-| **PASS** | 전체 통과 | 배포 가능 |
-| **CONDITIONAL** | P0/P1 통과, P2/P3 일부 fixme | 조건부 진행 |
-| **FAIL** | P0 또는 P1 실패 존재 | 수정 필수 |
+| **PASS** | 자동 테스트 + 탐색 QA 전체 통과 | 배포 가능 |
+| **CONDITIONAL** | P0/P1 통과, P2/P3 일부 fixme 또는 탐색 QA 경고만 | 조건부 진행 |
+| **FAIL** | P0 또는 P1 실패 존재 (자동 테스트 또는 탐색 QA) | 수정 필수 |
 
 ### QA 문서 업데이트
 
@@ -223,6 +271,8 @@ IF retry >= max_retries:
 | `--max-retries N` | Healer 최대 반복 횟수 | 5 |
 | `--headed` | 브라우저 화면 표시 | false |
 | `--skip-generate` | 기존 테스트 코드 사용 (Step 2 건너뜀) | false |
+| `--no-explore` | 브라우저 탐색 QA 스킵 (Step 5 건너뜀) | false |
+| `--explore-only` | 브라우저 탐색 QA만 실행 (Step 2~4 건너뜀) | false |
 | `--fix-code` | 구현 코드 수정도 허용 | true |
 | `--fix-test-only` | 테스트 코드만 수정 (구현 코드 수정 금지) | false |
 
@@ -233,7 +283,7 @@ IF retry >= max_retries:
 | 리소스 | 역할 | 연결 |
 |--------|------|------|
 | qa-writer (에이전트) | 테스트 시나리오 작성 | Step 1 입력 |
-| qa-engineer (에이전트) | 품질 판정 기준 | Step 6 판정 |
+| qa-engineer (에이전트) | 품질 판정 기준 | Step 7 판정 |
 | qa-test-planner (스킬) | 테스트 계획 수립 | 선행 스킬 |
 | zephermine (스킬) | qa-scenarios.md + operation-scenarios.md 생성 | Step 1 입력 |
 
@@ -250,6 +300,7 @@ IF retry >= max_retries:
 ## 주의사항
 
 - Playwright 미설치 시 `npx playwright install` 필요
+- 브라우저 탐색 QA(Step 5)는 Playwright MCP가 설치되어 있어야 실행 가능
 - Healer가 구현 코드를 수정하므로, 커밋되지 않은 변경사항이 있으면 주의
 - 외부 의존성(메일, 결제 등) 테스트는 mock 대체 권장
 
