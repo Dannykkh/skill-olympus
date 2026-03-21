@@ -23,6 +23,62 @@ set "GEMINI_HOOKS_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 playwright chrome-devtools"
 set "LEGACY_MCP_SERVERS=sequential-thinking"
 
+REM ============================================
+REM   Prerequisites check
+REM ============================================
+where node >nul 2>nul || (
+    echo [ERROR] Node.js is required but not found.
+    echo        Install from https://nodejs.org/
+    pause
+    exit /b 1
+)
+
+where jq >nul 2>nul || (
+    echo [PREREQ] jq not found. Installing...
+    set "JQ_INSTALLED=0"
+
+    REM Try winget first
+    where winget >nul 2>nul && (
+        echo        Trying winget...
+        winget install jqlang.jq --accept-package-agreements --accept-source-agreements >nul 2>nul
+        where jq >nul 2>nul && set "JQ_INSTALLED=1"
+    )
+
+    REM Try choco as fallback
+    if "!JQ_INSTALLED!"=="0" (
+        where choco >nul 2>nul && (
+            echo        Trying chocolatey...
+            choco install jq -y >nul 2>nul
+            where jq >nul 2>nul && set "JQ_INSTALLED=1"
+        )
+    )
+
+    REM Direct download as last resort
+    if "!JQ_INSTALLED!"=="0" (
+        echo        Downloading jq from GitHub...
+        set "JQ_URL=https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe"
+        set "JQ_DEST=%USERPROFILE%\.local\bin\jq.exe"
+        if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
+        powershell -Command "Invoke-WebRequest -Uri '!JQ_URL!' -OutFile '!JQ_DEST!'" >nul 2>nul
+        if exist "!JQ_DEST!" (
+            set "PATH=%USERPROFILE%\.local\bin;%PATH%"
+            set "JQ_INSTALLED=1"
+            echo        Downloaded to !JQ_DEST!
+            echo        NOTE: Add %USERPROFILE%\.local\bin to your PATH for future sessions.
+        )
+    )
+
+    if "!JQ_INSTALLED!"=="0" (
+        echo [ERROR] jq installation failed.
+        echo        Install manually: winget install jqlang.jq
+        echo        Or download from: https://github.com/jqlang/jq/releases
+        echo        jq is required for hook scripts.
+        pause
+        exit /b 1
+    )
+    echo [PREREQ] jq installed successfully.
+)
+
 REM Determine mode (scan all arguments)
 set "MODE=copy"
 for %%A in (%*) do (
