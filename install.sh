@@ -483,15 +483,15 @@ echo "  Codex Orchestrator MCP 등록 중... [필수]"
 if true; then
     CODEX_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
     CODEX_ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
-    if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ]; then
+    CODEX_ORCH_SQLITE="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/better-sqlite3/package.json"
+    if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ] || [ ! -f "$CODEX_ORCH_SQLITE" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$CODEX_ORCH_DIST" ]; then
-            CODEX_ORCH_PROJECT_ROOT="${SCRIPT_DIR%/}"
             codex mcp remove orchestrator >/dev/null 2>&1 || true
-            if codex mcp add --env "ORCHESTRATOR_PROJECT_ROOT=$CODEX_ORCH_PROJECT_ROOT" --env "ORCHESTRATOR_WORKER_ID=pm" orchestrator -- node "$CODEX_ORCH_DIST" >/dev/null 2>&1; then
+            if codex mcp add --env "ORCHESTRATOR_WORKER_ID=pm" orchestrator -- node "$CODEX_ORCH_DIST" >/dev/null 2>&1; then
                 CODEX_ORCH_RESULT="등록 완료"
             else
                 CODEX_ORCH_RESULT="등록 실패"

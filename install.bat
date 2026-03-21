@@ -569,9 +569,11 @@ echo   Registering Codex Orchestrator MCP... [required]
 if 1==1 (
     set "CODEX_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
     set "CODEX_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "CODEX_ORCH_SQLITE=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\better-sqlite3\package.json"
     set "NEED_CODEX_ORCH_BUILD=0"
     if not exist "!CODEX_ORCH_DIST!" set "NEED_CODEX_ORCH_BUILD=1"
     if not exist "!CODEX_ORCH_SDK!" set "NEED_CODEX_ORCH_BUILD=1"
+    if not exist "!CODEX_ORCH_SQLITE!" set "NEED_CODEX_ORCH_BUILD=1"
     if "!NEED_CODEX_ORCH_BUILD!"=="1" (
         echo       Building MCP server...
         cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
@@ -580,12 +582,9 @@ if 1==1 (
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "!CODEX_ORCH_DIST!" (
-            set "CODEX_ORCH_PROJECT_ROOT=%SCRIPT_DIR%"
-            if "!CODEX_ORCH_PROJECT_ROOT:~-1!"=="\" set "CODEX_ORCH_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT:~0,-1!"
-            set "CODEX_ORCH_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT:\=/!"
             set "CODEX_ORCH_DIST_NORM=!CODEX_ORCH_DIST:\=/!"
             call codex mcp remove orchestrator >nul 2>nul
-            call codex mcp add --env ORCHESTRATOR_PROJECT_ROOT=!CODEX_ORCH_PROJECT_ROOT! --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
+            call codex mcp add --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
             if !errorlevel! equ 0 (
                 set "CODEX_ORCH_RESULT=Registered"
             ) else (
