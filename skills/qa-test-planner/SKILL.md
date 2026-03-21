@@ -1,6 +1,9 @@
 ---
 name: qa-test-planner
-description: "테스트 계획", "QA 시나리오 작성" 요청 시 사용. QA 시작 전 테스트 전략 수립할 때. 테스트 플랜, 수동 테스트 케이스, 회귀 테스트, 버그 리포트 생성. Figma MCP 연동 지원.
+description: >
+  Use when asked for "테스트 계획" or "QA 시나리오 작성". Helps create
+  QA strategies, manual test cases, regression suites, bug reports, and Figma
+  validation before formal QA execution.
 trigger: explicit
 ---
 
