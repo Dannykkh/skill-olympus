@@ -185,3 +185,45 @@ if ($response -and $response.Length -ge 5) {
 if ($entry) {
     [System.IO.File]::AppendAllText($ConvFile, $entry, [System.Text.Encoding]::UTF8)
 }
+
+# ─────────────────────────────────────────────
+# Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)
+# ─────────────────────────────────────────────
+if ($response -and $response.Length -ge 5) {
+    $hasError = $response -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
+    $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
+    $safeResponse = $response
+    if ($safeResponse.Length -gt 3000) { $safeResponse = $safeResponse.Substring(0, 3000) + "...[truncated]" }
+    $safeResponse = $safeResponse -replace $secretPattern, '$1: [REDACTED]'
+    $safeUser = if ($userText) { $userText } else { "" }
+    if ($safeUser.Length -gt 1000) { $safeUser = $safeUser.Substring(0, 1000) + "...[truncated]" }
+
+    if ($hasError) {
+        $obsTargetDir = Join-Path $PWD.Path "memory" "gotchas"
+        $obsEventType = "turn_error"
+    } else {
+        $obsTargetDir = Join-Path $PWD.Path "memory" "learned"
+        $obsEventType = "turn_success"
+    }
+
+    if (-not (Test-Path $obsTargetDir)) {
+        New-Item -ItemType Directory -Path $obsTargetDir -Force | Out-Null
+    }
+    $obsFile = Join-Path $obsTargetDir "observations.jsonl"
+    $obs = @{
+        timestamp = (Get-Date -Format "o")
+        event = $obsEventType
+        cli = "gemini"
+        input = $safeUser
+        output = $safeResponse
+        session = "unknown"
+    } | ConvertTo-Json -Compress
+    [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+
+    # 파일 크기 제한 (10MB)
+    if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
+        $archiveDir = Join-Path $obsTargetDir "archive"
+        if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
+        Move-Item $obsFile (Join-Path $archiveDir "observations-$(Get-Date -Format 'yyyy-MM-dd-HHmmss').jsonl") -Force
+    }
+}

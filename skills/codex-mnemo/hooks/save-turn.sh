@@ -394,6 +394,53 @@ elif [ "$HOOK_WARNINGS" -gt 0 ] 2>/dev/null; then
 fi
 run_notification_hook "$NOTIFY_TITLE" "$NOTIFY_MESSAGE"
 
+# ─────────────────────────────────────────────
+# Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)
+# 응답 텍스트에서 에러/성공 패턴을 감지하여 observations.jsonl에 기록
+# ─────────────────────────────────────────────
+if [ -n "$RESPONSE" ] && [ -n "$BASE_DIR" ]; then
+    OBS_EVENT_TYPE=""
+    OBS_TARGET_DIR=""
+
+    if echo "$RESPONSE" | grep -qiE '(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)' 2>/dev/null; then
+        OBS_TARGET_DIR="$BASE_DIR/memory/gotchas"
+        OBS_EVENT_TYPE="turn_error"
+    else
+        OBS_TARGET_DIR="$BASE_DIR/memory/learned"
+        OBS_EVENT_TYPE="turn_success"
+    fi
+
+    mkdir -p "$OBS_TARGET_DIR"
+    OBS_FILE="$OBS_TARGET_DIR/observations.jsonl"
+
+    SAFE_RESPONSE="$(echo "$RESPONSE" | head -c 3000 | sed -E 's/(api[_-]?key|token|secret|password|authorization)([\"'"'"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi' 2>/dev/null || echo "$RESPONSE" | head -c 3000)"
+    SAFE_USER="$(echo "$USER_TEXT" | head -c 1000)"
+    OBS_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    OBS_SESSION="${TURN_ID:-unknown}"
+
+    if command -v jq &>/dev/null; then
+        jq -n -c \
+            --arg ts "$OBS_TS" \
+            --arg ev "$OBS_EVENT_TYPE" \
+            --arg cli "codex" \
+            --arg inp "$SAFE_USER" \
+            --arg out "$SAFE_RESPONSE" \
+            --arg sess "$OBS_SESSION" \
+            '{timestamp:$ts, event:$ev, cli:$cli, input:$inp, output:$out, session:$sess}' \
+            >> "$OBS_FILE" 2>/dev/null
+    fi
+
+    # 파일 크기 제한 (10MB)
+    if [ -f "$OBS_FILE" ]; then
+        OBS_SIZE_MB=$(du -m "$OBS_FILE" 2>/dev/null | cut -f1)
+        if [ "${OBS_SIZE_MB:-0}" -ge 10 ]; then
+            OBS_ARCHIVE_DIR="$OBS_TARGET_DIR/archive"
+            mkdir -p "$OBS_ARCHIVE_DIR"
+            mv "$OBS_FILE" "$OBS_ARCHIVE_DIR/observations-$(date +%Y%m%d-%H%M%S).jsonl" 2>/dev/null || true
+        fi
+    fi
+fi
+
 CHRONOS_CONTINUE="$HOME/.codex/skills/auto-continue-loop/scripts/continue-loop.sh"
 if [ -x "$CHRONOS_CONTINUE" ]; then
     if ! printf '%s' "$PAYLOAD" | "$CHRONOS_CONTINUE"; then
