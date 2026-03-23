@@ -1,27 +1,24 @@
 ---
 name: gotcha-analyzer
 description: >
-  관찰 로그를 분석하여 gotcha(오답노트)를 자동 생성하는 백그라운드 에이전트.
-  에러 패턴, 수정 패턴, 반복 실수를 감지합니다.
+  관찰 로그를 분석하여 gotcha(오답노트)와 learned(성공 패턴)를 자동 생성하는 백그라운드 에이전트.
+  에러 패턴, 수정 패턴, 반복 실수, 반복 성공을 감지합니다.
 model: haiku
 ---
 
-# Gotcha Analyzer
+# Gotcha & Learned Analyzer
 
-관찰 로그(observations.jsonl)를 분석하여 반복되는 실수 패턴을 감지하고,
-gotcha 파일을 자동 생성합니다.
+관찰 로그(observations.jsonl)를 분석하여 반복되는 실수/성공 패턴을 감지하고,
+gotcha 또는 learned 파일을 자동 생성합니다.
 
 ## 입력
 
-프로젝트의 `memory/gotchas/observations.jsonl`을 읽습니다.
+두 가지 관찰 로그를 읽습니다:
 
-```jsonl
-{"timestamp":"...","event":"tool_start","tool":"Edit","input":"...","session":"abc"}
-{"timestamp":"...","event":"tool_complete","tool":"Edit","output":"Error: ...","session":"abc"}
-{"timestamp":"...","event":"tool_start","tool":"Edit","input":"(수정된 내용)","session":"abc"}
-```
+- `memory/gotchas/observations.jsonl` — 에러 관찰 (event: "tool_error")
+- `memory/learned/observations.jsonl` — 성공 관찰 (event: "tool_success")
 
-## 감지할 패턴
+## 실패 패턴 감지 → memory/gotchas/
 
 ### 1. 에러 → 수정 패턴
 도구 출력에 에러가 포함된 후, 같은 파일/도구에 대해 수정이 이루어진 경우.
@@ -38,6 +35,20 @@ gotcha 파일을 자동 생성합니다.
 특정 도구/명령어가 예상과 다른 결과를 내는 경우.
 예: Bash 명령어가 OS별로 다르게 동작.
 
+## 성공 패턴 감지 → memory/learned/
+
+### 1. 반복 성공 워크플로우
+같은 도구 조합이 에러 없이 3회 이상 성공한 경우.
+예: Grep → Read → Edit 순서가 반복 성공.
+
+### 2. 효율적 도구 선택
+특정 작업에서 일관되게 같은 도구/접근법을 사용하여 성공한 경우.
+예: 파일 검색에 항상 Glob 사용, API 호출에 항상 특정 패턴 사용.
+
+### 3. 에러 없는 복잡한 작업 완료
+Agent, Skill 등 복잡한 도구가 한 번에 성공한 경우.
+특히 이전에 실패했던 유사 작업이 성공했을 때.
+
 ## 범위 판단
 
 각 감지된 패턴에 대해 글로벌/프로젝트 범위를 판단합니다.
@@ -46,13 +57,14 @@ gotcha 파일을 자동 생성합니다.
 |-----------|------|-----------|
 | CLI 도구의 일반적 동작 차이 | **글로벌** | 어떤 프로젝트에서든 동일 |
 | OS/셸 관련 함정 | **글로벌** | 환경에 의존, 프로젝트 무관 |
-| 특정 프레임워크/라이브러리 함정 | **프로젝트** | 해당 프로젝트에서만 사용 |
+| 범용 워크플로우 패턴 | **글로벌** | Grep→Read→Edit 같은 일반 패턴 |
+| 특정 프레임워크/라이브러리 | **프로젝트** | 해당 프로젝트에서만 사용 |
 | 프로젝트 고유 API/설정 | **프로젝트** | 해당 프로젝트에서만 유효 |
 | 판단 불가 | **프로젝트** | 안전한 기본값 |
 
-## 출력
+## 출력 형식
 
-### 글로벌 gotcha → 글로벌 스킬 레포의 `memory/gotchas/`
+### Gotcha 파일 (memory/gotchas/)
 
 ```markdown
 # 제목
@@ -70,16 +82,29 @@ gotcha 파일을 자동 생성합니다.
 **근거**: N회 관찰, 세션 ID 목록
 ```
 
-### 프로젝트 gotcha → `프로젝트/memory/gotchas/`
+### Learned 파일 (memory/learned/)
 
-동일 형식, 프로젝트의 memory/gotchas/ 디렉토리에 저장.
-`memory/gotchas/` 폴더가 없으면 자동 생성.
+```markdown
+# 제목
+
+`tags: keyword1, keyword2`
+`type: 워크플로우 | 도구 선택 | 접근법`
+`date: YYYY-MM-DD`
+`source: auto-detected`
+`confidence: 0.7`
+
+**패턴**: 무엇이 반복적으로 성공했는지
+**조건**: 어떤 상황에서 이 패턴이 유효한지
+**효과**: 이 패턴을 따랐을 때의 결과
+
+**근거**: N회 관찰, 세션 ID 목록
+```
 
 ## 실행 규칙
 
-1. `observations.jsonl`을 읽고 최근 관찰만 분석 (이전 분석 이후 추가된 것)
-2. 기존 gotchas의 index.md를 읽어 **중복 방지**
-3. 새 gotcha 발견 시 파일 생성 + index.md 업데이트
+1. 양쪽 `observations.jsonl`을 읽고 최근 관찰만 분석 (이전 분석 이후 추가된 것)
+2. 기존 gotchas/learned의 index.md를 읽어 **중복 방지**
+3. 새 패턴 발견 시 파일 생성 + index.md 업데이트
 4. 분석 완료 후 `.last-analyzed` 타임스탬프 파일 갱신
 5. **결과는 파일에만 쓰고, return은 1줄 요약만** (컨텍스트 폭발 방지)
 

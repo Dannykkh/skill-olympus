@@ -71,47 +71,60 @@ fi
 echo "- \`[$TIMESTAMP]\` **$TOOL_NAME** $DETAIL" >> "$LOG_FILE"
 
 # ─────────────────────────────────────────────
-# Gotchas 관찰 기록 (memory/gotchas/observations.jsonl)
-# 에러가 포함된 도구 호출만 기록하여 실수 패턴 분석에 활용
+# 학습 관찰 기록 (memory/gotchas/ + memory/learned/)
+# 에러 → gotchas, 성공 → learned 에 각각 기록
 # ─────────────────────────────────────────────
 
 TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_response // .tool_output // .output // empty' 2>/dev/null)
+TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT" | head -c 3000)
 
-# 에러 패턴 감지 (에러가 있는 경우만 기록)
+# 기록 대상 판단
+TARGET_DIR=""
+EVENT_TYPE=""
+
 if echo "$TOOL_OUTPUT" | grep -qiE '(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)' 2>/dev/null; then
-    GOTCHAS_DIR="$PWD/memory/gotchas"
-    mkdir -p "$GOTCHAS_DIR"
+    # 실패 → memory/gotchas/
+    TARGET_DIR="$PWD/memory/gotchas"
+    EVENT_TYPE="tool_error"
+else
+    # 수정/실행 도구가 에러 없이 성공 → memory/learned/
+    case "$TOOL_NAME" in
+        Edit|Write|Bash|Agent|Skill)
+            TARGET_DIR="$PWD/memory/learned"
+            EVENT_TYPE="tool_success"
+            ;;
+        *) exit 0 ;;
+    esac
+fi
 
-    OBS_FILE="$GOTCHAS_DIR/observations.jsonl"
+mkdir -p "$TARGET_DIR"
+OBS_FILE="$TARGET_DIR/observations.jsonl"
 
-    # 입력/출력 truncate + 시크릿 스크러빙
-    TOOL_INPUT_STR=$(echo "$INPUT" | jq -c '.tool_input // {}' 2>/dev/null | head -c 3000)
-    TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT" | head -c 3000)
-    SECRET_RE='s/\(api[_-]\?key\|token\|secret\|password\|authorization\)\(["'"'"'\s:=]*\)[A-Za-z0-9_\-/.+=]\{8,\}/\1\2[REDACTED]/gi'
-    TOOL_INPUT_STR=$(echo "$TOOL_INPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_INPUT_STR")
-    TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_OUTPUT_STR")
+# 입력/출력 truncate + 시크릿 스크러빙
+TOOL_INPUT_STR=$(echo "$INPUT" | jq -c '.tool_input // {}' 2>/dev/null | head -c 3000)
+TOOL_INPUT_STR=$(echo "$TOOL_INPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_INPUT_STR")
+TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_OUTPUT_STR")
 
-    SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null)
-    OBS_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null)
+OBS_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    # jq로 안전하게 JSON 생성
-    jq -n -c \
-        --arg ts "$OBS_TS" \
-        --arg ev "tool_error" \
-        --arg tl "$TOOL_NAME" \
-        --arg inp "$TOOL_INPUT_STR" \
-        --arg out "$TOOL_OUTPUT_STR" \
-        --arg sess "$SESSION_ID" \
-        '{timestamp:$ts, event:$ev, tool:$tl, input:$inp, output:$out, session:$sess}' \
-        >> "$OBS_FILE" 2>/dev/null
+# jq로 안전하게 JSON 생성
+jq -n -c \
+    --arg ts "$OBS_TS" \
+    --arg ev "$EVENT_TYPE" \
+    --arg tl "$TOOL_NAME" \
+    --arg inp "$TOOL_INPUT_STR" \
+    --arg out "$TOOL_OUTPUT_STR" \
+    --arg sess "$SESSION_ID" \
+    '{timestamp:$ts, event:$ev, tool:$tl, input:$inp, output:$out, session:$sess}' \
+    >> "$OBS_FILE" 2>/dev/null
 
-    # 파일 크기 제한 (10MB 초과 시 아카이브)
-    if [ -f "$OBS_FILE" ]; then
-        FILE_SIZE_MB=$(du -m "$OBS_FILE" 2>/dev/null | cut -f1)
-        if [ "${FILE_SIZE_MB:-0}" -ge 10 ]; then
-            ARCHIVE_DIR="$GOTCHAS_DIR/archive"
-            mkdir -p "$ARCHIVE_DIR"
-            mv "$OBS_FILE" "$ARCHIVE_DIR/observations-$(date +%Y%m%d-%H%M%S).jsonl" 2>/dev/null || true
-        fi
+# 파일 크기 제한 (10MB 초과 시 아카이브)
+if [ -f "$OBS_FILE" ]; then
+    FILE_SIZE_MB=$(du -m "$OBS_FILE" 2>/dev/null | cut -f1)
+    if [ "${FILE_SIZE_MB:-0}" -ge 10 ]; then
+        ARCHIVE_DIR="$TARGET_DIR/archive"
+        mkdir -p "$ARCHIVE_DIR"
+        mv "$OBS_FILE" "$ARCHIVE_DIR/observations-$(date +%Y%m%d-%H%M%S).jsonl" 2>/dev/null || true
     fi
 fi
