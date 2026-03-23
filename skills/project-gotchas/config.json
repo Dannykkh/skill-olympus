@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "observer": {
+    "enabled": true,
+    "min_observations_to_analyze": 20
+  }
+}

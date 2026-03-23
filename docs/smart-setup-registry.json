@@ -256,6 +256,7 @@
     { "id": "zeus", "tags": ["*"], "priority": "optional" },
     { "id": "zephermine", "tags": ["*"], "priority": "recommended" },
     { "id": "manage-skills", "tags": ["*"], "priority": "optional" },
+    { "id": "project-gotchas", "tags": ["*"], "priority": "recommended" },
     { "id": "verify-implementation", "tags": ["*"], "priority": "optional" },
     { "id": "seo-audit", "tags": ["react", "nextjs", "vue", "angular", "svelte", "astro", "remix", "html"], "priority": "optional" },
     { "id": "reddit-researcher", "tags": ["*"], "priority": "optional" },

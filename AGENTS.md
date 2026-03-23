@@ -110,7 +110,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 AI Tools | codex, gemini, multi-ai-orchestration, orchestrator, workpm (다이달로스), workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
-| 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검색/검증 도구 |
+| 🔮 Meta | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-plan (아프로디테), design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 |
