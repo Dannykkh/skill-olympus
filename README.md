@@ -48,7 +48,7 @@ Each skill is named after a Greek myth character (or a baseball role) that match
 
 | Skill | Name | Origin | Role |
 |-------|------|--------|------|
-| `/zephermine` | Zephermine (젭마인) | — | **Architect** — 24-step deep interview, spec generation, 5-expert team review |
+| `/zephermine` | Zephermine (젭마인) | — | **Architect** — 26-step deep interview, spec generation, 5-expert team review |
 | `/zeus` | Zeus (제우스) | King of the Gods | **Commander** — Zero-interaction full pipeline, controls everything |
 | `/agent-team` | Danny's Team (대니즈팀) | — | **Construction Crew** — Wave-grouped parallel implementation |
 | `/workpm` | Daedalus (다이달로스) | Master Craftsman | **Site Foreman** — PM that builds without pre-design, hands-on |
@@ -94,13 +94,13 @@ One command does everything:
 
 ```
 /zeus "Build a shopping mall. React + Spring Boot"
-    → Design (24-step interview) → Implement (parallel workers) → Inspect → Test
+    → Design (26-step interview) → Implement (parallel workers) → Inspect → Test
     → Zero interaction — never asks questions, all decisions automated
 ```
 
 | Phase | Skill | What it does |
 |-------|-------|-------------|
-| **Design** | `/zephermine` (젭마인) | 24-step interview → SPEC.md → 5-agent team review |
+| **Design** | `/zephermine` (젭마인) | 26-step interview → SPEC.md → 5-agent team review |
 | **Implement** | `/agent-team` | Wave-grouped parallel execution with Agent Teams |
 | **Inspect** | `/argos` (아르고스) | Construction inspection: verify code matches design |
 | **Test** | `/qpassenger` (큐패신저) | Playwright E2E tests + fix-until-pass loop |
