@@ -42,6 +42,26 @@ That's it. **93 skills, 47 agents, 12 hooks** installed across Claude Code + Cod
 
 ---
 
+## Meet the Team
+
+Each skill is named after a Greek myth character (or a baseball role) that matches its purpose.
+
+| Skill | Name | Origin | Role |
+|-------|------|--------|------|
+| `/zephermine` | Zephermine (젭마인) | — | **Architect** — 24-step deep interview, spec generation, 5-expert team review |
+| `/zeus` | Zeus (제우스) | King of the Gods | **Commander** — Zero-interaction full pipeline, controls everything |
+| `/agent-team` | Danny's Team (대니즈팀) | — | **Construction Crew** — Wave-grouped parallel implementation |
+| `/workpm` | Daedalus (다이달로스) | Master Craftsman | **Site Foreman** — PM that builds without pre-design, hands-on |
+| `/argos` | Argos (아르고스) | The All-Seeing (100 eyes) | **Inspector** — Construction inspection, verifies code matches design |
+| `/qpassenger` | QPassenger (큐패신저) | — | **QA Tester** — Playwright E2E tests + fix-until-pass loop |
+| `/closer` | Closer (클로저) | Baseball Closer | **Closer** — Post-pipeline deliverables: flow diagrams + docs |
+| `/chronos` | Chronos (크로노스) | God of Time | **Tireless Worker** — Autonomous FIND-FIX-VERIFY loop, never stops |
+| `/hermes` | Hermes (헤르메스) | God of Commerce | **Business Analyst** — Business model, TAM/SAM/SOM, GTM strategy |
+| `/aphrodite` | Aphrodite (아프로디테) | Goddess of Beauty | **Design Director** — Design orchestrator with 161 palettes, 73 fonts |
+| `mnemo` | Mnemo (므네모) | Mnemosyne (Goddess of Memory) | **Librarian** — 3-layer persistent memory across sessions and CLIs |
+
+---
+
 ## What's New
 
 ### v1.8.0 — Project Gotchas + Learned Patterns (Mar 2026)
