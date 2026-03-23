@@ -84,55 +84,60 @@ try {
     $toolOutput = $json.tool_response
     if (-not $toolOutput) { $toolOutput = $json.tool_output }
     if (-not $toolOutput) { $toolOutput = $json.output }
-} catch { $toolOutput = $null }
 
-$outputStr = if ($toolOutput) { try { "$toolOutput" } catch { "" } } else { "" }
-$hasError = $outputStr -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
+    $outputStr = ""
+    if ($toolOutput) { $outputStr = "$toolOutput" }
 
-# 시크릿 스크러빙 + truncate 공통 처리
-$secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
-$inputStr = try { if ($toolInput) { ($toolInput | ConvertTo-Json -Compress -Depth 3) } else { "" } } catch { "" }
-if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
-if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
-$inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
-$outputStr = $outputStr -replace $secretPattern, '$1: [REDACTED]'
+    $hasError = $outputStr -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
 
-$sessionId = if ($json.session_id) { $json.session_id } else { "unknown" }
+    $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
+    $inputStr = ""
+    if ($toolInput) { $inputStr = ($toolInput | ConvertTo-Json -Compress -Depth 3) }
+    if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
+    if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
+    $inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
+    $outputStr = $outputStr -replace $secretPattern, '$1: [REDACTED]'
 
-# 기록 대상 판단 + 저장
-if ($hasError) {
-    # 실패 → memory/gotchas/
-    $targetDir = Join-Path $PWD.Path "memory" "gotchas"
-    $eventType = "tool_error"
-} elseif ($toolName -in @("Edit", "Write", "Bash", "Agent", "Skill")) {
-    # 수정/실행 도구가 에러 없이 성공 → memory/learned/
-    $targetDir = Join-Path $PWD.Path "memory" "learned"
-    $eventType = "tool_success"
-} else {
-    exit 0
-}
+    $sessionId = "unknown"
+    if ($json.session_id) { $sessionId = $json.session_id }
 
-if (-not (Test-Path $targetDir)) {
-    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-}
+    $targetDir = $null
+    $eventType = $null
 
-$obsFile = Join-Path $targetDir "observations.jsonl"
+    if ($hasError) {
+        $targetDir = Join-Path $PWD.Path "memory" "gotchas"
+        $eventType = "tool_error"
+    } elseif ($toolName -in @("Edit", "Write", "Bash", "Agent", "Skill")) {
+        $targetDir = Join-Path $PWD.Path "memory" "learned"
+        $eventType = "tool_success"
+    }
 
-$obs = @{
-    timestamp = (Get-Date -Format "o")
-    event = $eventType
-    tool = $toolName
-    input = $inputStr
-    output = $outputStr
-    session = $sessionId
-} | ConvertTo-Json -Compress
+    if ($targetDir) {
+        if (-not (Test-Path $targetDir)) {
+            New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+        }
 
-[System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+        $obsFile = Join-Path $targetDir "observations.jsonl"
 
-# 파일 크기 제한 (10MB 초과 시 아카이브)
-if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
-    $archiveDir = Join-Path $targetDir "archive"
-    if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
-    $archiveTs = Get-Date -Format "yyyy-MM-dd-HHmmss"
-    Move-Item $obsFile (Join-Path $archiveDir "observations-$archiveTs.jsonl") -Force
+        $obs = @{
+            timestamp = (Get-Date -Format "o")
+            event = $eventType
+            tool = $toolName
+            input = $inputStr
+            output = $outputStr
+            session = $sessionId
+        } | ConvertTo-Json -Compress
+
+        [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+
+        # 파일 크기 제한 (10MB 초과 시 아카이브)
+        if ((Get-Item $obsFile -ErrorAction SilentlyContinue).Length / 1MB -ge 10) {
+            $archiveDir = Join-Path $targetDir "archive"
+            if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
+            $archiveTs = Get-Date -Format "yyyy-MM-dd-HHmmss"
+            Move-Item $obsFile (Join-Path $archiveDir "observations-$archiveTs.jsonl") -Force
+        }
+    }
+} catch {
+    # 관찰 기록 실패해도 메인 기능에 영향 없음
 }
