@@ -71,50 +71,61 @@ if (Test-Path $LogFile) {
 [System.IO.File]::AppendAllText($LogFile, $entry, [System.Text.Encoding]::UTF8)
 
 # ─────────────────────────────────────────────
-# Gotchas 관찰 기록 (memory/gotchas/observations.jsonl)
-# 에러가 포함된 도구 호출만 기록하여 실수 패턴 분석에 활용
+# 학습 관찰 기록 (memory/gotchas/ + memory/learned/)
+# 에러 → gotchas, 성공 → learned 에 각각 기록
 # ─────────────────────────────────────────────
 
 $toolOutput = $json.tool_response
 if (-not $toolOutput) { $toolOutput = $json.tool_output }
 if (-not $toolOutput) { $toolOutput = $json.output }
 
-# 에러 패턴 감지 (에러가 있는 경우만 기록)
 $outputStr = if ($toolOutput) { "$toolOutput" } else { "" }
 $hasError = $outputStr -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
 
+# 시크릿 스크러빙 + truncate 공통 처리
+$secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
+$inputStr = if ($toolInput) { ($toolInput | ConvertTo-Json -Compress -Depth 3) } else { "" }
+if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
+if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
+$inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
+$outputStr = $outputStr -replace $secretPattern, '$1: [REDACTED]'
+
+$sessionId = if ($json.session_id) { $json.session_id } else { "unknown" }
+
+# 기록 대상 판단 + 저장
 if ($hasError) {
-    $gotchasDir = Join-Path $PWD.Path "memory" "gotchas"
-    if (-not (Test-Path $gotchasDir)) {
-        New-Item -ItemType Directory -Path $gotchasDir -Force | Out-Null
-    }
+    # 실패 → memory/gotchas/
+    $targetDir = Join-Path $PWD.Path "memory" "gotchas"
+    $eventType = "tool_error"
+} elseif ($toolName -in @("Edit", "Write", "Bash", "Agent", "Skill")) {
+    # 수정/실행 도구가 에러 없이 성공 → memory/learned/
+    $targetDir = Join-Path $PWD.Path "memory" "learned"
+    $eventType = "tool_success"
+} else {
+    exit 0
+}
 
-    $obsFile = Join-Path $gotchasDir "observations.jsonl"
+if (-not (Test-Path $targetDir)) {
+    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+}
 
-    # 시크릿 스크러빙
-    $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
-    $inputStr = if ($toolInput) { ($toolInput | ConvertTo-Json -Compress -Depth 3) } else { "" }
-    if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
-    if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
-    $inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
-    $outputStr = $outputStr -replace $secretPattern, '$1: [REDACTED]'
+$obsFile = Join-Path $targetDir "observations.jsonl"
 
-    $obs = @{
-        timestamp = (Get-Date -Format "o")
-        event = "tool_error"
-        tool = $toolName
-        input = $inputStr
-        output = $outputStr
-        session = if ($json.session_id) { $json.session_id } else { "unknown" }
-    } | ConvertTo-Json -Compress
+$obs = @{
+    timestamp = (Get-Date -Format "o")
+    event = $eventType
+    tool = $toolName
+    input = $inputStr
+    output = $outputStr
+    session = $sessionId
+} | ConvertTo-Json -Compress
 
-    [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+[System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
 
-    # 파일 크기 제한 (10MB 초과 시 아카이브)
-    if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
-        $archiveDir = Join-Path $gotchasDir "archive"
-        if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
-        $archiveTs = Get-Date -Format "yyyy-MM-dd-HHmmss"
-        Move-Item $obsFile (Join-Path $archiveDir "observations-$archiveTs.jsonl") -Force
-    }
+# 파일 크기 제한 (10MB 초과 시 아카이브)
+if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
+    $archiveDir = Join-Path $targetDir "archive"
+    if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
+    $archiveTs = Get-Date -Format "yyyy-MM-dd-HHmmss"
+    Move-Item $obsFile (Join-Path $archiveDir "observations-$archiveTs.jsonl") -Force
 }

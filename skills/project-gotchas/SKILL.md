@@ -1,13 +1,13 @@
 ---
 name: project-gotchas
 description: >
-  오답노트 자동 관리. CLI(Claude/Codex/Gemini)가 반복적으로 틀리는 패턴,
-  환경 함정, 설치 문제를 2계층(글로벌 + 프로젝트별)으로 기록하고 참조.
-  므네모(mnemo)가 생성하는 memory/ 폴더 안에 gotchas/를 관리하여 크로스 CLI 참조 가능.
-  트리거 1 (참조): 작업 시작 시 gotchas를 확인하여 같은 실수 방지.
+  오답노트 + 성공 패턴 자동 관리. CLI(Claude/Codex/Gemini)의 실패 패턴(gotchas)과
+  성공 패턴(learned)을 2계층(글로벌 + 프로젝트별)으로 기록하고 참조.
+  므네모(mnemo)가 생성하는 memory/ 폴더 안에서 크로스 CLI 참조 가능.
+  트리거 1 (참조): 작업 시작 시 gotchas + learned를 확인.
   트리거 2 (기록): "실수였어", "이거 기록해", "gotcha 추가", "함정이었네",
-  "오답노트", "이것도 주의사항" 같은 표현 시.
-  트리거 3 (자발적 제안): CLI가 같은 실수를 수정당했을 때 기록을 제안.
+  "오답노트", "이것도 주의사항", "이 패턴 좋다", "이거 기억해" 같은 표현 시.
+  트리거 3 (자발적 제안): CLI가 실수를 수정당하거나 성공 패턴이 반복될 때 기록을 제안.
 when_to_use: >
   1. 작업 시 기존 gotchas(글로벌 + 프로젝트)를 참조하여 같은 실수 방지.
   2. 사용자가 기록을 요청하면 적절한 계층에 파일 생성 + index.md 업데이트.
@@ -16,35 +16,36 @@ avoid_if: >
   단순 오타, 일회성 실수, 이미 CLAUDE.md에 규칙으로 등록된 내용.
 ---
 
-# Project Gotchas (오답노트)
+# Project Gotchas (오답노트 + 성공 패턴)
 
-CLI가 반복적으로 틀리는 패턴과 환경 함정을 기록합니다.
+CLI의 실패 패턴과 성공 패턴을 자동으로 기록하고 학습합니다.
 글로벌 설치 1회로 어떤 프로젝트에서든 자동 작동합니다.
 므네모(mnemo)가 생성하는 `memory/` 폴더 안에 관리하여 Claude/Codex/Gemini 모두 참조 가능합니다.
 
 ## 2계층 저장 구조
 
 ```
-글로벌 스킬 레포/memory/gotchas/    ← 글로벌 (모든 프로젝트에서 참조)
-├── index.md
-├── 001-서브에이전트-return-폭발.md
-└── 002-yaml-frontmatter-파싱.md
-
-어떤-프로젝트/memory/gotchas/       ← 프로젝트별 (이 프로젝트에서만)
-├── index.md
-├── observations.jsonl              ← 관찰 로그 (자동 생성)
-├── 001-특정API-반올림주의.md
-└── 002-빌드설정-함정.md
+어떤-프로젝트/memory/
+├── gotchas/                        ← 실패 패턴 (오답노트)
+│   ├── index.md
+│   ├── observations.jsonl          ← 에러 관찰 로그 (자동 생성)
+│   ├── 001-특정API-반올림주의.md
+│   └── 002-빌드설정-함정.md
+└── learned/                        ← 성공 패턴 (학습 노트)
+    ├── index.md
+    ├── observations.jsonl          ← 성공 관찰 로그 (자동 생성)
+    ├── 001-grep-먼저-edit-나중에.md
+    └── 002-테스트-먼저-구현-나중에.md
 ```
 
-- `memory/` 폴더가 없으면 `memory/gotchas/`를 포함하여 자동 생성
+- `memory/` 폴더가 없으면 자동 생성
 - 므네모가 이미 `memory/`를 관리하므로 별도 `.gitignore` 처리 불필요
-- Claude, Codex, Gemini 어떤 CLI에서든 `memory/gotchas/index.md`로 접근 가능
+- Claude, Codex, Gemini 어떤 CLI에서든 접근 가능
 
 ### 참조 순서
 
-1. **글로벌** 글로벌 스킬 레포의 `memory/gotchas/index.md` 확인
-2. **프로젝트** 현재 프로젝트의 `memory/gotchas/index.md` 확인
+1. **글로벌** 글로벌 스킬 레포의 `memory/gotchas/` + `memory/learned/` 확인
+2. **프로젝트** 현재 프로젝트의 `memory/gotchas/` + `memory/learned/` 확인
 3. 현재 작업과 관련된 키워드 매칭 → 해당 파일만 읽기
 
 ### 저장 범위 판단
