@@ -550,6 +550,49 @@ if ($hookErrors -gt 0) {
 }
 Invoke-NotificationHook -Title $notifyTitle -Message $notifyMessage
 
+# ─────────────────────────────────────────────
+# Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)
+# 응답 텍스트에서 에러/성공 패턴을 감지하여 observations.jsonl에 기록
+# ─────────────────────────────────────────────
+if ($response -and $baseDir) {
+    $hasError = $response -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_|실패|오류)'
+    $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
+    $safeResponse = $response
+    if ($safeResponse.Length -gt 3000) { $safeResponse = $safeResponse.Substring(0, 3000) + "...[truncated]" }
+    $safeResponse = $safeResponse -replace $secretPattern, '$1: [REDACTED]'
+    $safeUser = if ($userText) { $userText } else { "" }
+    if ($safeUser.Length -gt 1000) { $safeUser = $safeUser.Substring(0, 1000) + "...[truncated]" }
+
+    if ($hasError) {
+        $obsTargetDir = Join-Path $baseDir "memory" "gotchas"
+        $obsEventType = "turn_error"
+    } else {
+        $obsTargetDir = Join-Path $baseDir "memory" "learned"
+        $obsEventType = "turn_success"
+    }
+
+    if (-not (Test-Path $obsTargetDir)) {
+        New-Item -ItemType Directory -Path $obsTargetDir -Force | Out-Null
+    }
+    $obsFile = Join-Path $obsTargetDir "observations.jsonl"
+    $obs = @{
+        timestamp = (Get-Date -Format "o")
+        event = $obsEventType
+        cli = "codex"
+        input = $safeUser
+        output = $safeResponse
+        session = if ($turnId) { $turnId } else { "unknown" }
+    } | ConvertTo-Json -Compress
+    [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+
+    # 파일 크기 제한 (10MB)
+    if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
+        $archiveDir = Join-Path $obsTargetDir "archive"
+        if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
+        Move-Item $obsFile (Join-Path $archiveDir "observations-$(Get-Date -Format 'yyyy-MM-dd-HHmmss').jsonl") -Force
+    }
+}
+
 $chronosContinue = Join-Path $HOME ".codex\skills\auto-continue-loop\scripts\continue-loop.ps1"
 if (Test-Path $chronosContinue) {
     try {

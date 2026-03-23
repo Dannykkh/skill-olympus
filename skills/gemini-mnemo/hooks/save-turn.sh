@@ -188,3 +188,48 @@ if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
 
     echo -e "\n## [$TIMESTAMP] Assistant\n\n$RESPONSE\n" >> "$CONV_FILE"
 fi
+
+# ─────────────────────────────────────────────
+# Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)
+# ─────────────────────────────────────────────
+if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
+    OBS_TARGET_DIR=""
+    OBS_EVENT_TYPE=""
+
+    if echo "$RESPONSE" | grep -qiE '(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)' 2>/dev/null; then
+        OBS_TARGET_DIR="$PWD/memory/gotchas"
+        OBS_EVENT_TYPE="turn_error"
+    else
+        OBS_TARGET_DIR="$PWD/memory/learned"
+        OBS_EVENT_TYPE="turn_success"
+    fi
+
+    mkdir -p "$OBS_TARGET_DIR"
+    OBS_FILE="$OBS_TARGET_DIR/observations.jsonl"
+
+    SAFE_RESPONSE="$(echo "$RESPONSE" | head -c 3000 | sed -E 's/(api[_-]?key|token|secret|password|authorization)([\"'"'"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi' 2>/dev/null || echo "$RESPONSE" | head -c 3000)"
+    SAFE_USER="$(echo "$USER_TEXT" | head -c 1000)"
+    OBS_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+    if command -v jq &>/dev/null; then
+        jq -n -c \
+            --arg ts "$OBS_TS" \
+            --arg ev "$OBS_EVENT_TYPE" \
+            --arg cli "gemini" \
+            --arg inp "$SAFE_USER" \
+            --arg out "$SAFE_RESPONSE" \
+            --arg sess "unknown" \
+            '{timestamp:$ts, event:$ev, cli:$cli, input:$inp, output:$out, session:$sess}' \
+            >> "$OBS_FILE" 2>/dev/null
+    fi
+
+    # 파일 크기 제한 (10MB)
+    if [ -f "$OBS_FILE" ]; then
+        OBS_SIZE_MB=$(du -m "$OBS_FILE" 2>/dev/null | cut -f1)
+        if [ "${OBS_SIZE_MB:-0}" -ge 10 ]; then
+            OBS_ARCHIVE_DIR="$OBS_TARGET_DIR/archive"
+            mkdir -p "$OBS_ARCHIVE_DIR"
+            mv "$OBS_FILE" "$OBS_ARCHIVE_DIR/observations-$(date +%Y%m%d-%H%M%S).jsonl" 2>/dev/null || true
+        fi
+    fi
+fi
