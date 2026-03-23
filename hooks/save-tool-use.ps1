@@ -7,7 +7,12 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-$json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+try {
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+} catch {
+    exit 0
+}
+if (-not $json) { exit 0 }
 
 $toolName = $json.tool_name
 $toolInput = $json.tool_input
@@ -75,16 +80,18 @@ if (Test-Path $LogFile) {
 # 에러 → gotchas, 성공 → learned 에 각각 기록
 # ─────────────────────────────────────────────
 
-$toolOutput = $json.tool_response
-if (-not $toolOutput) { $toolOutput = $json.tool_output }
-if (-not $toolOutput) { $toolOutput = $json.output }
+try {
+    $toolOutput = $json.tool_response
+    if (-not $toolOutput) { $toolOutput = $json.tool_output }
+    if (-not $toolOutput) { $toolOutput = $json.output }
+} catch { $toolOutput = $null }
 
-$outputStr = if ($toolOutput) { "$toolOutput" } else { "" }
+$outputStr = if ($toolOutput) { try { "$toolOutput" } catch { "" } } else { "" }
 $hasError = $outputStr -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
 
 # 시크릿 스크러빙 + truncate 공통 처리
-$secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
-$inputStr = if ($toolInput) { ($toolInput | ConvertTo-Json -Compress -Depth 3) } else { "" }
+$secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
+$inputStr = try { if ($toolInput) { ($toolInput | ConvertTo-Json -Compress -Depth 3) } else { "" } } catch { "" }
 if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
 if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
 $inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
