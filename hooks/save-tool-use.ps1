@@ -69,3 +69,52 @@ if (Test-Path $LogFile) {
 }
 
 [System.IO.File]::AppendAllText($LogFile, $entry, [System.Text.Encoding]::UTF8)
+
+# ─────────────────────────────────────────────
+# Gotchas 관찰 기록 (memory/gotchas/observations.jsonl)
+# 에러가 포함된 도구 호출만 기록하여 실수 패턴 분석에 활용
+# ─────────────────────────────────────────────
+
+$toolOutput = $json.tool_response
+if (-not $toolOutput) { $toolOutput = $json.tool_output }
+if (-not $toolOutput) { $toolOutput = $json.output }
+
+# 에러 패턴 감지 (에러가 있는 경우만 기록)
+$outputStr = if ($toolOutput) { "$toolOutput" } else { "" }
+$hasError = $outputStr -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
+
+if ($hasError) {
+    $gotchasDir = Join-Path $PWD.Path "memory" "gotchas"
+    if (-not (Test-Path $gotchasDir)) {
+        New-Item -ItemType Directory -Path $gotchasDir -Force | Out-Null
+    }
+
+    $obsFile = Join-Path $gotchasDir "observations.jsonl"
+
+    # 시크릿 스크러빙
+    $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
+    $inputStr = if ($toolInput) { ($toolInput | ConvertTo-Json -Compress -Depth 3) } else { "" }
+    if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
+    if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
+    $inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
+    $outputStr = $outputStr -replace $secretPattern, '$1: [REDACTED]'
+
+    $obs = @{
+        timestamp = (Get-Date -Format "o")
+        event = "tool_error"
+        tool = $toolName
+        input = $inputStr
+        output = $outputStr
+        session = if ($json.session_id) { $json.session_id } else { "unknown" }
+    } | ConvertTo-Json -Compress
+
+    [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+
+    # 파일 크기 제한 (10MB 초과 시 아카이브)
+    if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
+        $archiveDir = Join-Path $gotchasDir "archive"
+        if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
+        $archiveTs = Get-Date -Format "yyyy-MM-dd-HHmmss"
+        Move-Item $obsFile (Join-Path $archiveDir "observations-$archiveTs.jsonl") -Force
+    }
+}

@@ -290,6 +290,7 @@ claude plugin install voltagent-qa-sec
 | `agents/ai-ml.md` | LLM API 최신 모델/SDK + RAG + Vector DB |
 | `skills/memory-compact/` | MEMORY.md 크기 점검 및 압축 — 비대해진 메모리 정리 (/memory-compact) |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
+| `skills/project-gotchas/` | 오답노트 자동 관리 — 2계층(글로벌+프로젝트) + Haiku 자동 분석 |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
 | `skills/final-inspection/` | 마무리투수(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/closer) |
 | `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (/release) |

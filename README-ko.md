@@ -161,7 +161,7 @@ node skills/orchestrator/install.js <대상-프로젝트-경로>
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 **AI 도구** | codex, gemini, multi-ai-orchestration, orchestrator, workpm (다이달로스), workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
-| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | 플러그인/스킬 생성/검증 도구 |
+| 🔮 **메타** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, verify-implementation | 플러그인/스킬 생성/검증 + 오답노트 자동 관리 |
 | 📝 **문서화** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | 다이어그램 & 문서 |
 | 🎨 **프론트엔드** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | React/TypeScript/디자인/Stitch UI 생성 + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 |
 | 🛠️ **개발** | docker-deploy, docker-db-backup, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | 개발 도구 & 배포 |
@@ -363,6 +363,7 @@ claude-code-customizations/
 │   ├── systematic-debugging/
 │   ├── test-driven-development/
 │   ├── manage-skills/
+│   ├── project-gotchas/
 │   ├── verify-implementation/
 │   ├── wrangler/
 │   ├── seo-audit/

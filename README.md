@@ -161,7 +161,7 @@ One-line description in, fully built project out. Chains zephermine → orchestr
 | Category | Skills | Description |
 |----------|--------|-------------|
 | 🤖 **AI Tools** | codex, gemini, multi-ai-orchestration, orchestrator, workpm (Daedalus), workpm-mcp, pmworker, agent-team, agent-team-codex | External AI model integration + Multi-AI orchestration + Daedalus (site PM) + Native Agent Teams (Opus 4.6) + Codex Multi-Agent + Activity Log |
-| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, verify-implementation | Plugin/skill creation/verification tools |
+| 🔮 **Meta** | agent-md-refactor, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, verify-implementation | Plugin/skill creation/verification tools + auto gotcha management |
 | 📝 **Documentation** | mermaid-diagrams, marp-slide, draw-io, excalidraw, crafting-effective-readmes | Diagrams & documentation |
 | 🎨 **Frontend** | react-dev, vercel-react-best-practices, mui, design-system-starter, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | React/TypeScript/Design/Stitch UI generation + SEO+AEO+GEO 10-area audit + UI/UX 8-area audit |
 | 🛠️ **Development** | docker-deploy, docker-db-backup, python-backend-fastapi, database-schema-designer, dependency-updater, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards | Dev tools & deployment |
@@ -361,6 +361,7 @@ claude-code-customizations/
 │   ├── systematic-debugging/
 │   ├── test-driven-development/
 │   ├── manage-skills/
+│   ├── project-gotchas/
 │   ├── verify-implementation/
 │   ├── wrangler/
 │   ├── docx/
