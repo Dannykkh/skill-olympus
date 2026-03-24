@@ -155,6 +155,12 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 5
 
 ## 검증 보고서
 
+**Archive 기존 보고서:** `<planning_dir>/verify-report.md`가 이미 존재하면:
+```
+1. <planning_dir>/archive/ 디렉토리 생성 (없으면)
+2. 기존 파일 → <planning_dir>/archive/verify-report-{YYYY-MM-DD-HHMM}.md 로 이동
+```
+
 Phase 1~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ### 보고서 구조

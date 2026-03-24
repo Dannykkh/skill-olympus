@@ -8,6 +8,7 @@
 
 - 독립 실행: `docs/athena/{project-name}.md`
 - 젭마인 시너지: `<planning_dir>/strategic-review.md`
+- 이전 결과: `docs/athena/archive/{project-name}-{YYYY-MM-DD-HHMM}.md`
 
 ---
 

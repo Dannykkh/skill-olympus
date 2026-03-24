@@ -64,7 +64,19 @@ header: "분석 대상"
 
 기존 젭마인 산출물(`spec.md`)이 있으면 거기서 자동 추출 가능.
 
-### 3. 웹 리서치
+### 3. Archive 기존 산출물
+
+`docs/hermes/{project-name}.md`가 이미 존재하면 archive로 이동:
+
+```
+1. docs/hermes/archive/ 디렉토리 생성 (없으면)
+2. 기존 파일 → docs/hermes/archive/{project-name}-{YYYY-MM-DD-HHMM}.md 로 이동 (Bash mv)
+3. 새 산출물을 docs/hermes/{project-name}.md 에 생성
+```
+
+이렇게 하면 최신 결과는 항상 같은 경로에 있고, 이전 결과는 archive에 보존됩니다.
+
+### 4. 웹 리서치
 
 분석 대상에 대해 WebSearch로 기초 조사:
 - 산업 현황, 시장 규모, 주요 플레이어

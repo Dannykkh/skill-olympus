@@ -56,7 +56,16 @@ Determine session state by checking existing files:
 
 1. Set `planning_dir` = parent directory of the spec file
 2. **If `planning_dir` doesn't exist, create it automatically**
-3. Set `initial_file` = the spec file path
+3. **Archive 기존 산출물** — `planning_dir`이 이미 존재하고 **spec.md가 있는 완료된 계획**이면:
+   ```
+   a. {planning_dir}/archive/ 디렉토리 생성 (없으면)
+   b. 기존 파일 전체 → {planning_dir}/archive/{YYYY-MM-DD-HHMM}/ 로 이동 (Bash mv)
+      - archive/ 폴더 자체는 이동하지 않음
+   c. planning_dir을 클린 상태로 시작
+   ```
+   **resume 모드일 때는 archive 하지 않음** — 이어서 작업할 때는 기존 파일을 유지.
+   사용자가 "새로 시작"이라고 명시하거나, 모든 단계가 완료된 상태에서 재실행할 때만 archive.
+4. Set `initial_file` = the spec file path
 4. If spec file doesn't exist, create an empty template:
    ```markdown
    # Feature Spec

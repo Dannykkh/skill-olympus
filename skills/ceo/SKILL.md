@@ -59,7 +59,7 @@ Athena(아테나) — 전략의 여신이 검토합니다
 **우선순위 순서로 입력 확인:**
 
 1. `$ARGUMENTS`에 파일 경로가 있으면 → 해당 파일 읽기
-2. 헤르메스 산출물 탐색: `Glob("docs/hermes/*.md")` → 있으면 자동 읽기
+2. 헤르메스 산출물 탐색: `Glob("docs/hermes/*.md")` → 있으면 자동 읽기 (archive/ 제외)
 3. 젭마인 spec 탐색: `Glob("docs/plan/*/spec.md")` → 있으면 읽기
 4. 위 모두 없으면 → AskUserQuestion
 
@@ -77,7 +77,17 @@ header: "검토 대상"
 | 둘 다 | 풀 시너지 | 사업 + 기술 양쪽에서 도전 |
 | 없음 | 독립 모드 | 사용자 설명 기반으로 도전 |
 
-### 3. 웹 리서치 (간결하게)
+### 3. Archive 기존 산출물
+
+`docs/athena/{project-name}.md`가 이미 존재하면 archive로 이동:
+
+```
+1. docs/athena/archive/ 디렉토리 생성 (없으면)
+2. 기존 파일 → docs/athena/archive/{project-name}-{YYYY-MM-DD-HHMM}.md 로 이동 (Bash mv)
+3. 새 산출물을 docs/athena/{project-name}.md 에 생성
+```
+
+### 4. 웹 리서치 (간결하게)
 
 검토 대상에 대해 WebSearch로 경쟁사, 시장 동향, 실패 사례를 조사:
 - "{주제} 실패 사례", "{주제} 경쟁사", "{주제} market failure"
