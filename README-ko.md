@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **94개 스킬** | **47개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
+> **95개 스킬** | **48개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
 
 ---
 
@@ -36,7 +36,7 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-끝입니다. **94개 스킬, 47개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
+끝입니다. **95개 스킬, 48개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
 
 > Codex/Gemini가 미설치 시 해당 단계는 자동 스킵됩니다.
 
@@ -161,7 +161,7 @@ chmod +x install.sh && ./install.sh
 
 ## 구성 요소
 
-### 스킬 (94개)
+### 스킬 (95개)
 
 | 카테고리 | 스킬 | 핵심 |
 |----------|------|------|
@@ -177,9 +177,10 @@ chmod +x install.sh && ./install.sh
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |
 | **미디어** | video-maker | Remotion 기반 React 영상 |
 | **리서치** | reddit-researcher | 시장 조사 + 리드 스코어링 |
+| **번역** | ko-en-translator | 한↔영 양방향 번역 (기술 문서, 코드, i18n) |
 | **유틸** | humanizer, jira, datadog-cli, excel2md + 3개 | AI 패턴 제거, 통합 |
 
-### 에이전트 (47개)
+### 에이전트 (48개)
 
 | 영역 | 에이전트 |
 |------|----------|

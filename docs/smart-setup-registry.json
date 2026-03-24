@@ -270,7 +270,8 @@
     { "id": "biz-strategy", "tags": ["*"], "priority": "optional" },
     { "id": "ceo", "tags": ["*"], "priority": "optional" },
     { "id": "okr", "tags": ["*"], "priority": "optional" },
-    { "id": "design-plan", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" }
+    { "id": "design-plan", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
+    { "id": "ko-en-translator", "tags": ["*"], "priority": "optional" }
   ],
 
   "internal-agents": [
@@ -317,7 +318,8 @@
     { "id": "dotnet-coding-standards", "tags": ["dotnet", "aspnet", "csharp", "blazor"], "priority": "recommended" },
     { "id": "desktop-wpf", "tags": ["dotnet", "wpf", "csharp"], "priority": "essential" },
     { "id": "general-purpose", "tags": ["*"], "priority": "optional" },
-    { "id": "web-preview-guide", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "recommended" }
+    { "id": "web-preview-guide", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "recommended" },
+    { "id": "bilingual-dev", "tags": ["*"], "priority": "optional" }
   ],
 
   "hooks": [

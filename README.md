@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **94 skills** | **47 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
+> **95 skills** | **48 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
 
 ---
 
@@ -36,7 +36,7 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **94 skills, 47 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **95 skills, 48 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -161,7 +161,7 @@ Includes auto gotcha/learned tracking:
 
 ## What's Inside
 
-### Skills (94)
+### Skills (95)
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
@@ -177,9 +177,10 @@ Includes auto gotcha/learned tracking:
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |
 | **Media** | video-maker | Remotion-based React video |
 | **Research** | reddit-researcher | Market research + lead scoring |
+| **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
 
-### Agents (47)
+### Agents (48)
 
 Specialized subagents for every development task:
 

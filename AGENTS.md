@@ -105,7 +105,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (91개)
+### Skills (95개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -122,11 +122,12 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |
 | 🎬 Media | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
+| 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
 | 🧠 Memory/Session | mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
 
-### Agents (42개)
+### Agents (43개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -142,6 +143,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | | naming-conventions | 네이밍 컨벤션 (항상 적용) |
 | | reducing-entropy | 코드베이스 최소화 철학 |
 | | web-preview-guide | 웹 프리뷰 모드 개발 가이드 (디자인 DNA → Frontend → Backend) |
+| | bilingual-dev | 한↔영 이중언어 개발 가이드 (코드 주석, 문서, i18n, 커밋 자동 양언어) |
 | | fullstack-coding-standards | 풀스택 코딩 표준 (백엔드 계층, 프론트 API, DB 연동) |
 | **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
 | | backend-spring | Spring Boot 백엔드 전문가 |
