@@ -81,7 +81,6 @@ qa-scenarios.md가 전혀 없으면 `qa-test-planner` 스킬을 활용하여 시
 1. `operation-scenarios.md` 존재 시 → 업무 흐름 기반 TC 작성 (우선), 없으면 Glob으로 라우트/API 탐색
 2. qa-test-planner 템플릿으로 CRUD별 정상/에러/엣지 케이스 작성 (우선순위, 전제조건, 테스트 데이터 포함)
 3. `qa-scenarios.md`로 저장
-   - 기존 `qa-scenarios.md`가 있으면 archive 먼저: `archive/qa-scenarios-{YYYY-MM-DD-HHMM}.md`로 이동
 
 ---
 
