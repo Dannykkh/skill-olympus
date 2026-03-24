@@ -300,6 +300,7 @@ claude plugin install voltagent-qa-sec
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
 | `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 디자인시스템→DB매칭→구현→리뷰 (/aphrodite) |
+| `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
 
 ---
 
