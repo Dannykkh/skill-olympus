@@ -65,6 +65,13 @@ Each skill is named after a Greek myth character (or a baseball role) that match
 
 ## What's New
 
+### v1.9.0 — Athena CEO Coaching (Mar 2026)
+
+- **ceo (Athena)** — CEO coaching skill: Go/No-Go gate, strategic challenge, scope decisions (Expand/Reduce/Pivot/Kill)
+- **Pipeline expansion** — New phase: `/hermes` → `/athena` → `/zephermine` (Analyze → Challenge → Design)
+- **Hermes synergy** — Athena auto-reads Hermes output for data-driven strategic challenge
+- **README overhaul** — Star-optimized structure, Meet the Team with Greek myth naming
+
 ### v1.8.0 — Project Gotchas + Learned Patterns (Mar 2026)
 
 - **project-gotchas** — Auto mistake tracking + success pattern learning with Haiku analyzer
@@ -258,6 +265,7 @@ Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| [v1.9.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.9.0) | 2026-03-24 | Athena CEO Coaching + Pipeline Expansion |
 | [v1.8.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.8.0) | 2026-03-23 | Project Gotchas + Learned Patterns |
 | [v1.7.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.7.0) | 2026-03-21 | Orchestrator SQLite WAL + QPassenger |
 | [v1.6.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.6.0) | 2026-03-18 | Design + Business + Skill Best Practices |

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2026-03-24
+
+### Features
+- **ceo (Athena)** — CEO coaching skill: Go/No-Go gate, strategic challenge, scope decisions (Expand/Reduce/Pivot/Kill), kill test. Hermes synergy for data-driven challenge (d0a6541)
+- **pipeline** — New pipeline phase: `/hermes` → `/athena` → `/zephermine` (d0a6541)
+
+### Docs
+- **README** — Full rewrite: star-optimized structure, Meet the Team section with Greek myth naming (e14a1d8, f859c14)
+- **README-ko** — Korean README renewal: same structure as English version (d5f7ef7)
+- **zephermine** — 24-step → 26-step correction (d1fa029)
+
+---
+
 ## [1.8.0] - 2026-03-23
 
 ### Features
