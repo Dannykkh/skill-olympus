@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **93 skills** | **47 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
+> **94 skills** | **47 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
 
 ---
 
@@ -36,7 +36,7 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **93 skills, 47 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **94 skills, 47 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -57,6 +57,7 @@ Each skill is named after a Greek myth character (or a baseball role) that match
 | `/closer` | Closer (클로저) | Baseball Closer | **Closer** — Post-pipeline deliverables: flow diagrams + docs |
 | `/chronos` | Chronos (크로노스) | God of Time | **Tireless Worker** — Autonomous FIND-FIX-VERIFY loop, never stops |
 | `/hermes` | Hermes (헤르메스) | God of Commerce | **Business Analyst** — Business model, TAM/SAM/SOM, GTM strategy |
+| `/athena` | Athena (아테나) | Goddess of Strategy | **CEO Coach** — Go/No-Go gate, strategic challenge, scope decisions |
 | `/aphrodite` | Aphrodite (아프로디테) | Goddess of Beauty | **Design Director** — Design orchestrator with 161 palettes, 73 fonts |
 | `mnemo` | Mnemo (므네모) | Mnemosyne (Goddess of Memory) | **Librarian** — 3-layer persistent memory across sessions and CLIs |
 
@@ -100,6 +101,8 @@ One command does everything:
 
 | Phase | Skill | What it does |
 |-------|-------|-------------|
+| **Analyze** | `/hermes` (헤르메스) | Business model, TAM/SAM/SOM, GTM, metrics, cohort |
+| **Challenge** | `/athena` (아테나) | CEO coaching — Go/No-Go gate, scope decisions, kill test |
 | **Design** | `/zephermine` (젭마인) | 26-step interview → SPEC.md → 5-agent team review |
 | **Implement** | `/agent-team` | Wave-grouped parallel execution with Agent Teams |
 | **Inspect** | `/argos` (아르고스) | Construction inspection: verify code matches design |
@@ -151,7 +154,7 @@ Includes auto gotcha/learned tracking:
 
 ## What's Inside
 
-### Skills (93)
+### Skills (94)
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
@@ -159,7 +162,7 @@ Includes auto gotcha/learned tracking:
 | **Pipeline** | zephermine, zeus, argos, qpassenger, closer | Zero-interaction full dev pipeline |
 | **Frontend** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 73 fonts, SEO+AEO+GEO audit |
 | **Development** | docker-deploy, database-schema-designer, code-reviewer + 7 more | Docker, DB design, code quality |
-| **Business** | biz-strategy, estimate, okr, daily-meeting-update | Cost estimation, OKR, standup |
+| **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | qa-test-planner, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
 | **Memory** | mnemo, memory-compact, project-gotchas | 3-layer memory, auto learning |
 | **Docs** | mermaid-diagrams, marp-slide, docx, pdf, draw-io + 3 more | Diagrams, presentations, documents |

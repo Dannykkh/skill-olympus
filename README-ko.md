@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **93개 스킬** | **47개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
+> **94개 스킬** | **47개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
 
 ---
 
@@ -36,7 +36,7 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-끝입니다. **93개 스킬, 47개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
+끝입니다. **94개 스킬, 47개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
 
 > Codex/Gemini가 미설치 시 해당 단계는 자동 스킵됩니다.
 
@@ -57,6 +57,7 @@ chmod +x install.sh && ./install.sh
 | `/closer` | 클로저 | 야구 마무리투수 | **마무리투수** — 파이프라인 완료 후 흐름도 + 문서 산출물 |
 | `/chronos` | 크로노스 | 시간의 신 | **끝까지 가는 일꾼** — 자율 FIND-FIX-VERIFY 루프, 멈추지 않음 |
 | `/hermes` | 헤르메스 | 상업의 신 | **사업 분석가** — 비즈니스 모델, TAM/SAM/SOM, GTM 전략 |
+| `/athena` | 아테나 | 전략의 여신 | **CEO 코치** — Go/No-Go 판정, 전략적 도전, 스코프 결정 |
 | `/aphrodite` | 아프로디테 | 미의 여신 | **디자인 디렉터** — 디자인 오케스트레이터 (161 팔레트, 73 폰트) |
 | `mnemo` | 므네모 | 므네모시네 (기억의 여신) | **사서** — 세션과 CLI를 넘나드는 3계층 영속 메모리 |
 
@@ -100,6 +101,8 @@ chmod +x install.sh && ./install.sh
 
 | 단계 | 스킬 | 하는 일 |
 |------|------|---------|
+| **사업분석** | `/hermes` (헤르메스) | 비즈니스 모델, TAM/SAM/SOM, GTM, 지표, 코호트 |
+| **CEO 코칭** | `/athena` (아테나) | 전략적 도전 — Go/No-Go 판정, 스코프 결정, Kill 테스트 |
 | **설계** | `/zephermine` (젭마인) | 26단계 인터뷰 → SPEC.md → 5인 전문가 팀 리뷰 |
 | **구현** | `/agent-team` (대니즈팀) | 웨이브 그룹 병렬 실행 (Agent Teams) |
 | **감리** | `/argos` (아르고스) | 준공검사: 설계 대비 구현 검증 |
@@ -151,7 +154,7 @@ chmod +x install.sh && ./install.sh
 
 ## 구성 요소
 
-### 스킬 (93개)
+### 스킬 (94개)
 
 | 카테고리 | 스킬 | 핵심 |
 |----------|------|------|
@@ -159,7 +162,7 @@ chmod +x install.sh && ./install.sh
 | **파이프라인** | zephermine, zeus, argos, qpassenger, closer | 제로 인터랙션 풀 파이프라인 |
 | **프론트엔드** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5개 | 161 팔레트, 73 폰트, SEO+AEO+GEO 감사 |
 | **개발** | docker-deploy, database-schema-designer, code-reviewer + 7개 | Docker, DB 설계, 코드 품질 |
-| **비즈니스** | biz-strategy, estimate, okr, daily-meeting-update | 견적서, OKR, 스탠드업 |
+| **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | qa-test-planner, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |
 | **메모리** | mnemo, memory-compact, project-gotchas | 3계층 메모리, 자동 학습 |
 | **문서** | mermaid-diagrams, marp-slide, docx, pdf, draw-io + 3개 | 다이어그램, 프레젠테이션, 문서 |

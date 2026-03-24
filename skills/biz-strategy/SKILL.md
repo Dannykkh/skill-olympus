@@ -35,8 +35,8 @@ auto_apply: false
 ## 파이프라인 위치
 
 ```
-/hermes → /zephermine → /agent-team → ... → /estimate
-  사업성 검토     기술 설계      구현              견적서
+/hermes → /athena → /zephermine → /agent-team → ... → /estimate
+ 사업분석    CEO 코칭    기술 설계      구현              견적서
 ```
 
 **독립 실행 가능** — 파이프라인 밖에서 단독 사용.
@@ -126,6 +126,7 @@ TAM(전체) → SAM(접근 가능) → SOM(1~3년 확보 가능) 순으로 WebSe
   LTV/CAC: {비율}
 
 👉 다음 단계:
+  /athena             → CEO 코칭 (전략적 도전)
   /okr                → 분기별 OKR 설정
   /zephermine         → 기술 설계 시작
   /estimate           → 개발 견적서
@@ -149,6 +150,7 @@ TAM(전체) → SAM(접근 가능) → SOM(1~3년 확보 가능) 순으로 WebSe
 
 | 스킬 | 역할 | 연결 |
 |------|------|------|
+| ceo (athena) | CEO 코칭 | 후행 — 사업 분석 데이터로 전략적 도전 |
 | okr | 분기별 목표/핵심결과 설정 | 후행 — 사업성 검토 후 실행 계획 |
 | zephermine | 기술 설계 | 후행 — 사업성 확인 후 설계 |
 | estimate | 개발 견적서 | 후행 — 비용 산정 |
