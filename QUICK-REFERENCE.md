@@ -17,6 +17,7 @@
 | 릴리즈 | `/release` |
 | 견적 | `/estimate` |
 | 헤르메스 | `/hermes` |
+| 아테나 | `/athena` |
 | OKR | `/okr` |
 | 아프로디테 | `/aphrodite` |
 
@@ -296,6 +297,7 @@ claude plugin install voltagent-qa-sec
 | `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (/release) |
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (/estimate) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
+| `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
 | `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 디자인시스템→DB매칭→구현→리뷰 (/aphrodite) |
 
