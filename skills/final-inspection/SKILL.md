@@ -62,7 +62,7 @@ Closer(클로저) — 마무리투수 등판
 2. 없으면 현재 디렉토리에서 자동 감지:
    - `package.json`, `pom.xml`, `pyproject.toml`, `*.csproj` 등 프로젝트 파일 탐색
    - `src/`, `app/`, `lib/` 등 소스 디렉토리 탐색
-3. 기존 산출물 수집:
+3. 기존 산출물 수집 (archive/ 경로 제외):
    - `docs/plan/*/spec.md` — 설계 산출물
    - `docs/plan/*/verify-report.md` — argos 감리 보고서
    - `docs/flow-diagrams/` — 기존 흐름도

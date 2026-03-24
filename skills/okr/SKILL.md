@@ -60,8 +60,8 @@ question: "이번 분기(Q?)의 핵심 목표가 뭔가요?"
 header: "OKR 설정"
 ```
 
-기존 산출물 참조 (있으면):
-- `docs/biz-strategy/*.md` → 사업 전략에서 목표 도출
+기존 산출물 참조 (있으면, archive/ 경로 제외):
+- `docs/hermes/*.md` → 사업 분석에서 목표 도출
 - `docs/plan/*/spec.md` → 기술 계획에서 목표 도출
 
 ### Step 2: Objectives 설정

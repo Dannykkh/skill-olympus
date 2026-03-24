@@ -43,7 +43,7 @@ config_file = "C:/Users/Administrator/.codex/agents/fast_worker.toml"
 
 ### 1) 섹션 모드
 
-- 입력에 `docs/plan/*/sections/index.md` 또는 zephermine 산출물이 있는 경우
+- 입력에 `docs/plan/*/sections/index.md` 또는 zephermine 산출물이 있는 경우 (archive/ 경로 제외)
 - 섹션 의존성을 Wave로 분리해 병렬 실행
 
 ### 2) 자유 모드

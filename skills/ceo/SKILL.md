@@ -60,7 +60,7 @@ Athena(아테나) — 전략의 여신이 검토합니다
 
 1. `$ARGUMENTS`에 파일 경로가 있으면 → 해당 파일 읽기
 2. 헤르메스 산출물 탐색: `Glob("docs/hermes/*.md")` → 있으면 자동 읽기 (archive/ 제외)
-3. 젭마인 spec 탐색: `Glob("docs/plan/*/spec.md")` → 있으면 읽기
+3. 젭마인 spec 탐색: `Glob("docs/plan/*/spec.md")` → 있으면 읽기 (archive/ 경로 제외)
 4. 위 모두 없으면 → AskUserQuestion
 
 ```

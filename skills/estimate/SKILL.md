@@ -57,7 +57,7 @@ Estimate — 개발 견적서 생성
 
 입력 소스를 결정합니다:
 
-**A. 젭마인 산출물이 있는 경우 (권장):**
+**A. 젭마인 산출물이 있는 경우 (권장, archive/ 경로 제외):**
 - `docs/plan/*/spec.md` — 기능 요구사항
 - `docs/plan/*/sections/` — 섹션별 상세 스펙
 - `docs/plan/*/api-spec.md` — API 엔드포인트

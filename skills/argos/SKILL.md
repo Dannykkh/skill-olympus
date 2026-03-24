@@ -46,7 +46,7 @@ auto_apply: false
 계획 산출물 디렉토리를 찾습니다:
 
 1. `$ARGUMENTS`로 전달된 경로
-2. `docs/plan/*/spec.md` 패턴으로 자동 탐색 (Glob)
+2. `docs/plan/*/spec.md` 패턴으로 자동 탐색 (Glob) — **archive/ 경로 제외** (결과에서 `archive` 포함된 경로 필터링)
 3. 못 찾으면 → AskUserQuestion으로 경로 요청
 
 ### 3. Scan Artifacts

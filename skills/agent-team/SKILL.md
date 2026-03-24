@@ -132,7 +132,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 
 #### 섹션 모드 (zephermine 산출물 있음)
 - `$ARGUMENTS`로 planning_dir가 제공되었거나
-- `docs/plan/*/sections/index.md`가 존재하면
+- `docs/plan/*/sections/index.md`가 존재하면 (archive/ 경로 제외)
 - → **섹션 모드**로 진행 (기존 6단계 워크플로우)
 
 #### 자유 모드 (사용자 지시만 있음)
