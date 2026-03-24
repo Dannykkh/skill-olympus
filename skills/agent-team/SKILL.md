@@ -96,6 +96,7 @@ Phase 0 시작 시 자동 판별:
 - Agent Teams 활성화: `settings.json`에 `"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}`
 - `"teammateMode": "in-process"` 또는 `"tmux"` 설정
 - ⚠️ **TeamCreate 시 반드시 `mode: "bypassPermissions"` 지정** — 미지정 시 teammate가 파일 쓰기 권한 승인 대기 상태에 빠져 무한 대기
+- ⚠️ **SendMessage 시 반드시 `summary` 파라미터 포함** — string message만 보내면 `error: summary is required` 에러 발생
 
 ### Codex 모드
 - Codex CLI 설치 (`codex` 명령어 사용 가능)
