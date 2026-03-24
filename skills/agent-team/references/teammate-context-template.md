@@ -177,6 +177,11 @@ Task #4를 확인하세요.
 - 예: `✅ section-04-api 완료. 파일 5개 생성, 에러 0건.`
 - 이유: return text가 Lead 컨텍스트에 합산되어 컨텍스트 폭발 방지
 
+**⚠️ CRITICAL SendMessage RULE:**
+- `SendMessage`로 Lead에게 메시지를 보낼 때 **반드시 `summary` 파라미터를 포함**할 것
+- summary 없이 string message만 보내면 `error: summary is required when message is a string` 에러 발생
+- 예: `SendMessage({ to: "lead", message: "section-04 완료", summary: "section-04 구현 완료 보고" })`
+
 ### 9. Activity Logging (활동 기록)
 
 작업 과정을 `conversations/` 디렉토리에 기록합니다.

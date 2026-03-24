@@ -49,7 +49,7 @@ description에 구현해야 할 전체 내용이 있어.
 1. 위 파일만 생성/수정할 것
 2. 다른 teammate의 파일은 절대 수정 금지
 3. 구현 완료 후 반드시 TaskUpdate({ taskId: '#{taskId}', status: 'completed' }) 실행
-4. 문제가 있으면 Lead에게 메시지로 보고
+4. 문제가 있으면 Lead에게 메시지로 보고 (SendMessage 사용 시 반드시 summary 파라미터 포함)
 5. 작업 활동을 conversations/{YYYY-MM-DD}-team-dannys.md 에 기록할 것
    - 시작/결정/에러/파일변경/완료 시점에 기록
    - 형식: ## [HH:mm:ss] {name} ({section}) → **{TYPE}**: {message} → #tags:
