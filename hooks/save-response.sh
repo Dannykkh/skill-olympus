@@ -104,12 +104,19 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
     exit 0
 fi
 
+# 프로젝트 루트 결정: git root → 없으면 CWD fallback
+PROJECT_ROOT="$PWD"
+GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$GIT_ROOT" ]; then
+    PROJECT_ROOT="$GIT_ROOT"
+fi
+
 # 대화 파일 경로 결정
-CONV_DIR="$PWD/conversations"
+CONV_DIR="$PROJECT_ROOT/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-claude.md"
 
-ensure_memory_scaffold "$PWD"
+ensure_memory_scaffold "$PROJECT_ROOT"
 
 # conversations 폴더 자동 생성
 if [ ! -d "$CONV_DIR" ]; then
@@ -118,7 +125,7 @@ fi
 
 # 파일 없으면 헤더 자동 생성 (save-conversation이 아직 안 돌았을 수 있음)
 if [ ! -f "$CONV_FILE" ]; then
-    PROJECT_NAME=$(basename "$PWD")
+    PROJECT_NAME=$(basename "$PROJECT_ROOT")
     cat > "$CONV_FILE" << HEADER
 ---
 date: $TODAY

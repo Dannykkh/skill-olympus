@@ -21,8 +21,17 @@ $toolInput = $json.tool_input
 $skipTools = @("Glob", "Grep", "Read", "LS", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList", "TaskOutput")
 if ($skipTools -contains $toolName) { exit 0 }
 
+# 프로젝트 루트 결정: git root → 없으면 CWD fallback
+$ProjectRoot = $PWD.Path
+try {
+    $gitRoot = git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+        $ProjectRoot = $gitRoot.Replace('/', '\')
+    }
+} catch {}
+
 # 대화 로그 경로
-$ConvDir = Join-Path $PWD.Path "conversations"
+$ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $LogFile = Join-Path $ConvDir "$Today-toollog.md"
 
@@ -105,10 +114,10 @@ try {
     $eventType = $null
 
     if ($hasError) {
-        $targetDir = Join-Path $PWD.Path "memory" "gotchas"
+        $targetDir = Join-Path $ProjectRoot "memory" "gotchas"
         $eventType = "tool_error"
     } elseif ($toolName -in @("Edit", "Write", "Bash", "Agent", "Skill")) {
-        $targetDir = Join-Path $PWD.Path "memory" "learned"
+        $targetDir = Join-Path $ProjectRoot "memory" "learned"
         $eventType = "tool_success"
     }
 

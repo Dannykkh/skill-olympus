@@ -110,11 +110,20 @@ if ($Prompt) {
     $Prompt = $Prompt -replace '(?s)<private>.*?</private>', '[PRIVATE]'
 }
 
-$ConvDir = Join-Path $PWD.Path "conversations"
+# 프로젝트 루트 결정: git root → 없으면 CWD fallback
+$ProjectRoot = $PWD.Path
+try {
+    $gitRoot = git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+        $ProjectRoot = $gitRoot.Replace('/', '\')
+    }
+} catch {}
+
+$ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today-claude.md"
 
-Ensure-MemoryScaffold -BaseDir $PWD.Path
+Ensure-MemoryScaffold -BaseDir $ProjectRoot
 
 # 폴더 생성
 if (-not (Test-Path $ConvDir)) {
@@ -126,7 +135,7 @@ if (-not (Test-Path $ConvFile)) {
     $Header = @"
 ---
 date: $Today
-project: $(Split-Path $PWD.Path -Leaf)
+project: $(Split-Path $ProjectRoot -Leaf)
 keywords: []
 summary: ""
 ---
