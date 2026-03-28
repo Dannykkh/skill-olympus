@@ -102,12 +102,19 @@ PROMPT=$(echo "$INPUT_JSON" | jq -r '.prompt // empty' 2>/dev/null)
 if [ -n "$PROMPT" ]; then
     PROMPT=$(echo "$PROMPT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$PROMPT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
 fi
-CONV_DIR="$PWD/conversations"
+# 프로젝트 루트 결정: git root → 없으면 CWD fallback
+PROJECT_ROOT="$PWD"
+GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$GIT_ROOT" ]; then
+    PROJECT_ROOT="$GIT_ROOT"
+fi
+
+CONV_DIR="$PROJECT_ROOT/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-claude.md"
-PROJECT_NAME=$(basename "$PWD")
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
-ensure_memory_scaffold "$PWD"
+ensure_memory_scaffold "$PROJECT_ROOT"
 
 # 폴더 생성
 mkdir -p "$CONV_DIR"

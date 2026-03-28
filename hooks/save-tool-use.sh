@@ -13,8 +13,15 @@ case "$TOOL_NAME" in
     Glob|Grep|Read|LS|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput) exit 0 ;;
 esac
 
+# 프로젝트 루트 결정: git root → 없으면 CWD fallback
+PROJECT_ROOT="$PWD"
+GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$GIT_ROOT" ]; then
+    PROJECT_ROOT="$GIT_ROOT"
+fi
+
 # 대화 로그 경로
-CONV_DIR="$PWD/conversations"
+CONV_DIR="$PROJECT_ROOT/conversations"
 TODAY=$(date +%Y-%m-%d)
 LOG_FILE="$CONV_DIR/$TODAY-toollog.md"
 
@@ -84,13 +91,13 @@ EVENT_TYPE=""
 
 if echo "$TOOL_OUTPUT" | grep -qiE '(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)' 2>/dev/null; then
     # 실패 → memory/gotchas/
-    TARGET_DIR="$PWD/memory/gotchas"
+    TARGET_DIR="$PROJECT_ROOT/memory/gotchas"
     EVENT_TYPE="tool_error"
 else
     # 수정/실행 도구가 에러 없이 성공 → memory/learned/
     case "$TOOL_NAME" in
         Edit|Write|Bash|Agent|Skill)
-            TARGET_DIR="$PWD/memory/learned"
+            TARGET_DIR="$PROJECT_ROOT/memory/learned"
             EVENT_TYPE="tool_success"
             ;;
         *) exit 0 ;;

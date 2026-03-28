@@ -108,12 +108,21 @@ $transcriptPath = $json.transcript_path
 
 if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
 
+# 프로젝트 루트 결정: git root → 없으면 CWD fallback
+$ProjectRoot = $PWD.Path
+try {
+    $gitRoot = git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+        $ProjectRoot = $gitRoot.Replace('/', '\')
+    }
+} catch {}
+
 # 대화 파일 경로 결정
-$ConvDir = Join-Path $PWD.Path "conversations"
+$ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today-claude.md"
 
-Ensure-MemoryScaffold -BaseDir $PWD.Path
+Ensure-MemoryScaffold -BaseDir $ProjectRoot
 
 # conversations 폴더 자동 생성
 if (-not (Test-Path $ConvDir)) {
@@ -122,7 +131,7 @@ if (-not (Test-Path $ConvDir)) {
 
 # 파일 없으면 헤더 자동 생성 (save-conversation이 아직 안 돌았을 수 있음)
 if (-not (Test-Path $ConvFile)) {
-    $ProjectName = Split-Path $PWD.Path -Leaf
+    $ProjectName = Split-Path $ProjectRoot -Leaf
     $Header = @"
 ---
 date: $Today
