@@ -259,6 +259,7 @@
     { "id": "project-gotchas", "tags": ["*"], "priority": "recommended" },
     { "id": "verify-implementation", "tags": ["*"], "priority": "optional" },
     { "id": "seo-audit", "tags": ["react", "nextjs", "vue", "angular", "svelte", "astro", "remix", "html"], "priority": "optional" },
+    { "id": "autoresearch", "tags": ["*"], "priority": "optional" },
     { "id": "reddit-researcher", "tags": ["*"], "priority": "optional" },
     { "id": "ui-ux-auditor", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
     { "id": "video-maker", "tags": ["react", "nextjs"], "priority": "optional" },

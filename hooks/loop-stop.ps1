@@ -32,6 +32,22 @@ $iteration = Get-FmValue "iteration"
 $maxIterations = Get-FmValue "max_iterations"
 $completionPromise = Get-FmValue "completion_promise"
 $stateSession = Get-FmValue "session_id"
+$startedAt = Get-FmValue "started_at"
+
+# stale 감지: started_at이 2시간 이상 지났으면 자동 비활성화
+if ($startedAt) {
+    try {
+        $startTime = [DateTimeOffset]::Parse($startedAt)
+        $elapsed = [DateTimeOffset]::UtcNow - $startTime
+        if ($elapsed.TotalHours -ge 2) {
+            Write-Host "loop: started_at($startedAt)이 2시간 이상 경과. 이전 세션의 stale 루프를 자동 종료합니다."
+            Remove-Item $stateFile -Force
+            exit 0
+        }
+    } catch {
+        # 파싱 실패 시 무시하고 계속 진행
+    }
+}
 
 # 세션 격리
 $hookObj = $hookInput | ConvertFrom-Json -ErrorAction SilentlyContinue

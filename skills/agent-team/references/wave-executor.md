@@ -126,8 +126,8 @@ Wave 2+ 실행 시, 선행 섹션의 결과를 teammate에게 전달:
 | teammate 에러 발생 | 에러 로그 확인 → `mode: "bypassPermissions"`로 새 teammate 생성하여 재시도 1회 |
 | 재시도도 실패 (2회) | 해당 섹션을 Lead가 subagent로 직접 구현, 또는 사용자에게 보고 |
 | 파일 충돌 감지 | Lead가 git diff로 확인 → merge 또는 사용자 판단 요청 |
-| Wave 전체 실패 | 이후 Wave도 중단, **TeamDelete 실행 후** 사용자에게 보고 |
-| 작업 완료 또는 중단 | **반드시 TeamDelete 호출** — 좀비 teammate 방지 |
+| Wave 전체 실패 | 이후 Wave도 중단, **teammate shutdown → TeamDelete 실행 후** 사용자에게 보고 |
+| 작업 완료 또는 중단 | **반드시 teammate shutdown → TeamDelete 순서로 호출** — shutdown 없이 TeamDelete하면 active member 잔존으로 실패 → 좀비 발생 |
 
 ## Delegate 모드 운용
 

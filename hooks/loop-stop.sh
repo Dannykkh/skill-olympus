@@ -19,6 +19,21 @@ ITERATION=$(echo "$FRONTMATTER" | grep '^iteration:' | sed 's/iteration: *//')
 MAX_ITERATIONS=$(echo "$FRONTMATTER" | grep '^max_iterations:' | sed 's/max_iterations: *//')
 COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/')
 
+# stale 감지: started_at이 2시간 이상 지났으면 자동 비활성화
+STARTED_AT=$(echo "$FRONTMATTER" | grep '^started_at:' | sed 's/started_at: *//' | sed 's/^"\(.*\)"$/\1/' || true)
+if [ -n "$STARTED_AT" ]; then
+    STARTED_EPOCH=$(date -d "$STARTED_AT" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${STARTED_AT%%Z*}" +%s 2>/dev/null || echo "")
+    if [ -n "$STARTED_EPOCH" ]; then
+        NOW_EPOCH=$(date +%s)
+        ELAPSED=$(( NOW_EPOCH - STARTED_EPOCH ))
+        if [ "$ELAPSED" -ge 7200 ]; then
+            echo "loop: started_at($STARTED_AT)이 2시간 이상 경과. 이전 세션의 stale 루프를 자동 종료합니다."
+            rm "$STATE_FILE"
+            exit 0
+        fi
+    fi
+fi
+
 # 세션 격리: 다른 세션의 루프와 충돌 방지
 STATE_SESSION=$(echo "$FRONTMATTER" | grep '^session_id:' | sed 's/session_id: *//' || true)
 HOOK_SESSION=$(echo "$HOOK_INPUT" | jq -r '.session_id // ""')

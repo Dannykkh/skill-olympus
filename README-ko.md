@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **95개 스킬** | **48개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
+> **96개 스킬** | **48개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
 
 ---
 
@@ -173,7 +173,7 @@ chmod +x install.sh && ./install.sh
 | **테스트** | qa-test-planner, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |
 | **메모리** | mnemo, memory-compact, project-gotchas | 3계층 메모리, 자동 학습 |
 | **문서** | mermaid-diagrams, marp-slide, docx, pdf, draw-io + 3개 | 다이어그램, 프레젠테이션, 문서 |
-| **메타** | skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 관리, 릴리즈 자동화 |
+| **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing), 관리, 릴리즈 |
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |
 | **미디어** | video-maker | Remotion 기반 React 영상 |
 | **리서치** | reddit-researcher | 시장 조사 + 리드 스코어링 |

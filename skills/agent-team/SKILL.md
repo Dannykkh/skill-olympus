@@ -347,7 +347,7 @@ Step {N} complete: {summary}
 | teammate 무응답 (1분+) | 파일 생성 여부 직접 확인 → 미생성 시 해당 teammate shutdown → `mode: "bypassPermissions"`로 재스폰 |
 | teammate/agent 실패 | Claude: Task 로그 확인 → `mode: "bypassPermissions"`로 재스폰 1회, Codex: 재spawn 1회 → 실패 시 사용자 보고 |
 | 파일 충돌 감지 | 두 teammate/agent가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
-| 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → 사용자에게 새 세션에서 재개 안내 |
+| 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → **teammate shutdown → TeamDelete** → 사용자에게 새 세션에서 재개 안내 |
 | spawn_agent 실패 (Codex) | Codex CLI 설치/권한 확인 → full-auto 모드 권장 → 재시도 |
 | agent wait 타임아웃 (Codex) | close_agent 후 재spawn → 섹션 범위 축소 고려 |
 | 2회 재시도 후에도 실패 | 해당 섹션을 Lead가 직접 구현 (subagent 위임) 또는 사용자에게 보고 |
@@ -357,12 +357,24 @@ Step {N} complete: {summary}
 **모든 Wave 완료 후 또는 중단 시 반드시 실행:**
 
 ```
-1. TeamDelete 호출 → 팀 리소스 해제
-2. 좀비 teammate 방지 (idle 상태로 context 점유 차단)
+1. 각 teammate에게 shutdown 요청
+   └─ SendMessage(to: "<teammate-name>", message: "작업 완료. 종료해주세요.")
+   └─ 모든 teammate가 idle/종료될 때까지 대기
+
+2. 모든 teammate 종료 확인 후 TeamDelete 호출
+   └─ 팀 디렉토리 (~/.claude/teams/{team-name}/) 제거
+   └─ 태스크 디렉토리 (~/.claude/tasks/{team-name}/) 제거
+
+3. TeamDelete 실패 시 (active member 잔존)
+   └─ 남은 teammate 목록 확인 → 개별 shutdown 재전송
+   └─ 그래도 실패 시: 수동 정리 안내
+      ls ~/.claude/teams/
+      ls ~/.claude/tasks/
 ```
 
-⚠️ **중단/실패 시에도 TeamDelete 필수** — 에러로 중단되더라도 팀 정리를 반드시 수행합니다.
-rm -rf 같은 수동 정리에 의존하지 마세요.
+⚠️ **TeamDelete는 active member가 있으면 실패합니다.** 반드시 teammate shutdown → 종료 확인 → TeamDelete 순서를 지키세요.
+
+⚠️ **중단/실패 시에도 Cleanup 필수** — 에러로 중단되더라도 teammate shutdown + TeamDelete를 반드시 수행합니다.
 
 ---
 

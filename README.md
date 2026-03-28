@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **95 skills** | **48 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
+> **96 skills** | **48 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
 
 ---
 
@@ -173,7 +173,7 @@ Includes auto gotcha/learned tracking:
 | **Testing** | qa-test-planner, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
 | **Memory** | mnemo, memory-compact, project-gotchas | 3-layer memory, auto learning |
 | **Docs** | mermaid-diagrams, marp-slide, docx, pdf, draw-io + 3 more | Diagrams, presentations, documents |
-| **Meta** | skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill management, release automation |
+| **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |
 | **Media** | video-maker | Remotion-based React video |
 | **Research** | reddit-researcher | Market research + lead scoring |
