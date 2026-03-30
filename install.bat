@@ -663,27 +663,10 @@ if "!NEED_GEMINI_HOOKS!"=="1" (
     set "GEMINI_HOOKS_RESULT=Skipped: hook bundle not selected"
 )
 
-REM Gemini MCP (core)
+REM Gemini MCP (disabled — gemini CLI MCP support unstable)
 echo.
-echo   Installing Gemini MCP... [core]
-if 1==1 (
-    where gemini >nul 2>nul
-    if !errorlevel! equ 0 (
-        if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
-            node "%SCRIPT_DIR%install-mcp-gemini.js" !DEFAULT_MCP_SERVERS!
-            if !errorlevel! equ 0 (
-                set "GEMINI_MCP_RESULT=Installed"
-            ) else (
-                set "GEMINI_MCP_RESULT=Install failed"
-            )
-        ) else (
-            set "GEMINI_MCP_RESULT=Skip: no install-mcp-gemini.js"
-        )
-    ) else (
-        set "GEMINI_MCP_RESULT=Skip: gemini CLI not found"
-    )
-    echo       MCP: !GEMINI_MCP_RESULT!
-)
+echo   Gemini MCP install... [skipped: gemini CLI MCP not supported]
+set "GEMINI_MCP_RESULT=Skipped(disabled)"
 
 REM Gemini Orchestrator MCP (required)
 echo.

@@ -567,21 +567,10 @@ else
     GEMINI_HOOKS_RESULT="건너뜀: 훅 번들 미선택"
 fi
 
-# Gemini MCP (코어)
+# Gemini MCP (비활성화 — gemini CLI의 MCP 지원이 불안정하여 설치 루틴 제외)
 echo ""
-echo "  Gemini MCP 설치 중... [코어]"
-if true; then
-    if command -v gemini >/dev/null 2>&1; then
-        if [ -f "$SCRIPT_DIR/install-mcp-gemini.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-gemini.js" --all && GEMINI_MCP_RESULT="설치 완료" || GEMINI_MCP_RESULT="설치 실패"
-        else
-            GEMINI_MCP_RESULT="스킵(install-mcp-gemini.js 없음)"
-        fi
-    else
-        GEMINI_MCP_RESULT="스킵(gemini CLI 없음)"
-    fi
-    echo "      MCP: $GEMINI_MCP_RESULT"
-fi
+echo "  Gemini MCP 설치... [건너뜀: gemini CLI MCP 미지원]"
+GEMINI_MCP_RESULT="건너뜀(비활성화)"
 
 # Gemini Orchestrator MCP (필수 설치)
 echo ""
