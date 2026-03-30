@@ -16,7 +16,7 @@
 
 **The production-ready agent harness for Claude Code, Codex CLI, and Gemini CLI.**
 
-Not just configs. A complete system: zero-interaction full pipeline (design → implement → inspect → test), cross-CLI memory persistence, auto gotcha/learned pattern tracking, and multi-AI parallel orchestration. Evolved over 3+ months of intensive daily use building real products.
+Not just configs. A complete **harness engineering** system: CPS-gated design interviews (Context → Problem → Solution with mandatory checkpoints), zero-interaction full pipeline (design → implement → inspect → test), end-to-end traceability from interview to code inspection, cross-CLI memory persistence, and multi-AI parallel orchestration. Evolved over 3+ months of intensive daily use building real products.
 
 Works across **Claude Code**, **Codex CLI**, and **Gemini CLI**.
 

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-03-30
+
+### Harness Engineering — CPS Framework
+- **zephermine** — Interview restructured from A-G categories to **CPS 3-Phase + 3-Gate** (Context → Problem → Solution with mandatory user agreement checkpoints) (f5b08eb)
+- **zephermine** — spec.md now includes **Context Map** (ecosystem map, stakeholders) and **Problem Statement** (core problems with priority) as traceable anchors (f5b08eb)
+- **zephermine** — Section index gains **Ecosystem Coverage Check**: every system in Context Map must be covered by a section or explicitly excluded (f5b08eb)
+- **argos** — New **Phase 0: CPS Traceability** — validates Problem→Solution, Ecosystem→Section, Problem→Section mapping before code inspection (f5b08eb)
+- **pipeline** — Clear role separation: `/hermes` (business CPS) stays outside `/zeus`, `/zephermine` (implementation CPS) stays inside (f5b08eb)
+- **docs** — Harness Engineering Report: full pipeline flow, 3-axis model, CPS framework documentation (f5b08eb)
+
+### Bug Fixes
+- **install** — Disable Gemini MCP install routine (gemini CLI MCP support unstable) (998637f)
+
+---
+
 ## [1.9.0] - 2026-03-24
 
 ### Features
