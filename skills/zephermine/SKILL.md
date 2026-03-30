@@ -165,13 +165,51 @@ Write Q&A to `<planning_dir>/interview.md`
 Combine into `<planning_dir>/spec.md`:
 - Initial input + research findings + interview answers + Test Scenarios
 
+**필수 포함: Context Map 섹션** — interview.md의 Gate 1 결과에서 가져옴:
+
+```markdown
+## Context Map
+
+### 공유 전제
+- 목표: {궁극적 목표}
+- 산업: {산업} | 범위: {MVP/풀/리뉴얼}
+- 성공 기준: {성공의 정의}
+
+### 이해관계자
+| 역할 | 설명 | 관련 섹션 |
+|------|------|-----------|
+| {역할} | {설명} | (Step 19에서 backfill) |
+
+### 에코시스템 맵
+| 시스템 | 대상 | 연동 방식 | 관련 섹션 |
+|--------|------|-----------|-----------|
+| {시스템} | {대상} | {내장/외부API/제외} | (Step 19에서 backfill) |
+
+### 기존 환경
+{기술 스택, 기존 코드, 인프라 요약}
+```
+
+**필수 포함: Problem Statement 섹션** — interview.md의 Gate 2 결과에서 가져옴:
+
+```markdown
+## Problem Statement
+
+| # | 핵심 문제 | 영향 | 우선순위 | 해결 섹션 |
+|---|-----------|------|----------|-----------|
+| P1 | {문제} | {영향} | 🔴 필수 | (Step 19에서 backfill) |
+| P2 | {문제} | {영향} | 🟠 중요 | (Step 19에서 backfill) |
+```
+
+> Context Map과 Problem Statement의 '관련 섹션'/'해결 섹션' 열은 Step 19에서 backfill됩니다.
+> 이 두 섹션은 다운스트림(섹션 분할, argos 감리)에서 추적성 검증의 앵커로 사용됩니다.
+
 **필수 포함: Risk Assessment 섹션**
 
 | 위험 요소 | 영향도 | 발생 확률 | 완화 전략 |
 |-----------|--------|-----------|-----------|
 | {기술적 위험} | High/Med/Low | High/Med/Low | {대응 방안} |
 
-**조건부 생성: Design System** — 인터뷰 Category B(디자인 비전)가 수집된 경우:
+**조건부 생성: Design System** — 인터뷰 Phase S-1(디자인 비전)이 수집된 경우:
 See [design-system-guide.md](references/design-system-guide.md)
 `<planning_dir>/design-system.md` 생성. UI/프론트엔드가 없는 프로젝트는 자동 건너뜀.
 
@@ -286,6 +324,10 @@ See [section-index.md](references/section-index.md)
 Read `plan.md`. Identify natural section boundaries → create `<planning_dir>/sections/index.md`.
 **CRITICAL:** index.md MUST start with a SECTION_MANIFEST block.
 
+**CPS Backfill:** SECTION_MANIFEST 생성 후, 반드시:
+1. **에코시스템 커버리지 체크** — spec.md의 Context Map → 에코시스템 맵의 모든 시스템이 섹션에서 커버되는지 확인. See [section-index.md](references/section-index.md) Ecosystem Coverage Check.
+2. **spec.md backfill** — Context Map의 '관련 섹션' 열과 Problem Statement의 '해결 섹션' 열을 실제 섹션명으로 업데이트.
+
 ### 20. Write Section Files — Parallel Subagents
 
 See [section-splitting.md](references/section-splitting.md)
@@ -313,6 +355,8 @@ See [operation-qa-guide.md](references/operation-qa-guide.md)
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
+- `spec.md`에 `## Context Map`과 `## Problem Statement` 섹션이 있는지 확인
+- Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
 - `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 18 미실행)
 - `api-spec.md` (API가 있는 프로젝트)
 - `db-schema.md` (DB가 있는 프로젝트)

@@ -101,6 +101,46 @@ Configuration loading and validation.
 - **Parallelization**: Consider which sections can run independently
 - **Dependency direction**: Earlier sections should not depend on later sections
 
+## Ecosystem Coverage Check
+
+spec.md에 `## Context Map` 섹션이 있는 경우, SECTION_MANIFEST 생성 후 에코시스템 커버리지를 반드시 확인합니다.
+spec.md에 Context Map이 없으면 (레거시 계획) 이 단계를 건너뜁니다.
+
+### 확인 절차
+
+1. spec.md에서 `## Context Map` → `### 에코시스템 맵` 테이블 파싱
+2. 각 시스템에 대해 SECTION_MANIFEST에서 대응 섹션 존재 여부 확인
+3. 결과를 아래 테이블로 정리하여 `sections/index.md` 하단에 추가:
+
+```markdown
+## Ecosystem Coverage
+
+| 시스템 | 커버 섹션 | 상태 |
+|--------|-----------|------|
+| 고객 앱 | section-03-customer | ✅ 커버됨 |
+| 기사 앱 | section-04-driver | ✅ 커버됨 |
+| 결제 시스템 | - | ⏭️ 제외 (외부 PG 사용, 연동만) |
+| 관리자 웹 | - | ❌ 누락 → 섹션 추가 필요 |
+```
+
+### 상태 정의
+
+- ✅ 커버됨: 해당 시스템을 구현하는 섹션이 MANIFEST에 있음
+- ⏭️ 제외: 외부 서비스/향후 구현 등 명시적 사유로 제외 (사유 기록 필수)
+- ❌ 누락: 커버되지 않음 → 섹션 추가 또는 제외 사유 문서화
+
+### 누락 시 조치
+
+- 섹션 추가가 필요하면 SECTION_MANIFEST에 섹션 추가
+- 제외가 적절하면 사유를 기록하고 ⏭️로 변경
+- **❌ 상태가 남아있으면 Step 20(섹션 파일 작성)으로 진행하지 않음**
+
+### Backfill
+
+커버리지 확인 후:
+1. spec.md의 에코시스템 맵 '관련 섹션' 열을 실제 섹션명으로 업데이트
+2. spec.md의 Problem Statement '해결 섹션' 열을 해당 문제를 해결하는 섹션명으로 업데이트
+
 ## Example index.md
 
 ```markdown

@@ -38,7 +38,7 @@ auto_apply: false
 
 ```
 아르고스(Argos) — 100개의 눈으로 감리 시작
-순서: Detect → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 4 (QA) → Phase 5 (도면) → Report
+순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 4 (QA) → Phase 5 (도면) → Report
 ```
 
 ### 2. Resolve Planning Directory
@@ -55,9 +55,11 @@ auto_apply: false
 
 ```
 필수:
-  spec.md              → Phase 1 (정적 검증)
+  spec.md              → Phase 0 (CPS 추적, Context Map/Problem Statement 있을 때)
+                       → Phase 1 (정적 검증)
 
 선택 (있으면 해당 Phase 실행):
+  sections/index.md    → Phase 0-2, 0-3 (없으면 해당 서브체크 건너뜀)
   api-spec.md          → Phase 3 (API 일치)
   qa-scenarios.md      → Phase 4 (QA 시나리오)
   flow-diagrams/index.md      → Phase 5 (도면 대조)
@@ -72,7 +74,9 @@ auto_apply: false
 상태 출력:
 ```
 📋 검증 대상:
+  ✅ spec.md (CPS)     → Phase 0 (Context Map + Problem Statement 감지됨)
   ✅ spec.md           → Phase 1, 2
+  ✅ sections/index.md → Phase 0 (에코시스템 커버리지)
   ✅ api-spec.md       → Phase 3
   ✅ qa-scenarios.md   → Phase 4
   ✅ flow-diagrams/ (3개)     → Phase 5
@@ -80,7 +84,39 @@ auto_apply: false
 
 ---
 
-## 검증 프로세스 (5 Phase)
+## 검증 프로세스 (6 Phase: 0~5)
+
+### Phase 0: CPS 추적성 검증
+
+spec.md에 `## Context Map`과 `## Problem Statement`가 **모두 있는 경우만** 실행합니다.
+없으면 아래 메시지 출력 후 Phase 1로 바로 진행:
+```
+ℹ️ CPS 섹션 미감지 — 레거시 계획, Phase 0 건너뜀
+```
+
+See [verify-protocol.md](references/verify-protocol.md) — Phase 0
+
+#### 0-1. Problem → Solution 추적
+Problem Statement의 각 문제(P1, P2, P3...)에 대해:
+- spec.md Requirements에 대응하는 솔루션이 기술되어 있는가?
+- 결과: ✅ 추적됨 / ❌ 솔루션 없음
+
+#### 0-2. 에코시스템 → 섹션 커버리지
+Context Map의 에코시스템 맵 각 시스템에 대해:
+- `sections/index.md`에서 대응 섹션이 있는가?
+- ⏭️ 제외 사유가 문서화되어 있는가?
+- 결과: ✅ 커버됨 / ⏭️ 명시적 제외 / ❌ 누락
+
+#### 0-3. Problem → 섹션 매핑
+Problem Statement의 '해결 섹션' 열이 가리키는 섹션 파일이 실제로 존재하는가?
+- 결과: ✅ 존재 / ❌ 파일 없음
+
+#### 등급 영향
+- Phase 0 전체 통과 → 다음 Phase로 진행
+- Phase 0 일부 실패 → **CONDITIONAL** 등급 (FAIL이 아님 — 문서 수정으로 해결 가능)
+- Healer 분류: "manual fix required" (자동 수정 불가, 설계 문서 수정 필요)
+
+---
 
 ### Phase 1: 정적 검증
 
@@ -161,7 +197,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 5
 2. 기존 파일 → <planning_dir>/archive/verify-report-{YYYY-MM-DD-HHMM}.md 로 이동
 ```
 
-Phase 1~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
+Phase 0~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ### 보고서 구조
 
@@ -169,12 +205,17 @@ Phase 1~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 # Argos 검증 보고서
 
 ## 요약
+- CPS 추적성: ✅/⚠️ CONDITIONAL/ℹ️ 건너뜀
 - 전체 충족률: {N}%
 - 빌드: ✅/❌
 - 테스트: {passed}/{total}
 - API 일치: {matched}/{total}
 - QA 통과: {passed}/{total}
 - 도면 매칭: {matched}/{total} 노드
+
+## Phase 0: CPS 추적성 검증
+{Problem→Solution 추적 + 에코시스템→섹션 커버리지 + Problem→섹션 매핑 결과}
+(CPS 섹션 미감지 시: "레거시 계획 — 건너뜀")
 
 ## Phase 1: 정적 검증
 {기능 검증 + 품질 검증 결과 테이블}

@@ -8,6 +8,77 @@ zephermine resume 시 모든 계획 파일이 존재하고 사용자가 "구현 
 
 ## 검증 프로세스
 
+### Phase 0: CPS 추적성 검증
+
+spec.md에 `## Context Map`과 `## Problem Statement` 섹션이 **모두 존재**하는 경우만 실행.
+하나라도 없으면 "ℹ️ CPS 섹션 미감지 — 레거시 계획, Phase 0 건너뜀" 출력 후 Phase 1로 진행.
+
+**코드 실행 없이 문서 간 대조만 수행합니다.**
+
+#### 0-1. Problem → Solution 추적
+
+1. spec.md `## Problem Statement` 테이블에서 P1, P2, P3... 추출
+2. 각 문제에 대해 spec.md `## Requirements`에서 대응하는 솔루션 기술 여부 확인
+3. 판정:
+   - 요구사항에 해당 문제를 해결하는 항목이 있음 → ✅ 추적됨
+   - 해당 문제를 해결하는 요구사항이 없음 → ❌ 솔루션 없음
+
+```markdown
+## 0-1. Problem → Solution
+| # | 문제 | 대응 요구사항 | 상태 |
+|---|------|-------------|------|
+| P1 | {문제} | Req 2, 5 | ✅ |
+| P2 | {문제} | - | ❌ |
+```
+
+#### 0-2. 에코시스템 → 섹션 커버리지
+
+1. spec.md `## Context Map` → `### 에코시스템 맵` 테이블에서 시스템 목록 추출
+2. `sections/index.md`의 SECTION_MANIFEST 및 Ecosystem Coverage 테이블과 대조
+3. 판정:
+   - 대응 섹션이 MANIFEST에 있음 → ✅ 커버됨
+   - ⏭️ 제외로 문서화됨 (사유 있음) → ⏭️ 명시적 제외
+   - 어디에도 없음 → ❌ 누락
+
+```markdown
+## 0-2. Ecosystem → Section
+| 시스템 | 커버 섹션 | 상태 |
+|--------|-----------|------|
+| 고객 앱 | section-03 | ✅ |
+| 결제 | - | ⏭️ 외부 PG |
+| 관리자 웹 | - | ❌ 누락 |
+```
+
+#### 0-3. Problem → 섹션 매핑
+
+1. spec.md `## Problem Statement`의 '해결 섹션' 열에서 섹션명 추출
+2. 해당 섹션 파일(`sections/section-NN-name.md`)이 실제로 존재하는지 확인
+3. 판정:
+   - 파일 존재 → ✅ 존재
+   - '해결 섹션' 열이 비어있음 (backfill 안 됨) → ⚠️ 미매핑
+   - 파일 미존재 → ❌ 파일 없음
+
+```markdown
+## 0-3. Problem → Section Files
+| # | 해결 섹션 | 파일 존재 | 상태 |
+|---|-----------|-----------|------|
+| P1 | section-03-customer | ✅ | ✅ |
+| P2 | (비어있음) | - | ⚠️ 미매핑 |
+```
+
+#### Phase 0 등급 판정
+
+| 결과 | 등급 영향 |
+|------|-----------|
+| 0-1, 0-2, 0-3 모두 통과 | ✅ PASS — Phase 1로 진행 |
+| 일부 ⚠️ 미매핑 | ⚠️ CONDITIONAL — 설계 문서 보완 권고 |
+| ❌ 존재 | ⚠️ CONDITIONAL — 설계 문서 수정 필요 |
+
+Phase 0 실패는 **FAIL이 아닌 CONDITIONAL**입니다. 코드 문제가 아닌 설계 문서 문제이므로,
+Healer는 "manual fix required"로 분류합니다.
+
+---
+
 ### 서브에이전트 검증 실행
 
 **Phase 1: 정적 검증** — Task(subagent_type="Explore") 2개 병렬 실행:
