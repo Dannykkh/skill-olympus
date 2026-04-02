@@ -105,7 +105,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (96개)
+### Skills (97개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -114,7 +114,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
 | 🎨 Frontend | design-plan (아프로디테), design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 |
-| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy | 개발 도구 |
+| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy, social-login | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스), final-inspection (클로저) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |

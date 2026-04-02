@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **96개 스킬** | **48개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
+> **97개 스킬** | **48개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
 
 ---
 
@@ -36,7 +36,7 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-끝입니다. **95개 스킬, 48개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
+끝입니다. **96개 스킬, 48개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
 
 > Codex/Gemini가 미설치 시 해당 단계는 자동 스킵됩니다.
 
@@ -168,7 +168,7 @@ chmod +x install.sh && ./install.sh
 | **AI 도구** | codex, gemini, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
 | **파이프라인** | zephermine, zeus, argos, qpassenger, closer | 제로 인터랙션 풀 파이프라인 |
 | **프론트엔드** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5개 | 161 팔레트, 73 폰트, SEO+AEO+GEO 감사 |
-| **개발** | docker-deploy, database-schema-designer, code-reviewer + 7개 | Docker, DB 설계, 코드 품질 |
+| **개발** | docker-deploy, database-schema-designer, social-login, code-reviewer + 7개 | Docker, DB 설계, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | qa-test-planner, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |
 | **메모리** | mnemo, memory-compact, project-gotchas | 3계층 메모리, 자동 학습 |
