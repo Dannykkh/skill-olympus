@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **96 skills** | **48 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
+> **97 skills** | **48 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
 
 ---
 
@@ -36,7 +36,7 @@ cd claude-code-agent-customizations
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **95 skills, 48 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **96 skills, 48 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -168,7 +168,7 @@ Includes auto gotcha/learned tracking:
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
 | **Pipeline** | zephermine, zeus, argos, qpassenger, closer | Zero-interaction full dev pipeline |
 | **Frontend** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 73 fonts, SEO+AEO+GEO audit |
-| **Development** | docker-deploy, database-schema-designer, code-reviewer + 7 more | Docker, DB design, code quality |
+| **Development** | docker-deploy, database-schema-designer, social-login, code-reviewer + 7 more | Docker, DB design, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | qa-test-planner, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
 | **Memory** | mnemo, memory-compact, project-gotchas | 3-layer memory, auto learning |

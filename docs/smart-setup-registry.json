@@ -272,7 +272,8 @@
     { "id": "ceo", "tags": ["*"], "priority": "optional" },
     { "id": "okr", "tags": ["*"], "priority": "optional" },
     { "id": "design-plan", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
-    { "id": "ko-en-translator", "tags": ["*"], "priority": "optional" }
+    { "id": "ko-en-translator", "tags": ["*"], "priority": "optional" },
+    { "id": "social-login", "tags": ["react", "nextjs", "spring", "fastapi", "nodejs", "dotnet"], "priority": "optional" }
   ],
 
   "internal-agents": [
