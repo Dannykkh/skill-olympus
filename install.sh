@@ -139,7 +139,7 @@ if [ "$MODE" = "uninstall" ]; then
     echo "[7/12] Codex MCP 제거 중..."
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
-            if node "$SCRIPT_DIR/install-mcp-codex.js" --uninstall context7 fetch playwright sequential-thinking; then
+            if node "$SCRIPT_DIR/install-mcp-codex.js" --uninstall context7 playwright chrome-devtools sequential-thinking; then
                 CODEX_MCP_RESULT="제거 완료"
                 echo "      완료!"
             else
@@ -211,7 +211,7 @@ if [ "$MODE" = "uninstall" ]; then
     echo "[12/12] Gemini MCP/Orchestrator 제거 중..."
     if command -v gemini >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-gemini.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-gemini.js" --uninstall context7 fetch playwright sequential-thinking
+            node "$SCRIPT_DIR/install-mcp-gemini.js" --uninstall context7 playwright chrome-devtools sequential-thinking
         fi
         gemini mcp remove orchestrator >/dev/null 2>&1 || true
         echo "      완료!"
@@ -330,10 +330,23 @@ if [ "$HAS_CLAUDE" = "1" ]; then
     if [ "$NEED_HOOKS" = "1" ] && [ -d "$SCRIPT_DIR/hooks" ]; then
         mkdir -p "$CLAUDE_DIR/hooks"
         for hook_file in "$SCRIPT_DIR/hooks"/*.sh; do
-            [ -f "$hook_file" ] && hook_name=$(basename "$hook_file") && echo "      - $hook_name" && cp "$hook_file" "$CLAUDE_DIR/hooks/" && chmod +x "$CLAUDE_DIR/hooks/$hook_name"
+            [ -f "$hook_file" ] || continue
+            hook_name=$(basename "$hook_file")
+            # 디버그 훅 스킵 (install.bat과 동일)
+            if [[ "$hook_name" == *debug* ]]; then
+                echo "      - $hook_name [skip: debug]"
+                continue
+            fi
+            echo "      - $hook_name" && cp "$hook_file" "$CLAUDE_DIR/hooks/" && chmod +x "$CLAUDE_DIR/hooks/$hook_name"
         done
         for hook_file in "$SCRIPT_DIR/hooks"/*.ps1; do
-            [ -f "$hook_file" ] && echo "      - $(basename "$hook_file")" && cp "$hook_file" "$CLAUDE_DIR/hooks/"
+            [ -f "$hook_file" ] || continue
+            hook_name=$(basename "$hook_file")
+            if [[ "$hook_name" == *debug* ]]; then
+                echo "      - $hook_name [skip: debug]"
+                continue
+            fi
+            echo "      - $hook_name" && cp "$hook_file" "$CLAUDE_DIR/hooks/"
         done
         for hook_file in "$SCRIPT_DIR/hooks"/*.js; do
             [ -f "$hook_file" ] && echo "      - $(basename "$hook_file")" && cp "$hook_file" "$CLAUDE_DIR/hooks/"
@@ -379,7 +392,7 @@ if true; then
     echo ""
     echo "      무료 MCP 자동 설치를 시작합니다..."
     echo ""
-    node "$SCRIPT_DIR/install-mcp.js" --all
+    node "$SCRIPT_DIR/install-mcp.js" context7 playwright chrome-devtools
     echo ""
     echo "      완료! (추가: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
 fi
@@ -465,7 +478,7 @@ echo "  Codex MCP 설치 중... [코어]"
 if true; then
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-codex.js" --all && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
+            node "$SCRIPT_DIR/install-mcp-codex.js" context7 playwright chrome-devtools && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
         else
             CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
         fi
