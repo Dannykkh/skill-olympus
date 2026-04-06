@@ -401,8 +401,9 @@ fi
 echo ""
 echo "[7/7] Orchestrator MCP 서버 등록 중... (Claude) [필수]"
 if true; then
-    ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    # 글로벌 설치 경로 사용 (레포 경로가 아닌 ~/.claude/skills/ — 다른 PC에서도 동작)
+    ORCH_DIST="$CLAUDE_DIR/skills/orchestrator/mcp-server/dist/index.js"
+    ORCH_SDK="$CLAUDE_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
     if [ ! -f "$ORCH_DIST" ] || [ ! -f "$ORCH_SDK" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
@@ -494,9 +495,9 @@ fi
 echo ""
 echo "  Codex Orchestrator MCP 등록 중... [필수]"
 if true; then
-    CODEX_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    CODEX_ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
-    CODEX_ORCH_SQLITE="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/better-sqlite3/package.json"
+    CODEX_ORCH_DIST="$CODEX_DIR/skills/orchestrator/mcp-server/dist/index.js"
+    CODEX_ORCH_SDK="$CODEX_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    CODEX_ORCH_SQLITE="$CODEX_DIR/skills/orchestrator/mcp-server/node_modules/better-sqlite3/package.json"
     if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ] || [ ! -f "$CODEX_ORCH_SQLITE" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
@@ -589,8 +590,8 @@ GEMINI_MCP_RESULT="건너뜀(비활성화)"
 echo ""
 echo "  Gemini Orchestrator MCP 등록 중... [필수]"
 if true; then
-    GEMINI_ORCH_DIST="$SCRIPT_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    GEMINI_ORCH_SDK="$SCRIPT_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    GEMINI_ORCH_DIST="$GEMINI_DIR/skills/orchestrator/mcp-server/dist/index.js"
+    GEMINI_ORCH_SDK="$GEMINI_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
     if [ ! -f "$GEMINI_ORCH_DIST" ] || [ ! -f "$GEMINI_ORCH_SDK" ]; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)

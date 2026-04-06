@@ -453,8 +453,9 @@ REM Register Orchestrator MCP server (required)
 echo.
 echo [7/7] Registering Orchestrator MCP... - Claude [required]
 if 1==1 (
-    set "ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
-    set "ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    REM 글로벌 설치 경로 사용 (레포 경로가 아닌 CLAUDE_DIR — 다른 PC에서도 동작)
+    set "ORCH_DIST=%CLAUDE_DIR%\skills\orchestrator\mcp-server\dist\index.js"
+    set "ORCH_SDK=%CLAUDE_DIR%\skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
     set "NEED_ORCH_BUILD=0"
     if not exist "!ORCH_DIST!" set "NEED_ORCH_BUILD=1"
     if not exist "!ORCH_SDK!" set "NEED_ORCH_BUILD=1"
@@ -567,9 +568,9 @@ REM Codex Orchestrator MCP (required)
 echo.
 echo   Registering Codex Orchestrator MCP... [required]
 if 1==1 (
-    set "CODEX_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
-    set "CODEX_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
-    set "CODEX_ORCH_SQLITE=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\better-sqlite3\package.json"
+    set "CODEX_ORCH_DIST=!CODEX_DIR!\skills\orchestrator\mcp-server\dist\index.js"
+    set "CODEX_ORCH_SDK=!CODEX_DIR!\skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "CODEX_ORCH_SQLITE=!CODEX_DIR!\skills\orchestrator\mcp-server\node_modules\better-sqlite3\package.json"
     set "NEED_CODEX_ORCH_BUILD=0"
     if not exist "!CODEX_ORCH_DIST!" set "NEED_CODEX_ORCH_BUILD=1"
     if not exist "!CODEX_ORCH_SDK!" set "NEED_CODEX_ORCH_BUILD=1"
@@ -672,8 +673,8 @@ REM Gemini Orchestrator MCP (required)
 echo.
 echo   Registering Gemini Orchestrator MCP... [required]
 if 1==1 (
-    set "GEMINI_ORCH_DIST=%SCRIPT_DIR%skills\orchestrator\mcp-server\dist\index.js"
-    set "GEMINI_ORCH_SDK=%SCRIPT_DIR%skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "GEMINI_ORCH_DIST=!GEMINI_DIR!\skills\orchestrator\mcp-server\dist\index.js"
+    set "GEMINI_ORCH_SDK=!GEMINI_DIR!\skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
     set "NEED_GEMINI_ORCH_BUILD=0"
     if not exist "!GEMINI_ORCH_DIST!" set "NEED_GEMINI_ORCH_BUILD=1"
     if not exist "!GEMINI_ORCH_SDK!" set "NEED_GEMINI_ORCH_BUILD=1"
