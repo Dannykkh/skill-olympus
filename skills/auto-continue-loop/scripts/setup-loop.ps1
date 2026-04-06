@@ -21,7 +21,7 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
   /loop 할일 [옵션]
 
 옵션:
-  --max-iterations <횟수>         최대 반복 횟수 (기본: 무제한)
+  --max-iterations <횟수>         최대 반복 횟수 (기본: 50, 0=무제한)
   --completion-promise '<조건>'   완료 조건
   --help                         도움말
 
@@ -63,6 +63,17 @@ if (-not $prompt) {
 }
 
 New-Item -ItemType Directory -Path ".claude" -Force | Out-Null
+
+# 기존 루프 감지 — 다른 세션의 루프가 활성 상태이면 경고
+if (Test-Path ".claude/loop-state.md") {
+    $existingContent = Get-Content ".claude/loop-state.md" -Raw
+    $existingSession = if ($existingContent -match "session_id:\s*(.+)") { $Matches[1].Trim() } else { "" }
+    $currentSession = if ($env:CLAUDE_CODE_SESSION_ID) { $env:CLAUDE_CODE_SESSION_ID } else { "" }
+    if ($existingSession -and $currentSession -and $existingSession -ne $currentSession) {
+        Write-Host "⚠️ 다른 세션($($existingSession.Substring(0, [Math]::Min(8, $existingSession.Length)))...)의 루프가 활성 상태입니다."
+        Write-Host "   기존 루프를 덮어쓰고 새 루프를 시작합니다."
+    }
+}
 
 $sessionId = if ($env:CLAUDE_CODE_SESSION_ID) { $env:CLAUDE_CODE_SESSION_ID } else { "" }
 $cpYaml = if ($completionPromise -ne "null") { "`"$completionPromise`"" } else { "null" }

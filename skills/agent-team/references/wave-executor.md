@@ -97,6 +97,14 @@ while (wave의 모든 Task가 completed가 아님):
    생성된 파일: {file_count}개
    다음 Wave: {next_wave_sections}
    ```
+4. **컨텍스트 체크 (Wave 전환 시 필수)**:
+   - 남은 Wave 수 대비 현재 대화 길이를 판단
+   - 대화가 매우 길어졌다면 (응답이 느려지거나, compact가 이미 실행되었거나):
+     - 현재까지 결과를 `conversations/{YYYY-MM-DD}-team-dannys.md`에 저장
+     - teammate shutdown → TeamDelete
+     - `zeus-state.json` 또는 핸드오프 파일에 "Wave {N+1}부터 재개" 기록
+     - 사용자에게 "새 세션에서 `/agent-team`을 다시 실행하면 Wave {N+1}부터 재개됩니다" 안내
+   - 여유가 있으면 다음 Wave로 즉시 진행
 
 ## 선행 섹션 컨텍스트 전달
 
@@ -123,8 +131,8 @@ Wave 2+ 실행 시, 선행 섹션의 결과를 teammate에게 전달:
 | 상황 | 대응 |
 |------|------|
 | teammate가 Task를 completed로 안 바꿈 (1분+) | 담당 파일 생성 여부 확인 → 미생성 시 shutdown → `mode: "bypassPermissions"`로 재스폰 |
-| teammate 에러 발생 | 에러 로그 확인 → `mode: "bypassPermissions"`로 새 teammate 생성하여 재시도 1회 |
-| 재시도도 실패 (2회) | 해당 섹션을 Lead가 subagent로 직접 구현, 또는 사용자에게 보고 |
+| teammate 에러 발생 | 에러 로그 확인 → `mode: "bypassPermissions"`로 새 teammate 생성하여 재시도 (최대 2회) |
+| 재시도 2회 후에도 실패 | 해당 섹션을 Lead가 subagent로 직접 구현, 또는 사용자에게 보고 |
 | 파일 충돌 감지 | Lead가 git diff로 확인 → merge 또는 사용자 판단 요청 |
 | Wave 전체 실패 | 이후 Wave도 중단, **teammate shutdown → TeamDelete 실행 후** 사용자에게 보고 |
 | 작업 완료 또는 중단 | **반드시 teammate shutdown → TeamDelete 순서로 호출** — shutdown 없이 TeamDelete하면 active member 잔존으로 실패 → 좀비 발생 |

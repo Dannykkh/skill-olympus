@@ -280,11 +280,11 @@ Bash: {detected_e2e_command}
 
 계획 단계에서 정의한 입출력 기대값을 실제 구현과 대조합니다.
 
-#### 3-1. QA 시나리오 문서 로드
+#### 4-1. QA 시나리오 문서 로드
 
 `<planning_dir>/qa-scenarios.md`를 읽어 모든 테스트 케이스 추출.
 
-#### 3-2. 시나리오별 통과 판정
+#### 4-2. 시나리오별 통과 판정
 
 각 테스트 케이스에 대해:
 
@@ -294,7 +294,7 @@ Bash: {detected_e2e_command}
 | **코드 분석** | 테스트는 없지만 코드상 해당 로직이 구현됨 → ⚠️ (테스트 미작성) |
 | **미구현** | 코드에서 해당 처리가 없음 → ❌ |
 
-#### 3-3. QA 시나리오 결과 마킹
+#### 4-3. QA 시나리오 결과 마킹
 
 `qa-scenarios.md`의 체크박스를 업데이트:
 
@@ -307,7 +307,7 @@ Bash: {detected_e2e_command}
 - [x] 이메일 형식 오류: → 400 ⚠️ (코드 있음, 테스트 없음)
 ```
 
-#### 3-4. QA 통과율 요약
+#### 4-4. QA 통과율 요약
 
 ```markdown
 ## QA 시나리오 검증 결과
@@ -366,7 +366,175 @@ Bash: {detected_e2e_command}
 
 ---
 
-Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
+---
+
+**Phase 6: 디자인 준수 검증** — design-system.md 기반 (UI 프로젝트만)
+
+`<planning_dir>/design-system.md` 또는 프로젝트 루트의 `design-system.md`/`DESIGN.md`가 존재하면 실행.
+
+#### 6-1. 디자인 토큰 준수 검사
+
+design-system.md에서 정의된 토큰을 추출하고, 실제 코드에서 사용 여부를 확인:
+
+| 검증 항목 | 확인 방법 |
+|-----------|-----------|
+| **CSS 변수 정의** | `:root` 또는 `tailwind.config.*`에 토큰이 반영되었는가 |
+| **색상 하드코딩** | `#` 또는 `rgb(` 패턴이 토큰을 우회하고 있지 않은가 (Grep: `style=.*#[0-9a-f]`, `bg-\[#`) |
+| **폰트 하드코딩** | `font-family` 직접 지정이 디자인 시스템과 불일치하지 않는가 |
+| **간격 하드코딩** | `px` 직접 값이 토큰 스케일(4px 단위)과 맞지 않는가 |
+| **라운딩 일관성** | `rounded-*` 값이 design-system의 radius 토큰과 일치하는가 |
+
+결과 형식:
+```markdown
+### 디자인 토큰 준수율
+
+| 토큰 카테고리 | 정의됨 | 코드 적용 | 우회 | 준수율 |
+|--------------|--------|-----------|------|--------|
+| 색상 | 8개 | 6개 | 2건 | 75% |
+| 폰트 | 3개 | 3개 | 0건 | 100% |
+| 간격 | 5개 | 4개 | 3건 | 57% |
+| 라운딩 | 3개 | 3개 | 0건 | 100% |
+```
+
+#### 6-2. AI Slop 탐지
+
+`frontend-design/references/ai-slop-blacklist.md` 공유 블랙리스트 기반:
+
+**10항목 블랙리스트 검사** (Grep + 시각 판단):
+
+| # | 탐지 대상 | Grep 패턴 |
+|---|----------|----------|
+| 1 | 보라/인디고 그라데이션 | `from-purple`, `from-indigo`, `linear-gradient.*purple` |
+| 2 | 3열 대칭 피처 그리드 | `grid-cols-3` + 반복 아이콘+제목+설명 구조 |
+| 3 | 원형 배경 아이콘 | `rounded-full.*bg-` + SVG/아이콘 |
+| 4 | 전부 가운데 정렬 | `text-center` 연속 3+ 컨테이너 |
+| 5 | 균일 둥근 모서리 | 동일 `rounded-*` 값이 카드/버튼/입력 전체에 적용 |
+| 6 | 장식용 블롭/웨이브 SVG | `blob`, `wave`, 장식 목적 `absolute` SVG |
+| 7 | 과사용 폰트 | `font-family.*Inter`, `font-family.*Roboto` (프라이머리 사용) |
+
+**Hard Rejection 7개 검사** (시각 판단 — 서버 실행 중이면 스크린샷 참조):
+1. 제네릭 SaaS 카드 그리드가 첫 인상
+2. 이미지에 기대는 약한 브랜드
+3. 강한 헤드라인 + 액션 없음
+4. 텍스트 뒤 복잡한 이미지
+5. 같은 무드 문구 반복
+6. 내러티브 없는 캐러셀
+7. 카드 쌓기로 만든 앱 UI
+
+결과: 블랙리스트 항목 수 + Hard Rejection 발견 여부
+
+#### 6-3. UI/UX 9영역 채점
+
+`ui-ux-auditor`의 채점 방법론을 적용하여 9영역 각각 0-10 채점:
+
+| 영역 | 가중치 | 채점 기준 요약 |
+|------|--------|---------------|
+| 다크/라이트 모드 | 10% | 하드코딩 색상, 테마 전환 |
+| 반응형 | 15% | 브레이크포인트, 터치 타겟, 가로 스크롤 |
+| 접근성 | 15% | alt, aria, 대비, 키보드, 시맨틱 |
+| 로딩 상태 | 10% | Skeleton, 빈 상태, 에러 UI |
+| 폼 UX | 10% | 유효성 검사, 포커스, 자동완성 |
+| 네비게이션 | 10% | 활성 표시, 뒤로가기, 브레드크럼 |
+| 타이포/간격 | 15% | 계층, 줄 간격, 일관성 |
+| 애니메이션 | 10% | 호버, 전환, reduced-motion |
+| AI Slop | 5% | 블랙리스트 항목 수 |
+
+가중 총점 → A~F 등급:
+
+| 등급 | 점수 |
+|------|------|
+| A | 9.0+ |
+| B | 7.0-8.9 |
+| C | 5.0-6.9 |
+| D | 3.0-4.9 |
+| F | 0-2.9 |
+
+결과 형식:
+```markdown
+### UI/UX 스코어카드
+
+| 영역 | 점수 | 주요 이슈 |
+|------|------|----------|
+| 다크/라이트 모드 | 7/10 | 하드코딩 2건 |
+| 반응형 | 5/10 | sm: 브레이크포인트 누락 |
+| ... | ... | ... |
+
+**총점: {X.X}/10 (등급: {A~F})**
+```
+
+---
+
+---
+
+**Phase 7: 보안 검증** — 항상 실행. `security-reviewer` 에이전트의 인프라 우선 방법론 적용.
+
+#### 7-1. 시크릿 탐지 (Secret Archaeology)
+
+현재 코드 + git 히스토리에서 시크릿 노출 탐색:
+
+```bash
+# 현재 코드
+grep -rn "api[_-]?key\s*=\s*[\"'][^\"']\+" --include="*.{ts,js,py,java,go}" .
+grep -rn "password\s*=\s*[\"'][^\"']\+" --include="*.{ts,js,py,java,go,env}" .
+# 알려진 시크릿 접두사
+grep -rn "sk-[a-zA-Z0-9]\{20,\}\|AKIA[A-Z0-9]\{16\}\|ghp_[a-zA-Z0-9]\{36\}\|glpat-" .
+# git 히스토리 (삭제되었어도 위험)
+git log --all -p --diff-filter=D -- "*.env" "*.key" "*.pem" 2>/dev/null | head -50
+```
+
+| 심각도 | 탐지 대상 |
+|--------|----------|
+| 🔴 Critical | 하드코딩 API 키, .env 커밋 이력, PEM/인증서 노출 |
+| 🟠 High | 비밀번호 평문, 내부 URL 하드코딩 (프로덕션) |
+
+**False-Positive 제외**: 테스트 파일, .env.example, 주석, node_modules, 타입 정의, 빌드 출력
+
+#### 7-2. 의존성 공급망 (Supply Chain)
+
+```bash
+npm audit --json 2>/dev/null || yarn audit --json 2>/dev/null   # Node.js
+pip-audit --format json 2>/dev/null                              # Python
+```
+
+| 검사 | 기준 |
+|------|------|
+| Critical/High CVE | 🔴 즉시 업데이트 |
+| Lock 파일 미커밋 | 🟠 의존성 변조 가능 |
+| 메이저 버전 2+ 뒤처짐 | 🟡 보안 패치 미수신 |
+
+#### 7-3. OWASP Top 10 코드 스캔
+
+validate-code 훅(3개 패턴)보다 넓은 범위:
+
+| 취약점 | Grep 패턴 |
+|--------|----------|
+| SQL Injection | `f"SELECT`, `f"INSERT`, `+ "WHERE"`, 문자열 연결 쿼리 |
+| XSS | `dangerouslySetInnerHTML`, `innerHTML =`, `document.write` |
+| Command Injection | `os.system(`, `subprocess.*shell=True`, `exec(` |
+| Path Traversal | `../` + 사용자 입력 결합, `req.params` + 파일 경로 |
+| SSRF | `fetch(userInput)`, `axios.get(userUrl)` 패턴 |
+| CSRF | 상태 변경 POST에 토큰 없음 |
+| 인증 누락 | 라우트 핸들러에 인증 미들웨어 없음 |
+| Rate Limit 없음 | 인증/비용 발생 엔드포인트에 throttle 미적용 |
+
+#### 7-4. STRIDE 위협 요약
+
+시스템 전체에 대해 6가지 위협 평가:
+
+```markdown
+| 위협 | 대응 상태 | 근거 | 권고 |
+|------|----------|------|------|
+| Spoofing | ✅/⚠️/❌ | {인증 메커니즘 확인} | {미비 시 권고} |
+| Tampering | ✅/⚠️/❌ | {HTTPS, 서명, 무결성} | |
+| Repudiation | ✅/⚠️/❌ | {감사 로그 존재 여부} | |
+| Info Disclosure | ✅/⚠️/❌ | {에러 핸들링, 로깅} | |
+| DoS | ✅/⚠️/❌ | {Rate Limit, 리소스 제한} | |
+| Elevation | ✅/⚠️/❌ | {RBAC, 권한 검사} | |
+```
+
+---
+
+Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 + Phase 7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ### 검증 결과 보고
 

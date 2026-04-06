@@ -1,6 +1,22 @@
 ---
 name: social-login
-description: Social Login Implementation Guide. 소셜 로그인(Google, Apple, Kakao, Naver) 구현 가이드. 트리거: "소셜 로그인", "social login", "카카오 로그인", "구글 로그인", "애플 로그인", "네이버 로그인", "DEVELOPER_ERROR", "KOE205", "keyHash".
+description: >
+  Social Login Implementation Guide. 소셜 로그인(Google, Apple, Kakao, Naver) 구현 가이드.
+  React Native(Expo), Swift, Kotlin, Web 환경. 실전 gotcha + 체크리스트.
+triggers:
+  - "소셜 로그인"
+  - "social login"
+  - "카카오 로그인"
+  - "네이버 로그인"
+  - "구글 로그인"
+  - "애플 로그인"
+  - "kakao login"
+  - "google sign-in"
+  - "apple sign-in"
+  - "DEVELOPER_ERROR"
+  - "KOE205"
+  - "keyHash"
+auto_apply: false
 ---
 
 # Social Login Implementation Guide

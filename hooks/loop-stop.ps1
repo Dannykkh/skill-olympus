@@ -99,6 +99,8 @@ try {
 }
 
 # 완료 감지 1: AI가 "더 이상 할 게 없다" 패턴 출력
+# 오탐 방지: 전체 출력이 아닌 마지막 500자만 검사
+$tailOutput = if ($lastOutput.Length -gt 500) { $lastOutput.Substring($lastOutput.Length - 500) } else { $lastOutput }
 $donePatterns = @(
     'Chronos Complete',
     '더 이상.*(할|수정할|고칠).*(없|작업이 없)',
@@ -109,7 +111,7 @@ $donePatterns = @(
     '모든.*작업.*완료'
 )
 foreach ($p in $donePatterns) {
-    if ($lastOutput -match $p) {
+    if ($tailOutput -match $p) {
         Write-Host "loop: AI가 작업 완료를 보고했습니다. 루프를 종료합니다."
         Remove-Item $stateFile -Force
         exit 0
@@ -118,7 +120,7 @@ foreach ($p in $donePatterns) {
 
 # 완료 감지 2: <promise> 매칭
 if ($completionPromise -and $completionPromise -ne "null") {
-    $promiseMatch = [regex]::Match($lastOutput, '<promise>(.*?)</promise>')
+    $promiseMatch = [regex]::Match($tailOutput, '<promise>(.*?)</promise>')
     if ($promiseMatch.Success -and $promiseMatch.Groups[1].Value.Trim() -eq $completionPromise) {
         Write-Host "loop: 완료 조건 달성! <promise>$completionPromise</promise>"
         Remove-Item $stateFile -Force

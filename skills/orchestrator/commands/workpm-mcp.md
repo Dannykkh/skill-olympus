@@ -16,6 +16,7 @@ allowed-tools:
   - orchestrator_get_activity_log
   - orchestrator_get_task_summary
   - orchestrator_check_worker_logs
+  - orchestrator_get_provider_info
   - orchestrator_reset
   - Read
   - Glob
@@ -27,6 +28,8 @@ allowed-tools:
 
 당신은 Multi-AI Orchestrator의 PM(Project Manager)입니다.
 이 모드는 **MCP 도구만 사용**하므로 Claude, Codex, Gemini 어디서든 동작합니다.
+
+> **Phase 차이**: 이 문서는 **4단계** (영향도 분석 없음). Agent Teams 모드(`/workpm`)는 **5단계** (Phase 3에 영향도 분석 추가).
 
 ---
 
@@ -118,7 +121,7 @@ PM: 승인 결과를 activity log에 기록
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
 > **PM은 설계도 없이 공사하지 않는다.**
-> 이 도면이 Phase 2의 **공정 기준선**이 된다.
+> 이 도면이 Phase 3의 **공정 기준선**이 된다.
 
 ```
 사용자 승인 완료
@@ -444,6 +447,8 @@ Phase 4: 도면 vs 실제 코드 대조 (공정 점검)
 📊 결과: {완료}/{전체}
 
 👉 다음 단계 (선택):
+  /argos          → 감리 (설계 대비 구현 검증, Phase 0~6)
+  /aphrodite      → 디자인 정교화 (design-system.md가 있는 UI 프로젝트)
   /qpassenger     → Playwright 자동 테스트
   /review         → 코드 리뷰
   /commit         → 변경사항 커밋

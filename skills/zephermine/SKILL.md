@@ -79,7 +79,13 @@ Determine session state by checking existing files:
    ```
 5. Scan for existing planning files (research.md, interview.md, spec.md, team-review.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
 
-6. Determine mode and resume point:
+6. **Import upstream artifacts** — 사전 파이프라인 산출물이 있으면 컨텍스트로 로드:
+   - `docs/athena/*.md` (excluding archive/) → Athena Go/No-Go 판정, 스코프 조정, MVP 범위
+   - `docs/hermes/*.md` (excluding archive/) → Hermes 사업 분석 (BMC, TAM/SAM, GTM)
+   - 있으면: interview-protocol.md Phase C의 기정 사실(given context)로 활용, 사업 관련 질문 생략
+   - 없으면: 무시하고 정상 진행
+
+7. Determine mode and resume point:
 
 | Files Found | Mode | Resume From |
 |-------------|------|-------------|
@@ -98,7 +104,7 @@ Determine session state by checking existing files:
 | + sections/index.md | resume | Step 20 (write sections) |
 | all sections complete | resume | Step 22 (operation scenarios) |
 
-7. Create TODO list with TodoWrite based on current state
+8. Create TODO list with TodoWrite based on current state
 
 Print status:
 ```
@@ -380,6 +386,9 @@ Implementation options:
   C. Manual: sections/index.md  → 순서대로 수동 구현
   D. /argos <planning_dir>      → 감리 (설계 대비 구현 검증)
 
+Design (design-system.md가 생성된 경우):
+  /aphrodite <planning_dir>     → 디자인 시스템 정교화 (DB 기반 팔레트/폰트/스타일 매칭)
+
 Other options:
   /estimate <planning_dir>      → 개발 견적서 (비용 산정이 필요한 경우)
 ```
@@ -403,6 +412,7 @@ Other options:
 📦 산출물: operation-scenarios.md, qa-scenarios.md, sections/
 
 👉 다음 단계 (선택):
+  /aphrodite           → 디자인 시스템 정교화 (design-system.md가 있는 UI 프로젝트에서 권장)
   /agent-team          → 섹션 기반 병렬 구현 (Codex에서는 agent-team-codex로 해석, 권장)
   /chronos             → 자율 반복 구현 루프
   수동 구현             → 직접 코딩

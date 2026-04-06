@@ -7,6 +7,7 @@ allowed-tools:
   - orchestrator_unlock_file
   - orchestrator_complete_task
   - orchestrator_fail_task
+  - orchestrator_heartbeat
   - orchestrator_get_task
   - orchestrator_get_status
   - orchestrator_get_file_locks

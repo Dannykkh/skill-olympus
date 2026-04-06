@@ -598,23 +598,29 @@ export class StateManager {
   // --------------------------------------------------------------------------
 
   public lockFile(filePath: string, reason?: string): { success: boolean; message: string } {
-    const locks = this.getFileLocks();
+    // 트랜잭션으로 감싸서 TOCTOU 레이스 컨디션 방지
+    // (읽기-체크-쓰기가 원자적으로 실행됨)
+    const txn = this.db.transaction(() => {
+      const locks = this.getFileLocks();
 
-    const existingLock = locks.find(l => this.isPathOverlap(filePath, l.path));
-    if (existingLock) {
-      if (existingLock.owner === this.workerId) {
-        return { success: true, message: `Path '${filePath}' is already locked by you` };
+      const existingLock = locks.find(l => this.isPathOverlap(filePath, l.path));
+      if (existingLock) {
+        if (existingLock.owner === this.workerId) {
+          return { success: true, message: `Path '${filePath}' is already locked by you` };
+        }
+        return {
+          success: false,
+          message: `Path '${filePath}' is locked by ${existingLock.owner} (locked: ${existingLock.path})`,
+        };
       }
-      return {
-        success: false,
-        message: `Path '${filePath}' is locked by ${existingLock.owner} (locked: ${existingLock.path})`,
-      };
-    }
 
-    this.db.prepare('INSERT INTO file_locks (path, owner, locked_at, reason) VALUES (?, ?, ?, ?)')
-      .run(filePath, this.workerId, new Date().toISOString(), reason || null);
+      this.db.prepare('INSERT INTO file_locks (path, owner, locked_at, reason) VALUES (?, ?, ?, ?)')
+        .run(filePath, this.workerId, new Date().toISOString(), reason || null);
 
-    return { success: true, message: `Path '${filePath}' locked successfully` };
+      return { success: true, message: `Path '${filePath}' locked successfully` };
+    });
+
+    return txn();
   }
 
   public unlockFile(filePath: string): { success: boolean; message: string } {

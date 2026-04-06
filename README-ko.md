@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **97개 스킬** | **48개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
+> **98개 스킬** | **49개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
 
 ---
 

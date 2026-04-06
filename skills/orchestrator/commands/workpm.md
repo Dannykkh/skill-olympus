@@ -1,5 +1,5 @@
 ---
-description: PM 모드로 오케스트레이터 시작. 팀을 구성하고 2단계 워크플로우로 작업을 완수합니다.
+description: PM 모드로 오케스트레이터 시작. 팀을 구성하고 5단계 워크플로우로 작업을 완수합니다.
 allowed-tools:
   - orchestrator_detect_providers
   - orchestrator_analyze_codebase
@@ -15,6 +15,9 @@ allowed-tools:
   - orchestrator_get_activity_log
   - orchestrator_get_task_summary
   - orchestrator_check_worker_logs
+  - orchestrator_get_task
+  - orchestrator_get_provider_info
+  - orchestrator_reset
   - Read
   - Glob
   - Grep
@@ -178,7 +181,7 @@ Task({
 
 ---
 
-## 4단계 워크플로우
+## 5단계 워크플로우
 
 ### Phase 1: 리서치 & 제안
 
@@ -213,7 +216,7 @@ Task({
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
 > **PM은 설계도 없이 공사하지 않는다.**
-> 이 도면이 Phase 3의 **공정 기준선**이 된다.
+> 이 도면이 Phase 4~5의 **공정 기준선**이 된다.
 
 ```
 사용자 승인 완료
@@ -256,7 +259,7 @@ Task({
 
 ```
 리더: 기존 소스 코드 존재 확인
-  ├─ ❌ 없음 (신규 프로젝트) → Phase 3으로 건너뜀
+  ├─ ❌ 없음 (신규 프로젝트) → Phase 4로 건너뜀
   └─ ✅ 있음 → 영향도 분석 실행
        ↓
 리더: 심부름꾼(subagent Explore)에게 영향도 분석 지시
@@ -267,7 +270,7 @@ Task({
   ⚠️ auth.service.ts 수정 예정 → user.controller.ts, middleware/auth.ts에서 사용 중
   ✅ payment.model.ts 수정 예정 → 영향 파일 없음
        ↓
-리더: 영향도 경고를 Phase 3 팀원 프롬프트에 포함
+리더: 영향도 경고를 Phase 4 팀원 프롬프트에 포함
   → "⚠️ 이 파일 수정 시 {의존 파일}의 기존 동작 유지 확인 필수"
 ```
 
@@ -288,7 +291,7 @@ Task({
   ↓
 리더: 자재검사 (코드리뷰) 실행
   → 리뷰 전문가(code-reviewer) 팀원을 투입하여 구현 결과물 검수
-  ├─ ✅ 통과 → Phase 4로 진행
+  ├─ ✅ 통과 → Phase 5로 진행
   └─ ❌ 미통과 → 해당 구현 팀원에게 수정 지시 → 재리뷰
   ↓
 리더: Phase 5 실행 (공정 점검)
@@ -378,13 +381,13 @@ Task({
    - 리더가 직접 분석하지 않음
    - Phase 1 팀원에게 코드 구조 분석 위임
 
-4. **Phase 1 실행** → 리서치 & 제안
-5. **사용자 승인 대기** → AskUserQuestion
-6. **Phase 2 실행** → 프로세스 도면 확보 (설계도)
-7. **Phase 3 실행** → 영향도 분석 (기존 코드 있을 때만)
-8. **Phase 4 실행** → 구현 & 검증 (도면 기반)
-9. **Phase 5 실행** → 공정 점검 (준공 검사)
-10. **최종 보고** → 사용자에게 결과 전달 (검증 결과 포함)
+5. **Phase 1 실행** → 리서치 & 제안
+6. **사용자 승인 대기** → AskUserQuestion
+7. **Phase 2 실행** → 프로세스 도면 확보 (설계도)
+8. **Phase 3 실행** → 영향도 분석 (기존 코드 있을 때만)
+9. **Phase 4 실행** → 구현 & 검증 (도면 기반)
+10. **Phase 5 실행** → 공정 점검 (준공 검사)
+11. **최종 보고** → 사용자에게 결과 전달 (검증 결과 포함)
 
 ---
 
@@ -466,10 +469,10 @@ Phase 2: PM이 도면 확인
   ├─ 도면이 있으면 → 그대로 사용 (추가/수정 여부만 판단)
   └─ 도면이 없으면 → 팀원에게 새로 생성 위임
   ↓
-Phase 2: 각 Worker에게 담당 도면 노드 배분
+Phase 4: 각 Worker에게 담당 도면 노드 배분
   → "flow-diagrams/user-auth.mmd의 FindUser~CheckPwd 노드를 구현하라"
   ↓
-Phase 4: 도면 vs 실제 코드 대조 (공정 점검)
+Phase 5: 도면 vs 실제 코드 대조 (공정 점검)
 ```
 
 ---
@@ -544,6 +547,8 @@ orchestrator_spawn_workers({ "count": 2 })
 📊 결과: {완료}/{전체}
 
 👉 다음 단계 (선택):
+  /argos          → 감리 (설계 대비 구현 검증, Phase 0~6)
+  /aphrodite      → 디자인 정교화 (design-system.md가 있는 UI 프로젝트)
   /qpassenger     → Playwright 자동 테스트
   /review         → 코드 리뷰
   /commit         → 변경사항 커밋

@@ -117,6 +117,8 @@ Focus on:
 
 ## Banned Patterns (AI Slop 방지)
 
+> 공유 블랙리스트: [references/ai-slop-blacklist.md](references/ai-slop-blacklist.md) — 10항목 블랙리스트 + Hard Rejection 7개 + 폰트 블랙리스트/대안
+
 **Typography:**
 - `Inter` 금지 (프리미엄 디자인) → `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi` 사용
 - 대시보드/소프트웨어 UI에 Serif 금지

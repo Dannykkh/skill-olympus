@@ -35,6 +35,6 @@ zephermine 섹션을 Agent Teams로 병렬 실행합니다.
 
 ## 실행
 
-$ARGUMENTS를 planning 디렉토리 경로로 사용하여 SKILL.md의 6단계 워크플로우를 실행합니다.
+$ARGUMENTS를 planning 디렉토리 경로로 사용하여 SKILL.md의 Step 0~8 워크플로우를 실행합니다.
 
 Read `skills/agent-team/SKILL.md` and follow the workflow from Step 0 to Step 8.

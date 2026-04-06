@@ -85,6 +85,7 @@ const HOOK_BUNDLE_MAP = {
   "validate-code": ["all-only"],
   "validate-docs": ["all-only"],
   "validate-api": ["all-only"],
+  "format-code": ["all-only"],
   "save-response": ["mnemo"],
   "save-tool-use": ["mnemo"], // Claude only: PostToolUse 도구 관찰 로그
   "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
@@ -92,10 +93,24 @@ const HOOK_BUNDLE_MAP = {
   "ddingdong-noti": ["all-only"], // OS 네이티브 알림 훅
 };
 
-// Check whether the given hook should be installed
-// All bundles are core installs, so always returns true
+// Check whether the given hook should be installed based on bundle selection
 function shouldIncludeHook(hookName) {
-  return true;
+  // 필수 훅은 항상 설치
+  if (MANDATORY_HOOKS.includes(hookName)) return true;
+
+  // 번들 미지정(= 전체 설치)이면 전부 포함
+  if (!components) return true;
+
+  const bundles = HOOK_BUNDLE_MAP[hookName];
+  if (!bundles) return true; // 매핑에 없는 훅은 기본 포함
+
+  // "all-only" 번들: 5개 이상 컴포넌트가 선택된 경우에만 설치
+  if (bundles.includes("all-only")) {
+    return components.length >= 5 || components.includes("all");
+  }
+
+  // 해당 훅의 번들 중 하나라도 선택되어 있으면 설치
+  return bundles.some(b => components.includes(b));
 }
 
 // ── Build Claude hooks config ──
@@ -135,6 +150,8 @@ function buildClaudeHooksConfig(dir, isWindows) {
     post.push(hookEntry("Write", cmd(`validate-docs.${ext}`)));
   if (shouldIncludeHook("validate-api"))
     post.push(hookEntry("Edit|Write", cmd(`validate-api.${ext}`)));
+  if (shouldIncludeHook("format-code"))
+    post.push(hookEntry("Edit|Write", cmd(`format-code.${ext}`)));
   if (post.length > 0) config.PostToolUse = post;
 
   // Stop
@@ -195,6 +212,8 @@ function buildGeminiHooksConfig(dir, isWindows) {
     aa.push(hookEntry("", cmd(`validate-docs.${ext}`)));
   if (shouldIncludeHook("validate-api"))
     aa.push(hookEntry("", cmd(`validate-api.${ext}`)));
+  if (shouldIncludeHook("format-code"))
+    aa.push(hookEntry("", cmd(`format-code.${ext}`)));
   if (shouldIncludeHook("loop-stop"))
     aa.push(hookEntry("", cmd(`loop-stop.${ext}`)));
   if (shouldIncludeHook("ddingdong-noti"))

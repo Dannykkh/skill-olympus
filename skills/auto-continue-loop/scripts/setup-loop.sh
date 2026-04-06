@@ -18,7 +18,7 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
   /loop 할일 [옵션]
 
 옵션:
-  --max-iterations <횟수>         최대 반복 횟수 (기본: 무제한)
+  --max-iterations <횟수>         최대 반복 횟수 (기본: 50, 0=무제한)
   --completion-promise '<조건>'   완료 조건 (여러 단어면 따옴표로 감싸세요)
   -h, --help                     도움말
 
@@ -66,6 +66,16 @@ if [[ -z "$PROMPT" ]]; then
 fi
 
 mkdir -p .claude
+
+# 기존 루프 감지 — 다른 세션의 루프가 활성 상태이면 경고
+if [ -f ".claude/loop-state.md" ]; then
+    EXISTING_SESSION=$(grep "^session_id:" .claude/loop-state.md 2>/dev/null | sed 's/session_id: *//' || true)
+    CURRENT_SESSION="${CLAUDE_CODE_SESSION_ID:-}"
+    if [ -n "$EXISTING_SESSION" ] && [ -n "$CURRENT_SESSION" ] && [ "$EXISTING_SESSION" != "$CURRENT_SESSION" ]; then
+        echo "⚠️ 다른 세션(${EXISTING_SESSION:0:8}...)의 루프가 활성 상태입니다." >&2
+        echo "   기존 루프를 덮어쓰고 새 루프를 시작합니다." >&2
+    fi
+fi
 
 # completion_promise YAML 형식
 if [[ -n "$COMPLETION_PROMISE" ]] && [[ "$COMPLETION_PROMISE" != "null" ]]; then

@@ -94,15 +94,17 @@ if [ $JQ_EXIT -ne 0 ]; then
 fi
 
 # 완료 감지 1: AI가 "더 이상 할 게 없다" 패턴 출력
-if echo "$LAST_OUTPUT" | grep -qiE '(Chronos Complete|더 이상.*(할|수정할|고칠).*(없|작업이 없)|all issues.*fixed|no more.*issues|남은.*이슈.*없|모든.*이슈.*수정.*완료|모든.*작업.*완료)'; then
+# 오탐 방지: 전체 출력이 아닌 마지막 500자만 검사 (중간에 "Chronos Complete"가 언급만 된 경우 무시)
+TAIL_OUTPUT=$(echo "$LAST_OUTPUT" | tail -c 500)
+if echo "$TAIL_OUTPUT" | grep -qiE '(Chronos Complete|더 이상.*(할|수정할|고칠).*(없|작업이 없)|all issues.*fixed|no more.*issues|남은.*이슈.*없|모든.*이슈.*수정.*완료|모든.*작업.*완료)'; then
     echo "loop: AI가 작업 완료를 보고했습니다. 루프를 종료합니다."
     rm "$STATE_FILE"
     exit 0
 fi
 
-# 완료 감지 2: <promise>텍스트</promise> 매칭
+# 완료 감지 2: <promise>텍스트</promise> 매칭 (마지막 500자에서)
 if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
-    PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+    PROMISE_TEXT=$(echo "$TAIL_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
 
     if [ -n "$PROMISE_TEXT" ] && [ "$PROMISE_TEXT" = "$COMPLETION_PROMISE" ]; then
         echo "loop: 완료 조건 달성! <promise>$COMPLETION_PROMISE</promise>"

@@ -2,6 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-04-06
+
+### Pipeline Integrity Audit + gstack-Inspired Improvements
+
+**Zeus 파이프라인 정합성 (6건)**
+- **zeus** — auto-interview-generator를 CPS Gate 1/2/3 구조로 재작성 (A~G → Phase C/P/S)
+- **zeus** — phase-transitions.md를 5-Phase → 7-Phase로 전면 재작성 (verification + docker 추가)
+- **zeus** — commands/zeus.md를 7-Phase로 동기화
+- **zeus** — docker-setup.md Phase 번호 수정 ("Phase 3" → "Phase 5")
+- **zeus** — Taste Decision 분류 추가 (mechanical/taste → Phase 6 리포트에 표시)
+- **zephermine** — docs/athena/ + docs/hermes/ 사전 파이프라인 산출물 참조 추가
+
+**gstack 참고 비즈니스 스킬 개선 (4건)**
+- **hermes** — 영역 0 수요 검증 추가 (4개 강제 질문 + 수요 판정 등급, YC office-hours 참고)
+- **hermes** — 3-Layer 리서치 패턴 (정석/트렌드/1원칙 + 유레카)
+- **athena** — Anti-sycophancy 규칙 + CEO 인지 모델 7개 (Bezos/Munger/Grove/Jobs/Horowitz/Altman)
+- **zeus** — Taste Decision (mechanical/taste 분류)
+
+**gstack 참고 디자인 스킬 개선 (6건)**
+- **frontend-design** — AI Slop 블랙리스트 공유 reference 생성 (10항목 + Hard Rejection 7개 + 폰트 블랙/대안)
+- **ui-ux-auditor** — 8영역 → 9영역 (AI Slop 탐지) + 0-10 채점 + A~F 등급
+- **design-plan** — Phase 4에 9영역 채점 + AI Slop 반영
+- **zephermine** — design-system-guide CPS Phase S-1 참조 + AI Slop 방지 + /aphrodite 안내
+- **zephermine** — Step 24/26에 /aphrodite 다음 단계 추가
+
+**Argos 감리 확장 (Phase 6~7)**
+- **argos** — Phase 6: 디자인 준수 검증 (디자인 토큰 + AI Slop + 9영역 채점)
+- **argos** — Phase 7: 보안 검증 (시크릿 고고학 + 의존성 + OWASP + STRIDE)
+- **argos** — commands/argos.md 신규 생성
+
+**Daedalus 점검 (9건)**
+- **workpm** — 4단계 → 5단계 헤더, Phase 자기참조 5건, Phase 기준선 수정
+- **workpm** — argos/aphrodite 다음 단계 추가, allowed-tools 3개 추가, description 업데이트
+- **workpm-mcp** — Phase 차이 문서화, 기준선 코멘트, argos/aphrodite 추가
+- **orchestrator** — SKILL.md 워크플로우 5단계/4단계 업데이트
+- **pmworker** — orchestrator_heartbeat allowed-tools 추가
+- **state-manager.ts** — lockFile TOCTOU 레이스 컨디션 트랜잭션 수정
+
+**Danny's Team 점검 (8건)**
+- **agent-team** — 재시도 횟수 2회로 통일, Step 라벨 수정, 인트로 Activity Log 추가
+- **agent-team** — argos/aphrodite 다음 단계, Pre-Step 좀비 팀 정리, Wave 간 컨텍스트 체크
+- **agent-team-codex** — Step 0 PM 게이트 + Step 6 코드 리뷰 게이트 + 보조문서 매핑 추가
+- **hooks** — save-tool-use skip 목록에 TeamCreate/TeamDelete/SendMessage 추가
+
+**Chronos 점검 (7건)**
+- **chronos** — setup-loop help "무제한" → "50, 0=무제한"
+- **chronos** — chronos-worker 완료 신호 + gotchas/learned 참조 추가
+- **chronos** — loop-stop 오탐 방지 (마지막 500자만 검사)
+- **chronos** — Codex continue-loop 2시간 stale guard 추가
+- **chronos** — setup-loop 기존 루프 감지 (동시 루프 방어)
+- **chronos** — agents/chronos-worker.md 글로벌 복사
+
+**보안 에이전트 보강**
+- **security-reviewer** — 인프라 우선 6 Phase (시크릿→의존성→CI/CD→OWASP→STRIDE→LLM)
+- **security-reviewer** — 6개 실행 모드 + 신뢰도 게이트 + False-Positive 17개 제외 목록
+
+**인프라 개선**
+- **install-hooks-config.js** — format-code 훅 등록 + shouldIncludeHook 번들 필터링 복원
+
+### New Skills
+- **health-data** — Health Connect/HealthKit 건강 데이터 통합 가이드 (심박수, 수면, 걸음, 동기화)
+
+### Improvements
+- **social-login** — frontmatter에 triggers + auto_apply 추가
+
+---
+
 ## [2.0.0] - 2026-03-30
 
 ### Harness Engineering — CPS Framework

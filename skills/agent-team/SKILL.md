@@ -122,7 +122,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 
 모드 판별 후 표시:
 ```
-[섹션 모드] 순서: 산출물 검토 → Parse → Wave Plan → Tasks → Execute → Review → Verify(반복) → Report
+[섹션 모드] 순서: 산출물 검토 → Parse → Wave Plan → Tasks → Execute → Review → Verify(반복) → Activity Log → Report
 [자유 모드] 순서: Analyze → Wave Plan → Tasks → Execute → Review → Verify(반복) → Report
 ```
 
@@ -133,7 +133,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 #### 섹션 모드 (zephermine 산출물 있음)
 - `$ARGUMENTS`로 planning_dir가 제공되었거나
 - `docs/plan/*/sections/index.md`가 존재하면 (archive/ 경로 제외)
-- → **섹션 모드**로 진행 (기존 6단계 워크플로우)
+- → **섹션 모드**로 진행 (Step 0~8 워크플로우)
 
 #### 자유 모드 (사용자 지시만 있음)
 - planning_dir이 없고, sections/index.md도 없으면
@@ -170,6 +170,14 @@ teammate 생성 시 이 팀명을 사용하세요.
 ---
 
 ## Workflow
+
+### Pre-Step: 좀비 팀 정리
+
+> 이전 세션에서 TeamDelete 없이 종료된 경우 좀비 teammate가 남아있을 수 있음.
+
+```
+TeamDelete("dannys-team")   # 에러 무시 — 팀이 없으면 자연스럽게 넘어감
+```
 
 ### Step 0: 산출물 검토 (PM 게이트)
 
@@ -279,8 +287,8 @@ while (마스터 체크리스트 미통과 항목 존재):
   3. 도면 노드 검증 (flow-diagrams 존재 시)
   4. 파일 소유권 검증
 
-  미통과 → 해당 teammate에 재지시 → 대기 → 재검증 (최대 3회)
-  3회 후에도 미통과 → 사용자에게 보고 + 수동 개입 요청
+  미통과 → 해당 teammate에 재지시 → 대기 → 재검증 (최대 2회)
+  2회 후에도 미통과 → 사용자에게 보고 + 수동 개입 요청
 ```
 
 ### Step 7: Activity Log Summary
@@ -331,12 +339,14 @@ Lead 의사결정 로그: conversations/{date}-team-dannys.md
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/9: {STEP_NAME}
+STEP {N+1}/9: {STEP_NAME}     (Step 0~8, 총 9단계)
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
 ───────────────────────────────────────────────────────────────
 ```
+
+> 표시 예: Step 0 → `STEP 1/9`, Step 8 → `STEP 9/9`
 
 ## Error Handling
 
@@ -352,9 +362,13 @@ Step {N} complete: {summary}
 | agent wait 타임아웃 (Codex) | close_agent 후 재spawn → 섹션 범위 축소 고려 |
 | 2회 재시도 후에도 실패 | 해당 섹션을 Lead가 직접 구현 (subagent 위임) 또는 사용자에게 보고 |
 
-## Team Cleanup (필수)
+## Team Cleanup (필수 — 좀비 teammate 방지)
 
-**모든 Wave 완료 후 또는 중단 시 반드시 실행:**
+**모든 Wave 완료 후, 에러 중단 시, 컨텍스트 한도 도달 시 반드시 실행:**
+
+> **좀비 방지**: TeamDelete 없이 세션이 끝나면 teammate 프로세스가 남아있을 수 있습니다.
+> 새 세션에서 `/agent-team`을 실행하면 **Step 0 전에 기존 팀 정리**를 먼저 시도합니다:
+> `TeamDelete("dannys-team")` — 에러 무시 (팀이 없으면 자연스럽게 넘어감).
 
 ```
 1. 각 teammate에게 shutdown 요청
@@ -386,6 +400,8 @@ Step {N} complete: {summary}
 📊 결과: {통과/실패 요약}
 
 👉 다음 단계 (선택):
+  /argos               → 감리 (설계 대비 구현 검증, Phase 0~6)
+  /aphrodite           → 디자인 정교화 (design-system.md가 있는 UI 프로젝트)
   /qpassenger          → Playwright 자동 테스트 + Healer 루프
   /review              → 코드 리뷰 (품질/보안/성능)
   /commit              → 변경사항 커밋

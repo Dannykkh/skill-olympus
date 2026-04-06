@@ -356,6 +356,18 @@ if [ -n "$TURN_ID" ] && [ -n "$LAST_TURN_ID" ] && [ "$TURN_ID" = "$LAST_TURN_ID"
     exit 0
 fi
 
+# Stale guard: 2시간 초과 시 자동 종료
+STARTED_AT="$(fm_value "started_at")"
+if [ -n "$STARTED_AT" ]; then
+    STARTED_EPOCH=$(date -d "$STARTED_AT" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${STARTED_AT%%Z*}" +%s 2>/dev/null || echo "0")
+    NOW_EPOCH=$(date +%s)
+    ELAPSED=$((NOW_EPOCH - STARTED_EPOCH))
+    if [ "$ELAPSED" -ge 7200 ]; then
+        remove_state_file "stale-loop: ${ELAPSED}s elapsed (>2h)"
+        exit 0
+    fi
+fi
+
 if ! [[ "$ITERATION" =~ ^[0-9]+$ ]] || ! [[ "$MAX_ITERATIONS" =~ ^[0-9]+$ ]]; then
     remove_state_file "invalid-state-counters"
     exit 0

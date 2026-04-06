@@ -105,7 +105,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (97개)
+### Skills (98개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|

@@ -18,7 +18,7 @@ $toolName = $json.tool_name
 $toolInput = $json.tool_input
 
 # 기록하지 않을 도구 (너무 빈번하거나 노이즈)
-$skipTools = @("Glob", "Grep", "Read", "LS", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList", "TaskOutput")
+$skipTools = @("Glob", "Grep", "Read", "LS", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList", "TaskOutput", "TeamCreate", "TeamDelete", "SendMessage")
 if ($skipTools -contains $toolName) { exit 0 }
 
 # 프로젝트 루트 결정: git root → 없으면 CWD fallback

@@ -84,7 +84,7 @@ auto_apply: false
 
 ---
 
-## 검증 프로세스 (6 Phase: 0~5)
+## 검증 프로세스 (8 Phase: 0~7)
 
 ### Phase 0: CPS 추적성 검증
 
@@ -187,6 +187,70 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 5
    - **에러 처리**: 에러 경로 노드에 예외 처리가 있는가
    - **누락 경로**: 코드에만 있는 경로 (다이어그램 업데이트 필요)
 
+### Phase 6: 디자인 준수 검증
+
+`design-system.md`가 있는 경우만 실행. UI/프론트엔드가 없는 프로젝트는 자동 건너뜀.
+
+See [verify-protocol.md](references/verify-protocol.md) — Phase 6
+
+#### 6-1. 디자인 토큰 준수
+`design-system.md`의 디자인 토큰(색상, 폰트, 간격, 라운딩)이 실제 코드에 적용되었는지 확인:
+- CSS 변수 / Tailwind config에 토큰이 정의되어 있는가
+- 하드코딩된 색상/폰트가 토큰을 우회하고 있지 않은가
+- 결과: ✅ 준수 / ⚠️ 일부 우회 / ❌ 미적용
+
+#### 6-2. AI Slop 탐지
+[AI Slop 블랙리스트](../../frontend-design/references/ai-slop-blacklist.md) 기반 검사:
+- 10항목 블랙리스트 grep/시각 확인
+- Hard Rejection 7개 확인 → 발견 시 FAIL
+- 과사용 폰트(Inter, Roboto 등) 프라이머리 사용 여부
+
+#### 6-3. UI/UX 9영역 채점
+`ui-ux-auditor`의 채점 방법론 적용:
+- 9영역 각각 0-10 채점
+- 가중 총점 → A~F 등급
+- 5.0 미만 → CONDITIONAL, Hard Rejection 발견 → FAIL
+
+#### 등급 영향
+- Phase 6 등급 A~B → 다음 Phase로 진행
+- Phase 6 등급 C → **CONDITIONAL** (디자인 개선 권장)
+- Phase 6 등급 D~F 또는 Hard Rejection → **FAIL** (디자인 재작업 필요)
+- design-system.md 미감지 → 건너뜀 (등급에 영향 없음)
+
+### Phase 7: 보안 검증
+
+**항상 실행.** `security-reviewer` 에이전트의 인프라 우선 방법론을 적용.
+
+See [verify-protocol.md](references/verify-protocol.md) — Phase 7
+
+#### 7-1. 시크릿 탐지 (Secret Archaeology)
+- 현재 코드의 하드코딩 시크릿 Grep (`api_key=`, `password=`, `sk-`, `AKIA` 등)
+- git 히스토리에서 삭제된 시크릿 탐색 (`git log --all -p -S "SECRET"`)
+- .env 파일 커밋 이력 확인
+- 결과: 🔴 Critical (노출) / ✅ 안전
+
+#### 7-2. 의존성 공급망 (Supply Chain)
+- `npm audit` / `pip-audit` / `trivy` 실행 (설치된 도구 사용)
+- Critical/High CVE 탐지
+- Lock 파일 커밋 여부
+- 결과: 🔴 Critical CVE 수 / 🟠 High CVE 수
+
+#### 7-3. OWASP Top 10 코드 스캔
+- SQL Injection, XSS, Command Injection, Path Traversal, SSRF, CSRF 패턴 Grep
+- `validate-code` 훅보다 넓은 범위 (훅은 3개 패턴, 여기서는 전체 OWASP)
+- 인증/권한 체계 확인 (미인증 엔드포인트 탐지)
+- Rate Limiting 존재 여부
+
+#### 7-4. STRIDE 위협 요약
+- Spoofing / Tampering / Repudiation / Info Disclosure / DoS / Elevation
+- 각 위협별 현재 대응 상태: ✅ 대응 / ⚠️ 부분 / ❌ 미대응
+- 미대응 위협에 대한 권고 1줄씩
+
+#### 등급 영향
+- 🔴 Critical 1건 이상 → **FAIL** (보안 수정 필수)
+- 🟠 High만 있고 Critical 없음 → **CONDITIONAL**
+- 🟡 Medium 이하만 → PASS에 영향 없음 (권고만)
+
 ---
 
 ## 검증 보고서
@@ -197,7 +261,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 5
 2. 기존 파일 → <planning_dir>/archive/verify-report-{YYYY-MM-DD-HHMM}.md 로 이동
 ```
 
-Phase 0~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
+Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ### 보고서 구조
 
@@ -212,6 +276,8 @@ Phase 0~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 - API 일치: {matched}/{total}
 - QA 통과: {passed}/{total}
 - 도면 매칭: {matched}/{total} 노드
+- 디자인 준수: {등급} ({총점}/10) 또는 건너뜀
+- 보안: 🔴{N} 🟠{N} 🟡{N} 또는 "통과"
 
 ## Phase 0: CPS 추적성 검증
 {Problem→Solution 추적 + 에코시스템→섹션 커버리지 + Problem→섹션 매핑 결과}
@@ -231,6 +297,13 @@ Phase 0~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 ## Phase 5: 프로세스 도면 검증
 {노드 매칭 테이블 + 누락 노드}
+
+## Phase 6: 디자인 준수 검증
+{디자인 토큰 준수율 + AI Slop 탐지 결과 + 9영역 스코어카드}
+(design-system.md 미감지 시: "UI 없음 — 건너뜀")
+
+## Phase 7: 보안 검증
+{시크릿 탐지 + 의존성 CVE + OWASP 스캔 + STRIDE 요약}
 
 ## 누락 항목 목록
 {전체 Phase에서 ❌인 항목 통합}
@@ -260,7 +333,7 @@ Phase 0~5 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 
 | 옵션 | 설명 | 기본값 |
 |------|------|--------|
-| `--phase N` | 특정 Phase만 실행 (1~5) | 전체 |
+| `--phase N` | 특정 Phase만 실행 (0~7) | 전체 |
 | `--skip-build` | Phase 2 빌드 건너뜀 | false |
 | `--skip-e2e` | Phase 2 E2E 건너뜀 | false |
 | `--report-only` | 기존 보고서 표시만 | false |

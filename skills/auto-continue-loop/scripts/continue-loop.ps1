@@ -211,6 +211,21 @@ if ($turnId -and $lastTurnId -and $turnId -eq $lastTurnId) {
     exit 0
 }
 
+# Stale guard: 2시간 초과 시 자동 종료
+$startedAt = Get-FrontmatterValue $stateContent "started_at"
+if ($startedAt) {
+    try {
+        $startTime = [DateTimeOffset]::Parse($startedAt)
+        $elapsed = [DateTimeOffset]::UtcNow - $startTime
+        if ($elapsed.TotalHours -ge 2) {
+            Remove-StateFile $stateFile "stale-loop: $([int]$elapsed.TotalSeconds)s elapsed (>2h)"
+            exit 0
+        }
+    } catch {
+        # 파싱 실패 시 무시 — stale guard 비활성
+    }
+}
+
 if ($iteration -notmatch '^\d+$' -or $maxIterations -notmatch '^\d+$') {
     Remove-StateFile $stateFile "invalid-state-counters"
     exit 0

@@ -10,7 +10,7 @@ if [ -z "$TOOL_NAME" ]; then exit 0; fi
 
 # 기록하지 않을 도구 (너무 빈번하거나 노이즈)
 case "$TOOL_NAME" in
-    Glob|Grep|Read|LS|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput) exit 0 ;;
+    Glob|Grep|Read|LS|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput|TeamCreate|TeamDelete|SendMessage) exit 0 ;;
 esac
 
 # 프로젝트 루트 결정: git root → 없으면 CWD fallback

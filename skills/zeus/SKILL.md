@@ -50,7 +50,10 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 1. **NEVER call AskUserQuestion** — 모든 결정은 자동선택 규칙으로 처리 (`Recommended` 우선, 없으면 자동 응답 테이블)
 2. **절대 멈추지 않는다** — 에러 시 기록하고 계속 진행
 3. **Phase 완료 즉시 다음 Phase 시작** — "다음을 진행합니다" 같은 중간 보고 금지. Phase 0→1→2→3→4→5→6을 한 턴에 연속 실행
-4. **[ZEUS-AUTO] 태그** — 자동 결정에는 반드시 태그 표시
+4. **[ZEUS-AUTO] 태그 + 결정 분류** — 자동 결정에는 태그와 분류를 표시:
+   - `[ZEUS-AUTO:mechanical]` — 정답이 하나인 결정 (기본값 선택, 폴백 등). 기록만.
+   - `[ZEUS-AUTO:taste]` — 합리적인 사람이 다르게 판단할 수 있는 결정 (디자인 톤, 기능 우선순위 등). **Phase 6 리포트에 모아서 표시** — 사용자가 나중에 검토 가능.
+   - 예: `[ZEUS-AUTO:taste] 인증 방식 JWT 선택 (세션 기반도 가능하나 SPA에 적합한 JWT 우선)`
 5. **재개 지원** — docs/zeus/zeus-state.json으로 중단 지점부터 재개
 6. **모든 Phase 강제 실행** — Phase 0~6 모두 최소 1회 실행 시도 필수. "건너뜀"은 물리적 불가(Docker 미설치 등)일 때만 허용하며, 그 경우에도 폴백 경로를 실행
 
@@ -128,7 +131,7 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을
 - argos: 결과 즉시 승인 / agent-team: Wave Plan 즉시 실행, 실패 섹션 재시도
 - qpassenger: 전체 시나리오, docker-compose 우선, 없으면 dev server 자동 실행
 
-**Step 6 합성 인터뷰 생성**: Phase 0 파싱 결과 + 산업별 프리셋 조합으로 A~G 카테고리 질문-답변 쌍 자동 생성.
+**Step 6 합성 인터뷰 생성**: Phase 0 파싱 결과 + 산업별 프리셋 조합으로 CPS Phase C/P/S + Gate 1/2/3 구조의 인터뷰 트랜스크립트를 자동 생성.
 [생성 로직 → references/auto-interview-generator.md](references/auto-interview-generator.md)
 [산업별 프리셋 → references/autopilot-defaults.md](references/autopilot-defaults.md)
 
@@ -157,7 +160,7 @@ TeamCreate 도구 사용 가능?
 - Step 0(산출물 검토) → Step 1(index 파싱) → Step 2(Wave Plan, [ZEUS-AUTO] 즉시 "실행") → Step 3~4(Task + Wave) → Step 5(Code Review) → Step 6(체크리스트) → Step 7(Activity Log) → Step 8(Final Report)
 
 **경로 B — 다이달로스** (TeamCreate 사용 불가):
-- `skills/orchestrator/commands/workpm.md` Phase 2부터 실행 (젭마인 산출물 이미 있으므로 리서치 단계 건너뜀)
+- `skills/orchestrator/commands/workpm.md` Phase 2부터 실행 (5단계 워크플로우: Phase 1 리서치 → **2 도면** → 3 영향도 → 4 구현 → 5 점검. 젭마인 산출물이 있으므로 Phase 1 건너뜀)
 
 **공통 규칙:**
 - PM 원칙 유지: 코딩 금지, 기억 외부화, 체크리스트 완수
@@ -176,7 +179,7 @@ TeamCreate 도구 사용 가능?
 시공 완료 후 설계 대비 준공검사.
 
 1. `<planning_dir>` 경로를 Phase 1에서 받아서 전달
-2. argos Phase 1~5 순차 실행 → `verify-report.md` 생성
+2. argos Phase 0~7 순차 실행 → `verify-report.md` 생성 (Phase 6은 design-system.md 있을 때만, Phase 7 보안은 항상)
 3. 검증 결과 자동 승인 (zeus는 무중단)
 
 **폴백 조건 (Phase 3은 skip 금지):**

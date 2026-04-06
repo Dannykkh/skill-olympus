@@ -10,7 +10,7 @@
 ![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
 ![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-> **97 skills** | **48 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
+> **98 skills** | **49 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
 
 ---
 

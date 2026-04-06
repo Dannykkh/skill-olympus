@@ -9,7 +9,7 @@ Zeus Phase 4에서 Docker 환경 구성 및 컨테이너 실행 절차.
 ```
 1. Docker 설치 확인
    ├── docker --version 성공 → 계속
-   └── 실패 → Phase 4 건너뜀 (Phase 5에서 dev server fallback)
+   └── 실패 → dev server fallback (Phase 5에서 dev server 사용)
 
 2. docker-compose.yml 존재 확인
    ├── 있음 → Step 3 건너뛰고 Step 4로
@@ -34,7 +34,7 @@ Zeus Phase 4에서 Docker 환경 구성 및 컨테이너 실행 절차.
    - 실패 시 docker compose logs로 원인 확인
 
 6. 실행 확인
-   ├── 헬스체크 통과 → Phase 3로 진행 (서버 이미 실행 중)
+   ├── 헬스체크 통과 → Phase 5로 진행 (서버 이미 실행 중)
    └── 실패 → 포트 재확인 → 1회 재시도 → 그래도 실패 시 로그 기록
 ```
 
