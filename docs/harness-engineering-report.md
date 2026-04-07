@@ -4,8 +4,8 @@
 > 환경, 제약 조건, 피드백 루프를 설계하는 기법
 
 **작성일:** 2026-03-30
-**대상 프로젝트:** claude-code-agent-customizations
-**적용 범위:** 젭마인(zephermine) → 대니즈팀(agent-team) → 아르고스(argos) → 큐패신저(qpassenger) 파이프라인
+**대상 프로젝트:** skill-olympus
+**적용 범위:** 젭마인(zephermine) → 대니즈팀(agent-team) → 아르고스(argos) → 미노스(minos) 파이프라인
 
 ---
 
@@ -143,7 +143,7 @@ S (Solution) : "그러면 이렇게 풀자"             — 해결책 제시
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────┐
-│  🧪 테스트 — /qpassenger (큐패신저)                     │
+│  🧪 테스트 — /minos (미노스)                     │
 │                                                         │
 │  qa-scenarios.md → Playwright 테스트 자동 생성          │
 │  → 실행 → 실패 시 수정 → 재실행 (fix-until-pass 루프) │
@@ -225,9 +225,9 @@ argos Phase 0-3: Problem Statement의 '해결 섹션' 열이
 | 대니즈팀 | `/agent-team` | 섹션별 병렬 구현 | 필수 | 에코시스템 기반 섹션 소비 |
 | 크로노스 | `/chronos` | 자율 FIND→FIX→VERIFY 루프 | 대안 | agent-team 대신 사용 가능 |
 | **아르고스** | **`/argos`** | **감리 (Phase 0~5 검증)** | **필수** | **Phase 0: CPS 추적성 검증** |
-| 큐패신저 | `/qpassenger` | Playwright 테스트 루프 | 필수 | - |
-| 제우스 | `/zeus` | 원클릭 전자동 (젭마인~큐패신저) | 선택 | 전체 체인 자동화 |
-| 클로저 | `/closer` | 파이프라인 마무리 + 문서 산출 | 선택 | - |
+| 미노스 | `/minos` | Playwright 테스트 루프 | 필수 | - |
+| 제우스 | `/zeus` | 원클릭 전자동 (젭마인~미노스) | 선택 | 전체 체인 자동화 |
+| 클리오 | `/clio` | 파이프라인 마무리 + 문서 산출 | 선택 | - |
 
 ---
 
@@ -241,7 +241,7 @@ argos Phase 0-3: Problem Statement의 '해결 섹션' 열이
 /zephermine          # 설계 — CPS 인터뷰 + 산출물 생성
 /agent-team          # 구현 — 섹션별 병렬 코딩
 /argos               # 감리 — Phase 0(CPS) ~ Phase 5(도면)
-/qpassenger          # 테스트 — fix-until-pass
+/minos          # 테스트 — fix-until-pass
 ```
 
 ### B. 원클릭 자동화 (제우스)
@@ -263,7 +263,7 @@ argos Phase 0-3: Problem Statement의 '해결 섹션' 열이
 
 # 3단계: 구현~테스트 (택 1)
 /zeus                          # 전자동
-/agent-team → /argos → /qpassenger  # 수동 제어
+/agent-team → /argos → /minos  # 수동 제어
 ```
 
 ---

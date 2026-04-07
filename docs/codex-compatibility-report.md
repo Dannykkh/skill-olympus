@@ -1,7 +1,7 @@
 # Codex Compatibility Report
 
 - Generated: 2026-03-13
-- Project: `D:/git/claude-code-agent-customizations`
+- Project: `D:/git/skill-olympus`
 - Codex CLI: `codex-cli 0.114.0`
 
 ## Inventory
@@ -35,8 +35,8 @@
 - orchestrator MCP present: yes
 - windows sandbox elevated: yes
 - codex hook bridge installed: yes
-- orchestrator path: `D:/git/claude-code-agent-customizations/skills/orchestrator/mcp-server/dist/index.js`
-- orchestrator project root: `D:/git/claude-code-agent-customizations`
+- orchestrator path: `D:/git/skill-olympus/skills/orchestrator/mcp-server/dist/index.js`
+- orchestrator project root: `D:/git/skill-olympus`
 - orchestrator tracks current repo: yes
 
 ## Gaps

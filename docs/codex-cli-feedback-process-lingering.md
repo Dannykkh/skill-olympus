@@ -10,7 +10,7 @@ This makes it look like a background loop is still running.
 - OS: Windows (PowerShell)
 - Shell: `pwsh`
 - Codex CLI: `codex-cli 0.101.0`
-- Workspace: `D:\git\claude-code-agent-customizations`
+- Workspace: `D:\git\skill-olympus`
 
 ## Observed Behavior
 

@@ -11,9 +11,9 @@
 | 다이달로스 | `/daedalus` (workpm) |
 | 아르고스 | `/argos` |
 | 크로노스 | `/chronos` |
-| 큐패신저 | `/qpassenger` |
+| 미노스 | `/minos` |
 | 대니즈팀 | `/agent-team` |
-| 클로저 | `/closer` |
+| 클리오 | `/clio` |
 | 릴리즈 | `/release` |
 | 견적 | `/estimate` |
 | 헤르메스 | `/hermes` |
@@ -87,7 +87,7 @@
 |--------|------|------|
 | **TDD Guide 에이전트** (외부) | Red-Green-Refactor 강제, 80%+ 커버리지 | `curl -o ~/.claude/agents/tdd-guide.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/tdd-guide.md` |
 | **/tdd 명령어** | TDD 워크플로우 실행 | `curl -o .claude/commands/tdd.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/commands/tdd.md` |
-| **qpassenger (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) | 이 저장소의 `skills/qpassenger/` |
+| **minos (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) | 이 저장소의 `skills/minos/` |
 
 ### 코드 리뷰
 
@@ -261,7 +261,7 @@ claude plugin install voltagent-qa-sec
 |------|------|
 | `skills/zeus/` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동화 (/zeus) |
 | `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
-| `skills/qpassenger/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (큐패신저) |
+| `skills/minos/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) |
 | `skills/argos/` | 감리/검증 — 정적·런타임·API·도면 대조 5단계 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
@@ -294,7 +294,7 @@ claude plugin install voltagent-qa-sec
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
 | `skills/project-gotchas/` | 오답노트 자동 관리 — 2계층(글로벌+프로젝트) + Haiku 자동 분석 |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
-| `skills/final-inspection/` | 마무리투수(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/closer) |
+| `skills/clio/` | 역사의 뮤즈(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/clio) |
 | `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (/release) |
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (/estimate) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
@@ -311,7 +311,7 @@ claude plugin install voltagent-qa-sec
 이 문서 URL을 Claude에게 알려주고 요청:
 
 ```
-https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/master/QUICK-REFERENCE.md
+https://raw.githubusercontent.com/Dannykkh/skill-olympus/master/QUICK-REFERENCE.md
 읽고 이 프로젝트에 맞는 스킬 추천해줘
 ```
 
@@ -323,5 +323,5 @@ https://raw.githubusercontent.com/Dannykkh/claude-code-agent-customizations/mast
 
 ---
 
-**저장소:** https://github.com/Dannykkh/claude-code-agent-customizations
+**저장소:** https://github.com/Dannykkh/skill-olympus
 **마지막 업데이트:** 2026-03-13

@@ -10,7 +10,7 @@
 설계 (What)        구현 (Build)            검증 (Verify)         배포 (Ship)
 ─────────────     ─────────────────      ─────────────        ──────────────
                   ┌ /agent-team ──┐
-/zephermine ──→   │  (Claude 병렬) │ ──→  /qpassenger ──→  /docker-deploy
+/zephermine ──→   │  (Claude 병렬) │ ──→  /minos ──→  /docker-deploy
                   ├ /workpm ──────┤
                   │  (멀티AI 병렬) │
                   └───────────────┘
@@ -23,7 +23,7 @@
 | **설계** | `/zephermine` | 스펙, 섹션, QA 시나리오, API 명세, DB 스키마 | **무엇**을 만드는가? |
 | **아키텍처** | `architect` 에이전트 | ADR, 기술 스택 결정 | **어떤 구조**로 만드는가? |
 | **구현** | `/agent-team` 또는 `workpm` | 소스 코드 | **코드**를 작성 |
-| **검증** | `/qpassenger` | 테스트 코드, QA 보고서 | **동작**하는가? |
+| **검증** | `/minos` | 테스트 코드, QA 보고서 | **동작**하는가? |
 | **배포** | `/docker-deploy` | Dockerfile, docker-compose, install.bat | **어떻게 배포**하는가? |
 
 ### 각 Phase에서 사용되는 리소스
@@ -33,7 +33,7 @@
 | **설계** | zephermine | spec-interviewer | Tavily (웹 리서치), Exa (코드 검색), Codex/Gemini CLI (도메인 전문가) |
 | **아키텍처** | — | architect | — |
 | **구현** | agent-team, orchestrator | frontend-react, backend-spring, database-mysql, database-postgresql, fullstack-coding-standards, naming-conventions | Playwright (E2E), Context7 (라이브러리 문서) |
-| **검증** | qpassenger | qa-engineer, qa-writer, code-review-checklist | Playwright (테스트 실행) |
+| **검증** | minos | qa-engineer, qa-writer, code-review-checklist | Playwright (테스트 실행) |
 | **배포** | docker-deploy | — | — |
 | **공통** | commit-work, mnemo | reducing-entropy, security-reviewer | GitHub (PR/이슈) |
 
@@ -44,13 +44,13 @@
 ### 대형: 신규 프로젝트, 복잡한 다기능 시스템
 
 ```
-/zephermine → architect → /agent-team → /qpassenger → /docker-deploy
+/zephermine → architect → /agent-team → /minos → /docker-deploy
 ```
 
 1. **`/zephermine`**: 심층 인터뷰 → 리서치 → 스펙 → 섹션 분리
 2. **`architect`**: 기술 스택 평가 → ADR 작성 → 확장성 설계
 3. **`/agent-team`**: 섹션별 teammate 배정 → Wave 병렬 구현 → verify
-4. **`/qpassenger`**: QA 시나리오 → Playwright 테스트 → Healer 루프
+4. **`/minos`**: QA 시나리오 → Playwright 테스트 → Healer 루프
 5. **`/docker-deploy`**: Dockerfile + docker-compose + 설치 스크립트
 
 **예시**: SaaS 플랫폼, 관리자 대시보드, 멀티테넌트 시스템
@@ -60,12 +60,12 @@
 ### 중형: 기존 프로젝트에 기능 추가
 
 ```
-/zephermine → /agent-team 또는 수동 구현 → /qpassenger
+/zephermine → /agent-team 또는 수동 구현 → /minos
 ```
 
 1. **`/zephermine`**: 요구사항 정리 → 영향 분석 → 섹션 분리
 2. **구현**: 섹션이 2~3개면 수동, 4개 이상이면 `/agent-team`
-3. **`/qpassenger`**: 기능 테스트 + 회귀 테스트
+3. **`/minos`**: 기능 테스트 + 회귀 테스트
 
 **예시**: 결제 기능 추가, 알림 시스템 도입, OAuth 연동
 
@@ -74,11 +74,11 @@
 ### 소형: 버그 수정, 단일 기능
 
 ```
-구현 → /qpassenger
+구현 → /minos
 ```
 
 1. **구현**: 직접 코드 작성 (설계 단계 불필요)
-2. **`/qpassenger`**: 수정 확인 + 회귀 방지
+2. **`/minos`**: 수정 확인 + 회귀 방지
 
 **예시**: 로그인 버그, 폼 유효성 검증 추가, API 응답 포맷 변경
 
@@ -87,10 +87,10 @@
 ### QA만: 구현은 끝났고 테스트만 필요
 
 ```
-/qpassenger
+/minos
 ```
 
-1. **`/qpassenger`**: 시나리오 자동 생성 → 테스트 → Healer
+1. **`/minos`**: 시나리오 자동 생성 → 테스트 → Healer
 
 **예시**: 기존 코드 인수인계 후 품질 확인, 리팩토링 후 회귀 테스트
 
@@ -102,7 +102,7 @@
 /zeus "할일 관리 앱 만들어줘"
 ```
 
-1. **`/zeus`**: 설계(zephermine) → 구현(workpm) → 테스트(qpassenger)를 **zero-interaction**으로 전체 자동 실행
+1. **`/zeus`**: 설계(zephermine) → 구현(workpm) → 테스트(minos)를 **zero-interaction**으로 전체 자동 실행
 
 AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리합니다.
 
@@ -139,9 +139,9 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | `plan.md` | 구현 계획 (섹션 분할 근거) | agent-team, workpm |
 | `domain-process-analysis.md` | 업무 흐름표 (역할/CRUD/입출력/예외) | 개발자 (API 설계 근거) |
 | `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | architect, 개발자 |
-| `qa-scenarios.md` | QA 테스트 시나리오 | qpassenger |
+| `qa-scenarios.md` | QA 테스트 시나리오 | minos |
 | `db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | architect, 개발자, api-spec |
-| `api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, qpassenger |
+| `api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, minos |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
 
 ### 건너뛸 때
@@ -233,22 +233,22 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 ---
 
-## Phase 3: 검증 — `/qpassenger`
+## Phase 3: 검증 — `/minos`
 
 **언제 쓰나**: 구현이 끝나고 테스트를 자동화하고 싶을 때
 
 ```
-/qpassenger                           # 자동 감지
-/qpassenger @qa-scenarios.md   # 젭마인 QA 문서 지정
-/qpassenger --api-only                # API 테스트만
-/qpassenger --fix-test-only           # 구현 코드 수정 금지
+/minos                           # 자동 감지
+/minos @qa-scenarios.md   # 젭마인 QA 문서 지정
+/minos --api-only                # API 테스트만
+/minos --fix-test-only           # 구현 코드 수정 금지
 ```
 
 ### 사용되는 리소스
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | qpassenger | 5단계 워크플로우 (수집→생성→실행→Healer→보고) |
+| **스킬** | minos | 5단계 워크플로우 (수집→생성→실행→Healer→보고) |
 | **에이전트** | qa-engineer | 품질 판정 기준 (PASS/CONDITIONAL/FAIL) |
 | **에이전트** | qa-writer | 시나리오 없을 때 현장 생성 |
 | **에이전트** | code-review-checklist | 코드 품질 기준 (패시브) |
@@ -371,7 +371,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
      ↓
  /review + security-reviewer
      ↓
- /qpassenger
+ /minos
      ↓
  /docker-deploy
      ↓
@@ -403,7 +403,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 # 사용: frontend-react, backend-spring, database-postgresql, Context7
 
 # 4. 검증
-/qpassenger
+/minos
 # → qa-scenarios.md 45개 시나리오 → Playwright 실행
 # → Healer 2회 수정 → PASS (43/45 즉시 통과, 2개 수정 후 통과)
 # 사용: qa-engineer, Playwright MCP
@@ -426,7 +426,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 # 사용: backend-spring, fullstack-coding-standards (패시브)
 
 # 3. 검증
-/qpassenger --api-only
+/minos --api-only
 # → 결제 API 12개 시나리오 → 실행 → PASS
 ```
 
@@ -436,7 +436,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 # 설계 건너뜀, 바로 수정
 # 버그 수정 후:
 
-/qpassenger
+/minos
 # → 인증 관련 시나리오 자동 생성 → 실행 → PASS
 
 /commit
@@ -457,5 +457,5 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | [skills/zephermine/](../skills/zephermine/) | 젭마인 설계 스킬 |
 | [skills/agent-team/](../skills/agent-team/) | Agent Teams 병렬 실행 |
 | [skills/orchestrator/](../skills/orchestrator/) | PM-Worker 멀티AI 오케스트레이션 |
-| [skills/qpassenger/](../skills/qpassenger/) | QA 자동 테스트 + Healer |
+| [skills/minos/](../skills/minos/) | QA 자동 테스트 + Healer |
 | [skills/docker-deploy/](../skills/docker-deploy/) | Docker 배포 환경 생성 |

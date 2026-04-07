@@ -1,9 +1,9 @@
-# 결과 보고 템플릿 — qpassenger Step 7
+# 결과 보고 템플릿 — minos Step 7
 
 ## 결과 보고서 형식
 
 ```markdown
-# QPassenger 결과
+# Minos 결과
 
 ## 요약
 - 총 시나리오: N개

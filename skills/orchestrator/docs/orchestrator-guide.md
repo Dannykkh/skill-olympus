@@ -157,7 +157,7 @@ npm run build
   "mcpServers": {
     "orchestrator": {
       "command": "node",
-      "args": ["D:/git/claude-code-agent-customizations/skills/orchestrator/mcp-server/dist/index.js"],
+      "args": ["D:/git/skill-olympus/skills/orchestrator/mcp-server/dist/index.js"],
       "env": {
         "ORCHESTRATOR_PROJECT_ROOT": "${workspaceFolder}",
         "ORCHESTRATOR_WORKER_ID": "pm"

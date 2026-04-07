@@ -329,7 +329,7 @@ PR Quality Score: X/10
    PR Quality Score: X/10
 
 다음 단계 (선택):
-  /qpassenger          → Playwright 자동 테스트
+  /minos          → Playwright 자동 테스트
   security-reviewer    → 보안 전문 심층 리뷰
   /commit              → 변경사항 커밋
   /ship                → PR 생성

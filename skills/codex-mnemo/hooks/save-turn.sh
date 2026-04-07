@@ -356,6 +356,17 @@ if [ -z "$BASE_DIR" ]; then
     BASE_DIR="$PWD"
 fi
 
+# Sub-directory(예: bin/Debug)를 부모 git root로 정규화한다.
+# Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
+# conversations/는 진짜 프로젝트 루트에 생기도록 한다.
+# git이 없는 디렉토리면 BASE_DIR 그대로 유지 (fail-open).
+if [ -n "$BASE_DIR" ]; then
+    GIT_ROOT_NORMALIZED=$(git -C "$BASE_DIR" rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$GIT_ROOT_NORMALIZED" ]; then
+        BASE_DIR="$GIT_ROOT_NORMALIZED"
+    fi
+fi
+
 ensure_memory_scaffold "$BASE_DIR"
 
 CONV_DIR="$BASE_DIR/conversations"

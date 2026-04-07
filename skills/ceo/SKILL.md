@@ -35,7 +35,7 @@ auto_apply: false
 ## 파이프라인 위치
 
 ```
-/hermes → /athena → /zephermine → /agent-team → /argos → /qpassenger
+/hermes → /athena → /zephermine → /agent-team → /argos → /minos
  사업분석    CEO 코칭    기술 설계      구현         감리      테스트
  "돈 되나?"  "만들어야 해?"  "어떻게?"   "만들어!"    "맞나?"    "돌아가나?"
 ```

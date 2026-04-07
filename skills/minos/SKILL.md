@@ -1,7 +1,9 @@
 ---
-name: qpassenger
-description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프 (큐패신저). qa-writer → 코드 생성 → 실행 → 수정 반복. /qpassenger로 실행.
+name: minos
+description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프 (미노스). qa-writer → 코드 생성 → 실행 → 수정 반복. /minos로 실행.
 triggers:
+  - "minos"
+  - "미노스"
   - "qpassenger"
   - "큐패신저"
   - "qa-until-pass"
@@ -11,20 +13,23 @@ triggers:
 auto_apply: false
 ---
 
-# QPassenger (큐패신저)
+# Minos (미노스)
+
+> **미노스(Minos)**: 그리스 신화의 저승 심판자. 죽은 자의 영혼을 심판해 합격/불합격을 가립니다.
+> 코드를 심판대에 세워 모든 테스트가 통과할 때까지 fix 루프를 반복하는 이 스킬의 본성과 일치합니다.
 
 QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트가 통과할 때까지 자동으로 수정을 반복합니다.
 
 ## Quick Start
 
 ```
-/qpassenger                           # 자동 감지 (qa-scenarios.md 또는 docs/qa/)
-/qpassenger @qa-scenarios.md   # 특정 QA 문서 지정
-/qpassenger --api-only                # API 테스트만
-/qpassenger --ui-only                 # UI 테스트만
+/minos                           # 자동 감지 (qa-scenarios.md 또는 docs/qa/)
+/minos @qa-scenarios.md          # 특정 QA 문서 지정
+/minos --api-only                # API 테스트만
+/minos --ui-only                 # UI 테스트만
 ```
 
-**공식 호출명:** `/qpassenger` (별칭: `큐패신저`)
+**공식 호출명:** `/minos` (별칭: `미노스`, 레거시: `/qpassenger`, `큐패신저`)
 
 ## 워크플로우 (7단계)
 
@@ -311,7 +316,7 @@ IF retry >= max_retries:
 QA가 완료되면 사용자에게 다음 단계를 안내합니다:
 
 ```
-✅ QPassenger 완료! (결과: {PASS/CONDITIONAL/FAIL})
+✅ Minos 완료! (결과: {PASS/CONDITIONAL/FAIL})
 
 👉 다음 단계 (선택):
   /docker-deploy       → Docker 배포 환경 생성

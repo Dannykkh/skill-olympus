@@ -1,10 +1,10 @@
 ---
 name: agent-team
-description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. Claude Agent Teams + Codex spawn_agent 지원. /agent-team으로 실행. 대니즈팀.
+description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. Claude Agent Teams + Codex spawn_agent 지원. /agent-team 또는 /poseidon으로 실행. 포세이돈.
 triggers:
   - "agent-team"
-  - "대니즈팀"
-  - "dannys team"
+  - "포세이돈"
+  - "poseidon"
   - "팀 실행"
   - "agent team"
 auto_apply: false
@@ -12,20 +12,22 @@ auto_apply: false
 
 # Agent Team — Zephermine 섹션 병렬 실행
 
-> **대니즈팀(Dannys Team)**: 젭마인 산출물을 받아 체계적으로 구현합니다.
+> **포세이돈(Poseidon)**: 젭마인 산출물을 받아 체계적으로 구현합니다.
+> 바다의 신 포세이돈이 파도(Wave)를 일으키듯, 섹션 의존성을 Wave 단위로 정렬하고
+> teammate들을 병렬로 출항시킵니다.
 
 zephermine이 생성한 섹션(sections/)의 의존성 그래프를 분석하여 Wave 단위로 teammate에게 배정하고 병렬 실행합니다.
 
-## 다이달로스 vs 대니즈팀
+## 다이달로스 vs 포세이돈
 
 | 상황 | 사용할 도구 |
 |------|-----------|
 | **젭마인 없이** 바로 구현 시작 | **다이달로스** (`/daedalus`) — 직접 리서치 → 제안 → 구현 |
-| **젭마인 산출물**(sections/) 기반 구현 | **대니즈팀** (`/agent-team`) — 섹션 파싱 → Wave → 구현 |
+| **젭마인 산출물**(sections/) 기반 구현 | **포세이돈** (`/agent-team` 또는 `/poseidon`) — 섹션 파싱 → Wave → 구현 |
 
 ## Lead(PM) 핵심 원칙
 
-> 다이달로스의 PM 철학을 대니즈팀 Lead에도 적용합니다.
+> 다이달로스의 PM 철학을 포세이돈 Lead에도 적용합니다.
 
 ### 1. 작업 외주화 — Lead는 코딩하지 않는다
 
@@ -107,17 +109,21 @@ Phase 0 시작 시 자동 판별:
 
 ## Team Name
 
-팀 이름은 **대니즈팀(Dannys Team)**으로 고정합니다.
+팀 이름은 **포세이돈(Poseidon)**으로 고정합니다.
 teammate 생성 시 이 팀명을 사용하세요.
 
-**공식 호출명:** `/agent-team` (별칭: `대니즈팀`, `Dannys Team`)
+**공식 호출명:** `/agent-team` (별칭: `/poseidon`, `포세이돈`, `Poseidon`)
+
+> 포세이돈은 바다의 신이며, 파도(Wave)를 다스리는 존재입니다.
+> 섹션 의존성 그래프를 Wave 단위로 정렬해 teammate들을 병렬 출항시키는
+> 이 스킬의 본성과 일치합니다.
 
 ## CRITICAL: First Actions
 
 ### 1. Print Intro
 
 ```
-대니즈팀(Dannys Team) 시작
+포세이돈(Poseidon) 출항
 ```
 
 모드 판별 후 표시:
@@ -176,7 +182,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 > 이전 세션에서 TeamDelete 없이 종료된 경우 좀비 teammate가 남아있을 수 있음.
 
 ```
-TeamDelete("dannys-team")   # 에러 무시 — 팀이 없으면 자연스럽게 넘어감
+TeamDelete("poseidon-team")   # 에러 무시 — 팀이 없으면 자연스럽게 넘어감
 ```
 
 ### Step 0: 산출물 검토 (PM 게이트)
@@ -219,7 +225,7 @@ See [section-parser.md](references/section-parser.md)
 
 ```
 ═══════════════════════════════════════
-대니즈팀(Dannys Team) 실행 계획
+포세이돈(Poseidon) 실행 계획
 ═══════════════════════════════════════
 Wave 1 (병렬 3개):
   - section-01-foundation [풀스택] (파일: src/core/**)
@@ -261,7 +267,7 @@ See [wave-executor.md](references/wave-executor.md)
 - 전문가 역할, 섹션 내용, 담당 파일 목록
 - 📐 프로세스 도면 경로 + 담당 노드 ID (도면 있는 경우)
 - ⚠️ 파일 소유권 규칙 (다른 teammate 파일 수정 금지)
-- Activity logging 위치 (`conversations/{YYYY-MM-DD}-team-dannys.md`)
+- Activity logging 위치 (`conversations/{YYYY-MM-DD}-team-poseidon.md`)
 
 ### Step 5: Code Review Gate (자재검사)
 
@@ -294,7 +300,7 @@ while (마스터 체크리스트 미통과 항목 존재):
 ### Step 7: Activity Log Summary
 
 모든 Wave 완료 후:
-1. `conversations/{YYYY-MM-DD}-team-dannys.md` 읽기
+1. `conversations/{YYYY-MM-DD}-team-poseidon.md` 읽기
 2. teammate별 활동 통계 집계 (기록 수, 에러 수, 파일 수)
 3. Orchestrator MCP 사용 시 `orchestrator_get_activity_log`로 JSONL 로그 확인
 4. 요약을 Final Report에 포함
@@ -303,7 +309,7 @@ while (마스터 체크리스트 미통과 항목 존재):
 
 ```
 ═══════════════════════════════════════
-대니즈팀: 실행 완료
+포세이돈: 실행 완료
 ═══════════════════════════════════════
 📋 마스터 체크리스트: M/N 통과 (XX%)
 📐 도면 매칭: K개 노드 중 J개 구현 (YY%)
@@ -313,7 +319,7 @@ while (마스터 체크리스트 미통과 항목 존재):
   ✅ section-01-foundation — 체크 3/3, 파일 3개
   ⚠️ section-03-api — 체크 4/5 (테스트 1건 미통과)
 
-Lead 의사결정 로그: conversations/{date}-team-dannys.md
+Lead 의사결정 로그: conversations/{date}-team-poseidon.md
 ═══════════════════════════════════════
 ```
 
@@ -368,7 +374,7 @@ Step {N} complete: {summary}
 
 > **좀비 방지**: TeamDelete 없이 세션이 끝나면 teammate 프로세스가 남아있을 수 있습니다.
 > 새 세션에서 `/agent-team`을 실행하면 **Step 0 전에 기존 팀 정리**를 먼저 시도합니다:
-> `TeamDelete("dannys-team")` — 에러 무시 (팀이 없으면 자연스럽게 넘어감).
+> `TeamDelete("poseidon-team")` — 에러 무시 (팀이 없으면 자연스럽게 넘어감).
 
 ```
 1. 각 teammate에게 shutdown 요청
@@ -402,7 +408,7 @@ Step {N} complete: {summary}
 👉 다음 단계 (선택):
   /argos               → 감리 (설계 대비 구현 검증, Phase 0~6)
   /aphrodite           → 디자인 정교화 (design-system.md가 있는 UI 프로젝트)
-  /qpassenger          → Playwright 자동 테스트 + Healer 루프
+  /minos          → Playwright 자동 테스트 + Healer 루프
   /review              → 코드 리뷰 (품질/보안/성능)
   /commit              → 변경사항 커밋
 

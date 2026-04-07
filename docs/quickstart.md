@@ -9,16 +9,16 @@ Claude Code 커스터마이징을 설치하고 사용하는 방법입니다.
 ### Windows
 
 ```powershell
-git clone https://github.com/Dannykkh/claude-code-agent-customizations.git
-cd claude-code-agent-customizations
+git clone https://github.com/Dannykkh/skill-olympus.git
+cd skill-olympus
 .\install.bat
 ```
 
 ### Linux/Mac
 
 ```bash
-git clone https://github.com/Dannykkh/claude-code-agent-customizations.git
-cd claude-code-agent-customizations
+git clone https://github.com/Dannykkh/skill-olympus.git
+cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
@@ -37,7 +37,7 @@ chmod +x install.sh && ./install.sh
 ```
 설계              구현                 검증               배포
 ────────         ─────────           ──────────        ──────────
-/zephermine  →   /agent-team    →   /qpassenger →  /docker-deploy
+/zephermine  →   /agent-team    →   /minos →  /docker-deploy
                  (또는 workpm)
 ```
 
@@ -45,7 +45,7 @@ chmod +x install.sh && ./install.sh
 |------|--------|--------|
 | **설계** | `/zephermine "온라인 서점 만들어줘"` | 인터뷰 → 리서치 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
 | **구현** | `/agent-team` | 섹션별 팀원 배정 → 병렬 코딩 → 검증 |
-| **검증** | `/qpassenger` | Playwright 테스트 자동 생성 → 실패 시 자동 수정 (max 5회) |
+| **검증** | `/minos` | Playwright 테스트 자동 생성 → 실패 시 자동 수정 (max 5회) |
 | **배포** | `/docker-deploy` | Dockerfile + docker-compose + 원클릭 설치 스크립트 |
 
 각 단계가 끝나면 **다음에 뭘 할지 안내**가 나옵니다.
@@ -55,10 +55,10 @@ chmod +x install.sh && ./install.sh
 | 규모 | 사용법 |
 |------|--------|
 | **전자동** (제우스) | `/zeus "설명"` — 한 줄이면 설계→구현→테스트 전부 자동 |
-| **대형** (신규 프로젝트) | `/zephermine` → `/agent-team` → `/qpassenger` → `/docker-deploy` |
-| **중형** (기능 추가) | `/zephermine` → 직접 코딩 → `/qpassenger` |
-| **소형** (버그 수정) | 직접 수정 → `/qpassenger` |
-| **QA만** | `/qpassenger` |
+| **대형** (신규 프로젝트) | `/zephermine` → `/agent-team` → `/minos` → `/docker-deploy` |
+| **중형** (기능 추가) | `/zephermine` → 직접 코딩 → `/minos` |
+| **소형** (버그 수정) | 직접 수정 → `/minos` |
+| **QA만** | `/minos` |
 
 > 상세: [워크플로우 가이드](workflow-guide.md)
 
@@ -74,7 +74,7 @@ chmod +x install.sh && ./install.sh
 | `/zephermine` | 심층 인터뷰 → 설계 스펙 생성 |
 | `/agent-team` | Agent Teams 병렬 구현 (Claude 네이티브) |
 | `workpm` | Multi-AI 병렬 구현. Claude는 커맨드, Codex/Gemini는 스킬 별칭으로 동작 |
-| `/qpassenger` | QA 시나리오 → Playwright 테스트 → 자동 수정 루프 |
+| `/minos` | QA 시나리오 → Playwright 테스트 → 자동 수정 루프 |
 
 ### 코드 품질
 
@@ -134,7 +134,7 @@ chmod +x install.sh && ./install.sh
 나: /agent-team
 → 5개 섹션 파싱 → 팀원 배정 → 병렬 구현 → 빌드 검증
 
-나: /qpassenger
+나: /minos
 → QA 시나리오 25개 → Playwright 테스트 → 전체 PASS
 ```
 

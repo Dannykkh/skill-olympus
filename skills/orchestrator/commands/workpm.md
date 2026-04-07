@@ -549,7 +549,7 @@ orchestrator_spawn_workers({ "count": 2 })
 👉 다음 단계 (선택):
   /argos          → 감리 (설계 대비 구현 검증, Phase 0~6)
   /aphrodite      → 디자인 정교화 (design-system.md가 있는 UI 프로젝트)
-  /qpassenger     → Playwright 자동 테스트
+  /minos     → Playwright 자동 테스트
   /review         → 코드 리뷰
   /commit         → 변경사항 커밋
 ```
