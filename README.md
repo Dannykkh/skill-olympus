@@ -2,25 +2,44 @@
 
 # Skill Olympus
 
-> *Where every skill is a Greek god, and every workflow is a myth.*
+### Twelve Greek gods. One command. A working SaaS.
+
+> *Speak the name of cloud-gathering Zeus, and the entire pantheon descends —*
+> *Zephermine drafts the spec, Poseidon raises the fleet, Argos counts every plank,*
+> *Minos judges every test, and Clio carves the whole story into bronze.*
 
 [![Stars](https://img.shields.io/github/stars/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/stargazers)
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Shell](https://img.shields.io/badge/-Shell-4EAA25?logo=gnu-bash&logoColor=white)
-![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
-![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
-![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
+![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
+![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
+![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
 
-> **98 skills** | **49 agents** | **12 hooks** | **3 CLI support** | **Cross-CLI memory sync**
+A production agent harness for **Claude Code**, **Codex CLI**, and **Gemini CLI** —
+named after the Twelve Olympians, forged across 3 months of daily real-product builds.
+
+```bash
+/zeus "Build a shopping mall. React + Spring Boot + PostgreSQL"
+```
+
+One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
+**No questions asked. No blueprints needed. No human in the loop.**
 
 ---
 
-**The production-ready agent harness for Claude Code, Codex CLI, and Gemini CLI.**
+### What you actually get
 
-Not just configs. A complete **harness engineering** system: CPS-gated design interviews (Context → Problem → Solution with mandatory checkpoints), zero-interaction full pipeline (design → implement → inspect → test), end-to-end traceability from interview to code inspection, cross-CLI memory persistence, and multi-AI parallel orchestration. Evolved over 3+ months of intensive daily use building real products.
+| | |
+|---|---|
+| 🏛️ **The Pantheon** | 12 Greek gods (skills), each forged for one craft. Call one, or call Zeus to summon all twelve at once |
+| ⚡ **One-command pipeline** | `/zeus "..."` ships an entire SaaS with zero human interaction (design → build → inspect → test) |
+| 🧠 **Cross-CLI memory** | Persistent 3-layer memory (`mnemo`) that survives across sessions AND across Claude/Codex/Gemini |
+| 🔁 **Tireless loop** | `/chronos` autonomously runs FIND → FIX → VERIFY until the bug dies or the dawn breaks |
+| 👁️ **Hundred-eyed watchman** | `/argos` cross-references spec ↔ code ↔ tests. Nothing slips past 100 eyes |
+| ⚖️ **Underworld judge** | `/minos` weighs every Playwright test on golden scales. Fix-until-pass loop, no escape |
+| 📜 **The chronicler** | `/clio` carves the final PRD, flow diagrams, technical docs, and user manual onto bronze |
 
-Works across **Claude Code**, **Codex CLI**, and **Gemini CLI**.
+**98 skills · 49 agents · 13 hooks · 3 CLIs · 1 mythology**
 
 ---
 

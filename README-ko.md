@@ -2,25 +2,44 @@
 
 # Skill Olympus (스킬 올림푸스)
 
-> *모든 스킬이 한 명의 그리스 신, 모든 워크플로우가 하나의 신화.*
+### 열두 신. 한 마디. 작동하는 SaaS.
+
+> *구름을 모으시는 제우스의 이름을 부르라, 그러면 모든 신들이 강림하리라 ―*
+> *젭마인이 설계도를 그리고, 포세이돈이 함대를 일으키며, 아르고스가 모든 못을 세고,*
+> *미노스가 모든 테스트를 심판하고, 클리오가 그 모든 이야기를 청동에 새기리라.*
 
 [![Stars](https://img.shields.io/github/stars/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/stargazers)
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Shell](https://img.shields.io/badge/-Shell-4EAA25?logo=gnu-bash&logoColor=white)
-![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
-![PowerShell](https://img.shields.io/badge/-PowerShell-5391FE?logo=powershell&logoColor=white)
-![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
+![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
+![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
+![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
 
-> **98개 스킬** | **49개 에이전트** | **12개 훅** | **3개 CLI 지원** | **크로스 CLI 메모리 동기화**
+**Claude Code**, **Codex CLI**, **Gemini CLI**를 위한 프로덕션 에이전트 하네스 ―
+12명의 올림포스 신의 이름으로, 3개월간 매일 실전 프로덕트를 만들며 다듬어졌습니다.
+
+```bash
+/zeus "쇼핑몰 만들어줘. React + Spring Boot + PostgreSQL"
+```
+
+한 줄. 열두 신. 설계 → 구현 → 감리 → 테스트 → 출항.
+**질문 없이. 청사진 없이. 인간의 손길 없이.**
 
 ---
 
-**Claude Code, Codex CLI, Gemini CLI를 위한 프로덕션 레벨 에이전트 하니스.**
+### 무엇을 얻는가
 
-단순한 설정 파일이 아닙니다. 완전한 **하네스 엔지니어링** 시스템입니다: CPS 게이트 설계 인터뷰(Context → Problem → Solution, 필수 합의 체크포인트), 제로 인터랙션 풀 파이프라인(설계 → 구현 → 감리 → 테스트), 인터뷰에서 감리까지 엔드투엔드 추적성, 크로스 CLI 메모리 영속성, 멀티 AI 병렬 오케스트레이션. 3개월 이상의 실전 프로덕트 개발 경험에서 진화했습니다.
+| | |
+|---|---|
+| 🏛️ **신전** | 12명의 그리스 신(스킬), 각자 한 가지 손재주를 위해 빚어졌다. 한 명을 부르거나 ― 제우스를 부르면 열둘이 한꺼번에 강림 |
+| ⚡ **한 마디 파이프라인** | `/zeus "..."` 한 줄이 SaaS 한 채를 완성한다 (설계 → 구현 → 감리 → 테스트, 인간의 손길 없이) |
+| 🧠 **CLI 가로지르는 기억** | 3계층 영속 메모리(`mnemo`)가 세션을 가로지르고 Claude/Codex/Gemini를 가로지른다 |
+| 🔁 **지치지 아니하는 루프** | `/chronos`가 자율적으로 FIND → FIX → VERIFY를 반복한다, 버그가 죽거나 새벽이 올 때까지 |
+| 👁️ **백 개의 눈을 가진 파수꾼** | `/argos`가 spec ↔ 코드 ↔ 테스트를 교차검증한다. 백 개의 눈을 비껴가는 것은 없다 |
+| ⚖️ **저승의 심판자** | `/minos`가 모든 Playwright 테스트를 황금 저울에 단다. fix-until-pass 루프, 도망갈 곳은 없다 |
+| 📜 **기록자** | `/clio`가 마지막 PRD, 흐름도, 기술 문서, 사용자 매뉴얼을 청동에 새긴다 |
 
-**Claude Code**, **Codex CLI**, **Gemini CLI**에서 동작합니다.
+**98개 스킬 · 49개 에이전트 · 13개 훅 · 3개 CLI · 1개 신화**
 
 ---
 
