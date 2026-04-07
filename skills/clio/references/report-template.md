@@ -1,7 +1,7 @@
 # 최종 보고서 마크다운 템플릿
 
 ```markdown
-# Closer — 최종 보고서
+# Clio — 최종 보고서 (역사의 뮤즈)
 
 ## 요약
 | 항목 | 결과 |
@@ -16,8 +16,8 @@
 | 설계 | /zephermine | {spec 위치 또는 "없음"} |
 | 구현 | /agent-team | {구현 완료} |
 | 감리 | /argos | {PASS/CONDITIONAL/FAIL 또는 "미실행"} |
-| QA | /qpassenger | {통과율 N% 또는 "미실행"} |
-| 마무리 | /closer | 본 보고서 |
+| QA | /minos | {통과율 N% 또는 "미실행"} |
+| 마무리 | /clio | 본 보고서 |
 
 ## Phase 1: 프로세스 흐름도
 - 생성: {N}개 다이어그램

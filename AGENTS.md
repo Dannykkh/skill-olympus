@@ -45,9 +45,9 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |시나리오|체이닝 순서|
 |---|---|
-|새 프로젝트 (풀코스)|zephermine → architect → agent-team → qpassenger → docker-deploy|
+|새 프로젝트 (풀코스)|zephermine → architect → agent-team → minos → docker-deploy|
 |전자동 (제우스)|zeus — 한 줄 설명만으로 설계→구현→테스트 완전 자동|
-|기능 추가|zephermine → agent-team/수동 구현 → qpassenger|
+|기능 추가|zephermine → agent-team/수동 구현 → minos|
 |데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
 |UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|
@@ -55,7 +55,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |리팩토링|explore-agent → reducing-entropy → code-reviewer|
 |보안 감사|security-reviewer → code-review-checklist|
 |UI/UX 품질 점검|ui-ux-auditor → ui-ux-designer (필요 시 디자인 조언)|
-|QA 자동화|qpassenger (시나리오 자동 생성 → Playwright → Healer)|
+|QA 자동화|minos (시나리오 자동 생성 → Playwright → Healer)|
 |반복 수정 루프|auto-continue-loop (이슈 탐색 → 수정 → 검증 → 다음, 자동 반복)|
 |다이어그램 기반 구현 검증|flow-verifier plan → 구현 → flow-verifier verify (코드 흐름 ↔ 다이어그램 대조)|
 
@@ -81,7 +81,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 - 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/seo-audit`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다.
 - 내부 구현은 CLI별 실행 모델 차이를 반영해 달라질 수 있지만, 사용자 인터페이스와 핵심 결과는 맞춰야 합니다.
 - 단순 파일 복사만으로 parity를 판단하지 말고, 전역 설치본에서 실제로 동작하는지까지 검증합니다.
-- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `workpm`, `/chronos`(크로노스), `/qpassenger`(큐패신저), `/agent-team`(대니즈팀)
+- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `workpm`, `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈)
 
 ---
 
@@ -117,7 +117,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy, social-login | 개발 도구 |
 | 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner, qpassenger, auto-continue-loop, flow-verifier, argos (아르고스), final-inspection (클로저) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |
+| 🧪 Testing | code-reviewer, qa-test-planner, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |
 | 📦 Git | commit-work, release-notes | Git 워크플로우 & 릴리즈 노트 자동화 (버전+CHANGELOG+태그) |
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |

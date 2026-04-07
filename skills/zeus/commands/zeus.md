@@ -47,10 +47,10 @@ LOOP:
 
 0. **Description Parsing** — 산업군, 기술스택, 기능 추출
 1. **Planning** — zephermine 26단계 자동 실행 (인터뷰는 CPS Gate 구조로 합성 생성)
-2. **Implementation** — agent-team(대니즈팀) 또는 daedalus(다이달로스)로 병렬 구현
+2. **Implementation** — agent-team(포세이돈) 또는 daedalus(다이달로스)로 병렬 구현
 3. **Verification** — argos(아르고스) 감리: 설계 대비 준공검사
 4. **Docker Setup** — Docker 환경 구성 + 컨테이너 실행 (미설치 시 dev server fallback)
-5. **Testing** — qpassenger(큐패신저)로 E2E 테스트 + Healer 루프
+5. **Testing** — minos(미노스)로 E2E 테스트 + Healer 루프
 6. **Report** — docs/zeus/zeus-report.md 최종 보고서
 
 **CRITICAL**: 각 Phase 사이에 사용자에게 "다음 단계를 진행합니다" 같은 확인을 구하지 마세요. 바로 다음 Phase 코드를 실행하세요. 중간에 멈추는 것은 zeus의 목적에 반합니다.
@@ -61,7 +61,7 @@ LOOP:
 - Phase 2: `docs/zeus/zeus-log.md`에 agent-team/daedalus 실행 기록
 - Phase 3: `docs/zeus/zeus-log.md`에 argos 실행 기록 (최소 정적 분석)
 - Phase 4: `docs/zeus/zeus-log.md`에 Docker/dev-server 시도 기록
-- Phase 5: QA 결과 파일 또는 `docs/zeus/zeus-log.md`에 qpassenger 실행 기록
+- Phase 5: QA 결과 파일 또는 `docs/zeus/zeus-log.md`에 minos 실행 기록
 - 위 중 하나라도 없으면 **Phase 6을 시작하지 말고 누락된 Phase 먼저 실행**
 
 ### 재개

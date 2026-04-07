@@ -1,4 +1,4 @@
-# Server Setup — qpassenger 서버 준비 상세
+# Server Setup — minos 서버 준비 상세
 
 ## 서버 환경 감지 (Step 3-1)
 

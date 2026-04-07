@@ -3,7 +3,7 @@
 ## 2-1. PRD (Product Requirements Document)
 
 **입력:** 소스 코드 분석 결과 + 흐름도 + 기존 spec (있으면)
-**출력:** `docs/closer/latest/PRD.md`
+**출력:** `docs/clio/latest/PRD.md`
 
 포함 항목:
 - 기능 개요 (소스에서 추출한 실제 기능)
@@ -16,7 +16,7 @@
 ## 2-2. 기술 문서 (Technical Document)
 
 **입력:** 소스 코드 구조 + 흐름도 + 의존성
-**출력:** `docs/closer/latest/TECHNICAL.md`
+**출력:** `docs/clio/latest/TECHNICAL.md`
 
 포함 항목:
 - 시스템 아키텍처 개요 (Mermaid C4 또는 컴포넌트 다이어그램)
@@ -30,7 +30,7 @@
 ## 2-3. 사용자 매뉴얼 초안 (User Manual Draft)
 
 **입력:** UI 코드 분석 + API 엔드포인트 + 흐름도
-**출력:** `docs/closer/latest/USER-MANUAL.md`
+**출력:** `docs/clio/latest/USER-MANUAL.md`
 
 포함 항목:
 - 주요 기능별 사용법

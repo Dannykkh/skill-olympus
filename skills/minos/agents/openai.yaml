@@ -1,0 +1,7 @@
+interface:
+  display_name: "Minos"
+  short_description: "Judge tests and heal failures until pass (Greek underworld judge)."
+  default_prompt: "Use $minos to turn these QA scenarios into Playwright tests and keep fixing failures until they pass."
+
+policy:
+  allow_implicit_invocation: true

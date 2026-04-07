@@ -1,9 +1,11 @@
 **Language:** English | [한국어](README-ko.md)
 
-# Claude Code Agent Customizations
+# Skill Olympus
 
-[![Stars](https://img.shields.io/github/stars/Dannykkh/claude-code-agent-customizations?style=flat)](https://github.com/Dannykkh/claude-code-agent-customizations/stargazers)
-[![Forks](https://img.shields.io/github/forks/Dannykkh/claude-code-agent-customizations?style=flat)](https://github.com/Dannykkh/claude-code-agent-customizations/network/members)
+> *Where every skill is a Greek god, and every workflow is a myth.*
+
+[![Stars](https://img.shields.io/github/stars/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/stargazers)
+[![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Shell](https://img.shields.io/badge/-Shell-4EAA25?logo=gnu-bash&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white)
@@ -26,8 +28,8 @@ Works across **Claude Code**, **Codex CLI**, and **Gemini CLI**.
 
 ```bash
 # Clone
-git clone https://github.com/Dannykkh/claude-code-agent-customizations.git
-cd claude-code-agent-customizations
+git clone https://github.com/Dannykkh/skill-olympus.git
+cd skill-olympus
 
 # Windows
 .\install.bat
@@ -50,11 +52,11 @@ Each skill is named after a Greek myth character (or a baseball role) that match
 |-------|------|--------|------|
 | `/zephermine` | Zephermine (젭마인) | — | **Architect** — 26-step deep interview, spec generation, 5-expert team review |
 | `/zeus` | Zeus (제우스) | King of the Gods | **Commander** — Zero-interaction full pipeline, controls everything |
-| `/agent-team` | Danny's Team (대니즈팀) | — | **Construction Crew** — Wave-grouped parallel implementation |
+| `/agent-team` / `/poseidon` | Poseidon (포세이돈) | — | **Construction Crew** — Wave-grouped parallel implementation. The sea god commands the waves. |
 | `/workpm` | Daedalus (다이달로스) | Master Craftsman | **Site Foreman** — PM that builds without pre-design, hands-on |
 | `/argos` | Argos (아르고스) | The All-Seeing (100 eyes) | **Inspector** — Construction inspection, verifies code matches design |
-| `/qpassenger` | QPassenger (큐패신저) | — | **QA Tester** — Playwright E2E tests + fix-until-pass loop |
-| `/closer` | Closer (클로저) | Baseball Closer | **Closer** — Post-pipeline deliverables: flow diagrams + docs |
+| `/minos` | Minos (미노스) | — | **QA Tester** — Playwright E2E tests + fix-until-pass loop |
+| `/clio` | Closer (클리오) | Baseball Closer | **Closer** — Post-pipeline deliverables: flow diagrams + docs |
 | `/chronos` | Chronos (크로노스) | God of Time | **Tireless Worker** — Autonomous FIND-FIX-VERIFY loop, never stops |
 | `/hermes` | Hermes (헤르메스) | God of Commerce | **Business Analyst** — Business model, TAM/SAM/SOM, GTM strategy |
 | `/athena` | Athena (아테나) | Goddess of Strategy | **CEO Coach** — Go/No-Go gate, strategic challenge, scope decisions |
@@ -79,10 +81,10 @@ Each skill is named after a Greek myth character (or a baseball role) that match
 - **Cross-CLI observation** — Claude save-tool-use + Codex/Gemini save-turn hooks integrated
 - **CHANGELOG.md** — Version history v1.0.0 ~ v1.8.0
 
-### v1.7.0 — Orchestrator SQLite WAL + QPassenger Step 5 (Mar 2026)
+### v1.7.0 — Orchestrator SQLite WAL + Minos Step 5 (Mar 2026)
 
 - **orchestrator** — state.json → SQLite WAL migration for crash recovery
-- **qpassenger** — Playwright MCP real-browser QA testing
+- **minos** — Playwright MCP real-browser QA testing
 - **codemap** — CodeMap index for codebase navigation
 
 ### v1.6.0 — Design + Business + Skill Best Practices (Mar 2026)
@@ -92,7 +94,7 @@ Each skill is named after a Greek myth character (or a baseball role) that match
 - **biz-strategy (Hermes)** — Business model canvas, TAM/SAM/SOM, GTM strategy
 - **Anthropic best practices** — Applied across all skills
 
-See the full changelog in [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/Dannykkh/claude-code-agent-customizations/releases).
+See the full changelog in [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/Dannykkh/skill-olympus/releases).
 
 ---
 
@@ -113,8 +115,8 @@ One command does everything:
 | **Design** | `/zephermine` (젭마인) | 26-step interview → SPEC.md → 5-agent team review |
 | **Implement** | `/agent-team` | Wave-grouped parallel execution with Agent Teams |
 | **Inspect** | `/argos` (아르고스) | Construction inspection: verify code matches design |
-| **Test** | `/qpassenger` (큐패신저) | Playwright E2E tests + fix-until-pass loop |
-| **Deliver** | `/closer` (클로저) | Flow diagrams + PRD + technical docs + user manual |
+| **Test** | `/minos` (미노스) | Playwright E2E tests + fix-until-pass loop |
+| **Deliver** | `/clio` (클리오) | Flow diagrams + PRD + technical docs + user manual |
 | **Full Auto** | `/zeus` (제우스) | All phases chained, zero interaction |
 
 Each skill works standalone or as part of the pipeline.
@@ -166,7 +168,7 @@ Includes auto gotcha/learned tracking:
 | Category | Skills | Highlights |
 |----------|--------|------------|
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
-| **Pipeline** | zephermine, zeus, argos, qpassenger, closer | Zero-interaction full dev pipeline |
+| **Pipeline** | zephermine, zeus, argos, minos, closer | Zero-interaction full dev pipeline |
 | **Frontend** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 73 fonts, SEO+AEO+GEO audit |
 | **Development** | docker-deploy, database-schema-designer, social-login, code-reviewer + 7 more | Docker, DB design, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
@@ -267,16 +269,16 @@ Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| [v1.9.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.9.0) | 2026-03-24 | Athena CEO Coaching + Pipeline Expansion |
-| [v1.8.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.8.0) | 2026-03-23 | Project Gotchas + Learned Patterns |
-| [v1.7.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.7.0) | 2026-03-21 | Orchestrator SQLite WAL + QPassenger |
-| [v1.6.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.6.0) | 2026-03-18 | Design + Business + Skill Best Practices |
-| [v1.5.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.5.0) | 2026-03-09 | Closer + SEO Audit + Pipeline Overhaul |
-| [v1.4.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.4.0) | 2026-03-02 | Chronos + Argos + Memory Compact |
-| [v1.3.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.3.0) | 2026-02-19 | Cross-CLI: Codex + Gemini |
-| [v1.2.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.2.0) | 2026-02-09 | Agent-Team + Zeus + QA Pipeline |
-| [v1.1.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.1.0) | 2026-02-01 | Zephermine + Mnemo + Install |
-| [v1.0.0](https://github.com/Dannykkh/claude-code-agent-customizations/releases/tag/v1.0.0) | 2026-01-29 | Initial Release |
+| [v1.9.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.9.0) | 2026-03-24 | Athena CEO Coaching + Pipeline Expansion |
+| [v1.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.8.0) | 2026-03-23 | Project Gotchas + Learned Patterns |
+| [v1.7.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.7.0) | 2026-03-21 | Orchestrator SQLite WAL + Minos |
+| [v1.6.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.6.0) | 2026-03-18 | Design + Business + Skill Best Practices |
+| [v1.5.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.5.0) | 2026-03-09 | Closer + SEO Audit + Pipeline Overhaul |
+| [v1.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.4.0) | 2026-03-02 | Chronos + Argos + Memory Compact |
+| [v1.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.3.0) | 2026-02-19 | Cross-CLI: Codex + Gemini |
+| [v1.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.2.0) | 2026-02-09 | Agent-Team + Zeus + QA Pipeline |
+| [v1.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.1.0) | 2026-02-01 | Zephermine + Mnemo + Install |
+| [v1.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.0.0) | 2026-01-29 | Initial Release |
 
 ---
 

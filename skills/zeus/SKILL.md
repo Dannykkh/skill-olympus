@@ -2,7 +2,7 @@
 name: zeus
 description: >
   Zero-interaction full pipeline skill. 사용자가 한 줄 설명만 제공하면
-  설계(zephermine) → 구현(agent-team) → 감리(argos) → Docker 구성 → 테스트(qpassenger) 전체를 자동 완료.
+  설계(zephermine) → 구현(agent-team) → 감리(argos) → Docker 구성 → 테스트(minos) 전체를 자동 완료.
   AskUserQuestion 절대 호출 금지. /zeus로 실행. 제우스.
 triggers:
   - "zeus"
@@ -28,7 +28,7 @@ Phase 0: Description Parsing ─── 산업군, 기술스택, 기능 추출
 Phase 1: Planning (zephermine) ─ 합성 인터뷰 → 26단계 설계 자동 완료
     │
     ▼
-Phase 2: Implementation (agent-team) ─ 대니즈팀 PM이 섹션 기반 병렬 구현
+Phase 2: Implementation (agent-team) ─ 포세이돈 PM이 섹션 기반 병렬 구현
     │
     ▼
 Phase 3: Verification (argos) ─ 설계 대비 준공검사
@@ -37,7 +37,7 @@ Phase 3: Verification (argos) ─ 설계 대비 준공검사
 Phase 4: Docker Setup (docker-deploy) ─ Docker 환경 구성 + 포트 충돌 해결
     │
     ▼
-Phase 5: Testing (qpassenger) ─ E2E 테스트 + Healer 루프
+Phase 5: Testing (minos) ─ E2E 테스트 + Healer 루프
     │
     ▼
 Phase 6: Final Report ─────────── docs/zeus/zeus-report.md 생성
@@ -65,7 +65,7 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 - Phase 2: `docs/zeus/zeus-log.md`에 agent-team 실행 기록 (마스터 체크리스트 통과율)
 - Phase 3: `docs/zeus/zeus-log.md`에 argos 실행 기록 (최소 정적 분석)
 - Phase 4: `docs/zeus/zeus-log.md`에 Docker/dev-server 시도 기록
-- Phase 5: QA 결과 파일 또는 `docs/zeus/zeus-log.md`에 qpassenger 실행 기록
+- Phase 5: QA 결과 파일 또는 `docs/zeus/zeus-log.md`에 minos 실행 기록
 
 위 중 하나라도 없으면 Phase 6을 시작하지 말고, 누락된 phase를 먼저 실행.
 컨텍스트가 부족하여 누락 phase 실행이 불가능하면: `zeus-state.json`의 `currentPhase`를 누락 phase로 설정하고 핸드오프.
@@ -129,7 +129,7 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을
 - zephermine Step 6: **합성 트랜스크립트 생성** / Step 9: **셀프 리뷰** / Step 12~13: 수용+즉시 승인
 - zephermine Step 21~22: SKILLS-CATALOG.md 참조, 추가 설치 불필요 (글로벌 스킬)
 - argos: 결과 즉시 승인 / agent-team: Wave Plan 즉시 실행, 실패 섹션 재시도
-- qpassenger: 전체 시나리오, docker-compose 우선, 없으면 dev server 자동 실행
+- minos: 전체 시나리오, docker-compose 우선, 없으면 dev server 자동 실행
 
 **Step 6 합성 인터뷰 생성**: Phase 0 파싱 결과 + 산업별 프리셋 조합으로 CPS Phase C/P/S + Gate 1/2/3 구조의 인터뷰 트랜스크립트를 자동 생성.
 [생성 로직 → references/auto-interview-generator.md](references/auto-interview-generator.md)
@@ -141,7 +141,7 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을
 
 ---
 
-## Phase 2: Implementation (대니즈팀 → 다이달로스 폴백)
+## Phase 2: Implementation (포세이돈 → 다이달로스 폴백)
 
 구현 도구를 자동 선택합니다:
 
@@ -149,13 +149,13 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을
 Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
     ▼
 TeamCreate 도구 사용 가능?
-  ├── ✅ → 대니즈팀(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
+  ├── ✅ → 포세이돈(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
   └── ❌ → 다이달로스(daedalus) — PM이 직접 리서치 없이 구현 관리
 ```
 
-**판별 방법**: Phase 2 시작 시 TeamCreate 도구 호출을 시도. 성공하면 대니즈팀, 실패하면 다이달로스.
+**판별 방법**: Phase 2 시작 시 TeamCreate 도구 호출을 시도. 성공하면 포세이돈, 실패하면 다이달로스.
 
-**경로 A — 대니즈팀** (TeamCreate 사용 가능):
+**경로 A — 포세이돈** (TeamCreate 사용 가능):
 - Claude: `skills/agent-team/SKILL.md` / Codex: `skills/agent-team-codex/SKILL.md`
 - Step 0(산출물 검토) → Step 1(index 파싱) → Step 2(Wave Plan, [ZEUS-AUTO] 즉시 "실행") → Step 3~4(Task + Wave) → Step 5(Code Review) → Step 6(체크리스트) → Step 7(Activity Log) → Step 8(Final Report)
 
@@ -169,7 +169,7 @@ TeamCreate 도구 사용 가능?
 **실패 시 폴백 (Phase 2는 skip 금지):**
 - `plan.md` 미생성 → Phase 0 파싱 결과 기반 최소 plan 생성 후 즉시 실행
 - `sections/` 미생성 → 최소 1개 통합 섹션 생성 후 단일 구현 실행
-- 대니즈팀 teammate 전부 실패 → 다이달로스로 자동 전환
+- 포세이돈 teammate 전부 실패 → 다이달로스로 자동 전환
 - 다이달로스 subagent도 실패 → 단일 구현 task로 최종 폴백
 
 ---
@@ -203,21 +203,21 @@ TeamCreate 도구 사용 가능?
 
 ---
 
-## Phase 5: Testing (qpassenger)
+## Phase 5: Testing (minos)
 
 구현 완료 후 자동 E2E 테스트.
 
 1. `qa-scenarios.md` 존재 확인 (Phase 1에서 생성됨)
 2. Playwright 미설치 시 `npx playwright install` 자동 실행
-3. qpassenger Step 1~6 실행:
+3. minos Step 1~6 실행:
    - Step 3: Phase 4에서 서버 이미 실행 중이면 헬스체크만
    - Step 5: Healer 루프 (최대 5회)
 4. 결과 집계
 
 **폴백 조건 (Phase 5는 skip 금지):**
-- 서버 시작 불가 → `--api-only` 모드로 qpassenger 실행
+- 서버 시작 불가 → `--api-only` 모드로 minos 실행
 - QA 시나리오 미존재 → 프로젝트 구조에서 기본 시나리오 현장 생성 후 실행
-- Playwright 설치 실패 → 실패 원인과 재실행 명령을 qpassenger Step 1/2/6로 리포트
+- Playwright 설치 실패 → 실패 원인과 재실행 명령을 minos Step 1/2/6로 리포트
 
 ---
 
@@ -286,7 +286,7 @@ TeamCreate 도구 사용 가능?
 - Phase 2 경로 A: `skills/agent-team/SKILL.md` / `skills/agent-team-codex/SKILL.md`
 - Phase 2 경로 B: `skills/orchestrator/commands/workpm.md`
 - Phase 4: `skills/docker-deploy/SKILL.md`
-- Phase 5: `skills/qpassenger/SKILL.md`
+- Phase 5: `skills/minos/SKILL.md`
 
 ---
 

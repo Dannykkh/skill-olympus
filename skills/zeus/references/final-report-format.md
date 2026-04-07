@@ -76,7 +76,7 @@ Phase 6 시작 전 반드시 확인:
 | 2 | `zeus-log.md`에 agent-team 기록 | Phase 2 폴백 실행 |
 | 3 | `zeus-log.md`에 argos 실행 기록 | Phase 3 실행 |
 | 4 | `zeus-log.md`에 서버 실행 시도 기록 | Phase 4 실행 |
-| 5 | qpassenger 실행 기록 (QA 결과 파일 또는 로그) | Phase 5 실행 |
+| 5 | minos 실행 기록 (QA 결과 파일 또는 로그) | Phase 5 실행 |
 
 **하나라도 없는 상태에서 리포트를 작성하는 것은 금지.**
 컨텍스트가 부족하면 `zeus-state.json`에 `currentPhase: "testing"`을 저장하고 핸드오프.

@@ -28,7 +28,7 @@ auto_apply: false
 ## 파이프라인 위치
 
 ```
-/zephermine (설계사)  →  /agent-team (대니즈팀)  →  /argos (감리)  →  /qpassenger (실사)
+/zephermine (설계사)  →  /agent-team (포세이돈)  →  /argos (감리)  →  /minos (실사)
      도면 생성               섹션 기반 구현           준공검사          런타임 테스트
 ```
 
@@ -346,9 +346,9 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 |------|------|------|
 | zephermine | 설계 산출물 생성 | 검증 대상 (spec, api-spec, qa-scenarios, flow-diagrams) |
 | flow-verifier | 프로세스 도면 검증 | Phase 5에서 활용 |
-| agent-team (대니즈팀) | 구현 수행 | 검증 전 선행 단계 (젭마인 산출물 기반) |
+| agent-team (포세이돈) | 구현 수행 | 검증 전 선행 단계 (젭마인 산출물 기반) |
 | daedalus (다이달로스) | 구현 수행 | 검증 전 선행 단계 (젭마인 없이 직접 진행) |
-| qpassenger | Playwright 실사 테스트 | 검증 후 후행 단계 |
+| minos | Playwright 실사 테스트 | 검증 후 후행 단계 |
 | code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할, 시공 중 자동 실행 |
 
 ---
@@ -359,7 +359,7 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 ✅ 아르고스 감리 완료! (결과: {PASS/CONDITIONAL/FAIL})
 
 👉 다음 단계 (선택):
-  /qpassenger          → Playwright 실사 테스트 (아직 안 했다면)
+  /minos          → Playwright 실사 테스트 (아직 안 했다면)
   /commit              → 변경사항 커밋
   /wrap-up             → 세션 요약 + MEMORY.md 업데이트
 ```

@@ -116,7 +116,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 - **orchestrator** — state.json → SQLite WAL migration (2db3d2c)
-- **qpassenger** — Playwright MCP browser exploration QA Step 5 (d076b19)
+- **minos** — Playwright MCP browser exploration QA Step 5 (d076b19)
 - **agents** — Large-scale agent improvements (octopus reference) (a406744)
 
 ### Bug Fixes
@@ -137,7 +137,7 @@ All notable changes to this project will be documented in this file.
 
 ### Refactoring
 - **skills** — Anthropic skill-making best practices applied (7a4856b)
-- **skills** — Progressive disclosure split for qpassenger, hermes, closer (91916b4)
+- **skills** — Progressive disclosure split for minos, hermes, closer (91916b4)
 - **skills** — Trigger conditions added to 11 skill descriptions (97e55fe)
 
 ---
@@ -195,7 +195,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 - **zephermine** — GitHub similar project search + QA scenarios + API spec generation (3fcbe84, b2fa3ea, 3129b73)
 - **agent-team** — Native Agent Teams with wave grouping + free mode (c3c0438, ad4af93)
-- **qa-until-pass** — Fix-until-pass test loop (later renamed to qpassenger) (c818470)
+- **qa-until-pass** — Fix-until-pass test loop (later renamed to minos) (c818470)
 - **zeus** — Zero-interaction full pipeline skill (e55bb64)
 - **stitch UI skills** — Design-md, enhance-prompt, loop, react (230bebf)
 - **plugin manifest** — Claude Code plugin marketplace support (033c4ba)

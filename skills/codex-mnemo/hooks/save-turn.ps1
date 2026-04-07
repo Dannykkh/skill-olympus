@@ -504,6 +504,19 @@ if (-not $baseDir) {
     $baseDir = $PWD.Path
 }
 
+# Sub-directory(예: bin/Debug)를 부모 git root로 정규화한다.
+# Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
+# conversations/는 진짜 프로젝트 루트에 생기도록 한다.
+# git이 없는 디렉토리면 baseDir 그대로 유지 (fail-open).
+if ($baseDir) {
+    try {
+        $gitRoot = & git -C $baseDir rev-parse --show-toplevel 2>$null
+        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+            $baseDir = $gitRoot.Replace('/', '\')
+        }
+    } catch {}
+}
+
 Ensure-MemoryScaffold $baseDir
 
 $convDir = Join-Path $baseDir "conversations"

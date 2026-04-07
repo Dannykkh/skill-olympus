@@ -46,7 +46,7 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 | 2 | Implementation (agent-team/daedalus) | `implementation` | `"implementation"` |
 | 3 | Verification (argos) | `verification` | `"verification"` |
 | 4 | Docker Setup (docker-deploy) | `docker` | `"docker"` |
-| 5 | Testing (qpassenger) | `testing` | `"testing"` |
+| 5 | Testing (minos) | `testing` | `"testing"` |
 | 6 | Final Report | `report` | `"report"` |
 
 ---
@@ -130,10 +130,10 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 1. `qa-scenarios.md` 존재 확인
 2. 서버 상태 확인 (헬스체크)
 3. Playwright 설치 확인 (미설치 시 `npx playwright install`)
-4. qpassenger Step 1~7 실행
+4. minos Step 1~7 실행
 
 **실패 시:**
-- 서버 시작 불가 → `--api-only` 모드로 qpassenger 실행
+- 서버 시작 불가 → `--api-only` 모드로 minos 실행
 - QA 시나리오 미존재 → 현장 생성 후 실행
 
 ---
@@ -141,7 +141,7 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 ### Phase 5 → Phase 6 (Testing → Report)
 
 **전환 조건:**
-- qpassenger 완료 (PASS/CONDITIONAL/FAIL 무관)
+- minos 완료 (PASS/CONDITIONAL/FAIL 무관)
 
 **전환 액션:**
 1. 전체 결과 집계
@@ -214,7 +214,7 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 - docker-compose.yml: 생성
 - 컨테이너: up (port 3000, 5432)
 
-## [HH:MM:SS] Phase 5 — Testing (qpassenger)
+## [HH:MM:SS] Phase 5 — Testing (minos)
 - QA scenarios: 12개
 - Playwright tests: 10/12 passed
 - Healer loops: 2회
