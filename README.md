@@ -44,24 +44,75 @@ That's it. **96 skills, 48 agents, 12 hooks** installed across Claude Code + Cod
 
 ---
 
-## Meet the Team
+## The Pantheon
 
-Each skill is named after a Greek myth character (or a baseball role) that matches its purpose.
+> Twelve gods sit on Mount Olympus. Each holds a domain. Each answers to a single name.
+> Call any one of them — or call **Zeus**, and the entire pantheon descends at once.
+
+This isn't a collection of plugins. It's a **mythology of work**:
+a small council of gods, each forged for one craft, each speaking in their own voice.
+They hand work to one another the way the old myths describe — Zephermine whispers a spec
+into Poseidon's ear, Poseidon raises the waves, Argos counts every plank, Minos judges
+each soul at the gate, and Clio carves the whole story into stone for those who come after.
+
+Below is the council. Pick one, or summon them all.
+
+### The Council of Twelve
 
 | Skill | Name | Origin | Role |
 |-------|------|--------|------|
-| `/zephermine` | Zephermine (젭마인) | — | **Architect** — 26-step deep interview, spec generation, 5-expert team review |
-| `/zeus` | Zeus (제우스) | King of the Gods | **Commander** — Zero-interaction full pipeline, controls everything |
-| `/agent-team` / `/poseidon` | Poseidon (포세이돈) | — | **Construction Crew** — Wave-grouped parallel implementation. The sea god commands the waves. |
-| `/workpm` | Daedalus (다이달로스) | Master Craftsman | **Site Foreman** — PM that builds without pre-design, hands-on |
-| `/argos` | Argos (아르고스) | The All-Seeing (100 eyes) | **Inspector** — Construction inspection, verifies code matches design |
-| `/minos` | Minos (미노스) | — | **QA Tester** — Playwright E2E tests + fix-until-pass loop |
-| `/clio` | Closer (클리오) | Baseball Closer | **Closer** — Post-pipeline deliverables: flow diagrams + docs |
-| `/chronos` | Chronos (크로노스) | God of Time | **Tireless Worker** — Autonomous FIND-FIX-VERIFY loop, never stops |
-| `/hermes` | Hermes (헤르메스) | God of Commerce | **Business Analyst** — Business model, TAM/SAM/SOM, GTM strategy |
-| `/athena` | Athena (아테나) | Goddess of Strategy | **CEO Coach** — Go/No-Go gate, strategic challenge, scope decisions |
-| `/aphrodite` | Aphrodite (아프로디테) | Goddess of Beauty | **Design Director** — Design orchestrator with 161 palettes, 73 fonts |
-| `mnemo` | Mnemo (므네모) | Mnemosyne (Goddess of Memory) | **Librarian** — 3-layer persistent memory across sessions and CLIs |
+| `/zephermine` | Zephermine (젭마인) | The West Wind, breath of inspiration | **The Architect** — 26-step deep interview, spec generation, 5-expert team review |
+| `/zeus` | Zeus (제우스) | King of the Gods | **The Commander** — Zero-interaction full pipeline. One command, all gods descend |
+| `/agent-team` / `/poseidon` | Poseidon (포세이돈) | God of the Sea | **The Sea Lord** — Raises the waves. Section dependencies sail in formation, fleet by fleet |
+| `/workpm` | Daedalus (다이달로스) | Master Craftsman of the Labyrinth | **The Hands-On Builder** — Builds without a blueprint. Hands in clay, eyes on the prize |
+| `/argos` | Argos (아르고스) | The All-Seeing, Hundred-Eyed Watchman | **The Inspector** — A hundred eyes never blink. Every line of code is seen |
+| `/minos` | Minos (미노스) | Judge of the Underworld | **The Judge** — Souls and code alike stand trial. The fix-loop never closes until it passes |
+| `/clio` | Clio (클리오) | Muse of History | **The Chronicler** — The last to speak. She carves the heroes' deeds into the records of time |
+| `/chronos` | Chronos (크로노스) | God of Time | **The Tireless One** — Time itself bends to her will. FIND → FIX → VERIFY, again, and again, and again |
+| `/hermes` | Hermes (헤르메스) | God of Commerce, Messenger of the Gods | **The Merchant** — Reads markets like he reads winds. TAM, SAM, SOM, GTM — the trader's compass |
+| `/athena` | Athena (아테나) | Goddess of Strategy & Wisdom | **The Strategist** — Cold-eyed, cold-blooded. Asks the questions that hurt: ship it, kill it, or pivot? |
+| `/aphrodite` | Aphrodite (아프로디테) | Goddess of Beauty | **The Beauty** — 161 palettes, 73 fonts, 84 styles. Nothing leaves her hands ugly |
+| `mnemo` | Mnemo (므네모) | Mnemosyne, Mother of the Muses | **The Keeper of Memory** — Forgets nothing. Three layers of memory across every session, every CLI |
+
+---
+
+### Voices from Olympus
+
+**Zeus** — *"One word, and the council convenes. I do not negotiate with the work. I deliver it."*
+Throws every god into the field with a single line. Design → Implement → Inspect → Test, untouched by human hand.
+
+**Zephermine** — *"Twenty-six questions. None of them are optional. The spec is sacred."*
+The breath that shapes the blueprint. CPS-gated interview, 5-expert review, no spec ships half-formed.
+
+**Poseidon** — *"You don't fight the sea. You ride it."*
+Reads the dependency graph like tides. Builds the fleet (teammates), waits for the wave, sends them all out together.
+
+**Daedalus** — *"There was no labyrinth before me. I made it from nothing. Hand me the stone."*
+For when there is no plan. He researches, proposes, drafts, and builds — alone if he must.
+
+**Argos** — *"Of my hundred eyes, none ever close. The plank you forgot to nail down — I have already counted it."*
+Walks the construction site after the crew leaves. Cross-references spec ↔ code ↔ tests. Nothing slips past.
+
+**Minos** — *"Stand before me. Show me your tests. The verdict is binary."*
+Drags the code to the gate of the underworld. Fails it. Heals it. Fails it again. Repeats until it passes.
+
+**Clio** — *"The work is finished. Now I write the song."*
+Turns the corpse of a project into a living document. Flow diagrams, PRD, technical docs, user manual — all carved at the end.
+
+**Chronos** — *"You are mortal. You sleep. I do not."*
+The autonomous loop that does not give up. FIND → FIX → VERIFY, until the bug is dead or the dawn breaks.
+
+**Hermes** — *"Every market is a road. Every road has a price. Pay it, or starve."*
+Business model, market sizing, GTM. Reads the trade winds before you commit a single line.
+
+**Athena** — *"Wisdom is knowing what not to build. I will ask you the question you are afraid of."*
+Go / No-Go gate. Scope decisions. The CEO who makes you justify your existence.
+
+**Aphrodite** — *"Beauty is not a luxury. It is the difference between a tool and a thing people love."*
+Design orchestrator. 161 palettes, 73 fonts, 84 styles, design tokens, component architecture.
+
+**Mnemo** — *"Forget nothing. The conversation you had three months ago is the answer you need today."*
+The mother of all muses. Three-layer memory: index, semantic, episodic. Crosses every CLI, persists every session.
 
 ---
 
