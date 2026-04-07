@@ -131,3 +131,83 @@
 - 추가로 전역 Codex 등록 시 `ORCHESTRATOR_PROJECT_ROOT`를 설치 디렉터리로 고정하던 동작을 제거해, 런타임이 현재 워크스페이스 기준으로 동작하게 맞췄다.
 - 즉시 복구 절차: 실행 경로의 `skills/orchestrator/mcp-server`에서 `npm install && npm run build` 후 `codex mcp remove/add orchestrator`
 - **참조**: [대화 링크](conversations/2026-03-21-codex.md)
+
+### powershell-bom, system-text-encoding-utf8, utf8nobom
+`tags: powershell, bom, utf8, encoding, system-text-encoding`
+`date: 2026-04-08`
+`source: claude`
+
+- **함정**: PowerShell의 `[System.Text.Encoding]::UTF8`은 **BOM 포함** 인코더 (혼동 큰 .NET API)
+- 결과: `WriteAllText`/`AppendAllText`로 새 파일 만들면 첫 3 바이트가 `EF BB BF` BOM으로 시작
+- 영향: 첫 줄 grep/awk 매칭 실패, log 파일 cutoff 정규식 깨짐, mnemo-errors.log 24시간 카운트 오류
+- **해결**: 파일 상단에 `$Utf8NoBom = New-Object System.Text.UTF8Encoding $false` 정의 후 모든 호출에 사용
+- 8개 PS 스크립트 18곳에서 일괄 교체
+- **참조**: commit b11761e
+
+### powershell-join-path, ps5.1, 3-arg-unsupported
+`tags: powershell, join-path, ps-5.1, windows`
+`date: 2026-04-08`
+`source: claude`
+
+- **함정**: PowerShell 5.1의 `Join-Path`는 인수 2개만 받음 (PS 6+에서 `-AdditionalChildPath` 추가)
+- `Join-Path $base "memory" "gotchas"` → 에러: "'gotchas' 인수를 허용하는 위치 매개 변수를 찾을 수 없습니다"
+- **해결**: 중첩 호출 — `Join-Path (Join-Path $base "memory") "gotchas"`
+- 발견 위치: gemini-mnemo, codex-mnemo, save-tool-use 각 SKILL의 observation 블록
+- 증상: 대화 진행 중 "에러 잔뜩 출력" — 실제 저장은 성공하지만 stderr 노이즈
+
+### subprocess-encoding-cp949, python-windows, korean
+`tags: python, subprocess, encoding, cp949, windows, korean`
+`date: 2026-04-08`
+`source: claude`
+
+- **함정**: `subprocess.run(text=True)`만 쓰면 Windows에서 시스템 기본 인코딩(cp949)으로 디코딩 시도
+- git 출력에 한글이 포함되면 `UnicodeDecodeError: 'cp949' codec can't decode...`
+- handoff 스크립트(create_handoff.py / check_staleness.py)의 git rev-parse 호출에서 발생
+- **해결**: `text=True, encoding="utf-8", errors="replace"` 명시
+- `read_text()` / `write_text()` 도 동일하게 `encoding="utf-8"` 명시 필요
+- `sys.stdout.reconfigure(encoding="utf-8")`도 추가 (한글 print 깨짐 방지)
+
+### windows-app-store-python3-stub, exit-49
+`tags: python, windows, app-store, python3, stub, exit-49`
+`date: 2026-04-08`
+`source: claude`
+
+- **함정**: Windows에서 `python3` 명령은 보통 App Store stub
+- 위치: `C:\Users\...\AppData\Local\Microsoft\WindowsApps\python3.exe`
+- 실행 시 Windows Store로 리다이렉트하면서 **exit code 49** 반환
+- 영향: bash 스크립트가 `command -v python3` → 성공하니까 사용 → exit 49
+- **해결**: 순서를 `python` → `py` → `python3`으로. 또한 `--version`으로 stub 검증 후 사용
+- reconcile-conversations.sh에 적용
+
+### codex-cwd-stay-as-bin-debug, payload-cwd-not-normalized
+`tags: codex, cwd, sub-directory, vs-bin-debug, normalization`
+`date: 2026-04-08`
+`source: claude`
+
+- **함정**: Codex save-turn은 payload의 cwd 필드를 그대로 사용 (git rev-parse 정규화 없음)
+- 결과: Visual Studio가 bin/Debug에서 실행되어 그 cwd가 payload에 들어오면 conversations가 거기에 생성
+- **해결**: baseDir 결정 직후 `git -C $baseDir rev-parse --show-toplevel`로 부모 git root 정규화
+- Gemini의 save-turn도 동일 문제 — 동일 패턴으로 수정
+- Claude의 헬퍼(Get-ClaudeProjectRoot)는 transcript JSONL에서 cwd 추출 → Codex/Gemini는 다른 source
+
+### gemini-no-transcript, hook-failure-permanent-loss
+`tags: gemini, transcript, hook-failure, data-loss, no-recovery`
+`date: 2026-04-08`
+`source: claude`
+
+- **구조적 한계**: Gemini CLI는 자체 conversation transcript를 저장하지 않음
+- Claude (`~/.claude/projects/.../*.jsonl`) / Codex (`~/.codex/sessions/.../rollout-*.jsonl`)와 달리, Gemini는 hook payload만이 유일한 데이터
+- 결과: **save-turn hook이 한 번 실패하면 해당 turn은 영구 손실** (reconcile 불가능)
+- mitigation: gemini-mnemo의 save-turn fail-open 강화 + .claude/mnemo-errors.log에 기록
+- 사용자 인지 필요: Gemini reconcile 자동화 불가, 수동도 source 자체가 없음
+
+### codex-notify-only-event, no-pretooluse-block
+`tags: codex, notify, hook-event, pretooluse, block, structural-limit`
+`date: 2026-04-08`
+`source: claude`
+
+- **구조적 한계**: Codex CLI는 `notify` event 1개만 존재 — turn이 끝난 후에만 발동
+- 결과: PreToolUse 시점이 없어서 `protect-files`, `check-new-file` 같은 **차단형 hook 절대 동작 불가**
+- codex-hook-bridge.js가 turn 끝에 모든 변경 파일을 검증하지만, 이미 일이 끝난 사후 검증
+- 사용자가 `.env`나 `credentials.json`을 수정해도 차단되지 않음 (경고만)
+- mitigation 불가능 — Codex CLI 자체 한계

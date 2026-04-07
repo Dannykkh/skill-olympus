@@ -198,3 +198,61 @@
 - Codex는 `notify`만 제공하므로 `skills/codex-mnemo/hooks/codex-hook-bridge.js`가 현재 턴의 session JSONL에서 `apply_patch` 수정 파일을 복원하고, `save-turn.*`에서 `check-new-file`, `protect-files`, `format-code`, `validate-code`, `validate-docs`, `validate-api`를 fan-out 실행하도록 연결.
 - `orchestrator-detector`는 notify 시점으로는 같은 턴 사전 개입이 불가능하므로, `skills/codex-mnemo/templates/agents-md-rules.md`에 오케스트레이터 모드 자동 해석 규칙을 넣어 `workpm`, `pmworker`, `agent-team`, `zeus`를 explicit mode switch로 처리.
 - **참조**: [대화 링크](conversations/2026-03-13-codex.md)
+
+### reconcile-pattern, jsonl-source-of-truth, idempotent-backfill
+`tags: reconcile, pattern, jsonl, idempotent, backfill, sidecar-index`
+`date: 2026-04-08`
+`source: claude`
+
+- **Reconcile 4단계 패턴** (Claude/Codex 공통):
+  1. JSONL transcript를 source of truth로 선언 (Claude `~/.claude/projects/.../`, Codex `~/.codex/sessions/.../`)
+  2. 사이드카 인덱스 (`conversations/.mnemo-index.json`)에 이미 처리된 dedup key 저장
+  3. JSONL 스캔 → 인덱스에 없는 turn만 backfill
+  4. 멱등 보장 (재실행해도 같은 결과)
+- **Dedup key 차이**: Claude는 JSONL line uuid (각 줄 고유), Codex는 `sha1(timestamp+role+content[:200])` (Codex line은 unique id 없음)
+- **호출 시점**: SessionStart hook (Claude/Gemini), 수동 실행 (Codex — notify만 있어 자동화 불가)
+- **참조**: commit b11761e
+
+### fail-open-pattern, mnemo-errors-log, sessionstart-banner
+`tags: fail-open, error-log, mnemo, sessionstart, banner, observability`
+`date: 2026-04-08`
+`source: claude`
+
+- **Hook 에러 처리 패턴**:
+  - 정상 skip 케이스 (빈 응답, dedup, transcript 없음): 조용히 `exit 0`, 로그 없음
+  - 진짜 실패 (파싱/IO 에러): `.claude/mnemo-errors.log`에 기록 후 `exit 0` (fail-open)
+  - `MNEMO_STRICT=1` 환경변수: 디버깅용 non-zero exit
+- **사용자 가시화**: SessionStart hook이 최근 24시간 에러 N건을 STDERR 배너로 알림
+- 8개 hook (save-response/conversation/tool-use × ps1+sh, codex/gemini save-turn, reconcile wrapper) 모두 통합
+- **이전**: 모든 catch가 `exit 0`만 — silent failure, 사용자가 데이터 손실을 인지할 방법 없음
+- **참조**: commit b11761e
+
+### days-lookback-pattern, midnight-session, hook-failure-insurance
+`tags: reconcile, days-lookback, midnight, sessionstart, insurance`
+`date: 2026-04-08`
+`source: claude`
+
+- **Reconcile 기본 7일 lookback** (이전: "오늘만"):
+  - 자정 넘긴 세션: 23:55 turn(어제 날짜) + 00:30 새 세션 → 어제 turn skip 방지
+  - 어제 hook 실패 → 오늘 reconcile이 자동 복구
+  - uuid 기반 멱등이라 재처리 비용 거의 없음 (실측 0.4초 / 27일치)
+- **CLI 옵션**:
+  - `--all`: 전체 기간 (가장 강력)
+  - `--date YYYY-MM-DD`: 특정 날짜만
+  - `--days N`: 최근 N일 (기본 7)
+- **참조**: commit ae24701
+
+### bom-less-utf8-pattern, powershell-utf8encoding-false
+`tags: powershell, bom, utf8, file-write, pattern`
+`date: 2026-04-08`
+`source: claude`
+
+- **PowerShell BOM 회피 패턴**:
+  ```powershell
+  $Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+  [System.IO.File]::WriteAllText($path, $content, $Utf8NoBom)
+  [System.IO.File]::AppendAllText($path, $line, $Utf8NoBom)
+  ```
+- **금지**: `[System.Text.Encoding]::UTF8` (BOM 포함 인코더)
+- 영향: MEMORY.md, conversations/*.md, observations.jsonl, mnemo-errors.log 등 첫 줄 grep/awk 매칭 보장
+- **참조**: gotchas.md `powershell-bom`

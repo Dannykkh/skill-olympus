@@ -355,3 +355,62 @@
 - `skills/gemini-mnemo/install.js`를 수정해 설치 시 `context.fileName`에 `AGENTS.md`(최초 설치 시 `GEMINI.md`도 함께) 자동 반영.
 - 제거 시 `AGENTS.md` 엔트리만 정리해 기존 사용자 설정을 최대한 보존.
 - **참조**: [대화 링크](conversations/2026-02-14-codex.md)
+
+### reconcile-conversations-py, mnemo-backfill, jsonl-source-of-truth
+`tags: reconcile, mnemo, python, jsonl, backfill, claude, codex`
+`date: 2026-04-08`
+`source: claude`
+
+- **위치**:
+  - `skills/mnemo/scripts/reconcile_conversations.py` (Claude)
+  - `skills/codex-mnemo/scripts/reconcile_codex_conversations.py` (Codex)
+  - `hooks/reconcile-conversations.ps1`/`.sh` (SessionStart wrapper, Claude+Codex 동시 실행)
+- **사용**:
+  ```bash
+  python skills/mnemo/scripts/reconcile_conversations.py              # 기본 7일 lookback
+  python skills/mnemo/scripts/reconcile_conversations.py --all        # 전체 기간
+  python skills/mnemo/scripts/reconcile_conversations.py --days 3     # 최근 3일
+  python skills/mnemo/scripts/reconcile_conversations.py --date 2026-04-07
+  python skills/mnemo/scripts/reconcile_conversations.py --dry-run    # 시뮬레이션
+  ```
+- **자동 실행**: Claude SessionStart hook + Gemini BeforeAgent hook (멱등이라 매 턴 실행 OK)
+- Codex는 SessionStart 부재로 자동 실행 안 됨 → 수동 호출 필요
+- **참조**: commit b11761e (P0), ae24701 (days lookback fix)
+
+### mnemo-errors-log, sessionstart-banner, fail-open-observability
+`tags: mnemo, error-log, fail-open, observability, sessionstart`
+`date: 2026-04-08`
+`source: claude`
+
+- **위치**: `<project-root>/.claude/mnemo-errors.log` (BOM 없는 UTF-8)
+- **포맷**: `[YYYY-MM-DD HH:MM:SS] [hook-name] [context] message`
+- **작성하는 hook들** (8개):
+  - hooks/save-response.{ps1,sh}
+  - hooks/save-conversation.{ps1,sh}
+  - hooks/save-tool-use.{ps1,sh}
+  - hooks/reconcile-conversations.{ps1,sh}
+  - skills/codex-mnemo/hooks/save-turn.{ps1,sh}
+  - skills/gemini-mnemo/hooks/save-turn.{ps1,sh}
+- **읽는 곳**: SessionStart hook이 최근 24시간 에러 N건을 STDERR 배너로 알림
+- **MNEMO_STRICT=1**: 환경변수 설정 시 fail-open 대신 exit 1 (디버깅용)
+- **참조**: commit b11761e
+
+### sidecar-index-mnemo, conversations-mnemo-index-json
+`tags: sidecar-index, mnemo, dedup, uuid, sha1, conversations`
+`date: 2026-04-08`
+`source: claude`
+
+- **위치**: `<project-root>/conversations/.mnemo-index.json`
+- **포맷**:
+  ```json
+  {
+    "version": 1,
+    "claude": { "YYYY-MM-DD": ["uuid1", "uuid2", ...] },
+    "codex":  { "YYYY-MM-DD": ["sha1_a", "sha1_b", ...] }
+  }
+  ```
+- **목적**: save-response/save-turn과 reconcile이 동일한 dedup key 공간 공유 → 양방향 멱등
+- **Dedup key 차이**:
+  - Claude: JSONL line `uuid` (각 줄 고유)
+  - Codex: `sha1(timestamp + role + content[:200])` (line uuid 부재)
+- `.gitignore`로 제외 (사용자별 데이터)

@@ -113,3 +113,54 @@
 - **install-select.js 기본값**: all로 변경 (Claude+Codex+Gemini 전부 설치)
 - **Codex 스킬 발견 문제**: 파일은 `~/.codex/skills/`에 복사되지만, Codex AI가 스킬 존재를 모름. `instructions.md` 없음. 다음 세션에서 해결 필요
 - **memory 폴더 통합 검토**: 비용 대비 이점 부족 → 현재 구조 유지 결정
+
+### mnemo, jsonl, source-of-truth, reconcile, sidecar-index, uuid-dedup
+`tags: mnemo, jsonl, transcript, reconcile, sidecar-index, uuid, dedup`
+`date: 2026-04-08`
+`source: claude`
+
+- **JSONL transcript = source of truth, conversations/.md = 미러** (단방향 → 양방향 reconcile)
+- Claude: `~/.claude/projects/<encoded>/*.jsonl`, Codex: `~/.codex/sessions/.../rollout-*.jsonl`, Gemini: 자체 transcript 없음 (reconcile 불가능)
+- **사이드카 인덱스**: `conversations/.mnemo-index.json` = `{version, claude: {date: [uuid]}, codex: {date: [sha1]}}`
+- **Dedup 키**: Claude는 JSONL line uuid (각 줄 고유), Codex는 `sha1(timestamp + role + content[:200])` (Codex는 line uuid 없음)
+- save-response/save-turn과 reconcile이 동일 인덱스 공유 → 양방향 멱등
+- **참조**: commit b11761e
+
+### cwd-resolution, project-root, jsonl-cwd, hook-pwd-bug, vs-bin-debug
+`tags: cwd, project-root, hook, jsonl, sub-directory, visual-studio`
+`date: 2026-04-08`
+`source: claude`
+
+- **문제**: hook 실행 시점의 PWD에 의존 → Visual Studio bin/Debug 같은 sub-directory에 conversations 폴더 잘못 생성됨
+- **3단계 우선순위 (Get-ClaudeProjectRoot / get_claude_project_root)**:
+  1. JSONL transcript의 마지막 메시지 cwd 필드 → 그 cwd에서 git -C rev-parse
+  2. transcript_path 부모 디렉토리 디코딩 (D--git-foo → D:\git\foo)
+  3. 기존 PWD + git rev-parse (최종 fallback)
+- 적용: save-response/save-conversation/save-tool-use/reconcile-conversations + Codex/Gemini save-turn (총 8개 hook)
+- **Gemini hook payload는 transcript_path 부재** → cwd 필드 직접 + git rev-parse 정규화로 처리
+- **참조**: commit 887f261 (Claude/Codex), 27b07cd (Gemini)
+
+### greek-mythology-naming, poseidon, minos, clio, pantheon, skill-olympus
+`tags: naming, greek-mythology, poseidon, minos, clio, pantheon, repo-rename`
+`date: 2026-04-08`
+`source: claude`
+
+- **그리스 신화 일관성**: 핵심 파이프라인 스킬을 모두 신화 이름으로 통일
+- **Rename**: agent-team 별칭 대니즈팀 → **포세이돈** (파도/wave 비유), qpassenger → **미노스** (저승 심판자, fix-until-pass), final-inspection/closer → **클리오** (역사의 뮤즈, 마지막 기록자)
+- **Repo rename**: claude-code-agent-customizations → **skill-olympus** (`gh repo rename`, GitHub 자동 redirect)
+- 호출명: `/poseidon`, `/minos`, `/clio` (legacy alias 모두 유지: /agent-team, /qpassenger, /closer)
+- **참조**: commit ac10f12
+
+### 3-cli-parity, hook-event-mapping, codex-notify, gemini-beforeagent
+`tags: parity, hook, claude, codex, gemini, event-mapping, structural-limit`
+`date: 2026-04-08`
+`source: claude`
+
+- **3-CLI hook event 매핑** (구조적 한계 명확화):
+  - Claude: UserPromptSubmit / PreToolUse / PostToolUse / Stop / SessionStart (5종)
+  - Codex: notify (1종) — turn 끝에만 발동, save-turn에서 codex-hook-bridge.js로 chain 호출
+  - Gemini: BeforeAgent / BeforeTool / AfterModel / AfterAgent (4종)
+- **Codex 구조적 한계**: notify 1개만 → PreToolUse 차단형 hook (protect-files, check-new-file) 불가능. 사후 검증만 가능
+- **save-tool-use는 Claude only**: Codex/Gemini 모두 PostToolUse 이벤트 부재 → 개별 도구 호출 추적 불가
+- **Rules는 100% parity**: install-claude-md.js + codex/gemini-mnemo template 공유로 6개 핵심 규칙 자동 동기화
+- **참조**: 3-CLI parity audit (2026-04-08 세션)
