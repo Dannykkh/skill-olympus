@@ -42,6 +42,62 @@ function Exit-MnemoError {
     exit 0
 }
 
+# ── 프로젝트 루트 결정 (save-response.ps1과 동일 로직) ──────────
+function Get-ClaudeProjectRoot {
+    param([string]$TranscriptPath)
+
+    if ($TranscriptPath -and (Test-Path $TranscriptPath)) {
+        try {
+            $lines = Get-Content $TranscriptPath -Tail 200 -Encoding UTF8 -ErrorAction SilentlyContinue
+            $cwd = $null
+            for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+                if ($lines[$i] -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
+                    $cwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'
+                    break
+                }
+            }
+            if ($cwd -and (Test-Path $cwd)) {
+                try {
+                    $gitRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
+                    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                        return $gitRoot.Replace('/', '\')
+                    }
+                } catch {}
+                return $cwd
+            }
+        } catch {}
+    }
+
+    if ($TranscriptPath) {
+        try {
+            $parent = Split-Path -Leaf (Split-Path $TranscriptPath -Parent)
+            if ($parent -match '^([A-Za-z])--(.+)$') {
+                $drive = $Matches[1]
+                $rest = $Matches[2] -replace '-', '\'
+                $decoded = "${drive}:\$rest"
+                if (Test-Path $decoded) {
+                    try {
+                        $gitRoot = & git -C $decoded rev-parse --show-toplevel 2>$null
+                        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                            return $gitRoot.Replace('/', '\')
+                        }
+                    } catch {}
+                    return $decoded
+                }
+            }
+        } catch {}
+    }
+
+    $root = $PWD.Path
+    try {
+        $gitRoot = git rev-parse --show-toplevel 2>$null
+        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+            $root = $gitRoot.Replace('/', '\')
+        }
+    } catch {}
+    return $root
+}
+
 function Ensure-MemoryScaffold {
     param(
         [Parameter(Mandatory = $true)][string]$BaseDir
@@ -152,14 +208,10 @@ if ($Prompt) {
     $Prompt = $Prompt -replace '(?s)<private>.*?</private>', '[PRIVATE]'
 }
 
-# 프로젝트 루트 결정: git root → 없으면 CWD fallback
-$ProjectRoot = $PWD.Path
-try {
-    $gitRoot = git rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-        $ProjectRoot = $gitRoot.Replace('/', '\')
-    }
-} catch {}
+# 프로젝트 루트 결정: JSONL cwd → transcript path 디코딩 → PWD fallback
+# UserPromptSubmit hook도 transcript_path가 payload에 포함됨 (Claude Code 표준)
+$transcriptPath = $json.transcript_path
+$ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath
 
 $ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"

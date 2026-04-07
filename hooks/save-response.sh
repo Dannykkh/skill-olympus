@@ -36,6 +36,74 @@ exit_mnemo_error() {
     exit 0
 }
 
+# ── 프로젝트 루트 결정 ────────────────────────────────────────
+# 문제: hook 실행 시점의 PWD가 bin/Debug 같은 sub-directory면 git rev-parse도
+# 부모 git을 못 찾고 PWD fallback이 작동해 conversations/가 잘못된 위치에 생긴다.
+# 해결: JSONL transcript의 마지막 메시지에 있는 "cwd" 필드를 1순위로 사용한다.
+get_claude_project_root() {
+    local transcript_path="$1"
+
+    # 1순위: JSONL의 마지막 cwd 필드 → git root
+    if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+        local cwd
+        # 마지막 200줄에서 cwd 필드 찾기 (JSON 이스케이프 \\ 처리)
+        cwd=$(tail -n 200 "$transcript_path" 2>/dev/null \
+            | grep -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' \
+            | tail -n 1 \
+            | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' \
+            | sed 's|\\\\|\\|g')
+        if [ -n "$cwd" ]; then
+            # Windows 경로(C:\...)를 git bash 형식(/c/...)으로도 시도
+            local cwd_unix="$cwd"
+            if [[ "$cwd" =~ ^([A-Za-z]):\\ ]]; then
+                local drive="${BASH_REMATCH[1]}"
+                cwd_unix="/${drive,,}/${cwd:3}"
+                cwd_unix="${cwd_unix//\\//}"
+            fi
+            if [ -d "$cwd_unix" ]; then
+                local git_root
+                git_root=$(git -C "$cwd_unix" rev-parse --show-toplevel 2>/dev/null)
+                if [ -n "$git_root" ]; then
+                    echo "$git_root"
+                    return 0
+                fi
+                echo "$cwd_unix"
+                return 0
+            fi
+        fi
+    fi
+
+    # 2순위: transcript_path 부모 디렉토리 디코딩
+    if [ -n "$transcript_path" ]; then
+        local parent
+        parent=$(basename "$(dirname "$transcript_path")")
+        if [[ "$parent" =~ ^([A-Za-z])--(.+)$ ]]; then
+            local drive="${BASH_REMATCH[1],,}"
+            local rest="${BASH_REMATCH[2]//-//}"
+            local decoded="/$drive/$rest"
+            if [ -d "$decoded" ]; then
+                local git_root
+                git_root=$(git -C "$decoded" rev-parse --show-toplevel 2>/dev/null)
+                if [ -n "$git_root" ]; then
+                    echo "$git_root"
+                    return 0
+                fi
+                echo "$decoded"
+                return 0
+            fi
+        fi
+    fi
+
+    # 3순위 (fallback): 기존 PWD + git rev-parse
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then
+        root="$git_root"
+    fi
+    echo "$root"
+}
+
 # ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
 # conversations/.mnemo-index.json 포맷:
 #   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] } }
@@ -182,12 +250,8 @@ if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
     exit 0
 fi
 
-# 프로젝트 루트 결정: git root → 없으면 CWD fallback
-PROJECT_ROOT="$PWD"
-GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-if [ -n "$GIT_ROOT" ]; then
-    PROJECT_ROOT="$GIT_ROOT"
-fi
+# 프로젝트 루트 결정: JSONL cwd → transcript path 디코딩 → PWD fallback
+PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
 
 # 대화 파일 경로 결정
 CONV_DIR="$PROJECT_ROOT/conversations"

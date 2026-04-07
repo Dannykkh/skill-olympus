@@ -8,15 +8,74 @@
 # - 조용히: 에러가 발생해도 세션 시작을 막지 않음 (fail-open)
 # - 멱등: 각 CLI의 사이드카 인덱스(.mnemo-index.json)가 Claude/Codex 네임스페이스 공유
 
-# stdin JSON 페이로드는 필요 없지만 pipeline 호환을 위해 명시적으로 소비
-cat > /dev/null 2>&1 || true
-
-# 프로젝트 루트 결정: git root → CWD fallback
-PROJECT_ROOT="$PWD"
-GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-if [ -n "$GIT_ROOT" ]; then
-    PROJECT_ROOT="$GIT_ROOT"
+# stdin JSON 페이로드에서 transcript_path 추출
+INPUT_JSON=$(cat 2>/dev/null || true)
+TRANSCRIPT_PATH=""
+if [ -n "$INPUT_JSON" ] && command -v jq >/dev/null 2>&1; then
+    TRANSCRIPT_PATH=$(echo "$INPUT_JSON" | jq -r '.transcript_path // empty' 2>/dev/null)
 fi
+
+# ── 프로젝트 루트 결정 (save-response.sh와 동일 로직) ──────────
+get_claude_project_root() {
+    local transcript_path="$1"
+
+    if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+        local cwd
+        cwd=$(tail -n 200 "$transcript_path" 2>/dev/null \
+            | grep -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' \
+            | tail -n 1 \
+            | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' \
+            | sed 's|\\\\|\\|g')
+        if [ -n "$cwd" ]; then
+            local cwd_unix="$cwd"
+            if [[ "$cwd" =~ ^([A-Za-z]):\\ ]]; then
+                local drive="${BASH_REMATCH[1]}"
+                cwd_unix="/${drive,,}/${cwd:3}"
+                cwd_unix="${cwd_unix//\\//}"
+            fi
+            if [ -d "$cwd_unix" ]; then
+                local git_root
+                git_root=$(git -C "$cwd_unix" rev-parse --show-toplevel 2>/dev/null)
+                if [ -n "$git_root" ]; then
+                    echo "$git_root"
+                    return 0
+                fi
+                echo "$cwd_unix"
+                return 0
+            fi
+        fi
+    fi
+
+    if [ -n "$transcript_path" ]; then
+        local parent
+        parent=$(basename "$(dirname "$transcript_path")")
+        if [[ "$parent" =~ ^([A-Za-z])--(.+)$ ]]; then
+            local drive="${BASH_REMATCH[1],,}"
+            local rest="${BASH_REMATCH[2]//-//}"
+            local decoded="/$drive/$rest"
+            if [ -d "$decoded" ]; then
+                local git_root
+                git_root=$(git -C "$decoded" rev-parse --show-toplevel 2>/dev/null)
+                if [ -n "$git_root" ]; then
+                    echo "$git_root"
+                    return 0
+                fi
+                echo "$decoded"
+                return 0
+            fi
+        fi
+    fi
+
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then
+        root="$git_root"
+    fi
+    echo "$root"
+}
+
+PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$HOOK_DIR/.."

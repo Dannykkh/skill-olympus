@@ -55,6 +55,72 @@ function Exit-MnemoError {
     exit 0
 }
 
+# ── 프로젝트 루트 결정 ────────────────────────────────────────
+# 문제: hook 실행 시점의 PWD가 bin/Debug 같은 sub-directory면 git rev-parse도
+# 부모 git을 못 찾고 PWD fallback이 작동해 conversations/가 잘못된 위치에 생긴다.
+# 해결: JSONL transcript의 마지막 메시지에 있는 "cwd" 필드를 1순위로 사용한다.
+# Claude Code가 직접 기록하는 값이라 가장 신뢰할 수 있다.
+function Get-ClaudeProjectRoot {
+    param([string]$TranscriptPath)
+
+    # 1순위: JSONL의 마지막 cwd 필드 → 그 cwd에서 git root 찾기
+    if ($TranscriptPath -and (Test-Path $TranscriptPath)) {
+        try {
+            $lines = Get-Content $TranscriptPath -Tail 200 -Encoding UTF8 -ErrorAction SilentlyContinue
+            $cwd = $null
+            for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+                if ($lines[$i] -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
+                    # JSON 이스케이프 해제: \\  → \  ,  \"  → "
+                    $cwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'
+                    break
+                }
+            }
+            if ($cwd -and (Test-Path $cwd)) {
+                # cwd에서 git root 찾기 (sub-dir여도 부모 프로젝트 루트로 정규화)
+                try {
+                    $gitRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
+                    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                        return $gitRoot.Replace('/', '\')
+                    }
+                } catch {}
+                return $cwd
+            }
+        } catch {}
+    }
+
+    # 2순위: transcript_path 부모 디렉토리 디코딩 (lossy 인코딩이나 일관됨)
+    # ~/.claude/projects/D--git-foo/<uuid>.jsonl → D:\git\foo
+    if ($TranscriptPath) {
+        try {
+            $parent = Split-Path -Leaf (Split-Path $TranscriptPath -Parent)
+            if ($parent -match '^([A-Za-z])--(.+)$') {
+                $drive = $Matches[1]
+                $rest = $Matches[2] -replace '-', '\'
+                $decoded = "${drive}:\$rest"
+                if (Test-Path $decoded) {
+                    try {
+                        $gitRoot = & git -C $decoded rev-parse --show-toplevel 2>$null
+                        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                            return $gitRoot.Replace('/', '\')
+                        }
+                    } catch {}
+                    return $decoded
+                }
+            }
+        } catch {}
+    }
+
+    # 3순위 (최종 fallback): 기존 PWD + git rev-parse
+    $root = $PWD.Path
+    try {
+        $gitRoot = git rev-parse --show-toplevel 2>$null
+        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+            $root = $gitRoot.Replace('/', '\')
+        }
+    } catch {}
+    return $root
+}
+
 # ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
 # conversations/.mnemo-index.json 포맷:
 #   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] } }
@@ -211,14 +277,8 @@ $transcriptPath = $json.transcript_path
 # transcript_path가 없거나 파일이 없는 경우는 정상 skip (로그 X)
 if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
 
-# 프로젝트 루트 결정: git root → 없으면 CWD fallback
-$ProjectRoot = $PWD.Path
-try {
-    $gitRoot = git rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-        $ProjectRoot = $gitRoot.Replace('/', '\')
-    }
-} catch {}
+# 프로젝트 루트 결정: JSONL cwd → transcript path 디코딩 → PWD fallback
+$ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath
 
 # 대화 파일 경로 결정
 $ConvDir = Join-Path $ProjectRoot "conversations"
