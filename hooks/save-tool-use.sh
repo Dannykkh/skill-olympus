@@ -2,8 +2,46 @@
 # save-tool-use.sh - PostToolUse 훅: 도구 호출을 한 줄로 기록
 # 도구명 + 파일경로만 append. AI 호출 없음 = 빠름
 # claude-mem의 관찰 캡처 아이디어를 차용하되, 파일 기반으로 단순 구현
+#
+# 에러 처리 (P1 parity):
+# - 정상 skip 케이스(빈 stdin, skipTools): 조용히 exit 0
+# - 진짜 실패(파싱 에러): .claude/mnemo-errors.log 기록 후 exit 0
+# - $MNEMO_STRICT='1' 이면 실패 시 exit 1
+
+log_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then root="$git_root"; fi
+    local err_dir="$root/.claude"
+    mkdir -p "$err_dir" 2>/dev/null || true
+    local log_path="$err_dir/mnemo-errors.log"
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$ts] [save-tool-use.sh] [$ctx] $msg" >> "$log_path" 2>/dev/null || true
+}
+
+exit_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    log_mnemo_error "$ctx" "$msg"
+    if [ "${MNEMO_STRICT:-}" = "1" ]; then exit 1; fi
+    exit 0
+}
 
 INPUT=$(cat)
+if [ -z "$INPUT" ]; then exit 0; fi
+
+if ! command -v jq >/dev/null 2>&1; then
+    exit_mnemo_error 'missing-jq' 'jq가 설치되어 있지 않습니다'
+fi
+
+# JSON 유효성 먼저 확인
+if ! echo "$INPUT" | jq -e . >/dev/null 2>&1; then
+    exit_mnemo_error 'stdin-json' 'stdin JSON 파싱 실패'
+fi
 
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 if [ -z "$TOOL_NAME" ]; then exit 0; fi

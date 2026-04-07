@@ -319,6 +319,7 @@ Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-
 |validate-api.sh|PostToolUse|API 파일 수정|구문/타입 검사|
 |save-conversation.sh|UserPromptSubmit|모든 입력|사용자 입력을 대화 파일에 저장|
 |save-response.sh|Stop|세션 종료|Assistant 응답을 대화 파일에 저장|
+|reconcile-conversations.sh|SessionStart|세션 시작|Claude transcript + Codex rollout JSONL 기준으로 save-response/save-turn이 놓친 턴을 backfill (멱등)|
 |orchestrator-detector.js|UserPromptSubmit|workpm/pmworker 입력|PM/Worker 모드 감지|
 |loop-stop.sh|Stop|Chronos 루프 활성 시|세션 종료 가로채서 프롬프트 재투입 (자동 반복)|
 |ddingdong-noti.sh|Stop|세션 종료|OS 네이티브 알림 (Windows BurntToast, macOS osascript, Linux notify-send)|

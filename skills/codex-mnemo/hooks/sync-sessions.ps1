@@ -8,6 +8,9 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
+# BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
 function Parse-JsonSafe([string]$text) {
     if (-not $text) { return $null }
     try { return ($text | ConvertFrom-Json) } catch { return $null }
@@ -50,7 +53,7 @@ summary: ""
 # $dateKey
 
 "@
-            [System.IO.File]::WriteAllText($convFile, $header, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($convFile, $header, $Utf8NoBom)
         }
         return $convFile
     } catch {
@@ -82,7 +85,7 @@ function Save-State([string]$path, $state) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }
     $json = ($state | ConvertTo-Json -Depth 8)
-    [System.IO.File]::WriteAllText($path, $json, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($path, $json, $Utf8NoBom)
 }
 
 function Normalize-PathSafe([string]$p) {
@@ -175,7 +178,7 @@ foreach ($file in $files) {
         $heading = if ($role -eq "assistant") { "Assistant" } else { "User" }
         $record = "`n## [$ts] $heading`n`n$text`n"
         try {
-            [System.IO.File]::AppendAllText($convFile, $record, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::AppendAllText($convFile, $record, $Utf8NoBom)
         } catch {}
     }
 

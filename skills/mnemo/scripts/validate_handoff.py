@@ -19,6 +19,14 @@ import re
 import sys
 from pathlib import Path
 
+# Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Secret detection patterns
 SECRET_PATTERNS = [
     (r'["\']?[a-zA-Z_]*api[_-]?key["\']?\s*[:=]\s*["\'][^"\']{10,}["\']', "API key"),
@@ -202,7 +210,8 @@ def validate_handoff(filepath: str) -> dict:
     if not path.exists():
         return {"error": f"File not found: {filepath}"}
 
-    content = path.read_text()
+    # UTF-8 명시: Windows cp949 fallback 방지
+    content = path.read_text(encoding="utf-8")
     base_path = path.parent.parent.parent  # Go up from .claude/handoffs/
 
     # Run checks

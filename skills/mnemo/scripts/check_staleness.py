@@ -21,14 +21,28 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 
 def run_cmd(cmd: list[str], cwd: str = None) -> tuple[bool, str]:
-    """Run a command and return (success, output)."""
+    """Run a command and return (success, output).
+
+    UTF-8 명시: Windows에서 git 출력에 한글이 포함되면 cp949 기본 디코딩이
+    실패하므로 명시적으로 utf-8 + errors='replace'로 보호한다.
+    """
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=cwd,
             timeout=10
         )
@@ -39,7 +53,8 @@ def run_cmd(cmd: list[str], cwd: str = None) -> tuple[bool, str]:
 
 def parse_handoff_metadata(filepath: str) -> dict:
     """Extract metadata from a handoff file."""
-    content = Path(filepath).read_text()
+    # UTF-8 명시: Windows cp949 fallback 방지
+    content = Path(filepath).read_text(encoding="utf-8")
     metadata = {
         "created": None,
         "branch": None,

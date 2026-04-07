@@ -59,8 +59,34 @@ codex-mnemo/
 │   ├── save-turn.sh             # Linux/Mac notify 오케스트레이터 (+ Chronos optional chain)
 │   ├── append-user.sh           # User 저장 전담
 │   └── append-assistant.sh      # Assistant 저장 전담
+├── scripts/
+│   └── reconcile_codex_conversations.py  # rollout JSONL → conversations/ 복구
 └── templates/
     └── agents-md-rules.md       # AGENTS.md 주입 규칙
+```
+
+---
+
+## Reconcile (누락 턴 복구)
+
+Codex의 notify 훅이 한 번이라도 실패하거나 Codex CLI가 강제 종료되면 해당 턴의
+`conversations/YYYY-MM-DD-codex.md` 미러링이 유실됩니다. 그러나 rollout JSONL
+(`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`)은 Codex가 직접 기록하는 source of truth
+이므로, `reconcile_codex_conversations.py`가 이를 스캔해 누락된 turn을 자동 복구합니다.
+
+**Dedup 키**: Codex rollout 라인에는 uuid가 없으므로 `sha1(timestamp + role + content[:200])`
+조합을 키로 사용하며, `conversations/.mnemo-index.json`의 `codex` 네임스페이스에 저장됩니다.
+Claude 인덱스(`claude` 네임스페이스)와 충돌하지 않습니다.
+
+**자동 실행**: Claude Code의 `SessionStart` 훅(`reconcile-conversations.ps1/.sh`)이
+오늘자 날짜에 대해 Claude + Codex 두 CLI를 모두 복구합니다.
+
+**수동 실행**:
+```bash
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py              # 오늘자
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --all        # 전체 기간
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --dry-run    # 시뮬레이션
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --project-root D:/git/foo
 ```
 
 ---

@@ -8,6 +8,9 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
+# BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
 function Write-DebugLog([string]$message) {
     try {
         $debugDir = Join-Path $HOME ".codex\hooks"
@@ -16,8 +19,33 @@ function Write-DebugLog([string]$message) {
         }
         $debugFile = Join-Path $debugDir "save-turn-debug.log"
         $line = "[{0}] {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $message
-        [System.IO.File]::AppendAllText($debugFile, $line + [Environment]::NewLine, [System.Text.Encoding]::UTF8)
+        [System.IO.File]::AppendAllText($debugFile, $line + [Environment]::NewLine, $Utf8NoBom)
     } catch {}
+}
+
+# P1 parity: Claude/Gemini와 공유하는 mnemo-errors.log에 에러급 실패를 기록한다.
+# Write-DebugLog는 Codex 전용 디버그 trace이고, 사용자에게 가시화할 에러는
+# 프로젝트의 .claude/mnemo-errors.log로 통합된다 (SessionStart 배너에서 집계됨).
+function Write-MnemoError {
+    param([string]$Context, [string]$Message)
+    try {
+        $root = $PWD.Path
+        try {
+            $gitRoot = git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
+        } catch {}
+        $errDir = Join-Path $root '.claude'
+        if (-not (Test-Path $errDir)) {
+            New-Item -ItemType Directory -Path $errDir -Force | Out-Null
+        }
+        $logPath = Join-Path $errDir 'mnemo-errors.log'
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $line = "[$ts] [codex-mnemo/save-turn.ps1] [$Context] $Message`r`n"
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::AppendAllText($logPath, $line, $utf8NoBom)
+    } catch {}
+    # 디버그 파일에도 동일 메시지 기록 (Codex 전용 trace 보존)
+    Write-DebugLog "ERROR [$Context] $Message"
 }
 
 function Parse-JsonSafe([string]$text) {
@@ -319,7 +347,7 @@ function Ensure-MemoryScaffold([string]$BaseDir) {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
-        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), [System.Text.Encoding]::UTF8)
+        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
     $categoryFiles = @{
@@ -356,7 +384,7 @@ function Ensure-MemoryScaffold([string]$BaseDir) {
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
         if (-not (Test-Path $filePath)) {
-            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }
     }
 }
@@ -498,7 +526,7 @@ summary: ""
 # $today
 
 "@
-    [System.IO.File]::WriteAllText($convFile, $header, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($convFile, $header, $Utf8NoBom)
 }
 
 if (Test-Path $convFile) {
@@ -518,16 +546,23 @@ if (Test-Path $convFile) {
 }
 
 $ts = Get-Date -Format 'HH:mm:ss'
-Add-CodexUserEntry -ConvFile $convFile -Timestamp $ts -UserText $userText
-Add-CodexAssistantEntry -ConvFile $convFile -Timestamp $ts -Response $response
+# P1 parity: 파일 쓰기 실패 시 mnemo-errors.log에 기록해 사용자에게 가시화한다.
+try {
+    Add-CodexUserEntry -ConvFile $convFile -Timestamp $ts -UserText $userText
+    Add-CodexAssistantEntry -ConvFile $convFile -Timestamp $ts -Response $response
 
-if ($turnId) {
-    [System.IO.File]::AppendAllText($convFile, "<!-- turn:$turnId -->`n", [System.Text.Encoding]::UTF8)
-} else {
-    $sig = Get-Sha1 ("$userText`n---`n$response")
-    if ($sig) {
-        [System.IO.File]::AppendAllText($convFile, "<!-- turnhash:$sig -->`n", [System.Text.Encoding]::UTF8)
+    if ($turnId) {
+        [System.IO.File]::AppendAllText($convFile, "<!-- turn:$turnId -->`n", $Utf8NoBom)
+    } else {
+        $sig = Get-Sha1 ("$userText`n---`n$response")
+        if ($sig) {
+            [System.IO.File]::AppendAllText($convFile, "<!-- turnhash:$sig -->`n", $Utf8NoBom)
+        }
     }
+} catch {
+    Write-MnemoError -Context 'conv-append' -Message "conversations 파일 쓰기 실패: $($_.Exception.Message)"
+    if ($env:MNEMO_STRICT -eq '1') { exit 1 }
+    # fail-open: notify 훅 체인은 계속 진행 (에러는 이미 기록됨)
 }
 
 Write-DebugLog "saved: baseDir=$baseDir, file=$convFile, userLen=$($userText.Length), respLen=$($response.Length), turnId=$turnId"
@@ -563,11 +598,13 @@ if ($response -and $baseDir) {
     $safeUser = if ($userText) { $userText } else { "" }
     if ($safeUser.Length -gt 1000) { $safeUser = $safeUser.Substring(0, 1000) + "...[truncated]" }
 
+    # PS 5.1 호환: Join-Path는 3개 인수 미지원. 중첩 호출로 처리.
+    $memoryDir = Join-Path $baseDir "memory"
     if ($hasError) {
-        $obsTargetDir = Join-Path $baseDir "memory" "gotchas"
+        $obsTargetDir = Join-Path $memoryDir "gotchas"
         $obsEventType = "turn_error"
     } else {
-        $obsTargetDir = Join-Path $baseDir "memory" "learned"
+        $obsTargetDir = Join-Path $memoryDir "learned"
         $obsEventType = "turn_success"
     }
 
@@ -583,7 +620,7 @@ if ($response -and $baseDir) {
         output = $safeResponse
         session = if ($turnId) { $turnId } else { "unknown" }
     } | ConvertTo-Json -Compress
-    [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+    [System.IO.File]::AppendAllText($obsFile, "$obs`n", $Utf8NoBom)
 
     # 파일 크기 제한 (10MB)
     if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {

@@ -1,11 +1,46 @@
 ﻿# 대화 로그 저장 (단순 append)
 # Claude Code는 stdin으로 JSON을 전달함 (UTF-8)
+#
+# 에러 처리 (P1):
+# - UserPromptSubmit 훅이라 crash 시 입력이 차단될 수 있음 → 반드시 fail-open
+# - 실패는 .claude/mnemo-errors.log에 기록
+# - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1 (디버깅용)
 
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
+# BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+function Write-MnemoError {
+    param([string]$Context, [string]$Message)
+    try {
+        $root = $PWD.Path
+        try {
+            $gitRoot = git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
+        } catch {}
+        $errDir = Join-Path $root '.claude'
+        if (-not (Test-Path $errDir)) {
+            New-Item -ItemType Directory -Path $errDir -Force | Out-Null
+        }
+        $logPath = Join-Path $errDir 'mnemo-errors.log'
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $line = "[$ts] [save-conversation.ps1] [$Context] $Message`r`n"
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::AppendAllText($logPath, $line, $utf8NoBom)
+    } catch {}
+}
+
+function Exit-MnemoError {
+    param([string]$Context, [string]$Message)
+    Write-MnemoError -Context $Context -Message $Message
+    if ($env:MNEMO_STRICT -eq '1') { exit 1 }
+    exit 0
+}
 
 function Ensure-MemoryScaffold {
     param(
@@ -60,7 +95,7 @@ function Ensure-MemoryScaffold {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
-        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), [System.Text.Encoding]::UTF8)
+        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
     $categoryFiles = @{
@@ -97,13 +132,20 @@ function Ensure-MemoryScaffold {
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
         if (-not (Test-Path $filePath)) {
-            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }
     }
 }
 
-$json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+try {
+    $rawInput = [Console]::In.ReadToEnd()
+    if (-not $rawInput) { exit 0 }
+    $json = $rawInput | ConvertFrom-Json
+} catch {
+    Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"
+}
 $Prompt = $json.prompt
+if (-not $Prompt) { exit 0 }
 
 # <private> 블록 제거 (민감 정보 보호)
 if ($Prompt) {
@@ -143,19 +185,23 @@ summary: ""
 # $Today
 
 "@
-    [System.IO.File]::WriteAllText($ConvFile, $Header, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($ConvFile, $Header, $Utf8NoBom)
 }
 
 # 중복 방지: 같은 분(minute)에 동일 프롬프트가 이미 저장되어 있으면 스킵
 $TimeStamp = Get-Date -Format 'HH:mm'
 $Entry = "`n## [$TimeStamp] User`n`n$Prompt`n"
 
-if (Test-Path $ConvFile) {
-    $Existing = Get-Content $ConvFile -Raw -Encoding UTF8
-    if ($Existing -match [regex]::Escape("## [$TimeStamp] User") -and $Existing -match [regex]::Escape($Prompt)) {
-        exit 0
+try {
+    if (Test-Path $ConvFile) {
+        $Existing = Get-Content $ConvFile -Raw -Encoding UTF8
+        if ($Existing -match [regex]::Escape("## [$TimeStamp] User") -and $Existing -match [regex]::Escape($Prompt)) {
+            exit 0
+        }
     }
-}
 
-# append (BOM 없는 UTF-8로 저장)
-[System.IO.File]::AppendAllText($ConvFile, $Entry, [System.Text.Encoding]::UTF8)
+    # append (BOM 없는 UTF-8로 저장)
+    [System.IO.File]::AppendAllText($ConvFile, $Entry, $Utf8NoBom)
+} catch {
+    Exit-MnemoError -Context 'file-io' -Message "대화 파일 쓰기 실패: $($_.Exception.Message)"
+}

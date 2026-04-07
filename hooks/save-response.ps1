@@ -1,12 +1,110 @@
 ﻿# save-response.ps1 - Stop 훅: Assistant 응답을 대화 파일에 저장
 # transcript_path에서 마지막 assistant 메시지를 추출하여 append
 # AI 호출 없음 = 빠름
+#
+# 에러 처리 철학 (P1):
+# - 정상 skip 케이스(빈 응답, 중복, transcript 없음): 조용히 exit 0
+# - 진짜 실패(파싱 에러, IO 에러): .claude/mnemo-errors.log에 기록 후 exit 0
+# - $env:MNEMO_STRICT = '1' 이면 실패 시 exit 1 (디버깅용)
 
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
+# BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+# ── mnemo 에러 로깅 ──────────────────────────────────────────────
+# 실패 상황(파싱 에러, IO 에러 등)을 $ProjectRoot\.claude\mnemo-errors.log에
+# 기록한다. 로그 쓰기 자체가 실패해도 메인 훅이 막히지 않도록 try/catch로 감쌈.
+function Write-MnemoError {
+    param(
+        [Parameter(Mandatory = $true)][string]$Context,
+        [Parameter(Mandatory = $true)][string]$Message
+    )
+    try {
+        $root = $PWD.Path
+        try {
+            $gitRoot = git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
+        } catch {}
+        $errDir = Join-Path $root '.claude'
+        if (-not (Test-Path $errDir)) {
+            New-Item -ItemType Directory -Path $errDir -Force | Out-Null
+        }
+        $logPath = Join-Path $errDir 'mnemo-errors.log'
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $line = "[$ts] [save-response.ps1] [$Context] $Message`r`n"
+        # BOM 없는 UTF-8로 append (PowerShell Add-Content -Encoding UTF8은 첫 줄에 BOM을 붙임)
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::AppendAllText($logPath, $line, $utf8NoBom)
+    } catch {
+        # 로그 쓰기 실패는 무시 (훅이 막히면 안 됨)
+    }
+}
+
+function Exit-MnemoError {
+    param(
+        [Parameter(Mandatory = $true)][string]$Context,
+        [Parameter(Mandatory = $true)][string]$Message
+    )
+    Write-MnemoError -Context $Context -Message $Message
+    if ($env:MNEMO_STRICT -eq '1') { exit 1 }
+    exit 0
+}
+
+# ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
+# conversations/.mnemo-index.json 포맷:
+#   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] } }
+# PS 5.1 호환: -AsHashtable 없이 PSCustomObject → Hashtable 수동 변환.
+function Test-UuidInIndex {
+    param([string]$ConvDir, [string]$Today, [string]$Uuid)
+    if (-not $Uuid) { return $false }
+    $indexPath = Join-Path $ConvDir '.mnemo-index.json'
+    if (-not (Test-Path $indexPath)) { return $false }
+    try {
+        $obj = Get-Content $indexPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if (-not $obj -or -not $obj.claude) { return $false }
+        $prop = $obj.claude.PSObject.Properties[$Today]
+        if (-not $prop) { return $false }
+        return @($prop.Value) -contains $Uuid
+    } catch {
+        return $false
+    }
+}
+
+function Add-UuidToIndex {
+    param([string]$ConvDir, [string]$Today, [string]$Uuid)
+    if (-not $Uuid) { return }
+    $indexPath = Join-Path $ConvDir '.mnemo-index.json'
+    $data = @{ version = 1; claude = @{} }
+    if (Test-Path $indexPath) {
+        try {
+            $obj = Get-Content $indexPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($obj.version) { $data.version = $obj.version }
+            if ($obj.claude) {
+                foreach ($prop in $obj.claude.PSObject.Properties) {
+                    $data.claude[$prop.Name] = @($prop.Value)
+                }
+            }
+        } catch {}
+    }
+    if (-not $data.claude.ContainsKey($Today)) {
+        $data.claude[$Today] = @()
+    }
+    if ($data.claude[$Today] -notcontains $Uuid) {
+        $data.claude[$Today] = @($data.claude[$Today]) + $Uuid
+    }
+    try {
+        $json = $data | ConvertTo-Json -Depth 10
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::WriteAllText($indexPath, $json, $utf8NoBom)
+    } catch {
+        Write-MnemoError -Context 'index-write' -Message $_.Exception.Message
+    }
+}
 
 function Ensure-MemoryScaffold {
     param(
@@ -61,7 +159,7 @@ function Ensure-MemoryScaffold {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
-        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), [System.Text.Encoding]::UTF8)
+        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
     $categoryFiles = @{
@@ -98,14 +196,19 @@ function Ensure-MemoryScaffold {
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
         if (-not (Test-Path $filePath)) {
-            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }
     }
 }
 
-$json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+try {
+    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+} catch {
+    Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"
+}
 $transcriptPath = $json.transcript_path
 
+# transcript_path가 없거나 파일이 없는 경우는 정상 skip (로그 X)
 if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
 
 # 프로젝트 루트 결정: git root → 없으면 CWD fallback
@@ -143,53 +246,36 @@ summary: ""
 # $Today
 
 "@
-    [System.IO.File]::WriteAllText($ConvFile, $Header, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($ConvFile, $Header, $Utf8NoBom)
 }
 
-# JSONL 파일 끝에서 역방향으로 assistant text 메시지 찾기
-# Get-Content -Tail은 파일 전체를 읽으므로, 대용량 JSONL(수백MB)에서 느림
-# → FileStream.Seek로 끝에서 청크 단위로 읽어 성능 확보
+# JSONL 전체를 line-by-line으로 스캔하며 마지막 assistant text 줄을 찾는다.
+# P3: 이전에는 파일 끝에서 청크 단위 역방향 탐색 + remainder 이월 로직을 썼지만
+#     (1) $chunkLines[0]을 항상 스킵해 첫 줄/파일 시작 근처 줄을 놓치는 버그,
+#     (2) remainder 경계 누수 버그가 있었다.
+#     오늘자 JSONL은 보통 수 MB이고 [System.IO.File]::ReadLines는 lazy iterator로
+#     메모리 효율적이라 전체 스캔이 충분히 빠르다. 단순함이 정확성을 보장.
+# 마지막 1개만 필요하므로 전체 스캔하며 match할 때마다 덮어쓴다.
 $lastTextLine = $null
 try {
-    $fs = [System.IO.FileStream]::new($transcriptPath, 'Open', 'Read', 'ReadWrite')
-    $chunkSize = 512KB
-    $maxRead = 5MB  # 최대 5MB까지만 탐색
-    $totalRead = 0
-    $remainder = ""
-
-    while ($totalRead -lt $maxRead -and $fs.Length -gt 0) {
-        $readSize = [Math]::Min($chunkSize, $fs.Length - $totalRead)
-        if ($readSize -le 0) { break }
-        $seekPos = [Math]::Max(0, $fs.Length - $totalRead - $readSize)
-        $fs.Seek($seekPos, 'Begin') | Out-Null
-        $buffer = New-Object byte[] $readSize
-        $fs.Read($buffer, 0, $readSize) | Out-Null
-        $chunk = [System.Text.Encoding]::UTF8.GetString($buffer) + $remainder
-        $totalRead += $readSize
-
-        # 줄 단위로 분리 후 역순 탐색
-        $chunkLines = $chunk -split "`n"
-        $remainder = $chunkLines[0]  # 첫 줄은 잘렸을 수 있으므로 다음 청크에 이월
-        for ($i = $chunkLines.Count - 1; $i -ge 1; $i--) {
-            $line = $chunkLines[$i]
-            # assistant 메시지 중 text 블록이 포함된 줄 찾기
-            # Claude Code JSONL은 "type":"assistant"과 "type":"text"가 같은 줄에 있음
-            # 공백 유무에 관계없이 매칭
-            if ($line -match '"type"\s*:\s*"assistant"' -and $line -match '"type"\s*:\s*"text"') {
-                $lastTextLine = $line
-                break
-            }
+    foreach ($line in [System.IO.File]::ReadLines($transcriptPath, [System.Text.Encoding]::UTF8)) {
+        if ($line -match '"type"\s*:\s*"assistant"' -and $line -match '"type"\s*:\s*"text"') {
+            $lastTextLine = $line
         }
-        if ($lastTextLine) { break }
-        if ($seekPos -eq 0) { break }
     }
-    $fs.Close()
 } catch {
-    if ($fs) { $fs.Close() }
+    Exit-MnemoError -Context 'transcript-read' -Message "JSONL 읽기 실패: $($_.Exception.Message)"
 }
-if (-not $lastTextLine) { exit 0 }
+# 마지막 text 라인을 못 찾은 경우 → 이상 상황 (전체 스캔 후에도 없음).
+# reconcile-conversations가 다음 세션 시작 시 JSONL 전체를 다시 훑어 복구하므로
+# 여기서는 기록만 남기고 정상 종료.
+if (-not $lastTextLine) {
+    Write-MnemoError -Context 'no-assistant-text' -Message "transcript=$transcriptPath 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
+    exit 0
+}
 
-# 텍스트 추출
+# 텍스트 + uuid 추출
+# uuid는 JSONL 줄마다 고유하므로 dedup 키로 완벽함 (message.id는 여러 줄 공유됨)
 try {
     $msg = $lastTextLine | ConvertFrom-Json
     $texts = @()
@@ -199,8 +285,9 @@ try {
         }
     }
     $response = ($texts -join "`n").Trim()
+    $lineUuid = $msg.uuid  # JSONL 줄 고유 식별자
 } catch {
-    exit 0
+    Exit-MnemoError -Context 'message-json' -Message "assistant 라인 JSON 파싱 실패: $($_.Exception.Message)"
 }
 
 # <private> 블록 제거 (민감 정보 보호)
@@ -209,27 +296,33 @@ $response = $response -replace '(?s)<private>.*?</private>', '[PRIVATE]'
 # 빈 응답이면 스킵
 if (-not $response -or $response.Length -lt 5) { exit 0 }
 
-# 4000자 제한 (코드 블록 포함 시 충분한 여유)
-if ($response.Length -gt 4000) {
-    $response = $response.Substring(0, 4000) + "..."
+# P2: 4000자 truncation 제거. JSONL 원본에 온전히 있으니 미러도 온전히 저장.
+
+# 중복 방지 (P2): uuid 기반 사이드카 인덱스가 1순위, 레거시 fingerprint는 fallback
+if ($lineUuid -and (Test-UuidInIndex -ConvDir $ConvDir -Today $Today -Uuid $lineUuid)) {
+    exit 0
 }
 
-# 중복 방지: 타임스탬프 + 응답 내용 fingerprint 이중 체크
-$ts = Get-Date -Format 'HH:mm:ss'
+# 레거시 호환: 인덱스 도입 전에 저장된 파일은 fingerprint로 매칭
 if (Test-Path $ConvFile) {
     $existing = Get-Content $ConvFile -Raw -Encoding UTF8
-    # 1) 같은 초에 이미 저장되어 있으면 스킵
-    if ($existing -match [regex]::Escape("## [$ts] Assistant")) {
-        exit 0
-    }
-    # 2) 응답 첫 80자가 이미 파일에 있으면 스킵 (다른 초에 같은 내용 방지)
     $fpLen = [Math]::Min(80, $response.Length)
     $fingerprint = $response.Substring(0, $fpLen)
     if ($existing.Contains($fingerprint)) {
+        # 이미 저장되어 있음 → 인덱스에만 등록하고 종료 (재실행 시 빠른 skip)
+        if ($lineUuid) {
+            Add-UuidToIndex -ConvDir $ConvDir -Today $Today -Uuid $lineUuid
+        }
         exit 0
     }
 }
 
 # append (BOM 없는 UTF-8로 저장)
+$ts = Get-Date -Format 'HH:mm:ss'
 $entry = "`n## [$ts] Assistant`n`n$response`n"
-[System.IO.File]::AppendAllText($ConvFile, $entry, [System.Text.Encoding]::UTF8)
+[System.IO.File]::AppendAllText($ConvFile, $entry, $Utf8NoBom)
+
+# 인덱스에 uuid 등록 (다음 Stop 훅과 reconcile이 이걸 보고 skip)
+if ($lineUuid) {
+    Add-UuidToIndex -ConvDir $ConvDir -Today $Today -Uuid $lineUuid
+}

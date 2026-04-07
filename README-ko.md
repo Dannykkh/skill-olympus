@@ -194,10 +194,11 @@ chmod +x install.sh && ./install.sh
 | **글쓰기** | writing-specialist, humanizer-guidelines, writing-guidelines |
 | **언어** | typescript-spec, python-spec |
 
-### 훅 (12개)
+### 훅 (13개)
 
 | 훅 | 이벤트 | 역할 |
 |----|--------|------|
+| reconcile-conversations | SessionStart | JSONL 기준 Claude/Codex 누락 턴 자동 복구 |
 | save-response | Stop | 어시스턴트 응답 + #tags 자동 저장 |
 | save-tool-use | PostToolUse | 도구 로깅 + 오답노트/학습 관찰 |
 | save-conversation | UserPromptSubmit | 사용자 입력 영속화 |

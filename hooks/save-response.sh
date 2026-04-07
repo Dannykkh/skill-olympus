@@ -2,6 +2,76 @@
 # save-response.sh - Stop 훅: Assistant 응답을 대화 파일에 저장
 # transcript_path에서 마지막 assistant 메시지를 추출하여 append
 # AI 호출 없음 = 빠름
+#
+# 에러 처리 철학 (P1):
+# - 정상 skip 케이스(빈 응답, 중복, transcript 없음): 조용히 exit 0
+# - 진짜 실패(파싱 에러, IO 에러): .claude/mnemo-errors.log에 기록 후 exit 0
+# - $MNEMO_STRICT = '1' 이면 실패 시 exit 1 (디버깅용)
+
+# ── mnemo 에러 로깅 ──────────────────────────────────────────────
+log_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then
+        root="$git_root"
+    fi
+    local err_dir="$root/.claude"
+    mkdir -p "$err_dir" 2>/dev/null || true
+    local log_path="$err_dir/mnemo-errors.log"
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$ts] [save-response.sh] [$ctx] $msg" >> "$log_path" 2>/dev/null || true
+}
+
+exit_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    log_mnemo_error "$ctx" "$msg"
+    if [ "${MNEMO_STRICT:-}" = "1" ]; then
+        exit 1
+    fi
+    exit 0
+}
+
+# ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
+# conversations/.mnemo-index.json 포맷:
+#   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] } }
+is_uuid_in_index() {
+    local index_path="$1"
+    local today="$2"
+    local uuid="$3"
+    [ -z "$uuid" ] && return 1
+    [ ! -f "$index_path" ] && return 1
+    jq -e --arg d "$today" --arg u "$uuid" \
+        '.claude[$d] // [] | index($u) != null' \
+        "$index_path" >/dev/null 2>&1
+}
+
+add_uuid_to_index() {
+    local index_path="$1"
+    local today="$2"
+    local uuid="$3"
+    [ -z "$uuid" ] && return 0
+    local tmp
+    tmp=$(mktemp 2>/dev/null || echo "${index_path}.tmp.$$")
+    if [ -f "$index_path" ]; then
+        jq --arg d "$today" --arg u "$uuid" \
+            '.version //= 1 | .claude //= {} | .claude[$d] //= [] | .claude[$d] |= (. + [$u] | unique)' \
+            "$index_path" > "$tmp" 2>/dev/null
+    else
+        jq -n --arg d "$today" --arg u "$uuid" \
+            '{version: 1, claude: {($d): [$u]}}' > "$tmp" 2>/dev/null
+    fi
+    if [ -s "$tmp" ]; then
+        mv "$tmp" "$index_path" 2>/dev/null || rm -f "$tmp"
+    else
+        rm -f "$tmp"
+        log_mnemo_error 'index-write' 'jq 인덱스 생성 실패'
+    fi
+}
 
 ensure_memory_scaffold() {
     local base_dir="$1"
@@ -98,8 +168,16 @@ EOF
 
 INPUT=$(cat)
 
-# transcript_path 추출
+# transcript_path 추출 (jq 없거나 JSON 깨졌을 때를 구분)
+if ! command -v jq >/dev/null 2>&1; then
+    exit_mnemo_error 'missing-jq' 'jq가 설치되어 있지 않습니다'
+fi
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
+JQ_STATUS=$?
+if [ $JQ_STATUS -ne 0 ]; then
+    exit_mnemo_error 'stdin-json' "stdin JSON 파싱 실패 (jq exit=$JQ_STATUS)"
+fi
+# transcript_path 자체가 없거나 파일이 없는 건 정상 skip (로그 X)
 if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
     exit 0
 fi
@@ -139,20 +217,32 @@ summary: ""
 HEADER
 fi
 
-# JSONL 마지막 500줄에서 assistant text 메시지 찾기
+# JSONL 전체 스캔 — 마지막 assistant text 메시지 찾기
+# P3: 이전에는 tail -n 500으로 마지막 500줄만 봤는데, tool_use가 많은 긴 turn에서는
+#     assistant text가 500줄 경계 밖으로 밀려 누락됐다. 오늘자 JSONL은 보통 수 MB라
+#     grep 전체 스캔이 수십 ms 안에 끝난다.
 # Claude Code는 thinking/text/tool_use를 별도 JSONL 줄로 분리함
 # → "type":"assistant" AND "type":"text" 둘 다 포함된 줄을 찾아야 함
-LAST_TEXT_LINE=$(tail -n 500 "$TRANSCRIPT_PATH" | grep '"type":"assistant"' | grep '"type":"text"' | tail -n 1)
+LAST_TEXT_LINE=$(grep '"type":"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep '"type":"text"' | tail -n 1)
 if [ -z "$LAST_TEXT_LINE" ]; then
-    # type 앞에 공백이 있을 수 있음
-    LAST_TEXT_LINE=$(tail -n 500 "$TRANSCRIPT_PATH" | grep -E '"type"\s*:\s*"assistant"' | grep -E '"type"\s*:\s*"text"' | tail -n 1)
+    # type 앞에 공백이 있을 수 있음 (JSON formatter 차이)
+    LAST_TEXT_LINE=$(grep -E '"type"[[:space:]]*:[[:space:]]*"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep -E '"type"[[:space:]]*:[[:space:]]*"text"' | tail -n 1)
 fi
 if [ -z "$LAST_TEXT_LINE" ]; then
+    # 이상 상황: 전체 스캔 후에도 assistant text가 없음.
+    # reconcile-conversations가 다음 세션 시작 시 JSONL 전체에서 복구한다.
+    log_mnemo_error 'no-assistant-text' "transcript=$TRANSCRIPT_PATH 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
     exit 0
 fi
 
-# 텍스트 추출
+# 텍스트 + uuid 추출
+# JSONL 전체 라인 파싱 → text 블록과 라인 uuid를 함께 추출
+# uuid는 JSONL 줄마다 고유 (dedup 키), message.id는 여러 줄 공유 가능
+if ! echo "$LAST_TEXT_LINE" | jq -e . >/dev/null 2>&1; then
+    exit_mnemo_error 'message-json' 'assistant 라인 JSON 파싱 실패'
+fi
 RESPONSE=$(echo "$LAST_TEXT_LINE" | jq -r '[.message.content[] | select(.type=="text") | .text] | join("\n")' 2>/dev/null)
+LINE_UUID=$(echo "$LAST_TEXT_LINE" | jq -r '.uuid // empty' 2>/dev/null)
 RESPONSE=$(echo "$RESPONSE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
 # <private> 블록 제거 (민감 정보 보호)
@@ -163,22 +253,29 @@ if [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; then
     exit 0
 fi
 
-# 4000자 제한 (코드 블록 포함 시 충분한 여유)
-if [ ${#RESPONSE} -gt 4000 ]; then
-    RESPONSE="${RESPONSE:0:4000}..."
-fi
+# P2: 4000자 truncation 제거. JSONL 원본에 온전히 있으니 미러도 온전히 저장.
 
-# 중복 방지: 타임스탬프 + 응답 내용 fingerprint 이중 체크
-TIMESTAMP=$(date +%H:%M:%S)
-# 1) 같은 초에 이미 저장되어 있으면 스킵
-if grep -qF "## [$TIMESTAMP] Assistant" "$CONV_FILE" 2>/dev/null; then
+# 중복 방지 (P2): uuid 기반 사이드카 인덱스가 1순위, 레거시 fingerprint는 fallback
+INDEX_PATH="$CONV_DIR/.mnemo-index.json"
+if [ -n "$LINE_UUID" ] && is_uuid_in_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"; then
     exit 0
 fi
-# 2) 응답 첫 80자가 이미 파일에 있으면 스킵 (다른 초에 같은 내용 방지)
+
+# 레거시 호환: 인덱스 도입 전에 저장된 파일은 fingerprint로 매칭
 FINGERPRINT="${RESPONSE:0:80}"
 if [ -n "$FINGERPRINT" ] && grep -qF "$FINGERPRINT" "$CONV_FILE" 2>/dev/null; then
+    # 이미 저장되어 있음 → 인덱스에만 등록하고 종료
+    if [ -n "$LINE_UUID" ]; then
+        add_uuid_to_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"
+    fi
     exit 0
 fi
 
 # append
-echo -e "\n## [$TIMESTAMP] Assistant\n\n$RESPONSE\n" >> "$CONV_FILE"
+TIMESTAMP=$(date +%H:%M:%S)
+printf '\n## [%s] Assistant\n\n%s\n' "$TIMESTAMP" "$RESPONSE" >> "$CONV_FILE"
+
+# 인덱스에 uuid 등록 (다음 Stop 훅과 reconcile이 이걸 보고 skip)
+if [ -n "$LINE_UUID" ]; then
+    add_uuid_to_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"
+fi

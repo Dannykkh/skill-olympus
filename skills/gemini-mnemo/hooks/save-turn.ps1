@@ -1,12 +1,49 @@
 ﻿# save-turn.ps1 - Gemini CLI AfterAgent 훅: User+Assistant 턴을 대화 파일에 저장
 # Gemini는 stdin으로 JSON 페이로드를 전달함 (prompt + prompt_response)
 # AI 호출 없음 = 빠름
+#
+# 에러 처리 (P1 parity):
+# - 실패는 .claude/mnemo-errors.log에 기록
+# - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1
+#
+# Note: Gemini는 JSONL transcript가 없어 reconcile이 불가능하다.
+#       훅이 실패하면 해당 턴은 영구 유실되므로 fail-open 로깅이 특히 중요하다.
 
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
+# BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+function Write-MnemoError {
+    param([string]$Context, [string]$Message)
+    try {
+        $root = $PWD.Path
+        try {
+            $gitRoot = git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
+        } catch {}
+        $errDir = Join-Path $root '.claude'
+        if (-not (Test-Path $errDir)) {
+            New-Item -ItemType Directory -Path $errDir -Force | Out-Null
+        }
+        $logPath = Join-Path $errDir 'mnemo-errors.log'
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $line = "[$ts] [gemini-mnemo/save-turn.ps1] [$Context] $Message`r`n"
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::AppendAllText($logPath, $line, $utf8NoBom)
+    } catch {}
+}
+
+function Exit-MnemoError {
+    param([string]$Context, [string]$Message)
+    Write-MnemoError -Context $Context -Message $Message
+    if ($env:MNEMO_STRICT -eq '1') { exit 1 }
+    exit 0
+}
 
 function Ensure-MemoryScaffold {
     param(
@@ -61,7 +98,7 @@ function Ensure-MemoryScaffold {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
-        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), [System.Text.Encoding]::UTF8)
+        [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
     $categoryFiles = @{
@@ -98,7 +135,7 @@ function Ensure-MemoryScaffold {
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
         if (-not (Test-Path $filePath)) {
-            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }
     }
 }
@@ -106,9 +143,11 @@ function Ensure-MemoryScaffold {
 # stdin에서 JSON 페이로드 파싱
 $payload = $null
 try {
-    $payload = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $rawInput = [Console]::In.ReadToEnd()
+    if (-not $rawInput) { exit 0 }
+    $payload = $rawInput | ConvertFrom-Json
 } catch {
-    exit 0
+    Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"
 }
 
 if (-not $payload) { exit 0 }
@@ -153,7 +192,7 @@ summary: ""
 # $Today
 
 "@
-    [System.IO.File]::WriteAllText($ConvFile, $Header, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($ConvFile, $Header, $Utf8NoBom)
 }
 
 $ts = Get-Date -Format 'HH:mm:ss'
@@ -172,18 +211,19 @@ if ($userText -and $userText.Length -ge 1) {
 }
 
 # Assistant 응답 처리
+# P2 parity: 4000자 truncation 제거. JSONL 원본이 없는 Gemini에서는 유실된 부분을
+# 복구할 경로가 없으므로 온전한 원문을 저장해야 한다.
 if ($response -and $response.Length -ge 5) {
-    # 4000자 제한 (코드 블록 포함 시 충분한 여유)
-    if ($response.Length -gt 4000) {
-        $response = $response.Substring(0, 4000) + "..."
-    }
-
     $entry += "`n## [$ts] Assistant`n`n$response`n"
 }
 
 # append (BOM 없는 UTF-8로 저장)
 if ($entry) {
-    [System.IO.File]::AppendAllText($ConvFile, $entry, [System.Text.Encoding]::UTF8)
+    try {
+        [System.IO.File]::AppendAllText($ConvFile, $entry, $Utf8NoBom)
+    } catch {
+        Exit-MnemoError -Context 'file-io' -Message "대화 파일 쓰기 실패: $($_.Exception.Message)"
+    }
 }
 
 # ─────────────────────────────────────────────
@@ -198,11 +238,13 @@ if ($response -and $response.Length -ge 5) {
     $safeUser = if ($userText) { $userText } else { "" }
     if ($safeUser.Length -gt 1000) { $safeUser = $safeUser.Substring(0, 1000) + "...[truncated]" }
 
+    # PS 5.1 호환: Join-Path는 3개 인수 미지원. 중첩 호출로 처리.
+    $memoryDir = Join-Path $PWD.Path "memory"
     if ($hasError) {
-        $obsTargetDir = Join-Path $PWD.Path "memory" "gotchas"
+        $obsTargetDir = Join-Path $memoryDir "gotchas"
         $obsEventType = "turn_error"
     } else {
-        $obsTargetDir = Join-Path $PWD.Path "memory" "learned"
+        $obsTargetDir = Join-Path $memoryDir "learned"
         $obsEventType = "turn_success"
     }
 
@@ -218,7 +260,7 @@ if ($response -and $response.Length -ge 5) {
         output = $safeResponse
         session = "unknown"
     } | ConvertTo-Json -Compress
-    [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+    [System.IO.File]::AppendAllText($obsFile, "$obs`n", $Utf8NoBom)
 
     # 파일 크기 제한 (10MB)
     if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {

@@ -18,11 +18,20 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 
 def extract_title(filepath: Path) -> str:
     """Extract the title from a handoff document."""
     try:
-        content = filepath.read_text()
+        # UTF-8 명시: Windows cp949 fallback 방지
+        content = filepath.read_text(encoding="utf-8")
         # Look for first H1 header
         match = re.search(r'^#\s+(?:Handoff:\s*)?(.+)$', content, re.MULTILINE)
         if match:
@@ -39,7 +48,7 @@ def extract_title(filepath: Path) -> str:
 def check_completion_status(filepath: Path) -> str:
     """Check if handoff appears complete or has TODOs remaining."""
     try:
-        content = filepath.read_text()
+        content = filepath.read_text(encoding="utf-8")
         todo_count = content.count("[TODO:")
         if todo_count == 0:
             return "Complete"

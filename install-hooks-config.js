@@ -73,7 +73,7 @@ function hookEntry(matcher, command) {
 }
 
 // Mandatory hooks: always installed regardless of component selection
-const MANDATORY_HOOKS = ["save-conversation", "save-tool-use", "save-response", "save-turn", "orchestrator-detector"];
+const MANDATORY_HOOKS = ["save-conversation", "save-tool-use", "save-response", "save-turn", "orchestrator-detector", "reconcile-conversations"];
 
 // Hook-to-bundle mapping (which bundle requires which hook)
 // Mandatory hooks (MANDATORY_HOOKS) always return true in shouldIncludeHook
@@ -89,6 +89,7 @@ const HOOK_BUNDLE_MAP = {
   "save-response": ["mnemo"],
   "save-tool-use": ["mnemo"], // Claude only: PostToolUse 도구 관찰 로그
   "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
+  "reconcile-conversations": ["mnemo"], // SessionStart: backfill missed assistant turns from JSONL
   "loop-stop": ["all-only"], // Chronos 루프 Stop 훅 (loop-state.md 없으면 자동 통과)
   "ddingdong-noti": ["all-only"], // OS 네이티브 알림 훅
 };
@@ -123,6 +124,12 @@ function buildClaudeHooksConfig(dir, isWindows) {
   const nodeCmd = (script) => `node "${d}/${script}"`;
 
   const config = {};
+
+  // SessionStart: reconcile missed assistant turns from JSONL transcript
+  const ss = [];
+  if (shouldIncludeHook("reconcile-conversations"))
+    ss.push(hookEntry("", cmd(`reconcile-conversations.${ext}`)));
+  if (ss.length > 0) config.SessionStart = ss;
 
   // UserPromptSubmit
   const ups = [];
@@ -181,9 +188,13 @@ function buildGeminiHooksConfig(dir, isWindows) {
 
   const config = {};
 
-  // BeforeAgent (← mapped from UserPromptSubmit)
+  // BeforeAgent (← mapped from UserPromptSubmit + SessionStart)
   // Gemini BeforeAgent payload: {"prompt": "..."} — same as Claude
+  // Gemini는 SessionStart 이벤트가 없으므로 reconcile을 BeforeAgent에 둔다.
+  // reconcile은 멱등이고 오늘자만 보므로 매 턴 호출되어도 비용이 낮다.
   const ba = [];
+  if (shouldIncludeHook("reconcile-conversations"))
+    ba.push(hookEntry("", cmd(`reconcile-conversations.${ext}`)));
   if (shouldIncludeHook("save-conversation"))
     ba.push(hookEntry("", cmd(`save-conversation.${ext}`)));
   if (shouldIncludeHook("orchestrator-detector"))

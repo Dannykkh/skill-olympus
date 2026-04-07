@@ -7,5 +7,7 @@ function Add-CodexUserEntry {
 
     if (-not $UserText -or $UserText.Trim().Length -lt 1) { return }
     $entry = "`n## [$Timestamp] User`n`n$($UserText.Trim())`n"
-    [System.IO.File]::AppendAllText($ConvFile, $entry, [System.Text.Encoding]::UTF8)
+    # BOM 없는 UTF-8: PS의 [System.Text.Encoding]::UTF8은 BOM을 포함하므로 사용 안 함
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::AppendAllText($ConvFile, $entry, $utf8NoBom)
 }

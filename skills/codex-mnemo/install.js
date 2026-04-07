@@ -286,6 +286,27 @@ function install() {
     }
     console.log(`      - ${hookFile}`);
   }
+
+  // Install reconcile script (used by Claude's SessionStart hook wrapper
+  // to back-fill conversations from Codex rollout JSONL).
+  const scriptsDir = path.join(codexDir, "scripts");
+  const scriptFiles = ["reconcile_codex_conversations.py"];
+  let scriptsInstalled = 0;
+  for (const scriptFile of scriptFiles) {
+    const src = path.join(sourceDir, "scripts", scriptFile);
+    if (!fs.existsSync(src)) continue;
+    ensureDir(scriptsDir);
+    const dest = path.join(scriptsDir, scriptFile);
+    copyFile(src, dest);
+    if (!isWindows) {
+      fs.chmodSync(dest, 0o755);
+    }
+    console.log(`      - scripts/${scriptFile}`);
+    scriptsInstalled++;
+  }
+  if (scriptsInstalled === 0) {
+    console.log("      - (no reconcile scripts found, skipped)");
+  }
   console.log("      Done!");
 
   // [2/3] config.toml notify settings
@@ -351,6 +372,14 @@ function uninstall() {
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {
       console.log(`      - ${file} removed`);
+    }
+  }
+  // Remove reconcile scripts installed under ~/.codex/scripts/
+  const scriptsDir = path.join(codexDir, "scripts");
+  const scriptFiles = ["reconcile_codex_conversations.py"];
+  for (const file of scriptFiles) {
+    if (removeFile(path.join(scriptsDir, file))) {
+      console.log(`      - scripts/${file} removed`);
     }
   }
   console.log("      Done!");

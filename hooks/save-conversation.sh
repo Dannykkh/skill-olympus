@@ -1,6 +1,34 @@
 #!/bin/bash
 # 대화 로그 저장 (단순 append)
 # Claude Code는 stdin으로 JSON을 전달함
+#
+# 에러 처리 (P1):
+# - UserPromptSubmit 훅이라 crash 시 입력이 차단될 수 있음 → 반드시 fail-open
+# - 실패는 .claude/mnemo-errors.log에 기록
+# - $MNEMO_STRICT='1' 이면 실패 시 exit 1 (디버깅용)
+
+log_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then root="$git_root"; fi
+    local err_dir="$root/.claude"
+    mkdir -p "$err_dir" 2>/dev/null || true
+    local log_path="$err_dir/mnemo-errors.log"
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$ts] [save-conversation.sh] [$ctx] $msg" >> "$log_path" 2>/dev/null || true
+}
+
+exit_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    log_mnemo_error "$ctx" "$msg"
+    if [ "${MNEMO_STRICT:-}" = "1" ]; then exit 1; fi
+    exit 0
+}
 
 ensure_memory_scaffold() {
     local base_dir="$1"
@@ -96,12 +124,22 @@ EOF
 }
 
 INPUT_JSON=$(cat)
+if [ -z "$INPUT_JSON" ]; then exit 0; fi
+
+if ! command -v jq >/dev/null 2>&1; then
+    exit_mnemo_error 'missing-jq' 'jq가 설치되어 있지 않습니다'
+fi
+
+# JSON 유효성 먼저 확인 (깨진 JSON은 skip 아니라 에러)
+if ! echo "$INPUT_JSON" | jq -e . >/dev/null 2>&1; then
+    exit_mnemo_error 'stdin-json' 'stdin JSON 파싱 실패'
+fi
+
 PROMPT=$(echo "$INPUT_JSON" | jq -r '.prompt // empty' 2>/dev/null)
+if [ -z "$PROMPT" ]; then exit 0; fi
 
 # <private> 블록 제거 (민감 정보 보호)
-if [ -n "$PROMPT" ]; then
-    PROMPT=$(echo "$PROMPT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$PROMPT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
-fi
+PROMPT=$(echo "$PROMPT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$PROMPT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
 # 프로젝트 루트 결정: git root → 없으면 CWD fallback
 PROJECT_ROOT="$PWD"
 GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)

@@ -3,6 +3,14 @@
   "description": "Claude Code hook configuration example",
 
   "hooks": {
+    "SessionStart": [
+      {
+        "description": "JSONL transcript 기준으로 누락된 assistant 턴 복구 (mnemo reconcile)",
+        "matcher": "",
+        "hooks": ["bash hooks/reconcile-conversations.sh"]
+      }
+    ],
+
     "UserPromptSubmit": [
       {
         "description": "오케스트레이터 PM/Worker 모드 감지",

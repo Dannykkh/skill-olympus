@@ -11,6 +11,24 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_FILE" 2>/dev/null || true
 }
 
+# P1 parity: Claude/Gemini와 공유하는 .claude/mnemo-errors.log에 에러급 실패를 기록한다.
+# debug_log는 Codex 전용 trace이고, 사용자에게 가시화할 에러는 프로젝트 공용 로그로 통합된다.
+log_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then root="$git_root"; fi
+    local err_dir="$root/.claude"
+    mkdir -p "$err_dir" 2>/dev/null || true
+    local log_path="$err_dir/mnemo-errors.log"
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$ts] [codex-mnemo/save-turn.sh] [$ctx] $msg" >> "$log_path" 2>/dev/null || true
+    debug_log "ERROR [$ctx] $msg"
+}
+
 run_notification_hook() {
     local title="${1:-Codex CLI}"
     local message="${2:-작업이 완료되었습니다}"
@@ -367,11 +385,17 @@ if [ -n "$TURN_ID" ] && grep -qF "<!-- turn:$TURN_ID -->" "$CONV_FILE" 2>/dev/nu
 fi
 
 TIMESTAMP="$(date +%H:%M:%S)"
-append_user_entry "$CONV_FILE" "$TIMESTAMP" "$USER_TEXT"
-append_assistant_entry "$CONV_FILE" "$TIMESTAMP" "$RESPONSE"
+# P1 parity: 파일 쓰기 실패 시 mnemo-errors.log에 기록
+if ! {
+    append_user_entry "$CONV_FILE" "$TIMESTAMP" "$USER_TEXT" &&
+    append_assistant_entry "$CONV_FILE" "$TIMESTAMP" "$RESPONSE"
+} 2>/dev/null; then
+    log_mnemo_error 'conv-append' "conversations 파일 쓰기 실패 ($CONV_FILE)"
+    if [ "${MNEMO_STRICT:-}" = "1" ]; then exit 1; fi
+fi
 
 if [ -n "$TURN_ID" ]; then
-    echo "<!-- turn:$TURN_ID -->" >> "$CONV_FILE"
+    echo "<!-- turn:$TURN_ID -->" >> "$CONV_FILE" 2>/dev/null || log_mnemo_error 'turn-marker' "turn marker 쓰기 실패"
 fi
 
 debug_log "saved: baseDir=$BASE_DIR, file=$CONV_FILE, userLen=${#USER_TEXT}, respLen=${#RESPONSE}, turnId=$TURN_ID"

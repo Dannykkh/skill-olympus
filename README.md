@@ -196,10 +196,11 @@ Specialized subagents for every development task:
 | **Writing** | writing-specialist, humanizer-guidelines, writing-guidelines |
 | **Language** | typescript-spec, python-spec |
 
-### Hooks (12)
+### Hooks (13)
 
 | Hook | Event | Purpose |
 |------|-------|---------|
+| reconcile-conversations | SessionStart | Backfill missed Claude/Codex turns from JSONL transcripts |
 | save-response | Stop | Auto-save assistant responses with #tags |
 | save-tool-use | PostToolUse | Tool logging + gotchas/learned observation |
 | save-conversation | UserPromptSubmit | Persist user input |

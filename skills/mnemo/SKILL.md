@@ -46,16 +46,18 @@ mnemo/
 ├── SKILL.md                    # 이 파일
 ├── install.js                  # 설치 스크립트
 ├── hooks/                      # 대화 저장 훅 (root hooks/에 위치)
-│   ├── save-conversation.ps1/.sh   # User 입력 저장
-│   ├── save-tool-use.ps1/.sh       # 도구 호출 관찰 로그
-│   └── save-response.ps1/.sh       # Assistant 응답 저장
+│   ├── save-conversation.ps1/.sh       # User 입력 저장
+│   ├── save-tool-use.ps1/.sh           # 도구 호출 관찰 로그
+│   ├── save-response.ps1/.sh           # Assistant 응답 저장 (Stop)
+│   └── reconcile-conversations.ps1/.sh # 누락 턴 복구 (SessionStart)
 ├── templates/                  # CLAUDE.md 규칙
 │   └── claude-md-rules.md
-├── scripts/                    # 핸드오프 스크립트
+├── scripts/                    # 핸드오프 + reconcile 스크립트
 │   ├── create_handoff.py
 │   ├── validate_handoff.py
 │   ├── list_handoffs.py
-│   └── check_staleness.py
+│   ├── check_staleness.py
+│   └── reconcile_conversations.py  # JSONL → conversations/ 복구
 ├── references/                 # 핸드오프 템플릿
 │   ├── handoff-template.md
 │   └── resume-checklist.md
@@ -69,6 +71,9 @@ mnemo/
 ## 기능 1: 대화 자동 저장
 
 ```
+[SessionStart 훅] reconcile-conversations
+    → 지난 세션에서 놓친 assistant 턴을 JSONL 기준으로 backfill (멱등)
+    ↓
 사용자 입력
     ↓
 [UserPromptSubmit 훅] save-conversation
@@ -83,6 +88,20 @@ Claude 응답 (끝에 #tags 포함)
     ↓
 [Stop 훅] save-response
     → transcript에서 응답 추출 → <private> 블록 제거 → 대화 파일 append
+```
+
+**Source of truth**: `~/.claude/projects/<encoded>/*.jsonl` (Claude Code가 보관)
+**검색 미러**: `conversations/YYYY-MM-DD-claude.md` (사람이 읽는 형태)
+**멱등 인덱스**: `conversations/.mnemo-index.json` (JSONL 줄 uuid 기반)
+
+Stop 훅이 한 번이라도 실패하거나 Claude Code가 강제 종료되면 해당 턴의
+미러링이 누락됩니다. 다음 세션 시작 시 `reconcile-conversations`가 자동으로
+JSONL을 스캔하여 놓친 턴을 복구합니다. 수동 실행도 가능합니다:
+
+```bash
+python skills/mnemo/scripts/reconcile_conversations.py              # 오늘자
+python skills/mnemo/scripts/reconcile_conversations.py --all        # 전체
+python skills/mnemo/scripts/reconcile_conversations.py --dry-run    # 시뮬레이션
 ```
 
 ---

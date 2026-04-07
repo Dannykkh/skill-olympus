@@ -1,16 +1,53 @@
 # save-tool-use.ps1 - PostToolUse 훅: 도구 호출을 한 줄로 기록
 # 도구명 + 파일경로만 append. AI 호출 없음 = 빠름
 # claude-mem의 관찰 캡처 아이디어를 차용하되, 파일 기반으로 단순 구현
+#
+# 에러 처리 (P1 parity):
+# - 정상 skip 케이스(빈 stdin, skipTools): 조용히 exit 0
+# - 진짜 실패(파싱 에러): .claude/mnemo-errors.log 기록 후 exit 0
+# - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1
 
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-try {
-    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
-} catch {
+# BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+function Write-MnemoError {
+    param([string]$Context, [string]$Message)
+    try {
+        $root = $PWD.Path
+        try {
+            $gitRoot = git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
+        } catch {}
+        $errDir = Join-Path $root '.claude'
+        if (-not (Test-Path $errDir)) {
+            New-Item -ItemType Directory -Path $errDir -Force | Out-Null
+        }
+        $logPath = Join-Path $errDir 'mnemo-errors.log'
+        $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $line = "[$ts] [save-tool-use.ps1] [$Context] $Message`r`n"
+        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+        [System.IO.File]::AppendAllText($logPath, $line, $utf8NoBom)
+    } catch {}
+}
+
+function Exit-MnemoError {
+    param([string]$Context, [string]$Message)
+    Write-MnemoError -Context $Context -Message $Message
+    if ($env:MNEMO_STRICT -eq '1') { exit 1 }
     exit 0
+}
+
+try {
+    $rawInput = [Console]::In.ReadToEnd()
+    if (-not $rawInput) { exit 0 }
+    $json = $rawInput | ConvertFrom-Json
+} catch {
+    Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"
 }
 if (-not $json) { exit 0 }
 
@@ -51,7 +88,7 @@ type: tool-log
 # Tool Usage Log - $Today
 
 "@
-    [System.IO.File]::WriteAllText($LogFile, $Header, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($LogFile, $Header, $Utf8NoBom)
 }
 
 # 도구별 핵심 정보 추출
@@ -82,7 +119,7 @@ if (Test-Path $LogFile) {
     if ($existing.Contains($fingerprint)) { exit 0 }
 }
 
-[System.IO.File]::AppendAllText($LogFile, $entry, [System.Text.Encoding]::UTF8)
+[System.IO.File]::AppendAllText($LogFile, $entry, $Utf8NoBom)
 
 # ─────────────────────────────────────────────
 # 학습 관찰 기록 (memory/gotchas/ + memory/learned/)
@@ -113,11 +150,13 @@ try {
     $targetDir = $null
     $eventType = $null
 
+    # PS 5.1 호환: Join-Path는 3개 인수 미지원. 중첩 호출로 처리.
+    $memoryDir = Join-Path $ProjectRoot "memory"
     if ($hasError) {
-        $targetDir = Join-Path $ProjectRoot "memory" "gotchas"
+        $targetDir = Join-Path $memoryDir "gotchas"
         $eventType = "tool_error"
     } elseif ($toolName -in @("Edit", "Write", "Bash", "Agent", "Skill")) {
-        $targetDir = Join-Path $ProjectRoot "memory" "learned"
+        $targetDir = Join-Path $memoryDir "learned"
         $eventType = "tool_success"
     }
 
@@ -137,7 +176,7 @@ try {
             session = $sessionId
         } | ConvertTo-Json -Compress
 
-        [System.IO.File]::AppendAllText($obsFile, "$obs`n", [System.Text.Encoding]::UTF8)
+        [System.IO.File]::AppendAllText($obsFile, "$obs`n", $Utf8NoBom)
 
         # 파일 크기 제한 (10MB 초과 시 아카이브)
         if ((Get-Item $obsFile -ErrorAction SilentlyContinue).Length / 1MB -ge 10) {
@@ -148,5 +187,6 @@ try {
         }
     }
 } catch {
-    # 관찰 기록 실패해도 메인 기능에 영향 없음
+    # 관찰 기록 실패해도 메인 기능에 영향 없음 — 그러나 로그에는 남김
+    Write-MnemoError -Context 'observation' -Message $_.Exception.Message
 }

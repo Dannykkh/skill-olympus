@@ -2,6 +2,34 @@
 # save-turn.sh - Gemini CLI AfterAgent 훅: User+Assistant 턴을 대화 파일에 저장
 # Gemini는 stdin으로 JSON 페이로드를 전달함 (prompt + prompt_response)
 # AI 호출 없음 = 빠름
+#
+# 에러 처리 (P1 parity):
+# - 실패는 .claude/mnemo-errors.log에 기록
+# - $MNEMO_STRICT='1' 이면 실패 시 exit 1
+# Note: Gemini는 JSONL transcript가 없어 reconcile이 불가능. 훅이 실패하면 영구 유실.
+
+log_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then root="$git_root"; fi
+    local err_dir="$root/.claude"
+    mkdir -p "$err_dir" 2>/dev/null || true
+    local log_path="$err_dir/mnemo-errors.log"
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$ts] [gemini-mnemo/save-turn.sh] [$ctx] $msg" >> "$log_path" 2>/dev/null || true
+}
+
+exit_mnemo_error() {
+    local ctx="$1"
+    local msg="$2"
+    log_mnemo_error "$ctx" "$msg"
+    if [ "${MNEMO_STRICT:-}" = "1" ]; then exit 1; fi
+    exit 0
+}
 
 ensure_memory_scaffold() {
     local base_dir="$1"
@@ -104,6 +132,9 @@ fi
 
 # User 입력 추출: prompt 필드
 if command -v jq &>/dev/null; then
+    if ! echo "$INPUT" | jq -e . >/dev/null 2>&1; then
+        exit_mnemo_error 'stdin-json' 'stdin JSON 파싱 실패 (jq)'
+    fi
     USER_TEXT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null)
     RESPONSE=$(echo "$INPUT" | jq -r '.prompt_response // empty' 2>/dev/null)
 elif command -v python3 &>/dev/null; then
@@ -122,7 +153,7 @@ try:
 except: pass
 " 2>/dev/null)
 else
-    exit 0
+    exit_mnemo_error 'missing-parser' 'jq 또는 python3이 필요합니다'
 fi
 
 USER_TEXT=$(echo "$USER_TEXT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -180,13 +211,10 @@ if [ -n "$USER_TEXT" ]; then
 fi
 
 # Assistant 응답 처리
+# P2 parity: 4000자 truncation 제거. Gemini는 JSONL 원본이 없어 유실된 부분을
+# 복구할 경로가 없으므로 온전한 원문을 저장해야 한다.
 if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
-    # 4000자 제한 (코드 블록 포함 시 충분한 여유)
-    if [ ${#RESPONSE} -gt 4000 ]; then
-        RESPONSE="${RESPONSE:0:4000}..."
-    fi
-
-    echo -e "\n## [$TIMESTAMP] Assistant\n\n$RESPONSE\n" >> "$CONV_FILE"
+    printf '\n## [%s] Assistant\n\n%s\n' "$TIMESTAMP" "$RESPONSE" >> "$CONV_FILE"
 fi
 
 # ─────────────────────────────────────────────
