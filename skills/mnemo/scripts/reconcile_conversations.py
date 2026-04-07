@@ -43,7 +43,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -165,10 +165,16 @@ def list_transcript_files(transcript_dir: Path) -> list[Path]:
 def parse_assistant_turns(
     jsonl_path: Path,
     date_filter: str | None,
+    since_date: str | None = None,
 ) -> list[AssistantTurn]:
     """
     Parse a single JSONL transcript and return assistant turns that contain
-    at least one non-empty text block. Filter by local date if provided.
+    at least one non-empty text block.
+
+    Filtering rules (mutually exclusive):
+      - date_filter: only turns whose local date == this exact date
+      - since_date:  only turns whose local date >= this date (inclusive window)
+      - both None:   no filter (all turns)
     """
     turns: list[AssistantTurn] = []
     try:
@@ -197,6 +203,8 @@ def parse_assistant_turns(
                 timestamp_utc = obj.get("timestamp") or ""
                 local_date, local_time = utc_iso_to_local(timestamp_utc)
                 if date_filter and local_date != date_filter:
+                    continue
+                if since_date and local_date < since_date:
                     continue
 
                 turns.append(
@@ -336,6 +344,7 @@ def legacy_fingerprint_present(conv_text: str, turn_text: str) -> bool:
 def reconcile(
     project_root: Path,
     date_filter: str | None,
+    since_date: str | None = None,
     dry_run: bool = False,
     verbose: bool = False,
 ) -> ReconcileStats:
@@ -360,7 +369,7 @@ def reconcile(
     all_turns: list[AssistantTurn] = []
     seen_uuids: set[str] = set()
     for jsonl in transcripts:
-        for turn in parse_assistant_turns(jsonl, date_filter):
+        for turn in parse_assistant_turns(jsonl, date_filter, since_date):
             stats.assistant_turns += 1
             if not turn.uuid or turn.uuid in seen_uuids:
                 continue
@@ -439,12 +448,18 @@ def main() -> int:
         "--date",
         type=str,
         default=None,
-        help="Only reconcile this local date (YYYY-MM-DD). Default: today.",
+        help="Reconcile only this exact local date (YYYY-MM-DD). Mutually exclusive with --days/--all.",
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        default=None,
+        help="Reconcile the last N days (inclusive of today). Default behavior: 7 days.",
     )
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Reconcile every date found in the transcript (ignores --date).",
+        help="Reconcile every date found in the transcript (ignores --date/--days).",
     )
     parser.add_argument(
         "--dry-run",
@@ -466,17 +481,29 @@ def main() -> int:
     start = args.project_root.resolve() if args.project_root else Path.cwd()
     project_root = detect_project_root(start)
 
+    # Filter resolution priority: --all > --date > --days > default(7 days)
+    # Why default 7 days instead of "today only":
+    #   1) Sessions can cross midnight — turns at 23:55 and 00:05 belong to
+    #      different local dates but the same conversation
+    #   2) If yesterday's save-response hook silently failed, "today only"
+    #      reconcile would never recover those turns
+    #   3) Cost is negligible — uuid dedup makes re-checking instant
+    date_filter: str | None = None
+    since_date: str | None = None
     if args.all:
-        date_filter: str | None = None
+        pass  # both None = no filter
     elif args.date:
         date_filter = args.date
     else:
-        date_filter = datetime.now().strftime("%Y-%m-%d")
+        days = args.days if args.days is not None else 7
+        cutoff = datetime.now() - timedelta(days=days - 1)
+        since_date = cutoff.strftime("%Y-%m-%d")
 
     try:
         stats = reconcile(
             project_root=project_root,
             date_filter=date_filter,
+            since_date=since_date,
             dry_run=args.dry_run,
             verbose=args.verbose,
         )

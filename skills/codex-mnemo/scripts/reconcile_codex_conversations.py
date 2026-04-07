@@ -51,7 +51,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -220,11 +220,17 @@ def parse_rollout(
     path: Path,
     target_project_norm: str | None,
     date_filter: str | None,
+    since_date: str | None = None,
 ) -> tuple[list[CodexTurn], str | None]:
     """
     Parse a single rollout JSONL and return (turns, cwd).
     If target_project_norm is set, the rollout is skipped (empty turns list
     returned) when its session_meta.cwd doesn't match.
+
+    Filtering rules (mutually exclusive):
+      - date_filter: only turns whose local date == this exact date
+      - since_date:  only turns whose local date >= this date (inclusive window)
+      - both None:   no filter (all turns)
     """
     turns: list[CodexTurn] = []
     session_cwd: str | None = None
@@ -273,6 +279,8 @@ def parse_rollout(
                 ts_utc = obj.get("timestamp") or ""
                 local_date, local_time = utc_iso_to_local(ts_utc)
                 if date_filter and local_date != date_filter:
+                    continue
+                if since_date and local_date < since_date:
                     continue
 
                 turns.append(
@@ -379,6 +387,7 @@ def legacy_fingerprint_present(conv_text: str, turn_text: str) -> bool:
 def reconcile(
     project_root: Path,
     date_filter: str | None,
+    since_date: str | None = None,
     dry_run: bool = False,
     verbose: bool = False,
     days_lookback: int = 30,
@@ -392,14 +401,14 @@ def reconcile(
             print(f"[mnemo-codex] no sessions dir at {sessions_root}", file=sys.stderr)
         return stats
 
-    # Only look at recent rollouts to keep the scan fast. --all bypasses.
-    lookback = None if date_filter is None else days_lookback
-    if date_filter is None:
+    # Only scan recent rollout files to keep the scan fast.
+    # --all (date_filter=None and since_date=None) bypasses the limit.
+    if date_filter is None and since_date is None:
         # --all: scan everything
         rollouts = list_rollout_files(sessions_root)
     else:
-        # Default / --date: only last 30 days of files
-        rollouts = list_rollout_files(sessions_root, days=30)
+        # --date / --days / default: limit file mtime to days_lookback
+        rollouts = list_rollout_files(sessions_root, days=days_lookback)
 
     if not rollouts:
         return stats
@@ -413,7 +422,7 @@ def reconcile(
 
     for rollout in rollouts:
         stats.scanned_files += 1
-        turns, session_cwd = parse_rollout(rollout, target_project_norm, date_filter)
+        turns, session_cwd = parse_rollout(rollout, target_project_norm, date_filter, since_date)
         if not turns and session_cwd is not None:
             # Session belonged to a different project
             stats.skipped_other_project += 1
@@ -486,8 +495,12 @@ def main() -> int:
         description="Reconcile conversations/ mirror against Codex rollout JSONL.",
     )
     parser.add_argument("--project-root", type=Path, default=None)
-    parser.add_argument("--date", type=str, default=None)
-    parser.add_argument("--all", action="store_true")
+    parser.add_argument("--date", type=str, default=None,
+                        help="Reconcile only this exact date (YYYY-MM-DD)")
+    parser.add_argument("--days", type=int, default=None,
+                        help="Reconcile last N days (inclusive of today). Default: 7")
+    parser.add_argument("--all", action="store_true",
+                        help="Reconcile every date found (ignores --date/--days)")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--verbose", action="store_true")
@@ -496,17 +509,26 @@ def main() -> int:
     start = args.project_root.resolve() if args.project_root else Path.cwd()
     project_root = detect_project_root(start)
 
+    # Filter resolution priority: --all > --date > --days > default(7 days)
+    # Default is 7 days (not "today only") to handle:
+    #   1) Sessions crossing midnight (turn at 23:55, next at 00:05)
+    #   2) Yesterday's hook silently failed — recover on next day's reconcile
+    date_filter: str | None = None
+    since_date: str | None = None
     if args.all:
-        date_filter: str | None = None
+        pass
     elif args.date:
         date_filter = args.date
     else:
-        date_filter = datetime.now().strftime("%Y-%m-%d")
+        days = args.days if args.days is not None else 7
+        cutoff = datetime.now() - timedelta(days=days - 1)
+        since_date = cutoff.strftime("%Y-%m-%d")
 
     try:
         stats = reconcile(
             project_root=project_root,
             date_filter=date_filter,
+            since_date=since_date,
             dry_run=args.dry_run,
             verbose=args.verbose,
         )
