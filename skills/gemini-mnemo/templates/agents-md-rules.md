@@ -75,9 +75,28 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 - `/zeus`, `제우스` → `zeus`
 - `/minos`, `미노스`, `/qpassenger` (legacy), `큐패신저` → `minos`
 - `/clio`, `클리오`, `/closer` (legacy), `클로저` → `clio`
-- `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → `agent-team`
+- `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → **Gemini는 미지원, `workpm` (다이달로스) fallback** (아래 한계 섹션 참조)
 - `/daedalus`, `다이달로스`, `workpm` → `workpm`
 - `/argos`, `아르고스` → `argos`
+
+## Gemini 구조적 한계 (사용자에게 솔직하게 안내)
+
+Gemini CLI는 다음 동작이 **구조적으로 불가능**합니다:
+
+1. **Multi-agent 부재**: Claude의 TeamCreate/SendMessage 또는 Codex의 multi_agent 도구가 없음. 따라서 `/poseidon` (agent-team, 병렬 시공팀)은 직접 동작 불가능.
+   - **Fallback**: 사용자가 `/poseidon`을 부르면 → "Gemini는 multi-agent 미지원입니다. **다이달로스** (`/workpm`)로 대신 진행할까요?"라고 안내하고, 동의 시 `workpm` (단일 PM 직접 구현)으로 전환.
+   - **또는**: Claude Code/Codex CLI에서 직접 `/poseidon` 실행을 권장.
+2. **자체 transcript 부재**: Claude (`~/.claude/projects/.../*.jsonl`) / Codex (`~/.codex/sessions/.../rollout-*.jsonl`)와 달리 Gemini는 conversation을 자체 저장하지 않음. **save-turn hook이 한 번 실패하면 해당 turn은 영구 손실** (reconcile 불가능).
+3. **PostToolUse 부재**: 개별 도구 호출 단위 관찰 hook 없음. AfterAgent로 turn 단위 관찰만 가능.
+
+이 한계는 mitigation할 수 없습니다. 사용자에게 솔직히 안내하세요.
+
+## 데이터 손실 방지 (mnemo)
+
+Gemini는 자체 transcript가 없으므로 다른 mitigation이 필요합니다:
+- save-turn hook의 fail-open + `.claude/mnemo-errors.log` 기록 (실패 시 사용자 가시화)
+- conversation cwd는 항상 git root로 정규화 (Visual Studio bin/Debug 같은 sub-directory는 부모 git root로 매핑)
+- `reconcile-conversations` (BeforeAgent hook)는 Claude/Codex의 transcript에서 같은 프로젝트의 데이터를 backfill 가능 (Gemini 자체 데이터는 backfill 불가)
 
 ## 과거 대화 검색 규칙
 

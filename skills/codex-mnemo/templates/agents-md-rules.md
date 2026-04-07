@@ -104,6 +104,26 @@ Codex에는 Claude의 `UserPromptSubmit` 훅이 없으므로, `orchestrator-dete
 - 모드 진입 전에 장황한 소개 문구를 출력하지 않습니다.
 - 같은 턴 안에서 바로 PM/Worker/Zeus/Agent-Team 흐름을 시작해야 합니다.
 
+## Codex 구조적 한계 (사용자에게 솔직하게 안내)
+
+Codex CLI는 `notify` event 1개만 가지므로 다음 동작이 **구조적으로 불가능**합니다:
+
+1. **PreToolUse 차단**: `protect-files`, `check-new-file` 같은 차단형 hook은 **사후 검증**만 가능 (이미 일이 끝난 후). `.env`, `credentials.json` 등 민감 파일을 수정해도 차단되지 않고 경고만.
+2. **PostToolUse 관찰**: `save-tool-use` 같은 도구 단위 관찰 로그가 없음 (turn 단위 관찰만 가능).
+3. **SessionStart**: 세션 시작 이벤트가 없어 `reconcile-conversations` 자동 호출 불가. 수동 호출만:
+   ```bash
+   python ~/.codex/scripts/reconcile_codex_conversations.py --days 7
+   ```
+
+이 한계는 codex-hook-bridge.js가 turn 끝에 chain 호출로 부분적으로 보완하지만, **실시간 차단은 절대 불가능**합니다. 사용자에게 솔직히 안내하세요.
+
+## 데이터 손실 방지 (mnemo)
+
+Codex의 conversation은 `~/.codex/sessions/.../rollout-*.jsonl`이 source of truth입니다.
+- **save-turn hook이 실패해도 rollout JSONL에는 데이터가 살아있음**
+- 누락된 turn은 `reconcile_codex_conversations.py`로 backfill 가능 (`sha1(timestamp+role+content[:200])` 기반 멱등)
+- conversation cwd는 항상 git root로 정규화 (Visual Studio bin/Debug 같은 sub-directory는 부모 git root로 매핑)
+
 ## 과거 대화 검색 규칙
 
 사용자가 과거 작업을 언급하면 (예: "이전에 ~했었지?", "그때 ~ 어떻게 했더라?"),
