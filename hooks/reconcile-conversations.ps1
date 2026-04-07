@@ -11,18 +11,74 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Claude Code가 stdin으로 JSON 페이로드를 넘겨주지만 reconcile은 필요 없음.
-# 즉시 버리지 않고 흘려보내면 hook pipeline이 깨질 수 있어 명시적으로 읽고 폐기.
-try { [Console]::In.ReadToEnd() | Out-Null } catch {}
-
-# 프로젝트 루트 결정: git root → CWD fallback
-$ProjectRoot = $PWD.Path
+# Claude Code가 stdin으로 JSON 페이로드를 전달. transcript_path를 추출해
+# 프로젝트 루트 결정에 활용한다 (SessionStart hook도 transcript_path를 받음).
+$transcriptPath = $null
 try {
-    $gitRoot = git rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-        $ProjectRoot = $gitRoot.Replace('/', '\')
+    $rawInput = [Console]::In.ReadToEnd()
+    if ($rawInput) {
+        $payload = $rawInput | ConvertFrom-Json
+        $transcriptPath = $payload.transcript_path
     }
 } catch {}
+
+# ── 프로젝트 루트 결정 (save-response.ps1과 동일 로직) ──────────
+function Get-ClaudeProjectRoot {
+    param([string]$TranscriptPath)
+
+    if ($TranscriptPath -and (Test-Path $TranscriptPath)) {
+        try {
+            $lines = Get-Content $TranscriptPath -Tail 200 -Encoding UTF8 -ErrorAction SilentlyContinue
+            $cwd = $null
+            for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+                if ($lines[$i] -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
+                    $cwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'
+                    break
+                }
+            }
+            if ($cwd -and (Test-Path $cwd)) {
+                try {
+                    $gitRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
+                    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                        return $gitRoot.Replace('/', '\')
+                    }
+                } catch {}
+                return $cwd
+            }
+        } catch {}
+    }
+
+    if ($TranscriptPath) {
+        try {
+            $parent = Split-Path -Leaf (Split-Path $TranscriptPath -Parent)
+            if ($parent -match '^([A-Za-z])--(.+)$') {
+                $drive = $Matches[1]
+                $rest = $Matches[2] -replace '-', '\'
+                $decoded = "${drive}:\$rest"
+                if (Test-Path $decoded) {
+                    try {
+                        $gitRoot = & git -C $decoded rev-parse --show-toplevel 2>$null
+                        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                            return $gitRoot.Replace('/', '\')
+                        }
+                    } catch {}
+                    return $decoded
+                }
+            }
+        } catch {}
+    }
+
+    $root = $PWD.Path
+    try {
+        $gitRoot = git rev-parse --show-toplevel 2>$null
+        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+            $root = $gitRoot.Replace('/', '\')
+        }
+    } catch {}
+    return $root
+}
+
+$ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath
 
 # 스크립트 경로 해결 헬퍼: 여러 후보 경로 중 존재하는 첫 번째 반환
 function Find-FirstExisting {

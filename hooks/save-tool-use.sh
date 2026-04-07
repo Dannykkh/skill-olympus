@@ -31,6 +31,66 @@ exit_mnemo_error() {
     exit 0
 }
 
+# ── 프로젝트 루트 결정 (save-response.sh와 동일 로직) ──────────
+get_claude_project_root() {
+    local transcript_path="$1"
+
+    if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+        local cwd
+        cwd=$(tail -n 200 "$transcript_path" 2>/dev/null \
+            | grep -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' \
+            | tail -n 1 \
+            | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' \
+            | sed 's|\\\\|\\|g')
+        if [ -n "$cwd" ]; then
+            local cwd_unix="$cwd"
+            if [[ "$cwd" =~ ^([A-Za-z]):\\ ]]; then
+                local drive="${BASH_REMATCH[1]}"
+                cwd_unix="/${drive,,}/${cwd:3}"
+                cwd_unix="${cwd_unix//\\//}"
+            fi
+            if [ -d "$cwd_unix" ]; then
+                local git_root
+                git_root=$(git -C "$cwd_unix" rev-parse --show-toplevel 2>/dev/null)
+                if [ -n "$git_root" ]; then
+                    echo "$git_root"
+                    return 0
+                fi
+                echo "$cwd_unix"
+                return 0
+            fi
+        fi
+    fi
+
+    if [ -n "$transcript_path" ]; then
+        local parent
+        parent=$(basename "$(dirname "$transcript_path")")
+        if [[ "$parent" =~ ^([A-Za-z])--(.+)$ ]]; then
+            local drive="${BASH_REMATCH[1],,}"
+            local rest="${BASH_REMATCH[2]//-//}"
+            local decoded="/$drive/$rest"
+            if [ -d "$decoded" ]; then
+                local git_root
+                git_root=$(git -C "$decoded" rev-parse --show-toplevel 2>/dev/null)
+                if [ -n "$git_root" ]; then
+                    echo "$git_root"
+                    return 0
+                fi
+                echo "$decoded"
+                return 0
+            fi
+        fi
+    fi
+
+    local root="$PWD"
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [ -n "$git_root" ]; then
+        root="$git_root"
+    fi
+    echo "$root"
+}
+
 INPUT=$(cat)
 if [ -z "$INPUT" ]; then exit 0; fi
 
@@ -51,12 +111,9 @@ case "$TOOL_NAME" in
     Glob|Grep|Read|LS|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput|TeamCreate|TeamDelete|SendMessage) exit 0 ;;
 esac
 
-# 프로젝트 루트 결정: git root → 없으면 CWD fallback
-PROJECT_ROOT="$PWD"
-GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-if [ -n "$GIT_ROOT" ]; then
-    PROJECT_ROOT="$GIT_ROOT"
-fi
+# 프로젝트 루트 결정: JSONL cwd → transcript path 디코딩 → PWD fallback
+TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
+PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
 
 # 대화 로그 경로
 CONV_DIR="$PROJECT_ROOT/conversations"
