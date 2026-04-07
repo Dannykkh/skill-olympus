@@ -73,7 +73,8 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 - `/chronos`, `/loop`, `크로노스` → `auto-continue-loop`
 - `/zephermine`, `젭마인`, `제퍼마인`, `제퍼미네` → `zephermine`
 - `/zeus`, `제우스` → `zeus`
-- `/minos`, `미노스` → `minos`
+- `/minos`, `미노스`, `/qpassenger` (legacy), `큐패신저` → `minos`
+- `/clio`, `클리오`, `/closer` (legacy), `클로저` → `clio`
 - `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → `agent-team`
 - `/daedalus`, `다이달로스`, `workpm` → `workpm`
 - `/argos`, `아르고스` → `argos`

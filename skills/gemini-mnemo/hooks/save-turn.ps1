@@ -167,12 +167,35 @@ if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $respon
     exit 0
 }
 
+# 프로젝트 루트 결정
+# Gemini hook payload는 transcript_path가 없으므로 PWD 기반 결정.
+# Sub-directory(예: bin/Debug)를 부모 git root로 정규화한다.
+# - 1순위: payload의 cwd / working_directory / project_root 필드
+# - 2순위: PWD에서 git -C rev-parse --show-toplevel
+# - 3순위: PWD 그대로
+$ProjectRoot = ""
+foreach ($k in @("cwd", "working_directory", "project_root", "workspace_root")) {
+    $v = ""
+    try { $v = "$($payload.$k)".Trim() } catch {}
+    if ($v -and (Test-Path $v)) {
+        $ProjectRoot = $v
+        break
+    }
+}
+if (-not $ProjectRoot) { $ProjectRoot = $PWD.Path }
+try {
+    $gitRoot = & git -C $ProjectRoot rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+        $ProjectRoot = $gitRoot.Replace('/', '\')
+    }
+} catch {}
+
 # 대화 디렉토리 및 파일
-$ConvDir = Join-Path $PWD.Path "conversations"
+$ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today-gemini.md"
 
-Ensure-MemoryScaffold -BaseDir $PWD.Path
+Ensure-MemoryScaffold -BaseDir $ProjectRoot
 
 # 폴더 생성
 if (-not (Test-Path $ConvDir)) {
@@ -184,7 +207,7 @@ if (-not (Test-Path $ConvFile)) {
     $Header = @"
 ---
 date: $Today
-project: $(Split-Path $PWD.Path -Leaf)
+project: $(Split-Path $ProjectRoot -Leaf)
 keywords: []
 summary: ""
 ---
@@ -239,7 +262,7 @@ if ($response -and $response.Length -ge 5) {
     if ($safeUser.Length -gt 1000) { $safeUser = $safeUser.Substring(0, 1000) + "...[truncated]" }
 
     # PS 5.1 호환: Join-Path는 3개 인수 미지원. 중첩 호출로 처리.
-    $memoryDir = Join-Path $PWD.Path "memory"
+    $memoryDir = Join-Path $ProjectRoot "memory"
     if ($hasError) {
         $obsTargetDir = Join-Path $memoryDir "gotchas"
         $obsEventType = "turn_error"

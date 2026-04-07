@@ -172,13 +172,35 @@ if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; the
     exit 0
 fi
 
+# 프로젝트 루트 결정
+# Gemini hook payload는 transcript_path가 없으므로 PWD 기반 결정.
+# Sub-directory(예: bin/Debug)를 부모 git root로 정규화한다.
+# - 1순위: payload의 cwd / working_directory / project_root 필드
+# - 2순위: PWD에서 git -C rev-parse --show-toplevel
+# - 3순위: PWD 그대로
+PROJECT_ROOT=""
+for k in cwd working_directory project_root workspace_root; do
+    v=$(echo "$INPUT" | jq -r ".$k // empty" 2>/dev/null)
+    if [ -n "$v" ] && [ -d "$v" ]; then
+        PROJECT_ROOT="$v"
+        break
+    fi
+done
+if [ -z "$PROJECT_ROOT" ]; then
+    PROJECT_ROOT="$PWD"
+fi
+GIT_ROOT_NORMALIZED=$(git -C "$PROJECT_ROOT" rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$GIT_ROOT_NORMALIZED" ]; then
+    PROJECT_ROOT="$GIT_ROOT_NORMALIZED"
+fi
+
 # 대화 디렉토리 및 파일
-CONV_DIR="$PWD/conversations"
+CONV_DIR="$PROJECT_ROOT/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-gemini.md"
-PROJECT_NAME=$(basename "$PWD")
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
-ensure_memory_scaffold "$PWD"
+ensure_memory_scaffold "$PROJECT_ROOT"
 
 # 폴더 생성
 mkdir -p "$CONV_DIR"
@@ -225,10 +247,10 @@ if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
     OBS_EVENT_TYPE=""
 
     if echo "$RESPONSE" | grep -qiE '(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)' 2>/dev/null; then
-        OBS_TARGET_DIR="$PWD/memory/gotchas"
+        OBS_TARGET_DIR="$PROJECT_ROOT/memory/gotchas"
         OBS_EVENT_TYPE="turn_error"
     else
-        OBS_TARGET_DIR="$PWD/memory/learned"
+        OBS_TARGET_DIR="$PROJECT_ROOT/memory/learned"
         OBS_EVENT_TYPE="turn_success"
     fi
 
