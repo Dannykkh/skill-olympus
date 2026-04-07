@@ -44,75 +44,121 @@ That's it. **96 skills, 48 agents, 12 hooks** installed across Claude Code + Cod
 
 ---
 
-## The Pantheon
+## The Pantheon of Olympus
 
-> Twelve gods sit on Mount Olympus. Each holds a domain. Each answers to a single name.
-> Call any one of them — or call **Zeus**, and the entire pantheon descends at once.
+> *Beyond the wine-dark sea, where clouds part above the world, Mount Olympus rises.
+> On its windswept summit dwell the Twelve, each crowned with their own dominion,
+> each known by an ancient and many-named song. Speak the name of one, and that one alone
+> shall descend the holy mountain. Speak the name of cloud-gathering Zeus,
+> and the whole pantheon shall come down with him in golden procession.*
 
-This isn't a collection of plugins. It's a **mythology of work**:
-a small council of gods, each forged for one craft, each speaking in their own voice.
-They hand work to one another the way the old myths describe — Zephermine whispers a spec
-into Poseidon's ear, Poseidon raises the waves, Argos counts every plank, Minos judges
-each soul at the gate, and Clio carves the whole story into stone for those who come after.
+This is no mere tool-chest. It is a small **mythology of work**, a council of immortals
+each shaped to a single craft. They work as the old singers tell us they have always worked —
+gentle Zephermine, breath of the west wind, whispers a blueprint into the ear of earth-shaking
+Poseidon; Poseidon stirs the deep and his fleet sails forth in waves; hundred-eyed Argos
+walks the shore at dusk to count every nail and every beam; stern Minos sits upon his marble
+throne to weigh each soul at the gate; and last of all, fair-tressed Clio takes up her stylus
+to carve the whole tale upon a tablet of bronze, that mortals yet unborn may read of it.
 
-Below is the council. Pick one, or summon them all.
+Below stand the immortals. Call upon one — or call upon all.
 
-### The Council of Twelve
+### The Twelve Who Sit Upon the Mountain
 
-| Skill | Name | Origin | Role |
-|-------|------|--------|------|
-| `/zephermine` | Zephermine (젭마인) | The West Wind, breath of inspiration | **The Architect** — 26-step deep interview, spec generation, 5-expert team review |
-| `/zeus` | Zeus (제우스) | King of the Gods | **The Commander** — Zero-interaction full pipeline. One command, all gods descend |
-| `/agent-team` / `/poseidon` | Poseidon (포세이돈) | God of the Sea | **The Sea Lord** — Raises the waves. Section dependencies sail in formation, fleet by fleet |
-| `/workpm` | Daedalus (다이달로스) | Master Craftsman of the Labyrinth | **The Hands-On Builder** — Builds without a blueprint. Hands in clay, eyes on the prize |
-| `/argos` | Argos (아르고스) | The All-Seeing, Hundred-Eyed Watchman | **The Inspector** — A hundred eyes never blink. Every line of code is seen |
-| `/minos` | Minos (미노스) | Judge of the Underworld | **The Judge** — Souls and code alike stand trial. The fix-loop never closes until it passes |
-| `/clio` | Clio (클리오) | Muse of History | **The Chronicler** — The last to speak. She carves the heroes' deeds into the records of time |
-| `/chronos` | Chronos (크로노스) | God of Time | **The Tireless One** — Time itself bends to her will. FIND → FIX → VERIFY, again, and again, and again |
-| `/hermes` | Hermes (헤르메스) | God of Commerce, Messenger of the Gods | **The Merchant** — Reads markets like he reads winds. TAM, SAM, SOM, GTM — the trader's compass |
-| `/athena` | Athena (아테나) | Goddess of Strategy & Wisdom | **The Strategist** — Cold-eyed, cold-blooded. Asks the questions that hurt: ship it, kill it, or pivot? |
-| `/aphrodite` | Aphrodite (아프로디테) | Goddess of Beauty | **The Beauty** — 161 palettes, 73 fonts, 84 styles. Nothing leaves her hands ugly |
-| `mnemo` | Mnemo (므네모) | Mnemosyne, Mother of the Muses | **The Keeper of Memory** — Forgets nothing. Three layers of memory across every session, every CLI |
+| Skill | Name | Epithet | Domain |
+|-------|------|---------|--------|
+| `/zephermine` | **Zephermine** (젭마인) | *Breath of the West Wind, Bringer of Spring* | The Architect — 26-step deep interview, spec generation, 5-expert team review |
+| `/zeus` | **Zeus** (제우스) | *Cloud-Gatherer, Hurler of Thunderbolts, Father of Gods and Men* | The Sovereign — Zero-interaction full pipeline; at his nod the council convenes |
+| `/agent-team` / `/poseidon` | **Poseidon** (포세이돈) | *Earth-Shaker, Lord of the Wine-Dark Sea, Trident-Bearer* | The Sea Lord — Reads dependency graphs as a sailor reads tides; sends the fleet in waves |
+| `/workpm` | **Daedalus** (다이달로스) | *The Master Builder, Maker of the Labyrinth, Father of Wings* | The Hands-On Builder — Where there is no plan, he becomes the plan |
+| `/argos` | **Argos** (아르고스) | *Argos Panoptes, the All-Seeing, of the Hundred Eyes* | The Watchman — Of his hundred eyes, none ever sleep at the same hour |
+| `/minos` | **Minos** (미노스) | *Judge of the Dead, Keeper of the Golden Scales* | The Judge — At his marble throne, every soul and every test is weighed |
+| `/clio` | **Clio** (클리오) | *Kleio, Proclaimer, Muse of History, Daughter of Memory* | The Chronicler — Her stylus sets down what mortals have done, that none may forget |
+| `/chronos` | **Chronos** (크로노스) | *Father of Time, the Unwearying, He Who Devours the Hours* | The Tireless — Time itself is his servant; he turns the wheel until the deed is done |
+| `/hermes` | **Hermes** (헤르메스) | *Wing-Footed Messenger, Guide of Souls, Patron of Merchants* | The Wayfinder — Reads the trade-winds and the marketplaces of distant lands |
+| `/athena` | **Athena** (아테나) | *Gray-Eyed Daughter of Zeus, Defender of Cities, Born from the Skull* | The Strategist — Wisdom that cuts as cleanly as her father's bronze spear |
+| `/aphrodite` | **Aphrodite** (아프로디테) | *Foam-Born, Golden, Cytherean, Lover of Laughter* | The Beauty — From her hand come forms that mortals cannot help but love |
+| `mnemo` | **Mnemo** (므네모) | *Mnemosyne, Titaness of Memory, Mother of all the Muses* | The Keeper — She forgets nothing; her daughters are born of her remembering |
 
 ---
 
-### Voices from Olympus
+### Songs from the Mountain
 
-**Zeus** — *"One word, and the council convenes. I do not negotiate with the work. I deliver it."*
-Throws every god into the field with a single line. Design → Implement → Inspect → Test, untouched by human hand.
+> Hear now the voices of the Twelve, as the old singers heard them.
 
-**Zephermine** — *"Twenty-six questions. None of them are optional. The spec is sacred."*
-The breath that shapes the blueprint. CPS-gated interview, 5-expert review, no spec ships half-formed.
+🜲 **Zeus, Cloud-Gatherer**
+Upon the topmost peak he sits, and his nod is the law of mountains.
+When his voice rolls out across Olympus, the council rises as one and descends —
+designer, builder, watchman, judge, and chronicler — all at his single word.
+*"Speak my name once, mortal, and the whole council shall walk beside you to the end."*
 
-**Poseidon** — *"You don't fight the sea. You ride it."*
-Reads the dependency graph like tides. Builds the fleet (teammates), waits for the wave, sends them all out together.
+🜂 **Zephermine, Bringer of the West Wind**
+She is the soft breath that wakes the seed beneath the soil.
+Six and twenty are her questions, and the breath of each one is gentle —
+yet none may pass her by, for the spec is sacred and half-told tales bear no fruit.
+*"I ask, and ask, and ask again — until what was unspoken becomes a thing of stone."*
 
-**Daedalus** — *"There was no labyrinth before me. I made it from nothing. Hand me the stone."*
-For when there is no plan. He researches, proposes, drafts, and builds — alone if he must.
+🜄 **Poseidon, Earth-Shaker**
+He stands knee-deep in the wine-dark sea, his trident raised, and the waters listen.
+The fleet of teammates lies in the harbor, and at his bidding the wave gathers them all
+and bears them out together, each prow pointed where the dependency graph commands.
+*"The sea does not yield to the swimmer. The swimmer who knows the tide — she yields to him."*
 
-**Argos** — *"Of my hundred eyes, none ever close. The plank you forgot to nail down — I have already counted it."*
-Walks the construction site after the crew leaves. Cross-references spec ↔ code ↔ tests. Nothing slips past.
+🜔 **Daedalus, Master Builder**
+Before him there was no labyrinth in all of Crete.
+He took stone from the mountain and shaped it with his own hands, and the work was good.
+Where the blueprint is missing, where the architect has not spoken, send for him —
+he will research, he will draft, and if no other hand will rise, his alone shall raise the walls.
+*"Give me the stone. The plan I shall make as I go."*
 
-**Minos** — *"Stand before me. Show me your tests. The verdict is binary."*
-Drags the code to the gate of the underworld. Fails it. Heals it. Fails it again. Repeats until it passes.
+👁 **Argos Panoptes, the Hundred-Eyed**
+He paces the half-built city by night, and at no hour are all his eyes closed at once.
+The plank a mortal builder forgot to nail — he has already seen it.
+The line of code that fails to match the spec — he has already named it.
+*"While fifty of my eyes rest, fifty more keep watch. Nothing passes Argos in the dark."*
 
-**Clio** — *"The work is finished. Now I write the song."*
-Turns the corpse of a project into a living document. Flow diagrams, PRD, technical docs, user manual — all carved at the end.
+⚖ **Minos, Judge of the Dead**
+He sits upon a throne of cold marble at the gate where the souls of the dead must come.
+He raises his golden scales, and the work is weighed against itself.
+His verdict is two-fold and no other: it shall pass, or it shall return to the fire.
+*"Stand before the scales, child of mortals. We shall see if your tests are honest."*
 
-**Chronos** — *"You are mortal. You sleep. I do not."*
-The autonomous loop that does not give up. FIND → FIX → VERIFY, until the bug is dead or the dawn breaks.
+📜 **Clio, Muse of the Long Memory**
+She comes last of all the gods, after the labor is laid down.
+Her stylus is bronze and her tablet is the years to come.
+What the heroes have done, she sets down — diagram, decree, manual, and song —
+that the children of the children of those mortals may know the deeds were real.
+*"The work has ended. Now begins the telling, and the telling endures."*
 
-**Hermes** — *"Every market is a road. Every road has a price. Pay it, or starve."*
-Business model, market sizing, GTM. Reads the trade winds before you commit a single line.
+⏳ **Chronos, the Unwearying**
+He is older than memory, older than the gods themselves.
+He turns the great wheel of the hours and does not tire when mortals sleep.
+The bug shall die or the dawn shall come — and Chronos shall outlast them both.
+*"Mortals close their eyes. I do not. The work shall be finished, by sunrise or by the next."*
 
-**Athena** — *"Wisdom is knowing what not to build. I will ask you the question you are afraid of."*
-Go / No-Go gate. Scope decisions. The CEO who makes you justify your existence.
+🪶 **Hermes, Wing-Footed**
+He moves between the worlds — the high palace and the low marketplace, both are his road.
+He reads the trade-winds of distant lands and the price of grain in city-gates yet unseen.
+Before a single coin is risked, before a single line of code is written, he speaks first.
+*"Every market is a road, traveler. Every road has its toll. Bring silver, or bring nothing."*
 
-**Aphrodite** — *"Beauty is not a luxury. It is the difference between a tool and a thing people love."*
-Design orchestrator. 161 palettes, 73 fonts, 84 styles, design tokens, component architecture.
+🦉 **Athena, Gray-Eyed**
+She was born full-grown from the skull of her father, helmeted, spear in hand.
+Her wisdom does not flatter; her counsel is the cold edge of the bronze.
+She will ask the question the mortal fears most — *should this thing be made at all?*
+*"Wisdom, child, is to know which work must never be begun. I shall ask. You shall answer."*
 
-**Mnemo** — *"Forget nothing. The conversation you had three months ago is the answer you need today."*
-The mother of all muses. Three-layer memory: index, semantic, episodic. Crosses every CLI, persists every session.
+🌹 **Aphrodite, Foam-Born**
+She rose from the white foam of the sea, and the world has not been plain since.
+A hundred and sixty-one palettes lie at her hand, three and seventy fonts, four and eighty styles.
+What leaves her workshop is not merely useful — it is loved, and that is the difference.
+*"Beauty is not the ornament of the work. Beauty is what makes the work survive its maker."*
+
+📚 **Mnemo, Mother of the Muses**
+Long before the nine sisters sang, Mnemosyne kept the long memory of the world.
+The conversation a mortal had three moons ago is the answer she carries to him today.
+Three layers she keeps — the index of names, the meaning of things, the tale itself —
+and her remembering crosses every session, every CLI, every dawn.
+*"Forget nothing, child. The word you spoke long ago is the gift you needed now."*
 
 ---
 
