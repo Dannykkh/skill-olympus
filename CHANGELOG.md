@@ -2,6 +2,103 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2026-04-08
+
+### 🏛️ Skill Olympus — The Pantheon Awakens
+
+**v3.0.0은 이번 프로젝트의 가장 큰 변경입니다.** 데이터 유실 방지 종합 개편, 그리스 신화 네이밍 통일, repo rename, 3-CLI parity 강화. BREAKING change 포함.
+
+#### ⚠️ BREAKING CHANGES
+
+- **Repo rename**: `claude-code-agent-customizations` → **`skill-olympus`**
+  - GitHub 자동 redirect 활성 — 옛 URL은 한동안 유효
+  - Local clone은 `git remote set-url origin https://github.com/Dannykkh/skill-olympus.git` 권장
+- **Skill rename** (legacy alias 모두 유지):
+  - `qpassenger` → **`minos`** (저승의 심판자, fix-until-pass)
+  - `final-inspection` (closer) → **`clio`** (역사의 뮤즈, 마지막 기록자)
+  - `agent-team` 별칭 `대니즈팀` → **`포세이돈`** (바다의 신, 파도/wave 비유)
+- **호출명 변경**: `/qpassenger`, `/closer` → `/minos`, `/clio` (옛 명령은 alias로 유지)
+
+#### 🔱 The Pantheon — 12명의 그리스 신으로 통일
+
+| 신 | 스킬 | 역할 |
+|---|---|---|
+| Zeus | `/zeus` | Sovereign — 한 줄로 전체 파이프라인 |
+| Zephermine | `/zephermine` | Architect — 26단계 인터뷰 |
+| Poseidon | `/agent-team` `/poseidon` | Sea Lord — 병렬 시공 |
+| Daedalus | `/workpm` `/daedalus` | Hands-On Builder — 직접 구현 |
+| Argos | `/argos` | All-Seeing — 100개의 눈 |
+| Minos | `/minos` | Judge — 저승의 심판자 |
+| Clio | `/clio` | Chronicler — 역사의 뮤즈 |
+| Chronos | `/chronos` | Tireless — 시간을 지치지 않는 자 |
+| Hermes | `/hermes` | Wayfarer — 상업의 신 |
+| Athena | `/athena` | Strategist — 전략의 여신 |
+| Aphrodite | `/aphrodite` | Beauty — 미의 여신 |
+| Mnemo | `mnemo` | Keeper of Memory — 모든 뮤즈의 어머니 |
+
+#### 🧠 Mnemo — JSONL 기반 데이터 유실 방지 종합 개편
+
+**문제**: Stop 훅이 한 번이라도 실패하면 turn이 영구 손실. 실측 결과 **27일치 대화 중 약 67% (Claude), 88% (Codex)가 누락 상태**였음.
+
+**해결**:
+- **reconcile 시스템 신규** — JSONL transcript를 source of truth로 선언하고, save-response/save-turn이 놓친 turn을 자동 backfill
+  - `skills/mnemo/scripts/reconcile_conversations.py` (Claude)
+  - `skills/codex-mnemo/scripts/reconcile_codex_conversations.py` (Codex, sha1 dedup)
+  - `hooks/reconcile-conversations.ps1`/`.sh` (SessionStart wrapper, Claude+Codex 동시 실행)
+- **사이드카 인덱스** `conversations/.mnemo-index.json` — uuid/sha1 기반 멱등 dedup, save-response와 reconcile이 동일 인덱스 공유
+- **Days lookback 7일** — 자정 넘긴 세션 + 어제 hook 실패 자동 복구
+- **Silent failure 제거** — 모든 mnemo hook이 `.claude/mnemo-errors.log`에 통합 기록 + SessionStart 24시간 에러 배너
+- **Truncation 제거** — 4000자 제한 삭제 (실측 6233자 turn 정상 저장)
+- **JSONL 청크 경계 버그 수정** — 5MB 청크 역방향 → ReadLines 전체 스캔 (PS), tail -n 500 → grep 전체 (sh)
+
+#### 📁 conversations 폴더 잘못된 위치 버그 수정 (Critical)
+
+**증상**: Visual Studio가 bin/Debug에서 실행되어 그 cwd에서 hook이 호출되면 conversations가 거기에 잘못 생성. 사용자 보고: "윈도우 프로그램 짤 때 갑자기 debug 폴더에 conversations가 생기더라". 실측 한 프로젝트에 흩어진 conversations 폴더 7개 발견.
+
+**해결**: 8개 hook에 cwd 정규화 헬퍼 추가 (`Get-ClaudeProjectRoot` / `get_claude_project_root`):
+1. JSONL transcript의 cwd 필드 → 그 cwd에서 git -C rev-parse
+2. transcript_path 부모 디렉토리 디코딩 (D--git-foo → D:\git\foo)
+3. 기존 PWD + git rev-parse (최종 fallback)
+
+적용: save-response/save-conversation/save-tool-use/reconcile-conversations + Codex/Gemini save-turn
+
+#### 🌐 3-CLI Parity 강화
+
+- **Hook parity audit** — Claude/Codex/Gemini의 hook event 매핑 매트릭스 작성
+- **Rules parity** — 6개 핵심 규칙(`#tags`, `<private>`, 과거 검색, MEMORY.md, 핸드오프, alias)이 3-CLI 모두 100% parity
+- **Codex 구조적 한계 명시** — notify 1개 event라 PreToolUse 차단형 hook 불가능 → 사용자에게 솔직히 안내
+- **Gemini 구조적 한계 명시** — 자체 transcript 부재 (reconcile 불가), `/poseidon`은 multi-agent 부재로 `workpm` (다이달로스) fallback
+- **CLI 전용 alias 추가** — `/minos`, `/clio`, `/poseidon` + legacy alias가 codex-mnemo + gemini-mnemo agents-md-rules.md에 동기화
+
+#### 🪄 Hidden bug 수정 (audit 중 발견)
+
+- **PowerShell BOM** — `[System.Text.Encoding]::UTF8`은 BOM 포함 인코더. `New-Object System.Text.UTF8Encoding $false`로 8개 PS 스크립트 18곳 교체
+- **PS 5.1 Join-Path 3-인수 미지원** — gemini-mnemo, codex-mnemo, save-tool-use 3곳 중첩 호출로 수정
+- **subprocess 인코딩 cp949 디코드 실패** — handoff 스크립트 4개에 `encoding="utf-8", errors="replace"` 명시 (한글 git 출력 처리)
+- **Windows App Store python3 stub exit 49** — wrapper에서 `python` 우선 시도 + `--version` 검증
+- **Codex/Gemini의 cwd 정규화 부재** — Visual Studio 같은 환경에서 Claude와 동일한 버그 발생 → 동일 패턴으로 수정
+
+#### 📜 README 호메로스 서사시 톤
+
+- **The Pantheon of Olympus** 섹션 신설 — "포도주처럼 검푸른 바다 너머, 구름이 갈라지는 곳에 올림푸스 산이 솟아 있다"
+- 12명의 신마다 epithet + 묘사 + 명대사 (Robert Fagles / 천병희 번역체 풍)
+- "구름을 모으시는 자 제우스", "땅을 흔드시는 자 포세이돈", "회색 눈의 아테나" 등 호메로스 별호
+- 영문 + 한글 양쪽 동일 톤
+
+#### 🚀 GitHub Launch 준비
+
+- **GitHub topics 16개** — `claude-code`, `codex-cli`, `gemini-cli`, `agent-skills`, `greek-mythology`, `llm-agents`, `agent-orchestration`, `mcp`, `prompt-engineering`, `ai-tools` 등
+- **README hero 재구성** — "Twelve Greek gods. One command. A working SaaS."
+- **Reddit launch playbook** — `docs/launch/reddit-post.md` (제목 후보 + 본문 초안 + 댓글 답변 playbook)
+- **`.claude-plugin/` 메타데이터 갱신** — name/description/keywords 모두 v2.0.0 → 새 정보로
+
+#### 🧹 Gitignore 정리
+
+- `*.log`, `tmp-*`, `*-debug.log` 패턴 추가
+- `tmp-claude-debug.log` 추적 해제
+
+---
+
 ## [2.1.0] - 2026-04-06
 
 ### Pipeline Integrity Audit + gstack-Inspired Improvements
