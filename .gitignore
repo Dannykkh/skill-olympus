@@ -11,6 +11,11 @@ Thumbs.db
 *.bak
 nul
 
+# Logs (자동 생성 — 절대 commit 금지)
+*.log
+tmp-*
+*-debug.log
+
 # Dependencies
 node_modules/
 
