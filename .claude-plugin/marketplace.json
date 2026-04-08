@@ -1,29 +1,39 @@
 {
-  "name": "danny-tools",
+  "name": "skill-olympus",
   "owner": {
     "name": "Dannykkh"
   },
   "metadata": {
-    "description": "Claude Code 커스터마이징 올인원 패키지: 설계 → 구현 → 검증 → 배포 전체 파이프라인",
-    "version": "1.0.0"
+    "description": "Twelve Greek gods. One command. A working SaaS. 그리스 신들의 신전 — 설계부터 출항까지 한 마디로 끝내는 멀티 CLI 파이프라인.",
+    "version": "2.0.0"
   },
   "plugins": [
     {
-      "name": "danny-tools",
+      "name": "skill-olympus",
       "source": {
         "source": "github",
-        "repo": "Dannykkh/claude-code-agent-customizations"
+        "repo": "Dannykkh/skill-olympus"
       },
-      "description": "65+ skills, 34+ agents: zephermine (설계 자동화), agent-team (병렬 코딩), qpassenger (QA 자동화), docker-deploy, fullstack standards, multi-AI orchestration",
-      "version": "1.0.0",
+      "description": "98 skills + 49 agents + 13 hooks for Claude Code + Codex CLI + Gemini CLI. Twelve Greek gods (zephermine, poseidon, argos, minos, clio, chronos, zeus, hermes, athena, aphrodite, daedalus, mnemo) form a full dev pipeline. Cross-CLI persistent memory, zero-interaction full pipeline (design → build → inspect → test → ship).",
+      "version": "2.0.0",
       "category": "productivity",
       "tags": [
-        "planning",
+        "claude-code",
+        "codex-cli",
+        "gemini-cli",
+        "agent-skills",
+        "greek-mythology",
+        "pantheon",
+        "zephermine",
+        "poseidon",
+        "minos",
+        "clio",
+        "zeus",
+        "chronos",
+        "multi-ai-orchestration",
+        "cross-cli-memory",
         "fullstack",
-        "qa",
-        "deploy",
-        "git-deploy",
-        "multi-ai",
+        "qa-automation",
         "korean"
       ]
     }
