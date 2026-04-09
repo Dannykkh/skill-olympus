@@ -118,6 +118,14 @@ Gemini는 자체 transcript가 없으므로 다른 mitigation이 필요합니다
    - 첫 grep에서 못 찾으면 동의어로 재시도, 최대 3회
 6. 매칭된 대화 파일의 해당 섹션(전후 문맥) 읽기
 
+**⚠️ JSONL 직접 읽기 절대 금지:**
+- Gemini는 자체 transcript가 없습니다. 다른 CLI의 jsonl(`~/.claude/projects/**/*.jsonl`, `~/.codex/sessions/**/rollout-*.jsonl`)도 mnemo 내부 백업이므로 직접 읽지 마세요.
+- 검색 대상은 **오직 `conversations/*.md`** 입니다. Read 도구로 jsonl을 직접 열지 마세요.
+- `conversations/`에서 못 찾아도 jsonl fallback 금지. 다음 절차를 따르세요:
+  1. BeforeAgent의 `reconcile-conversations` hook이 자동으로 Claude/Codex transcript에서 backfill 시도 (Gemini 자체 데이터는 backfill 불가)
+  2. `conversations/`에서 재검색
+  3. 그래도 없으면 "관련 기록을 찾지 못했습니다"라고 솔직히 답변
+
 **핵심: 각 단계에서 답을 찾으면 거기서 멈추기. 더 깊이 들어갈 필요 없음.**
 
 **검색 트리거 (이런 표현이 나오면 검색):**

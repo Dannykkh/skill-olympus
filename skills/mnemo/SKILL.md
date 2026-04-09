@@ -90,9 +90,11 @@ Claude 응답 (끝에 #tags 포함)
     → transcript에서 응답 추출 → <private> 블록 제거 → 대화 파일 append
 ```
 
-**Source of truth**: `~/.claude/projects/<encoded>/*.jsonl` (Claude Code가 보관)
-**검색 미러**: `conversations/YYYY-MM-DD-claude.md` (사람이 읽는 형태)
+**내부 백업** (⚠️ 직접 읽기 금지, reconcile 전용): `~/.claude/projects/<encoded>/*.jsonl`
+**검색 대상** (사람이 읽고 Claude가 grep): `conversations/YYYY-MM-DD-claude.md`
 **멱등 인덱스**: `conversations/.mnemo-index.json` (JSONL 줄 uuid 기반)
+
+> 과거 대화 검색은 **`conversations/*.md`만** 대상입니다. JSONL은 mnemo의 reconcile 스크립트만 만집니다. Read 도구로 jsonl을 직접 열면 안 됩니다.
 
 Stop 훅이 한 번이라도 실패하거나 Claude Code가 강제 종료되면 해당 턴의
 미러링이 누락됩니다. 다음 세션 시작 시 `reconcile-conversations`가 자동으로
