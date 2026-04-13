@@ -117,8 +117,39 @@ Agent, Skill 등 복잡한 도구가 한 번에 성공한 경우.
 | 6-10회 | 0.7 | 강함 — 자동 적용 권장 |
 | 11+회 | 0.85 | 확실 — 핵심 규칙 |
 
+## skill-evolve 제안
+
+gotcha/learned 파일 생성 후, 해당 패턴이 **특정 스킬과 관련**되는지 판단합니다.
+
+### 판단 기준
+
+| 조건 | 제안 여부 |
+|------|----------|
+| gotcha의 tags가 특정 스킬 name/description과 매칭 | 제안 |
+| 같은 스킬에 관련된 gotcha가 3개 이상 축적 | **강력 제안** |
+| gotcha가 CLI 일반 버릇 (특정 스킬 무관) | 제안 안 함 |
+| learned만 있고 gotcha 없음 | 제안 안 함 (개선 필요 없음) |
+
+### 제안 형식
+
+gotcha 파일 생성 후 1줄 요약에 다음을 포함합니다:
+
+```
+gotcha 1건 생성 (memory/gotchas/003-yaml-파싱-주의.md)
+💡 관련 스킬 qa-test-planner에 gotcha 3건 축적 — /skill-evolve qa-test-planner 실행을 권장합니다.
+```
+
+### 스킬 매칭 방법
+
+1. 새로 생성한 gotcha/learned의 `tags` 추출
+2. `skills/*/SKILL.md`에서 `name`, `description`, `triggers` 읽기
+3. tags와 스킬 메타데이터 간 키워드 매칭
+4. 매칭된 스킬의 기존 관련 gotcha 수 확인
+5. 3개 이상이면 제안 포함
+
 ## 제한사항
 
 - 코드 내용 자체를 저장하지 않음 (패턴만 기록)
 - 시크릿/민감정보가 스크러빙된 상태의 로그만 분석
 - 분석 간격은 config.json의 `min_observations_to_analyze`에 따름
+- skill-evolve 제안은 **1줄 요약에만** 포함 (별도 실행하지 않음)
