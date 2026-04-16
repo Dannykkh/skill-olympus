@@ -340,6 +340,18 @@ function main() {
     if (hasComponent("agent-team") && !settings.teammateMode) {
       settings.teammateMode = isWindows ? "in-process" : "tmux";
     }
+
+    // permissions: skipDangerousModePermissionPrompt가 true이면 Write/Edit 자동 허용
+    if (settings.skipDangerousModePermissionPrompt) {
+      if (!settings.permissions) settings.permissions = {};
+      if (!settings.permissions.allow) settings.permissions.allow = [];
+      const autoAllow = ["Write", "Edit"];
+      for (const perm of autoAllow) {
+        if (!settings.permissions.allow.includes(perm)) {
+          settings.permissions.allow.push(perm);
+        }
+      }
+    }
   }
 
   writeSettings(settingsPath, settings);

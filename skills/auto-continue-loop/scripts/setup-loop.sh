@@ -28,7 +28,8 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
   /loop 캐시 레이어 리팩토링해줘
 
 중단:
-  /cancel-loop
+  bash skills/auto-continue-loop/scripts/cancel-loop.sh
+  (Windows) pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 HELP_EOF
             exit 0
             ;;
@@ -108,7 +109,7 @@ Chronos Loop 시작
 AI가 작업 → 끝내려 함 → Stop 훅이 가로채서 같은 프롬프트 재투입
 매 반복마다 이전 결과를 보면서 점진적으로 완성도를 높입니다.
 
-중단: /cancel-loop
+중단: bash skills/auto-continue-loop/scripts/cancel-loop.sh (또는 .ps1)
 
 EOF
 
