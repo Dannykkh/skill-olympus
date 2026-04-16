@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0] - 2026-04-16
+
+### Features
+- **skills**: add skill-evolve + gotcha analyzer에 스킬 개선 제안 연결 (03b2085)
+- add update-check system + VERSION file for upgrade notifications (8b62d09)
+
+### Bug Fixes
+- **mnemo**: JSONL 직접 읽기 금지 가드 추가 — 3-CLI parity (af4c9eb)
+- **chronos**: AI가 loop-state.md를 직접 rm하지 않도록 개선 (e53b7bf)
+
+### Other Changes
+- **gitignore**: docs/launch/ 추적 해제 — 마케팅 초안은 local only (27b0f8e)
+
 ## [3.0.0] - 2026-04-08
 
 ### 🏛️ Skill Olympus — The Pantheon Awakens
