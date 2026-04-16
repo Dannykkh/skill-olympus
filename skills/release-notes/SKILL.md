@@ -159,6 +159,7 @@ Semantic Versioning (major.minor.patch) 규칙:
 
 | 파일 | 필드 |
 |------|------|
+| `VERSION` | 파일 전체를 `X.Y.Z`로 교체 (줄바꿈 포함) |
 | `package.json` | `"version": "X.Y.Z"` |
 | `pyproject.toml` | `version = "X.Y.Z"` |
 | `setup.py` | `version="X.Y.Z"` |
@@ -167,6 +168,8 @@ Semantic Versioning (major.minor.patch) 규칙:
 | `build.gradle` | `version = 'X.Y.Z'` |
 
 **없으면 건너뜀** — 에러 아님.
+
+**중요**: `VERSION` 파일은 업데이트 체크 시스템(`scripts/update-check.ps1|sh`)이 참조합니다. 반드시 릴리즈 시 업데이트해야 합니다.
 
 ### 버전 확인
 

@@ -66,6 +66,22 @@ echo "============================================"
 echo ""
 
 # ============================================
+#   업데이트 체크 (non-blocking)
+# ============================================
+if [ "$MODE" != "uninstall" ]; then
+    UPDATE_RESULT=$(bash "$SCRIPT_DIR/scripts/update-check.sh" 2>/dev/null || true)
+    if echo "$UPDATE_RESULT" | grep -q '^UPGRADE_AVAILABLE'; then
+        OLD_VER=$(echo "$UPDATE_RESULT" | awk '{print $2}')
+        NEW_VER=$(echo "$UPDATE_RESULT" | awk '{print $3}')
+        echo "  ╔══════════════════════════════════════════════╗"
+        echo "  ║  New version available: v${OLD_VER} → v${NEW_VER}          ║"
+        echo "  ║  Run: git pull && ./install.sh --all         ║"
+        echo "  ╚══════════════════════════════════════════════╝"
+        echo ""
+    fi
+fi
+
+# ============================================
 #   --uninstall 모드: 설정 정리 (MCP, Mnemo, Hooks, Codex, Gemini)
 # ============================================
 if [ "$MODE" = "uninstall" ]; then

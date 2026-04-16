@@ -154,6 +154,20 @@ invoke_reconcile() {
 invoke_reconcile "$CLAUDE_SCRIPT" 'claude'
 invoke_reconcile "$CODEX_SCRIPT" 'codex'
 
+# ── 업데이트 체크 (하루 1회, non-blocking) ──
+UPDATE_SCRIPT="$REPO_ROOT/scripts/update-check.sh"
+if [ ! -f "$UPDATE_SCRIPT" ]; then
+    UPDATE_SCRIPT="$HOME/.claude/skills/update-check.sh"
+fi
+if [ -f "$UPDATE_SCRIPT" ]; then
+    UPDATE_RESULT=$(bash "$UPDATE_SCRIPT" 2>/dev/null || true)
+    if echo "$UPDATE_RESULT" | grep -q '^UPGRADE_AVAILABLE'; then
+        OLD_VER=$(echo "$UPDATE_RESULT" | awk '{print $2}')
+        NEW_VER=$(echo "$UPDATE_RESULT" | awk '{print $3}')
+        echo "[skill-olympus] 새 버전 v${NEW_VER} 사용 가능 (현재 v${OLD_VER}). git pull && ./install.sh --all 로 업데이트하세요." >&2
+    fi
+fi
+
 # 세션 시작 시 누적된 에러 수를 STDERR로 안내 (최근 24시간)
 ERR_LOG="$PROJECT_ROOT/.claude/mnemo-errors.log"
 if [ -f "$ERR_LOG" ]; then

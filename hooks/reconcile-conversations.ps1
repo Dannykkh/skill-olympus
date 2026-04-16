@@ -167,6 +167,22 @@ function Invoke-ReconcileScript {
 Invoke-ReconcileScript -ScriptPath $claudeScript -CliLabel 'claude'
 Invoke-ReconcileScript -ScriptPath $codexScript -CliLabel 'codex'
 
+# ── 업데이트 체크 (하루 1회, non-blocking) ──
+try {
+    $updateScript = Join-Path $repoRoot 'scripts\update-check.ps1'
+    if (-not (Test-Path $updateScript)) {
+        $updateScript = Join-Path $HOME '.claude\skills\update-check.ps1'
+    }
+    if (Test-Path $updateScript) {
+        $updateResult = & powershell -NoProfile -ExecutionPolicy Bypass -File $updateScript 2>$null
+        if ($updateResult -match '^UPGRADE_AVAILABLE\s+(\S+)\s+(\S+)') {
+            $oldVer = $Matches[1]
+            $newVer = $Matches[2]
+            [Console]::Error.WriteLine("[skill-olympus] 새 버전 v${newVer} 사용 가능 (현재 v${oldVer}). git pull && install.bat --all 로 업데이트하세요.")
+        }
+    }
+} catch {}
+
 # 세션 시작 시 누적된 에러 수를 배너로 알림 (STDERR로 출력, 훅 출력은 무시됨)
 try {
     $errLog = Join-Path $ProjectRoot '.claude\mnemo-errors.log'

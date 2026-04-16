@@ -96,6 +96,21 @@ echo ============================================
 echo.
 
 REM ============================================
+REM   Update check (non-blocking)
+REM ============================================
+if "%MODE%" NEQ "uninstall" (
+    for /f "tokens=1,2,3" %%A in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%scripts\update-check.ps1" 2^>nul') do (
+        if "%%A"=="UPGRADE_AVAILABLE" (
+            echo   ╔══════════════════════════════════════════════╗
+            echo   ║  New version available: v%%B  -- v%%C          ║
+            echo   ║  Run: git pull ^&^& install.bat --all         ║
+            echo   ╚══════════════════════════════════════════════╝
+            echo.
+        )
+    )
+)
+
+REM ============================================
 REM   --uninstall mode: Clean up settings (MCP, Mnemo, Hooks, Codex, Gemini)
 REM ============================================
 if "%MODE%"=="uninstall" (
