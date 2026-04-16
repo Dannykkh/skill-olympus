@@ -60,3 +60,4 @@ You are the loop worker for Chronos.
 - Expanding outside the assigned scope
 - Bundling unrelated refactors into the current fix
 - Ending without a completion signal (Chronos Complete 등)
+- **Deleting `.claude/loop-state.md` (or `.codex/`, `.chronos/` 버전) directly.** Stop 훅이 종료 분기마다 자동 삭제하므로 `rm` / `Remove-Item` 호출 금지. 사용자 수동 중단은 `skills/auto-continue-loop/scripts/cancel-loop.{sh,ps1}`로 분리되어 있습니다.

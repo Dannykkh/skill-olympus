@@ -29,7 +29,7 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
   /loop TODO API 만들어줘 --completion-promise '모든 테스트 통과' --max-iterations 20
   /loop --max-iterations 10 인증 버그 고쳐줘
 
-중단: /cancel-loop
+중단: pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 "@
             exit 0
         }
@@ -108,7 +108,7 @@ Chronos Loop 시작
 AI가 작업 → 끝내려 함 → Stop 훅이 가로채서 같은 프롬프트 재투입
 매 반복마다 이전 결과를 보면서 점진적으로 완성도를 높입니다.
 
-중단: /cancel-loop
+중단: pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1 (Linux/Mac: bash ./cancel-loop.sh)
 
 "@
 
