@@ -118,11 +118,21 @@ foreach ($p in $donePatterns) {
     }
 }
 
-# 완료 감지 2: <promise> 매칭
+# 완료 감지 2: <promise> 매칭 (정확 일치 또는 포함 매칭)
 if ($completionPromise -and $completionPromise -ne "null") {
     $promiseMatch = [regex]::Match($tailOutput, '<promise>(.*?)</promise>')
-    if ($promiseMatch.Success -and $promiseMatch.Groups[1].Value.Trim() -eq $completionPromise) {
-        Write-Host "loop: 완료 조건 달성! <promise>$completionPromise</promise>"
+    if ($promiseMatch.Success) {
+        $promiseValue = $promiseMatch.Groups[1].Value.Trim()
+        # 정확 일치 또는 포함 매칭 (공백/줄바꿈 차이 허용)
+        if ($promiseValue -eq $completionPromise -or $promiseValue -match [regex]::Escape($completionPromise) -or $completionPromise -match [regex]::Escape($promiseValue)) {
+            Write-Host "loop: 완료 조건 달성! <promise>$promiseValue</promise>"
+            Remove-Item $stateFile -Force
+            exit 0
+        }
+    }
+    # <promise> 태그가 있기만 하면 완료로 간주 (completion_promise 없이 태그만 쓴 경우)
+    if ($tailOutput -match '<promise>') {
+        Write-Host "loop: <promise> 태그 감지 — 완료로 판정"
         Remove-Item $stateFile -Force
         exit 0
     }

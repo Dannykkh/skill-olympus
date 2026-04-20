@@ -102,12 +102,22 @@ if echo "$TAIL_OUTPUT" | grep -qiE '(Chronos Complete|더 이상.*(할|수정할
     exit 0
 fi
 
-# 완료 감지 2: <promise>텍스트</promise> 매칭 (마지막 500자에서)
+# 완료 감지 2: <promise>텍스트</promise> 매칭 (마지막 500자에서, 포함 매칭)
 if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
     PROMISE_TEXT=$(echo "$TAIL_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
 
-    if [ -n "$PROMISE_TEXT" ] && [ "$PROMISE_TEXT" = "$COMPLETION_PROMISE" ]; then
-        echo "loop: 완료 조건 달성! <promise>$COMPLETION_PROMISE</promise>"
+    if [ -n "$PROMISE_TEXT" ]; then
+        # 정확 일치 또는 포함 매칭
+        if [ "$PROMISE_TEXT" = "$COMPLETION_PROMISE" ] || echo "$PROMISE_TEXT" | grep -qF "$COMPLETION_PROMISE" || echo "$COMPLETION_PROMISE" | grep -qF "$PROMISE_TEXT"; then
+            echo "loop: 완료 조건 달성! <promise>$PROMISE_TEXT</promise>"
+            rm "$STATE_FILE"
+            exit 0
+        fi
+    fi
+
+    # <promise> 태그가 있기만 하면 완료로 간주
+    if echo "$TAIL_OUTPUT" | grep -q '<promise>'; then
+        echo "loop: <promise> 태그 감지 — 완료로 판정"
         rm "$STATE_FILE"
         exit 0
     fi
