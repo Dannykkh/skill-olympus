@@ -67,7 +67,7 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 **핵심 규칙:**
 - `/foo-bar` 형태면 `foo-bar` 스킬과 먼저 exact match 시도합니다.
 - exact match가 없으면, `SKILLS-CATALOG.md`에서 설명/별칭으로 매칭합니다.
-- `workpm`, `pmworker`처럼 slash 없이 쓰는 canonical 이름도 단독 요청이면 explicit invocation으로 처리하세요.
+- `workpm`, `daedalus`처럼 slash 없이 쓰는 canonical 이름도 단독 요청이면 explicit invocation으로 처리하세요.
 
 **우선 고정 alias:**
 - `/chronos`, `/loop`, `크로노스` → `auto-continue-loop`
