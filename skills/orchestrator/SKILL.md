@@ -7,6 +7,12 @@ triggers:
   - "다이달로스"
   - "pmworker"
   - "orchestrator"
+  - "workpm-mcp"
+  - "daedalus-mcp"
+  - "daedalus --mcp"
+  - "multi ai"
+  - "멀티 에이전트"
+  - "병렬 ai"
 auto_apply: false
 ---
 

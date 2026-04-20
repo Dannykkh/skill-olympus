@@ -81,11 +81,50 @@ QA 문서에서 테스트 케이스 테이블을 추출합니다:
 
 ### 시나리오 없을 때 현장 생성
 
-qa-scenarios.md가 전혀 없으면 `qa-test-planner` 스킬을 활용하여 시나리오를 생성합니다:
+qa-scenarios.md가 전혀 없으면 미노스가 직접 시나리오를 생성합니다:
 
-1. `operation-scenarios.md` 존재 시 → 업무 흐름 기반 TC 작성 (우선), 없으면 Glob으로 라우트/API 탐색
-2. qa-test-planner 템플릿으로 CRUD별 정상/에러/엣지 케이스 작성 (우선순위, 전제조건, 테스트 데이터 포함)
-3. `qa-scenarios.md`로 저장
+**1단계: 프로젝트 분석 (자동)**
+
+```bash
+# 라우트/API 엔드포인트 탐색
+grep -rn "router\.\|@Get\|@Post\|@app\.\|app\.get\|app\.post" --include="*.{ts,tsx,js,py,java}" src/ app/ 2>/dev/null | head -30
+
+# 페이지/컴포넌트 탐색
+find src -name "*.tsx" -path "*/pages/*" -o -name "*.tsx" -path "*/app/*" 2>/dev/null
+```
+
+**2단계: 시나리오 생성 (CRUD + 엣지 케이스)**
+
+| 입력 소스 | 생성 전략 |
+|-----------|----------|
+| `operation-scenarios.md` 있음 | 업무 흐름 기반 TC 작성 (우선) |
+| `api-spec.md` 있음 | API 엔드포인트별 정상/에러 케이스 |
+| 둘 다 없음 | 코드 분석으로 라우트/페이지 자동 감지 → TC 생성 |
+
+**3단계: TC 테이블 작성**
+
+각 기능에 대해 아래 형식으로 테스트 케이스를 작성합니다:
+
+```markdown
+| TC-ID | 시나리오 | 유형 | 입력 | 기대 결과 | 우선순위 | 전제조건 |
+|-------|---------|------|------|----------|---------|---------|
+| TC-001 | 정상 로그인 | 정상 | valid@test.com / Pass123! | 대시보드 이동 | P0 | 회원 가입 완료 |
+| TC-002 | 잘못된 비밀번호 | 에러 | valid@test.com / wrong | "비밀번호 오류" 표시 | P0 | - |
+| TC-003 | 빈 이메일 제출 | 엣지 | (빈값) / Pass123! | "이메일 필수" 검증 | P1 | - |
+```
+
+**TC 유형별 필수 포함:**
+
+| 유형 | 최소 케이스 | 예시 |
+|------|-----------|------|
+| 정상 (Happy path) | 기능당 1~2개 | 로그인 성공, 주문 완료 |
+| 에러 (Error) | 기능당 2~3개 | 잘못된 입력, 권한 없음, 404 |
+| 엣지 (Edge) | 주요 기능당 1~2개 | 빈값, 특수문자, 최대길이, 동시 요청 |
+| 회귀 (Regression) | 변경 영역당 1개 | 기존 기능이 깨지지 않았는지 |
+
+**4단계: 저장**
+
+생성된 시나리오를 `qa-scenarios.md`로 저장 → Step 2로 진행
 
 ---
 
@@ -289,7 +328,6 @@ IF retry >= max_retries:
 |--------|------|------|
 | qa-writer (에이전트) | 테스트 시나리오 작성 | Step 1 입력 |
 | qa-engineer (에이전트) | 품질 판정 기준 | Step 7 판정 |
-| qa-test-planner (스킬) | 테스트 계획 수립 | 선행 스킬 |
 | zephermine (스킬) | qa-scenarios.md + operation-scenarios.md 생성 | Step 1 입력 |
 
 ---

@@ -37,9 +37,12 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 | 🔁 **Tireless loop** | `/chronos` autonomously runs FIND → FIX → VERIFY until the bug dies or the dawn breaks |
 | 👁️ **Hundred-eyed watchman** | `/argos` cross-references spec ↔ code ↔ tests. Nothing slips past 100 eyes |
 | ⚖️ **Underworld judge** | `/minos` weighs every Playwright test on golden scales. Fix-until-pass loop, no escape |
-| 📜 **The chronicler** | `/clio` carves the final PRD, flow diagrams, technical docs, and user manual onto bronze |
+| 📜 **The chronicler** | `/clio` — closer + muse. GO/NO-GO judgment first, then carves PRD, flow diagrams, docs, and doc site onto bronze |
+| 🏠 **Keeper of the hearth** | `/hestia` scans dead code, unused exports, orphan files — and sweeps them clean |
+| 📋 **Launch checklist** | `/launch` — pre-launch quality gates, staged rollout plan, rollback playbook |
+| 📐 **Decision records** | `/adr` — architecture decisions with alternatives, trade-offs, and superseded tracking |
 
-**98 skills · 49 agents · 13 hooks · 3 CLIs · 1 mythology**
+**95 skills · 42 agents · 10 hooks · 3 CLIs · 1 mythology**
 
 ---
 
@@ -57,7 +60,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **96 skills, 48 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **95 skills, 48 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -279,16 +282,16 @@ Includes auto gotcha/learned tracking:
 
 ## What's Inside
 
-### Skills (95)
+### Skills (97)
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
-| **Pipeline** | zephermine, zeus, argos, minos, closer | Zero-interaction full dev pipeline |
-| **Frontend** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 73 fonts, SEO+AEO+GEO audit |
-| **Development** | docker-deploy, database-schema-designer, social-login, code-reviewer + 7 more | Docker, DB design, social login, code quality |
+| **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
+| **Frontend** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 73 fonts, SEO+AEO+GEO audit |
+| **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
-| **Testing** | qa-test-planner, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
+| **Testing** | minos, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
 | **Memory** | mnemo, memory-compact, project-gotchas | 3-layer memory, auto learning |
 | **Docs** | mermaid-diagrams, marp-slide, docx, pdf, draw-io + 3 more | Diagrams, presentations, documents |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |
@@ -298,7 +301,7 @@ Includes auto gotcha/learned tracking:
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
 
-### Agents (48)
+### Agents (43)
 
 Specialized subagents for every development task:
 

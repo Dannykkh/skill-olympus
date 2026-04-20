@@ -105,19 +105,19 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (98개)
+### Skills (95개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, multi-ai-orchestration, orchestrator, workpm (다이달로스), workpm-mcp, pmworker, agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
+| 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + 스킬 프롬프트 자동 최적화 (Hill Climbing) |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
-| 🎨 Frontend | design-plan (아프로디테), design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch-design-md, stitch-enhance-prompt, stitch-loop, stitch-react, seo-audit, ui-ux-auditor | 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 |
-| 🛠️ Development | database-schema-designer, dependency-updater, docker-deploy, docker-db-backup, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-analyzer, python-backend-fastapi, reducing-entropy, social-login | 개발 도구 |
-| 🎯 Planning | game-changing-features, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
+| 🎨 Frontend | design-plan (아프로디테), design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor | 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 |
+| 🛠️ Development | database-schema-designer, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login | 개발 도구 |
+| 🎯 Planning | game-changing-features, shipping-and-launch, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, qa-test-planner, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |
+| 🧪 Testing | code-reviewer, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |
 | 📦 Git | commit-work, release-notes | Git 워크플로우 & 릴리즈 노트 자동화 (버전+CHANGELOG+태그) |
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |
@@ -127,21 +127,16 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
 | 🧠 Memory/Session | mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
 
-### Agents (43개)
+### Agents (42개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
-| **Workflow** | fullstack-development-workflow | 풀스택 개발 종합 워크플로우 |
-| | spec-interviewer | SPEC.md 심층 인터뷰 |
+| **Workflow** | spec-interviewer | SPEC.md 심층 인터뷰 |
 | | architect | 시스템 아키텍처 설계, 기술 스택 평가, ADR 작성 |
-| **Guidelines (Passive)** | react-best-practices | React/Next.js 최적화 규칙 (항상 적용) |
-| | react-useeffect-guidelines | useEffect 베스트 프랙티스 (항상 적용) |
+| **Guidelines (Passive)** | react-best-practices | React/Next.js 최적화 규칙 + useEffect 가이드 (항상 적용) |
 | | python-fastapi-guidelines | FastAPI 모범 사례 (항상 적용) |
-| | writing-guidelines | 명확한 글쓰기 규칙 (항상 적용) |
-| | humanizer-guidelines | AI 글쓰기 패턴 제거 (항상 적용) |
-| | code-review-checklist | 코드 리뷰 체크리스트 (항상 적용) |
+| | writing-guidelines | 명확한 글쓰기 + AI 패턴 제거 통합 (항상 적용) |
 | | naming-conventions | 네이밍 컨벤션 (항상 적용) |
-| | reducing-entropy | 코드베이스 최소화 철학 |
 | | web-preview-guide | 웹 프리뷰 모드 개발 가이드 (디자인 DNA → Frontend → Backend) |
 | | bilingual-dev | 한↔영 이중언어 개발 가이드 (코드 주석, 문서, i18n, 커밋 자동 양언어) |
 | | fullstack-coding-standards | 풀스택 코딩 표준 (백엔드 계층, 프론트 API, DB 연동) |
@@ -173,8 +168,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | **Migration** | migration-helper | 레거시→모던 마이그레이션 가이드 |
 | | explore-agent | 레거시 코드 분석 |
 | **Planning** | feature-tracker | 기능 목록 및 진행 상황 관리 |
-| **General** | general-purpose | 복잡한 다단계 작업용 기본 에이전트 |
-| | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
+| **General** | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
 | | chronos-worker | auto-continue-loop용 Gemini 로컬 루프 에이전트 |
 
 ## Creating a New Skill
@@ -311,11 +305,8 @@ Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-
 
 |훅|타이밍|트리거|동작|
 |---|---|---|---|
-|validate-code.sh|PostToolUse|*.py, *.ts, *.tsx, *.java 수정|500줄 제한, 함수 크기, 보안 검사|
-|check-new-file.sh|PreToolUse|새 파일 생성|reducing-entropy 확인, 유사 파일 경고|
-|validate-docs.sh|PostToolUse|*.md 작성|AI 글쓰기 패턴 검출|
+|check-new-file.sh|PreToolUse|새 파일 생성|유사 파일 경고|
 |protect-files.sh|PreToolUse|민감 파일 수정|.env, credentials 보호|
-|format-code.sh|PostToolUse|코드 수정|자동 포맷팅 (Python/TS/JS/Java/CSS)|
 |validate-api.sh|PostToolUse|API 파일 수정|구문/타입 검사|
 |save-conversation.sh|UserPromptSubmit|모든 입력|사용자 입력을 대화 파일에 저장|
 |save-response.sh|Stop|세션 종료|Assistant 응답을 대화 파일에 저장|
@@ -355,16 +346,7 @@ Layer 3: Skills (On-demand Analysis)
         "hooks": ["bash hooks/protect-files.sh"]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": ["bash hooks/validate-code.sh"]
-      },
-      {
-        "matcher": "Write",
-        "hooks": ["bash hooks/validate-docs.sh"]
-      }
-    ]
+    "PostToolUse": []
   }
 }
 ```

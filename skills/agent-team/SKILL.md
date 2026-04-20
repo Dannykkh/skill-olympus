@@ -100,6 +100,64 @@ Phase 0 시작 시 자동 판별:
 - ⚠️ **TeamCreate 시 반드시 `mode: "bypassPermissions"` 지정** — 미지정 시 teammate가 파일 쓰기 권한 승인 대기 상태에 빠져 무한 대기
 - ⚠️ **SendMessage 시 반드시 `summary` 파라미터 포함** — string message만 보내면 `error: summary is required` 에러 발생
 
+### 모델 선택 전략
+
+**"무엇을 만들지" 판단 → Opus, "어떻게 만들지" 실행 → Sonnet.**
+
+#### Wave별 모델 배분
+
+| Wave 단계 | 팀원 역할 | 모델 |
+|-----------|----------|------|
+| **Wave 0: 도메인 분석** | 아키텍처 조사, 기술 스택 평가, DB 스키마 설계 | **Opus** |
+| **Wave N: 구현** | 기능 코딩, 파일 생성, 테스트 작성 | **Sonnet** |
+| **Wave N: 자재검사** | code-reviewer 검수 | **Opus** |
+| **Wave N: 테스트 실행** | 테스트 러너, 린트, 타입 체크 | **Sonnet** |
+| **최종 검증** | AC 대조, 공정 점검 | **Opus** |
+
+```
+# 도메인 분석 — Opus
+TeamCreate({
+  name: "domain-expert",
+  model: "opus",
+  mode: "bypassPermissions",
+  prompt: "이 도메인의 아키텍처를 분석하고 설계 방향을 제안해줘..."
+})
+
+# 구현 — Sonnet
+TeamCreate({
+  name: "wave1-auth-impl",
+  model: "sonnet",
+  mode: "bypassPermissions",
+  prompt: "섹션 spec에 따라 인증 모듈을 구현해줘..."
+})
+
+# 자재검사 — Opus
+TeamCreate({
+  name: "reviewer",
+  model: "opus",
+  mode: "bypassPermissions",
+  prompt: "skills/code-reviewer/SKILL.md를 참조하여 구현 결과를 검수해줘..."
+})
+```
+
+### Wave 완료 후 테스트 검증 (필수)
+
+각 Wave 구현 완료 시, Lead는 테스트 팀원을 투입한다:
+
+1. **기존 테스트 실행**: `npm test`, `pytest`, `go test` 등 프로젝트 테스트 프레임워크 실행
+2. **린트/타입 체크**: `tsc --noEmit`, `eslint`, `ruff check` 등
+3. **실패 시**: 구현 팀원에게 수정 지시 → 재실행 (최대 3회)
+4. **3회 연속 실패**: 해당 팀원 해고 → 새 팀원(Opus)으로 교체, 실패 원인 분석부터 재시작
+
+### 에러 복구 전략
+
+| 상황 | 조치 |
+|------|------|
+| 팀원이 잘못된 파일 수정 | `git diff` 확인 → revert 지시 |
+| 테스트 3회 연속 실패 | 팀원 해고 → Opus로 교체 → 원인 분석부터 |
+| 자재검사 2회 미통과 | 구현 팀원 교체 → 리뷰 지적사항 포함 재구현 |
+| 팀원 무응답 (1분+) | shutdown → 재스폰 (최대 2회) |
+
 ### Codex 모드
 - Codex CLI 설치 (`codex` 명령어 사용 가능)
 - full-auto 모드 권장 (`codex --approval-mode full-auto`)

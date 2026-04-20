@@ -298,16 +298,31 @@ Task({
 ```
 
 **Phase 4 리더 체크리스트:**
-1. 새 팀원 4명 spawn (구현 전문, 새 이름 필수)
+1. 새 팀원 spawn (구현 전문, 새 이름 필수, `model: "sonnet"`)
 2. 승인된 제안서 + **도면 경로** + 태스크 배분 (SendMessage)
 3. 태스크별 담당 파일 영역 명시 (충돌 방지)
 4. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
 5. 팀원 보고 수신
-6. **자재검사**: 리뷰 전문가(`code-reviewer`) 팀원 1명 투입
+6. **자재검사**: 리뷰 전문가(`code-reviewer`) 팀원 1명 투입 (`model: "opus"`)
    - `skills/code-reviewer/SKILL.md`를 참조하여 구현 결과물 검수
    - 500줄 제한, 보안, 타입, SRP, DRY 체크
    - 미통과 시 → 구현 팀원에게 수정 지시 → 수정 후 재리뷰 (최대 2회)
-7. 자재검사 통과 → Phase 5 공정 점검 실행
+7. **테스트 검증**: 구현 팀원 또는 새 팀원에게 테스트 실행 위임 (`model: "sonnet"`)
+   - 프로젝트에 테스트 프레임워크가 있으면 → 기존 테스트 실행 (`npm test`, `pytest` 등)
+   - 테스트 실패 시 → 구현 팀원에게 수정 지시 → 재실행 (최대 3회)
+   - 테스트 프레임워크 없으면 → 핵심 기능에 대한 기본 테스트 작성 후 실행
+   - 린트/타입 체크도 함께 실행 (`tsc --noEmit`, `eslint`, `ruff check` 등)
+8. 자재검사 + 테스트 모두 통과 → Phase 5 공정 점검 실행
+
+**Phase 4 에러 복구 전략:**
+
+| 상황 | 조치 |
+|------|------|
+| 팀원이 잘못된 파일 수정 | 리더가 `git diff` 확인 → 해당 팀원에게 revert 지시 |
+| 테스트 3회 연속 실패 | 해당 팀원 해고 → 새 팀원(Opus)으로 교체 → 실패 원인 분석부터 지시 |
+| 자재검사 2회 연속 미통과 | 구현 팀원 해고 → 새 팀원에게 리뷰 지적사항 포함한 프롬프트로 재구현 |
+| 팀원 무응답 (1분 이상) | shutdown → `mode: "bypassPermissions"`로 재스폰 (최대 2회) |
+| 구현 결과가 도면과 완전 불일치 | Phase 4 전체 롤백 → 도면 재확인 → 팀원 교체 후 재시작 |
 
 ### Phase 5: 공정 점검 (준공 검사)
 
@@ -365,6 +380,7 @@ Task({
 
    **팀 모드 시 TeamCreate 호출 규칙:**
    - 반드시 `mode: "bypassPermissions"` 지정
+   - 모델 선택: 판단 작업(아키텍처/도메인 조사)은 `model: "opus"`, 코딩 작업(구현/테스트)은 `model: "sonnet"`
    - 이전 실행에서 같은 팀명이 남아있을 수 있으므로, 생성 전 TeamDelete 시도 (에러 무시)
    - TeamCreate 실패 시: 1회 재시도 → 재실패 시 subagent 폴백
 
@@ -507,13 +523,36 @@ Phase 5: 도면 vs 실제 코드 대조 (공정 점검)
 
 ---
 
-## AI 배정 가이드
+## Phase별 모델 배분
 
-**기본 원칙: Claude(Opus 4.6)가 모든 작업에 최상위.** 외부 CLI는 특정 강점이 있을 때만 선택적 사용.
+**기준: "무엇을 만들지" 판단 → Opus, "어떻게 만들지" 실행 → Sonnet.**
+
+| Phase | 팀원 역할 | 모델 | 이유 |
+|-------|----------|------|------|
+| **1. 리서치 & 제안** | 도메인 조사, 아키텍처 비교, 기술 스택 평가 | **Opus** | 판단·분석·비교 작업 |
+| **2. 프로세스 도면** | Mermaid 다이어그램 설계 | **Opus** | 설계 판단 |
+| **3. 영향도 분석** | 의존성 탐색, 영향 범위 식별 | **Sonnet** | 코드 탐색 (Grep/Read) |
+| **4. 구현** | 기능 코딩, 파일 생성, 테스트 작성 | **Sonnet** | 코딩 실행 |
+| **4. 자재검사** | code-reviewer 검수 | **Opus** | 품질 판단 |
+| **4. 테스트 실행** | 테스트 러너 | **Sonnet** | 실행 작업 |
+| **5. 공정 점검** | 도면 vs 코드 대조 | **Opus** | 검증 판단 |
+
+```
+# Phase 1 — 리서치 팀원 (Opus)
+TeamCreate({ name: "researcher-1", model: "opus", mode: "bypassPermissions", ... })
+
+# Phase 4 — 구현 팀원 (Sonnet)
+TeamCreate({ name: "impl-auth", model: "sonnet", mode: "bypassPermissions", ... })
+
+# Phase 4 — 자재검사 (Opus)
+TeamCreate({ name: "reviewer", model: "opus", mode: "bypassPermissions", ... })
+```
+
+### 외부 CLI 배정
 
 | 태스크 유형 | 담당 | 비고 |
 |------------|------|------|
-| **모든 코딩** | **claude** (기본) | 코딩, 추론, 아키텍처 모두 최상위 |
+| 대부분의 작업 | **claude** (기본) | Opus/Sonnet 위 테이블 참조 |
 | UI/프론트엔드 | claude 또는 gemini | Gemini CLI 설치 시 활용 가능 |
 | 대량 반복 코드 | claude 또는 codex | Codex CLI 설치 시 활용 가능 |
 | 코드 리뷰 (대용량) | claude 또는 gemini | 1M 토큰 컨텍스트 필요 시 |

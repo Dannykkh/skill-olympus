@@ -37,9 +37,12 @@
 | 🔁 **지치지 아니하는 루프** | `/chronos`가 자율적으로 FIND → FIX → VERIFY를 반복한다, 버그가 죽거나 새벽이 올 때까지 |
 | 👁️ **백 개의 눈을 가진 파수꾼** | `/argos`가 spec ↔ 코드 ↔ 테스트를 교차검증한다. 백 개의 눈을 비껴가는 것은 없다 |
 | ⚖️ **저승의 심판자** | `/minos`가 모든 Playwright 테스트를 황금 저울에 단다. fix-until-pass 루프, 도망갈 곳은 없다 |
-| 📜 **기록자** | `/clio`가 마지막 PRD, 흐름도, 기술 문서, 사용자 매뉴얼을 청동에 새긴다 |
+| 📜 **기록자 + 마무리투수** | `/clio` — 먼저 GO/NO-GO를 판정하고, 그 다음 PRD, 흐름도, 기술 문서, 문서 사이트를 청동에 새긴다 |
+| 🏠 **화로의 여신** | `/hestia`가 Dead Code, 미사용 export, 고아 파일을 찾아 화로를 깨끗이 유지한다 |
+| 📋 **출시 체크리스트** | `/launch` — 프리런치 품질 게이트, 단계적 롤아웃, 롤백 플레이북 |
+| 📐 **결정 기록** | `/adr` — 아키텍처 결정을 대안·트레이드오프·이력과 함께 기록 |
 
-**98개 스킬 · 49개 에이전트 · 13개 훅 · 3개 CLI · 1개 신화**
+**95개 스킬 · 42개 에이전트 · 10개 훅 · 3개 CLI · 1개 신화**
 
 ---
 
@@ -57,7 +60,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-끝입니다. **96개 스킬, 48개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
+끝입니다. **95개 스킬, 48개 에이전트, 12개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
 
 > Codex/Gemini가 미설치 시 해당 단계는 자동 스킵됩니다.
 
@@ -280,16 +283,16 @@ chmod +x install.sh && ./install.sh
 
 ## 구성 요소
 
-### 스킬 (95개)
+### 스킬 (97개)
 
 | 카테고리 | 스킬 | 핵심 |
 |----------|------|------|
 | **AI 도구** | codex, gemini, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
-| **파이프라인** | zephermine, zeus, argos, minos, closer | 제로 인터랙션 풀 파이프라인 |
-| **프론트엔드** | react-dev, frontend-design, stitch-*, seo-audit, ui-ux-auditor + 5개 | 161 팔레트, 73 폰트, SEO+AEO+GEO 감사 |
-| **개발** | docker-deploy, database-schema-designer, social-login, code-reviewer + 7개 | Docker, DB 설계, 소셜 로그인, 코드 품질 |
+| **파이프라인** | zephermine, zeus, argos, minos, closer, shipping-and-launch | 제로 인터랙션 풀 파이프라인, 출시 체크리스트 |
+| **프론트엔드** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5개 | 161 팔레트, 73 폰트, SEO+AEO+GEO 감사 |
+| **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
-| **테스트** | qa-test-planner, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |
+| **테스트** | minos, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |
 | **메모리** | mnemo, memory-compact, project-gotchas | 3계층 메모리, 자동 학습 |
 | **문서** | mermaid-diagrams, marp-slide, docx, pdf, draw-io + 3개 | 다이어그램, 프레젠테이션, 문서 |
 | **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing), 관리, 릴리즈 |
@@ -299,7 +302,7 @@ chmod +x install.sh && ./install.sh
 | **번역** | ko-en-translator | 한↔영 양방향 번역 (기술 문서, 코드, i18n) |
 | **유틸** | humanizer, jira, datadog-cli, excel2md + 3개 | AI 패턴 제거, 통합 |
 
-### 에이전트 (48개)
+### 에이전트 (43개)
 
 | 영역 | 에이전트 |
 |------|----------|

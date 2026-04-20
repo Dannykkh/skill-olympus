@@ -167,12 +167,12 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 설계 단계 ──────────────────────────────────────────────
   /design-system-starter    → 디자인 토큰, 색상, 폰트, 간격 정의
   젭마인 Step 8             → design-system.md 자동 생성
-  /stitch-design-md         → Stitch 프로젝트 DESIGN.md 생성
+  /stitch design             → Stitch 프로젝트 DESIGN.md 생성
 
 구현 단계 ──────────────────────────────────────────────
   frontend-design (이 스킬) → auto_apply로 미학 자동 적용
-  /stitch-loop              → Stitch MCP로 멀티페이지 생성
-  /stitch-react             → HTML → React 변환
+  /stitch loop              → Stitch MCP로 멀티페이지 생성
+  /stitch react             → HTML → React 변환
 
 리뷰 단계 ──────────────────────────────────────────────
   ui-ux-designer 에이전트   → "이 디자인 괜찮아?" 비평/조언

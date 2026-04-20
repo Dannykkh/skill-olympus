@@ -2,6 +2,77 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0] - 2026-04-20
+
+### 🧹 The Great Cleanup — 정리의 시대
+
+**v4.0.0은 대규모 품질 감사 + 정리 + 강화입니다.** addyosmani/agent-skills 벤치마크 후 중복 제거, 약한 스킬 강화, 새 올림포스 신 추가, 훅 현대화.
+
+#### ⚠️ BREAKING CHANGES
+
+- **에이전트 7개 삭제** (archive/로 이동, 복원 가능):
+  - `humanizer-guidelines` → `writing-guidelines`에 흡수
+  - `react-useeffect-guidelines` → `react-best-practices`에 흡수
+  - `web-preview-development` → `web-preview-guide`에 이미 포함
+  - `code-review-checklist` → `code-reviewer` 스킬이 커버
+  - `general-purpose` — 가치 없음 (삭제)
+  - `fullstack-development-workflow` → `fullstack-coding-standards`에 흡수
+  - `reducing-entropy` → `deprecation-and-migration` + `hestia`에 흡수
+
+- **스킬 7개 삭제** (archive/로 이동):
+  - `stitch-design-md`, `stitch-enhance-prompt`, `stitch-loop`, `stitch-react` → **`stitch`** 1개로 통합 (4 모드)
+  - `workpm-mcp` → `orchestrator` 트리거 흡수
+  - `pmworker` → `workpm` 트리거 흡수
+  - `multi-ai-orchestration` → `orchestrator`에 흡수
+  - `qa-test-planner` → `minos`에 흡수 (시나리오 현장 생성)
+  - `reducing-entropy` → `deprecation-and-migration` + `hestia`에 분리 흡수
+
+- **훅 3개 삭제** (archive/로 이동):
+  - `validate-code` — Claude Code 내장 보안 검사가 대체
+  - `validate-docs` — `humanizer` + `writing-guidelines`가 대체
+  - `debug-stop-hook` — 디버깅 전용, 개발 완료
+  - `format-code` — Claude Code가 포매팅 대체 + stdin 파싱 불일치
+
+- **500줄 파일 크기 제한 폐지** — LLM 시대에 줄 수 제한 불필요. 구조 원칙(단일 책임, 순환 의존 금지)으로 전환
+
+#### 🏛️ New Olympians
+
+| 신 | 스킬 | 역할 |
+|---|---|---|
+| Hestia (헤스티아) | `/hestia` | 화로의 여신 — Dead Code 탐지 + 코드 위생 관리 |
+| — | `/adr` | ADR(Architecture Decision Records) 작성 + 인덱스 관리 |
+| — | `/launch` | 프리런치 체크리스트 + 단계적 롤아웃 + 롤백 플레이북 |
+| — | `/deprecate` | 코드 부채 정리 + 마이그레이션 가이드 |
+
+#### 🔧 Skill Enhancements
+
+- **clio v2.1** — 마무리투수(Closer) 복원:
+  - Phase 1 신설: GO/NO-GO 판정 (테스트/린트/타입/커버리지/누락 탐지)
+  - Phase 3.5 신설: 문서 사이트 생성 (VitePress/Docusaurus/MkDocs, Hot Reload)
+  - NO-GO 시 문서 생성 중단
+- **agent-team + workpm** — Phase별 Opus/Sonnet 모델 배분:
+  - 판단 작업 (아키텍처, 도메인 조사) → Opus
+  - 코딩 작업 (구현, 테스트) → Sonnet
+  - Phase 4 테스트 단계 + 에러 복구 전략 5종 추가
+- **chronos** — loop-state.md 접근 금지 명시, 책임 분리 (AI vs 훅 vs 사용자)
+- **minos** — qa-test-planner 흡수, 시나리오 없을 때 4단계 현장 생성 프로세스
+- **seo-audit** — Lighthouse CLI 자동 실행 + 점수 기반 우선순위
+- **test-driven-development** — 테스트 프레임워크 자동 감지 (Vitest/Jest/pytest/JUnit/xUnit/Go)
+- **excel2md** — 구조 분석, 데이터 타입 감지, 병합 셀/멀티 헤더 처리
+- **web-to-markdown** — 배치 변환, 로그인 페이지, 선택적 추출
+- **stitch** — 4종 통합 (design/prompt/loop/react 모드)
+
+#### 📊 Numbers
+
+| 항목 | v3.1.0 | v4.0.0 | 변화 |
+|------|--------|--------|------|
+| Skills | 98 | 95 | -3 |
+| Agents | 49 | 42 | -7 |
+| Hooks | 13 | 10 | -3 |
+| Archive | 0 | 17 | 복원 가능 |
+
+---
+
 ## [3.1.0] - 2026-04-16
 
 ### Features

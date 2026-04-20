@@ -376,6 +376,6 @@ Emulation.setDeviceMetricsOverride(width: 375, height: 812, deviceScaleFactor: 3
 
 Stitch MCP가 활성화된 환경에서는:
 1. Phase 0으로 디자인 토큰 확정
-2. `stitch-enhance-prompt`로 프롬프트 최적화
-3. `stitch-loop`로 페이지 생성
-4. `stitch-react`로 React 컴포넌트 변환 시 디자인 토큰 적용
+2. `/stitch prompt`로 프롬프트 최적화
+3. `/stitch loop`로 페이지 생성
+4. `/stitch react`로 React 컴포넌트 변환 시 디자인 토큰 적용

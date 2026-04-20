@@ -41,8 +41,8 @@ auto_apply: false
            web-design-guidelines     → 가이드라인 준수 체크
 
   보조:
-  - stitch-loop                      → Stitch MCP 멀티페이지 (선택)
-  - stitch-react                     → HTML → React 변환 (선택)
+  - /stitch loop                     → Stitch MCP 멀티페이지 (선택)
+  - /stitch react                    → HTML → React 변환 (선택)
   - seo-audit                        → SEO/AEO/GEO 감사 (선택)
 ```
 
@@ -189,8 +189,8 @@ options:
 - `frontend-design`의 Banned Patterns(AI Slop 금지) 적용
 
 **Stitch 프로젝트인 경우:**
-- `/stitch-loop` → 멀티페이지 생성
-- `/stitch-react` → React 컴포넌트 변환
+- `/stitch loop` → 멀티페이지 생성
+- `/stitch react` → React 컴포넌트 변환
 
 ---
 
@@ -281,8 +281,8 @@ options:
 | frontend-design | 미학 적용 + DB 매칭 + 구현 (auto_apply) | 2~3 |
 | ui-ux-auditor | 8영역 UI/UX 감사 | 4 |
 | web-design-guidelines | Web Interface Guidelines 체크 | 4 |
-| stitch-loop | Stitch 멀티페이지 생성 (선택) | 3 |
-| stitch-react | HTML → React 변환 (선택) | 3 |
+| stitch (loop 모드) | Stitch 멀티페이지 생성 (선택) | 3 |
+| stitch (react 모드) | HTML → React 변환 (선택) | 3 |
 | seo-audit | SEO/AEO/GEO 감사 (후행, 선택) | - |
 | ui-ux-designer (에이전트) | 디자인 비평/조언 (필요 시) | - |
 

@@ -36,15 +36,7 @@ $Errors = @()
 $Content = Get-Content $FilePath -Raw -ErrorAction SilentlyContinue
 $Lines = Get-Content $FilePath -ErrorAction SilentlyContinue
 
-# === 1. 파일 줄 수 검사 (500줄 제한) ===
-$LineCount = $Lines.Count
-if ($LineCount -gt 500) {
-    $Errors += "[Line Limit] File has $LineCount lines (max: 500). Split into modules."
-} elseif ($LineCount -gt 400) {
-    $Warnings += "[Line Limit] File has $LineCount lines. Consider splitting soon (max: 500)."
-}
-
-# === 2. 보안 취약점 패턴 검사 ===
+# === 1. 보안 취약점 패턴 검사 ===
 # SQL Injection 패턴
 if ($Content -match "(execute|query|raw)\s*\([^)]*\+|f[`"'].*SELECT|f[`"'].*INSERT|f[`"'].*UPDATE|f[`"'].*DELETE") {
     $Errors += "[Security] Potential SQL Injection: Use parameterized queries instead of string concatenation"
@@ -65,7 +57,7 @@ if ($Content -match "(?i)(password|secret|api_key|apikey|token)\s*=\s*[`"'][^`"'
     $Warnings += "[Security] Potential hardcoded secret detected: Use environment variables"
 }
 
-# === 3. TODO/FIXME 없이 주석 처리된 코드 경고 ===
+# === 2. TODO/FIXME 없이 주석 처리된 코드 경고 ===
 $CommentedCode = ($Lines | Where-Object { $_ -match "^\s*(#|//)\s*(if|for|while|def|function|class|return|import|const|let|var)" }).Count
 if ($CommentedCode -gt 5) {
     $Warnings += "[Clean Code] $CommentedCode lines of commented-out code detected: Remove or add TODO"

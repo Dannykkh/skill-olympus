@@ -302,6 +302,9 @@ claude plugin install voltagent-qa-sec
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
 | `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 디자인시스템→DB매칭→구현→리뷰 (/aphrodite) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
+| `skills/deprecation-and-migration/` | 코드 부채 정리 + 마이그레이션 — 레거시 폐기 계획, API 버전 전환, Strangler Fig 패턴, 부채 감사 (/deprecate) |
+| `skills/documentation-and-adrs/` | ADR(Architecture Decision Records) — 아키텍처 결정 기록 + 인덱스 관리 + MEMORY.md 연동 (/adr) |
+| `skills/shipping-and-launch/` | 출시 체크리스트 — 프리런치 품질 게이트, 단계적 롤아웃, 롤백 플레이북, Post-Launch 점검 (/launch) |
 | `skills/social-login/` | 소셜 로그인 — Google/Apple/Kakao/Naver × React Native/Swift/Kotlin/Web 구현 가이드 + Gotcha 체크리스트 |
 
 ---

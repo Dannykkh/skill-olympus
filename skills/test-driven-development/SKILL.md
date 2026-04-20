@@ -17,6 +17,43 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
+## Step 0: 테스트 프레임워크 자동 감지
+
+TDD 시작 전 프로젝트의 테스트 환경을 감지합니다:
+
+```bash
+# 프레임워크 감지
+_TEST_CMD=""
+[ -f "package.json" ] && grep -q "vitest" package.json && _TEST_CMD="npx vitest run"
+[ -f "package.json" ] && grep -q "jest" package.json && _TEST_CMD="npx jest"
+[ -f "pytest.ini" ] || [ -f "pyproject.toml" ] && grep -q "pytest" pyproject.toml 2>/dev/null && _TEST_CMD="pytest"
+[ -f "pom.xml" ] && _TEST_CMD="mvn test"
+[ -f "*.csproj" ] && _TEST_CMD="dotnet test"
+[ -f "go.mod" ] && _TEST_CMD="go test ./..."
+
+echo "TEST_CMD: ${_TEST_CMD:-감지 실패 — 사용자에게 확인}"
+```
+
+| 감지 패턴 | 프레임워크 | 단일 파일 실행 | 전체 실행 |
+|-----------|-----------|--------------|----------|
+| vitest in package.json | Vitest | `npx vitest run path/to/test.ts` | `npx vitest run` |
+| jest in package.json | Jest | `npx jest path/to/test.ts` | `npx jest` |
+| pytest.ini / pyproject.toml | pytest | `pytest path/to/test.py` | `pytest` |
+| pom.xml | JUnit/Maven | `mvn test -pl module -Dtest=TestClass` | `mvn test` |
+| *.csproj | xUnit/NUnit | `dotnet test --filter ClassName` | `dotnet test` |
+| go.mod | Go testing | `go test ./pkg/...` | `go test ./...` |
+| 없음 | - | 사용자에게 확인 | - |
+
+**파일 위치 컨벤션:**
+
+| 프레임워크 | 테스트 파일 위치 | 네이밍 |
+|-----------|----------------|--------|
+| Vitest/Jest | `src/__tests__/` 또는 `*.test.ts` | `{name}.test.ts` |
+| pytest | `tests/` | `test_{name}.py` |
+| JUnit | `src/test/java/` | `{Name}Test.java` |
+| xUnit | `*.Tests/` | `{Name}Tests.cs` |
+| Go | 같은 디렉토리 | `{name}_test.go` |
+
 ## The Iron Law
 
 ```

@@ -29,7 +29,7 @@ Write-Host "[Hook] New file creation detected: $FilePath"
 
 $Warnings = @()
 
-# === 1. Reducing Entropy 체크 ===
+# === 1. New File Check 체크 ===
 # 테스트/목/스텁 파일은 허용
 if ($FileName -match "test|spec|mock|stub|fixture|__init__.py") {
     exit 0
@@ -41,7 +41,7 @@ if ((Test-Path $DirName) -and $BaseName.Length -ge 5) {
     $SimilarFiles = Get-ChildItem -Path $DirName -File -Filter "$Prefix*" -ErrorAction SilentlyContinue | Select-Object -First 5
 
     if ($SimilarFiles) {
-        $Warnings += "[Reducing Entropy] Similar files exist in directory:"
+        $Warnings += "[New File Check] Similar files exist in directory:"
         foreach ($file in $SimilarFiles) {
             $Warnings += "  -> $($file.Name)"
         }
@@ -51,7 +51,7 @@ if ((Test-Path $DirName) -and $BaseName.Length -ge 5) {
 
 # === 3. 유틸/헬퍼 파일 생성 경고 ===
 if ($FileName -match "util|utils|helper|helpers|common|shared") {
-    $Warnings += "[Reducing Entropy] Utility file detected: $FileName"
+    $Warnings += "[New File Check] Utility file detected: $FileName"
     $Warnings += "  -> Question: Can this logic be placed in the file that uses it?"
     $Warnings += "  -> Consider: Is this truly reusable across 3+ files?"
 }
@@ -61,7 +61,7 @@ if ($FileName -match "^(index\.ts|index\.js|__init__\.py|mod\.rs)$") {
     if (Test-Path $DirName) {
         $FileCount = (Get-ChildItem -Path $DirName -File -ErrorAction SilentlyContinue | Measure-Object).Count
         if ($FileCount -eq 0) {
-            $Warnings += "[Reducing Entropy] Creating new module/package: $DirName"
+            $Warnings += "[New File Check] Creating new module/package: $DirName"
             $Warnings += "  -> Question: Is a new module necessary, or can existing modules be extended?"
         }
     }
@@ -71,7 +71,7 @@ if ($FileName -match "^(index\.ts|index\.js|__init__\.py|mod\.rs)$") {
 if ($FileName -match "\.config\.|\.conf$|\.cfg$|rc\.js$|rc\.json$") {
     $ExistingConfigs = Get-ChildItem -Path "." -Recurse -Depth 2 -Include "*.config.*", "*.conf" -ErrorAction SilentlyContinue | Select-Object -First 5
     if ($ExistingConfigs) {
-        $Warnings += "[Reducing Entropy] New config file: $FileName"
+        $Warnings += "[New File Check] New config file: $FileName"
         $Warnings += "  -> Existing configs found. Consider consolidating."
     }
 }
@@ -80,7 +80,7 @@ if ($FileName -match "\.config\.|\.conf$|\.cfg$|rc\.js$|rc\.json$") {
 if ($Warnings.Count -gt 0) {
     Write-Host ""
     Write-Host "================================================================"
-    Write-Host "          REDUCING ENTROPY - Pre-Creation Check"
+    Write-Host "          NEW FILE CHECK - Pre-Creation Check"
     Write-Host "================================================================"
     Write-Host "  Before creating new files, ask:"
     Write-Host "  1. Can I extend an existing file instead?"

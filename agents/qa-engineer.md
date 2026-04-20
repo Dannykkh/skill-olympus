@@ -173,7 +173,7 @@ REST API contract and behavior testing.
 ## Test Case & Patterns
 
 테스트 시나리오/케이스 작성은 **qa-writer** 에이전트 사용.
-코드 패턴 (Unit/E2E) 예시는 `skills/qa-test-planner/SKILL.md` 참조.
+코드 패턴 (Unit/E2E) 예시는 `skills/minos/SKILL.md` 참조.
 
 ---
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # .claude/hooks/check-new-file.sh
-# 새 파일 생성 전 reducing-entropy 원칙 확인 (PreToolUse 훅)
+# 새 파일 생성 전 유사 파일/중복 생성 경고 (PreToolUse 훅)
 # 트리거: Write 도구 사용 전 (새 파일 생성 시)
 
 set -e
@@ -28,7 +28,7 @@ echo "[Hook] New file creation detected: $FILE_PATH"
 
 WARNINGS=()
 
-# === 1. Reducing Entropy 체크 ===
+# === 1. New File Check 체크 ===
 # 테스트/목/스텁 파일은 허용
 case "$FILENAME" in
     *test*|*spec*|*mock*|*stub*|*fixture*|__init__.py)
@@ -47,7 +47,7 @@ if [ -d "$DIRNAME" ]; then
         SIMILAR_FILES=$(find "$DIRNAME" -maxdepth 1 -name "${PREFIX}*" -type f 2>/dev/null | head -5)
 
         if [ -n "$SIMILAR_FILES" ]; then
-            WARNINGS+=("[Reducing Entropy] Similar files exist in directory:")
+            WARNINGS+=("[New File Check] Similar files exist in directory:")
             while IFS= read -r file; do
                 WARNINGS+=("  → $(basename "$file")")
             done <<< "$SIMILAR_FILES"
@@ -59,7 +59,7 @@ fi
 # === 3. 유틸/헬퍼 파일 생성 경고 ===
 case "$FILENAME" in
     *util*|*utils*|*helper*|*helpers*|*common*|*shared*)
-        WARNINGS+=("[Reducing Entropy] Utility file detected: $FILENAME")
+        WARNINGS+=("[New File Check] Utility file detected: $FILENAME")
         WARNINGS+=("  → Question: Can this logic be placed in the file that uses it?")
         WARNINGS+=("  → Consider: Is this truly reusable across 3+ files?")
         ;;
@@ -71,7 +71,7 @@ case "$FILENAME" in
         if [ -d "$DIRNAME" ]; then
             FILE_COUNT=$(find "$DIRNAME" -maxdepth 1 -type f 2>/dev/null | wc -l)
             if [ "$FILE_COUNT" -eq 0 ]; then
-                WARNINGS+=("[Reducing Entropy] Creating new module/package: $DIRNAME")
+                WARNINGS+=("[New File Check] Creating new module/package: $DIRNAME")
                 WARNINGS+=("  → Question: Is a new module necessary, or can existing modules be extended?")
             fi
         fi
@@ -83,7 +83,7 @@ case "$FILENAME" in
     *.config.*|*.conf|*.cfg|*rc.js|*rc.json)
         EXISTING_CONFIGS=$(find "." -maxdepth 2 -name "*.config.*" -o -name "*.conf" 2>/dev/null | head -5)
         if [ -n "$EXISTING_CONFIGS" ]; then
-            WARNINGS+=("[Reducing Entropy] New config file: $FILENAME")
+            WARNINGS+=("[New File Check] New config file: $FILENAME")
             WARNINGS+=("  → Existing configs found. Consider consolidating.")
         fi
         ;;
@@ -93,7 +93,7 @@ esac
 if [ ${#WARNINGS[@]} -gt 0 ]; then
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║          REDUCING ENTROPY - Pre-Creation Check               ║"
+    echo "║          NEW FILE CHECK - Pre-Creation Check               ║"
     echo "╠══════════════════════════════════════════════════════════════╣"
     echo "║  Before creating new files, ask:                             ║"
     echo "║  1. Can I extend an existing file instead?                   ║"
