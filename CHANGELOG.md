@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.1] - 2026-04-20
+
+### Bug Fixes
+- **chronos**: `continue-loop.ps1` Line 215 — `Get-FrontmatterValue $stateContent` → `Get-FmValue $frontmatter` (Codex 자동 재개 매 턴 실패 원인)
+- **install**: `install-hooks-config.js`에서 삭제된 훅 3개(validate-code, validate-docs, format-code) 설치 시도 제거
+- **cross-cli**: codex-mnemo/gemini-mnemo agents-md-rules에서 삭제된 스킬(workpm-mcp, pmworker) 참조 수정
+- **docs**: AGENTS.md Task Lookup + Workflow 체이닝 stale 참조 전부 교체, 500줄 제한 → 구조 원칙
+- **hooks**: settings.example*.json, SETUP.md에서 삭제된 훅 설정 제거
+- **.agents/hooks**: check-new-file "Reducing Entropy" → "New File Check" 동기화
+- **.agents/.codex-sync-manifest.json**: 삭제된 훅 4개 참조 제거
+
+### Other Changes
+- **hooks**: ddingdong-noti(데스크톱 알림) 비활성화 → archive
+
+---
+
 ## [4.0.0] - 2026-04-20
 
 ### 🧹 The Great Cleanup — 정리의 시대
