@@ -16,8 +16,8 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Task|Read First|
 |---|---|
 |AI/LLM API 코딩|agents/ai-ml.md|
-|React/Next.js|agents/react-best-practices.md,agents/react-useeffect-guidelines.md|
-|Code Review|agents/code-review-checklist.md,skills/code-reviewer/SKILL.md|
+|React/Next.js|agents/react-best-practices.md|
+|Code Review|skills/code-reviewer/SKILL.md|
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
 |Docker DB Backup|skills/docker-db-backup/SKILL.md|
 |API Testing|agents/api-tester.md|
@@ -32,12 +32,12 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Database (PostgreSQL/Supabase)|agents/database-postgresql.md,skills/supabase-postgres-best-practices/SKILL.md|
 |Migration|agents/migration-helper.md,agents/explore-agent.md|
 |Naming|agents/naming-conventions.md|
-|Full Workflow|agents/fullstack-development-workflow.md|
+|Full Workflow|agents/fullstack-coding-standards.md|
 |Architecture|agents/architect.md|
 |SPEC Interview|agents/spec-interviewer.md|
 |Security Review|agents/security-reviewer.md|
 |Web Preview + 디자인 토큰|agents/web-preview-guide.md,skills/design-system-starter/SKILL.md|
-|Stitch UI|agents/stitch-developer.md,skills/stitch-design-md/SKILL.md|
+|Stitch UI|agents/stitch-developer.md,skills/stitch/SKILL.md|
 |Agent Teams (Opus 4.6 병렬 실행)|skills/agent-team/SKILL.md|
 |Codex Multi-Agent Team|skills/agent-team-codex/SKILL.md|
 
@@ -50,10 +50,11 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |기능 추가|zephermine → agent-team/수동 구현 → minos|
 |데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
 |UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
-|UI 디자인 → 구현|stitch-enhance-prompt → stitch-loop → stitch-react → frontend-react|
-|코드 리뷰 종합|code-reviewer → security-reviewer → reducing-entropy|
-|리팩토링|explore-agent → reducing-entropy → code-reviewer|
-|보안 감사|security-reviewer → code-review-checklist|
+|UI 디자인 → 구현|stitch (prompt → loop → react 모드) → frontend-react|
+|코드 리뷰 종합|code-reviewer → security-reviewer|
+|코드 정리|hestia (dead code 탐지 + 삭제)|
+|리팩토링|explore-agent → deprecation-and-migration → code-reviewer|
+|보안 감사|security-reviewer → code-reviewer|
 |UI/UX 품질 점검|ui-ux-auditor → ui-ux-designer (필요 시 디자인 조언)|
 |QA 자동화|minos (시나리오 자동 생성 → Playwright → Healer)|
 |반복 수정 루프|auto-continue-loop (이슈 탐색 → 수정 → 검증 → 다음, 자동 반복)|
@@ -65,10 +66,10 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 ## Core Rules (Always Apply)
 
-|Rule|Limit|Action|
+|Rule|Principle|Action|
 |---|---|---|
-|File size|≤500 lines|Split into modules|
-|Function size|≤50 lines|Extract helper functions|
+|Single responsibility|1 file = 1 role|Split by responsibility|
+|No circular deps|Unidirectional|Restructure dependency direction|
 |Security|OWASP Top 10|Check SQL injection, XSS, CSRF|
 |Type safety|Required|Add type hints (Python) / TypeScript|
 |DRY principle|No duplication|Extract reusable components|
@@ -236,7 +237,7 @@ bash /mnt/skills/user/{skill-name}/scripts/{script}.sh [args]
 
 Skills are loaded on-demand — only the skill name and description are loaded at startup. The full `SKILL.md` loads into context only when the agent decides the skill is relevant. To minimize context usage:
 
-- **Keep SKILL.md under 500 lines** — put detailed reference material in separate files
+- **Keep SKILL.md concise** — put detailed reference material in separate files (progressive disclosure)
 - **Write specific descriptions** — helps the agent know exactly when to activate the skill
 - **Use progressive disclosure** — reference supporting files that get read only when needed
 - **Prefer scripts over inline code** — script execution doesn't consume context (only output does)

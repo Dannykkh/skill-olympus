@@ -82,10 +82,7 @@ const HOOK_BUNDLE_MAP = {
   "orchestrator-detector": ["orchestrator"],
   "check-new-file": ["all-only"], // only installed with the 'all' bundle
   "protect-files": ["all-only"],
-  "validate-code": ["all-only"],
-  "validate-docs": ["all-only"],
   "validate-api": ["all-only"],
-  "format-code": ["all-only"],
   "save-response": ["mnemo"],
   "save-tool-use": ["mnemo"], // Claude only: PostToolUse 도구 관찰 로그
   "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
@@ -151,14 +148,8 @@ function buildClaudeHooksConfig(dir, isWindows) {
   const post = [];
   if (shouldIncludeHook("save-tool-use"))
     post.push(hookEntry(".*", cmd(`save-tool-use.${ext}`)));
-  if (shouldIncludeHook("validate-code"))
-    post.push(hookEntry("Edit|Write", cmd(`validate-code.${ext}`)));
-  if (shouldIncludeHook("validate-docs"))
-    post.push(hookEntry("Write", cmd(`validate-docs.${ext}`)));
   if (shouldIncludeHook("validate-api"))
     post.push(hookEntry("Edit|Write", cmd(`validate-api.${ext}`)));
-  if (shouldIncludeHook("format-code"))
-    post.push(hookEntry("Edit|Write", cmd(`format-code.${ext}`)));
   if (post.length > 0) config.PostToolUse = post;
 
   // Stop
@@ -217,14 +208,8 @@ function buildGeminiHooksConfig(dir, isWindows) {
   const aa = [];
   if (shouldIncludeHook("save-turn"))
     aa.push(hookEntry("", cmd(`save-turn.${ext}`)));
-  if (shouldIncludeHook("validate-code"))
-    aa.push(hookEntry("", cmd(`validate-code.${ext}`)));
-  if (shouldIncludeHook("validate-docs"))
-    aa.push(hookEntry("", cmd(`validate-docs.${ext}`)));
   if (shouldIncludeHook("validate-api"))
     aa.push(hookEntry("", cmd(`validate-api.${ext}`)));
-  if (shouldIncludeHook("format-code"))
-    aa.push(hookEntry("", cmd(`format-code.${ext}`)));
   if (shouldIncludeHook("loop-stop"))
     aa.push(hookEntry("", cmd(`loop-stop.${ext}`)));
   if (shouldIncludeHook("ddingdong-noti"))
