@@ -159,9 +159,9 @@ git checkout master && git merge develop
 
 |훅|시점|동작|
 |---|---|---|
-|validate-code.sh|PostToolUse|500줄 제한, 보안 검사|
-|check-new-file.sh|PreToolUse|새 파일 필요성 확인|
-|validate-docs.sh|PostToolUse|문서 AI 패턴 검출|
+|check-new-file.sh|PreToolUse|유사 파일/중복 경고|
+|protect-files.sh|PreToolUse|.env, credentials 보호|
+|validate-api.sh|PostToolUse|API 파일 구문/타입 검사|
 
 ---
 

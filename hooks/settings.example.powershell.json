@@ -39,16 +39,6 @@
 
     "PostToolUse": [
       {
-        "description": "코드 파일 검증 (500줄, 함수 크기, 보안)",
-        "matcher": "Edit|Write",
-        "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-code.ps1 \"$TOOL_INPUT\""
-      },
-      {
-        "description": "마크다운 AI 글쓰기 패턴 검출",
-        "matcher": "Write",
-        "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-docs.ps1 \"$TOOL_INPUT\""
-      },
-      {
         "description": "API 파일 유효성 검사",
         "matcher": "Edit|Write",
         "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-api.ps1 \"$TOOL_INPUT\""

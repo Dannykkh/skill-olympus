@@ -93,9 +93,7 @@ Codex에는 Claude의 `UserPromptSubmit` 훅이 없으므로, `orchestrator-dete
 
 **핵심 규칙:**
 - 사용자 요청에 `zeus`, `/zeus`, `제우스`가 있으면 일반 설명으로 넘기지 말고 즉시 `zeus` skill을 읽고 전자동 파이프라인 모드로 들어갑니다.
-- 사용자 요청에 `workpm-mcp`, `/workpm-mcp`가 있으면 즉시 `workpm-mcp` skill을 읽고 MCP-only PM 모드로 들어갑니다.
-- 사용자 요청에 `workpm`, `/daedalus`, `다이달로스`가 있으면 즉시 `workpm` skill을 읽고 PM 모드로 들어갑니다.
-- 사용자 요청에 `pmworker`가 있으면 즉시 `pmworker` skill을 읽고 Worker 모드로 들어갑니다.
+- 사용자 요청에 `workpm`, `workpm-mcp`, `/daedalus`, `다이달로스`, `pmworker`가 있으면 즉시 `workpm` skill을 읽고 PM 모드로 들어갑니다. (MCP 대규모 모드는 `orchestrator` skill 참조)
 - 사용자 요청에 `agent-team`, `/agent-team`, `/poseidon`, `포세이돈`, `poseidon`이 있으면 즉시 `agent-team-codex` skill을 읽고 팀 리드 모드로 들어갑니다.
 - 이런 요청은 일반 질의응답보다 **명시적 모드 전환 요청**으로 우선 해석합니다.
 

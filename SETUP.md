@@ -581,9 +581,7 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
       { "matcher": "Write", "command": "bash hooks/check-new-file.sh \"$TOOL_INPUT\"" }
     ],
     "PostToolUse": [
-      { "matcher": "Write|Edit", "command": "bash hooks/validate-code.sh \"$TOOL_INPUT\"" },
-      { "matcher": "Write|Edit", "command": "bash hooks/format-code.sh \"$TOOL_INPUT\"" },
-      { "matcher": "Write", "command": "bash hooks/validate-docs.sh \"$TOOL_INPUT\"" }
+      { "matcher": "Write|Edit", "command": "bash hooks/validate-api.sh \"$TOOL_INPUT\"" }
     ]
   }
 }
@@ -602,9 +600,7 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
       { "matcher": "Write", "command": "powershell -ExecutionPolicy Bypass -File hooks/check-new-file.ps1 \"$TOOL_INPUT\"" }
     ],
     "PostToolUse": [
-      { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-code.ps1 \"$TOOL_INPUT\"" },
-      { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/format-code.ps1 \"$TOOL_INPUT\"" },
-      { "matcher": "Write", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-docs.ps1 \"$TOOL_INPUT\"" }
+      { "matcher": "Write|Edit", "command": "powershell -ExecutionPolicy Bypass -File hooks/validate-api.ps1 \"$TOOL_INPUT\"" }
     ]
   }
 }
