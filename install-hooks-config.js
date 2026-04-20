@@ -88,7 +88,6 @@ const HOOK_BUNDLE_MAP = {
   "save-turn": ["mnemo"], // Gemini only: saves User+Assistant together in AfterAgent
   "reconcile-conversations": ["mnemo"], // SessionStart: backfill missed assistant turns from JSONL
   "loop-stop": ["all-only"], // Chronos 루프 Stop 훅 (loop-state.md 없으면 자동 통과)
-  "ddingdong-noti": ["all-only"], // OS 네이티브 알림 훅
 };
 
 // Check whether the given hook should be installed based on bundle selection
@@ -158,8 +157,6 @@ function buildClaudeHooksConfig(dir, isWindows) {
     stop.push(hookEntry("", cmd(`save-response.${ext}`)));
   if (shouldIncludeHook("loop-stop"))
     stop.push(hookEntry("", cmd(`loop-stop.${ext}`)));
-  if (shouldIncludeHook("ddingdong-noti"))
-    stop.push(hookEntry("", cmd(`ddingdong-noti.${ext}`)));
   if (stop.length > 0) config.Stop = stop;
 
   return config;
@@ -212,8 +209,6 @@ function buildGeminiHooksConfig(dir, isWindows) {
     aa.push(hookEntry("", cmd(`validate-api.${ext}`)));
   if (shouldIncludeHook("loop-stop"))
     aa.push(hookEntry("", cmd(`loop-stop.${ext}`)));
-  if (shouldIncludeHook("ddingdong-noti"))
-    aa.push(hookEntry("", cmd(`ddingdong-noti.${ext}`)));
   if (aa.length > 0) config.AfterAgent = aa;
 
   return config;
