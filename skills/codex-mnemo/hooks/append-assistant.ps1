@@ -2,7 +2,7 @@ function Add-CodexAssistantEntry {
     param(
         [Parameter(Mandatory = $true)][string]$ConvFile,
         [Parameter(Mandatory = $true)][string]$Timestamp,
-        [Parameter(Mandatory = $true)][string]$Response
+        [string]$Response
     )
 
     if (-not $Response -or $Response.Trim().Length -lt 5) { return }

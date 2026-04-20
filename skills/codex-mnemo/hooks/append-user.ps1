@@ -2,7 +2,7 @@ function Add-CodexUserEntry {
     param(
         [Parameter(Mandatory = $true)][string]$ConvFile,
         [Parameter(Mandatory = $true)][string]$Timestamp,
-        [Parameter(Mandatory = $true)][string]$UserText
+        [string]$UserText
     )
 
     if (-not $UserText -or $UserText.Trim().Length -lt 1) { return }

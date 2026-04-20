@@ -10,6 +10,18 @@ const EMPTY_SUMMARY = {
   newFiles: [],
   messages: [],
 };
+const DEFAULT_ENABLED_HOOKS = ["check-new-file", "protect-files", "validate-api"];
+const ENABLED_HOOKS = new Set(
+  (process.env.CODEX_HOOK_BRIDGE_HOOKS || DEFAULT_ENABLED_HOOKS.join(","))
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean),
+);
+
+function isHookEnabled(scriptBase) {
+  return ENABLED_HOOKS.has("*") || ENABLED_HOOKS.has(scriptBase);
+}
+
 function readStdin() {
   try {
     return fs.readFileSync(0, "utf8");
@@ -314,6 +326,8 @@ function trimOutput(text, maxLength = 320) {
 }
 
 function runHook(baseDir, scriptBase, filePath, mode, userText) {
+  if (!isHookEnabled(scriptBase)) return null;
+
   const scriptPath = resolveHookScript(scriptBase);
   if (!scriptPath) return null;
 
