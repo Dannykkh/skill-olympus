@@ -212,7 +212,7 @@ if ($turnId -and $lastTurnId -and $turnId -eq $lastTurnId) {
 }
 
 # Stale guard: 2시간 초과 시 자동 종료
-$startedAt = Get-FrontmatterValue $stateContent "started_at"
+$startedAt = Get-FmValue $frontmatter "started_at"
 if ($startedAt) {
     try {
         $startTime = [DateTimeOffset]::Parse($startedAt)
