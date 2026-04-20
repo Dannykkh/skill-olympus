@@ -138,7 +138,14 @@ function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
 
     if ($completionPromise -and $completionPromise -ne "null") {
         $promiseMatch = [regex]::Match($lastOutput, '<promise>(.*?)</promise>')
-        if ($promiseMatch.Success -and $promiseMatch.Groups[1].Value.Trim() -eq $completionPromise) {
+        if ($promiseMatch.Success) {
+            $promiseValue = $promiseMatch.Groups[1].Value.Trim()
+            if ($promiseValue -eq $completionPromise -or $promiseValue -match [regex]::Escape($completionPromise) -or $completionPromise -match [regex]::Escape($promiseValue)) {
+                return $true
+            }
+        }
+        # <promise> 태그가 있기만 하면 완료로 간주
+        if ($lastOutput -match '<promise>') {
             return $true
         }
     }

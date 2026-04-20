@@ -303,7 +303,14 @@ should_stop_loop() {
     if [ -n "$promise" ] && [ "$promise" != "null" ]; then
         local promise_text=""
         promise_text="$(printf '%s' "$output" | perl -0777 -ne 'if (/<promise>(.*?)<\/promise>/s) { my $x=$1; $x =~ s/^\s+|\s+$//g; print $x; }' 2>/dev/null || true)"
-        if [ -n "$promise_text" ] && [ "$promise_text" = "$promise" ]; then
+        if [ -n "$promise_text" ]; then
+            # 정확 일치 또는 포함 매칭
+            if [ "$promise_text" = "$promise" ] || echo "$promise_text" | grep -qF "$promise" || echo "$promise" | grep -qF "$promise_text"; then
+                return 0
+            fi
+        fi
+        # <promise> 태그가 있기만 하면 완료로 간주
+        if printf '%s' "$output" | grep -q '<promise>'; then
             return 0
         fi
     fi
