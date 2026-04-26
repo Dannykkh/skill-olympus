@@ -96,7 +96,7 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp
 **이 프로젝트의 Guideline Agents**:
 - `react-best-practices` - React 최적화 규칙
 - `python-fastapi-guidelines` - FastAPI 모범 사례
-- `code-review-checklist` - 코드 품질 기준
+- `code-reviewer` - 코드 품질 기준
 
 ---
 

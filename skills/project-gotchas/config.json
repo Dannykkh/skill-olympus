@@ -3,5 +3,13 @@
   "observer": {
     "enabled": true,
     "min_observations_to_analyze": 20
+  },
+  "analyzer": {
+    "model_tier": "cleanup-low",
+    "models": {
+      "claude": "haiku",
+      "codex": "gpt-5.2-mini + reasoning low",
+      "gemini": "gemini-2.5-flash-lite"
+    }
   }
 }

@@ -296,6 +296,11 @@ fi
 # ============================================
 
 if [ "$HAS_CLAUDE" = "1" ]; then
+    # Move deprecated Olympus agents/skills out of active Claude paths, with backup.
+    if [ -f "$SCRIPT_DIR/scripts/prune-stale-assets.js" ]; then
+        node "$SCRIPT_DIR/scripts/prune-stale-assets.js" "$CLAUDE_DIR" --label claude
+    fi
+
     # Skills 설치 (코어 설치)
     echo "[1/7] Skills 설치 중... (글로벌) [코어]"
     if [ -d "$SCRIPT_DIR/skills" ]; then
@@ -326,14 +331,31 @@ if [ "$HAS_CLAUDE" = "1" ]; then
     mkdir -p "$CLAUDE_DIR/agents"
     if [ -d "$SCRIPT_DIR/agents" ]; then
         for agent_file in "$SCRIPT_DIR/agents"/*.md; do
-            [ -f "$agent_file" ] && echo "      - $(basename "$agent_file")" && cp "$agent_file" "$CLAUDE_DIR/agents/"
+            if [ -f "$agent_file" ]; then
+                agent_name=$(basename "$agent_file")
+                agent_name_lc=$(printf '%s' "$agent_name" | tr '[:upper:]' '[:lower:]')
+                if [ "$agent_name_lc" = "memory.md" ]; then
+                    echo "      - $agent_name [skipped: not an agent]"
+                else
+                    echo "      - $agent_name"
+                    cp "$agent_file" "$CLAUDE_DIR/agents/"
+                fi
+            fi
         done
     fi
     for skill_dir in "$SCRIPT_DIR/skills"/*/; do
         if [ -d "${skill_dir}agents" ]; then
             skill_name=$(basename "$skill_dir")
             for agent_file in "${skill_dir}agents"/*.md; do
-                [ -f "$agent_file" ] && echo "      - $(basename "$agent_file") [$skill_name]" && cp "$agent_file" "$CLAUDE_DIR/agents/"
+                if [ -f "$agent_file" ]; then
+                    agent_name=$(basename "$agent_file")
+                    if [ -f "$SCRIPT_DIR/agents/$agent_name" ]; then
+                        echo "      - $agent_name [$skill_name skipped: root agent wins]"
+                    else
+                        echo "      - $agent_name [$skill_name]"
+                        cp "$agent_file" "$CLAUDE_DIR/agents/"
+                    fi
+                fi
             done
         fi
     done

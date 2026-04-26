@@ -82,7 +82,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 - 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/seo-audit`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다.
 - 내부 구현은 CLI별 실행 모델 차이를 반영해 달라질 수 있지만, 사용자 인터페이스와 핵심 결과는 맞춰야 합니다.
 - 단순 파일 복사만으로 parity를 판단하지 말고, 전역 설치본에서 실제로 동작하는지까지 검증합니다.
-- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `workpm`, `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈)
+- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모)
 
 ---
 

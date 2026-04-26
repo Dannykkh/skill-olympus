@@ -1,6 +1,6 @@
 ---
 name: workpm
-description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행.
+description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행. Claude는 native TeamCreate, Codex/Gemini는 orchestrator MCP 경로를 사용합니다.
 triggers:
   - "workpm"
   - "daedalus"
@@ -26,9 +26,20 @@ auto_apply: false
 다이달로스는 **설계 산출물이 없을 때** 스스로 리서치 → 제안 → 도면 작성 → 구현까지 전체를 관리합니다.
 젭마인 산출물이 이미 있다면 `/agent-team`이 더 적합합니다 (섹션 파싱 + Wave 정렬 + 전문가 매칭).
 
+## 실행 경로
+
+| CLI | 실행 경로 | 기준 파일 |
+|-----|----------|----------|
+| Claude Code | Native Agent Teams (`TeamCreate`/`SendMessage`) | `skills/orchestrator/commands/workpm.md` |
+| Codex | Orchestrator MCP PM/Worker | `skills/orchestrator/commands/workpm-mcp.md` |
+| Gemini | Orchestrator MCP PM/Worker | `skills/orchestrator/commands/workpm-mcp.md` |
+
+`pmworker`는 레거시 호출명입니다. 별도 스킬로 보지 말고 이 다이달로스/오케스트레이터 경로로 라우팅합니다.
+
 ## 모델 선택 전략
 
 **"무엇을 만들지" 판단 → Opus, "어떻게 만들지" 실행 → Sonnet.**
+Codex/Gemini MCP 경로에서는 같은 의도를 `orchestrator_detect_providers`로 확인된 provider에 맞춰 매핑합니다.
 
 | Phase | 팀원 역할 | 모델 |
 |-------|----------|------|
@@ -42,8 +53,14 @@ auto_apply: false
 
 ## 워크플로우
 
-네이티브 Agent Teams (TeamCreate/SendMessage)를 사용합니다.
+CLI 런타임에 따라 단계 수가 다릅니다.
+
+| 경로 | 단계 | 차이 |
+|-----|------|------|
+| Claude native | 5단계 | Phase 3에 영향도 분석 포함 |
+| Codex/Gemini MCP | 4단계 | 영향도 분석을 별도 Phase로 두지 않고 구현 계획에 흡수 |
 
 ## Start
 
-Read `skills/orchestrator/commands/workpm.md` and follow the 4-phase workflow.
+Claude Code에서는 `skills/orchestrator/commands/workpm.md`를 읽고 native 5단계 워크플로우를 따릅니다.
+Codex/Gemini에서는 `skills/orchestrator/commands/workpm-mcp.md`를 읽고 MCP 기반 PM/Worker 워크플로우를 따릅니다.

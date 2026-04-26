@@ -141,19 +141,20 @@ skills/project-gotchas/
 ├── SKILL.md              ← 이 파일 (규칙서)
 ├── config.json           ← 관찰 설정
 └── agents/
-    └── analyzer.md       ← Haiku 분석 에이전트 (패턴 감지 → gotcha 생성)
+    └── gotcha-analyzer.md ← cleanup-low 분석 에이전트 (패턴 감지 → gotcha 생성)
 
 hooks/
-├── save-tool-use.ps1     ← 기존 므네모 훅에 gotchas 관찰 로직 통합
-└── save-tool-use.sh      ← (동일)
+├── save-tool-use.ps1|sh          ← Claude PostToolUse: 도구 단위 관찰
+├── codex-mnemo/save-turn.ps1|sh  ← Codex notify: 턴 단위 관찰
+└── gemini-mnemo/save-turn.ps1|sh ← Gemini AfterAgent: 턴 단위 관찰
 ```
 
 ### 동작 흐름
 
-별도 훅 없이 기존 `save-tool-use` 훅에 통합되어 동작합니다.
+별도 훅 없이 각 CLI의 므네모 저장 훅에 통합되어 동작합니다.
 
 ```
-도구 호출 완료 (PostToolUse)
+Claude: 도구 호출 완료 (PostToolUse)
     ↓
 hooks/save-tool-use.ps1|sh (기존 므네모 훅)
     ↓ 1. 도구 사용 로그 기록 (conversations/toollog.md) ← 기존 기능
@@ -163,20 +164,37 @@ hooks/save-tool-use.ps1|sh (기존 므네모 훅)
     ↓   시크릿 스크러빙
     ↓   observations.jsonl에 기록
     ↓
-memory/gotchas/observations.jsonl 에 에러 관찰 축적
+Codex/Gemini: 턴 종료/응답 완료 훅
+    ↓
+save-turn.ps1|sh
+    ↓ 응답에 에러 패턴이 있으면 memory/gotchas/observations.jsonl
+    ↓ 정상 응답이면 memory/learned/observations.jsonl
+
+observations.jsonl 에 관찰 축적
     ↓ 관찰 20개 이상 축적 시
     ↓
-agents/analyzer.md (Haiku 모델)
+agents/gotcha-analyzer.md (cleanup-low 모델 티어)
     ↓ 에러→수정 패턴, 반복 실패 감지
     ↓ 글로벌/프로젝트 범위 자동 판단
     ↓
 memory/gotchas/에 gotcha 파일 자동 생성 + index.md 업데이트
 ```
 
+### 분석 모델 매핑
+
+`gotcha-analyzer`의 `model: haiku`는 Claude Code 네이티브 실행용 실제 모델명입니다.
+Codex/Gemini에서는 같은 이름을 그대로 쓰지 않고 `cleanup-low` 티어로 해석합니다.
+
+| CLI | cleanup-low 매핑 |
+|-----|------------------|
+| Claude | `haiku` |
+| Codex | `gpt-5.2-mini` + `reasoning low` |
+| Gemini | `gemini-2.5-flash-lite` |
+
 ### 훅 등록
 
-별도 등록 불필요. `save-tool-use` 훅이 이미 PostToolUse에 등록되어 있으면 자동 작동합니다.
-므네모 설치 시 자동으로 등록됩니다.
+별도 등록 불필요. 므네모 설치 시 각 CLI에 맞는 훅이 자동 등록됩니다.
+Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 관찰입니다.
 
 ### 설정 (config.json)
 

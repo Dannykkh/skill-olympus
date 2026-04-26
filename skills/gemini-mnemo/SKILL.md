@@ -2,6 +2,15 @@
 name: gemini-mnemo
 description: Gemini CLI 과거 대화를 검색하거나 장기기억을 설정할 때 사용. AfterAgent 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색.
 triggers:
+  - "mnemo"
+  - "므네모"
+  - "장기기억"
+  - "memory"
+  - "기억해"
+  - "이전에"
+  - "handoff"
+  - "핸드오프"
+  - "세션 저장"
   - "gemini 기억"
   - "gemini memory"
   - "gemini-mnemo"

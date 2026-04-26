@@ -73,11 +73,15 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 - `/chronos`, `/loop`, `크로노스` → `auto-continue-loop`
 - `/zephermine`, `젭마인`, `제퍼마인`, `제퍼미네` → `zephermine`
 - `/zeus`, `제우스` → `zeus`
+- `/aphrodite`, `아프로디테` → `design-plan`
 - `/minos`, `미노스`, `/qpassenger` (legacy), `큐패신저` → `minos`
 - `/clio`, `클리오`, `/closer` (legacy), `클로저` → `clio`
 - `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → **Gemini는 미지원, `workpm` (다이달로스) fallback** (아래 한계 섹션 참조)
 - `/daedalus`, `다이달로스`, `workpm` → `workpm`
 - `/argos`, `아르고스` → `argos`
+- `/hermes`, `헤르메스` → `biz-strategy`
+- `/athena`, `아테나` → `ceo`
+- `/mnemo`, `므네모`, `mnemo` → `gemini-mnemo`
 
 ## Gemini 구조적 한계 (사용자에게 솔직하게 안내)
 

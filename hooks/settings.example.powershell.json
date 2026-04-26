@@ -26,7 +26,7 @@
 
     "PreToolUse": [
       {
-        "description": "새 파일 생성 전 reducing-entropy 확인",
+        "description": "새 파일 생성 전 중복 파일 확인",
         "matcher": "Write",
         "command": "powershell -ExecutionPolicy Bypass -File hooks/check-new-file.ps1 \"$TOOL_INPUT\""
       },

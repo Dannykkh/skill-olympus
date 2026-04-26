@@ -44,8 +44,8 @@ find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.ja
 find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" | wc -l
 # 예: 94 files
 
-# 500줄 이상 파일 (비대 후보)
-find src/ -type f \( -name "*.ts" -o -name "*.py" \) -exec awk 'END{if(NR>500)print NR,FILENAME}' {} \;
+# 책임 분리 검토용 대형 파일
+find src/ -type f \( -name "*.ts" -o -name "*.py" \) -exec awk 'END{print NR,FILENAME}' {} \; | sort -nr | head -20
 
 # 사용되지 않는 export (ts-prune, depcheck)
 npx ts-prune 2>/dev/null | grep -v "used in module" | wc -l

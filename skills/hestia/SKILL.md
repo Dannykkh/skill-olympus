@@ -69,16 +69,16 @@ find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.ja
 # 파일 수
 find src/ app/ lib/ -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.py" \) | wc -l
 
-# 500줄 이상 비대 파일
+# 책임 분리 검토용 대형 파일
 find src/ -type f \( -name "*.ts" -o -name "*.py" \) \
-  -exec awk 'END{if(NR>500)print NR,FILENAME}' {} \;
+  -exec awk 'END{print NR,FILENAME}' {} \; | sort -nr | head -20
 ```
 
 ```
 📏 현재 상태:
   LOC: {N}줄
   파일: {M}개
-  비대 파일 (500줄+): {K}개
+  책임 분리 검토 대상 파일: {K}개
 ```
 
 ---

@@ -9,7 +9,7 @@
  *   workpm      - PM mode (Claude Agent Teams)
  *   workpm-mcp  - PM mode (MCP only, all CLIs)
  *   pmworker    - Worker mode
- *   agent-team  - Agent Teams Lead mode (대니즈팀)
+ *   agent-team  - Agent Teams Lead mode (포세이돈)
  *   팀 실행      - Agent Teams Lead mode (한국어)
  *
  * Hook Type: UserPromptSubmit
@@ -18,10 +18,10 @@
 
 // Patterns for detection (zeus는 최상위 우선순위)
 const ZEUS_PATTERN = /(?:^|\s)(?:zeus|제우스|\/zeus)(?:\s|$)/i;
-const WORKPM_PATTERN = /(?:^|\s)workpm(?:\s|$)/i;
-const WORKPM_MCP_PATTERN = /(?:^|\s)workpm[- ]?mcp(?:\s|$)/i;
-const PMWORKER_PATTERN = /(?:^|\s)pmworker(?:\s|$)/i;
-const AGENT_TEAM_PATTERN = /(?:^|\s)(?:agent[- ]?team|에이전트\s*팀|팀\s*실행|대니즈\s*팀)(?:\s|$)/i;
+const WORKPM_PATTERN = /(?:^|\s)\/?(?:workpm|daedalus|다이달로스)(?:\s|$)/i;
+const WORKPM_MCP_PATTERN = /(?:^|\s)\/?(?:(?:workpm|daedalus)[- ]?mcp|(?:workpm|daedalus)\s+--mcp|다이달로스\s+--mcp)(?:\s|$)/i;
+const PMWORKER_PATTERN = /(?:^|\s)\/?pmworker(?:\s|$)/i;
+const AGENT_TEAM_PATTERN = /(?:^|\s)\/?(?:agent[- ]?team|poseidon|포세이돈|에이전트\s*팀|팀\s*실행)(?:\s|$)/i;
 
 /**
  * Build PM mode context
@@ -30,10 +30,10 @@ function buildPMContext() {
   return `
 [PM MODE — 다이달로스(Daedalus) ACTIVATED]
 
-Read skills/orchestrator/commands/workpm.md and follow the 4-phase workflow exactly as written.
-All PM principles, phase details, and checklist rules are in the workflow file.
+Read skills/workpm/SKILL.md first, then follow the Claude native 5-phase workflow in skills/orchestrator/commands/workpm.md.
+All PM principles, phase details, and checklist rules are in those workflow files.
 
-Start now: Read skills/orchestrator/commands/workpm.md
+Start now: Read skills/workpm/SKILL.md, then skills/orchestrator/commands/workpm.md
 `;
 }
 
@@ -81,11 +81,11 @@ Start now: Read skills/zeus/SKILL.md — then execute all phases without stoppin
 }
 
 /**
- * Build Agent Teams Lead context (대니즈팀)
+ * Build Agent Teams Lead context (포세이돈)
  */
 function buildAgentTeamContext() {
   return `
-[AGENT TEAM MODE — 대니즈팀(Dannys Team) ACTIVATED]
+[AGENT TEAM MODE — 포세이돈(Poseidon) ACTIVATED]
 
 Read skills/agent-team/SKILL.md and follow the workflow exactly as written.
 All PM principles, steps, expert matching rules, and verification loops are in the SKILL.md file.

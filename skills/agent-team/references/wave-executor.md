@@ -50,7 +50,7 @@ description에 구현해야 할 전체 내용이 있어.
 2. 다른 teammate의 파일은 절대 수정 금지
 3. 구현 완료 후 반드시 TaskUpdate({ taskId: '#{taskId}', status: 'completed' }) 실행
 4. 문제가 있으면 Lead에게 메시지로 보고 (SendMessage 사용 시 반드시 summary 파라미터 포함)
-5. 작업 활동을 conversations/{YYYY-MM-DD}-team-dannys.md 에 기록할 것
+5. 작업 활동을 conversations/{YYYY-MM-DD}-team-poseidon.md 에 기록할 것
    - 시작/결정/에러/파일변경/완료 시점에 기록
    - 형식: ## [HH:mm:ss] {name} ({section}) → **{TYPE}**: {message} → #tags:
    - 각 기록 3줄 이내로 간결하게
@@ -100,7 +100,7 @@ while (wave의 모든 Task가 completed가 아님):
 4. **컨텍스트 체크 (Wave 전환 시 필수)**:
    - 남은 Wave 수 대비 현재 대화 길이를 판단
    - 대화가 매우 길어졌다면 (응답이 느려지거나, compact가 이미 실행되었거나):
-     - 현재까지 결과를 `conversations/{YYYY-MM-DD}-team-dannys.md`에 저장
+     - 현재까지 결과를 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 저장
      - teammate shutdown → TeamDelete
      - `zeus-state.json` 또는 핸드오프 파일에 "Wave {N+1}부터 재개" 기록
      - 사용자에게 "새 세션에서 `/agent-team`을 다시 실행하면 Wave {N+1}부터 재개됩니다" 안내

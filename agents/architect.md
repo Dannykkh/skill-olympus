@@ -223,7 +223,7 @@ architect (How를 설계)  ← 이 에이전트
     ↓
 mermaid-diagram-specialist (다이어그램 생성)
     ↓
-fullstack-development-workflow (구현 시작)
+fullstack-coding-standards + agent-team/workpm (구현 시작)
 ```
 
 ### 단계별 산출물
@@ -233,7 +233,7 @@ fullstack-development-workflow (구현 시작)
 |요구사항|spec-interviewer|SPEC.md|
 |아키텍처|architect|ADR 문서, 기술 스택 매트릭스|
 |시각화|mermaid-diagram-specialist|시스템 다이어그램, ERD|
-|구현|fullstack-development-workflow|코드, 테스트, 문서|
+|구현|fullstack-coding-standards + agent-team/workpm|코드, 테스트, 문서|
 
 ### 아키텍처 리뷰 체크리스트
 

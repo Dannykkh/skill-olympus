@@ -307,14 +307,14 @@ Specialized subagents for every development task:
 
 | Area | Agents |
 |------|--------|
-| **Architecture** | architect, spec-interviewer, fullstack-development-workflow |
+| **Architecture** | architect, spec-interviewer, fullstack-coding-standards |
 | **Frontend** | frontend-react, react-best-practices, stitch-developer, ui-ux-designer |
 | **Backend** | backend-spring, backend-dotnet, desktop-wpf, python-fastapi |
 | **Database** | database-postgresql, database-mysql, database-schema-designer |
 | **Quality** | code-reviewer, security-reviewer, qa-engineer, tdd-coach |
 | **Performance** | performance-engineer, debugger |
 | **AI/ML** | ai-ml (RAG, LLM APIs, latest SDKs) |
-| **Writing** | writing-specialist, humanizer-guidelines, writing-guidelines |
+| **Writing** | writing-specialist, humanizer, writing-guidelines |
 | **Language** | typescript-spec, python-spec |
 
 ### Hooks (13)

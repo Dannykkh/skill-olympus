@@ -1,15 +1,32 @@
 ---
 name: gotcha-analyzer
 description: >
-  관찰 로그를 분석하여 gotcha(오답노트)와 learned(성공 패턴)를 자동 생성하는 백그라운드 에이전트.
+  cleanup-low 모델 티어로 관찰 로그를 분석하여 gotcha(오답노트)와 learned(성공 패턴)를 자동 생성하는 백그라운드 에이전트.
   에러 패턴, 수정 패턴, 반복 실수, 반복 성공을 감지합니다.
 model: haiku
+model_tier: cleanup-low
+model_map:
+  claude: "haiku"
+  codex: "gpt-5.2-mini + reasoning low"
+  gemini: "gemini-2.5-flash-lite"
 ---
 
 # Gotcha & Learned Analyzer
 
 관찰 로그(observations.jsonl)를 분석하여 반복되는 실수/성공 패턴을 감지하고,
 gotcha 또는 learned 파일을 자동 생성합니다.
+
+## 모델 선택
+
+이 에이전트는 `cleanup-low` 티어입니다. `model: haiku`는 Claude Code에서만
+직접 실행 가능한 모델명이고, Codex/Gemini에서는 같은 역할 티어를 각 CLI의
+가벼운 모델로 매핑합니다.
+
+| CLI | 모델 |
+|-----|------|
+| Claude | `haiku` |
+| Codex | `gpt-5.2-mini` + `reasoning low` |
+| Gemini | `gemini-2.5-flash-lite` |
 
 ## 입력
 
@@ -18,10 +35,15 @@ gotcha 또는 learned 파일을 자동 생성합니다.
 - `memory/gotchas/observations.jsonl` — 에러 관찰 (event: "tool_error")
 - `memory/learned/observations.jsonl` — 성공 관찰 (event: "tool_success")
 
+Codex/Gemini는 도구 단위 hook이 없으므로 턴 단위 이벤트도 입력으로 처리합니다:
+
+- `turn_error` — 응답 텍스트에서 오류/실패 패턴 감지
+- `turn_success` — 정상 응답 완료
+
 ## 실패 패턴 감지 → memory/gotchas/
 
 ### 1. 에러 → 수정 패턴
-도구 출력에 에러가 포함된 후, 같은 파일/도구에 대해 수정이 이루어진 경우.
+도구 출력 또는 턴 응답에 에러가 포함된 후, 같은 파일/도구/주제에 대해 수정이 이루어진 경우.
 같은 에러 유형이 2회 이상 반복되면 gotcha로 기록.
 
 ### 2. 사용자 수정 패턴
@@ -38,7 +60,7 @@ gotcha 또는 learned 파일을 자동 생성합니다.
 ## 성공 패턴 감지 → memory/learned/
 
 ### 1. 반복 성공 워크플로우
-같은 도구 조합이 에러 없이 3회 이상 성공한 경우.
+같은 도구 조합 또는 턴 작업 패턴이 에러 없이 3회 이상 성공한 경우.
 예: Grep → Read → Edit 순서가 반복 성공.
 
 ### 2. 효율적 도구 선택
@@ -136,7 +158,7 @@ gotcha 파일 생성 후 1줄 요약에 다음을 포함합니다:
 
 ```
 gotcha 1건 생성 (memory/gotchas/003-yaml-파싱-주의.md)
-💡 관련 스킬 qa-test-planner에 gotcha 3건 축적 — /skill-evolve qa-test-planner 실행을 권장합니다.
+💡 관련 스킬 minos에 gotcha 3건 축적 — /skill-evolve minos 실행을 권장합니다.
 ```
 
 ### 스킬 매칭 방법

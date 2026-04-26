@@ -346,6 +346,11 @@ if "!HAS_CLAUDE!"=="0" goto :skip_claude_assets
 REM Clean up broken symlinks/junctions from previous install-link.bat
 node "%SCRIPT_DIR%scripts\safe-copy.js" cleanup "%CLAUDE_DIR%"
 
+REM Move deprecated Olympus agents/skills out of active Claude paths, with backup.
+if exist "%SCRIPT_DIR%scripts\prune-stale-assets.js" (
+    node "%SCRIPT_DIR%scripts\prune-stale-assets.js" "%CLAUDE_DIR%" --label claude
+)
+
 REM Install Skills (global, bundle filtering)
 echo [1/7] Installing Skills... (global) [core]
 if exist "%SCRIPT_DIR%skills" (
@@ -373,15 +378,23 @@ echo [2/7] Installing Agents... (global) [core]
 node "%SCRIPT_DIR%scripts\safe-copy.js" mkdir "%CLAUDE_DIR%\agents"
 if exist "%SCRIPT_DIR%agents" (
     for %%F in ("%SCRIPT_DIR%agents\*.md") do (
-        echo       - %%~nxF
-        node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+        if /I "%%~nxF"=="MEMORY.md" (
+            echo       - %%~nxF [skipped: not an agent]
+        ) else (
+            echo       - %%~nxF
+            node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+        )
     )
 )
 for /d %%D in ("%SCRIPT_DIR%skills\*") do (
     if exist "%%D\agents" (
         for %%F in ("%%D\agents\*.md") do (
-            echo       - %%~nxF [%%~nxD]
-            node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+            if exist "%SCRIPT_DIR%agents\%%~nxF" (
+                echo       - %%~nxF [%%~nxD skipped: root agent wins]
+            ) else (
+                echo       - %%~nxF [%%~nxD]
+                node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
+            )
         )
     )
 )

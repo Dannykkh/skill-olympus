@@ -1,7 +1,11 @@
 ---
 name: agent-team-codex
-description: Codex CLI로 병렬 구현할 때 사용. multi_agent 기능으로 default/explorer/worker를 조합해 실행. zephermine 섹션 모드와 자유 모드 지원. /agent-team-codex로 실행.
+description: Codex CLI로 병렬 구현할 때 사용. multi_agent 기능으로 default/explorer/worker를 조합해 실행. zephermine 섹션 모드와 자유 모드 지원. /agent-team, /poseidon, /agent-team-codex로 실행.
 triggers:
+  - "agent-team"
+  - "poseidon"
+  - "포세이돈"
+  - "agent team"
   - "agent-team-codex"
   - "코덱스 에이전트팀"
   - "codex agent team"
@@ -93,7 +97,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 - 각 worker는 파일 소유권 범위를 벗어나지 않음
 - explorer는 코드 수정 금지
 - 충돌 가능성이 있으면 즉시 `default`가 재분배
-- 각 worker는 작업 과정을 `conversations/{YYYY-MM-DD}-team-dannys.md`에 기록
+- 각 worker는 작업 과정을 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 기록
 
 ### Step 4: 모니터링
 
@@ -105,7 +109,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 
 통합 전 활동 로그 요약:
 
-1. `conversations/{YYYY-MM-DD}-team-dannys.md` 읽기
+1. `conversations/{YYYY-MM-DD}-team-poseidon.md` 읽기
 2. 에이전트별 활동 통계: 기록 수, 에러 수, 파일 수
 3. Orchestrator MCP 사용 시 `orchestrator_get_activity_log`로 JSONL 로그도 확인
 4. 요약을 최종 보고에 포함

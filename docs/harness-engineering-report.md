@@ -164,7 +164,7 @@ S (Solution) : "그러면 이렇게 풀자"             — 해결책 제시
 | **인터뷰** | 사용자 요청 + (헤르메스 산출물) | CPS 3-Gate: Gate 통과 전 다음 Phase 불가 | Gate 1,2,3 합의 확인 |
 | **스펙** | interview.md (Gate 결과 포함) | Context Map + Problem Statement 필수 포함 | Step 23에서 CPS 섹션 존재 확인 |
 | **섹션 분할** | spec.md + plan.md + flow-diagrams | 에코시스템 커버리지 체크: ❌ 있으면 진행 불가 | Backfill로 spec.md 역추적 |
-| **구현** | sections/ (자립형 파일) | 500줄 제한, 코드 리뷰, Wave 의존성 | Master Checklist 검증 |
+| **구현** | sections/ (자립형 파일) | 기능/책임 단위 분리, 코드 리뷰, Wave 의존성 | Master Checklist 검증 |
 | **감리** | spec.md + 구현 코드 | Phase 0~5 순차 실행 | Phase 0: CPS 추적성 검증 |
 | **테스트** | qa-scenarios.md + 구현 코드 | fix-until-pass 루프 | Playwright 전체 통과 |
 

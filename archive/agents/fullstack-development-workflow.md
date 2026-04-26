@@ -27,7 +27,7 @@ references:
 ### 코드 품질 규칙 (항상 적용)
 |규칙|제한|
 |---|---|
-|파일 크기|≤ 500줄|
+|파일/모듈 크기|기능/책임 단위 분리, 대형 파일은 검토 신호|
 |함수 크기|≤ 50줄|
 |클래스 크기|≤ 300줄|
 |중복 코드|금지 → 추출/재사용|
@@ -159,7 +159,7 @@ git checkout master && git merge develop
 
 |훅|시점|동작|
 |---|---|---|
-|validate-code.sh|PostToolUse|500줄 제한, 보안 검사|
+|validate-code.sh|PostToolUse|기능/책임 단위 분리, 보안 검사|
 |check-new-file.sh|PreToolUse|새 파일 필요성 확인|
 |validate-docs.sh|PostToolUse|문서 AI 패턴 검출|
 

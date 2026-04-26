@@ -181,7 +181,7 @@ PM: 전체 완료 확인 → 자재검사 (코드리뷰)
   → orchestrator_create_task({
        id: "code-review",
        prompt: "skills/code-reviewer/SKILL.md를 참조하여 구현 결과물을 검수하라.
-                500줄 제한, 보안, 타입, SRP, DRY 체크.
+                기능/책임 단위 분리, 보안, 타입, SRP, DRY 체크.
                 리뷰 결과를 보고서로 작성하라.",
        scope: ["{구현된 파일 경로}"]
      })

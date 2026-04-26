@@ -20,7 +20,7 @@ references:
 
 |체크|기준|조치|
 |---|---|---|
-|파일 크기|≤ 500줄|모듈 분리|
+|파일/모듈 크기|기능/책임 단위 분리|모듈 분리|
 |함수 크기|≤ 50줄|헬퍼 추출|
 |SQL Injection|파라미터화 쿼리|f-string 금지|
 |XSS|입력 sanitize|dangerouslySetInnerHTML 주의|

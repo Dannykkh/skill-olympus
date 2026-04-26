@@ -50,6 +50,23 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 
 **적용 대상:** 사용자 입력과 Claude 응답 모두에 적용됩니다.
 
+## Claude 호환 호출명 규칙
+
+사용자가 Claude 방식 호출명을 쓰면 명시적 skill invocation으로 해석하세요.
+
+**우선 고정 alias:**
+- `/zephermine`, `젭마인`, `제퍼마인`, `제퍼미네` → `zephermine`
+- `/zeus`, `제우스` → `zeus`
+- `/aphrodite`, `아프로디테` → `design-plan`
+- `/minos`, `미노스`, `/qpassenger` (legacy), `큐패신저` → `minos`
+- `/clio`, `클리오`, `/closer` (legacy), `클로저` → `clio`
+- `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → `agent-team`
+- `/daedalus`, `다이달로스`, `workpm` → `workpm`
+- `/argos`, `아르고스` → `argos`
+- `/hermes`, `헤르메스` → `biz-strategy`
+- `/athena`, `아테나` → `ceo`
+- `/mnemo`, `므네모`, `mnemo` → `mnemo`
+
 ## 과거 대화 검색 규칙
 
 사용자가 과거 작업을 언급하면 (예: "이전에 ~했었지?", "그때 ~ 어떻게 했더라?"),

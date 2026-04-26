@@ -1,5 +1,5 @@
 ﻿# check-new-file.ps1
-# 새 파일 생성 전 reducing-entropy 원칙 확인 (PreToolUse 훅)
+# 새 파일 생성 전 유사 파일/중복 생성 경고 (PreToolUse 훅)
 # 트리거: Write 도구 사용 전 (새 파일 생성 시)
 
 # Claude Code는 stdin으로 JSON을 전달함

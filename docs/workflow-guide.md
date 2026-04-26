@@ -33,9 +33,9 @@
 | **설계** | zephermine | spec-interviewer | Tavily (웹 리서치), Exa (코드 검색), Codex/Gemini CLI (도메인 전문가) |
 | **아키텍처** | — | architect | — |
 | **구현** | agent-team, orchestrator | frontend-react, backend-spring, database-mysql, database-postgresql, fullstack-coding-standards, naming-conventions | Playwright (E2E), Context7 (라이브러리 문서) |
-| **검증** | minos | qa-engineer, qa-writer, code-review-checklist | Playwright (테스트 실행) |
+| **검증** | minos | qa-engineer, qa-writer, code-reviewer | Playwright (테스트 실행) |
 | **배포** | docker-deploy | — | — |
-| **공통** | commit-work, mnemo | reducing-entropy, security-reviewer | GitHub (PR/이슈) |
+| **공통** | commit-work, mnemo, hestia, deprecation-and-migration | security-reviewer | GitHub (PR/이슈) |
 
 ---
 
@@ -251,7 +251,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | **스킬** | minos | 5단계 워크플로우 (수집→생성→실행→Healer→보고) |
 | **에이전트** | qa-engineer | 품질 판정 기준 (PASS/CONDITIONAL/FAIL) |
 | **에이전트** | qa-writer | 시나리오 없을 때 현장 생성 |
-| **에이전트** | code-review-checklist | 코드 품질 기준 (패시브) |
+| **에이전트** | code-reviewer | 코드 품질 기준 (패시브) |
 | **MCP** | Playwright | 브라우저 자동화, E2E 테스트 실행 |
 
 ### 입력 소스 (우선순위)
@@ -328,7 +328,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | 에이전트 | 역할 | 적용 범위 |
 |---------|------|----------|
 | `fullstack-coding-standards` | 4계층 아키텍처, 코딩 규칙 12개 | 코드 작성 시 항상 |
-| `code-review-checklist` | 500줄 제한, DRY, 보안 체크 | 코드 작성 시 항상 |
+| `code-reviewer` | 기능/책임 단위 분리, DRY, 보안 체크 | 코드 작성 시 항상 |
 | `react-best-practices` | Vercel 45개 React 규칙 | React 코드 작성 시 |
 | `naming-conventions` | 네이밍 규칙 | 변수/함수/클래스 작성 시 |
 
@@ -351,7 +351,8 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 |------|------|------|--------------|
 | `/review` | 스킬 | 코드 리뷰 (품질/보안/성능) | 구현 후, QA 전 |
 | `security-reviewer` | 에이전트 | 보안 전문 감사 (OWASP) | 구현 후, 배포 전 |
-| `reducing-entropy` | 스킬 | 코드 정리, 기술부채 탐지 | 구현 후, 리뷰 전 |
+| `/hestia` | 스킬 | 코드 정리, dead code 탐지 | 구현 후, 리뷰 전 |
+| `/deprecate` | 스킬 | 레거시 폐기/마이그레이션 계획 | 구현 후, 리뷰 전 |
 | `/explain` | 스킬 | 코드 설명 (비유 + Mermaid) | 아무 때나 |
 | `/commit` | 스킬 | Git 커밋 | 각 Phase 완료 시 |
 | `/wrap-up` | 스킬 | 세션 요약 + MEMORY.md 업데이트 | 세션 종료 시 |

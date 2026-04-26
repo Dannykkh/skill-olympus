@@ -9,7 +9,7 @@ spawn explorer to analyze {target_scope}, map dependency risks, and propose a wa
 ## 2) Worker 스폰
 
 ```text
-spawn worker for {owned_files}. implement {task_goal}. run related tests. edit only {owned_files}. log activity to conversations/{date}-team-dannys.md (START/DECISION/ERROR/FILE/DONE).
+spawn worker for {owned_files}. implement {task_goal}. run related tests. edit only {owned_files}. log activity to conversations/{date}-team-poseidon.md (START/DECISION/ERROR/FILE/DONE).
 ```
 
 ## 3) Custom Worker 스폰
@@ -31,5 +31,5 @@ spawn explorer to parse docs/plan/{plan_name}/sections/index.md, extract depende
 ```
 
 ```text
-spawn worker for {section_files}. implement section {section_id} from docs/plan/{plan_name}/sections/{section_file}. edit only assigned files and run tests. log activity to conversations/{date}-team-dannys.md (START/DECISION/ERROR/FILE/DONE).
+spawn worker for {section_files}. implement section {section_id} from docs/plan/{plan_name}/sections/{section_file}. edit only assigned files and run tests. log activity to conversations/{date}-team-poseidon.md (START/DECISION/ERROR/FILE/DONE).
 ```

@@ -4,6 +4,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { pruneStaleAssets } = require("./prune-stale-assets");
 
 const args = process.argv.slice(2);
 const isUnlink = args.includes("--unlink");
@@ -66,6 +67,7 @@ function collectAgentFiles() {
   if (fs.existsSync(agentsSrcDir)) {
     for (const name of fs.readdirSync(agentsSrcDir).sort()) {
       const src = path.join(agentsSrcDir, name);
+      if (name.toLowerCase() === "memory.md") continue;
       if (name.toLowerCase().endsWith(".md") && fs.statSync(src).isFile()) {
         files.set(name, src);
       }
@@ -78,6 +80,7 @@ function collectAgentFiles() {
     for (const name of fs.readdirSync(embeddedAgentsDir).sort()) {
       const src = path.join(embeddedAgentsDir, name);
       if (name.toLowerCase().endsWith(".md") && fs.statSync(src).isFile()) {
+        if (files.has(name)) continue;
         files.set(name, src);
       }
     }
@@ -174,19 +177,6 @@ function syncAgents(destDir, agentFiles, mode) {
       const dest = path.join(destDir, entry.name);
       safeRm(dest);
       fs.cpSync(src, dest, { recursive: true, force: true });
-    }
-  }
-}
-
-function pruneAgentFiles(destDir, currentNames) {
-  ensureDir(destDir);
-  const currentSet = new Set(currentNames);
-  for (const entry of fs.readdirSync(destDir, { withFileTypes: true })) {
-    if (!entry.isFile()) continue;
-    const name = entry.name;
-    if (!name.toLowerCase().endsWith(".md")) continue;
-    if (!currentSet.has(name)) {
-      safeRm(path.join(destDir, name));
     }
   }
 }
@@ -417,12 +407,14 @@ function run() {
     codexNotifyHooks: mode === "unlink" ? [] : codexNotifyHookNames,
   };
 
+  if (mode !== "unlink") {
+    pruneStaleAssets(path.join(repoRoot, ".agents"));
+    pruneStaleAssets(codexHome);
+  }
+
   for (const item of targetMatrix) {
     cleanupStaleEntries(item.dest, previous[item.key], currentByKey[item.key]);
   }
-
-  pruneAgentFiles(targets.projectAgents, currentByKey.agents);
-  pruneAgentFiles(targets.codexAgents, currentByKey.agents);
 
   syncSkills(targets.projectSkills, skillNames, mode);
   syncSkills(targets.codexSkills, skillNames, mode);

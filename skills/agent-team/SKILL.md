@@ -335,7 +335,7 @@ See [wave-executor.md](references/wave-executor.md)
 - Codex: code review용 agent spawn
 - 미통과 시 → 수정 지시 → 재리뷰 (최대 2회)
 
-**검수 항목:** 500줄 제한, 보안 취약점, 타입, SRP, DRY
+**검수 항목:** 기능/책임 단위 분리, 보안 취약점, 타입, SRP, DRY
 
 ### Step 6: Verify Results — 마스터 체크리스트 대조
 

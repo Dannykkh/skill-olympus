@@ -306,14 +306,14 @@ chmod +x install.sh && ./install.sh
 
 | 영역 | 에이전트 |
 |------|----------|
-| **아키텍처** | architect, spec-interviewer, fullstack-development-workflow |
+| **아키텍처** | architect, spec-interviewer, fullstack-coding-standards |
 | **프론트엔드** | frontend-react, react-best-practices, stitch-developer, ui-ux-designer |
 | **백엔드** | backend-spring, backend-dotnet, desktop-wpf, python-fastapi |
 | **데이터베이스** | database-postgresql, database-mysql, database-schema-designer |
 | **품질** | code-reviewer, security-reviewer, qa-engineer, tdd-coach |
 | **성능** | performance-engineer, debugger |
 | **AI/ML** | ai-ml (RAG, LLM API, 최신 SDK) |
-| **글쓰기** | writing-specialist, humanizer-guidelines, writing-guidelines |
+| **글쓰기** | writing-specialist, humanizer, writing-guidelines |
 | **언어** | typescript-spec, python-spec |
 
 ### 훅 (13개)
@@ -324,7 +324,7 @@ chmod +x install.sh && ./install.sh
 | save-response | Stop | 어시스턴트 응답 + #tags 자동 저장 |
 | save-tool-use | PostToolUse | 도구 로깅 + 오답노트/학습 관찰 |
 | save-conversation | UserPromptSubmit | 사용자 입력 영속화 |
-| validate-code | PostToolUse | 500줄 제한, 보안 스캔 |
+| validate-code | PostToolUse | 기능/책임 단위 분리, 보안 스캔 |
 | check-new-file | PreToolUse | 엔트로피 축소 체크 |
 | protect-files | PreToolUse | 민감 파일 보호 |
 | validate-docs | PostToolUse | AI 글쓰기 패턴 감지 |

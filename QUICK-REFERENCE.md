@@ -75,7 +75,7 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **fullstack-coding-standards** | 3계층 구조 (Router→Service→Repository), DB 연동 규칙 | 이 저장소의 `skills/fullstack-coding-standards/` |
-| **python-backend-fastapi (로컬)** | 비동기, Pydantic, 500줄 제한 | 이 저장소의 `skills/python-backend-fastapi/` |
+| **python-backend-fastapi (로컬)** | 비동기, Pydantic, 기능/책임 단위 모듈화 | 이 저장소의 `skills/python-backend-fastapi/` |
 
 ---
 
@@ -94,7 +94,7 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **Code Reviewer 에이전트** | 품질/보안/성능 자동 리뷰 | `curl -o ~/.claude/agents/code-reviewer.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/code-reviewer.md` |
-| **code-reviewer (로컬)** | 500줄 제한, 모듈화, 보안 검증 | 이 저장소의 `skills/code-reviewer/` |
+| **code-reviewer (로컬)** | 기능/책임 단위 모듈화, 보안 검증 | 이 저장소의 `skills/code-reviewer/` |
 
 ### 보안 검토
 
