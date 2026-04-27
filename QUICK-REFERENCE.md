@@ -327,4 +327,4 @@ https://raw.githubusercontent.com/Dannykkh/skill-olympus/master/QUICK-REFERENCE.
 ---
 
 **저장소:** https://github.com/Dannykkh/skill-olympus
-**마지막 업데이트:** 2026-03-13
+**마지막 업데이트:** 2026-04-27

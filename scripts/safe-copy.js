@@ -82,6 +82,38 @@ function ensureDir(dir) {
   }
 }
 
+function hasNestedNodeModules(src) {
+  const stack = [src];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name === "node_modules") return true;
+      stack.push(path.join(current, entry.name));
+    }
+  }
+  return false;
+}
+
+function isInsideNodeModules(srcRoot, candidatePath) {
+  const rel = path.relative(srcRoot, candidatePath);
+  if (!rel || rel.startsWith("..")) return false;
+  return rel.split(path.sep).includes("node_modules");
+}
+
+function copyDir(src, dest, skipNodeModules = false) {
+  const filter = skipNodeModules
+    ? (candidatePath) => !isInsideNodeModules(src, candidatePath)
+    : undefined;
+  fs.cpSync(src, dest, { recursive: true, force: true, filter });
+}
+
 switch (mode) {
   case "cleanup": {
     const dir = arg1;
@@ -96,6 +128,7 @@ switch (mode) {
     break;
   }
   case "dir": {
+    const destExistsBeforeCopy = fs.existsSync(arg2);
     // 기존 심볼릭 링크/정션이 있으면 제거 후 복사 (install-link.bat 잔존 대응)
     try {
       const s = fs.lstatSync(arg2);
@@ -116,7 +149,7 @@ switch (mode) {
       // 존재하지 않으면 무시
     }
     ensureDir(arg2);
-    fs.cpSync(arg1, arg2, { recursive: true, force: true });
+    copyDir(arg1, arg2, hasNestedNodeModules(arg1) && destExistsBeforeCopy);
     break;
   }
   case "file": {

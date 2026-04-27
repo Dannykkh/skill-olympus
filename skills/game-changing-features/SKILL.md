@@ -1,6 +1,6 @@
 ---
 name: game-changing-features
-description: Find 10x product opportunities and high-leverage improvements. Use when user wants strategic product thinking, mentions '10x', wants to find high-impact features, or says 'what would make this 10x better', 'product strategy', or 'what should we build next'.
+description: "Find 10x product opportunities and high-leverage features; use for product strategy, what to build next, or make this 10x better."
 ---
 
 # 10x Mode

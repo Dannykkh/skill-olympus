@@ -238,7 +238,7 @@ bash /mnt/skills/user/{skill-name}/scripts/{script}.sh [args]
 Skills are loaded on-demand — only the skill name and description are loaded at startup. The full `SKILL.md` loads into context only when the agent decides the skill is relevant. To minimize context usage:
 
 - **Keep SKILL.md concise** — put detailed reference material in separate files (progressive disclosure)
-- **Write specific descriptions** — helps the agent know exactly when to activate the skill
+- **Write short, routing-focused descriptions** — include trigger words and boundaries; put workflow details in the body
 - **Use progressive disclosure** — reference supporting files that get read only when needed
 - **Prefer scripts over inline code** — script execution doesn't consume context (only output does)
 - **File references work one level deep** — link directly from SKILL.md to supporting files
@@ -311,10 +311,10 @@ Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-
 |validate-api.sh|PostToolUse|API 파일 수정|구문/타입 검사|
 |save-conversation.sh|UserPromptSubmit|모든 입력|사용자 입력을 대화 파일에 저장|
 |save-response.sh|Stop|세션 종료|Assistant 응답을 대화 파일에 저장|
+|save-tool-use.sh|PostToolUse|도구 실행|도구 사용 로그 + gotchas/learned 관찰 저장|
 |reconcile-conversations.sh|SessionStart|세션 시작|Claude transcript + Codex rollout JSONL 기준으로 save-response/save-turn이 놓친 턴을 backfill (멱등)|
 |orchestrator-detector.js|UserPromptSubmit|workpm/pmworker 입력|PM/Worker 모드 감지|
 |loop-stop.sh|Stop|Chronos 루프 활성 시|세션 종료 가로채서 프롬프트 재투입 (자동 반복)|
-|ddingdong-noti.sh|Stop|세션 종료|OS 네이티브 알림 (Windows BurntToast, macOS osascript, Linux notify-send)|
 
 ### 3-Layer Architecture
 

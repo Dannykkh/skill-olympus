@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.2] - 2026-04-27
+
+### Changed
+- **skills**: shortened routing-focused `description` metadata for 17 high-safety skills without changing workflow bodies.
+- **codex**: synced shortened descriptions to installed Codex skill copies to reduce startup skills prompt pressure.
+- **install**: copy-mode sync now skips nested `node_modules` directories when refreshing existing installs, avoiding Windows file-lock failures from running Orchestrator MCP native modules.
+- **install**: defined Codex/Gemini install directories before Orchestrator MCP checks so `install.bat` validates the correct targets.
+- **docs**: updated README/README-ko/AGENTS counts and hook tables to match the current 95 skills, 42 agents, and 9 hooks.
+
+---
+
 ## [4.0.1] - 2026-04-20
 
 ### Bug Fixes

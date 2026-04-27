@@ -1,6 +1,6 @@
 ---
 name: command-creator
-description: This skill should be used when creating a Claude Code slash command. Use when users ask to "create a command", "make a slash command", "add a command", or want to document a workflow as a reusable command. If running outside Claude, explain the limitation and redirect to a reusable skill or prompt recipe instead of `.claude/commands/`.
+description: "Create Claude Code slash commands or reusable command workflows; use for create/add/make command requests, and outside Claude redirect to a skill or prompt recipe."
 ---
 
 # Command Creator

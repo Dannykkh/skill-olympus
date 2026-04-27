@@ -42,7 +42,7 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 | 📋 **Launch checklist** | `/launch` — pre-launch quality gates, staged rollout plan, rollback playbook |
 | 📐 **Decision records** | `/adr` — architecture decisions with alternatives, trade-offs, and superseded tracking |
 
-**95 skills · 42 agents · 10 hooks · 3 CLIs · 1 mythology**
+**95 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
 
 ---
 
@@ -60,7 +60,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **95 skills, 48 agents, 12 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **95 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -282,7 +282,7 @@ Includes auto gotcha/learned tracking:
 
 ## What's Inside
 
-### Skills (97)
+### Skills (95)
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
@@ -301,7 +301,7 @@ Includes auto gotcha/learned tracking:
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
 
-### Agents (43)
+### Agents (42)
 
 Specialized subagents for every development task:
 
@@ -317,7 +317,7 @@ Specialized subagents for every development task:
 | **Writing** | writing-specialist, humanizer, writing-guidelines |
 | **Language** | typescript-spec, python-spec |
 
-### Hooks (13)
+### Hooks (9)
 
 | Hook | Event | Purpose |
 |------|-------|---------|
@@ -325,14 +325,10 @@ Specialized subagents for every development task:
 | save-response | Stop | Auto-save assistant responses with #tags |
 | save-tool-use | PostToolUse | Tool logging + gotchas/learned observation |
 | save-conversation | UserPromptSubmit | Persist user input |
-| validate-code | PostToolUse | 500-line limit, security scan |
 | check-new-file | PreToolUse | Reducing entropy check |
 | protect-files | PreToolUse | Sensitive file protection |
-| validate-docs | PostToolUse | AI writing pattern detection |
-| format-code | PostToolUse | Auto-format (Python/TS/JS/Java/CSS) |
 | validate-api | PostToolUse | API file validation |
 | loop-stop | Stop | Chronos auto-iteration |
-| ddingdong-noti | Stop | OS-native notification |
 | orchestrator-detector | UserPromptSubmit | PM/Worker mode detection |
 
 ---
@@ -388,6 +384,9 @@ Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **[v4.0.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.2)** | **2026-04-27** | **Skill description diet** — shorter routing metadata for safer Codex/Claude prompt budgets; docs and installed copies synced |
+| [v4.0.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.1) | 2026-04-20 | Hook install cleanup, stale references removed, structure principles replace old line-count guidance |
+| [v4.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.0) | 2026-04-20 | The Great Cleanup: skill/agent consolidation, obsolete hooks archived, Skill Olympus quality pass |
 | **[v3.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v3.0.0)** | **2026-04-08** | **🏛️ Skill Olympus — The Pantheon Awakens** (repo rename, 그리스 신화 통일, mnemo 데이터 유실 방지 종합 개편, 3-CLI parity, README 호메로스 톤) |
 | [v2.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v2.1.0) | 2026-04-06 | Pipeline Integrity Audit + gstack-Inspired Improvements (Zeus 7-Phase, hermes/athena 강화, AI Slop 탐지) |
 | [v2.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v2.0.0) | 2026-03-25 | Athena CEO Coaching + Pipeline Expansion |
@@ -410,4 +409,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-27

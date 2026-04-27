@@ -10,6 +10,8 @@ REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
+set "CODEX_DIR=%USERPROFILE%\.codex"
+set "GEMINI_DIR=%USERPROFILE%\.gemini"
 set "CODEX_MNEMO_RESULT=not-run"
 set "CODEX_SYNC_RESULT=not-run"
 set "CODEX_MCP_RESULT=not-run"

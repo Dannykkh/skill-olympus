@@ -1,6 +1,6 @@
 ---
 name: api-handoff
-description: API handoff documentation between backend and frontend teams. Supports both directions - backend documenting APIs for frontend, and frontend describing data needs for backend. Use when creating API docs, handoff documents, or communicating data requirements between teams.
+description: "Create backend/frontend API handoff docs for endpoints, frontend data needs, and cross-team data requirements."
 ---
 
 # API Handoff

@@ -1,6 +1,6 @@
 ---
 name: jira
-description: Use when the user mentions Jira issues (e.g., "PROJ-123"), asks about tickets, wants to create/view/update issues, check sprint status, or manage their Jira workflow. Triggers on keywords like "jira", "issue", "ticket", "sprint", "backlog", or issue key patterns.
+description: "Use for Jira issues/tickets, sprint/backlog workflow, create/view/update requests, or issue keys like PROJ-123."
 ---
 
 # Jira

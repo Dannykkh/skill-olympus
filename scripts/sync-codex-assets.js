@@ -47,6 +47,38 @@ function safeRm(targetPath) {
   }
 }
 
+function hasNestedNodeModules(src) {
+  const stack = [src];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      if (entry.name === "node_modules") return true;
+      stack.push(path.join(current, entry.name));
+    }
+  }
+  return false;
+}
+
+function isInsideNodeModules(srcRoot, candidatePath) {
+  const rel = path.relative(srcRoot, candidatePath);
+  if (!rel || rel.startsWith("..")) return false;
+  return rel.split(path.sep).includes("node_modules");
+}
+
+function copyDir(src, dest, skipNodeModules = false) {
+  const filter = skipNodeModules
+    ? (candidatePath) => !isInsideNodeModules(src, candidatePath)
+    : undefined;
+  fs.cpSync(src, dest, { recursive: true, force: true, filter });
+}
+
 function listDirectories(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
   return fs
@@ -57,8 +89,11 @@ function listDirectories(dirPath) {
 }
 
 function installDir(src, dest) {
-  safeRm(dest);
-  fs.cpSync(src, dest, { recursive: true, force: true });
+  const skipNodeModules = hasNestedNodeModules(src) && fs.existsSync(dest);
+  if (!skipNodeModules) {
+    safeRm(dest);
+  }
+  copyDir(src, dest, skipNodeModules);
 }
 
 function collectAgentFiles() {
@@ -176,7 +211,7 @@ function syncAgents(destDir, agentFiles, mode) {
       const src = path.join(agentsSrcDir, entry.name);
       const dest = path.join(destDir, entry.name);
       safeRm(dest);
-      fs.cpSync(src, dest, { recursive: true, force: true });
+      copyDir(src, dest);
     }
   }
 }

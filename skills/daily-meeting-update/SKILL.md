@@ -1,6 +1,6 @@
 ---
 name: daily-meeting-update
-description: "Interactive daily standup/meeting update generator. Use when user says 'daily', 'standup', 'scrum update', 'status update', 'what did I do yesterday', 'prepare for meeting', 'morning update', or 'team sync'. Pulls activity from GitHub, Jira, and available AI session history (Claude `.claude/projects` or project `conversations/*-codex.md` / `*-gemini.md`). Conducts 4-question interview (yesterday, today, blockers, discussion topics) and generates formatted Markdown update."
+description: "Generate interactive daily standup/status updates from GitHub, Jira, and AI session history; use for daily, standup, scrum, status update, yesterday/today/blockers, or team sync."
 user-invocable: true
 ---
 

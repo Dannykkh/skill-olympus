@@ -1,7 +1,7 @@
 ---
 name: react-dev
 version: 1.0.0
-description: This skill should be used when building React components with TypeScript, typing hooks, handling events, useEffect patterns, or when React TypeScript, React 19, Server Components are mentioned. Covers type-safe patterns for React 18-19 including generic components, proper event typing, useEffect best practices, and routing integration (TanStack Router, React Router).
+description: "Build type-safe React/TypeScript components, hooks, events, useEffect, React 18-19/Server Components, generic components, and TanStack/React Router integration."
 ---
 
 # React TypeScript
