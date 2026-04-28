@@ -126,6 +126,17 @@ find src -name "*.tsx" -path "*/pages/*" -o -name "*.tsx" -path "*/app/*" 2>/dev
 
 생성된 시나리오를 `qa-scenarios.md`로 저장 → Step 2로 진행
 
+### 도메인사전 컨텍스트 로드
+
+Step 1 끝에 `docs/domain-dictionary.md` 존재 여부를 확인하고, 있으면 메모리에 로드하여 Step 2~6 전체에서 참조합니다.
+
+**용도:**
+- 시나리오 텍스트의 도메인 용어를 사전 한글 표기와 일치시킴 (예: 사전 `Cart=장바구니`인데 시나리오에 "쇼핑백"이면 정정)
+- Step 2 코드 생성 시 `describe`/`it` 블록에 사전 영문 식별자 사용
+- 사전 위반 발견 시 Step 6 Healer Loop의 수정 후보로 분류
+
+사전이 없으면 이 컨텍스트 단계 건너뜀.
+
 ---
 
 ## Step 2: Playwright 코드 생성
@@ -149,6 +160,7 @@ package.json "playwright" → 버전 확인
 
 - 각 기능별 `describe` 블록, TC-ID 주석 포함
 - Role-based selector 우선, 하드코딩 URL 금지, `beforeEach`로 상태 초기화
+- **도메인사전 준수** (사전 있을 때): `describe('Cart')`, `it('adds item to 장바구니')` 같이 영문 식별자(클래스/함수명) + 한글 표기(테스트 설명/UI 라벨 매칭) 모두 사전 따름. 사전 금지 표현(예: `basket`)은 코드/주석에 절대 사용 금지
 
 ---
 

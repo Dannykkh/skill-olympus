@@ -38,7 +38,7 @@ auto_apply: false
 
 ```
 아르고스(Argos) — 100개의 눈으로 감리 시작
-순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 4 (QA) → Phase 5 (도면) → Report
+순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 4 (QA) → Phase 5 (도면) → Phase 6 (디자인) → Phase 7 (보안) → Phase 8 (도메인사전) → Report
 ```
 
 ### 2. Resolve Planning Directory
@@ -63,6 +63,7 @@ auto_apply: false
   api-spec.md          → Phase 3 (API 일치)
   qa-scenarios.md      → Phase 4 (QA 시나리오)
   flow-diagrams/index.md      → Phase 5 (도면 대조)
+  docs/domain-dictionary.md   → Phase 8 (도메인사전 감리)
 ```
 
 **spec.md조차 없으면:** 에러 메시지 출력 후 종료.
@@ -84,7 +85,7 @@ auto_apply: false
 
 ---
 
-## 검증 프로세스 (8 Phase: 0~7)
+## 검증 프로세스 (9 Phase: 0~8)
 
 ### Phase 0: CPS 추적성 검증
 
@@ -250,6 +251,50 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 - 🔴 Critical 1건 이상 → **FAIL** (보안 수정 필수)
 - 🟠 High만 있고 Critical 없음 → **CONDITIONAL**
 - 🟡 Medium 이하만 → PASS에 영향 없음 (권고만)
+
+### Phase 8: 도메인사전 감리
+
+`docs/domain-dictionary.md`가 있는 경우만 실행. 없으면 자동 건너뜀.
+
+> 도메인사전(Ubiquitous Language)이 코드/문서에 일관되게 적용됐는지 검증합니다.
+> Phase 1 정적 검증과 다른 점: Phase 1은 "기능 구현" 중심, Phase 8은 "용어 일관성" 중심.
+
+#### 8-1. 영문 식별자 준수
+
+사전의 각 핵심 용어가 코드의 식별자(클래스/함수/변수/타입명)에서 정확히 사용되는지:
+- 사전: `Cart` (영문 식별자: `cart`)
+- 코드: `class Cart`, `const cart`, `cartService` → ✅
+- 코드: `class Basket`, `const bag` → ❌ 금지 표현 사용
+- 결과: ✅ 준수 / ⚠️ 일부 위반 (N건) / ❌ 다수 위반
+
+#### 8-2. 금지 표현 검출
+
+사전의 "금지 표현" 섹션에 등재된 용어가 코드/문서/주석에 사용되었는지 Grep:
+- 금지: `~~basket~~`, `~~bag~~` (Cart로 통일)
+- 검출 시 보고: 파일:라인, 권장 대체 용어
+- 결과: ✅ 클린 / ❌ N건 검출
+
+#### 8-3. UI 한글 표기 일치
+
+사전이 정의한 한글 표기와 UI 라벨/메뉴/메시지가 일치하는지:
+- 사전: `Cart = 장바구니`
+- UI: `"장바구니에 담기"` → ✅
+- UI: `"쇼핑백 추가"` → ❌ 사전 위반
+- 검출 도구: i18n 파일, JSX/TSX 문자열 리터럴 Grep
+- 결과: ✅ 일치 / ⚠️ 일부 불일치 (N건)
+
+#### 8-4. 사전 미등재 신규 식별자
+
+코드에 새로 등장한 도메인 식별자가 사전에 등재되어 있는지:
+- 코드: `class Voucher` (사전에 없음)
+- 결과: ⚠️ 신규 식별자 N개 — 사전 갱신 권장 (또는 도메인 외 기술 용어로 분류)
+
+#### 등급 영향
+- Phase 8 8-1, 8-2, 8-3 모두 통과 → 다음 단계로 진행
+- 8-2 (금지 표현 검출) 5건 이상 → **CONDITIONAL** (용어 통일 작업 필요)
+- 8-1, 8-3 다수 위반 (전체 코어 용어의 30% 이상) → **CONDITIONAL**
+- 사전 자체가 없음 → 건너뜀 (등급에 영향 없음)
+- Healer 분류: 대부분 자동 수정 가능 (rename), 단 의미 변경은 사람 판단 필요
 
 ---
 

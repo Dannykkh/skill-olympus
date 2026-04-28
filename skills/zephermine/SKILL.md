@@ -26,7 +26,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Plan → External Review → DB Schema → API Spec → Flow Diagrams → Sections → Operation Scenarios → QA Scenarios → Skill Discovery
+순서: Research → Interview → Spec → Team Review → Domain Dictionary → Plan → External Review → DB Schema → API Spec → Flow Diagrams → Sections → Operation Scenarios → QA Scenarios → Skill Discovery
 ```
 
 ### 2. Resolve Spec File Path
@@ -77,7 +77,9 @@ Determine session state by checking existing files:
    - [Requirement 1]
    - [Requirement 2]
    ```
-5. Scan for existing planning files (research.md, interview.md, spec.md, team-review.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
+5. Scan for existing planning files (research.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
+
+   > 마스터 사전(`docs/domain-dictionary.md`)은 프로젝트 단일이므로 planning_dir 스캔에서 제외. planning_dir에는 변경 이력 델타만 보관.
 
 6. **Import upstream artifacts** — 사전 파이프라인 산출물이 있으면 컨텍스트로 로드:
    - `docs/athena/*.md` (excluding archive/) → Athena Go/No-Go 판정, 스코프 조정, MVP 범위
@@ -103,6 +105,18 @@ Determine session state by checking existing files:
 | + flow-diagrams/ | resume | Step 19 (section index) |
 | + sections/index.md | resume | Step 20 (write sections) |
 | all sections complete | resume | Step 22 (operation scenarios) |
+
+**도메인사전 Resume 보정 규칙** (위 테이블과 별도, Resume 시 항상 점검):
+
+| 조건 | 처리 |
+|------|------|
+| spec.md 있고 `docs/domain-dictionary.md` 없음 | Step 8 끝부산물(사전 v1 생성)을 먼저 실행한 후 정해진 Resume Step으로 진행 |
+| team-review.md 있고 사전이 v1에 머무름 (Dictionary Updates 미반영) | Step 10 끝부산물(사전 v2 자동 병합)을 먼저 실행 |
+| plan.md 있고 사전이 v3 미확정 (`<planning_dir>/domain-dictionary-delta.md`에 v2→v3 항목 없음) | Step 11 끝부산물(사전 v3 최종화)을 먼저 실행 — 사용자 multiSelect 1회 |
+
+**판정 방법**: `<planning_dir>/domain-dictionary-delta.md`의 `## v1 → v2`, `## v2 → v3` 섹션 존재 여부로 진행 단계 추정. 델타가 없으면 마스터 사전이 어떤 버전인지 모르므로 안전하게 v1부터 다시 실행.
+
+이 보정은 사용자가 Resume할 때 사전이 누락된 채로 다음 Phase가 진행되는 것을 막습니다.
 
 8. Create TODO list with TodoWrite based on current state
 
@@ -135,6 +149,25 @@ Step {N} complete: {summary}
 
 ## Workflow
 
+26단계는 **6 Phase**로 그룹화됩니다. Phase는 단순 라벨이며 Step 번호는 변경되지 않습니다. 다른 스킬이 "Phase X 후 호출"로 참조할 때 사용합니다.
+
+| Phase | Step | 핵심 산출물 |
+|-------|------|-------------|
+| **Phase 1: Discovery** | 4-7 | research.md, interview.md |
+| **Phase 2: Spec** | 8-9 | spec.md, personas-and-journeys.md, **domain-dictionary.md v1** |
+| **Phase 3: Domain** | 10-11 | team-review.md, **domain-dictionary.md v3 (확정)** |
+| **Phase 4: Plan** | 12-15 | plan.md, integration-notes.md |
+| **Phase 5: Design** | 16-19 | db-schema.md, api-spec.md, flow-diagrams/, sections/ |
+| **Phase 6: Validation** | 20-26 | section-*.md, operation-scenarios.md, qa-scenarios.md |
+
+**도메인사전은 Step이 아니라 Step의 부산물입니다.** Step 8 끝에서 v1 초안, Step 10 끝에서 전문가 입력으로 v2 자동 병합, Step 11 끝에서 사용자 확인으로 v3 확정. 별도 단계가 추가되지 않으며, 각 Step 본문 끝의 평범한 단락으로 처리됩니다.
+
+---
+
+## Phase 1: Discovery
+
+리서치와 인터뷰로 도메인을 파악하는 단계.
+
 ### 4. Research Decision
 
 See [research-protocol.md](references/research-protocol.md).
@@ -165,6 +198,12 @@ Run in main context (AskUserQuestion requires it). Informed by: initial spec + r
 ### 7. Save Interview Transcript
 
 Write Q&A to `<planning_dir>/interview.md`
+
+---
+
+## Phase 2: Spec
+
+Spec과 Persona를 합성하고, 도메인사전 v1 초안을 자동 생성하는 단계.
 
 ### 8. Write Initial Spec (Spec Synthesis)
 
@@ -222,6 +261,9 @@ See [design-system-guide.md](references/design-system-guide.md)
 **필수 포함: Test Scenarios 섹션** — 각 주요 기능마다 정상/에러/엣지 케이스.
 See [test-scenario-guide.md](references/test-scenario-guide.md)
 
+**Step 8 끝부산물 — 도메인사전 v1 초안 생성** (사용자 개입 최소):
+spec.md 작성 직후 `domain-dictionary` 스킬을 컨텍스트 모드로 자동 호출. 입력은 spec.md + interview.md. 글로벌 사전(`~/.claude/memory/domain-dictionaries/{도메인}.md`)이 있으면 후보 용어 multiSelect를 1회 진행(사용자 개입 1회 — 글로벌 → 프로젝트 시드). 글로벌이 비어있으면 사용자 개입 없음. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타(`<planning_dir>/domain-dictionary-delta.md`). 핵심 용어 5개 미만이면 자동 건너뜀. 자세한 절차는 [domain-dictionary/references/global-sync.md](../domain-dictionary/references/global-sync.md).
+
 ### 9. User Persona & Journey Map
 
 See [persona-journey-guide.md](references/persona-journey-guide.md)
@@ -230,6 +272,12 @@ See [persona-journey-guide.md](references/persona-journey-guide.md)
 UI/프론트엔드가 없는 프로젝트는 자동 건너뜀.
 
 **출력:** `<planning_dir>/personas-and-journeys.md`
+
+---
+
+## Phase 3: Domain
+
+전문가 분석으로 도메인을 깊이 이해하고, 사전을 v3까지 확정하는 단계.
 
 ### 10. Multi-Agent Team Analysis
 
@@ -245,14 +293,33 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 
 **CRITICAL — Agent return protocol:** Each agent writes full results to files, returns ONLY 2-3 line summary.
 
+**도메인사전 컨텍스트 주입:** 6명 전문가 모두에게 Step 8에서 생성된 사전 v1을 컨텍스트로 전달합니다. 전문가들은 같은 어휘로 분석하며, 분석 중 발견한 신규 용어/정의 다듬음/모호성을 결과물 끝 `## Dictionary Updates` 섹션에 기록합니다. 자세한 프롬프트는 [team-review-protocol.md](references/team-review-protocol.md) 참조.
+
 Results → `<planning_dir>/team-reviews/` (개별 6개) + `<planning_dir>/team-review.md` (통합).
+
+**Step 10 끝부산물 — 도메인사전 v2 자동 병합** (사용자 개입 없음):
+6개 전문가의 `## Dictionary Updates` 섹션을 추출하여 v1 → v2로 자동 병합. ADD(신규 추가)/REFINE(정의 다듬음)/MERGE(동의어 통합)는 자동 적용, CONFLICT(전문가 간 의견 갈림)는 자동 병합하지 않고 Step 11로 미룸. 갱신 대상: `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`.
 
 ### 11. User Confirmation of Domain Expert Suggestions
 
 See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 
-도메인 전문가 추가 제안을 AskUserQuestion(multiSelect)으로 사용자에게 확인.
-채택된 항목만 Step 12 Plan에 반영. 미채택은 반영하지 않음.
+**Step 11은 세 가지 multiSelect를 한 번에 진행합니다:**
+
+1. **도메인 전문가 추가 제안** (기존) — 채택된 항목만 Step 12 Plan에 반영
+2. **사전 변경 제안** (신규) — Step 10 자동 병합 시 CONFLICT로 미뤄진 항목 + 사용자 검토가 필요한 핵심 용어
+3. **글로벌 사전 반영 제안** (신규) — 이번 프로젝트에서 새로 정의/다듬어진 용어 중 글로벌 사전(`~/.claude/memory/domain-dictionaries/{도메인}.md`)에 추가할 것 선택
+
+**Step 11 끝부산물 — 도메인사전 v3 최종화** (사용자 개입 끝, 자동 반영만):
+사용자 결정을 반영하여 마스터(`docs/domain-dictionary.md`)를 v3로 확정, 델타에 최종 변경 이력 기록, 글로벌 반영 선택 항목을 `~/.claude/memory/domain-dictionaries/{도메인}.md`에 출처 메타데이터와 함께 추가.
+
+**Phase 4 이후로 이 사전은 변경되지 않습니다.** Plan, DB Schema, API Spec, Sections는 모두 v3을 따릅니다.
+
+---
+
+## Phase 4: Plan
+
+상세 구현 계획 수립 + 외부 LLM 리뷰 + 사용자 검토 단계.
 
 ### 12. Generate Implementation Plan
 
@@ -292,6 +359,12 @@ When you're done reviewing, select "Done" to continue.
 Options: "Done reviewing"
 
 Wait for user confirmation before proceeding.
+
+---
+
+## Phase 5: Design
+
+DB 스키마, API, 공정 도면, 섹션을 모두 도메인사전 v3에 따라 작성하는 단계.
 
 ### 16. Generate Database Schema
 
@@ -333,6 +406,12 @@ Read `plan.md`. Identify natural section boundaries → create `<planning_dir>/s
 **CPS Backfill:** SECTION_MANIFEST 생성 후, 반드시:
 1. **에코시스템 커버리지 체크** — spec.md의 Context Map → 에코시스템 맵의 모든 시스템이 섹션에서 커버되는지 확인. See [section-index.md](references/section-index.md) Ecosystem Coverage Check.
 2. **spec.md backfill** — Context Map의 '관련 섹션' 열과 Problem Statement의 '해결 섹션' 열을 실제 섹션명으로 업데이트.
+
+---
+
+## Phase 6: Validation
+
+섹션 파일 작성, 운영/QA 시나리오, 후속 스킬 발견, 최종 보고 단계.
 
 ### 20. Write Section Files — Parallel Subagents
 
@@ -435,7 +514,7 @@ Other options:
 | [design-system-guide.md](references/design-system-guide.md) | Step 8 디자인 시스템 문서 구조 |
 | [persona-journey-guide.md](references/persona-journey-guide.md) | Step 9 페르소나/여정맵 형식 상세 |
 | [team-review-protocol.md](references/team-review-protocol.md) | Step 10 에이전트별 분석 프롬프트, Phase A/B 상세 |
-| [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 확인 절차 |
+| [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 + 사전 변경 + 글로벌 반영 확인 절차 |
 | [external-review.md](references/external-review.md) | Step 13 Gemini/Codex 외부 리뷰 프롬프트 |
 | [schema-design-guide.md](references/schema-design-guide.md) | Step 16 DB 스키마 설계 절차, ERD/DDL 형식 |
 | [api-spec-guide.md](references/api-spec-guide.md) | Step 17 API 명세 형식, 엔드포인트 작성 규칙 |

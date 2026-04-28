@@ -140,6 +140,26 @@ find src/ app/ lib/ -empty -type f 2>/dev/null
 find src/ app/ lib/ -empty -type d 2>/dev/null
 ```
 
+### 2-6. 사전 미등재 도메인 식별자 (도메인사전 있을 때만)
+
+`docs/domain-dictionary.md`가 있으면 코드의 클래스/함수/타입명 중 사전에 없는 도메인 식별자를 보고합니다. 삭제 대상 ❌ — 사전 갱신 트리거일 뿐.
+
+```bash
+# 대문자로 시작하는 식별자 추출 (도메인 명사 후보)
+grep -rE "^(export\s+)?(class|interface|type|enum)\s+[A-Z]\w+" --include="*.ts" --include="*.tsx" src/ \
+  | grep -oE "(class|interface|type|enum)\s+[A-Z]\w+" | sort -u
+```
+
+각 식별자에 대해:
+- 사전 영문 식별자 목록과 대조
+- 사전에 없으면 → 보고 (도메인 신규 용어인지 / 기술 인프라 용어인지 사용자 판단)
+
+**출력 분류:**
+- 도메인 신규 용어 (예: `class Voucher`) → 사전 갱신 권장
+- 기술 인프라 용어 (예: `class CacheManager`) → 사전 외 정상
+
+기술 인프라 용어 휴리스틱: `Manager`, `Handler`, `Factory`, `Builder`, `Cache`, `Queue`, `Worker`, `Pool`, `Adapter` 같은 GoF/구조 패턴 접미사가 붙으면 인프라로 분류.
+
 ### 스캔 결과 보고
 
 ```
@@ -150,6 +170,7 @@ find src/ app/ lib/ -empty -type d 2>/dev/null
   미사용 파일:       {N}개
   @deprecated 마커:  {N}개
   빈 파일/폴더:      {N}개
+  사전 미등재 도메인: {N}개  (사전 있을 때만)
   ──────────────────
   총 정리 대상:      {N}건
 ```

@@ -107,12 +107,14 @@ teammate가 필요할 때 Read로 직접 읽도록 **경로만 전달** (전체 
 📎 참조 문서 (필요 시 Read로 확인):
 - API 계약서: <planning_dir>/api-spec.md
 - DB 스키마: <planning_dir>/db-schema.md
+- 도메인사전: docs/domain-dictionary.md (확정 v3 — 모든 식별자/UI 라벨이 이 사전을 따름)
 ```
 
 **매핑 규칙 (Step 0에서 존재 확인된 문서만):**
 
 | 섹션 성격 | 전달할 보조 문서 |
 |----------|----------------|
+| **모든 섹션 공통** | **`docs/domain-dictionary.md`** (있으면 무조건 전달) |
 | API/백엔드 | `api-spec.md` |
 | 데이터베이스 | `db-schema.md` |
 | 프론트엔드/UI | `design-system.md` |
@@ -120,6 +122,17 @@ teammate가 필요할 때 Read로 직접 읽도록 **경로만 전달** (전체 
 | 테스트 | `qa-scenarios.md` |
 
 > 보조 문서가 없으면 (젭마인에서 건너뛴 경우) 이 항목 생략.
+
+**도메인사전 강제 사용 지침** (사전이 있을 때만 추가):
+
+```
+⚠️ 도메인사전 준수 (필수)
+- 모든 클래스/함수/변수/타입명은 docs/domain-dictionary.md의 영문 식별자를 정확히 사용
+- UI 라벨/메시지는 사전의 한글 표기를 정확히 사용
+- 사전의 "금지 표현"은 절대 사용 금지 (예: cart 사전이면 basket/bag 금지)
+- 사전에 없는 신규 도메인 용어가 필요하면 Lead에게 보고 (사전 추가 후 진행)
+- 기술 인프라 용어(cache, queue, worker 등)는 사전 외 자유롭게 사용
+```
 
 ### 5. File Ownership (명시적 목록)
 
