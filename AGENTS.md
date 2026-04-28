@@ -106,14 +106,14 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (95개)
+### Skills (96개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + 스킬 프롬프트 자동 최적화 (Hill Climbing) |
-| 📝 Documentation | api-handoff, crafting-effective-readmes, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 |
-| 📖 Learning | explain | 코드 설명 (비유 + Mermaid 다이어그램) |
+| 📝 Documentation | api-handoff, crafting-effective-readmes, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 + 도메인 용어사전 (DDD Ubiquitous Language) |
+| 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
 | 🎨 Frontend | design-plan (아프로디테), design-system-starter, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor | 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 |
 | 🛠️ Development | database-schema-designer, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login | 개발 도구 |
 | 🎯 Planning | game-changing-features, shipping-and-launch, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |

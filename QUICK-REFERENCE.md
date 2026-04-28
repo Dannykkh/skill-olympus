@@ -261,6 +261,7 @@ claude plugin install voltagent-qa-sec
 |------|------|
 | `skills/zeus/` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동화 (/zeus) |
 | `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
+| `skills/domain-dictionary/` | 도메인 용어사전(DDD Ubiquitous Language) — 영-한 매핑, 동의어/이의어/과부하 탐지, zephermine 자동 호출 |
 | `skills/minos/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) |
 | `skills/argos/` | 감리/검증 — 정적·런타임·API·도면 대조 5단계 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
