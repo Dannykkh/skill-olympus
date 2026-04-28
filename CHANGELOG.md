@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.1.0] - 2026-04-28
+
+### 🆕 Domain Dictionary — Ubiquitous Language
+
+DDD(Domain-Driven Design)의 **Ubiquitous Language** 개념을 한국 SI 영-한 혼용 환경에 맞춘 새 스킬과 풀파이프라인 통합. 코드/스펙/대화의 도메인 용어를 추출하여 동의어/이의어/과부하/영-한 불일치를 탐지하고, 마스터(`docs/domain-dictionary.md`) + 델타(`<planning_dir>/domain-dictionary-delta.md`) + 글로벌(`~/.claude/memory/domain-dictionaries/`) 3계층으로 관리합니다.
+
+#### Added
+
+- **domain-dictionary** (신규 스킬) — 글로벌-프로젝트 패턴, 마스터-델타 구조, 글로벌 동기화 (참고형 + 명시 채택, 자동 상속 ❌)
+  - `references/extraction-guide.md` — 용어 추출 알고리즘, 동의어/이의어/과부하/영-한 불일치/약어/외래어 탐지
+  - `references/global-sync.md` — 글로벌 폴더 자동 생성, 도메인 추정, 명시적 글로벌 반영 절차
+  - `references/global-readme-template.md` — 첫 실행 시 글로벌 폴더에 복사되는 README 시드
+
+- **explain** — `--zoom-out` 모드 추가 (mattpocock/skills의 zoom-out 흡수): 호출자/형제 모듈/상위 맵 출력
+  - `references/zoom-out.md` — 줌아웃 모드 워크플로우
+
+#### Changed — 풀파이프라인 통합 (12개 스킬)
+
+- **zephermine** — 26단계를 6 Phase로 그룹화 + Step 8/10/11 끝부산물로 사전 v1→v2→v3 진화 + Resume 보정 규칙 (별도 단계 추가 X)
+- **zephermine team-review-protocol** — 6명 전문가에 사전 컨텍스트 자동 주입 + `## Dictionary Updates` 출력 의무화
+- **zephermine domain-confirmation-guide** — Step 11에서 multiSelect 3개(도메인 제안 + 사전 변경 + 글로벌 반영) 통합
+- **code-reviewer** — `maintainability` specialist에 "도메인사전 위반" + "모듈 깊이(인터페이스 가성비)" 카테고리 추가 (mattpocock improve-codebase-architecture 흡수)
+- **argos** — Phase 8 신규 (도메인사전 감리 4-step: 영문 식별자/금지 표현/UI 한글/미등재 신규). 8 Phase → 9 Phase
+- **agent-team(포세이돈)** — `teammate-context-template.md`에 사전 자동 주입 + 강제 사용 지침 (모든 worker 공통)
+- **agent-team-codex** — Codex spawn 명령에 사전 준수 지침 인라인 + 6번 공통 도메인사전 컨텍스트 템플릿
+- **workpm(다이달로스)** — Phase 1 끝 사전 자동 생성/로드 + Phase 4 teammate 전달 + Phase 5 사전 준수 검증
+- **minos(미노스)** — Step 1 끝 사전 컨텍스트 로드 + Step 2 코드 생성 시 `describe`/`it`이 사전 따름
+- **clio(클리오)** — Phase 3 시작 사전 로드 + 3종 문서(PRD/TECHNICAL/USER-MANUAL) 일관성 + 용어 색인 자동 부록
+- **biz-strategy(헤르메스)** — 산출물 끝 "## 핵심 도메인 용어 시드" 부록 (zephermine 사전 v1 시드 가교)
+- **ceo(아테나)** — Phase 6 신규 "도메인 명확성 점검" (Go/No-Go 보조 지표)
+- **hestia(헤스티아)** — 2-6 신규 "사전 미등재 도메인 식별자" 보고 (사전 갱신 트리거, 삭제 X)
+
+#### Docs
+
+- README.md / README-ko.md / AGENTS.md / QUICK-REFERENCE.md / docs/smart-setup-registry.json — 95개 → 96개 스킬 갱신
+- AGENTS.md Documentation 카테고리에 `domain-dictionary` 등록
+- explain 카테고리 설명에 "줌아웃 모드" 명시
+
+#### Decisions (보류)
+
+- **caveman 모드** — 핸드오프와 결이 다름 + 한국어 경어체 정책과 충돌 → 별도 도입 안 함
+- **design-an-interface** (mattpocock) — zephermine Step 16-20에 이미 인터페이스 설계 단계가 있음 + architect agent로 보강 → 별도 도입 안 함
+- **improve-codebase-architecture** — code-reviewer maintainability "모듈 깊이" 카테고리로 흡수
+
+---
+
 ## [4.0.2] - 2026-04-27
 
 ### Changed
