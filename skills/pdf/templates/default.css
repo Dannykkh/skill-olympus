@@ -1,0 +1,407 @@
+/*
+ * Markdown → PDF 기본 스타일 (한국 출판 기본값)
+ * - 페이지: A4 (210×297mm)
+ * - 마진: 25mm (한국 표준)
+ * - 본문 폰트: Pretendard → Noto Sans KR → 시스템 sans-serif
+ * - 코드 폰트: D2Coding → JetBrains Mono → monospace
+ *
+ * Paged Media 규격 (CSS Paged Media Module Level 3) — weasyprint 호환
+ */
+
+/* ============================================================
+ * 폰트 정의 — 시스템에 없으면 다음 후보로 자동 fallback
+ * ============================================================ */
+
+/* 본문 한글 폰트 — Pretendard (없으면 Noto Sans KR) */
+@font-face {
+  font-family: 'KR Sans';
+  src: local('Pretendard'),
+       local('Pretendard Variable'),
+       local('Noto Sans KR'),
+       local('NotoSansKR-Regular'),
+       local('Apple SD Gothic Neo'),
+       local('Malgun Gothic'),
+       local('맑은 고딕');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+/* 본문 영문 폰트 — Inter / system-ui */
+@font-face {
+  font-family: 'Body Sans';
+  src: local('Inter'),
+       local('Inter Variable'),
+       local('-apple-system'),
+       local('Segoe UI');
+  font-weight: 100 900;
+}
+
+/* 코드 폰트
+ * 우선순위: 시스템 D2Coding (한국 개발자 친화) → JetBrains Mono(자동 DL) → 시스템 fallback
+ * (D2Coding은 GitHub raw 직접 다운로드가 불가능하여 자동 다운로드 대상에서 제외) */
+@font-face {
+  font-family: 'Mono';
+  src: local('D2Coding'),
+       local('D2Coding-Ver1.3.2'),
+       local('JetBrains Mono'),
+       local('JetBrainsMono-Regular'),
+       local('Cascadia Code'),
+       local('Consolas'),
+       local('Menlo');
+}
+
+/* ============================================================
+ * @page — 페이지 레이아웃
+ *
+ * 주의: Chromium의 print-to-PDF는 @page margin box(@top-left,
+ * @bottom-center 등)와 string-set을 지원하지 않습니다.
+ * 페이지번호/푸터는 playwright의 displayHeaderFooter +
+ * footerTemplate 옵션으로 처리합니다 (markdown_to_pdf.py 참조).
+ *
+ * 여기서는 size와 본문 마진만 선언합니다.
+ * ============================================================ */
+
+@page {
+  size: A4;
+  margin: 25mm 20mm 25mm 20mm;
+}
+
+/* 표지 페이지: @page :first { margin: 0 }을 사용하지 않는다.
+ *
+ * 이유: position: fixed (워터마크)의 좌표 시스템이 본문 영역(margin 안쪽)
+ *       기준인데, 첫 페이지만 margin이 다르면 워터마크가 다른 위치에 찍힌다.
+ *       모든 페이지에 동일한 margin을 적용해 좌표를 통일한다.
+ *       표지 디자인은 .cover 클래스에서 padding으로 직접 채운다. */
+
+/* ============================================================
+ * 본문 기본 스타일
+ * ============================================================ */
+
+html {
+  font-size: 11pt;
+  line-height: 1.6;
+}
+
+body {
+  font-family: 'Body Sans', 'KR Sans', sans-serif;
+  color: #1a1a1a;
+  margin: 0;
+  padding: 0;
+  /* 한글-영문 혼용 시 베이스라인 자연스럽게 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* ============================================================
+ * 제목 (h1~h6) — H1마다 새 페이지 (--no-chapter-breaks로 끔)
+ * ============================================================ */
+
+h1 {
+  font-family: 'Body Sans', 'KR Sans', sans-serif;
+  font-size: 22pt;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 12mm 0;
+  string-set: doc-title content();
+  page-break-before: always;
+  page-break-after: avoid;
+  border-bottom: 0.5pt solid #ddd;
+  padding-bottom: 4mm;
+}
+
+/* 본문 첫 H1은 새 페이지 시작 안 함 (표지 다음에 바로) */
+body > h1:first-child,
+.no-chapter-breaks h1 {
+  page-break-before: auto;
+}
+
+h2 {
+  font-size: 16pt;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 10mm 0 4mm 0;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-size: 13pt;
+  font-weight: 600;
+  margin: 7mm 0 3mm 0;
+  page-break-after: avoid;
+}
+
+h4 {
+  font-size: 11pt;
+  font-weight: 600;
+  margin: 5mm 0 2mm 0;
+  page-break-after: avoid;
+}
+
+h5, h6 {
+  font-size: 10pt;
+  font-weight: 600;
+  margin: 4mm 0 2mm 0;
+  page-break-after: avoid;
+}
+
+/* ============================================================
+ * 단락, 인용
+ * ============================================================ */
+
+p {
+  margin: 0 0 3mm 0;
+  orphans: 2;
+  widows: 2;
+}
+
+blockquote {
+  margin: 4mm 0 4mm 4mm;
+  padding-left: 4mm;
+  border-left: 2pt solid #ccc;
+  color: #555;
+  font-style: italic;
+}
+
+/* ============================================================
+ * 리스트
+ * ============================================================ */
+
+ul, ol {
+  margin: 2mm 0 4mm 0;
+  padding-left: 6mm;
+}
+
+li {
+  margin-bottom: 1.5mm;
+}
+
+li > ul, li > ol {
+  margin: 1mm 0 1mm 0;
+}
+
+/* ============================================================
+ * 코드
+ * ============================================================ */
+
+code {
+  font-family: 'Mono', monospace;
+  font-size: 9.5pt;
+  background: #f4f4f4;
+  padding: 0.5mm 1.5mm;
+  border-radius: 1mm;
+}
+
+pre {
+  font-family: 'Mono', monospace;
+  font-size: 9pt;
+  line-height: 1.5;
+  background: #f7f7f7;
+  border: 0.5pt solid #e5e5e5;
+  border-radius: 1.5mm;
+  padding: 3mm 4mm;
+  margin: 3mm 0;
+  overflow-x: auto;
+  page-break-inside: avoid;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ============================================================
+ * 표
+ * ============================================================ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0;
+  font-size: 10pt;
+  page-break-inside: avoid;
+}
+
+thead {
+  display: table-header-group;
+}
+
+th, td {
+  border: 0.5pt solid #ccc;
+  padding: 2mm 3mm;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #f4f4f4;
+  font-weight: 700;
+}
+
+tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+/* ============================================================
+ * 링크
+ * ============================================================ */
+
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* PDF에서 외부 링크는 URL 표시하지 않음 (footnote 스타일은 차후) */
+
+/* ============================================================
+ * 이미지
+ * ============================================================ */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 4mm auto;
+  page-break-inside: avoid;
+}
+
+figure {
+  margin: 4mm 0;
+  text-align: center;
+}
+
+figcaption {
+  font-size: 9pt;
+  color: #666;
+  margin-top: 2mm;
+  font-style: italic;
+}
+
+/* ============================================================
+ * 수평선
+ * ============================================================ */
+
+hr {
+  border: none;
+  border-top: 0.5pt solid #ddd;
+  margin: 6mm 0;
+}
+
+/* ============================================================
+ * 표지 (cover)
+ * ============================================================ */
+
+.cover {
+  page-break-after: always;
+  /* 본문 영역(247mm) 거의 전체를 채움 — viewport 의존 없음 */
+  min-height: 230mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20mm 10mm;
+  box-sizing: border-box;
+}
+
+.cover-title {
+  font-family: 'Body Sans', 'KR Sans', sans-serif;
+  font-size: 32pt;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 10mm 0;
+  color: #1a1a1a;
+}
+
+.cover-subtitle {
+  font-size: 14pt;
+  font-weight: 400;
+  color: #555;
+  margin-bottom: 30mm;
+}
+
+.cover-rule {
+  width: 30mm;
+  height: 1pt;
+  background: #1a1a1a;
+  margin: 15mm 0;
+}
+
+.cover-author {
+  font-size: 12pt;
+  color: #1a1a1a;
+  margin-bottom: 3mm;
+}
+
+.cover-date {
+  font-size: 10pt;
+  color: #888;
+}
+
+/* ============================================================
+ * 목차 (TOC)
+ * ============================================================ */
+
+.toc {
+  page-break-after: always;
+}
+
+.toc h2 {
+  margin-top: 0;
+}
+
+.toc ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.toc li {
+  margin-bottom: 2mm;
+  display: flex;
+  align-items: baseline;
+}
+
+.toc a {
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.toc .toc-page {
+  color: #666;
+  font-variant-numeric: tabular-nums;
+  margin-left: 4mm;
+}
+
+.toc .toc-leader {
+  flex: 1;
+  border-bottom: 0.5pt dotted #ccc;
+  margin: 0 2mm;
+  position: relative;
+  top: -2pt;
+}
+
+.toc-h2 { padding-left: 0; }
+.toc-h3 { padding-left: 6mm; font-size: 10pt; }
+.toc-h4 { padding-left: 12mm; font-size: 9.5pt; color: #555; }
+
+/* ============================================================
+ * 코드 신택스 하이라이트 (Pygments 기본 토큰)
+ * ============================================================ */
+
+.highlight .k  { color: #008; font-weight: 600; }     /* keyword */
+.highlight .kd { color: #008; font-weight: 600; }
+.highlight .s, .highlight .s1, .highlight .s2 { color: #080; }  /* string */
+.highlight .c, .highlight .c1 { color: #888; font-style: italic; }  /* comment */
+.highlight .n  { color: #1a1a1a; }                    /* name */
+.highlight .nf { color: #06b; }                       /* function */
+.highlight .nb { color: #06b; font-weight: 600; }     /* builtin */
+.highlight .nc { color: #b06; font-weight: 600; }     /* class */
+.highlight .o  { color: #555; }                       /* operator */
+.highlight .mi, .highlight .mf { color: #c60; }       /* number */
+.highlight .ow { color: #008; font-weight: 600; }     /* operator-word */

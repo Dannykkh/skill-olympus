@@ -2,6 +2,59 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.0] - 2026-05-04
+
+### 🆕 Markdown → 출판품질 PDF (한국 기본값)
+
+`pdf` 스킬에 Markdown → 출판품질 PDF 변환 모드를 추가했습니다. A4 + 25mm 마진 + Pretendard 본문 폰트의 한국 출판 기본값을 따르며, Clio 스킬의 Phase 3-4에서 자동으로 호출되어 PRD/TECHNICAL/USER-MANUAL.md 산출물을 PDF로 함께 출력합니다.
+
+#### Added — pdf 스킬
+
+- `skills/pdf/scripts/markdown_to_pdf.py` — playwright + Chromium 기반 변환기
+  - 서브커맨드: `generate` / `preview` / `setup`
+  - **한국 기본값**: A4(210×297mm), 25mm 마진, Pretendard, "YYYY년 M월 D일"
+  - **자동 다운로드**: Pretendard Regular/Bold + JetBrains Mono (SIL OFL 1.1)
+  - **80% 케이스 무플래그**: `python markdown_to_pdf.py generate spec.md`
+  - **표지/TOC**: `--cover --toc --title --author --org`
+  - **워터마크**: `--watermark "초안"` 등 한글/영문 모두 지원 (대각선, 페이지 정중앙)
+  - **CONFIDENTIAL 푸터**: `--confidential` 옵션
+  - **preview 모드**: HTML 렌더 후 브라우저 자동 오픈 (PDF 라운드트립 회피)
+  - **외부 이미지 fetch 차단 기본 ON** — 트래커 픽셀 방어
+  - **Output Contract**: stdout=경로 한 줄, stderr=진행, exit code 0/1/2/3/4
+
+- `skills/pdf/templates/default.css` — A4 print CSS (Paged Media)
+- `skills/pdf/templates/cover.html` — 표지 템플릿
+- `skills/pdf/templates/watermark.css` — 대각선 워터마크 (mm 절대 좌표)
+
+#### Changed — pdf/SKILL.md
+
+- "Markdown → 출판품질 PDF" 섹션 추가 (한국 기본값/사용법/페이지 구성 옵션/Output Contract/의존성 설치)
+
+#### Changed — Clio (마무리투수)
+
+- Phase 3-4 신규: PDF 출력 단계
+  - AskUserQuestion 3단계 (PDF 여부 / 페이지 구성 모드 / 워터마크)
+  - 3종 산출물(PRD/TECHNICAL/USER-MANUAL)을 자동으로 PDF로도 출력
+  - 의존성 누락 시 자동 점검 + PDF만 건너뛰고 다음 Phase 진행 (블로커 아님)
+- 옵션 추가: `--no-pdf`, `--pdf=user-manual`
+- 산출물 디렉토리 트리/연관 스킬 테이블에 PDF 산출물 표기
+
+#### 백엔드 결정
+
+playwright + Chromium 채택 (gstack make-pdf의 Paged.js와 동등). `/minos` 스킬이 이미 사용 중이므로 의존성 중복 없음. weasyprint는 Windows GTK 런타임 의존성 문제로 제외.
+
+#### 의존성
+
+```
+pip install playwright markdown pygments
+playwright install chromium
+```
+
+또는 한 방에:
+```
+python skills/pdf/scripts/markdown_to_pdf.py setup
+```
+
 ## [4.1.0] - 2026-04-28
 
 ### 🆕 Domain Dictionary — Ubiquitous Language

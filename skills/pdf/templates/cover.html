@@ -1,0 +1,25 @@
+<!--
+  표지 템플릿 (Jinja2 변수 치환)
+  변수:
+    {{ title }}      — 문서 제목
+    {{ subtitle }}   — 부제 (선택)
+    {{ author }}     — 저자
+    {{ date }}       — 날짜 (YYYY년 M월 D일)
+    {{ org }}        — 조직/팀명 (선택)
+-->
+<section class="cover">
+  <div class="cover-title">{{ title }}</div>
+  {% if subtitle %}
+  <div class="cover-subtitle">{{ subtitle }}</div>
+  {% endif %}
+
+  <div class="cover-rule"></div>
+
+  {% if author %}
+  <div class="cover-author">{{ author }}</div>
+  {% endif %}
+  {% if org %}
+  <div class="cover-author">{{ org }}</div>
+  {% endif %}
+  <div class="cover-date">{{ date }}</div>
+</section>

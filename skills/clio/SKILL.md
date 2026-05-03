@@ -282,6 +282,99 @@ spec이 있으면, **설계 대비 구현 누락**을 탐지합니다:
   USER-MANUAL.md  — {N}개 기능 가이드
 ```
 
+### 3-4. PDF 출력 (한국 기본값: A4 + Pretendard)
+
+**`--no-pdf`가 아니면 진행.** 사용자에게 페이지 구성을 묻고 적합한 옵션으로 PDF를 자동 생성합니다.
+
+**AskUserQuestion으로 묻기 (한 번만):**
+
+> 산출물을 PDF로도 출력하시겠어요? (외부 공유/인쇄용)
+
+옵션:
+- A) 3종 모두 PDF (PRD + TECHNICAL + USER-MANUAL)
+- B) USER-MANUAL만 PDF (외부 공유용)
+- C) PDF 출력 안 함
+
+**A 또는 B 선택 시 후속 질문:**
+
+> 페이지 구성은 어떻게 할까요?
+
+옵션:
+- A) **출판 모드** — 표지 + TOC + H1마다 새 페이지 (외부 공유, 인쇄)
+- B) **간단 모드** — TOC만 (내부 문서)
+- C) **메모 모드** — 옵션 없음 (짧은 문서)
+
+> 워터마크가 필요한가요?
+
+옵션:
+- A) "초안" (작업 중)
+- B) "검토용" (리뷰 요청)
+- C) "대외비" + CONFIDENTIAL 푸터
+- D) 없음 (최종본)
+
+**PDF 생성 명령 (선택에 따라 자동 구성):**
+
+```bash
+# 출판 모드 + 워터마크 없음 예시
+python skills/pdf/scripts/markdown_to_pdf.py generate \
+  --cover --toc \
+  --title "{프로젝트명} 사용자 매뉴얼" \
+  --author "{팀/저자}" \
+  --org "{조직}" \
+  docs/clio/latest/USER-MANUAL.md
+
+# 검토용 워터마크 예시
+python skills/pdf/scripts/markdown_to_pdf.py generate \
+  --cover --toc --watermark "검토용" \
+  --title "{프로젝트명} PRD" \
+  docs/clio/latest/PRD.md
+
+# 대외비 예시
+python skills/pdf/scripts/markdown_to_pdf.py generate \
+  --cover --toc --watermark "대외비" --confidential \
+  --title "{프로젝트명} 기술문서" \
+  docs/clio/latest/TECHNICAL.md
+```
+
+**산출물 위치:**
+
+```
+docs/clio/latest/
+├── PRD.md         + PRD.pdf          (--cover --toc)
+├── TECHNICAL.md   + TECHNICAL.pdf    (--cover --toc)
+└── USER-MANUAL.md + USER-MANUAL.pdf  (--cover --toc, 외부 공유 빈도 높음)
+```
+
+**Phase 3-4 출력:**
+
+```
+✅ Phase 3-4 완료: PDF 출력
+  PRD.pdf            — {N} 페이지 ({size} KB)
+  TECHNICAL.pdf      — {N} 페이지 ({size} KB)
+  USER-MANUAL.pdf    — {N} 페이지 ({size} KB)
+  페이지 구성:        {출판 모드 / 간단 모드 / 메모 모드}
+  워터마크:          {초안 / 검토용 / 대외비 / 없음}
+```
+
+**의존성 자동 점검:**
+
+```bash
+python -c "import playwright, markdown" 2>/dev/null
+if [ $? -ne 0 ]; then
+  echo "⚠️  playwright 미설치. 다음 명령으로 설치:"
+  echo "    pip install playwright markdown pygments"
+  echo "    playwright install chromium"
+  echo "또는 한 방에:"
+  echo "    python skills/pdf/scripts/markdown_to_pdf.py setup"
+  echo "PDF 출력 건너뜁니다."
+fi
+```
+
+`/minos` 스킬이 이미 설치되어 있다면 playwright는 중복 없이 재사용됩니다.
+미설치 시 PDF만 건너뛰고 Phase 3.5로 진행 (블로커 아님).
+
+**상세 사용법:** [skills/pdf/SKILL.md](../pdf/SKILL.md) "Markdown → 출판품질 PDF" 섹션 참조.
+
 ---
 
 ## Phase 3.5: 문서 사이트 생성 (웹 매뉴얼)
@@ -448,9 +541,9 @@ npm start
 📁 산출물 위치: docs/clio/latest/
   CHECKLIST.md      — 최종 점검 결과 (Phase 1)
   flow-diagrams/    — 프로세스 흐름도 (Phase 2)
-  PRD.md            — 제품 요구사항 문서 (Phase 3)
-  TECHNICAL.md      — 기술 문서 (Phase 3)
-  USER-MANUAL.md    — 사용자 매뉴얼 (Phase 3)
+  PRD.md (+ .pdf)            — 제품 요구사항 문서 (Phase 3)
+  TECHNICAL.md (+ .pdf)      — 기술 문서 (Phase 3)
+  USER-MANUAL.md (+ .pdf)    — 사용자 매뉴얼 (Phase 3, 외부 공유용)
   FINAL-REPORT.md   — 최종 보고서 (Phase 4)
 
 📖 문서 사이트: http://localhost:{port} (Phase 3.5)
@@ -476,6 +569,8 @@ npm start
 | `--docs-only` | Phase 2~3만 실행 (문서 생성만, 점검 건너뜀) | false |
 | `--flow-only` | Phase 2만 실행 (흐름도만) | false |
 | `--no-site` | 문서 사이트 생성 건너뜀 (Phase 3.5 스킵) | false |
+| `--no-pdf` | PDF 출력 건너뜀 (Phase 3-4 스킵) | false |
+| `--pdf=user-manual` | USER-MANUAL만 PDF (PRD/TECHNICAL은 마크다운만) | false |
 | `--output-dir` | 산출물 디렉토리 변경 | `docs/clio/latest/` |
 | `--force` | NO-GO여도 문서 생성 강제 진행 | false |
 
@@ -507,6 +602,7 @@ npm start
 | release-notes | 버전 + CHANGELOG | Phase 4 이후 후속 |
 | shipping-and-launch | 배포 전 체크리스트 | Phase 4 이후 후속 |
 | documentation-and-adrs | ADR 작성 | Phase 4 보고서에 ADR 목록 포함 가능 |
+| pdf | Markdown → 출판품질 PDF | Phase 3-4에서 PRD/TECHNICAL/USER-MANUAL을 PDF로 출력 |
 | zeus | 전체 파이프라인 | zeus 완료 후 /clio로 마무리 |
 
 ## Related Files
@@ -520,3 +616,5 @@ npm start
 | `agents/documentation.md` | 문서 생성 에이전트 (PRD, API, IMPLEMENTATION 템플릿) |
 | `skills/minos/SKILL.md` | QA 시나리오 생성 + Playwright 테스트 |
 | `skills/mermaid-diagrams/SKILL.md` | Mermaid 문법 가이드 |
+| `skills/pdf/SKILL.md` | Markdown → 출판 PDF (Phase 3-4에서 호출) |
+| `skills/pdf/scripts/markdown_to_pdf.py` | PDF 변환 스크립트 (weasyprint) |

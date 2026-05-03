@@ -1,0 +1,49 @@
+/*
+ * 워터마크 (대각선, 모든 페이지에 자동 반복)
+ *
+ * 구현: position: fixed + transform: rotate(-30deg)
+ *   - CSS Paged Media spec에 따라 position: fixed는 모든 페이지에 반복됨
+ *   - Chromium의 print-to-PDF가 이를 정확히 지원
+ *   - @page background-image는 Chromium에서 무시되므로 사용 불가
+ *
+ * 한글/영문/숫자 모두 지원 (font-family로 본문 폰트 재사용).
+ */
+
+.watermark {
+  position: fixed;
+
+  /* 본문 영역(margin 안쪽) 정중앙에 고정.
+   *
+   * Chromium의 position: fixed는 페이지 박스가 아니라 본문 영역
+   * (margin box) 기준이다. @page margin이 위/아래/좌/우 모두 동일하면
+   * 본문 영역 정중앙 = 페이지 박스 정중앙으로 일치한다.
+   *
+   * default.css에서 @page :first 규칙을 없애 모든 페이지의 본문 영역
+   * 좌표 시스템을 통일했다. */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  -webkit-transform: translate(-50%, -50%) rotate(-30deg);
+
+  font-family: 'Pretendard', 'KR Sans', 'Body Sans', sans-serif;
+  font-size: 110pt;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.10);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+
+  z-index: 9999;
+  pointer-events: none;
+  user-select: none;
+
+  /* Chromium print: 색상 정확히 출력 */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* 표지 페이지에서는 워터마크 숨기지 않음
+ * (검토용/대외비 표시는 표지부터 보이는 게 표준)
+ *
+ * 표지에서 빼고 싶다면 .cover 안에서 .watermark { display: none; }로 오버라이드.
+ * 하지만 fixed 요소는 자식이 아니라 형제이므로, body 레벨에서 제어해야 함.
+ * 현재는 표지 포함 모든 페이지에 표시. */

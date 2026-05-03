@@ -71,3 +71,8 @@ skillmakingbook.md
 
 # Launch / marketing drafts (local only — 공개 전 personal note 포함)
 docs/launch/
+
+# pdf skill 테스트 산출물 (자동 생성)
+skills/pdf/test/out/
+skills/pdf/test/sample.pdf
+skills/pdf/test/sample.preview.html
