@@ -15,6 +15,21 @@ Git push → DeployMonitor 감지 → deploy.bat auto 실행
   6. 헬스체크
 ```
 
+## ⚠️ DB 엔진 일치성 (템플릿 수정 시 필수)
+
+`docker-compose.yml`의 DB 이미지와 `deploy.bat`의 DB 명령어가 일치해야 한다.
+PG ↔ MySQL 전환 프로젝트에서 명령어 잔존이 반복 발생 → 배포가 조용히 실패하고 `exit 5`만 남는다.
+
+| DB 이미지 | ping | 테이블 카운트 |
+|-----------|------|---------------|
+| `mysql:*`, `mariadb:*` | `mysqladmin ping -h localhost -u %DB_USER% -p%DB_PASSWORD% --silent` | `mysql ... -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='%DB_NAME%'"` |
+| `postgres:*` | `pg_isready -U %DB_USER% -d %DB_NAME%` | `psql ... -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'"` |
+
+**Postgres → MySQL 전환 시 체크:**
+- `backend/alembic/versions/*.py`의 `postgresql.UUID` 등 잔존 타입이 있으면 Alembic 블록 자체를 deploy.bat에서 제거 (MySQL에서 무의미하게 시간만 잡아먹음)
+
+---
+
 ## Self-Reload 패턴 (v3.0)
 
 **문제**: Windows 배치 파일은 실행 시작 시점에 전체 로드됨.
@@ -93,19 +108,24 @@ if /i "!DEPLOY_MODE!"=="reset" (
 )
 cd /d "%SCRIPT_DIR%"
 
-REM [4/6] DB 준비 대기
+REM [4/6] DB 준비 대기 — 90회 x 2s = 180s
+REM (멀티테넌트 ALTER 많을 때 60초는 부족 → SKIP_DB → exit 5 유발됨)
 set "DB_RETRIES=0"
 :WAIT_DB
-if %DB_RETRIES% GEQ 30 goto DB_TIMEOUT
-docker exec %PROJECT_NAME%-db mysqladmin ping -h localhost -u %DB_USER% -p%DB_PASSWORD% >nul 2>&1
+if %DB_RETRIES% GEQ 90 goto DB_TIMEOUT
+docker exec %PROJECT_NAME%-db mysqladmin ping -h localhost -u %DB_USER% -p%DB_PASSWORD% --silent >nul 2>&1
 if not errorlevel 1 goto DB_READY
 set /a DB_RETRIES+=1
 timeout /t 2 /nobreak >nul
 goto WAIT_DB
 
 :DB_TIMEOUT
-echo [경고] DB 준비 타임아웃
-goto SKIP_DB
+REM DB가 필수면 숨기지 말고 명시 실패. exit 4로 원인 구분이 쉬워진다.
+echo [ERROR] DB ping timeout after 180s.
+echo   1) docker-compose.yml의 DB 이미지와 여기 명령(mysqladmin/mysql) 일치 확인
+echo   2) docker logs %PROJECT_NAME%-db
+echo   3) DB_USER / DB_PASSWORD 일치 확인
+exit /b 4
 
 :DB_READY
 REM [5/6] DB 초기화 / 마이그레이션
@@ -141,11 +161,11 @@ if exist "database\migrations" (
 
 :SKIP_DB
 
-REM [6/6] 헬스체크
+REM [6/6] 헬스체크 — 45회 x 2s = 90s (migrate 직후 API 기동 여유)
 timeout /t 10 /nobreak >nul
 set "RETRIES=0"
 :HEALTH_CHECK
-if %RETRIES% GEQ 15 goto HEALTH_FAIL
+if %RETRIES% GEQ 45 goto HEALTH_FAIL
 curl -sf http://localhost:%API_PORT%/health >nul 2>&1
 if not errorlevel 1 goto HEALTH_OK
 set /a RETRIES+=1
@@ -162,6 +182,16 @@ echo [경고] API 헬스체크 실패
 if not "%MODE%"=="auto" pause
 exit /b 5
 ```
+
+## 실패 코드 매핑
+
+| exit | 의미 | 체크 포인트 |
+|------|------|-------------|
+| 0 | 정상 | — |
+| 4 | DB 준비 타임아웃 (180s) | DB 명령 일치성, DB 로그, 자격증명 |
+| 5 | API 헬스체크 실패 (90s) | API 로그, migration, SKIP_DB 경로 진입 여부 |
+
+---
 
 ## DB 처리 전략
 
