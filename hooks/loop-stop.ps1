@@ -3,7 +3,11 @@
 
 $ErrorActionPreference = "Stop"
 
-$hookInput = $input | Out-String
+# stdin을 UTF-8로 읽기. `$input | Out-String`은 PS 5.1 환경에서
+# 시스템 코드페이지(cp949 등)로 디코드하여 한글 페이로드를 mojibake로 만들고,
+# 결국 ConvertFrom-Json이 'invalid object' 에러로 실패함.
+try { [Console]::InputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+$hookInput = [Console]::In.ReadToEnd()
 $stateFile = ".claude/loop-state.md"
 
 # 상태 파일 없으면 루프 비활성 — 그냥 통과

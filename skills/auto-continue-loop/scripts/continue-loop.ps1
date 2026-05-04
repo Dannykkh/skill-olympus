@@ -153,7 +153,7 @@ function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
     return $false
 }
 
-$payload = ($input | Out-String).Trim()
+$payload = ([Console]::In.ReadToEnd()).Trim()
 if (-not $payload -and $args.Count -gt 0) {
     $candidate = $args[-1]
     if (Test-Path $candidate) {
