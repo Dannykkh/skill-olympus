@@ -100,7 +100,7 @@ Gemini CLI 대화
 | 설정 | `~/.gemini/settings.json` |
 | 규칙 | `~/.gemini/AGENTS.md` |
 | 컨텍스트 파일명 | `~/.gemini/settings.json`의 `context.fileName` |
-| 핸드오프 | 공통 프로젝트 경로 `.claude/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
+| 핸드오프 | 공통 프로젝트 경로 `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 
-> 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `.claude/handoffs/`를 사용합니다.
+> 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.
 > Claude, Codex, Gemini가 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.

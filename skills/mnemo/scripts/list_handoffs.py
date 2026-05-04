@@ -2,7 +2,7 @@
 """
 List available handoff documents in the current project.
 
-Searches for handoff documents in .claude/handoffs/ and displays:
+Searches for handoff documents in docs/handoffs/ and displays:
 - Filename with date
 - Title extracted from document
 - Status (if marked complete)
@@ -75,7 +75,7 @@ def parse_date_from_filename(filename: str) -> datetime | None:
 
 def list_handoffs(project_path: str) -> list[dict]:
     """List all handoff documents in a project."""
-    handoffs_dir = Path(project_path) / ".claude" / "handoffs"
+    handoffs_dir = Path(project_path) / "docs" / "handoffs"
 
     if not handoffs_dir.exists():
         return []
@@ -112,11 +112,11 @@ def main():
     handoffs = list_handoffs(project_path)
 
     if not handoffs:
-        print(f"No handoffs found in {project_path}/.claude/handoffs/")
+        print(f"No handoffs found in {project_path}/docs/handoffs/")
         print("\nTo create a handoff, run: python create_handoff.py [task-slug]")
         return
 
-    print(f"Found {len(handoffs)} handoff(s) in {project_path}/.claude/handoffs/\n")
+    print(f"Found {len(handoffs)} handoff(s) in {project_path}/docs/handoffs/\n")
     print("-" * 80)
 
     for h in handoffs:

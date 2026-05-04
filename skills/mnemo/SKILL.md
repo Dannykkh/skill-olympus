@@ -185,6 +185,6 @@ python scripts/check_staleness.py <handoff-file>
 |------|------|
 | 대화 로그 | `conversations/YYYY-MM-DD-claude.md` |
 | 도구 사용 로그 | `conversations/YYYY-MM-DD-toollog.md` |
-| 핸드오프 | `.claude/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
+| 핸드오프 | `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 | 인덱스 | `MEMORY.md` (프로젝트 루트) |
 | 의미기억 | `memory/*.md` (카테고리별 상세) |

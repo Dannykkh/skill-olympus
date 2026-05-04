@@ -257,7 +257,18 @@ MEMORY.md 인덱스에 각 카테고리 파일의 대략적 줄 수를 표기하
 **핸드오프 실행 절차:**
 
 1. **MEMORY.md 업데이트** — 이번 세션의 결정사항, 새 패턴을 적절한 memory/*.md에 추가 + 인덱스 업데이트
-2. **핸드오프 파일 생성** — 공통 프로젝트 핸드오프 디렉터리인 `.claude/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 아래 형식으로 작성:
+
+2. **gotcha/learned 자동 추출 + 저장** — 이번 세션 동안 누적된 jsonl 신규 라인을 분석해 정제 .md로 즉시 저장 (사용자 검토 없음):
+   - **대상**: `memory/gotchas/observations.jsonl` + `memory/learned/observations.jsonl`의 **이번 세션 새 라인만** (session_id 또는 시작 timestamp 기준 필터). 백로그는 손대지 않음
+   - **추출 기준**:
+     - gotcha: 반복된 에러, 사용자 수정/재지시, 함정 패턴
+     - learned: 반복된 성공 패턴, 효과적이었던 접근, 사용자가 "좋다/맞다" 확인
+   - **분류**: 글로벌(CLI/OS 공통) vs 프로젝트(특정 API/라이브러리/사내 규칙) 자동 판정. 애매하면 프로젝트로 (보수적)
+   - **secret 스크럽핑**: 저장 전 API 키/토큰/패스워드/PEM 키 등 자동 마스킹 (`validate_handoff.py`의 SECRET_PATTERNS 참조)
+   - **저장**: `memory/{gotchas,learned}/NNN-{slug}.md`로 저장 + `index.md` 갱신(없으면 생성). 형식은 `### 제목` + `tags:` + `date:` + `source:` + 내용 + 참조
+   - **사후 정리**: 잘못된 정제는 사용자가 `memory/` 디렉터리에서 직접 삭제
+
+3. **핸드오프 파일 생성** — 공통 프로젝트 핸드오프 디렉터리인 `docs/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 아래 형식으로 작성:
 
 ```markdown
 # Handoff: {작업 제목}
@@ -300,10 +311,11 @@ MEMORY.md 인덱스에 각 카테고리 파일의 대략적 줄 수를 표기하
 - {다음 세션에서 주의할 점}
 ```
 
-3. **사용자에게 안내:**
+4. **사용자에게 안내:**
 > "컨텍스트가 한도에 가까워져 핸드오프를 준비했습니다.
-> - 공통 핸드오프 파일: `.claude/handoffs/{파일명}`
+> - 공통 핸드오프 파일: `docs/handoffs/{파일명}`
 > - MEMORY.md 업데이트 완료
+> - gotcha/learned 자동 저장: {N개} (`memory/{gotchas,learned}/` 확인, 부적절하면 삭제)
 > 새 세션을 시작해주세요."
 
 **중요:** 100%에 도달하면 응답 자체가 불가능하므로, **여유 있을 때 미리** 실행하세요.

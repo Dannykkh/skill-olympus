@@ -130,7 +130,7 @@ Codex CLI 대화
 | 훅 | `~/.codex/hooks/save-turn.ps1\|.sh` |
 | 설정 | `~/.codex/config.toml` |
 | 규칙 | `~/.codex/AGENTS.md` |
-| 핸드오프 | 공통 프로젝트 경로 `.claude/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
+| 핸드오프 | 공통 프로젝트 경로 `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 
-> 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `.claude/handoffs/`를 사용합니다.
+> 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.
 > Claude, Codex, Gemini가 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.

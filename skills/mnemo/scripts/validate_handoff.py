@@ -11,7 +11,7 @@ Checks:
 
 Usage:
     python validate_handoff.py <handoff-file>
-    python validate_handoff.py .claude/handoffs/2024-01-15-143022-auth.md
+    python validate_handoff.py docs/handoffs/2024-01-15-143022-auth.md
 """
 
 import os
@@ -212,7 +212,7 @@ def validate_handoff(filepath: str) -> dict:
 
     # UTF-8 명시: Windows cp949 fallback 방지
     content = path.read_text(encoding="utf-8")
-    base_path = path.parent.parent.parent  # Go up from .claude/handoffs/
+    base_path = path.parent.parent.parent  # Go up from docs/handoffs/
 
     # Run checks
     todos_clear, remaining_todos = check_todos(content)
@@ -311,7 +311,7 @@ def print_report(result: dict):
 def main():
     if len(sys.argv) < 2:
         print("Usage: python validate_handoff.py <handoff-file>")
-        print("Example: python validate_handoff.py .claude/handoffs/2024-01-15-auth.md")
+        print("Example: python validate_handoff.py docs/handoffs/2024-01-15-auth.md")
         sys.exit(1)
 
     filepath = sys.argv[1]

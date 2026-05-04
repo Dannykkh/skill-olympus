@@ -78,14 +78,14 @@ python scripts/create_handoff.py "auth-part-2" --continues-from 2026-01-15-auth.
 ### 핸드오프 검증
 
 ```bash
-python scripts/validate_handoff.py .claude/handoffs/2026-02-01-auth.md
+python scripts/validate_handoff.py docs/handoffs/2026-02-01-auth.md
 # 출력: Quality Score: 85/100, No secrets detected
 ```
 
 ### 핸드오프 재개
 
 ```bash
-python scripts/check_staleness.py .claude/handoffs/2026-02-01-auth.md
+python scripts/check_staleness.py docs/handoffs/2026-02-01-auth.md
 # 출력: FRESH - Safe to resume
 ```
 
@@ -103,7 +103,7 @@ python scripts/check_staleness.py .claude/handoffs/2026-02-01-auth.md
 ### 단점/주의사항
 - Python 스크립트 실행 필요
 - 핸드오프 문서 수동 작성 필요 (LLM이 채워야 함)
-- 저장소가 `.claude/handoffs/`에 로컬 저장됨
+- 저장소가 `docs/handoffs/`에 로컬 저장됨
 
 ---
 
