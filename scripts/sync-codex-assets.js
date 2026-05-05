@@ -79,6 +79,23 @@ function copyDir(src, dest, skipNodeModules = false) {
   fs.cpSync(src, dest, { recursive: true, force: true, filter });
 }
 
+function filesMatch(src, dest) {
+  try {
+    const srcStat = fs.statSync(src);
+    const destStat = fs.statSync(dest);
+    if (!srcStat.isFile() || !destStat.isFile()) return false;
+    if (srcStat.size !== destStat.size) return false;
+    return fs.readFileSync(src).equals(fs.readFileSync(dest));
+  } catch {
+    return false;
+  }
+}
+
+function copyFileIfChanged(src, dest) {
+  if (filesMatch(src, dest)) return;
+  fs.copyFileSync(src, dest);
+}
+
 function listDirectories(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
   return fs
@@ -202,7 +219,7 @@ function syncAgents(destDir, agentFiles, mode) {
       safeRm(dest);
       continue;
     }
-    fs.copyFileSync(src, dest);
+    copyFileIfChanged(src, dest);
   }
   // agents/ 하위 디렉토리도 동기화 (references/ 등)
   if (mode !== "unlink" && fs.existsSync(agentsSrcDir)) {
@@ -224,7 +241,7 @@ function syncHooks(destDir, hookFiles, mode) {
       safeRm(dest);
       continue;
     }
-    fs.copyFileSync(src, dest);
+    copyFileIfChanged(src, dest);
   }
 }
 
