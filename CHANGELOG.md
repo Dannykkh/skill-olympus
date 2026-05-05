@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.1] - 2026-05-06
+
+### Fixed — Zeus 자동 연속 실행
+
+- `zeus` 스킬에 CLI별 자동 재개 계약을 추가해 제품 파이프라인 요청 시 `zephermine → 구현 → argos → docker-deploy → minos → report`가 중간 보고에서 멈추지 않도록 보강
+- Claude/Codex/Gemini 상태 파일을 각각 `.claude/`, `.codex/`, `.chronos/loop-state.md`로 분리하고, Codex notify 재개 시 git root 기준으로 상태 파일을 찾도록 수정
+- Codex notify 체인에서 PowerShell pipeline stdin 누락 가능성을 피하기 위해 Chronos payload를 임시 파일로 전달
+- Codex sync가 이미 동일한 hook/agent 파일을 덮어쓰다 Windows 파일 잠금(`EBUSY`)에 걸리는 문제를 방지
+
 ## [4.3.0] - 2026-05-05
 
 ### 🧠 므네모 메모리 정합성 점검
