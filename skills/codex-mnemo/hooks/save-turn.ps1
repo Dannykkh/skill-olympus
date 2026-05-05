@@ -645,9 +645,20 @@ if ($response -and $baseDir) {
 
 $chronosContinue = Join-Path $HOME ".codex\skills\auto-continue-loop\scripts\continue-loop.ps1"
 if (Test-Path $chronosContinue) {
+    $chronosPayloadFile = $null
     try {
-        ($payload | ConvertTo-Json -Compress -Depth 20) | & $chronosContinue
+        $chronosPayloadFile = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText(
+            $chronosPayloadFile,
+            ($payload | ConvertTo-Json -Compress -Depth 20),
+            $Utf8NoBom
+        )
+        & $chronosContinue $chronosPayloadFile
     } catch {
         Write-DebugLog "chronos-chain-failed: $($_.Exception.Message)"
+    } finally {
+        if ($chronosPayloadFile -and (Test-Path $chronosPayloadFile)) {
+            Remove-Item $chronosPayloadFile -Force -ErrorAction SilentlyContinue
+        }
     }
 }

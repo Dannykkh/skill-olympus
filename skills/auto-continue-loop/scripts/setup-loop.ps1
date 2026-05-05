@@ -62,20 +62,45 @@ if (-not $prompt) {
     exit 1
 }
 
-New-Item -ItemType Directory -Path ".claude" -Force | Out-Null
+$stateDir = if ($env:CODEX_THREAD_ID) {
+    ".codex"
+} elseif ($env:GEMINI_SESSION_ID) {
+    ".chronos"
+} else {
+    ".claude"
+}
+$statePath = Join-Path $stateDir "loop-state.md"
+
+New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
 
 # 기존 루프 감지 — 다른 세션의 루프가 활성 상태이면 경고
-if (Test-Path ".claude/loop-state.md") {
-    $existingContent = Get-Content ".claude/loop-state.md" -Raw
+if (Test-Path $statePath) {
+    $existingContent = Get-Content $statePath -Raw
     $existingSession = if ($existingContent -match "session_id:\s*(.+)") { $Matches[1].Trim() } else { "" }
-    $currentSession = if ($env:CLAUDE_CODE_SESSION_ID) { $env:CLAUDE_CODE_SESSION_ID } else { "" }
+    $currentSession = if ($env:CLAUDE_CODE_SESSION_ID) {
+        $env:CLAUDE_CODE_SESSION_ID
+    } elseif ($env:CODEX_THREAD_ID) {
+        $env:CODEX_THREAD_ID
+    } elseif ($env:GEMINI_SESSION_ID) {
+        $env:GEMINI_SESSION_ID
+    } else {
+        ""
+    }
     if ($existingSession -and $currentSession -and $existingSession -ne $currentSession) {
         Write-Host "⚠️ 다른 세션($($existingSession.Substring(0, [Math]::Min(8, $existingSession.Length)))...)의 루프가 활성 상태입니다."
         Write-Host "   기존 루프를 덮어쓰고 새 루프를 시작합니다."
     }
 }
 
-$sessionId = if ($env:CLAUDE_CODE_SESSION_ID) { $env:CLAUDE_CODE_SESSION_ID } else { "" }
+$sessionId = if ($env:CLAUDE_CODE_SESSION_ID) {
+    $env:CLAUDE_CODE_SESSION_ID
+} elseif ($env:CODEX_THREAD_ID) {
+    $env:CODEX_THREAD_ID
+} elseif ($env:GEMINI_SESSION_ID) {
+    $env:GEMINI_SESSION_ID
+} else {
+    ""
+}
 $cpYaml = if ($completionPromise -ne "null") { "`"$completionPromise`"" } else { "null" }
 $now = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
@@ -93,7 +118,7 @@ started_at: "$now"
 $prompt
 "@
 
-Set-Content -Path ".claude/loop-state.md" -Value $stateContent
+Set-Content -Path $statePath -Value $stateContent
 
 $maxLabel = if ($maxIterations -gt 0) { "${maxIterations}회" } else { "무제한" }
 $cpLabel = if ($completionPromise -ne "null") { $completionPromise } else { "없음" }
@@ -104,8 +129,9 @@ Chronos Loop 시작
 반복: 1회차
 최대 반복: $maxLabel
 완료 조건: $cpLabel
+상태 파일: $statePath
 
-AI가 작업 → 끝내려 함 → Stop 훅이 가로채서 같은 프롬프트 재투입
+AI가 작업 → 끝내려 함 → CLI 훅 체인이 같은 프롬프트 재투입
 매 반복마다 이전 결과를 보면서 점진적으로 완성도를 높입니다.
 
 중단: pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1 (Linux/Mac: bash ./cancel-loop.sh)

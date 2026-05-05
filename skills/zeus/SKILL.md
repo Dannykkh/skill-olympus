@@ -47,6 +47,7 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 
 ## CRITICAL RULES
 
+0. **메타 요청 구분** — 사용자가 Zeus 자체를 점검/수정/설명하라고 한 경우에는 제품 파이프라인을 시작하지 말고 이 SKILL.md와 관련 런타임만 점검한다. 제품/기능을 "제우스로 진행"하라는 요청일 때만 Phase 0~6을 실행한다.
 1. **NEVER call AskUserQuestion** — 모든 결정은 자동선택 규칙으로 처리 (`Recommended` 우선, 없으면 자동 응답 테이블)
 2. **절대 멈추지 않는다** — 에러 시 기록하고 계속 진행
 3. **Phase 완료 즉시 다음 Phase 시작** — "다음을 진행합니다" 같은 중간 보고 금지. Phase 0→1→2→3→4→5→6을 한 턴에 연속 실행
@@ -56,6 +57,45 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
    - 예: `[ZEUS-AUTO:taste] 인증 방식 JWT 선택 (세션 기반도 가능하나 SPA에 적합한 JWT 우선)`
 5. **재개 지원** — docs/zeus/zeus-state.json으로 중단 지점부터 재개
 6. **모든 Phase 강제 실행** — Phase 0~6 모두 최소 1회 실행 시도 필수. "건너뜀"은 물리적 불가(Docker 미설치 등)일 때만 허용하며, 그 경우에도 폴백 경로를 실행
+7. **완료 전 최종 응답 금지** — Phase 0~5 실행 증거가 없으면 "다음 구현 순서"를 사용자에게 넘기지 않는다. 실행 가능한 다음 작업은 즉시 수행하고, 불가능하면 `zeus-state.json`과 핸드오프를 남긴다.
+
+### CLI Auto-Continue Contract
+
+Zeus는 `zephermine → agent-team/workpm → argos → docker-deploy → minos → report`를 하나의 긴 작업으로 밀어붙이는 스킬입니다. 모델 지시만으로는 중간 보고 후 멈출 수 있으므로, 제품 파이프라인 요청으로 Zeus를 실행할 때는 Phase 0 전에 Chronos 자동 재개 가드를 부트스트랩합니다.
+
+CLI별 재개 방식:
+- Claude Code: `.claude/loop-state.md` + Stop `loop-stop.*` 훅
+- Codex: `.codex/loop-state.md` + notify `save-turn -> continue-loop -> codex exec resume --last`
+- Gemini: `.chronos/loop-state.md` + AfterAgent/worker 루프
+
+**부트스트랩 조건:**
+- 사용자 요청이 Zeus 자체 점검/문서 수정이 아니라 제품/기능 구현 파이프라인일 것
+- `auto-continue-loop/scripts/setup-loop.ps1` 또는 `.sh`를 찾을 수 있을 것. 현재 프로젝트의 `skills/auto-continue-loop/`를 먼저 쓰고, 없으면 현재 CLI의 글로벌 스킬 경로(`~/.claude/skills`, `~/.codex/skills`, `~/.gemini/skills`)를 사용한다.
+- 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Gemini: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 말고 기존 루프를 존중할 것. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않는다.
+
+**Windows PowerShell:**
+```powershell
+pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File skills/auto-continue-loop/scripts/setup-loop.ps1 `
+  --max-iterations 20 `
+  --completion-promise "Zeus Phase 0-6 complete" `
+  "Zeus pipeline: {사용자 원문}. Run zephermine through minos and final report. Execute missing Phase 0-6 from docs/zeus/zeus-state.json; do not stop at next steps."
+```
+
+**Linux/macOS:**
+```bash
+bash skills/auto-continue-loop/scripts/setup-loop.sh \
+  --max-iterations 20 \
+  --completion-promise "Zeus Phase 0-6 complete" \
+  "Zeus pipeline: {사용자 원문}. Run zephermine through minos and final report. Execute missing Phase 0-6 from docs/zeus/zeus-state.json; do not stop at next steps."
+```
+
+Phase 6에서만 완료 조건을 출력합니다:
+
+```text
+<promise>Zeus Phase 0-6 complete</promise>
+```
+
+중간에 컨텍스트가 부족하면 `docs/zeus/zeus-state.json`의 `currentPhase`를 다음 누락 phase로 저장하고 핸드오프를 생성한 뒤 종료합니다. 이 경우 완료 promise를 출력하지 않습니다.
 
 ### 실행 보장 게이트 (Phase 6 시작 전 필수)
 

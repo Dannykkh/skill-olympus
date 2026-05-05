@@ -66,12 +66,23 @@ if [[ -z "$PROMPT" ]]; then
     exit 1
 fi
 
-mkdir -p .claude
+if [ -n "${CODEX_THREAD_ID:-}" ]; then
+    STATE_DIR=".codex"
+    CURRENT_SESSION="${CODEX_THREAD_ID:-}"
+elif [ -n "${GEMINI_SESSION_ID:-}" ]; then
+    STATE_DIR=".chronos"
+    CURRENT_SESSION="${GEMINI_SESSION_ID:-}"
+else
+    STATE_DIR=".claude"
+    CURRENT_SESSION="${CLAUDE_CODE_SESSION_ID:-}"
+fi
+STATE_FILE="$STATE_DIR/loop-state.md"
+
+mkdir -p "$STATE_DIR"
 
 # 기존 루프 감지 — 다른 세션의 루프가 활성 상태이면 경고
-if [ -f ".claude/loop-state.md" ]; then
-    EXISTING_SESSION=$(grep "^session_id:" .claude/loop-state.md 2>/dev/null | sed 's/session_id: *//' || true)
-    CURRENT_SESSION="${CLAUDE_CODE_SESSION_ID:-}"
+if [ -f "$STATE_FILE" ]; then
+    EXISTING_SESSION=$(grep "^session_id:" "$STATE_FILE" 2>/dev/null | sed 's/session_id: *//' || true)
     if [ -n "$EXISTING_SESSION" ] && [ -n "$CURRENT_SESSION" ] && [ "$EXISTING_SESSION" != "$CURRENT_SESSION" ]; then
         echo "⚠️ 다른 세션(${EXISTING_SESSION:0:8}...)의 루프가 활성 상태입니다." >&2
         echo "   기존 루프를 덮어쓰고 새 루프를 시작합니다." >&2
@@ -85,11 +96,11 @@ else
     CP_YAML="null"
 fi
 
-cat > .claude/loop-state.md <<EOF
+cat > "$STATE_FILE" <<EOF
 ---
 active: true
 iteration: 1
-session_id: ${CLAUDE_CODE_SESSION_ID:-}
+session_id: $CURRENT_SESSION
 last_turn_id: ""
 max_iterations: $MAX_ITERATIONS
 completion_promise: $CP_YAML
@@ -105,8 +116,9 @@ Chronos Loop 시작
 반복: 1회차
 최대 반복: $(if [[ $MAX_ITERATIONS -gt 0 ]]; then echo "${MAX_ITERATIONS}회"; else echo "무제한"; fi)
 완료 조건: $(if [[ "$COMPLETION_PROMISE" != "null" ]]; then echo "$COMPLETION_PROMISE"; else echo "없음"; fi)
+상태 파일: $STATE_FILE
 
-AI가 작업 → 끝내려 함 → Stop 훅이 가로채서 같은 프롬프트 재투입
+AI가 작업 → 끝내려 함 → CLI 훅 체인이 같은 프롬프트 재투입
 매 반복마다 이전 결과를 보면서 점진적으로 완성도를 높입니다.
 
 중단: bash skills/auto-continue-loop/scripts/cancel-loop.sh (또는 .ps1)

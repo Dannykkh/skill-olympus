@@ -25,10 +25,35 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch
 
 ### 핵심 원칙
 
+0. **메타 요청 구분** — Zeus 자체를 점검/수정/설명하라는 요청이면 제품 파이프라인을 시작하지 말고 스킬과 런타임만 점검합니다.
 1. **AskUserQuestion 절대 호출 금지** — 모든 결정은 SKILL.md의 자동선택 규칙으로 처리 (`Recommended` 우선, 없으면 fallback)
 2. **절대 멈추지 않는다** — 에러 발생 시 docs/zeus/zeus-log.md에 기록하고 다음 단계로 진행
 3. **[ZEUS-AUTO] 태그** — 자동 결정에는 반드시 태그 표시
 4. **모든 Phase 강제 실행** — Phase 0~6 모두 최소 1회 실행 시도 필수. "건너뜀"은 물리적 불가(Docker 미설치 등)일 때만 허용하며, 그 경우에도 폴백 경로를 실행
+5. **완료 전 최종 응답 금지** — Phase 0~5 실행 증거가 없으면 "다음 구현 순서"를 사용자에게 넘기지 말고, 가능한 다음 작업을 즉시 수행합니다.
+
+### CLI 자동 재개
+
+제품/기능 파이프라인으로 `/zeus`가 실행되면 Phase 0 전에 Chronos 자동 재개 가드를 시작합니다. 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Gemini: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 않습니다. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않습니다.
+
+Claude Code는 Stop 훅으로, Codex는 notify 체인으로, Gemini는 AfterAgent/worker 루프로 같은 Zeus 파이프라인을 이어갑니다.
+현재 프로젝트의 `skills/auto-continue-loop/`가 없으면 현재 CLI의 글로벌 스킬 경로(`~/.claude/skills`, `~/.codex/skills`, `~/.gemini/skills`)에 설치된 `auto-continue-loop`를 사용합니다.
+
+```powershell
+pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File skills/auto-continue-loop/scripts/setup-loop.ps1 `
+  --max-iterations 20 `
+  --completion-promise "Zeus Phase 0-6 complete" `
+  "Zeus pipeline: {사용자 원문}. Run zephermine through minos and final report. Execute missing Phase 0-6 from docs/zeus/zeus-state.json; do not stop at next steps."
+```
+
+```bash
+bash skills/auto-continue-loop/scripts/setup-loop.sh \
+  --max-iterations 20 \
+  --completion-promise "Zeus Phase 0-6 complete" \
+  "Zeus pipeline: {사용자 원문}. Run zephermine through minos and final report. Execute missing Phase 0-6 from docs/zeus/zeus-state.json; do not stop at next steps."
+```
+
+Phase 6 완료 시에만 `<promise>Zeus Phase 0-6 complete</promise>`를 출력합니다.
 
 ### Phase 순서 — 자동 루프
 

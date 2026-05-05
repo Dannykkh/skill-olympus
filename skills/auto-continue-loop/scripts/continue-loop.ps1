@@ -64,8 +64,8 @@ function Extract-Text($value) {
 
 function Resolve-StateFile([string]$baseDir) {
     $candidates = @(
-        (Join-Path $baseDir ".claude\loop-state.md"),
         (Join-Path $baseDir ".codex\loop-state.md"),
+        (Join-Path $baseDir ".claude\loop-state.md"),
         (Join-Path $baseDir ".chronos\loop-state.md")
     )
 
@@ -154,6 +154,15 @@ function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
 }
 
 $payload = ([Console]::In.ReadToEnd()).Trim()
+if (-not $payload) {
+    try {
+        $pipelineParts = @()
+        foreach ($item in $input) {
+            if ($null -ne $item) { $pipelineParts += "$item" }
+        }
+        $payload = ($pipelineParts -join [Environment]::NewLine).Trim()
+    } catch {}
+}
 if (-not $payload -and $args.Count -gt 0) {
     $candidate = $args[-1]
     if (Test-Path $candidate) {
@@ -181,6 +190,18 @@ if (-not (Test-Path $baseDir)) {
     Write-DebugLog "skip: baseDir not found $baseDir"
     exit 0
 }
+
+# Codex notify payload can point at a subdirectory. Loop state is stored at the
+# project root, so normalize before looking for .codex/.claude state files.
+try {
+    $gitRoot = & git -C $baseDir rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+        $normalizedRoot = $gitRoot.Replace('/', '\')
+        if (Test-Path $normalizedRoot) {
+            $baseDir = $normalizedRoot
+        }
+    }
+} catch {}
 
 $stateFile = Resolve-StateFile $baseDir
 if (-not $stateFile) {
@@ -307,7 +328,7 @@ if (-not $codexCommand) {
 $baseDirCmd = $baseDir.Replace('"', '""')
 $promptFileCmd = $promptFile.Replace('"', '""')
 $logFileCmd = $logFile.Replace('"', '""')
-$resumeCommand = 'cd /d "{0}" && codex exec --skip-git-repo-check resume --last < "{1}" >> "{2}" 2>&1 && del /q "{1}"' -f $baseDirCmd, $promptFileCmd, $logFileCmd
+$resumeCommand = 'cd /d "{0}" && codex exec --skip-git-repo-check resume --last - < "{1}" >> "{2}" 2>&1 && del /q "{1}"' -f $baseDirCmd, $promptFileCmd, $logFileCmd
 
 try {
     Start-Process -FilePath "cmd.exe" -ArgumentList "/d", "/c", $resumeCommand -WindowStyle Hidden | Out-Null

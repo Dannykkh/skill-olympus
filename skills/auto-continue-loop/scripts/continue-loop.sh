@@ -180,8 +180,8 @@ first_non_empty_json() {
 resolve_state_file() {
     local base_dir="$1"
     local candidates=(
-        "$base_dir/.claude/loop-state.md"
         "$base_dir/.codex/loop-state.md"
+        "$base_dir/.claude/loop-state.md"
         "$base_dir/.chronos/loop-state.md"
     )
 
@@ -333,6 +333,13 @@ if [ ! -d "$BASE_DIR" ]; then
     exit 0
 fi
 
+# Codex notify payload can point at a subdirectory. Loop state is stored at the
+# project root, so normalize before looking for .codex/.claude state files.
+GIT_ROOT_NORMALIZED="$(git -C "$BASE_DIR" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -n "$GIT_ROOT_NORMALIZED" ] && [ -d "$GIT_ROOT_NORMALIZED" ]; then
+    BASE_DIR="$GIT_ROOT_NORMALIZED"
+fi
+
 STATE_FILE="$(resolve_state_file "$BASE_DIR" || true)"
 if [ -z "$STATE_FILE" ]; then
     exit 0
@@ -452,7 +459,7 @@ printf -v base_q '%q' "$BASE_DIR"
 printf -v prompt_q '%q' "$PROMPT_FILE"
 printf -v log_q '%q' "$LOG_FILE"
 printf -v codex_q '%q' "$CODEX_BIN"
-resume_cmd="cd $base_q && $codex_q exec --skip-git-repo-check resume --last < $prompt_q >> $log_q 2>&1; status=\$?; rm -f $prompt_q; exit \$status"
+resume_cmd="cd $base_q && $codex_q exec --skip-git-repo-check resume --last - < $prompt_q >> $log_q 2>&1; status=\$?; rm -f $prompt_q; exit \$status"
 nohup bash -lc "$resume_cmd" >/dev/null 2>&1 &
 
 debug_log "spawned: turn=${TURN_ID:-none} next=$NEXT_ITERATION state=$STATE_FILE"
