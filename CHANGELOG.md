@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.0] - 2026-05-05
+
+### 🧠 므네모 메모리 정합성 점검
+
+mnemo 시스템 5개 영역(대화 / 메모리 / 핸드오프 / gotchas / learning)과 3 CLI parity를 종합 점검하고, 발견된 이슈를 일괄 정리한 릴리즈입니다.
+
+#### Changed — 핸드오프 경로 (마이그레이션)
+
+- 핸드오프 저장 위치를 `.claude/handoffs/` → **`docs/handoffs/`**로 이전
+  - **이유**: `.claude/`는 `.gitignore` 대상이라 핸드오프가 공유 안 됨 + Codex/Gemini 사용자에게 `.claude` 위화감
+  - 4 핸드오프 스크립트(`create_handoff.py`, `list_handoffs.py`, `validate_handoff.py`, `check_staleness.py`) + 1 테스트 환경 스크립트 동시 갱신
+  - 기존 핸드오프 3 파일 자동 이전, 외부 가이드(`docs/resources/softaworks-agent-toolkit.md`) 경로 동기화
+
+#### Added — 핸드오프 시 자동 추출 + 저장
+
+- 핸드오프 절차에 **gotcha/learned 자동 추출 + 저장 단계** 박힘 (3 mnemo 템플릿 동일 — Claude/Codex/Gemini)
+  - 이번 세션 jsonl 신규 라인을 LLM이 분석 → 정제 .md 자동 저장 (사용자 검토 없음)
+  - secret 자동 마스킹 (`validate_handoff.py`의 SECRET_PATTERNS 재사용)
+  - 글로벌(CLI/OS 공통) vs 프로젝트(특정 API) 자동 분류, 애매하면 보수적으로 프로젝트로
+  - 백로그(누적된 raw observation)는 손대지 않음 — 다음 세션 분량부터 적용
+
+#### Added — memory 항목 형식 가이드 (오용 방지)
+
+H1 사례(2026-04-21)에서 LLM이 사용자 prompt를 `source:` 필드에 통째로 박은 패턴 발견. 재발 방지를 위해 3 mnemo 템플릿에 명시적 금지 추가:
+
+- `source:` 필드는 정확히 `claude` / `codex` / `gemini` **한 단어**만 (사용자 prompt/분석 텍스트/코드 블록 금지)
+- 항목명에 "항목" / "메모" / "기록" 같은 일반 단어 금지 — 검색 가능한 키워드 조합 사용
+- `tags:` 필드는 **최소 3개 키워드** (영/한 혼용 OK) — 검색 매칭 정확도 보장
+- 항목 본문은 **3줄 이내** 권장 — 길어지면 별도 파일/대화 링크로 참조
+
+#### Fixed — memory 위생
+
+- `memory/*.md` 4 파일에서 누락된 `source:` 필드 일괄 백필 (48 항목)
+- `memory/claude-global-config.md`의 잘못된 글로벌 `~/.claude/handoffs/` 트리 정정 (실재하지 않는 경로)
+- MEMORY.md 정리: 거대한 source 폐기물 제거 + 카테고리별 line count 표기 (118줄/6.1KB → 54줄/2.5KB)
+
+#### 적용
+
+```bash
+# 글로벌 mnemo 규칙 갱신
+install.bat   # Windows
+./install.sh  # macOS/Linux
+```
+
+설치 후 `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/AGENTS.md`의 마커 영역(`<!-- MNEMO:START -->` ~ `<!-- MNEMO:END -->`)이 새 가이드로 자동 갱신됩니다.
+
 ## [4.2.0] - 2026-05-04
 
 ### 🆕 Markdown → 출판품질 PDF (한국 기본값)
