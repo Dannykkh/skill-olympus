@@ -84,7 +84,7 @@ case "$AI_PROVIDER" in
             exit 1
         fi
         write_log "CLI_STARTED: Codex CLI at $(command -v codex)"
-        codex --full-auto --approval-mode full-auto -q "$SYSTEM_PROMPT"
+        printf "%s" "$SYSTEM_PROMPT" | codex -a never exec --sandbox workspace-write --skip-git-repo-check
         ;;
     gemini)
         if ! command -v gemini &> /dev/null; then
@@ -92,7 +92,8 @@ case "$AI_PROVIDER" in
             exit 1
         fi
         write_log "CLI_STARTED: Gemini CLI at $(command -v gemini)"
-        echo "$SYSTEM_PROMPT" | gemini
+        GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
+        timeout "$GEMINI_TIMEOUT_SECONDS" gemini --skip-trust --approval-mode yolo --output-format text -p "$SYSTEM_PROMPT"
         ;;
     *)
         write_log "ERROR: Unknown AI provider: $AI_PROVIDER (claude|codex|gemini)"

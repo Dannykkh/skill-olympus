@@ -96,10 +96,10 @@ function Get-AICommand {
             if ($AutoMode) { "claude --dangerously-skip-permissions" } else { "claude" }
         }
         "codex" {
-            if ($AutoMode) { "codex --full-auto --approval-mode full-auto" } else { "codex" }
+            if ($AutoMode) { "codex -a never exec --sandbox workspace-write --skip-git-repo-check" } else { "codex" }
         }
         "gemini" {
-            if ($AutoMode) { "gemini --approval-mode yolo" } else { "gemini" }
+            if ($AutoMode) { "gemini --skip-trust --approval-mode yolo --output-format text -p" } else { "gemini" }
         }
         default {
             if ($AutoMode) { "claude --dangerously-skip-permissions" } else { "claude" }

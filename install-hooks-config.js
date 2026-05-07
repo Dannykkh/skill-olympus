@@ -261,6 +261,22 @@ function main() {
   // hooks key: clean up existing hooks + add new ones
   // Replace entries with the same script filename even if paths differ (cross-PC portability)
   if (!settings.hooks) settings.hooks = {};
+  if (isGemini) {
+    const obsoleteHookBases = new Set([
+      "validate-code",
+      "validate-docs",
+      "format-code",
+      "ddingdong-noti",
+    ]);
+    const stripExt = (f) => f.replace(/\.(ps1|sh|js)$/, "");
+    for (const event of Object.keys(settings.hooks)) {
+      settings.hooks[event] = (settings.hooks[event] || []).filter((entry) => {
+        const existingCmd = entry.hooks?.[0]?.command || "";
+        const existingFilename = existingCmd.split("/").pop().replace(/"/g, "");
+        return !obsoleteHookBases.has(stripExt(existingFilename));
+      });
+    }
+  }
   for (const [event, entries] of Object.entries(hooksConfig)) {
     if (!settings.hooks[event]) settings.hooks[event] = [];
     for (const entry of entries) {

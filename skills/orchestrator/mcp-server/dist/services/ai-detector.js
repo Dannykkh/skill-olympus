@@ -100,15 +100,15 @@ export function getProviderCommand(provider, options = {}) {
                 : 'claude';
             break;
         case 'codex':
-            // Codex CLI 옵션
+            // Codex CLI auto mode: non-interactive, no approval prompts.
             command = autoMode
-                ? 'codex --full-auto --approval-mode full-auto'
+                ? 'codex -a never exec --sandbox workspace-write --skip-git-repo-check'
                 : 'codex';
             break;
         case 'gemini':
-            // Gemini CLI 옵션
+            // Gemini CLI auto mode: headless prompt + yolo approval.
             command = autoMode
-                ? 'gemini --approval-mode yolo'
+                ? 'gemini --skip-trust --approval-mode yolo --output-format text -p'
                 : 'gemini';
             break;
         default:

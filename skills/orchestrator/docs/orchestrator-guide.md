@@ -503,8 +503,8 @@ orchestrator_fail_task({
 | AI | 자동 모드 명령어 |
 |----|-----------------|
 | Claude | `claude --dangerously-skip-permissions` |
-| Codex | `codex --full-auto --approval-mode full-auto` |
-| Gemini | `gemini --approval-mode yolo` |
+| Codex | `codex -a never exec --sandbox workspace-write --skip-git-repo-check` |
+| Gemini | `gemini --skip-trust --approval-mode yolo --output-format text -p` |
 
 ### Fallback 동작
 

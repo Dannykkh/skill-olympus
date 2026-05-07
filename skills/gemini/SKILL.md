@@ -60,10 +60,10 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 5. Run the command and capture the output. For background/automated mode:
    ```bash
    # Recommended: Use yolo for background tasks
-   gemini -m gemini-3.1-pro-preview --approval-mode yolo "Review this codebase for security issues"
+   gemini -m gemini-3.1-pro-preview --approval-mode yolo -p "Review this codebase for security issues"
 
    # Or with timeout (5 min limit)
-   timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo "Review this codebase"
+   timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo -p "Review this codebase"
    ```
 
 6. For interactive sessions with an initial prompt:
@@ -77,14 +77,14 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 
 | Use case | Approval mode | Key flags |
 | --- | --- | --- |
-| Background code review | `yolo` ✅ | `-m gemini-3.1-pro-preview --approval-mode yolo` |
-| Background analysis | `yolo` ✅ | `-m gemini-3.1-pro-preview --approval-mode yolo` |
-| Background with timeout | `yolo` ✅ | `timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo` |
+| Background code review | `yolo` ✅ | `-m gemini-3.1-pro-preview --approval-mode yolo -p "..."` |
+| Background analysis | `yolo` ✅ | `-m gemini-3.1-pro-preview --approval-mode yolo -p "..."` |
+| Background with timeout | `yolo` ✅ | `timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo -p "..."` |
 | Interactive code review | `default` | `-m gemini-3.1-pro-preview --approval-mode default` (interactive terminal only) |
 | Code review with auto-edits | `auto_edit` | `-m gemini-3.1-pro-preview --approval-mode auto_edit` |
-| Automated refactoring | `yolo` | `-m gemini-3.1-pro-preview --approval-mode yolo` |
-| Speed-critical background | `yolo` ✅ | `-m gemini-3-flash-preview --approval-mode yolo` |
-| Entry-level frontier (fast) | `yolo` ✅ | `-m gemini-3.1-flash-lite-preview --approval-mode yolo` |
+| Automated refactoring | `yolo` | `-m gemini-3.1-pro-preview --approval-mode yolo -p "..."` |
+| Speed-critical background | `yolo` ✅ | `-m gemini-3-flash-preview --approval-mode yolo -p "..."` |
+| Entry-level frontier (fast) | `yolo` ✅ | `-m gemini-3.1-flash-lite-preview --approval-mode yolo -p "..."` |
 | Multi-directory analysis | `yolo` (if background) | `--include-directories <DIR1> --include-directories <DIR2>` |
 | Interactive with prompt | `auto_edit` or `default` | `-i "prompt" --approval-mode <mode>` |
 
@@ -106,7 +106,7 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 ```bash
 # For background execution (Claude Code, CI/CD, etc.)
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Perform a comprehensive code review focusing on:
+  -p "Perform a comprehensive code review focusing on:
    1. Security vulnerabilities
    2. Performance issues
    3. Code quality and maintainability
@@ -114,14 +114,14 @@ gemini -m gemini-3.1-pro-preview --approval-mode yolo \
 
 # With timeout safety (5 minutes)
 timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Perform a comprehensive code review..."
+  -p "Perform a comprehensive code review..."
 ```
 
 ### Plan Review (Background/Automated)
 ```bash
 # For background execution
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Review this architectural plan for:
+  -p "Review this architectural plan for:
    1. Scalability concerns
    2. Missing components
    3. Integration challenges
@@ -132,7 +132,7 @@ gemini -m gemini-3.1-pro-preview --approval-mode yolo \
 ```bash
 # For background execution
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Analyze the entire codebase to understand:
+  -p "Analyze the entire codebase to understand:
    1. Overall architecture
    2. Key patterns and conventions
    3. Potential technical debt
@@ -198,7 +198,7 @@ ps aux | grep gemini | grep -v grep
 
 ### Prevention
 - **ALWAYS use `--approval-mode yolo` for background/automated tasks**
-- Add timeout wrapper for safety: `timeout 300 gemini ...`
+- Add timeout wrapper for safety: `timeout 300 gemini ...` for quick checks, `timeout 600 gemini ...` for planning reviews
 - Never use `--approval-mode default` in non-interactive shells
 - Monitor first run with `ps` to ensure process completes
 

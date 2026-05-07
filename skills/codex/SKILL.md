@@ -12,7 +12,8 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
    - `-m, --model <MODEL>`
    - `--config model_reasoning_effort="<high|medium|low>"`
    - `--sandbox <read-only|workspace-write|danger-full-access>`
-   - `--full-auto`
+   - `-a never` before `exec` for non-interactive runs
+   - `--output-last-message <FILE>` when a clean final response file is needed
    - `-C, --cd <DIR>`
    - `--skip-git-repo-check`
 3. Always use --skip-git-repo-check.
@@ -24,9 +25,10 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 ### Quick Reference
 | Use case | Sandbox mode | Key flags |
 | --- | --- | --- |
-| Read-only review or analysis | `read-only` | `--sandbox read-only 2>/dev/null` |
-| Apply local edits | `workspace-write` | `--sandbox workspace-write --full-auto 2>/dev/null` |
-| Permit network or broad access | `danger-full-access` | `--sandbox danger-full-access --full-auto 2>/dev/null` |
+| Non-blocking automated review or analysis | `workspace-write` | `codex -a never exec --sandbox workspace-write --output-last-message <file>` |
+| Read-only review or analysis | `read-only` | `codex -a never exec --sandbox read-only --output-last-message <file>` |
+| Apply local edits | `workspace-write` | `codex -a never exec --sandbox workspace-write` |
+| Permit network or broad access | `danger-full-access` | `codex -a never exec --sandbox danger-full-access` |
 | Resume recent session | Inherited from original | `echo "prompt" \| codex exec --skip-git-repo-check resume --last 2>/dev/null` (no flags allowed) |
 | Run from another directory | Match task needs | `-C <DIR>` plus other flags `2>/dev/null` |
 
@@ -59,7 +61,7 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 
 ## Error Handling
 - Stop and report failures whenever `codex --version` or a `codex exec` command exits non-zero; request direction before retrying.
-- Before you use high-impact flags (`--full-auto`, `--sandbox danger-full-access`, `--skip-git-repo-check`) ask the user for permission using AskUserQuestion unless it was already given.
+- Before you use high-impact flags (`--sandbox danger-full-access`, `--skip-git-repo-check`) ask the user for permission using AskUserQuestion unless it was already given.
 - When output includes warnings or partial results, summarize them and ask how to adjust using `AskUserQuestion`.
 
 ## CLI Version

@@ -573,6 +573,8 @@ PROMPT_EOF
 **2. Codex 실행** (timeout 30분):
 
 > 모든 가용 입력을 sandwich로 합쳐서 stdin에 전달합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 조건부로 포함합니다.
+> `--json`은 최종 분석을 JSON으로 만드는 옵션이 아니라 이벤트 JSONL 출력용입니다. 도메인 분석 파일에는 마크다운 최종 응답만 필요하므로 `--output-last-message`를 사용합니다.
+> 멈춤 없는 자동 실행은 deprecated `--full-auto`가 아니라 `codex -a never exec --sandbox workspace-write`로 표현합니다. Codex가 보조 파일을 만들거나 명령 실행이 필요해도 승인 대기로 멈추지 않습니다.
 
 ```bash
 timeout 1800 bash -c '
@@ -592,11 +594,11 @@ $(cat "<planning_dir>/team-reviews/domain-research.md")
 
 ===== domain-dictionary.md (도메인 사전 v1, 있는 경우 — 용어를 정확히 따를 것) =====
 $( [ -f "<planning_dir>/domain-dictionary.md" ] && cat "<planning_dir>/domain-dictionary.md" || echo "(파일 없음 — Step 8 미수행)" )" \
-  | codex exec \
-    --sandbox read-only \
+  | codex -a never exec \
+    --sandbox workspace-write \
     --skip-git-repo-check \
-    --full-auto \
-  > "<planning_dir>/team-reviews/domain-process-analysis.md" 2>&1
+    --output-last-message "<planning_dir>/team-reviews/domain-process-analysis.md" \
+  >> "<planning_dir>/team-reviews/external-ai.log" 2>&1
 '
 CODEX_EXIT=$?
 
@@ -611,29 +613,36 @@ if [ ! -s "<planning_dir>/team-reviews/domain-process-analysis.md" ]; then
 fi
 ```
 
-**3. Gemini 실행** (timeout 30분):
+**3. Gemini 실행** (기본 timeout 10분, 필요 시 `GEMINI_TIMEOUT_SECONDS`로 조정):
 
 > Gemini는 `@file` 문법으로 파일을 직접 첨부합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 존재 여부를 확인 후 인자로 추가합니다.
+> 백그라운드/자동화에서는 `--approval-mode yolo`와 `-p/--prompt`를 함께 사용합니다. positional prompt만 쓰면 Gemini CLI가 interactive 모드로 들어가 승인 대기에서 멈출 수 있습니다.
+> Gemini는 종종 응답이 늦거나 네트워크/서버 문제로 반환이 없을 수 있으므로 30분을 기다리지 않습니다. 기본 600초 안에 결과가 없으면 실패로 기록하고 폴백합니다.
 
 ```bash
-timeout 1800 bash -c '
+GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
+timeout "$GEMINI_TIMEOUT_SECONDS" bash -c '
 EXTRA_FILES=""
-[ -f "<planning_dir>/research.md" ] && EXTRA_FILES="$EXTRA_FILES @<planning_dir>/research.md"
-[ -f "<planning_dir>/domain-dictionary.md" ] && EXTRA_FILES="$EXTRA_FILES @<planning_dir>/domain-dictionary.md"
+[ -f "<planning_dir>/research.md" ] && EXTRA_FILES="$EXTRA_FILES
+@<planning_dir>/research.md"
+[ -f "<planning_dir>/domain-dictionary.md" ] && EXTRA_FILES="$EXTRA_FILES
+@<planning_dir>/domain-dictionary.md"
 
-gemini --sandbox \
-  "$(cat "<planning_dir>/team-reviews/domain-technical-prompt.txt")" \
-  @<planning_dir>/spec.md \
-  @<planning_dir>/interview.md \
-  @<planning_dir>/team-reviews/domain-research.md \
-  $EXTRA_FILES \
-  > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>&1
+gemini --approval-mode yolo \
+  --output-format text \
+  -p "$(cat "<planning_dir>/team-reviews/domain-technical-prompt.txt")
+
+@<planning_dir>/spec.md
+@<planning_dir>/interview.md
+@<planning_dir>/team-reviews/domain-research.md
+$EXTRA_FILES" \
+  > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>> "<planning_dir>/team-reviews/external-ai.log"
 '
 GEMINI_EXIT=$?
 
 # 실패 체크: timeout(124) 또는 빈 파일
 if [ $GEMINI_EXIT -eq 124 ]; then
-  echo "[WARN] Gemini timeout (30분 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Gemini timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
 elif [ $GEMINI_EXIT -ne 0 ]; then
   echo "[WARN] Gemini 종료코드: $GEMINI_EXIT" >> "<planning_dir>/team-reviews/external-ai.log"
 fi
@@ -651,7 +660,7 @@ fi
 > | **Single-AI (Gemini)** | Gemini (process 프롬프트) | Gemini (technical 프롬프트) |
 > | **Claude-only** | Task(Explore) 위 그대로 | Task(Explore) 위 그대로 |
 >
-> **실패 폴백**: 실행 후 `external-ai.log`를 확인하고, 출력 파일이 비어있거나 오류면 해당 전문가만 Claude Explore로 재실행.
+> **실패 폴백**: 실행 후 `external-ai.log`를 확인하고, 출력 파일이 비어있거나 오류면 해당 전문가만 폴백 재실행. Codex가 사용 가능하면 Codex로 먼저 폴백하고, Codex도 없거나 실패하면 Claude Explore로 폴백.
 > **폴백 판정**: `[ ! -s "output.md" ]` — 파일이 없거나 0바이트면 폴백 트리거.
 
 ### 6단계: 개별 결과 저장
@@ -666,6 +675,18 @@ fi
 | Domain Researcher | `team-reviews/domain-research.md` | A |
 | Domain Process Expert | `team-reviews/domain-process-analysis.md` | B |
 | Domain Technical Expert | `team-reviews/domain-technical-analysis.md` | B |
+
+**Red Team 누락 방지 게이트:**
+
+`redteam-analysis.md`는 선택 산출물이 아닙니다. Phase A 완료 후 반드시 파일 존재와 크기를 확인합니다.
+
+```bash
+if [ ! -s "<planning_dir>/team-reviews/redteam-analysis.md" ]; then
+  echo "[WARN] Red Team output missing -> rerun Red Team or mark explicit N/A" >> "<planning_dir>/team-reviews/external-ai.log"
+fi
+```
+
+가능하면 Red Team만 즉시 재실행합니다. 재실행도 실패한 경우에만 `team-review.md`의 `Industry Context` 또는 `Dismissed/N/A` 섹션에 `RedTeam: N/A (execution failed)`를 명시합니다. 조용히 제외하지 않습니다.
 
 ### 7단계: 통합 리뷰 작성
 

@@ -104,8 +104,8 @@ try {
                 exit 1
             }
             Write-Log "CLI_STARTED: Codex CLI at $($cliPath.Source)" "Green"
-            # codex -q 플래그로 프롬프트 전달
-            codex --full-auto --approval-mode full-auto -q (Get-Content $promptFile -Raw)
+            # Non-interactive auto mode: approval never + workspace-write replaces deprecated --full-auto.
+            Get-Content $promptFile -Raw | codex -a never exec --sandbox workspace-write --skip-git-repo-check
         }
         "gemini" {
             $cliPath = Get-Command gemini -ErrorAction SilentlyContinue
@@ -114,7 +114,18 @@ try {
                 exit 1
             }
             Write-Log "CLI_STARTED: Gemini CLI at $($cliPath.Source)" "Green"
-            Get-Content $promptFile -Raw | gemini
+            $geminiTimeout = if ($env:GEMINI_TIMEOUT_SECONDS) { [int]$env:GEMINI_TIMEOUT_SECONDS } else { 600 }
+            $geminiPrompt = Get-Content $promptFile -Raw
+            $job = Start-Job -ScriptBlock {
+                param($prompt)
+                gemini --skip-trust --approval-mode yolo --output-format text -p $prompt
+            } -ArgumentList $geminiPrompt
+            if (-not (Wait-Job $job -Timeout $geminiTimeout)) {
+                Stop-Job $job -Force
+                Write-Log "ERROR: Gemini timeout after ${geminiTimeout}s" "Red"
+                exit 124
+            }
+            Receive-Job $job
         }
     }
     Write-Log "Worker $WorkerId finished successfully" "Green"

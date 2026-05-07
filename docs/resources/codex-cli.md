@@ -54,11 +54,11 @@ Use codex to analyze this repository and suggest improvements for my claude code
 4. 명령 실행:
 
 ```bash
-codex exec -m gpt-5.5 \
+codex -a never exec -m gpt-5.5 \
   --config model_reasoning_effort="high" \
   --sandbox read-only \
-  --full-auto \
   --skip-git-repo-check \
+  --output-last-message codex-analysis.md \
   "Analyze this Claude Code skill repository comprehensively..." 2>/dev/null
 ```
 
@@ -93,16 +93,18 @@ codex exec -m gpt-5.5 \
 
 | 사용 사례 | 샌드박스 모드 | 주요 플래그 |
 |----------|--------------|------------|
-| 읽기 전용 리뷰/분석 | `read-only` | `--sandbox read-only 2>/dev/null` |
-| 로컬 편집 적용 | `workspace-write` | `--sandbox workspace-write --full-auto` |
-| 네트워크/광범위 접근 허용 | `danger-full-access` | `--sandbox danger-full-access --full-auto` |
+| 멈춤 없는 자동 리뷰/분석 | `workspace-write` | `codex -a never exec --sandbox workspace-write --output-last-message <file>` |
+| 읽기 전용 리뷰/분석 | `read-only` | `codex -a never exec --sandbox read-only --output-last-message <file>` |
+| 로컬 편집 적용 | `workspace-write` | `codex -a never exec --sandbox workspace-write` |
+| 네트워크/광범위 접근 허용 | `danger-full-access` | `codex -a never exec --sandbox danger-full-access` |
 | 최근 세션 재개 | 원본에서 상속 | `echo "prompt" \| codex exec resume --last` |
 
 ---
 
 ## 주요 특징
 
-- **Thinking Token 억제**: 기본적으로 `2>/dev/null`로 stderr 출력 억제 (컨텍스트 윈도우 절약)
+- **최종 응답 저장**: 자동화에서는 `--output-last-message <file>`로 최종 응답만 파일에 저장
+- **JSONL 이벤트 출력**: `--json`은 최종 응답 JSON 변환이 아니라 이벤트 스트림 출력용
 - **세션 재개**: `codex resume` 또는 "추가 분석 계속"으로 언제든 세션 재개 가능
 - **캐시 입력 할인**: 반복 컨텍스트에 90% 할인 ($0.125/M 토큰), 최대 24시간 캐시 유지
 

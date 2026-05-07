@@ -68,7 +68,7 @@ Google의 Gemini 3.1 Pro Preview 모델을 Gemini CLI를 통해 활용하는 스
 
 ```bash
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Perform a comprehensive code review focusing on:
+  -p "Perform a comprehensive code review focusing on:
    1. Security vulnerabilities
    2. Performance issues
    3. Code quality and maintainability
@@ -79,7 +79,7 @@ gemini -m gemini-3.1-pro-preview --approval-mode yolo \
 
 ```bash
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Review this architectural plan for:
+  -p "Review this architectural plan for:
    1. Scalability concerns
    2. Missing components
    3. Integration challenges
@@ -90,7 +90,7 @@ gemini -m gemini-3.1-pro-preview --approval-mode yolo \
 
 ```bash
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
-  "Analyze the entire codebase to understand:
+  -p "Analyze the entire codebase to understand:
    1. Overall architecture
    2. Key patterns and conventions
    3. Potential technical debt
@@ -103,7 +103,7 @@ gemini -m gemini-3.1-pro-preview --approval-mode yolo \
 gemini -m gemini-3.1-pro-preview --approval-mode yolo \
   --include-directories /path/to/backend \
   --include-directories /path/to/frontend \
-  "Analyze the full-stack application architecture"
+  -p "Analyze the full-stack application architecture"
 ```
 
 ---
@@ -130,10 +130,10 @@ gemini -m gemini-3.1-pro-preview --approval-mode yolo \
 ✅ **올바른 방법**:
 ```bash
 # 완전 자동화 실행에 yolo 사용
-gemini -m gemini-3.1-pro-preview --approval-mode yolo "Review codebase"
+gemini -m gemini-3.1-pro-preview --approval-mode yolo -p "Review codebase"
 
 # 안전을 위해 타임아웃 래핑
-timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo "Review codebase"
+timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo -p "Review codebase"
 ```
 
 ❌ **절대 금지**:

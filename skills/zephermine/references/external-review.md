@@ -39,28 +39,45 @@ EOF
 
 TWO Bash tool calls in a single message. **timeout 30분 설정.**
 
-**Gemini** — `@file` 경로 참조 지원:
+**Gemini** — `@file` 경로 참조 지원. 기본 10분 안에 응답이 없으면 실패로 기록하고 Codex/Claude 리뷰만으로 진행:
 ```bash
-gemini --approval-mode yolo \
-  "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
-  @<planning_dir>/plan.md
+GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
+timeout "$GEMINI_TIMEOUT_SECONDS" gemini --approval-mode yolo \
+  --output-format text \
+  -p "$(cat '<planning_dir>/reviews/review-prompt.txt')
+
+@<planning_dir>/plan.md" \
+  > "<planning_dir>/reviews/gemini-review.md" 2>> "<planning_dir>/reviews/external-ai.log"
+GEMINI_EXIT=$?
+if [ $GEMINI_EXIT -eq 124 ]; then
+  echo "[WARN] Gemini review timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/reviews/external-ai.log"
+elif [ $GEMINI_EXIT -ne 0 ]; then
+  echo "[WARN] Gemini review 종료코드: $GEMINI_EXIT" >> "<planning_dir>/reviews/external-ai.log"
+fi
 ```
 
 **Codex** — stdin으로 프롬프트 전달 + 파일 읽기는 Codex가 직접:
 ```bash
 echo "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
-  | codex exec \
-    --sandbox read-only \
+  | codex -a never exec \
+    --sandbox workspace-write \
     --skip-git-repo-check \
-    --full-auto \
-    2>/dev/null
+    --output-last-message "<planning_dir>/reviews/codex-review.md" \
+    >> "<planning_dir>/reviews/external-ai.log" 2>&1
 ```
 
 > **Codex 주의사항:**
-> - 프롬프트는 반드시 **stdin(echo | codex exec)** 으로 전달 (인자 X)
-> - `--sandbox read-only`이므로 파일 읽기 가능 → 프롬프트에 경로만 명시
-> - `2>/dev/null`로 thinking 토큰 숨김
+> - 프롬프트는 반드시 **stdin(echo | codex -a never exec)** 으로 전달 (인자 X)
+> - `-a never`는 비대화형 실행에서 승인 대기로 멈추지 않게 하는 top-level 옵션입니다.
+> - `--sandbox workspace-write`는 현재 Codex CLI에서 deprecated `--full-auto`의 실질 대체입니다. Codex가 파일을 만들거나 명령을 실행해도 중간 승인으로 멈추지 않습니다.
+> - `--output-last-message`로 최종 응답만 리뷰 파일에 저장하고, 실행 로그는 `external-ai.log`에 남깁니다.
+> - `--json`은 최종 응답 포맷이 아니라 이벤트 스트림(JSONL) 출력용이므로 리뷰 파일 저장에는 사용하지 않습니다.
 > - `@file` 문법 미지원 (Gemini만 지원)
+
+> **Gemini 주의사항:**
+> - 백그라운드/자동화에서는 반드시 `--approval-mode yolo`를 사용합니다.
+> - Gemini CLI는 positional prompt가 interactive 기본이므로, headless 실행에는 `-p/--prompt`를 사용합니다.
+> - Gemini는 느리거나 응답이 없을 수 있으므로 timeout을 짧게 두고, 실패해도 계획 수립은 Codex/Claude 폴백으로 계속 진행합니다.
 
 ### Step 3: 결과 저장
 
