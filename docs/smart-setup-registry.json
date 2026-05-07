@@ -231,7 +231,6 @@
     { "id": "humanizer", "tags": ["*"], "priority": "optional" },
     { "id": "marp-slide", "tags": ["*"], "priority": "optional" },
     { "id": "meme-factory", "tags": ["*"], "priority": "optional" },
-    { "id": "nano-banana", "tags": ["*"], "priority": "optional" },
     { "id": "orchestrator", "tags": ["*"], "priority": "recommended" },
     { "id": "pdf", "tags": ["*"], "priority": "optional" },
     { "id": "plugin-forge", "tags": ["*"], "priority": "optional" },

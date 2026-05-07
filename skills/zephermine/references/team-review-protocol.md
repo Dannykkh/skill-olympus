@@ -148,7 +148,7 @@ which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
 > | CLI | 권장 default | 비추천 default |
 > |-----|--------------|----------------|
 > | Codex | `gpt-5.5`, `gpt-5.4`, `gpt-5.3-codex` | `gpt-5.4-mini` (sub-agent용) |
-> | Gemini | `gemini-3.1-pro-preview` | `gemini-3.1-flash-lite-preview`, `gemini-2.5-flash-lite` |
+> | Gemini | `gemini-3.1-pro-preview` | `gemini-3.1-flash-lite-preview` |
 >
 > default가 mini/lite로 설정된 환경에서는 도메인 전문가 분석이 얕아질 수 있습니다.
 

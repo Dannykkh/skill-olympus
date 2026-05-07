@@ -244,6 +244,5 @@ Context7: remotion 최신 API 확인
 
 | 리소스 | 역할 |
 |--------|------|
-| `nano-banana` (스킬) | Gemini 기반 이미지/썸네일 생성 → 영상 소스로 활용 |
 | `design-system-starter` (스킬) | 디자인 토큰 → 영상 컬러/타이포 일관성 |
 | `stitch-*` (스킬) | UI 디자인 → 영상 속 화면 목업 소스 |

@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.4] - 2026-05-07
+
+### Removed — nano-banana 스킬 + 레거시 모델 표 행
+
+원칙: "스킬 안의 모델 참조는 최신이거나 없애야 한다." 더 이상 쓰지 않는 nano-banana 스킬을 제거하고, Codex/Gemini 모델 표에서 레거시 행을 정리했습니다.
+
+#### Removed — nano-banana 스킬
+
+- `skills/nano-banana/` 폴더 전체 삭제
+- `docs/smart-setup-registry.json`에서 `nano-banana` 항목 제거
+- `skills/video-maker/SKILL.md`의 "연관 리소스" 표에서 `nano-banana` 행 제거
+
+#### Removed — 모델 표 레거시 행
+
+| 파일 | 제거된 행 |
+|------|----------|
+| `skills/codex/SKILL.md` | `gpt-5.2 (Legacy general-purpose)` |
+| `skills/gemini/SKILL.md` | Available models 리스트의 `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite` (3개) + Quick reference의 `Cost-optimized background` 행 + Model Selection Guide 표의 legacy 3행 + Tips 섹션의 cost-optimized 권고 |
+| `docs/resources/codex-cli.md` | `gpt-5.2 (레거시 범용)` |
+| `docs/resources/gemini-cli.md` | `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.5-flash-lite` (3개) |
+
+#### Changed — zephermine 비추천 default 안내문 정리
+
+`team-review-protocol.md:151`의 비추천 default 예시에서 `gemini-2.5-flash-lite` 제거 (이제 cleanup-low가 `gemini-3.1-flash-lite-preview`로 통일됨).
+
+#### 보존된 이력 항목 (의도적)
+
+- `CHANGELOG.md` 본문의 옛 모델 ID 인용 — 변경 이력 자체
+- `docs/skill-agent-dedup-audit-2026-04-26.md` — 시점 박힌 감사 보고서
+- `skills/mnemo/evals/results-opus-baseline.md` — 2025-11-27 평가 baseline
+- 각 agents/*.md의 `model: sonnet/opus/haiku` — Claude alias라 항상 최신 매핑
+
+#### 적용
+
+```bash
+install.bat   # Windows
+./install.sh  # macOS/Linux
+```
+
 ## [4.3.3] - 2026-05-07
 
 ### Changed — chronos-worker default 모델 + project-gotchas mini 일관성

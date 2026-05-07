@@ -41,9 +41,6 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
    - `gemini-3.1-pro-preview` ⭐ (flagship: refined Gemini 3 Pro with better thinking, improved token efficiency, more grounded responses)
    - `gemini-3-flash-preview` (Flash: frontier-class performance at reduced cost — note: still on 3, not 3.1)
    - `gemini-3.1-flash-lite-preview` (Flash Lite: entry-level frontier, fastest 3.x option)
-   - `gemini-2.5-pro` (legacy: stable all-around performance)
-   - `gemini-2.5-flash` (legacy: cost-efficient with thinking capabilities)
-   - `gemini-2.5-flash-lite` (legacy: fastest processing)
 
 2. Select the approval mode based on the task:
    - `default`: Prompt for approval (⚠️ ONLY for interactive terminal sessions)
@@ -88,7 +85,6 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 | Automated refactoring | `yolo` | `-m gemini-3.1-pro-preview --approval-mode yolo` |
 | Speed-critical background | `yolo` ✅ | `-m gemini-3-flash-preview --approval-mode yolo` |
 | Entry-level frontier (fast) | `yolo` ✅ | `-m gemini-3.1-flash-lite-preview --approval-mode yolo` |
-| Cost-optimized background | `yolo` ✅ | `-m gemini-2.5-flash --approval-mode yolo` |
 | Multi-directory analysis | `yolo` (if background) | `--include-directories <DIR1> --include-directories <DIR2>` |
 | Interactive with prompt | `auto_edit` or `default` | `-i "prompt" --approval-mode <mode>` |
 
@@ -99,9 +95,6 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 | `gemini-3.1-pro-preview` ⭐ | **Flagship**: Complex reasoning, coding, agentic tasks | 1M input | Refined Gemini 3 Pro — better thinking, token-efficient, more grounded |
 | `gemini-3-flash-preview` | Reduced-cost frontier performance | 1M input | Frontier-class quality at lower price (still on Gemini 3, not 3.1) |
 | `gemini-3.1-flash-lite-preview` | Entry-level frontier, fastest 3.x option | 1M input | Lite tier of the 3.1 family |
-| `gemini-2.5-pro` | Legacy: Strong all-around performance | 1M input | Thinking mode, mature stability |
-| `gemini-2.5-flash` | Legacy: Cost-efficient, high-volume tasks | 1M input | Best price, thinking mode |
-| `gemini-2.5-flash-lite` | Legacy: Fastest processing, high throughput | 1M input | Maximum speed, minimal latency |
 
 **Gemini 3.1 Pro vs 3 Pro**: Better thinking quality, improved token efficiency, more grounded and factually consistent responses. Built to refine the 3 Pro series.
 
@@ -217,7 +210,6 @@ ps aux | grep gemini | grep -v grep
    - Use `gemini-3.1-pro-preview` for complex reasoning, coding tasks, and maximum analysis quality (recommended default)
    - Use `gemini-3-flash-preview` for reduced-cost frontier performance
    - Use `gemini-3.1-flash-lite-preview` for fastest 3.x responses
-   - Use `gemini-2.5-flash` for cost-optimized high-volume processing
 4. **Leverage Gemini 3.1's strengths**: refined thinking, better token efficiency, grounded factual responses
 5. **Break down complex tasks**: Even with large context, structured analysis is more effective
 6. **Save findings**: Ask Gemini to output structured reports that can be saved for reference

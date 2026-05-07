@@ -73,7 +73,6 @@ codex exec -m gpt-5.5 \
 | `gpt-5.4-mini` | 빠르고 효율적인 mini (sub-agent, 정리 작업) | 저비용, 가벼운 작업용 |
 | `gpt-5.3-codex` | 복잡 소프트웨어 엔지니어링 특화 | GPT-5.4의 코딩 백본 |
 | `gpt-5.3-codex-spark` | 실시간 코딩 반복 (text-only research preview) | ChatGPT Pro 전용 |
-| `gpt-5.2` | 레거시 범용 | 이전 default |
 
 > 정확한 컨텍스트/가격은 공식 모델 카드 확인 (preview/stable 상태에 따라 변동).
 

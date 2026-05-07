@@ -39,7 +39,6 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 | `gpt-5.4-mini` | Fast, efficient mini model for responsive coding tasks and subagents | Lower-cost option for lighter workloads, sub-agents, cleanup tasks. |
 | `gpt-5.3-codex` | Industry-leading coding model for complex software engineering | Powers GPT-5.4's coding abilities. Use when coding-specific quality is paramount. |
 | `gpt-5.3-codex-spark` | Real-time coding iteration (text-only research preview) | ChatGPT Pro subscribers only. Optimized for near-instant coding iteration. |
-| `gpt-5.2` | Legacy general-purpose | Previous default; available for tasks needing deeper reasoning under prior behavior. |
 
 **Selection guide**: Start with `gpt-5.5` for most tasks. Drop to `gpt-5.4` when 5.5 isn't available. Use `gpt-5.3-codex` when you need maximum coding quality without 5.5 reasoning overhead. Use `gpt-5.4-mini` for sub-agents and cleanup workloads.
 

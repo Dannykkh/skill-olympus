@@ -47,9 +47,6 @@ Google의 Gemini 3.1 Pro Preview 모델을 Gemini CLI를 통해 활용하는 스
 | `gemini-3.1-pro-preview` ⭐ | 복잡한 추론, 코딩, 에이전트 작업 | 최신 플래그십 (Gemini 3 Pro의 정제 버전) |
 | `gemini-3-flash-preview` | 비용 절감 frontier 성능 | Gemini 3 그대로 (3.1 미적용) |
 | `gemini-3.1-flash-lite-preview` | 진입점 frontier, 가장 빠른 3.x | 3.1 라인의 lite 티어 |
-| `gemini-2.5-pro` | 레거시 범용 성능 | 안정적 |
-| `gemini-2.5-flash` | 비용 효율적, 대량 작업 | 저비용 |
-| `gemini-2.5-flash-lite` | 가장 빠른 처리 | 최대 속도 |
 
 > 정확한 컨텍스트/가격은 공식 모델 카드 확인 (preview 단계 변동 가능).
 
