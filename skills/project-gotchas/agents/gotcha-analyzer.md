@@ -7,7 +7,7 @@ model: haiku
 model_tier: cleanup-low
 model_map:
   claude: "haiku"
-  codex: "gpt-5.2-mini + reasoning low"
+  codex: "gpt-5.4-mini + reasoning low"
   gemini: "gemini-2.5-flash-lite"
 ---
 
@@ -25,7 +25,7 @@ gotcha 또는 learned 파일을 자동 생성합니다.
 | CLI | 모델 |
 |-----|------|
 | Claude | `haiku` |
-| Codex | `gpt-5.2-mini` + `reasoning low` |
+| Codex | `gpt-5.4-mini` + `reasoning low` |
 | Gemini | `gemini-2.5-flash-lite` |
 
 ## 입력

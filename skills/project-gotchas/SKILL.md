@@ -188,7 +188,7 @@ Codex/Gemini에서는 같은 이름을 그대로 쓰지 않고 `cleanup-low` 티
 | CLI | cleanup-low 매핑 |
 |-----|------------------|
 | Claude | `haiku` |
-| Codex | `gpt-5.2-mini` + `reasoning low` |
+| Codex | `gpt-5.4-mini` + `reasoning low` |
 | Gemini | `gemini-2.5-flash-lite` |
 
 ### 훅 등록

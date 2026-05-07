@@ -48,13 +48,13 @@ Use codex to analyze this repository and suggest improvements for my claude code
 ```
 
 **Claude Code 응답:**
-1. 사용할 모델 선택 (`gpt-5` 또는 `gpt-5-codex`)
-2. 추론 노력 수준 선택 (`low`, `medium`, `high`)
+1. 사용할 모델 선택 (`gpt-5.5` 기본, 또는 `gpt-5.3-codex` for 코딩 특화)
+2. 추론 노력 수준 선택 (`low`, `medium`, `high`, `xhigh`)
 3. 적절한 샌드박스 모드 선택 (분석은 `read-only` 기본값)
 4. 명령 실행:
 
 ```bash
-codex exec -m gpt-5-codex \
+codex exec -m gpt-5.5 \
   --config model_reasoning_effort="high" \
   --sandbox read-only \
   --full-auto \
@@ -66,12 +66,16 @@ codex exec -m gpt-5-codex \
 
 ## 모델 옵션
 
-| 모델 | 용도 | 컨텍스트 윈도우 | 주요 특징 |
-|------|------|----------------|----------|
-| `gpt-5.2-max` | 초복잡 추론, 심층 분석 | 400K 입력 / 128K 출력 | 76.3% SWE-bench, $1.25/$10.00 |
-| `gpt-5.2` ⭐ | 소프트웨어 엔지니어링, 에이전트 워크플로우 | 400K 입력 / 128K 출력 | 76.3% SWE-bench, $1.25/$10.00 |
-| `gpt-5.2-mini` | 비용 효율적 코딩 (4배 더 많은 사용량) | 400K 입력 / 128K 출력 | SOTA 성능, $0.25/$2.00 |
-| `gpt-5.1-thinking` | 초복잡 추론, 심층 분석 | 400K 입력 / 128K 출력 | 적응형 사고 깊이 |
+| 모델 | 용도 | 비고 |
+|------|------|------|
+| `gpt-5.5` ⭐ | **최신 플래그십 (default)**: 복잡한 코딩, computer use, 지식 작업, 리서치 워크플로우 | 2026-04부터 ChatGPT 로그인 + API 키 모두 사용 가능 |
+| `gpt-5.4` | 전 플랫폼 사용 가능한 플래그십 대안 | `gpt-5.5` 미지원 환경의 fallback |
+| `gpt-5.4-mini` | 빠르고 효율적인 mini (sub-agent, 정리 작업) | 저비용, 가벼운 작업용 |
+| `gpt-5.3-codex` | 복잡 소프트웨어 엔지니어링 특화 | GPT-5.4의 코딩 백본 |
+| `gpt-5.3-codex-spark` | 실시간 코딩 반복 (text-only research preview) | ChatGPT Pro 전용 |
+| `gpt-5.2` | 레거시 범용 | 이전 default |
+
+> 정확한 컨텍스트/가격은 공식 모델 카드 확인 (preview/stable 상태에 따라 변동).
 
 ---
 
@@ -107,8 +111,8 @@ codex exec -m gpt-5-codex \
 
 ## 요구사항
 
-- Codex CLI v0.57.0 이상 (GPT-5.2 모델 지원)
-- 버전 확인: `codex --version`
+- 최신 Codex CLI (GPT-5.5 모델 지원)
+- 버전 확인: `codex --version` / 업데이트: `npm install -g @openai/codex@latest`
 
 ---
 

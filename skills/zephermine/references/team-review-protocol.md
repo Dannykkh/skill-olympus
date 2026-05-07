@@ -137,6 +137,21 @@ which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
 
 **외부 AI 장점:** 같은 산업 분석을 서로 다른 LLM이 수행하면 다양한 관점 확보 + Claude 편향 보완.
 
+> **⚠️ 모델 default 설정 안내**
+>
+> External AI 호출 시 `-m` 모델 플래그를 명시하지 않으므로, **사용자의 CLI default 모델**이 사용됩니다.
+> - Codex: `~/.codex/config.toml`의 `model` 키 (없으면 `gpt-5.5`)
+> - Gemini: `~/.gemini/settings.json`의 default (없으면 CLI default)
+>
+> **도메인 전문가는 깊은 추론이 필요합니다.** Codex/Gemini default가 reasoning 모델이어야 분석 품질이 보장됩니다.
+>
+> | CLI | 권장 default | 비추천 default |
+> |-----|--------------|----------------|
+> | Codex | `gpt-5.5`, `gpt-5.4`, `gpt-5.3-codex` | `gpt-5.4-mini` (sub-agent용) |
+> | Gemini | `gemini-3.1-pro-preview` | `gemini-3.1-flash-lite-preview`, `gemini-2.5-flash-lite` |
+>
+> default가 mini/lite로 설정된 환경에서는 도메인 전문가 분석이 얕아질 수 있습니다.
+
 ### 4단계: 도메인 리서치 + 고정 에이전트 병렬 실행 (Phase A)
 
 고정 3 에이전트와 도메인 리서치를 **동시에** 병렬 실행합니다.
@@ -327,11 +342,13 @@ Task(
 
   Read these files:
   - <planning_dir>/spec.md
-  - <planning_dir>/interview.md
-  - <planning_dir>/research.md (if exists)
-  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치)
+  - <planning_dir>/interview.md (사용자 요구사항 인터뷰 — 깊은 컨텍스트의 기반)
+  - <planning_dir>/research.md (if exists — Step 5 초기 리서치: 논문/경쟁사/웹 1차 조사)
+  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치 v2)
+  - <planning_dir>/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
 
-  Use the domain-research.md findings to ground your analysis with real technologies and solutions.
+  Use ALL inputs to ground your analysis. interview.md는 사용자가 진짜 원하는 게 무엇인지의 일차 출처입니다.
+  domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
 
   **Your job: spec의 각 기능/업무를 촘촘한 업무 흐름표로 작성합니다.**
   개발자가 이 문서만 보고도 "누가, 왜, 뭘, 어떤 권한으로, 어떤 결과를" 파악할 수 있어야 합니다.
@@ -386,11 +403,13 @@ Task(
 
   Read these files:
   - <planning_dir>/spec.md
-  - <planning_dir>/interview.md
-  - <planning_dir>/research.md (if exists)
-  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치)
+  - <planning_dir>/interview.md (사용자 요구사항 인터뷰 — 깊은 컨텍스트의 기반)
+  - <planning_dir>/research.md (if exists — Step 5 초기 리서치: 논문/경쟁사/웹 1차 조사)
+  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치 v2)
+  - <planning_dir>/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
 
-  Use the domain-research.md findings to ground your analysis with real technologies and solutions.
+  Use ALL inputs to ground your analysis. interview.md는 사용자가 진짜 원하는 게 무엇인지의 일차 출처입니다.
+  domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
 
   **Your job: spec의 각 기능에 필요한 기술 스택과 연동을 구체적으로 매핑합니다.**
   개발자가 이 문서만 보고도 "어떤 기술로, 뭘 연동하고, 어떤 규격을 지켜야 하는지" 파악할 수 있어야 합니다.
@@ -553,6 +572,8 @@ PROMPT_EOF
 
 **2. Codex 실행** (timeout 30분):
 
+> 모든 가용 입력을 sandwich로 합쳐서 stdin에 전달합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 조건부로 포함합니다.
+
 ```bash
 timeout 1800 bash -c '
 echo "$(cat "<planning_dir>/team-reviews/domain-process-prompt.txt")
@@ -560,12 +581,18 @@ echo "$(cat "<planning_dir>/team-reviews/domain-process-prompt.txt")
 ===== spec.md =====
 $(cat "<planning_dir>/spec.md")
 
-===== interview.md =====
+===== interview.md (사용자 요구사항 — 깊은 컨텍스트 기반) =====
 $(cat "<planning_dir>/interview.md")
 
-===== domain-research.md (산업별 기술/솔루션 리서치) =====
-$(cat "<planning_dir>/team-reviews/domain-research.md")" \
-  | codex exec -m gpt-5.2 \
+===== research.md (Step 5 초기 리서치, 있는 경우) =====
+$( [ -f "<planning_dir>/research.md" ] && cat "<planning_dir>/research.md" || echo "(파일 없음 — Step 5 미수행)" )
+
+===== domain-research.md (산업별 기술/솔루션 리서치 v2) =====
+$(cat "<planning_dir>/team-reviews/domain-research.md")
+
+===== domain-dictionary.md (도메인 사전 v1, 있는 경우 — 용어를 정확히 따를 것) =====
+$( [ -f "<planning_dir>/domain-dictionary.md" ] && cat "<planning_dir>/domain-dictionary.md" || echo "(파일 없음 — Step 8 미수행)" )" \
+  | codex exec \
     --sandbox read-only \
     --skip-git-repo-check \
     --full-auto \
@@ -586,13 +613,20 @@ fi
 
 **3. Gemini 실행** (timeout 30분):
 
+> Gemini는 `@file` 문법으로 파일을 직접 첨부합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 존재 여부를 확인 후 인자로 추가합니다.
+
 ```bash
 timeout 1800 bash -c '
-gemini -m gemini-3-pro-preview --sandbox \
+EXTRA_FILES=""
+[ -f "<planning_dir>/research.md" ] && EXTRA_FILES="$EXTRA_FILES @<planning_dir>/research.md"
+[ -f "<planning_dir>/domain-dictionary.md" ] && EXTRA_FILES="$EXTRA_FILES @<planning_dir>/domain-dictionary.md"
+
+gemini --sandbox \
   "$(cat "<planning_dir>/team-reviews/domain-technical-prompt.txt")" \
   @<planning_dir>/spec.md \
   @<planning_dir>/interview.md \
   @<planning_dir>/team-reviews/domain-research.md \
+  $EXTRA_FILES \
   > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>&1
 '
 GEMINI_EXIT=$?

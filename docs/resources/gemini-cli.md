@@ -1,6 +1,6 @@
 # Gemini CLI Integration
 
-> Google Gemini 3 Pro를 Claude Code에서 사용하기 위한 통합 스킬
+> Google Gemini 3.1 Pro Preview를 Claude Code에서 사용하기 위한 통합 스킬
 
 ## 기본 정보
 
@@ -15,14 +15,14 @@
 
 ## 개요
 
-Google의 Gemini 3 Pro 모델을 Gemini CLI를 통해 활용하는 스킬입니다. 대규모 컨텍스트 윈도우(>200k 토큰) 및 최첨단 추론 기능이 필요한 작업에 적합합니다.
+Google의 Gemini 3.1 Pro Preview 모델을 Gemini CLI를 통해 활용하는 스킬입니다. 대규모 컨텍스트 윈도우(>200k 토큰) 및 최첨단 추론 기능이 필요한 작업에 적합합니다.
 
 ---
 
 ## 주요 기능
 
 - **대용량 컨텍스트**: 최대 1M 토큰 입력 처리
-- **최첨단 성능**: SWE-bench 76.2%, Gemini 2.5 Pro 대비 35% 향상
+- **개선된 추론**: Gemini 3 Pro 대비 더 나은 thinking, 향상된 토큰 효율, 더 grounded한 응답
 - **고급 추론**: 복잡한 코딩, 아키텍처 분석, 에이전트 워크플로우
 - **유연한 자동화**: 대화형/백그라운드 실행 모드 지원
 
@@ -42,13 +42,16 @@ Google의 Gemini 3 Pro 모델을 Gemini CLI를 통해 활용하는 스킬입니�
 
 ## 모델 옵션
 
-| 모델 | 용도 | 성능 |
+| 모델 | 용도 | 비고 |
 |------|------|------|
-| `gemini-3-pro-preview` ⭐ | 복잡한 추론, 코딩, 에이전트 작업 | 76.2% SWE-bench, 플래그십 품질 |
-| `gemini-3-flash` | 밀리초 단위 지연 시간, 속도 중요 작업 | 3 Pro에서 증류, TPU 최적화 |
+| `gemini-3.1-pro-preview` ⭐ | 복잡한 추론, 코딩, 에이전트 작업 | 최신 플래그십 (Gemini 3 Pro의 정제 버전) |
+| `gemini-3-flash-preview` | 비용 절감 frontier 성능 | Gemini 3 그대로 (3.1 미적용) |
+| `gemini-3.1-flash-lite-preview` | 진입점 frontier, 가장 빠른 3.x | 3.1 라인의 lite 티어 |
 | `gemini-2.5-pro` | 레거시 범용 성능 | 안정적 |
-| `gemini-2.5-flash` | 비용 효율적, 대량 작업 | $0.15/M 토큰 |
+| `gemini-2.5-flash` | 비용 효율적, 대량 작업 | 저비용 |
 | `gemini-2.5-flash-lite` | 가장 빠른 처리 | 최대 속도 |
+
+> 정확한 컨텍스트/가격은 공식 모델 카드 확인 (preview 단계 변동 가능).
 
 ---
 
@@ -67,7 +70,7 @@ Google의 Gemini 3 Pro 모델을 Gemini CLI를 통해 활용하는 스킬입니�
 ### 종합 코드 리뷰 (백그라운드)
 
 ```bash
-gemini -m gemini-3-pro-preview --approval-mode yolo \
+gemini -m gemini-3.1-pro-preview --approval-mode yolo \
   "Perform a comprehensive code review focusing on:
    1. Security vulnerabilities
    2. Performance issues
@@ -78,7 +81,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 ### 아키텍처 계획 리뷰
 
 ```bash
-gemini -m gemini-3-pro-preview --approval-mode yolo \
+gemini -m gemini-3.1-pro-preview --approval-mode yolo \
   "Review this architectural plan for:
    1. Scalability concerns
    2. Missing components
@@ -89,7 +92,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 ### 전체 코드베이스 분석
 
 ```bash
-gemini -m gemini-3-pro-preview --approval-mode yolo \
+gemini -m gemini-3.1-pro-preview --approval-mode yolo \
   "Analyze the entire codebase to understand:
    1. Overall architecture
    2. Key patterns and conventions
@@ -100,7 +103,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 ### 다중 디렉토리 분석
 
 ```bash
-gemini -m gemini-3-pro-preview --approval-mode yolo \
+gemini -m gemini-3.1-pro-preview --approval-mode yolo \
   --include-directories /path/to/backend \
   --include-directories /path/to/frontend \
   "Analyze the full-stack application architecture"
@@ -112,7 +115,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 
 | 플래그 | 설명 | 예시 |
 |--------|------|------|
-| `-m, --model` | Gemini 모델 선택 | `-m gemini-3-pro-preview` |
+| `-m, --model` | Gemini 모델 선택 | `-m gemini-3.1-pro-preview` |
 | `--approval-mode` | 도구 승인 제어 | `--approval-mode yolo` |
 | `-y, --yolo` | 자동 승인 약어 | `-y` |
 | `-i, --prompt-interactive` | 프롬프트 실행 후 계속 | `-i "Review auth system"` |
@@ -130,16 +133,16 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 ✅ **올바른 방법**:
 ```bash
 # 완전 자동화 실행에 yolo 사용
-gemini -m gemini-3-pro-preview --approval-mode yolo "Review codebase"
+gemini -m gemini-3.1-pro-preview --approval-mode yolo "Review codebase"
 
 # 안전을 위해 타임아웃 래핑
-timeout 300 gemini -m gemini-3-pro-preview --approval-mode yolo "Review codebase"
+timeout 300 gemini -m gemini-3.1-pro-preview --approval-mode yolo "Review codebase"
 ```
 
 ❌ **절대 금지**:
 ```bash
 # 백그라운드에서 무한 멈춤
-gemini -m gemini-3-pro-preview --approval-mode default "Review codebase"
+gemini -m gemini-3.1-pro-preview --approval-mode default "Review codebase"
 ```
 
 ---
@@ -158,29 +161,30 @@ gemini -m gemini-3-pro-preview --approval-mode default "Review codebase"
 ps aux | grep gemini | grep -v grep
 
 # 필요시 종료
-pkill -9 -f "gemini.*gemini-3-pro-preview"
+pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 ```
 
 ---
 
-## 성능 벤치마크
+## Gemini 3.1 Pro 특징
 
-Gemini 3 Pro 장점:
-- **SWE-bench**: 76.2% (최첨단)
-- **GPQA Diamond**: 91.9%
-- **WebDev Arena**: 1487 Elo
-- 소프트웨어 엔지니어링 작업에서 **35% 향상** (Gemini 2.5 Pro 대비)
+Gemini 3 Pro 시리즈를 정제하여:
+- **개선된 thinking**: 더 깊은 추론 품질
+- **토큰 효율성**: 같은 작업을 더 적은 토큰으로
+- **grounded 응답**: 사실 일관성 향상
+
+> 구체적 벤치마크 수치는 공식 모델 카드 확인.
 
 ---
 
 ## 요구사항
 
-- Gemini CLI v0.16.0 이상 (Gemini 3 지원)
-- 버전 확인: `gemini --version`
+- 최신 Gemini CLI (Gemini 3.x 모델 지원)
+- 버전 확인: `gemini --version` / 업데이트: `npm install -g @google/gemini-cli@latest`
 - Google Cloud 자격 증명 구성
 - 대용량 컨텍스트 작업을 위한 충분한 API 할당량
 
 ---
 
-**지식 컷오프**: Gemini 3 모델은 2025년 1월까지의 지식 보유
+**지식 컷오프**: 공식 모델 카드 참조 (Gemini 3.x 시리즈 기준).
 **문서 작성일:** 2026-02-02

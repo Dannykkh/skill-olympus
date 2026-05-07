@@ -85,7 +85,7 @@ import { ClaudeFlow } from 'claude-flow';
 const flow = new ClaudeFlow({
   agents: [
     { role: 'researcher', model: 'claude-opus' },
-    { role: 'coder', model: 'gpt-5.2' },
+    { role: 'coder', model: 'gpt-5.5' },
     { role: 'reviewer', model: 'claude-sonnet' }
   ]
 });

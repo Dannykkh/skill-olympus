@@ -2,6 +2,58 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.2] - 2026-05-07
+
+### Changed — zephermine 도메인 전문가 입력 보강
+
+도메인 전문가 호출 시 일부 입력 파일이 누락되던 문제를 해결하고, 사용자 CLI default 모델을 존중하도록 변경했습니다.
+
+#### Fixed — 누락 입력 파일 보강 (`team-review-protocol.md`)
+
+도메인 프로세스/기술 전문가가 받던 입력에서 빠지던 두 파일을 모든 모드(Claude-only / Codex / Gemini)에 통일 전달:
+
+- **`research.md`** (Step 5 초기 리서치) — Claude-only는 받았지만 External AI(Codex/Gemini)는 누락. 이제 sandwich/`@file`로 조건부 첨부
+- **`domain-dictionary.md`** (도메인 사전 v1) — 모든 모드에서 명시적으로 누락. "Step 10 메인 컨텍스트 위임"에 의존하던 비명시적 규칙을 코드 레벨로 박아넣음
+
+조건부 처리: Step 5/Step 8을 건너뛴 mini 플로우에서도 에러 없이 동작 (`[ -f file ] && cat ... || echo "(파일 없음)"`).
+
+**효과**: 모드 간 분석 품질 격차 해소 + 사전 일관성 확보 → Step 11(`domain-confirmation-guide.md`) CONFLICT 판정 감소.
+
+#### Changed — External AI 호출 시 `-m` 플래그 제거
+
+`team-review-protocol.md`, `external-review.md`의 외부 AI 자동 호출에서 `-m` 모델 지정을 제거. 이제 사용자의 CLI default를 존중:
+
+- Codex → `~/.codex/config.toml`의 `model` 키 (없으면 CLI default `gpt-5.5`)
+- Gemini → `~/.gemini/settings.json`의 default
+
+**효과**: 모델 ID가 바뀔 때마다 우리가 따라잡을 필요 없음. 사용자가 비용/품질 선택 가능.
+
+**경고문 추가**: 실행 모드 결정 표 직후 reasoning 모델 default 안내 (mini/lite로 default 잡혀있으면 분석 품질 저하 가능).
+
+#### Fixed — 모델 ID 일괄 갱신 (공식 문서 기준)
+
+OpenAI Codex Models 및 Gemini API Models 공식 문서 확인 후 박혀있던 옛 ID를 정정:
+
+| 영역 | 기존 | 변경 |
+|------|------|------|
+| 플래그십 (Codex) | `gpt-5.2` | `gpt-5.5` |
+| 플래그십 (Gemini) | `gemini-3-pro-preview` | `gemini-3.1-pro-preview` |
+| Mini (sub-agent용) | `gpt-5.2-mini` | `gpt-5.4-mini` |
+| Codex 모델 표 | 5.2-max/5.2/5.2-mini/5.1-thinking | 5.5/5.4/5.4-mini/5.3-codex/5.3-codex-spark |
+| Gemini 모델 표 | 3-pro-preview/3-flash | 3.1-pro-preview/3-flash-preview/3.1-flash-lite-preview |
+
+대상 파일: `skills/codex/SKILL.md`, `skills/gemini/SKILL.md`, `skills/project-gotchas/{SKILL.md,config.json,agents/gotcha-analyzer.md}`, `docs/resources/{codex-cli.md,gemini-cli.md,claude-flow.md}`.
+
+> 모델 표에는 "정확한 컨텍스트/가격은 공식 모델 카드 확인" 안내 박힘 — preview 단계 변동 대비.
+
+#### 적용
+
+```bash
+# 글로벌 동기화 (~/.claude, ~/.codex, ~/.gemini)
+install.bat   # Windows
+./install.sh  # macOS/Linux
+```
+
 ## [4.3.1] - 2026-05-06
 
 ### Fixed — Zeus 자동 연속 실행

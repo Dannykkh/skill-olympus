@@ -41,7 +41,7 @@ TWO Bash tool calls in a single message. **timeout 30분 설정.**
 
 **Gemini** — `@file` 경로 참조 지원:
 ```bash
-gemini -m gemini-3-pro-preview --approval-mode yolo \
+gemini --approval-mode yolo \
   "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
   @<planning_dir>/plan.md
 ```
@@ -49,7 +49,7 @@ gemini -m gemini-3-pro-preview --approval-mode yolo \
 **Codex** — stdin으로 프롬프트 전달 + 파일 읽기는 Codex가 직접:
 ```bash
 echo "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
-  | codex exec -m gpt-5.2 \
+  | codex exec \
     --sandbox read-only \
     --skip-git-repo-check \
     --full-auto \
