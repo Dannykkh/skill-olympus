@@ -189,7 +189,7 @@ Codex/Gemini에서는 같은 이름을 그대로 쓰지 않고 `cleanup-low` 티
 |-----|------------------|
 | Claude | `haiku` |
 | Codex | `gpt-5.4-mini` + `reasoning low` |
-| Gemini | `gemini-2.5-flash-lite` |
+| Gemini | `gemini-3.1-flash-lite-preview` |
 
 ### 훅 등록
 

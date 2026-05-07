@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.3.3] - 2026-05-07
+
+### Changed — chronos-worker default 모델 + project-gotchas mini 일관성
+
+v4.3.2 점검 후 발견된 잔여 옛 모델 ID 6곳 정리.
+
+#### Changed — chronos-worker `model:` 키 제거
+
+`agents/chronos-worker.md`, `skills/auto-continue-loop/agents/chronos-worker.md` 두 파일 frontmatter에서 `model: gemini-2.5-pro` 라인을 제거. 이제 사용자 `~/.gemini/settings.json` default를 존중. zephermine과 동일한 철학(사용자 default 존중 + 모델 ID 유지보수 부담 소멸).
+
+#### Changed — project-gotchas Gemini cleanup-low 갱신
+
+cleanup-low 티어 매핑에서 Codex만 갱신했던 v4.3.2의 비대칭 해소:
+
+- `gemini-2.5-flash-lite` → `gemini-3.1-flash-lite-preview` (4곳)
+- 대상: `skills/project-gotchas/{SKILL.md, config.json, agents/gotcha-analyzer.md}`
+
+#### 적용
+
+```bash
+install.bat   # Windows
+./install.sh  # macOS/Linux
+```
+
 ## [4.3.2] - 2026-05-07
 
 ### Changed — zephermine 도메인 전문가 입력 보강

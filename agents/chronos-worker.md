@@ -12,7 +12,6 @@ tools:
   - grep_search
   - list_directory
   - run_shell_command
-model: gemini-2.5-pro
 temperature: 0.2
 max_turns: 50
 ---
