@@ -187,6 +187,13 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.4.0 — /memory-distill + Dreaming 동등 자기개선 (2026.05)
+
+- **`/memory-distill` 스킬 (신규)** — raw `observations.jsonl`을 정제 `.md`로 변환하는 사용자 트리거. 모드: `--scan` / `--apply` / `--rebuild`. `--rebuild`는 중복 병합, 모순 처리(SUPERSEDED 패턴), 기존 .md를 `.archive/`로 백업하며 통째 재구성 — Anthropic Dreaming이 클라우드에서 하는 작업과 동일 로직
+- **gotcha-analyzer 모델 격상** — `cleanup-low`(Haiku/mini/flash-lite) → 호출자 메인 세션 모델 상속. Claude Opus 4.7 / GPT-5.5 / Gemini 3.1 Pro 분석 품질 (Dreaming `model: claude-opus-4-7` 동등)
+- **임계값 20 → 50 격하** — 자동 분석은 안전망으로 격하, 주 정제는 핸드오프 + `/memory-distill`로 이관
+- **다층 트리거** — Stop 훅(수집) → 임계값 50(안전망) → `/memory-distill`(사용자 트리거) → 핸드오프(세션 경계)
+
 ### v4.3.0 — 므네모 메모리 정합성 점검 (2026.05)
 
 - **핸드오프 경로 마이그레이션** — `.claude/handoffs/` → **`docs/handoffs/`** (gitignore 때문에 핸드오프가 팀원과 공유 안 되던 문제 해결)
@@ -405,7 +412,8 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
-| **[v4.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.3.0)** | **2026-05-05** | **므네모 메모리 정합성 점검** — 핸드오프 docs/handoffs/로 이전(크로스 CLI 공유); 핸드오프 시 gotcha/learned 자동 추출(검토 없음, secret 마스킹); 항목 형식 강화(source/tags/제목/길이); source 필드 48개 백필; 3 CLI parity 검증 |
+| **[v4.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.0)** | **2026-05-08** | **/memory-distill + Dreaming 동등 자기개선** — 신규 사용자 트리거 스킬 (`--scan`/`--apply`/`--rebuild` 모드, 중복 병합, SUPERSEDED 모순 처리, 아카이브 백업); gotcha-analyzer cleanup-low → 메인 세션 모델 상속 (Opus/GPT-5.5/3.1-Pro 분석 품질); 임계값 20→50 (안전망 격하); 다층 정제 트리거 |
+| [v4.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.3.0) | 2026-05-05 | **므네모 메모리 정합성 점검** — 핸드오프 docs/handoffs/로 이전(크로스 CLI 공유); 핸드오프 시 gotcha/learned 자동 추출(검토 없음, secret 마스킹); 항목 형식 강화(source/tags/제목/길이); source 필드 48개 백필; 3 CLI parity 검증 |
 | [v4.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.2.0) | 2026-05-04 | Markdown → 출판품질 PDF — pdf 스킬에 변환기 추가(playwright + Pretendard), 한국 기본값(A4 + 25mm), Clio Phase 3-4 자동 통합 |
 | **[v4.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.1.0)** | **2026-04-28** | **도메인사전 파이프라인** — 신규 domain-dictionary 스킬(DDD Ubiquitous Language)을 12개 스킬에 통합한 3계층 저장(마스터/델타/글로벌); 젭마인 6 Phase 그룹화; explain 줌아웃 모드; code-reviewer 모듈 깊이 카테고리 |
 | [v4.0.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.2) | 2026-04-27 | 스킬 description 다이어트 — Codex/Claude prompt budget을 위한 짧은 라우팅 메타데이터, 문서와 설치본 동기화 |

@@ -2,6 +2,80 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0] - 2026-05-08
+
+### Added — /memory-distill 스킬 + Dreaming-동등 자기개선 시스템
+
+Anthropic Dreaming(2026-05) 발표를 계기로 메모리 정제 시스템을 보강. 사용자 의지 트리거(`/memory-distill`)와 분석 모델 격상으로 Dreaming의 핵심 기능(rebuild + 메인 모델 분석)을 멀티 CLI(Claude/Codex/Gemini) 환경에서 무료/저비용으로 구현.
+
+문제 진단: raw observations 988건(326+662) 누적 동안 정제 .md 8% 미만(`memory/learned/`는 0개), 마지막 핸드오프 2026-04-06으로 한 달 이상 정제 흐름 중단. append-only 구조라 중복/모순 누적되며 부풀음.
+
+#### Added — `/memory-distill` 스킬
+
+신규 사용자 트리거 스킬(`skills/memory-distill/SKILL.md`). raw `observations.jsonl`을 정제 .md로 변환.
+
+| 모드 | 동작 |
+|------|------|
+| `--scan` (기본) | 후보 미리보기, 파일 미생성 |
+| `--apply` | 신규 정제 .md 생성 (incremental) |
+| `--rebuild` | 기존 정제 .md + 신규 관찰 통째 재구성 (Dreaming-like) |
+
+`--rebuild` 모드 처리:
+- 중복 병합 (tags 70%+ 매칭 → 1개로 통합, observations 합산, last_seen 갱신)
+- 모순 처리 (SUPERSEDED 패턴, 이력 보존)
+- 기존 .md `.archive/`로 백업 후 NNN 재부여
+- `index.md` + 카테고리 `.md` 동기화
+
+`--type`, `--since`, `--min-cluster` 필터 지원.
+
+#### Changed — gotcha-analyzer 모델 정책 격상
+
+`cleanup-low` 티어(Haiku/mini/flash-lite) → 호출자 메인 세션 모델 상속. Dreaming(`model: claude-opus-4-7`)과 동등 분석 품질을 무료에 가깝게 얻기 위함.
+
+| 항목 | Before | After |
+|------|--------|-------|
+| frontmatter | `model: haiku` + `model_tier`/`model_map` | model 미지정 (호출자 상속) |
+| Claude 분석 모델 | haiku | claude-opus-4-7 |
+| Codex 분석 모델 | gpt-5.4-mini + reasoning low | gpt-5.5 |
+| Gemini 분석 모델 | gemini-3.1-flash-lite-preview | gemini-3.1-pro-preview |
+
+비용 vs 품질 트레이드오프: 임계값 격하(아래)로 호출 빈도 감소 → 메인 모델 분석으로 정제 품질 ↑ → 노이즈 후보 .md 감소 → 사용자 검토 비용 ↓.
+
+#### Added — gotcha-analyzer rebuild 모드
+
+기존 incremental 모드(append-only)에 더해 `rebuild` 모드 추가. `/memory-distill --rebuild` 또는 핸드오프 정제 시 호출되어 동일 로직을 공유합니다.
+
+#### Changed — 자동 분석 임계값 20 → 50 (안전망 격하)
+
+같은 세션 내 학습은 컨텍스트가 처리하므로 정제는 세션 경계에서만 의미가 있다는 통찰을 반영. 주 정제는 핸드오프와 `/memory-distill`로 이관, 임계값 자동 분석은 핸드오프 누락 대비 안전망으로 격하.
+
+| 트리거 | 빈도 | 깊이 | 역할 |
+|--------|------|------|------|
+| Stop 훅 (jsonl append) | 매 응답 | 0 | 관찰 수집 |
+| 임계값(50) gotcha-analyzer | 가끔 | 가벼운 후보 추출 | 안전망 |
+| `/memory-distill` | 사용자 의지 | 풀 정제 + rebuild | 주 정제 |
+| 핸드오프 자동 추출 | 컨텍스트 위기 | 풀 정제 + 통합 | 세션 경계 정제 |
+
+#### Documentation
+
+- `README.md`, `README-ko.md`: 95 → 96 skills, 메모리 섹션 + Haiku analyzer 표기를 "메인 모델 상속"으로 갱신
+- `AGENTS.md`, `QUICK-REFERENCE.md`: memory-distill 등록
+- `docs/smart-setup-registry.json` `internal-skills`에 추가
+
+#### 적용
+
+```bash
+install.bat   # Windows
+./install.sh  # macOS/Linux
+```
+
+#### 사용 (새 세션 시작 후)
+
+```bash
+/memory-distill --scan          # 후보 미리보기 (raw 988건 → 클러스터)
+/memory-distill --rebuild       # 통째 재구성 (기존 22개 정제 + 신규 통합)
+```
+
 ## [4.3.4] - 2026-05-07
 
 ### Removed — nano-banana 스킬 + 레거시 모델 표 행
