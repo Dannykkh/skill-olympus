@@ -79,6 +79,32 @@ function copyDir(src, dest, skipNodeModules = false) {
   fs.cpSync(src, dest, { recursive: true, force: true, filter });
 }
 
+function removeDestEntriesMissingFromSource(src, dest, skipNodeModules = false) {
+  if (!fs.existsSync(dest)) return;
+
+  for (const entry of fs.readdirSync(dest, { withFileTypes: true })) {
+    const destPath = path.join(dest, entry.name);
+    if (skipNodeModules && isInsideNodeModules(dest, destPath)) continue;
+
+    const srcPath = path.join(src, entry.name);
+    if (!fs.existsSync(srcPath)) {
+      safeRm(destPath);
+      continue;
+    }
+
+    const srcStat = fs.statSync(srcPath);
+    const destStat = fs.statSync(destPath);
+    if (srcStat.isDirectory() && destStat.isDirectory()) {
+      removeDestEntriesMissingFromSource(srcPath, destPath, skipNodeModules);
+      continue;
+    }
+
+    if (srcStat.isDirectory() !== destStat.isDirectory()) {
+      safeRm(destPath);
+    }
+  }
+}
+
 function filesMatch(src, dest) {
   try {
     const srcStat = fs.statSync(src);
@@ -107,10 +133,9 @@ function listDirectories(dirPath) {
 
 function installDir(src, dest) {
   const skipNodeModules = hasNestedNodeModules(src) && fs.existsSync(dest);
-  if (!skipNodeModules) {
-    safeRm(dest);
-  }
+  ensureDir(dest);
   copyDir(src, dest, skipNodeModules);
+  removeDestEntriesMissingFromSource(src, dest, skipNodeModules);
 }
 
 function collectAgentFiles() {
