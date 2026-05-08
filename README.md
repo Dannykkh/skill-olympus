@@ -42,7 +42,7 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 | 📋 **Launch checklist** | `/launch` — pre-launch quality gates, staged rollout plan, rollback playbook |
 | 📐 **Decision records** | `/adr` — architecture decisions with alternatives, trade-offs, and superseded tracking |
 
-**95 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
+**96 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
 
 ---
 
@@ -60,7 +60,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **95 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **96 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -217,7 +217,7 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ### v1.8.0 — Project Gotchas + Learned Patterns (Mar 2026)
 
-- **project-gotchas** — Auto mistake tracking + success pattern learning with Haiku analyzer
+- **project-gotchas** — Auto mistake tracking + success pattern learning (analyzer inherits main session model — Opus/Sonnet quality, Dreaming-equivalent)
 - **2-layer storage** — Global (`memory/gotchas/`) + project-specific (`memory/learned/`)
 - **Cross-CLI observation** — Claude save-tool-use + Codex/Gemini save-turn hooks integrated
 - **CHANGELOG.md** — Version history v1.0.0 ~ v1.8.0
@@ -314,7 +314,7 @@ Includes auto gotcha/learned tracking:
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
-| **Memory** | mnemo, memory-compact, project-gotchas | 3-layer memory, auto learning |
+| **Memory** | mnemo, memory-compact, project-gotchas, memory-distill | 3-layer memory, auto learning, raw distillation (rebuild) |
 | **Docs** | mermaid-diagrams, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, presentations, documents, domain dictionary (DDD UL) |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |

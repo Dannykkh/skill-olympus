@@ -2,14 +2,16 @@
   "version": "1.0",
   "observer": {
     "enabled": true,
-    "min_observations_to_analyze": 20
+    "min_observations_to_analyze": 50,
+    "_note": "주 정제는 핸드오프와 /memory-distill로 이관. 이 임계값은 핸드오프 누락 대비 안전망(fallback) 역할."
   },
   "analyzer": {
-    "model_tier": "cleanup-low",
-    "models": {
-      "claude": "haiku",
-      "codex": "gpt-5.4-mini + reasoning low",
-      "gemini": "gemini-3.1-flash-lite-preview"
+    "model_policy": "inherit-caller",
+    "_note": "frontmatter model 미지정 → 호출자(메인 세션) 모델 상속. Dreaming(opus)과 동등 품질을 위해 cleanup-low에서 격상.",
+    "expected_models": {
+      "claude": "claude-opus-4-7",
+      "codex": "gpt-5.5",
+      "gemini": "gemini-3.1-pro-preview"
     }
   }
 }

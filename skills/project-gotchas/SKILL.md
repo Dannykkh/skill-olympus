@@ -141,7 +141,7 @@ skills/project-gotchas/
 ├── SKILL.md              ← 이 파일 (규칙서)
 ├── config.json           ← 관찰 설정
 └── agents/
-    └── gotcha-analyzer.md ← cleanup-low 분석 에이전트 (패턴 감지 → gotcha 생성)
+    └── gotcha-analyzer.md ← 분석 에이전트 (패턴 감지 → gotcha 생성, 메인 모델 상속)
 
 hooks/
 ├── save-tool-use.ps1|sh          ← Claude PostToolUse: 도구 단위 관찰
@@ -173,23 +173,24 @@ save-turn.ps1|sh
 observations.jsonl 에 관찰 축적
     ↓ 관찰 20개 이상 축적 시
     ↓
-agents/gotcha-analyzer.md (cleanup-low 모델 티어)
+agents/gotcha-analyzer.md (메인 세션 모델 상속)
     ↓ 에러→수정 패턴, 반복 실패 감지
     ↓ 글로벌/프로젝트 범위 자동 판단
     ↓
 memory/gotchas/에 gotcha 파일 자동 생성 + index.md 업데이트
 ```
 
-### 분석 모델 매핑
+### 분석 모델 정책
 
-`gotcha-analyzer`의 `model: haiku`는 Claude Code 네이티브 실행용 실제 모델명입니다.
-Codex/Gemini에서는 같은 이름을 그대로 쓰지 않고 `cleanup-low` 티어로 해석합니다.
+`gotcha-analyzer`는 frontmatter에 `model:`을 지정하지 않아 **호출자(메인 세션) 모델을 상속**합니다.
+Anthropic Dreaming(`model: claude-opus-4-7`)과 동등한 분석 품질을 얻기 위한 의도된 설계입니다.
+임계값 50으로 격하되어 빈도가 낮으므로 비용 부담은 제한적입니다.
 
-| CLI | cleanup-low 매핑 |
-|-----|------------------|
-| Claude | `haiku` |
-| Codex | `gpt-5.4-mini` + `reasoning low` |
-| Gemini | `gemini-3.1-flash-lite-preview` |
+| CLI | 상속 모델 |
+|-----|----------|
+| Claude | `claude-opus-4-7` |
+| Codex | `gpt-5.5` |
+| Gemini | `gemini-3.1-pro-preview` |
 
 ### 훅 등록
 
@@ -202,7 +203,7 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 {
   "observer": {
     "enabled": true,
-    "min_observations_to_analyze": 20
+    "min_observations_to_analyze": 50
   }
 }
 ```
@@ -210,7 +211,20 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 | 키 | 기본값 | 설명 |
 |----|--------|------|
 | `observer.enabled` | `true` | 관찰 활성화 여부 |
-| `observer.min_observations_to_analyze` | `20` | 분석 트리거 최소 관찰 수 |
+| `observer.min_observations_to_analyze` | `50` | 분석 트리거 최소 관찰 수 (안전망) |
+
+### 정제 트리거 다층 구조
+
+같은 세션 내 학습은 컨텍스트가 처리하므로 정제는 **세션 경계**에서 의미가 있습니다.
+
+| 트리거 | 빈도 | 깊이 | 역할 |
+|--------|------|------|------|
+| Stop 훅 (jsonl append) | 매 응답 | 0 | 관찰 수집 |
+| 임계값(50) 자동분석 | 가끔 | 가벼운 후보 추출 | **안전망** (핸드오프 누락 대비) |
+| `/memory-distill` | 사용자 의지 | 풀 정제 + rebuild | **주 정제** |
+| 핸드오프 자동 추출 | 컨텍스트 위기 | 풀 정제 + 통합 | 세션 경계 정제 |
+
+`/memory-distill`과 핸드오프 자동 추출은 동일 로직을 공유합니다.
 
 ### 관찰 데이터 관리
 
