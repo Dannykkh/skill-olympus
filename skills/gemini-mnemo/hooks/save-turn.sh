@@ -283,3 +283,41 @@ if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
         fi
     fi
 fi
+
+# ── mnemo status notify (LLM 호출 X, 비용 0) ──────────────────
+# raw 누적 500건 또는 마지막 핸드오프 14일 초과 시 status 파일 + stderr 안내.
+notify_mnemo_status() {
+    local root="$1"
+    local g_jsonl="$root/memory/gotchas/observations.jsonl"
+    local l_jsonl="$root/memory/learned/observations.jsonl"
+    local handoff_dir="$root/docs/handoffs"
+    local g_count=0 l_count=0
+    [ -f "$g_jsonl" ] && g_count=$(wc -l < "$g_jsonl" 2>/dev/null | tr -d ' ' || echo 0)
+    [ -f "$l_jsonl" ] && l_count=$(wc -l < "$l_jsonl" 2>/dev/null | tr -d ' ' || echo 0)
+    local total=$((g_count + l_count))
+    local days=999
+    if [ -d "$handoff_dir" ]; then
+        local latest mtime now
+        latest=$(ls -t "$handoff_dir"/*.md 2>/dev/null | head -n 1)
+        if [ -n "$latest" ]; then
+            mtime=$(stat -c %Y "$latest" 2>/dev/null || stat -f %m "$latest" 2>/dev/null || echo 0)
+            now=$(date +%s)
+            [ "$mtime" -gt 0 ] && days=$(( (now - mtime) / 86400 ))
+        fi
+    fi
+    if [ "$total" -lt 500 ] && [ "$days" -lt 14 ]; then
+        return 0
+    fi
+    local status_file="$root/memory/.mnemo-status.md"
+    mkdir -p "$root/memory" 2>/dev/null || true
+    {
+        echo "# mnemo status"
+        echo ""
+        echo "- raw observations: **${total}** (gotchas ${g_count} + learned ${l_count})"
+        echo "- last handoff: **${days}일 전**"
+        echo "- 권장: \`/memory-distill --rebuild\` 또는 핸드오프"
+        echo "- updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    } > "$status_file" 2>/dev/null || true
+    echo "[mnemo] raw ${total}건 / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
+}
+notify_mnemo_status "$PROJECT_ROOT"

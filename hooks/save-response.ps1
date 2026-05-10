@@ -386,3 +386,39 @@ $entry = "`n## [$ts] Assistant`n`n$response`n"
 if ($lineUuid) {
     Add-UuidToIndex -ConvDir $ConvDir -Today $Today -Uuid $lineUuid
 }
+
+# ── mnemo status notify (LLM 호출 X, 비용 0) ──────────────────
+# raw 누적 500건 또는 마지막 핸드오프 14일 초과 시 status 파일 + stderr 안내.
+function Notify-MnemoStatus {
+    param([string]$Root)
+    try {
+        $gJsonl = Join-Path $Root 'memory\gotchas\observations.jsonl'
+        $lJsonl = Join-Path $Root 'memory\learned\observations.jsonl'
+        $handoffDir = Join-Path $Root 'docs\handoffs'
+        $gCount = 0; $lCount = 0
+        if (Test-Path $gJsonl) {
+            $gCount = (Get-Content $gJsonl -ErrorAction SilentlyContinue | Measure-Object -Line).Lines
+        }
+        if (Test-Path $lJsonl) {
+            $lCount = (Get-Content $lJsonl -ErrorAction SilentlyContinue | Measure-Object -Line).Lines
+        }
+        $total = $gCount + $lCount
+        $days = 999
+        if (Test-Path $handoffDir) {
+            $latest = Get-ChildItem -Path $handoffDir -Filter '*.md' -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            if ($latest) { $days = [int](((Get-Date) - $latest.LastWriteTime).TotalDays) }
+        }
+        if ($total -lt 500 -and $days -lt 14) { return }
+        $statusDir = Join-Path $Root 'memory'
+        if (-not (Test-Path $statusDir)) {
+            New-Item -ItemType Directory -Path $statusDir -Force -ErrorAction SilentlyContinue | Out-Null
+        }
+        $statusFile = Join-Path $statusDir '.mnemo-status.md'
+        $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+        $content = "# mnemo status`n`n- raw observations: **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: ``/memory-distill --rebuild`` 또는 핸드오프`n- updated: $now`n"
+        [System.IO.File]::WriteAllText($statusFile, $content, $Utf8NoBom)
+        [Console]::Error.WriteLine("[mnemo] raw $total 건 / 마지막 핸드오프 $days 일 전 -> /memory-distill --rebuild 권장")
+    } catch {}
+}
+Notify-MnemoStatus -Root $ProjectRoot

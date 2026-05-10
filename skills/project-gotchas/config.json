@@ -2,12 +2,13 @@
   "version": "1.0",
   "observer": {
     "enabled": true,
-    "min_observations_to_analyze": 50,
-    "_note": "주 정제는 핸드오프와 /memory-distill로 이관. 이 임계값은 핸드오프 누락 대비 안전망(fallback) 역할."
+    "notify_threshold_total": 500,
+    "notify_threshold_handoff_days": 14,
+    "_note": "자동 분석 트리거는 의도적으로 두지 않음 (LLM 호출 비용). 누적 raw가 notify_threshold_total를 넘거나 마지막 핸드오프가 notify_threshold_handoff_days를 넘으면 mnemo Stop/save-turn 훅이 memory/.mnemo-status.md를 작성 + stderr 안내. 실제 정제는 사용자 의지(/memory-distill) 또는 핸드오프 시점에만 실행."
   },
   "analyzer": {
     "model_policy": "inherit-caller",
-    "_note": "frontmatter model 미지정 → 호출자(메인 세션) 모델 상속. Dreaming(opus)과 동등 품질을 위해 cleanup-low에서 격상.",
+    "_note": "frontmatter model 미지정 → 호출자(메인 세션) 모델 상속. /memory-distill 또는 핸드오프 자동 추출 시에만 호출되며, 호출 시 Dreaming(opus)과 동등 품질로 분석.",
     "expected_models": {
       "claude": "claude-opus-4-7",
       "codex": "gpt-5.5",

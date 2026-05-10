@@ -203,7 +203,8 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 {
   "observer": {
     "enabled": true,
-    "min_observations_to_analyze": 50
+    "notify_threshold_total": 500,
+    "notify_threshold_handoff_days": 14
   }
 }
 ```
@@ -211,20 +212,23 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 | 키 | 기본값 | 설명 |
 |----|--------|------|
 | `observer.enabled` | `true` | 관찰 활성화 여부 |
-| `observer.min_observations_to_analyze` | `50` | 분석 트리거 최소 관찰 수 (안전망) |
+| `observer.notify_threshold_total` | `500` | raw 누적 합계가 이 이상이면 안내 출력 |
+| `observer.notify_threshold_handoff_days` | `14` | 마지막 핸드오프가 이 일수보다 오래되면 안내 출력 |
 
-### 정제 트리거 다층 구조
+### 정제 트리거 (의도된 설계)
 
-같은 세션 내 학습은 컨텍스트가 처리하므로 정제는 **세션 경계**에서 의미가 있습니다.
+**자동 분석기는 두지 않습니다** — LLM 호출 비용을 한 번에 하나의 명시적 트리거에만 묶기 위함입니다.
+같은 세션 내 학습은 컨텍스트가 처리하므로, 정제는 **세션 경계**(핸드오프) 또는 **사용자 의지**(/memory-distill)에서만 일어납니다.
 
-| 트리거 | 빈도 | 깊이 | 역할 |
-|--------|------|------|------|
-| Stop 훅 (jsonl append) | 매 응답 | 0 | 관찰 수집 |
-| 임계값(50) 자동분석 | 가끔 | 가벼운 후보 추출 | **안전망** (핸드오프 누락 대비) |
-| `/memory-distill` | 사용자 의지 | 풀 정제 + rebuild | **주 정제** |
-| 핸드오프 자동 추출 | 컨텍스트 위기 | 풀 정제 + 통합 | 세션 경계 정제 |
+| 트리거 | 빈도 | 깊이 | LLM 비용 | 역할 |
+|--------|------|------|---------|------|
+| Stop 훅 (jsonl append) | 매 응답 | 0 | 0 | 관찰 수집 |
+| Stop 훅 (mnemo-status notify) | 임계값 도달 시 | 0 (텍스트 출력만) | 0 | 사용자 인지 |
+| `/memory-distill` | 사용자 의지 | 풀 정제 + rebuild | 1회 | **주 정제** |
+| 핸드오프 자동 추출 | 컨텍스트 위기 | 풀 정제 + 통합 | 1회 | 세션 경계 정제 |
 
-`/memory-distill`과 핸드오프 자동 추출은 동일 로직을 공유합니다.
+`/memory-distill`과 핸드오프 자동 추출은 동일 로직을 공유합니다 (gotcha-analyzer rebuild 모드).
+Stop 훅의 안내 출력은 LLM 호출이 아니라 단순 텍스트 — `memory/.mnemo-status.md` 파일 작성 + stderr 한 줄.
 
 ### 관찰 데이터 관리
 

@@ -343,3 +343,45 @@ printf '\n## [%s] Assistant\n\n%s\n' "$TIMESTAMP" "$RESPONSE" >> "$CONV_FILE"
 if [ -n "$LINE_UUID" ]; then
     add_uuid_to_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"
 fi
+
+# ── mnemo status notify (LLM 호출 X, 비용 0) ──────────────────
+# raw 관찰 누적량 + 마지막 핸드오프 일수가 임계값을 넘으면
+# memory/.mnemo-status.md에 기록 + stderr로 안내.
+# 사용자/LLM이 다음 세션 시작 시 status 파일을 보고 정제 권유.
+notify_mnemo_status() {
+    local root="$1"
+    local gotchas_jsonl="$root/memory/gotchas/observations.jsonl"
+    local learned_jsonl="$root/memory/learned/observations.jsonl"
+    local handoff_dir="$root/docs/handoffs"
+    local g_count=0 l_count=0
+    [ -f "$gotchas_jsonl" ] && g_count=$(wc -l < "$gotchas_jsonl" 2>/dev/null | tr -d ' ' || echo 0)
+    [ -f "$learned_jsonl" ] && l_count=$(wc -l < "$learned_jsonl" 2>/dev/null | tr -d ' ' || echo 0)
+    local total=$((g_count + l_count))
+    local days=999
+    if [ -d "$handoff_dir" ]; then
+        local latest
+        latest=$(ls -t "$handoff_dir"/*.md 2>/dev/null | head -n 1)
+        if [ -n "$latest" ]; then
+            local mtime now
+            mtime=$(stat -c %Y "$latest" 2>/dev/null || stat -f %m "$latest" 2>/dev/null || echo 0)
+            now=$(date +%s)
+            [ "$mtime" -gt 0 ] && days=$(( (now - mtime) / 86400 ))
+        fi
+    fi
+    # 임계값: raw 500건 또는 마지막 핸드오프 14일 초과
+    if [ "$total" -lt 500 ] && [ "$days" -lt 14 ]; then
+        return 0
+    fi
+    local status_file="$root/memory/.mnemo-status.md"
+    mkdir -p "$root/memory" 2>/dev/null || true
+    {
+        echo "# mnemo status"
+        echo ""
+        echo "- raw observations: **${total}** (gotchas ${g_count} + learned ${l_count})"
+        echo "- last handoff: **${days}일 전**"
+        echo "- 권장: \`/memory-distill --rebuild\` 또는 핸드오프"
+        echo "- updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    } > "$status_file" 2>/dev/null || true
+    echo "[mnemo] raw ${total}건 / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
+}
+notify_mnemo_status "$PROJECT_ROOT"

@@ -451,6 +451,7 @@ function run() {
   const CODEX_EXCLUDE_SKILLS = [
     "agent-team",      // Claude Agent Teams 전용 (TeamCreate/SendMessage). Codex용은 agent-team-codex
     "mnemo",           // Claude 전용 장기기억. Codex용은 codex-mnemo
+    "gemini-mnemo",    // Gemini 전용 장기기억. Codex와 무관
   ];
   const allSkillNames = listDirectories(skillsSrcDir);
   const skillNames = allSkillNames.filter((name) => !CODEX_EXCLUDE_SKILLS.includes(name));

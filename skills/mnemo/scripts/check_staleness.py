@@ -376,13 +376,81 @@ def print_report(result: dict):
         print("Verdict: [UNKNOWN] Manual verification needed")
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python check_staleness.py <handoff-file>")
-        print("Example: python check_staleness.py docs/handoffs/2024-01-15-auth.md")
-        sys.exit(1)
+def find_all_handoffs(project_path: str = None) -> list[Path]:
+    """현재 프로젝트의 docs/handoffs/ 안 모든 .md 파일 (날짜 내림차순)."""
+    base = Path(project_path) if project_path else Path.cwd()
+    handoffs_dir = base / "docs" / "handoffs"
+    if not handoffs_dir.exists():
+        return []
+    files = list(handoffs_dir.glob("*.md"))
+    # 파일명 기준 내림차순 (최신 먼저)
+    return sorted(files, reverse=True)
 
-    handoff_path = sys.argv[1]
+
+def print_summary_row(handoff_path: str, result: dict):
+    """일괄 모드용 1줄 요약."""
+    level = result.get("staleness_level", "UNKNOWN")
+    icon = {
+        "FRESH": "[OK]",
+        "SLIGHTLY_STALE": "[OK]",
+        "STALE": "[CAUTION]",
+        "VERY_STALE": "[WARN]",
+        "UNKNOWN": "[?]",
+    }.get(level, "[?]")
+    age = result.get("days_old")
+    age_str = f"{int(age)}d" if age is not None and age >= 1 else "<1d"
+    name = Path(handoff_path).name
+    print(f"  {icon:<10} {level:<15} {age_str:>6}  {name}")
+
+
+def main():
+    args = sys.argv[1:]
+    use_all = (not args) or args[0] in ("--all", "-a")
+
+    if use_all:
+        # 일괄 모드: docs/handoffs/ 전체 점검
+        project_path = args[1] if len(args) > 1 else None
+        handoffs = find_all_handoffs(project_path)
+        if not handoffs:
+            print("No handoffs found in docs/handoffs/")
+            sys.exit(0)
+
+        print(f"\nChecking staleness for {len(handoffs)} handoff(s):\n")
+        print(f"  {'Status':<10} {'Level':<15} {'Age':>6}  File")
+        print(f"  {'-' * 10} {'-' * 15} {'-' * 6}  {'-' * 60}")
+
+        worst_level = "FRESH"
+        level_priority = {"FRESH": 0, "SLIGHTLY_STALE": 1, "STALE": 2, "VERY_STALE": 3, "UNKNOWN": 1}
+
+        for hf in handoffs:
+            result = check_staleness(str(hf))
+            print_summary_row(str(hf), result)
+            level = result.get("staleness_level", "UNKNOWN")
+            if level_priority.get(level, 0) > level_priority.get(worst_level, 0):
+                worst_level = level
+
+        print()
+        print(f"  Worst level: {worst_level}")
+        print(f"  (Run `python check_staleness.py <file>` for details on a specific handoff)")
+
+        # exit code: 가장 심한 레벨 기준
+        if worst_level in ("FRESH", "SLIGHTLY_STALE"):
+            sys.exit(0)
+        elif worst_level == "STALE":
+            sys.exit(1)
+        else:
+            sys.exit(2)
+
+    # 단일 파일 모드 (기존)
+    if args[0] in ("-h", "--help"):
+        print("Usage:")
+        print("  python check_staleness.py                   # all handoffs (summary)")
+        print("  python check_staleness.py --all             # same as above")
+        print("  python check_staleness.py <handoff-file>    # detailed report for one file")
+        print("Example: python check_staleness.py docs/handoffs/2024-01-15-auth.md")
+        sys.exit(0)
+
+    handoff_path = args[0]
     result = check_staleness(handoff_path)
     print_report(result)
 

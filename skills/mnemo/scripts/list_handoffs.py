@@ -61,16 +61,24 @@ def check_completion_status(filepath: Path) -> str:
 
 
 def parse_date_from_filename(filename: str) -> datetime | None:
-    """Extract date from filename like 2024-01-15-143022-slug.md"""
-    match = re.match(r'(\d{4}-\d{2}-\d{2})-(\d{6})', filename)
-    if match:
-        try:
-            date_str = match.group(1)
-            time_str = match.group(2)
+    """Extract date from filename.
+
+    지원 형식:
+      - 2024-01-15-143022-slug.md  (YYYY-MM-DD-HHMMSS-slug, 정식)
+      - 2024-01-15-slug.md         (YYYY-MM-DD-slug, HHMMSS 생략, 레거시)
+    """
+    match = re.match(r'(\d{4}-\d{2}-\d{2})(?:-(\d{6}))?', filename)
+    if not match:
+        return None
+    try:
+        date_str = match.group(1)
+        time_str = match.group(2)
+        if time_str:
             return datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H%M%S")
-        except ValueError:
-            pass
-    return None
+        # HHMMSS 없는 레거시 파일은 자정으로 간주
+        return datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        return None
 
 
 def list_handoffs(project_path: str) -> list[dict]:
