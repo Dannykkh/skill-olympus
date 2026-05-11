@@ -187,6 +187,14 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.4.1 — mnemo 점검 패치 (2026.05)
+
+- **mnemo-status notify 훅 (LLM 호출 X)** — Stop/save-turn 훅이 raw jsonl 누적량 + 마지막 핸드오프 일수 체크 → 임계값(500건/14일) 도달 시 `memory/.mnemo-status.md` 작성 + stderr 한 줄. 텍스트 출력만, LLM 호출 0건
+- **설계 ↔ 문서 일치** — v4.4.0의 "임계값 50 자동분석"은 실제 구현 코드가 없는 문서 표현이었음(자동 분석기는 LLM 비용 절감 위해 의도적으로 제외). config.json / SKILL.md를 실제 설계와 일치시킴: 정제는 `/memory-distill` 또는 핸드오프에서만
+- **`list_handoffs.py` 버그 수정** — `YYYY-MM-DD-{slug}.md` (HHMMSS 없음) 파일이 "Date Unknown"으로 표시되던 문제 해결
+- **`check_staleness.py --all`** — 일괄 모드 추가, 이전에는 인자당 1개씩만 점검 가능했음
+- **Codex sync EXCLUDE** — `gemini-mnemo`가 Codex 설치본에 잘못 들어가던 문제 해결
+
 ### v4.4.0 — /memory-distill + Dreaming 동등 자기개선 (2026.05)
 
 - **`/memory-distill` 스킬 (신규)** — raw `observations.jsonl`을 정제 `.md`로 변환하는 사용자 트리거. 모드: `--scan` / `--apply` / `--rebuild`. `--rebuild`는 중복 병합, 모순 처리(SUPERSEDED 패턴), 기존 .md를 `.archive/`로 백업하며 통째 재구성 — Anthropic Dreaming이 클라우드에서 하는 작업과 동일 로직
@@ -412,7 +420,8 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
-| **[v4.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.0)** | **2026-05-08** | **/memory-distill + Dreaming 동등 자기개선** — 신규 사용자 트리거 스킬 (`--scan`/`--apply`/`--rebuild` 모드, 중복 병합, SUPERSEDED 모순 처리, 아카이브 백업); gotcha-analyzer cleanup-low → 메인 세션 모델 상속 (Opus/GPT-5.5/3.1-Pro 분석 품질); 임계값 20→50 (안전망 격하); 다층 정제 트리거 |
+| **[v4.4.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.1)** | **2026-05-11** | **mnemo 점검 패치** — Stop/save-turn `notify_mnemo_status` 훅 (`memory/.mnemo-status.md` + stderr, LLM 호출 X로 사용자 인지); SKILL.md/config.json을 실제 설계와 일치(자동분석기 없음); `list_handoffs.py`가 `YYYY-MM-DD-{slug}` 파일명 파싱; `check_staleness.py --all` 일괄 모드; Codex EXCLUDE에 `gemini-mnemo` 추가 |
+| [v4.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.0) | 2026-05-08 | **/memory-distill + Dreaming 동등 자기개선** — 신규 사용자 트리거 스킬 (`--scan`/`--apply`/`--rebuild` 모드, 중복 병합, SUPERSEDED 모순 처리, 아카이브 백업); gotcha-analyzer cleanup-low → 메인 세션 모델 상속 (Opus/GPT-5.5/3.1-Pro 분석 품질); 임계값 20→50 (안전망 격하); 다층 정제 트리거 |
 | [v4.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.3.0) | 2026-05-05 | **므네모 메모리 정합성 점검** — 핸드오프 docs/handoffs/로 이전(크로스 CLI 공유); 핸드오프 시 gotcha/learned 자동 추출(검토 없음, secret 마스킹); 항목 형식 강화(source/tags/제목/길이); source 필드 48개 백필; 3 CLI parity 검증 |
 | [v4.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.2.0) | 2026-05-04 | Markdown → 출판품질 PDF — pdf 스킬에 변환기 추가(playwright + Pretendard), 한국 기본값(A4 + 25mm), Clio Phase 3-4 자동 통합 |
 | **[v4.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.1.0)** | **2026-04-28** | **도메인사전 파이프라인** — 신규 domain-dictionary 스킬(DDD Ubiquitous Language)을 12개 스킬에 통합한 3계층 저장(마스터/델타/글로벌); 젭마인 6 Phase 그룹화; explain 줌아웃 모드; code-reviewer 모듈 깊이 카테고리 |

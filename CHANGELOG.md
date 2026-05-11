@@ -2,6 +2,76 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.1] - 2026-05-11
+
+### Fixed — mnemo 점검 패치 (의도와 문구 일치 + 인지 안내 + 누락 보강)
+
+v4.4.0 직후 mnemo 시스템 종합 점검 결과 발견된 갭들을 정리. **자동 분석기는 의도적으로 두지 않았다**는 설계 의도(LLM 호출 비용 절감)를 SKILL.md/config.json 문구와 일치시키고, 핸드오프 누락 시 사용자 인지를 도울 비용 0짜리 안내 메커니즘 추가.
+
+문제 진단: raw observations 1038건 누적, 마지막 핸드오프 2026-04-06으로 34일간 정제 멈춤. v4.4.0에서 적은 "임계값 50 자동분석"은 실제 호출 코드가 없는 문서 표현이었음. 사용자는 짧은 세션 후 핸드오프가 발동되지 않으면 정제 누락을 인지할 수단이 없었음.
+
+#### Added — Stop/save-turn 훅에 mnemo-status notify (LLM 호출 X)
+
+매 응답 종료 시 raw jsonl 누적량과 마지막 핸드오프 일수를 계산해, 임계값 도달 시 `memory/.mnemo-status.md` 파일 작성 + stderr 한 줄 안내.
+
+| 항목 | 값 |
+|------|-----|
+| raw 누적 임계값 | 500건 |
+| 마지막 핸드오프 임계값 | 14일 |
+| LLM 호출 | 없음 (단순 텍스트 출력) |
+
+대상 파일 (6개, Claude/Codex/Gemini × .sh + .ps1):
+- `hooks/save-response.{sh,ps1}` (Claude Stop)
+- `skills/codex-mnemo/hooks/save-turn.{sh,ps1}` (Codex notify)
+- `skills/gemini-mnemo/hooks/save-turn.{sh,ps1}` (Gemini AfterAgent)
+
+#### Fixed — SKILL.md/config.json 문구를 의도된 설계와 일치
+
+v4.4.0에서 잘못 적은 "임계값 자동 분석" 표현을 정정. 자동 분석기는 의도적으로 두지 않으며, 정제는 사용자 의지(`/memory-distill`) 또는 세션 경계(핸드오프)에서만 발동.
+
+| 파일 | Before | After |
+|------|--------|-------|
+| `skills/project-gotchas/config.json` | `min_observations_to_analyze: 50` | `notify_threshold_total: 500` + `notify_threshold_handoff_days: 14` |
+| `skills/project-gotchas/SKILL.md` | "안전망 자동분석" | "안내 출력 (LLM 호출 X)" |
+| `skills/memory-distill/SKILL.md` | 자동 트리거 표 | 사용자 의지/세션 경계 트리거 표 |
+
+#### Fixed — `list_handoffs.py` 파일명 파싱 버그
+
+`YYYY-MM-DD-{slug}.md` 형식(HHMMSS 없음)이 "Date Unknown"으로 표시되던 버그 수정. HHMMSS 옵셔널 지원.
+
+검증: `2026-04-06-v2.1-release.md` → "Date: 2026-04-06 00:00" 정상 표시.
+
+#### Added — `check_staleness.py --all` 일괄 모드
+
+기존: 인자로 핸드오프 파일 1개씩만 점검 가능 → 다수 핸드오프 점검 불편.
+추가: 인자 없이 또는 `--all` 시 `docs/handoffs/` 전체 일괄 점검 + 요약 출력.
+
+```
+$ python check_staleness.py --all
+Checking staleness for 3 handoff(s):
+  Status     Level              Age  File
+  [OK]       FRESH              <1d  2026-04-06-v2.1-release.md
+  [OK]       SLIGHTLY_STALE     <1d  2026-03-13-140000-pipeline-architecture.md
+  [WARN]     VERY_STALE         58d  2026-03-13-012826-codex-compatibility-wrap-up.md
+```
+
+#### Fixed — Codex sync EXCLUDE 누락 보강
+
+`scripts/sync-codex-assets.js`의 `CODEX_EXCLUDE_SKILLS`에 `gemini-mnemo` 누락. Gemini 전용 스킬이 Codex 설치본에 잘못 들어가던 정합성 문제 해결.
+
+| 설치본 | Before | After |
+|--------|--------|-------|
+| `~/.codex/skills/` | `codex-mnemo`, `gemini-mnemo` | `codex-mnemo`만 |
+
+#### 적용
+
+```bash
+install.bat   # Windows
+./install.sh  # macOS/Linux
+```
+
+새 세션부터 자동 안내가 활성화됩니다. 1038건 raw를 즉시 정제하려면 새 세션에서 `/memory-distill --rebuild` 실행.
+
 ## [4.4.0] - 2026-05-08
 
 ### Added — /memory-distill 스킬 + Dreaming-동등 자기개선 시스템
