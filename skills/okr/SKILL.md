@@ -53,7 +53,7 @@ OKR — 목표와 핵심결과 설정
 
 ### Step 1: 컨텍스트 수집
 
-AskUserQuestion으로 확인:
+현재 CLI의 질문 방식으로 확인:
 
 ```
 question: "이번 분기(Q?)의 핵심 목표가 뭔가요?"
@@ -138,7 +138,7 @@ O1: {목표}
 
 `docs/okr/current.md`를 읽고:
 
-1. 각 KR의 현재 상태를 AskUserQuestion으로 확인
+1. 각 KR의 현재 상태를 현재 CLI의 질문 방식으로 확인
 2. 진행률 업데이트
 3. 위험 KR 식별 (진행률 < 기대 진행률)
 

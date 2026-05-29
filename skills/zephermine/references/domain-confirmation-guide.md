@@ -4,13 +4,13 @@ Step 11 — 도메인 전문가 제안 + 도메인사전 변경 + 글로벌 반�
 
 ## 목적
 
-Step 11은 **세 가지 multiSelect**를 한 번에 진행합니다:
+Step 11은 **세 가지 사용자 결정**을 순서대로 확인합니다:
 
 1. **도메인 전문가 추가 제안** (기존)
 2. **도메인사전 변경 확정** (신규 — Step 10 자동 병합 시 CONFLICT로 미뤄진 항목 + 핵심 용어 검토)
 3. **글로벌 사전 반영 선택** (신규 — 이번 프로젝트 신규/수정 용어 중 글로벌 자산화)
 
-세 질문을 분리하면 사용자 피로도가 높아지므로, 가능하면 한 화면에서 그룹별로 묶어 진행합니다.
+기본은 일반 텍스트 번호 목록입니다. 구조화 질문 도구가 다중 선택을 명시 지원할 때만 한 화면 선택형으로 묶고, 항목이 많으면 2-3개 질문 또는 그룹 단위로 나누어 진행합니다. `Invalid tool parameters`가 한 번이라도 나면 같은 payload를 재시도하지 말고 일반 텍스트로 전환합니다.
 
 ## 절차
 
@@ -21,24 +21,24 @@ Step 11은 **세 가지 multiSelect**를 한 번에 진행합니다:
 - `team-reviews/domain-technical-analysis.md` — 기술 전문가 우선순위 테이블
 - 6개 전문가 분석 파일의 `## Dictionary Updates` 섹션 — Step 10 자동 병합 결과 + CONFLICT 항목
 - `docs/domain-dictionary.md` (현재 v2) — 비교 기준
-- 글로벌 사전 (`~/.claude/memory/domain-dictionaries/{도메인}.md`) — 비교 기준
+- 글로벌 사전 (`~/.agent-memory/domain-dictionaries/{도메인}.md`) — 비교 기준
 
-### 2. multiSelect 1 — 도메인 전문가 제안 (기존)
+### 2. 확인 1 — 도메인 전문가 제안 (기존)
 
 ```
 question: "도메인 전문가가 아래 항목을 추가 제안했습니다. 채택할 항목을 선택하세요.
 (🔴필수/🟡권장/🟢선택은 AI 판단이며, 최종 결정은 사용자입니다)"
 header: "Domain Suggestions"
-multiSelect: true
+selection: "multiple numbers by default; use structured multiple-selection only if the current CLI supports it"
 options:
   - label: "🔴 {항목1}: {한줄요약}"
     description: "{근거}"
   ...
 ```
 
-> 항목이 8개 이상이면 🔴/🟡/🟢 그룹별로 나누어 2~3회 질문.
+> 항목이 8개 이상이면 🔴/🟡/🟢 그룹별로 나누어 2~3회 질문. 구조화 도구가 불안정하면 `1, 3, 5 채택`처럼 번호 답변을 받습니다.
 
-### 3. multiSelect 2 — 도메인사전 변경 확정 (신규)
+### 3. 확인 2 — 도메인사전 변경 확정 (신규)
 
 Step 10 자동 병합에서 처리하지 못하고 CONFLICT로 미뤄진 항목을 사용자에게 결정 요청. 또한 자동 병합된 핵심 용어 5~10개도 검토 기회 제공.
 
@@ -46,7 +46,7 @@ Step 10 자동 병합에서 처리하지 못하고 CONFLICT로 미뤄진 항목�
 question: "도메인사전 변경 사항을 확정해주세요.
 (자동 병합된 항목은 ✅ 표시, 충돌 항목은 ⚠️ 표시. 둘 다 수정 가능)"
 header: "Dictionary"
-multiSelect: true
+selection: "multiple numbers by default; use structured multiple-selection only if the current CLI supports it"
 options:
   - label: "⚠️ Cart vs Basket: 어느 용어로 통일? (전문가 의견 갈림)"
     description: "Process Expert: cart 권장 (글로벌 표준), Tech Expert: basket 권장 (UI 친화)"
@@ -59,9 +59,9 @@ options:
 
 체크 = 채택. 미체크 = 변경 거부 (자동 병합 항목은 롤백, 충돌은 보류).
 
-### 4. multiSelect 3 — 글로벌 사전 반영 (신규)
+### 4. 확인 3 — 글로벌 사전 반영 (신규)
 
-이번 프로젝트에서 새로 정의/다듬어진 용어 중 글로벌 사전(`~/.claude/memory/domain-dictionaries/{도메인}.md`)에 추가할 것을 사용자가 선택.
+이번 프로젝트에서 새로 정의/다듬어진 용어 중 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`)에 추가할 것을 사용자가 선택.
 
 **자동 추정**: 인터뷰의 `[Industry]` 태그 → 글로벌 사전 도메인 결정 (예: ecommerce, healthcare).
 
@@ -69,7 +69,7 @@ options:
 question: "이번 프로젝트에서 정의된 다음 용어 중 글로벌 [{도메인}] 사전에 반영할 항목을 선택하세요.
 글로벌에 추가하면 다음 프로젝트에서도 후보로 제시됩니다."
 header: "Global Sync"
-multiSelect: true
+selection: "multiple numbers by default; use structured multiple-selection only if the current CLI supports it"
 options:
   - label: "Wishlist (찜) — 구매 의도 없는 관심 상품"
     description: "신규 정의 — 다른 이커머스 프로젝트에서도 자주 등장하는 개념"
@@ -88,7 +88,7 @@ options:
 ```
 
 > 글로벌 사전이 없는 도메인이면 사용자에게 신규 생성 확인:
-> "ecommerce 글로벌 사전이 없습니다. 새로 만들까요? (~/.claude/memory/domain-dictionaries/ecommerce.md)"
+> "ecommerce 글로벌 사전이 없습니다. 새로 만들까요? (~/.agent-memory/domain-dictionaries/ecommerce.md)"
 
 ### 5. 결과 기록
 
@@ -113,7 +113,7 @@ options:
 #### 사전 v3 최종화:
 - `docs/domain-dictionary.md` 갱신
 - `<planning_dir>/domain-dictionary-delta.md` 변경 이력 기록
-- 글로벌 반영 선택 항목 → `~/.claude/memory/domain-dictionaries/{도메인}.md`에 추가
+- 글로벌 반영 선택 항목 → `~/.agent-memory/domain-dictionaries/{도메인}.md`에 추가
 
 ### 6. Plan 반영 규칙
 

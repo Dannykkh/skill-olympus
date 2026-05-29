@@ -54,9 +54,13 @@ codemap/
 conversations/
 
 # 개인 관찰 데이터 (hooks가 자동 생성, 크로스-CLI 공유는 memory/ 유지)
+memory/.mnemo-status.md
 memory/gotchas/observations.jsonl
 memory/learned/observations.jsonl
 .skill-evolve/
+
+# Chronos runtime logs
+docs/chronos/
 
 # Claude conversation logs (auto-generated)
 .claude/conversations/

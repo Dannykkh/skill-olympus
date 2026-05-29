@@ -16,7 +16,6 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-  - AskUserQuestion
 ---
 
 # Humanizer: Remove AI Writing Patterns

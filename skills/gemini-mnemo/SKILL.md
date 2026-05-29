@@ -10,6 +10,7 @@ triggers:
   - "이전에"
   - "handoff"
   - "핸드오프"
+  - "핸즈오프"
   - "세션 저장"
   - "gemini 기억"
   - "gemini memory"
@@ -28,6 +29,7 @@ Gemini CLI 세션 간 컨텍스트 유지를 위한 장기기억 시스템입니
 ```bash
 node skills/gemini-mnemo/install.js              # 설치
 node skills/gemini-mnemo/install.js --uninstall  # 제거
+node skills/gemini-mnemo/install.js --check      # 설치 상태 점검
 ```
 
 ---

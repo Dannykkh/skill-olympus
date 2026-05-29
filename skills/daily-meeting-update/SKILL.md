@@ -14,8 +14,8 @@ Generate a daily standup/meeting update through an **interactive interview**. Ne
 
 이 스킬은 `config.json`에 설정이 필요합니다.
 
-1. `config.json`을 읽는다 (`skills/daily-meeting-update/config.json` 또는 `~/.claude/skills/daily-meeting-update/config.json`)
-2. 빈 필드가 있으면 사용자에게 AskUserQuestion으로 질문한다
+1. `config.json`을 읽는다 (`skills/daily-meeting-update/config.json` 또는 현재 CLI의 글로벌 스킬 경로)
+2. 빈 필드가 있으면 현재 CLI의 질문 방식으로 사용자에게 질문한다
 3. 답변을 `config.json`에 저장한다
 4. 이후 실행 시에는 `config.json`에서 자동으로 읽는다
 
@@ -51,7 +51,7 @@ START
 │ Phase 1: DETECT & OFFER INTEGRATIONS                │
 │ • Check: Claude Code history? gh CLI? jira CLI?     │
 │ • Claude Code → Pull yesterday's session digest     │
-│   → User selects relevant items via multiSelect     │
+│   → User selects relevant items by numbered list    │
 │ • GitHub/Jira → Ask user, pull if approved          │
 │ • Pull data NOW (before interview)                  │
 ├─────────────────────────────────────────────────────┤
@@ -79,7 +79,7 @@ Check for available integrations **silently** (suppress errors, don't show to us
 
 | Integration | Detection |
 |-------------|-----------|
-| **Claude Code History** | `~/.claude/projects` directory exists with `.jsonl` files |
+| **Claude Code History** | Claude transcript directory exists with `.jsonl` files |
 | **Codex/Gemini Project History** | `conversations/*-codex.md` or `conversations/*-gemini.md` exists |
 | GitHub CLI | `gh auth status` succeeds |
 | Jira CLI | `jira` command exists |
@@ -159,18 +159,18 @@ Options:
 
 ```bash
 python3 skills/daily-meeting-update/scripts/claude_digest.py --format json
-# fallback if running from an installed Claude skill location:
+# fallback if running from an installed global skill location:
 python3 ~/.claude/skills/daily-meeting-update/scripts/claude_digest.py --format json
 ```
 
-**Then present sessions with multiSelect:**
+**Then present sessions with numbered selection:**
 
 Use a structured multi-select UI if the runtime provides one; otherwise list the items in plain text and ask the user to reply with the relevant numbers:
 
 ```
 "Here are your Claude Code sessions from yesterday. Select the ones relevant to your standup:"
 
-Options (multiSelect):
+Options:
 - "Fix authentication bug (backend-api)"
 - "Implement OAuth flow (backend-api)"
 - "Update homepage styles (frontend-app)"
@@ -182,13 +182,13 @@ Options (multiSelect):
 **Do NOT run digest script when:**
 - User explicitly says "No" to Claude Code history
 - User says they'll provide everything manually
-- `~/.claude/projects` directory doesn't exist
+- Claude transcript directory doesn't exist
 
 **Codex/Gemini fallback:**
 
 - If Claude history is unavailable but `conversations/*-codex.md` or `conversations/*-gemini.md` exists, read the previous day's project conversation file directly.
 - Summarize relevant work items from that file in plain text.
-- Ask the user to confirm which items belong in the standup; do not require multiSelect UI.
+- Ask the user to confirm which items belong in the standup; do not require structured multi-selection UI.
 
 **If digest script fails:**
 - Fallback: Skip Claude Code integration silently, proceed with interview

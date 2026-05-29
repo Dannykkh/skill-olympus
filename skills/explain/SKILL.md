@@ -26,7 +26,7 @@ description: 코드를 비유 기반으로 설명하고 Mermaid 다이어그램�
 /explain "결제 흐름"
 ```
 
-기능 단위인 경우 Task(subagent_type="Explore")로 관련 파일을 먼저 탐색.
+기능 단위인 경우 현재 CLI의 background subagent/worker가 있으면 관련 파일을 먼저 탐색하게 하고, 없으면 메인 컨텍스트에서 `rg`/`Read`로 직접 탐색.
 
 ### 3. 줌아웃 모드 (Zoom-out)
 "이게 뭘 하는지"가 아니라 "이게 **어디에 속하는지**"가 궁금할 때.

@@ -15,9 +15,10 @@ This document defines the research decision and execution flow.
 │    - Academic research? (papers, algorithms, approaches)    │
 │    - Competitor analysis? (features, menus, UX patterns)    │
 │                                                             │
-│  Step 5: Execute research (parallel if multiple selected)   │
-│    - Subagents return results                               │
-│    - Main Claude combines and writes research.md     │
+│  Step 5: Execute research (bounded batches)                  │
+│    - Subagents write one file each                           │
+│    - Subagents return only short summaries                   │
+│    - Main Claude combines files into research.md             │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -25,6 +26,15 @@ This document defines the research decision and execution flow.
 ---
 
 ## Step 4: Research Decision
+
+### Question Tool Compatibility
+
+Use plain text numbered choices by default. Use a structured question tool only when the current CLI supports the exact schema.
+
+- Structured calls: max 3 questions per call, each with 2-3 short options.
+- Do not use structured multi-selection fields unless the CLI explicitly supports them.
+- For multiple selections, show a numbered checklist and ask the user to reply with multiple numbers.
+- If `Invalid tool parameters` occurs once, do not retry the same payload; fall back to plain text.
 
 ### 4.1 Read and Analyze the Spec File
 
@@ -46,7 +56,7 @@ If the spec is vague, fall back to generic options:
 
 ### 4.2 Ask About Codebase Research
 
-Use AskUserQuestion:
+Ask as a bounded choice. Use a structured question tool only if supported:
 
 ```
 question: "Is there existing code I should research first?"
@@ -60,7 +70,7 @@ options:
 
 ### 4.3 Ask About GitHub Similar Projects
 
-Use AskUserQuestion:
+Ask as a bounded choice. Use a structured question tool only if supported:
 
 ```
 question: "Should I search GitHub for similar projects to use as reference?"
@@ -79,12 +89,12 @@ If user selects yes, auto-generate search queries from spec:
 
 ### 4.4 Ask About Web Research
 
-Present the derived topics as multi-select options:
+Present the derived topics as a numbered checklist by default. Use structured multi-selection only if the current CLI explicitly supports it:
 
 ```
 question: "Should I research current best practices for any of these topics?"
 header: "Web Research"
-multiSelect: true
+selection: "multiple numbers by default; structured multiple-selection only if supported"
 options:
   - label: "{derived_topic_1}"
     description: "Based on spec mention of {X}"
@@ -98,7 +108,7 @@ If user selects "Other", follow up to get custom topics.
 
 ### 4.5 Ask About Academic Paper Research
 
-Use AskUserQuestion:
+Ask as a bounded choice. Use a structured question tool only if supported:
 
 ```
 question: "관련 논문이나 알고리즘을 조사할까요?"
@@ -117,7 +127,7 @@ If user selects yes, auto-generate search queries from spec:
 
 ### 4.6 Ask About Competitor Analysis
 
-Use AskUserQuestion:
+Ask as a bounded choice. Use a structured question tool only if supported:
 
 ```
 question: "경쟁 서비스/제품을 조사할까요?"
@@ -129,7 +139,7 @@ options:
     description: "경쟁 분석 불필요"
 ```
 
-If user selects yes, ask follow-up:
+If user selects yes, ask follow-up as plain text or a supported bounded choice:
 
 ```
 question: "알고 있는 경쟁 서비스가 있나요? (없으면 자동 검색합니다)"
@@ -149,31 +159,54 @@ If user selects no codebase AND no web research AND no GitHub research, skip ste
 
 ## Step 5: Execute Research
 
-### Critical Pattern: Subagents Return Results, Parent Writes Files
+### Critical Pattern: File-First, Bounded Research
 
-**DO NOT** have subagents write to files directly. This avoids race conditions and keeps control with the main context.
+**DO NOT** have research subagents return full findings to the parent context.
+
+Each research subagent writes to a unique file under `<planning_dir>/research/` and returns only a 1-2 line summary. This prevents the Step 5 failure mode where two large research agents return 100k+ tokens at once and the API responds with `Overloaded`.
+
+Race conditions are avoided by assigning one output file per research type:
+- `research/codebase.md`
+- `research/web.md`
+- `research/github.md`
+- `research/academic.md`
+- `research/competitors.md`
+
+The parent remains responsible for reading those files and writing the combined `<planning_dir>/research.md`.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  PARALLEL RESEARCH EXECUTION                                │
+│  BOUNDED RESEARCH EXECUTION                                 │
 │                                                             │
-│  Task 1: Explore ──────────┐                                │
-│    (codebase patterns)     │                                │
-│                            │                                │
-│  Task 2: Explore ──────────┤                                │
-│    (web best practices)    ├──→ Main Claude combines       │
-│                            │    and writes single          │
-│  Task 3: Explore ──────────┤    research.md         │
-│    (GitHub similar projects)│                                │
-│                            │                                │
-│  Task 4: Explore ──────────┤                                │
-│    (academic papers)       │                                │
-│                            │                                │
-│  Task 5: Explore ──────────┘                                │
-│    (competitor analysis)                                    │
+│  Batch 1 (max 2 tasks):                                     │
+│    Task: codebase → research/codebase.md                    │
+│    Task: web      → research/web.md                         │
+│                                                             │
+│  Batch 2 (max 2 tasks):                                     │
+│    Task: GitHub   → research/github.md                      │
+│    Task: academic → research/academic.md                    │
+│                                                             │
+│  Batch 3 (if needed):                                       │
+│    Task: competitors → research/competitors.md              │
+│                                                             │
+│  Parent combines research/*.md → research.md                │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Resource Budgets
+
+Apply these limits to every Step 5 research agent:
+
+| Research type | Hard budget |
+|---------------|-------------|
+| Codebase | Max 10 tool calls; inspect only entrypoints, config, tests, and 5-8 representative files |
+| Web | Max 3 topics; max 2 authoritative sources per topic |
+| GitHub | Max 3 repos; max 6 source files total across repos |
+| Academic | Max 5 sources; prioritize surveys/benchmarks over broad search |
+| Competitors | Max 5 competitors; pricing/features/navigation only |
+
+If the agent needs more time, it must write "Follow-up needed" in its output file instead of expanding scope.
 
 ### 5.1 Codebase Research (if selected)
 
@@ -192,8 +225,14 @@ Task tool:
 
     Focus areas from user: {user_specified_areas_if_any}
 
-    Return your findings as markdown.
-    DO NOT write to any files. Return findings in your response.
+    Resource budget:
+    - Max 10 tool calls.
+    - Inspect only entrypoints, config, tests, and 5-8 representative files.
+    - Prefer rg/Glob over broad file reads.
+
+    Write your full findings to: <planning_dir>/research/codebase.md
+    Return only: "codebase.md written. Patterns: N, Risks: N, Follow-up: yes/no"
+    DO NOT return the full findings in your response.
 ```
 
 ### 5.2 Web Research (if topics selected)
@@ -214,8 +253,14 @@ Task tool:
     3. Cross-validate information across sources
     4. Synthesize findings with clear recommendations
 
-    Return your findings as markdown. Always cite sources with URLs.
-    DO NOT write to any files. Return findings in your response.
+    Resource budget:
+    - Research max 3 topics.
+    - Use max 2 authoritative sources per topic.
+    - Prefer official docs, standards, and primary sources over blog chains.
+
+    Write your full findings to: <planning_dir>/research/web.md
+    Return only: "web.md written. Topics: N, Sources: N, Follow-up: yes/no"
+    DO NOT return the full findings in your response.
 ```
 
 ### 5.3 GitHub Similar Projects (if selected)
@@ -251,7 +296,12 @@ Task tool:
     5. Analyze: project structure, key design decisions, tech choices, code patterns
     6. Note: star count, last update, maturity level
 
-    Select top 3-5 most relevant projects. For each, provide:
+    Resource budget:
+    - Select top 3 most relevant projects.
+    - Read max 6 source files total across all repos.
+    - Do not clone repositories unless the user explicitly asked for deep repository analysis.
+
+    For each selected project, provide:
     - **Repo**: owner/name (URL)
     - **Stars / Last updated**: popularity and freshness
     - **Relevance**: why this project is useful as reference
@@ -261,8 +311,9 @@ Task tool:
     - **Key Code**: 참고할 만한 핵심 코드 패턴 (파일 경로 + 요약)
     - **Takeaways**: specific ideas we can adopt or avoid
 
-    Return your findings as markdown. Always include repo URLs.
-    DO NOT write to any files. Return findings in your response.
+    Write your full findings to: <planning_dir>/research/github.md
+    Return only: "github.md written. Repos: N, Follow-up: yes/no"
+    DO NOT return the full findings in your response.
 ```
 
 ### 5.4 Academic Paper Research (if selected)
@@ -299,8 +350,13 @@ Task tool:
     - Trade-offs between different approaches (speed vs accuracy, simplicity vs features)
     - Recommended implementation order (which to try first)
 
-    Return your findings as markdown.
-    DO NOT write to any files. Return findings in your response.
+    Resource budget:
+    - Max 5 sources.
+    - Prefer surveys, benchmark papers, official docs, and reproducible implementations.
+
+    Write your full findings to: <planning_dir>/research/academic.md
+    Return only: "academic.md written. Sources: N, Follow-up: yes/no"
+    DO NOT return the full findings in your response.
 ```
 
 ### 5.5 Competitor Analysis (if selected)
@@ -347,30 +403,72 @@ Task tool:
     - UX patterns we should adopt
     - UX anti-patterns we should avoid
 
-    Return your findings as markdown.
-    DO NOT write to any files. Return findings in your response.
+    Resource budget:
+    - Max 5 competitors.
+    - Capture pricing, features, navigation, and positioning.
+    - Do not deep-dive reviews unless the user selected competitor analysis as the primary research path.
+
+    Write your full findings to: <planning_dir>/research/competitors.md
+    Return only: "competitors.md written. Competitors: N, Follow-up: yes/no"
+    DO NOT return the full findings in your response.
 ```
 
-### 5.6 Parallel Execution
+### 5.6 Bounded Execution
 
-If multiple research types are needed, launch **all Task tools in a single message**.
+Create `<planning_dir>/research/` before launching tasks.
+
+If multiple research types are needed, launch tasks in bounded batches:
+- Default max: **2 concurrent research tasks**
+- If the previous batch hits `Overloaded`, rate limit, or timeout: retry the failed item once as a **single task** with half the budget
+- If it fails again: write a short warning stub to that research file and continue with successful research
+
+Do not launch all five research tasks in one message.
 
 ```
-# Single message with multiple tool calls:
+# Batch 1:
 [Task tool call 1: Explore subagent for codebase]
 [Task tool call 2: Explore subagent for web research]
+
+# Batch 2:
 [Task tool call 3: Explore subagent for GitHub projects]
 [Task tool call 4: Explore subagent for academic papers]
+
+# Batch 3:
 [Task tool call 5: Explore subagent for competitor analysis]
 ```
 
-Wait for all to complete, then combine results.
+Wait for a batch to complete before launching the next batch.
 
-### 5.5 Combine Results and Write File
+### 5.7 Combine Results and Write File
 
-After collecting results from all subagents, combine them into `<planning_dir>/research.md`.
+After collecting subagent summaries, read the files under `<planning_dir>/research/` and combine them into `<planning_dir>/research.md`.
 
-Structure the file however makes sense for the findings.
+Recommended structure:
+
+```markdown
+# Research
+
+## Summary
+- {top finding}
+
+## Codebase Research
+{content from research/codebase.md or "Skipped"}
+
+## Web Research
+{content from research/web.md or "Skipped"}
+
+## GitHub References
+{content from research/github.md or "Skipped"}
+
+## Academic / Algorithm Research
+{content from research/academic.md or "Skipped"}
+
+## Competitor Analysis
+{content from research/competitors.md or "Skipped"}
+
+## Open Questions
+- {follow-up items from subagent files}
+```
 
 ---
 
@@ -380,7 +478,8 @@ Structure the file however makes sense for the findings.
 |------|----------|
 | Spec file is vague | Present generic options based on detected language/framework |
 | User selects no research | Skip step 5, proceed to step 6 (interview) |
-| One subagent fails | Log warning, write file with only successful research |
-| All subagents fail | Log error, ask user if they want to retry or proceed |
+| One subagent fails | Retry once as a single task with half budget; if still failing, write warning stub and continue |
+| `API Error: Overloaded` | Wait briefly, reduce concurrency to 1, retry the failed research item once |
+| All subagents fail | Ask user whether to retry with codebase-only research or proceed without research |
 | Only one research type | Run single subagent, write file with just that content |
 | GitHub search returns no relevant results | Note in research file, not a blocker |

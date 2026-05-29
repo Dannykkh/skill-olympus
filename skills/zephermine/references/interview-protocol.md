@@ -1,6 +1,6 @@
 # Interview Protocol
 
-The interview runs directly in this skill (not subagent) because `AskUserQuestion` only works in main conversation context.
+The interview runs directly in this skill (not subagent) because user-facing questions must stay in the main conversation context.
 
 ## Context
 
@@ -26,12 +26,28 @@ If research was done, use it to:
 
 ## Technique
 
-- Use AskUserQuestion with focused questions (2-4 per round)
+- Ask focused questions in small batches (max 3 questions per turn)
+- Use plain text numbered questions for open-ended interview prompts
+- Use a structured question tool only for short bounded choices
 - Ask open-ended questions, not yes/no
 - Don't ask obvious questions already in spec
 - Dig deeper when answers reveal complexity
 - Summarize periodically to confirm understanding
 - **쉬운 말로 질문하기**: 전문용어를 쓸 때는 반드시 괄호 안에 풀어서 설명을 붙여라. 사용자가 개발자가 아닐 수 있다. 초등학생도 이해할 수 있는 수준으로 질문하되, 전문성은 유지하라.
+
+## Structured Tool Compatibility
+
+`Invalid tool parameters` 방지를 위해 인터뷰에서는 다음 규칙을 지킵니다:
+
+| 상황 | 처리 |
+|------|------|
+| 자유 답변이 필요한 질문 | 구조화 도구를 쓰지 말고 일반 텍스트로 질문 |
+| 질문이 4개 이상 | 2-3개씩 나누어 순차 질문 |
+| 구조화 도구 사용 | 한 번에 최대 3개 question, 각 question은 2-3개 선택지만 사용 |
+| 다중 선택이 필요한 선택 | CLI가 명시 지원할 때만 구조화 UI를 사용. 아니면 번호 목록으로 묻고 복수 번호 답변을 받음 |
+| `Invalid tool parameters` 1회 발생 | 같은 도구 재시도 금지. 즉시 일반 텍스트 질문으로 전환 |
+
+예: "핵심 4가지를 묻습니다"는 구조화 도구 한 번으로 호출하지 않습니다. `1-2번`을 먼저 묻고 답변 후 `3-4번`을 묻거나, 일반 텍스트 번호 목록으로 한 번에 제시합니다.
 
 ## 질문 작성 규칙
 
@@ -115,7 +131,7 @@ Gate를 통과하지 않으면 다음 Phase로 진행하지 않습니다.
 Phase C 질문이 끝나면, 파악한 내용을 **구조화된 요약**으로 정리하여 사용자에게 확인:
 
 ```
-AskUserQuestion:
+Plain confirmation question (preferred; use a structured tool only if it supports a long prompt plus two short options):
 "지금까지 파악한 구현 전제를 정리했습니다:
 
 📌 목표: {궁극적 목표}
@@ -169,7 +185,7 @@ AskUserQuestion:
 Phase P 질문이 끝나면, 핵심 문제를 **1~3개로 수렴**하여 사용자에게 확인:
 
 ```
-AskUserQuestion:
+Plain confirmation question (preferred; use a structured tool only if it supports a long prompt plus two short options):
 "인터뷰를 통해 파악한 핵심 문제입니다:
 
 | # | 핵심 문제 | 영향 | 우선순위 |
@@ -239,7 +255,7 @@ Phase S는 프로젝트 특성에 따라 해당하는 카테고리만 선택적�
 Phase S 질문이 끝나면, 솔루션 방향을 **요약**하여 사용자에게 확인:
 
 ```
-AskUserQuestion:
+Plain confirmation question (preferred; use a structured tool only if it supports a long prompt plus two short options):
 "솔루션 방향을 정리했습니다:
 
 📌 차별화: {차별화 포인트}

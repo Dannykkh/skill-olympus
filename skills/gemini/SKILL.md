@@ -37,7 +37,7 @@ pkill -9 -f "gemini.*gemini-3.1-pro-preview"
 
 ## Running a Task
 
-1. Ask the user (via `AskUserQuestion`) which model to use in a **single prompt**. Available models:
+1. Ask the user which model to use in a **single prompt**, using the current CLI's question method. Available models:
    - `gemini-3.1-pro-preview` ⭐ (flagship: refined Gemini 3 Pro with better thinking, improved token efficiency, more grounded responses)
    - `gemini-3-flash-preview` (Flash: frontier-class performance at reduced cost — note: still on 3, not 3.1)
    - `gemini-3.1-flash-lite-preview` (Flash Lite: entry-level frontier, fastest 3.x option)
@@ -151,14 +151,14 @@ gemini -m gemini-3.1-pro-preview --approval-mode default \
 - Gemini CLI sessions are typically one-shot or interactive. Unlike Codex, there's no built-in resume functionality.
 - For follow-up analysis, start a new Gemini session with context from previous findings.
 - When proposing follow-up actions, restate the chosen model and approval mode.
-- Use `AskUserQuestion` after each Gemini command to confirm next steps or gather clarifications.
+- Use the current CLI's question method after each Gemini command to confirm next steps or gather clarifications.
 
 ## Error Handling
 
 - Stop and report failures whenever `gemini --version` or a Gemini command exits non-zero.
 - Request direction before retrying failed commands.
-- Before using high-impact flags (`--approval-mode yolo`, `-y`, `--sandbox`), ask the user for permission using `AskUserQuestion` unless already granted.
-- When output includes warnings or partial results, summarize them and ask how to adjust using `AskUserQuestion`.
+- Before using high-impact flags (`--approval-mode yolo`, `-y`, `--sandbox`), ask the user for permission using the current CLI's question method unless already granted.
+- When output includes warnings or partial results, summarize them and ask how to adjust using the current CLI's question method.
 
 ## Troubleshooting Hung Gemini Processes
 

@@ -1,6 +1,6 @@
 ---
 name: workpm
-description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행. Claude는 native TeamCreate, Codex/Gemini는 orchestrator MCP 경로를 사용합니다.
+description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행. Claude는 native Agent Teams, Codex/Gemini는 orchestrator MCP 경로를 사용합니다.
 triggers:
   - "workpm"
   - "daedalus"
@@ -30,7 +30,7 @@ auto_apply: false
 
 | CLI | 실행 경로 | 기준 파일 |
 |-----|----------|----------|
-| Claude Code | Native Agent Teams (`TeamCreate`/`SendMessage`) | `skills/orchestrator/commands/workpm.md` |
+| Claude Code | Native Agent Teams | `skills/orchestrator/commands/workpm.md` |
 | Codex | Orchestrator MCP PM/Worker | `skills/orchestrator/commands/workpm-mcp.md` |
 | Gemini | Orchestrator MCP PM/Worker | `skills/orchestrator/commands/workpm-mcp.md` |
 
@@ -62,7 +62,7 @@ Codex/Gemini MCP 경로에서는 같은 의도를 `orchestrator_detect_providers
 1. **사전 존재 확인**: `docs/domain-dictionary.md` 탐색
 2. **있으면**: 컨텍스트로 로드, 모든 후속 Phase에 전달
 3. **없으면 즉석 생성** (간이 모드):
-   - 글로벌 사전(`~/.claude/memory/domain-dictionaries/{도메인}.md`) 후보 용어를 사용자에게 multiSelect 시드 (있으면)
+   - 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능) 후보 용어를 번호 목록으로 시드 (있으면)
    - 사용자 지시문에서 핵심 용어 5~10개 추출
    - 사용자 1회 확인 후 마스터 사전 v1 생성
    - 이후 시공 중 새 용어 발견 시 사전 자동 갱신 (델타 없이 마스터 직접)

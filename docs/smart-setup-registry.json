@@ -326,7 +326,6 @@
     { "id": "validate-api", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify"], "priority": "optional" },
     { "id": "save-response", "tags": ["*"], "priority": "recommended" },
     { "id": "orchestrator-detector", "tags": ["*"], "priority": "optional" },
-    { "id": "loop-stop", "tags": ["*"], "priority": "optional" },
-    { "id": "ddingdong-noti", "tags": ["*"], "priority": "optional" }
+    { "id": "loop-stop", "tags": ["*"], "priority": "optional" }
   ]
 }

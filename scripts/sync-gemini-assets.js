@@ -79,6 +79,32 @@ function copyDir(src, dest, skipNodeModules = false) {
   fs.cpSync(src, dest, { recursive: true, force: true, filter });
 }
 
+function removeDestEntriesMissingFromSource(src, dest, skipNodeModules = false) {
+  if (!fs.existsSync(dest)) return;
+
+  for (const entry of fs.readdirSync(dest, { withFileTypes: true })) {
+    const destPath = path.join(dest, entry.name);
+    if (skipNodeModules && isInsideNodeModules(dest, destPath)) continue;
+
+    const srcPath = path.join(src, entry.name);
+    if (!fs.existsSync(srcPath)) {
+      safeRm(destPath);
+      continue;
+    }
+
+    const srcStat = fs.statSync(srcPath);
+    const destStat = fs.statSync(destPath);
+    if (srcStat.isDirectory() && destStat.isDirectory()) {
+      removeDestEntriesMissingFromSource(srcPath, destPath, skipNodeModules);
+      continue;
+    }
+
+    if (srcStat.isDirectory() !== destStat.isDirectory()) {
+      safeRm(destPath);
+    }
+  }
+}
+
 function listDirectories(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
   return fs
@@ -90,10 +116,9 @@ function listDirectories(dirPath) {
 
 function installDir(src, dest) {
   const skipNodeModules = hasNestedNodeModules(src) && fs.existsSync(dest);
-  if (!skipNodeModules) {
-    safeRm(dest);
-  }
+  ensureDir(dest);
   copyDir(src, dest, skipNodeModules);
+  removeDestEntriesMissingFromSource(src, dest, skipNodeModules);
 }
 
 function collectAgentFiles() {
@@ -175,7 +200,27 @@ function syncSkills(destDir, skillNames, mode) {
       safeRm(dest);
       continue;
     }
+    // Keep SKILL.md present as early as possible. Gemini/Codex-style skill
+    // loaders may scan while this sync is running.
+    const skillMd = path.join(src, "SKILL.md");
+    if (fs.existsSync(skillMd)) {
+      ensureDir(dest);
+      fs.copyFileSync(skillMd, path.join(dest, "SKILL.md"));
+    }
     installDir(src, dest);
+  }
+}
+
+function validateSkillInstall(destDir, skillNames) {
+  const missing = [];
+  for (const skillName of skillNames) {
+    const skillMd = path.join(destDir, skillName, "SKILL.md");
+    if (!fs.existsSync(skillMd)) {
+      missing.push(skillMd);
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(`Missing SKILL.md after sync:\n${missing.join("\n")}`);
   }
 }
 
@@ -442,6 +487,9 @@ function run() {
   }
 
   syncSkills(targets.geminiSkills, skillNames, mode);
+  if (mode !== "unlink") {
+    validateSkillInstall(targets.geminiSkills, skillNames);
+  }
   syncAgents(targets.geminiAgents, agentFiles, mode);
   syncHooks(targets.geminiHooks, hookFiles, mode);
 

@@ -200,7 +200,7 @@ npm run build
 | **Codex** | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
 | **Gemini** | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
 
-- `workpm`: Claude Agent Teams 활용. TeamCreate/SendMessage로 팀원 관리
+- `workpm`: Claude Agent Teams 활용. Native Agent Teams 기능으로 팀원 관리
 - `workpm-mcp`: orchestrator_* MCP 도구만 사용. 모든 CLI에서 동작
 
 ### PM이 하는 일 (v2)
@@ -379,33 +379,23 @@ orchestrator_claim_task({task_id: "auth-api"})
 
 #### Step 3: 세부 TODO 작성
 
-**중요**: Worker는 큰 태스크를 받으면 Claude Code 내장 TaskCreate로 세부 계획을 세웁니다.
+**중요**: Worker는 큰 태스크를 받으면 현재 CLI의 로컬 TODO/계획 관리 방식으로 세부 계획을 세웁니다.
 
 ```
-TaskCreate({
-  subject: "JWT 시크릿 환경변수 설정",
-  description: ".env에 JWT_SECRET, JWT_EXPIRES_IN 추가"
-})
+TODO: JWT 시크릿 환경변수 설정
+- .env에 JWT_SECRET, JWT_EXPIRES_IN 추가
 
-TaskCreate({
-  subject: "generateToken 함수 구현",
-  description: "src/auth/jwt.ts - 액세스 토큰 생성"
-})
+TODO: generateToken 함수 구현
+- src/auth/jwt.ts - 액세스 토큰 생성
 
-TaskCreate({
-  subject: "verifyToken 함수 구현",
-  description: "src/auth/jwt.ts - 토큰 검증 및 디코딩"
-})
+TODO: verifyToken 함수 구현
+- src/auth/jwt.ts - 토큰 검증 및 디코딩
 
-TaskCreate({
-  subject: "로그인 엔드포인트 구현",
-  description: "POST /auth/login - 이메일/비밀번호 검증 후 토큰 반환"
-})
+TODO: 로그인 엔드포인트 구현
+- POST /auth/login - 이메일/비밀번호 검증 후 토큰 반환
 
-TaskCreate({
-  subject: "토큰 갱신 엔드포인트 구현",
-  description: "POST /auth/refresh - 리프레시 토큰으로 새 액세스 토큰"
-})
+TODO: 토큰 갱신 엔드포인트 구현
+- POST /auth/refresh - 리프레시 토큰으로 새 액세스 토큰
 ```
 
 #### Step 4: 파일 락 획득

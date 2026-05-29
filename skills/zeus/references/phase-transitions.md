@@ -54,7 +54,7 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 ## 전환 규칙
 
 핵심 원칙: 모든 Phase는 **skip 금지**, 실패 시에도 폴백 경로로 최소 1회 실행 시도.
-질문 처리 원칙: AskUserQuestion은 호출하지 않고 `(Recommended)` 옵션 우선 자동선택, 미존재 시 fallback 사용.
+질문 처리 원칙: 인터랙티브 질문 도구는 호출하지 않고 `(Recommended)` 옵션 우선 자동선택, 미존재 시 fallback 사용.
 
 ### Phase 0 → Phase 1 (Parsing → Planning)
 
@@ -79,7 +79,7 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 - `sections/` 디렉토리에 1개 이상 섹션 파일 존재
 
 **전환 액션:**
-1. 구현 도구 자동 선택 (TeamCreate 가능 → agent-team, 불가 → daedalus)
+1. 구현 도구 자동 선택 (병렬 팀/서브에이전트 가능 → agent-team 계열, 불가 → daedalus)
 2. sections/index.md 파싱 → task 생성
 
 **실패 시:**
@@ -198,7 +198,7 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 - Sections: 6개 생성
 
 ## [HH:MM:SS] Phase 2 — Implementation
-- Path: agent-team (TeamCreate 성공)
+- Path: agent-team 계열 (병렬 팀/서브에이전트 사용 가능)
 - Tasks: 6개 생성
 - Wave 1: 3개 → ✅ 완료
 - Wave 2: 3개 → ✅ 완료 (1개 재시도)

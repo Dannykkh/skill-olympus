@@ -20,7 +20,6 @@ allowed-tools:
   - Glob
   - Grep
   - Bash
-  - AskUserQuestion
 ---
 
 # Memory Distill — observations.jsonl → 정제 .md

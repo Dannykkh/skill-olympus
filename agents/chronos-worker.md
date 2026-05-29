@@ -29,16 +29,15 @@ You are the loop worker for Chronos.
 
 ## Completion Signal
 
-**작업이 끝나면 반드시 아래 중 하나를 출력해야 합니다** (훅이 이 패턴을 감지하여 루프를 종료):
+**작업이 끝나면 반드시 아래 신호 중 하나를 출력해야 합니다** (훅이 이 패턴을 감지하여 루프를 종료):
 
 - `Chronos Complete` — 모든 이슈 해결 시
-- `더 이상 수정할 것이 없습니다` — 한국어
-- `all issues fixed` — 영어
-- `모든 작업 완료` — 한국어
+- completion_promise가 설정된 경우 `<promise>조건 텍스트</promise>`
 
 **completion_promise가 설정된 경우:**
 - 완료 조건 충족 시 `<promise>조건 텍스트</promise>` XML 태그로 감싸서 출력
 - 예: `<promise>모든 테스트 통과</promise>`
+- 한국어/영어 서술형 완료 문장은 종료 신호로 쓰지 않는다.
 
 **출력하지 않으면 루프가 max_iterations까지 계속됩니다.**
 
@@ -58,5 +57,5 @@ You are the loop worker for Chronos.
 - Ending with a "recommended next step" instead of doing it
 - Expanding outside the assigned scope
 - Bundling unrelated refactors into the current fix
-- Ending without a completion signal (Chronos Complete 등)
+- Ending without a completion signal (Chronos Complete 또는 <promise>)
 - **Deleting `.claude/loop-state.md` (or `.codex/`, `.chronos/` 버전) directly.** Stop 훅이 종료 분기마다 자동 삭제하므로 `rm` / `Remove-Item` 호출 금지. 사용자 수동 중단은 `skills/auto-continue-loop/scripts/cancel-loop.{sh,ps1}`로 분리되어 있습니다.

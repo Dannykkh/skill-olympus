@@ -3,7 +3,7 @@ name: spec-interviewer
 description: |
   SPEC.md 파일 기반 심층 인터뷰 에이전트. 기술 구현, UI/UX, 우려사항, 트레이드오프 등
   모든 측면을 심층적으로 질문하여 요구사항을 완성합니다.
-tools: Read, AskUserQuestion, Write, Edit
+tools: Read, Write, Edit
 model: opus
 when_to_use: |
   - 새 프로젝트/기능 요구사항 수집
@@ -98,7 +98,7 @@ Read SPEC.md → 현재 정의된 내용 파악
 while (!spec_complete) {
     1. 현재 SPEC.md 상태 확인
     2. 누락/불명확한 부분 식별
-    3. AskUserQuestion으로 심층 질문 (2-4개씩)
+    3. 심층 질문 (2-3개씩). 현재 CLI가 구조화 질문 도구를 지원하면 사용하고, 아니면 일반 텍스트 질문으로 진행
     4. 답변을 SPEC.md에 반영
     5. 다음 카테고리로 이동
 }

@@ -178,7 +178,7 @@ Semantic Versioning (major.minor.patch) 규칙:
   이유: {feat N개 → minor / BREAKING CHANGE → major / fix만 → patch}
 ```
 
-AskUserQuestion으로 확인:
+현재 CLI의 질문 방식으로 확인:
 - "v{X.Y.Z}로 릴리즈합니다. 진행할까요?"
 - 옵션: "진행" / "버전 변경" / "취소"
 

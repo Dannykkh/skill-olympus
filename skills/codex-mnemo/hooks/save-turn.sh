@@ -29,19 +29,6 @@ log_mnemo_error() {
     debug_log "ERROR [$ctx] $msg"
 }
 
-run_notification_hook() {
-    local title="${1:-Codex CLI}"
-    local message="${2:-작업이 완료되었습니다}"
-    local notify_hook="$HOME/.codex/hooks/ddingdong-noti.sh"
-    if [ ! -f "$notify_hook" ]; then
-        return 0
-    fi
-
-    if ! AGENT_NOTIFY_TITLE="$title" AGENT_NOTIFY_MESSAGE="$message" bash "$notify_hook"; then
-        debug_log "notify-chain-failed: $notify_hook"
-    fi
-}
-
 get_node_cmd() {
     if command -v node >/dev/null 2>&1; then
         command -v node
@@ -411,23 +398,6 @@ fi
 
 debug_log "saved: baseDir=$BASE_DIR, file=$CONV_FILE, userLen=${#USER_TEXT}, respLen=${#RESPONSE}, turnId=$TURN_ID"
 HOOK_SUMMARY="$(run_hook_bridge "$BASE_DIR")"
-HOOK_WARNINGS="$(summary_field "$HOOK_SUMMARY" "warnings" | tr -d '\r\n')"
-HOOK_ERRORS="$(summary_field "$HOOK_SUMMARY" "errors" | tr -d '\r\n')"
-HOOK_WARNINGS="${HOOK_WARNINGS:-0}"
-HOOK_ERRORS="${HOOK_ERRORS:-0}"
-
-NOTIFY_TITLE="Codex CLI"
-NOTIFY_MESSAGE="작업이 완료되었습니다"
-if [ "$HOOK_ERRORS" -gt 0 ] 2>/dev/null; then
-    NOTIFY_TITLE="Codex Hook Alert"
-    NOTIFY_MESSAGE="작업 완료, hook 오류 ${HOOK_ERRORS}개"
-    if [ "$HOOK_WARNINGS" -gt 0 ] 2>/dev/null; then
-        NOTIFY_MESSAGE="${NOTIFY_MESSAGE} / 경고 ${HOOK_WARNINGS}개"
-    fi
-elif [ "$HOOK_WARNINGS" -gt 0 ] 2>/dev/null; then
-    NOTIFY_MESSAGE="작업 완료, hook 경고 ${HOOK_WARNINGS}개"
-fi
-run_notification_hook "$NOTIFY_TITLE" "$NOTIFY_MESSAGE"
 
 # ─────────────────────────────────────────────
 # Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)

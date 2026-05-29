@@ -27,22 +27,31 @@ auto_apply: false
 
 ## 첫 실행 시 동작
 
-스킬 첫 실행 시 글로벌 폴더 `~/.claude/memory/domain-dictionaries/`를 자동 생성하고 `references/global-readme-template.md`를 README.md로 복사합니다. 사용자가 `install.bat`/`install.sh`를 다시 실행하지 않아도 됩니다.
+스킬 첫 실행 시 글로벌 폴더를 자동 생성하고 `references/global-readme-template.md`를 README.md로 복사합니다. 기본 위치는 `~/.agent-memory/domain-dictionaries/`이며, `AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수가 있으면 그 값을 우선합니다. 사용자가 `install.bat`/`install.sh`를 다시 실행하지 않아도 됩니다.
 
 처음에는 글로벌 도메인 파일들이 비어있습니다(`ecommerce.md`, `healthcare.md` 등). 시간이 흐르면서 사용자의 zephermine 종료 시 명시 선택으로 누적됩니다 — 의도된 설계.
+
+## 질문 도구 호환성
+
+CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 피하기 위해 기본은 일반 텍스트 번호 목록입니다.
+
+- 구조화 질문 도구는 짧은 단일/소수 선택에만 사용합니다.
+- 한 번에 최대 3개 질문, 질문당 2-3개 짧은 선택지만 보냅니다.
+- 다중 선택은 기본적으로 "1, 3, 5처럼 번호로 답해주세요" 방식으로 받습니다. 구조화 다중 선택 필드는 현재 CLI가 명시 지원할 때만 사용합니다.
+- 도구 오류가 한 번 나면 같은 payload를 재시도하지 말고 일반 텍스트 질문으로 전환합니다.
 
 ## 사전의 두 종류 (글로벌 + 프로젝트)
 
 | 종류 | 위치 | 역할 |
 |------|------|------|
-| **글로벌** | `~/.claude/memory/domain-dictionaries/{도메인}.md` | 사용자 자산 — 자주 다루는 도메인의 누적 용어 (참고용 씨앗) |
+| **글로벌** | `~/.agent-memory/domain-dictionaries/{도메인}.md` | 사용자 자산 — 자주 다루는 도메인의 누적 용어 (참고용 씨앗) |
 | **프로젝트** (마스터) | `<project>/docs/domain-dictionary.md` | **진실의 원천** — 이 프로젝트만의 확정 사전 |
 | **프로젝트** (델타) | `<project>/docs/plan/{feature}/domain-dictionary-delta.md` | 이번 feature에서 추가/변경된 이력 (zephermine 산출물) |
 
 ### 글로벌 사전 폴더 구조
 
 ```
-~/.claude/memory/domain-dictionaries/
+~/.agent-memory/domain-dictionaries/
 ├── README.md          ← 사용 안내 + 도메인 분류 가이드
 ├── ecommerce.md       ← Cart, Order, SKU, Fulfillment...
 ├── healthcare.md      ← Patient, Encounter, Diagnosis...
@@ -65,7 +74,7 @@ auto_apply: false
 |-------|----------|------|
 | Phase 2 (Step 8 끝) | v1 초안 | spec.md, interview.md + 글로벌 사전 후보에서 추출. 사용자 개입 없음 |
 | Phase 3 (Step 10 끝) | v2 자동 병합 | 6개 전문가의 `## Dictionary Updates`를 자동 병합. CONFLICT는 미룸 |
-| Phase 3 (Step 11 끝) | v3 확정 | 사용자 multiSelect 결과 반영 + 글로벌 반영 명시 선택 |
+| Phase 3 (Step 11 끝) | v3 확정 | 사용자 확인 결과 반영 + 글로벌 반영 명시 선택 |
 
 **산출 위치:**
 - 마스터: `<project>/docs/domain-dictionary.md` (없으면 생성, 있으면 갱신)
@@ -125,12 +134,12 @@ auto_apply: false
 
 ### Step 4: 사용자 확인
 
-핵심 용어(상위 5~10개)를 AskUserQuestion(multiSelect)으로 확인:
+핵심 용어(상위 5~10개)를 일반 텍스트 번호 목록으로 확인합니다. 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용합니다.
 
 ```
 "아래 용어 정의를 확인해주세요. 수정이 필요한 항목을 선택하세요."
 header: "Domain Dictionary"
-multiSelect: true
+selection: "multiple numbers by default; structured multiple-selection only if supported"
 options:
   - label: "✅ Cart = 장바구니"
     description: "결제 전 임시 상품 목록. basket/bag 금지"
@@ -147,7 +156,7 @@ options:
 
 1. **마스터 갱신**: `<project>/docs/domain-dictionary.md`
 2. **델타 작성**: `<planning_dir>/domain-dictionary-delta.md` (이번 feature 변경 이력)
-3. **글로벌 반영** (사용자 선택 시): `~/.claude/memory/domain-dictionaries/{도메인}.md`에 항목 추가 + 출처 메타데이터
+3. **글로벌 반영** (사용자 선택 시): `~/.agent-memory/domain-dictionaries/{도메인}.md`에 항목 추가 + 출처 메타데이터
 
 **코드베이스 모드 (직접 호출)**: 마스터 직접 갱신만.
 
@@ -214,7 +223,7 @@ graph TD
 - ✅ Order 다듬음 확정
 
 ## Global Dictionary Sync (사용자 명시 선택)
-- ✅ Wishlist → ~/.claude/memory/domain-dictionaries/ecommerce.md
+- ✅ Wishlist → ~/.agent-memory/domain-dictionaries/ecommerce.md
 - ✅ Bundle → ecommerce.md
 - ❌ FlashSale → 프로젝트 특수성으로 보류
 ```
@@ -225,7 +234,7 @@ graph TD
 ✅ 도메인사전 갱신 완료
    - 마스터: docs/domain-dictionary.md (v3, 핵심 용어 N개)
    - 델타: <planning_dir>/domain-dictionary-delta.md
-   - 글로벌: ~/.claude/memory/domain-dictionaries/{도메인}.md (M개 추가)
+   - 글로벌: ~/.agent-memory/domain-dictionaries/{도메인}.md (M개 추가)
 
 다음 단계 (선택):
   zephermine 진행      → Step 12 Plan부터 사전 v3 따라 작성
@@ -273,4 +282,4 @@ graph TD
 | `references/global-sync.md` | 글로벌 사전 폴더 구조, 도메인 자동 추정, 동기화 절차 |
 | `<project>/docs/domain-dictionary.md` | **마스터** 사전 (프로젝트 단일, 진실의 원천) |
 | `<planning_dir>/domain-dictionary-delta.md` | 델타 — 이번 feature에서 추가/변경된 이력 |
-| `~/.claude/memory/domain-dictionaries/{도메인}.md` | 글로벌 사전 — 사용자 자산, 명시 선택으로만 추가됨 |
+| `~/.agent-memory/domain-dictionaries/{도메인}.md` | 글로벌 사전 — 사용자 자산, 명시 선택으로만 추가됨 |

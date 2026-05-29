@@ -120,14 +120,10 @@ function Remove-StateFile([string]$path, [string]$reason) {
 function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
     if (-not $lastOutput) { return $false }
 
+    # 느슨한 서술형 패턴은 진행 보고를 완료로 오인해 조기 종료시킨다.
+    # 종료 계약은 'Chronos Complete' 마커와 <promise> 태그뿐.
     $donePatterns = @(
-        'Chronos Complete',
-        '더 이상.*(할|수정할|고칠).*(없|작업이 없)',
-        'all issues.*fixed',
-        'no more.*issues',
-        '남은.*이슈.*없',
-        '모든.*이슈.*수정.*완료',
-        '모든.*작업.*완료'
+        'Chronos Complete'
     )
 
     foreach ($pattern in $donePatterns) {

@@ -296,7 +296,8 @@ should_stop_loop() {
         return 1
     fi
 
-    if printf '%s' "$output" | grep -qiE '(Chronos Complete|더 이상.*(할|수정할|고칠).*(없|작업이 없)|all issues.*fixed|no more.*issues|남은.*이슈.*없|모든.*이슈.*수정.*완료|모든.*작업.*완료)'; then
+    # 느슨한 서술형 패턴은 진행 보고를 완료로 오인해 조기 종료시키므로 마커만 검사한다.
+    if printf '%s' "$output" | grep -qiE 'Chronos Complete'; then
         return 0
     fi
 

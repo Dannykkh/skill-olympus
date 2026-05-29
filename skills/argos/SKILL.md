@@ -47,7 +47,7 @@ auto_apply: false
 
 1. `$ARGUMENTS`로 전달된 경로
 2. `docs/plan/*/spec.md` 패턴으로 자동 탐색 (Glob) — **archive/ 경로 제외** (결과에서 `archive` 포함된 경로 필터링)
-3. 못 찾으면 → AskUserQuestion으로 경로 요청
+3. 못 찾으면 → 현재 CLI의 질문 방식으로 경로 요청
 
 ### 3. Scan Artifacts
 

@@ -10,6 +10,7 @@ triggers:
   - "이전에"
   - "handoff"
   - "핸드오프"
+  - "핸즈오프"
   - "세션 저장"
 auto_apply: false
 ---

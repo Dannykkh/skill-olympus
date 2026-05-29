@@ -20,7 +20,6 @@ allowed-tools:
   - Bash
   - Agent
   - Skill
-  - AskUserQuestion
 ---
 
 # Skill Evolve — gotcha/learned → 스킬 자동 개선
@@ -74,7 +73,7 @@ allowed-tools:
 ```
 1. 스킬 목록 수집
    ├─ skills/*/SKILL.md (글로벌 스킬)
-   └─ .claude/skills/*/SKILL.md (로컬 스킬, 있으면)
+   └─ 현재 CLI의 글로벌/로컬 스킬 경로에 있는 `*/SKILL.md` (있으면)
 
 2. 각 스킬의 메타데이터 추출
    ├─ name

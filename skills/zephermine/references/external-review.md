@@ -37,7 +37,7 @@ EOF
 
 ### Step 2: 병렬 리뷰 실행
 
-TWO Bash tool calls in a single message. **timeout 30분 설정.**
+TWO Bash tool calls in a single message. Default timeout is 10 minutes per provider. Use longer timeouts only when the user explicitly asks for deep external review.
 
 **Gemini** — `@file` 경로 참조 지원. 기본 10분 안에 응답이 없으면 실패로 기록하고 Codex/Claude 리뷰만으로 진행:
 ```bash
@@ -58,12 +58,21 @@ fi
 
 **Codex** — stdin으로 프롬프트 전달 + 파일 읽기는 Codex가 직접:
 ```bash
-echo "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
+CODEX_REVIEW_TIMEOUT_SECONDS="${CODEX_REVIEW_TIMEOUT_SECONDS:-600}"
+timeout "$CODEX_REVIEW_TIMEOUT_SECONDS" bash -c '
+echo "$(cat "<planning_dir>/reviews/review-prompt.txt")" \
   | codex -a never exec \
     --sandbox workspace-write \
     --skip-git-repo-check \
     --output-last-message "<planning_dir>/reviews/codex-review.md" \
     >> "<planning_dir>/reviews/external-ai.log" 2>&1
+'
+CODEX_EXIT=$?
+if [ $CODEX_EXIT -eq 124 ]; then
+  echo "[WARN] Codex review timeout (${CODEX_REVIEW_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/reviews/external-ai.log"
+elif [ $CODEX_EXIT -ne 0 ]; then
+  echo "[WARN] Codex review 종료코드: $CODEX_EXIT" >> "<planning_dir>/reviews/external-ai.log"
+fi
 ```
 
 > **Codex 주의사항:**
@@ -100,7 +109,7 @@ echo "$(cat '<planning_dir>/reviews/review-prompt.txt')" \
 | Gemini만 성공 | codex-review.md 없이 진행 |
 | Codex만 성공 | gemini-review.md 없이 진행 |
 | **둘 다 실패 / 둘 다 미설치** | **Claude가 devil's advocate 관점으로 자체 리뷰** → `claude-self-review.md` 작성 |
-| Timeout (30분+) | `timeout 1800`이 자동 kill, 확보된 결과만 사용 |
+| Timeout | configured timeout이 자동 kill, 확보된 결과만 사용 |
 
 ### 폴백: Claude 자체 리뷰
 

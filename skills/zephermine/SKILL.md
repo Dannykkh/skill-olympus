@@ -77,7 +77,7 @@ Determine session state by checking existing files:
    - [Requirement 1]
    - [Requirement 2]
    ```
-5. Scan for existing planning files (research.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
+5. Scan for existing planning files (research.md, research/, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
 
    > 마스터 사전(`docs/domain-dictionary.md`)은 프로젝트 단일이므로 planning_dir 스캔에서 제외. planning_dir에는 변경 이력 델타만 보관.
 
@@ -92,6 +92,7 @@ Determine session state by checking existing files:
 | Files Found | Mode | Resume From |
 |-------------|------|-------------|
 | None | new | Step 4 |
+| research/ partial files only | resume | Step 5 (finish/merge research) |
 | research only | resume | Step 6 (interview) |
 | research + interview | resume | Step 8 (spec synthesis) |
 | + spec | resume | Step 9 (persona) |
@@ -112,7 +113,7 @@ Determine session state by checking existing files:
 |------|------|
 | spec.md 있고 `docs/domain-dictionary.md` 없음 | Step 8 끝부산물(사전 v1 생성)을 먼저 실행한 후 정해진 Resume Step으로 진행 |
 | team-review.md 있고 사전이 v1에 머무름 (Dictionary Updates 미반영) | Step 10 끝부산물(사전 v2 자동 병합)을 먼저 실행 |
-| plan.md 있고 사전이 v3 미확정 (`<planning_dir>/domain-dictionary-delta.md`에 v2→v3 항목 없음) | Step 11 끝부산물(사전 v3 최종화)을 먼저 실행 — 사용자 multiSelect 1회 |
+| plan.md 있고 사전이 v3 미확정 (`<planning_dir>/domain-dictionary-delta.md`에 v2→v3 항목 없음) | Step 11 끝부산물(사전 v3 최종화)을 먼저 실행 — 사용자 확인 |
 
 **판정 방법**: `<planning_dir>/domain-dictionary-delta.md`의 `## v1 → v2`, `## v2 → v3` 섹션 존재 여부로 진행 단계 추정. 델타가 없으면 마스터 사전이 어떤 버전인지 모르므로 안전하게 v1부터 다시 실행.
 
@@ -144,6 +145,20 @@ STEP {N}/26: {STEP_NAME}
 Step {N} complete: {summary}
 ───────────────────────────────────────────────────────────────
 ```
+
+---
+
+## Question Tool Compatibility
+
+Question tools differ by CLI. To avoid `Invalid tool parameters`, use plain text numbered questions by default.
+
+- Use structured question tools only for short bounded choices.
+- Structured calls must use max 3 questions per call, and each question should have 2-3 short options.
+- Do not send open-ended interview prompts through a structured question tool.
+- Do not use structured multi-selection fields unless the current CLI explicitly supports them. Otherwise, show a numbered checklist and ask the user to answer with multiple numbers.
+- If a structured question tool fails once, immediately fall back to plain text and do not retry the same payload.
+
+This applies to Step 4, Step 6, Step 11, Step 15, Step 25, and the automatic `domain-dictionary` flow.
 
 ---
 
@@ -181,11 +196,12 @@ See [research-protocol.md](references/research-protocol.md).
 
 See [research-protocol.md](references/research-protocol.md).
 
-Based on decisions from step 4, launch research subagents in parallel:
-- **Codebase:** `Task(subagent_type=Explore)`
-- **GitHub/Web/Academic/Competitor:** `Task(subagent_type=Explore)` with WebSearch
+Based on decisions from step 4, launch bounded research subagents:
+- **Codebase:** background subagent/worker → `<planning_dir>/research/codebase.md`
+- **GitHub/Web/Academic/Competitor:** background subagent/worker with web search where available → one file per research type under `<planning_dir>/research/`
+- **Concurrency cap:** max 2 research agents at a time; if `API Error: Overloaded`/rate limit occurs, retry the failed item once with concurrency 1 and half budget
 
-Subagents return findings (do NOT write files). Combine results → write to `<planning_dir>/research.md`.
+Subagents return only 1-2 line summaries. Main context combines `<planning_dir>/research/*.md` → `<planning_dir>/research.md`.
 
 Skip entirely if user chose no research in step 4.
 
@@ -193,7 +209,7 @@ Skip entirely if user chose no research in step 4.
 
 See [interview-protocol.md](references/interview-protocol.md)
 
-Run in main context (AskUserQuestion requires it). Informed by: initial spec + research findings.
+Run in main context. Informed by: initial spec + research findings. Use the Question Tool Compatibility rules above.
 
 ### 7. Save Interview Transcript
 
@@ -262,7 +278,7 @@ See [design-system-guide.md](references/design-system-guide.md)
 See [test-scenario-guide.md](references/test-scenario-guide.md)
 
 **Step 8 끝부산물 — 도메인사전 v1 초안 생성** (사용자 개입 최소):
-spec.md 작성 직후 `domain-dictionary` 스킬을 컨텍스트 모드로 자동 호출. 입력은 spec.md + interview.md. 글로벌 사전(`~/.claude/memory/domain-dictionaries/{도메인}.md`)이 있으면 후보 용어 multiSelect를 1회 진행(사용자 개입 1회 — 글로벌 → 프로젝트 시드). 글로벌이 비어있으면 사용자 개입 없음. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타(`<planning_dir>/domain-dictionary-delta.md`). 핵심 용어 5개 미만이면 자동 건너뜀. 자세한 절차는 [domain-dictionary/references/global-sync.md](../domain-dictionary/references/global-sync.md).
+spec.md 작성 직후 `domain-dictionary` 스킬을 컨텍스트 모드로 자동 호출. 입력은 spec.md + interview.md. 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능)이 있으면 후보 용어를 번호 목록으로 1회 확인(사용자 개입 1회 — 글로벌 → 프로젝트 시드). 글로벌이 비어있으면 사용자 개입 없음. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타(`<planning_dir>/domain-dictionary-delta.md`). 핵심 용어 5개 미만이면 자동 건너뜀. 자세한 절차는 [domain-dictionary/references/global-sync.md](../domain-dictionary/references/global-sync.md).
 
 ### 9. User Persona & Journey Map
 
@@ -285,9 +301,19 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 
 **⚠️ CONTEXT MANAGEMENT**: This step spawns 6 agents. Consider `/compact` before launching.
 
+**Default execution profile:** time-boxed standard mode. Deep domain research runs only when the feature is clearly domain-heavy (regulated industry, safety-critical workflow, payment/medical/finance/logistics/manufacturing integrations) or the user explicitly asks for deep research.
+
 **Phase A — 4개 병렬:** UX Agent / Architecture Agent / Red Team Agent / Domain Researcher
 
+- Domain Researcher first performs domain-complexity triage.
+- Low-complexity projects write a short `domain-research.md` stub without web search.
+- Medium/high-complexity projects use bounded, non-duplicative research only. Do not redo Step 5.
+
 **Phase B — 2개 병렬 (Phase A 완료 후):** Domain Process Expert / Domain Technical Expert
+
+- Domain experts do not perform fresh web research by default.
+- They synthesize `spec.md`, `interview.md`, `research.md`, `domain-research.md`, and `domain-dictionary.md`.
+- External AI domain experts are time-boxed; timeout/failure falls back to Claude or a warning stub.
 
 > Phase B 실행 CLI: Codex/Gemini 가용 여부에 따라 분배. 없으면 Claude Explore로 폴백.
 
@@ -304,14 +330,16 @@ Results → `<planning_dir>/team-reviews/` (개별 6개) + `<planning_dir>/team-
 
 See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 
-**Step 11은 세 가지 multiSelect를 한 번에 진행합니다:**
+**Step 11은 세 가지 결정을 순서대로 확인합니다.**
+
+기본은 일반 텍스트 번호 목록입니다. 구조화 질문 도구가 다중 선택을 명시 지원할 때만 한 화면 선택형으로 묶고, 항목이 많으면 2-3개 질문 단위로 나눕니다.
 
 1. **도메인 전문가 추가 제안** (기존) — 채택된 항목만 Step 12 Plan에 반영
 2. **사전 변경 제안** (신규) — Step 10 자동 병합 시 CONFLICT로 미뤄진 항목 + 사용자 검토가 필요한 핵심 용어
-3. **글로벌 사전 반영 제안** (신규) — 이번 프로젝트에서 새로 정의/다듬어진 용어 중 글로벌 사전(`~/.claude/memory/domain-dictionaries/{도메인}.md`)에 추가할 것 선택
+3. **글로벌 사전 반영 제안** (신규) — 이번 프로젝트에서 새로 정의/다듬어진 용어 중 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`)에 추가할 것 선택
 
 **Step 11 끝부산물 — 도메인사전 v3 최종화** (사용자 개입 끝, 자동 반영만):
-사용자 결정을 반영하여 마스터(`docs/domain-dictionary.md`)를 v3로 확정, 델타에 최종 변경 이력 기록, 글로벌 반영 선택 항목을 `~/.claude/memory/domain-dictionaries/{도메인}.md`에 출처 메타데이터와 함께 추가.
+사용자 결정을 반영하여 마스터(`docs/domain-dictionary.md`)를 v3로 확정, 델타에 최종 변경 이력 기록, 글로벌 반영 선택 항목을 `~/.agent-memory/domain-dictionaries/{도메인}.md`에 출처 메타데이터와 함께 추가.
 
 **Phase 4 이후로 이 사전은 변경되지 않습니다.** Plan, DB Schema, API Spec, Sections는 모두 v3을 따릅니다.
 
@@ -346,7 +374,7 @@ Analyze `<planning_dir>/reviews/`. You are the authority on what to integrate.
 
 ### 15. User Review of Integrated Plan
 
-Use AskUserQuestion:
+Ask in plain text. Use a structured question tool only if it supports a single short confirmation:
 ```
 The plan has been updated with external feedback. You can now review and edit plan.md.
 
@@ -418,10 +446,11 @@ Read `plan.md`. Identify natural section boundaries → create `<planning_dir>/s
 See [section-splitting.md](references/section-splitting.md)
 
 1. Parse `sections/index.md`의 SECTION_MANIFEST
-2. 각 섹션마다 Task 1개씩, **모든 Task를 한 메시지에서 병렬 실행**
-3. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, Reference Libraries, Implementation, Test Scenarios, Implementation Strategy, Quality Gate, Risk & Rollback, Acceptance Criteria, Files 포함)
+2. 의존성 레이어별로 섹션을 묶고, 한 번에 최대 3개 Task만 병렬 실행
+3. `Overloaded`/timeout이 나면 실패한 섹션만 단일 Task로 재시도
+4. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, Reference Libraries, Implementation, Test Scenarios, Implementation Strategy, Quality Gate, Risk & Rollback, Acceptance Criteria, Files 포함)
 
-Wait for ALL subagents to complete before proceeding.
+Wait for each batch to complete before launching the next batch.
 
 ### 21. Generate Operation Scenarios — Subagent
 
@@ -478,7 +507,7 @@ Other options:
 2. `Glob("skills/*/SKILL.md")`로 이미 설치된 스킬 확인 + 키워드 매칭
 3. 미매칭 주요 키워드(최대 5개): `npx skills find "{keyword}"`
 4. 이미 설치된 관련 스킬 + 새로 설치 가능한 스킬 목록 출력
-5. AskUserQuestion(multiSelect)으로 설치 선택 ("건너뛰기" 포함)
+5. 번호 목록으로 설치 선택 확인 ("건너뛰기" 포함). 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용
    → 선택 시 `npx skills add {package} -g -y` 실행
 
 > 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.

@@ -232,7 +232,28 @@ function syncSkills(destDir, skillNames, mode) {
       safeRm(dest);
       continue;
     }
+    // Keep SKILL.md present as early as possible. Codex can scan ~/.codex/skills
+    // while this sync is running; an empty freshly-created skill directory causes
+    // "failed to read file" warnings during startup.
+    const skillMd = path.join(src, "SKILL.md");
+    if (fs.existsSync(skillMd)) {
+      ensureDir(dest);
+      copyFileIfChanged(skillMd, path.join(dest, "SKILL.md"));
+    }
     installDir(src, dest);
+  }
+}
+
+function validateSkillInstall(destDir, skillNames) {
+  const missing = [];
+  for (const skillName of skillNames) {
+    const skillMd = path.join(destDir, skillName, "SKILL.md");
+    if (!fs.existsSync(skillMd)) {
+      missing.push(skillMd);
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(`Missing SKILL.md after sync:\n${missing.join("\n")}`);
   }
 }
 
@@ -496,6 +517,10 @@ function run() {
 
   syncSkills(targets.projectSkills, skillNames, mode);
   syncSkills(targets.codexSkills, skillNames, mode);
+  if (mode !== "unlink") {
+    validateSkillInstall(targets.projectSkills, skillNames);
+    validateSkillInstall(targets.codexSkills, skillNames);
+  }
   syncAgents(targets.projectAgents, agentFiles, mode);
   syncAgents(targets.codexAgents, agentFiles, mode);
   syncHooks(targets.projectHooks, hookFiles, mode);

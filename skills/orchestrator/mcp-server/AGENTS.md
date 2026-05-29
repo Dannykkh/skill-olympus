@@ -92,29 +92,25 @@
    → orchestrator_get_available_tasks()
    → orchestrator_claim_task({task_id: "auth-api"})
 
-2. ⭐ 세부 계획 수립 (Claude Code 내장 도구 사용)
-   → TaskCreate로 하위 TODO 생성
+2. 세부 계획 수립 (현재 CLI의 로컬 TODO/계획 관리 방식 사용)
+   → 하위 TODO 생성
 
    예시:
-   TaskCreate({
-     subject: "JWT 토큰 생성 함수 구현",
-     description: "src/auth/jwt.ts에 generateToken, verifyToken 함수 구현"
-   })
-   TaskCreate({
-     subject: "로그인 엔드포인트 구현",
-     description: "POST /auth/login - 이메일/비밀번호 검증 후 토큰 반환"
-   })
-   TaskCreate({
-     subject: "토큰 갱신 엔드포인트 구현",
-     description: "POST /auth/refresh - 리프레시 토큰으로 새 액세스 토큰 발급"
-   })
+   TODO: JWT 토큰 생성 함수 구현
+   - src/auth/jwt.ts에 generateToken, verifyToken 함수 구현
+
+   TODO: 로그인 엔드포인트 구현
+   - POST /auth/login - 이메일/비밀번호 검증 후 토큰 반환
+
+   TODO: 토큰 갱신 엔드포인트 구현
+   - POST /auth/refresh - 리프레시 토큰으로 새 액세스 토큰 발급
 
 3. 파일 락 획득
    → orchestrator_lock_file({path: "src/auth/"})
    → 다른 Worker와 충돌 방지
 
 4. 작업 수행 + 활동 기록
-   → TaskUpdate로 진행 상태 업데이트
+   → 현재 CLI의 로컬 TODO/계획 관리 방식으로 진행 상태 업데이트
    → 각 하위 TODO 완료 시 completed 처리
    → orchestrator_log_activity로 주요 활동 기록:
      - type: 'progress' (진행), 'decision' (결정), 'error' (에러), 'file_change' (파일 변경)
@@ -137,13 +133,13 @@
 ### Worker TODO 관리 패턴
 
 Worker는 오케스트레이터 태스크(큰 단위)를 받으면,
-Claude Code 내장 TaskCreate/TaskUpdate(작은 단위)로 세부 작업을 관리합니다.
+현재 CLI의 로컬 TODO/계획 관리 방식으로 세부 작업을 관리합니다.
 
 ```
-Orchestrator Task (PM이 생성)
+Orchestrator task (PM이 생성)
 └── "auth-api": JWT 인증 API 구현
     │
-    └── Claude Code Tasks (Worker가 생성)
+    └── Worker local TODOs
         ├── [✓] JWT 토큰 생성 함수 구현
         ├── [✓] 로그인 엔드포인트 구현
         ├── [ ] 토큰 갱신 엔드포인트 구현  ← 현재 작업 중
@@ -196,7 +192,7 @@ Orchestrator Task (PM이 생성)
 [Worker-1] orchestrator_claim_task({task_id: "task-2"})
 → 담당 완료
 
-[Worker-1] TaskCreate로 세부 계획 수립:
+[Worker-1] 로컬 TODO로 세부 계획 수립:
 - [ ] JWT 시크릿 설정
 - [ ] generateToken 함수
 - [ ] verifyToken 함수
@@ -207,7 +203,7 @@ Orchestrator Task (PM이 생성)
 → 락 획득
 
 [Worker-1] 작업 수행...
-→ 각 TODO 완료 시 TaskUpdate로 상태 변경
+→ 각 TODO 완료 시 로컬 진행 상태 업데이트
 
 [Worker-1] orchestrator_complete_task({task_id: "task-2"})
 → 완료! task-3, task-4 언블록됨

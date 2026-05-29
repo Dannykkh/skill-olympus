@@ -12,7 +12,6 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-  - AskUserQuestion
 ---
 
 # Korean↔English Translator

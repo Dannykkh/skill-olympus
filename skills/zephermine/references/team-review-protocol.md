@@ -1,6 +1,6 @@
 # Team Review Protocol
 
-5개 Explore 서브에이전트가 spec을 병렬 분석하여 plan 품질을 높이는 단계.
+6개 전문가가 spec을 분석하여 plan 품질을 높이는 단계입니다. Phase A는 고정 3명 + 도메인 리서처, Phase B는 도메인 프로세스/기술 전문가입니다.
 
 ---
 
@@ -41,7 +41,7 @@ Step 8 끝에서 생성된 `<planning_dir>/domain-dictionary.md` v1 사전을 **
 
 **자동 병합 규칙 (Step 10 끝):**
 - ADD/REFINE/MERGE → 자동 병합 (사전 v1 → v2)
-- CONFLICT → Step 11 사용자 multiSelect로 미룸
+- CONFLICT → Step 11 사용자 확인으로 미룸
 
 전문가 6명의 분석이 같은 어휘 위에서 이루어지면 결과물의 용어 일관성이 크게 향상됩니다.
 
@@ -55,7 +55,7 @@ spec.md ──┬──→ UX Agent (Claude) ─────────→ ux-a
                  ├──→ Architecture Agent (Claude) → architecture-analysis.md
                  ├──→ Red Team Agent (Claude) ────→ redteam-analysis.md
                  └──→ Domain Researcher (Claude)  → domain-research.md
-                      (WebSearch로 산업별 기술/솔루션 검색)
+                      (domain-complexity triage + bounded research)
 
 Phase B (domain-research.md 활용):
                  ┌──→ Domain Process Expert ──────→ domain-process-analysis.md
@@ -86,7 +86,7 @@ Phase B (domain-research.md 활용):
 
 인터뷰에서 파악한 산업군(`[Industry: {산업군}]` 태그)을 기반으로 페르소나를 동적 결정.
 
-> **Multi-AI 지원**: 도메인 전문가는 Codex/Gemini CLI가 설치되어 있으면 외부 AI로 실행하여 Claude 편향을 보완합니다. 고정 에이전트(UX, Architecture, Red Team)는 항상 Claude입니다.
+> **Multi-AI 지원**: 도메인 전문가는 Codex/Gemini CLI가 설치되어 있으면 외부 AI로 실행하여 Claude 편향을 보완합니다. 고정 에이전트(UX, Architecture, Red Team)는 현재 CLI에서 가능한 background subagent/worker 방식으로 실행하고, 없으면 메인 컨텍스트에서 순차 실행합니다.
 
 ## 산업군 → 도메인 전문가 매핑
 
@@ -102,6 +102,26 @@ Phase B (domain-research.md 활용):
 | **범용 (불명확)** | **비즈니스 프로세스 분석가** | **시스템 통합 전문가** |
 
 ## 실행 절차
+
+### Step 10 Runtime Budget Policy
+
+Step 10 must not become a second full research phase. Step 5 is for broad research; Step 10 is for expert synthesis.
+
+Default mode is **standard**:
+- Domain Researcher does triage first, then only fills missing industry context.
+- Domain Process Expert and Domain Technical Expert do not perform fresh web search by default.
+- External AI domain experts use short timeouts: Codex default 600s, Gemini default 600s.
+- If a budget is reached, write "Follow-up needed" in the output file and continue.
+
+Use **deep** mode only when the user explicitly asks for deep domain research or the project is clearly high-risk/high-regulation.
+
+| Domain complexity | Trigger | Domain Researcher behavior | Domain experts |
+|-------------------|---------|----------------------------|----------------|
+| LOW | internal tool, devtool, library, generic CRUD, no regulated workflow | No web search; write a short stub with assumptions | Lightweight synthesis from provided docs |
+| MEDIUM | domain workflow or external integration exists, but no heavy regulation | Max 4 search/fetch operations, max 4 sources | Synthesize, no fresh search |
+| HIGH | medical, finance, payment, safety, logistics, manufacturing, legal/regulatory risk | Max 8 search/fetch operations, max 6 sources | Synthesize, flag follow-up for unresolved compliance |
+
+Never repeat Step 5 research. If `research.md` already covers a topic, cite it and move on.
 
 ### 1단계: 입력 파일 준비 + 산업군 식별
 
@@ -160,21 +180,21 @@ which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
 **⚠️ 컨텍스트 폭발 방지 — 필수 규칙:**
 각 에이전트 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
 ```
-NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
 CRITICAL RETURN RULE: Write your FULL analysis to the file specified above.
 Your return message to the caller must be ONLY a 1-2 line summary like:
 "✅ {filename}.md written. Critical: N, Important: N, Nice-to-Have: N"
 DO NOT repeat the analysis content in your return message.
-This prevents context overflow when 5 agents return simultaneously.
+This prevents context overflow when multiple agents return simultaneously.
 ```
 
-이 규칙이 없으면 5개 에이전트의 전체 분석 내용이 메인 대화에 합산되어 컨텍스트 한도 초과.
+이 규칙이 없으면 여러 에이전트의 전체 분석 내용이 메인 대화에 합산되어 컨텍스트 한도 초과.
 
 ```
 # Phase A: 고정 3 에이전트 + 도메인 리서치를 하나의 메시지에서 병렬 실행:
 
-Task(
+BackgroundJob(
   subagent_type="Explore",
   prompt="""
   You are a **UX Expert** — 사용자 경험 전문가 (15년 경력).
@@ -196,7 +216,7 @@ Task(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/ux-analysis.md
 
-  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ ux-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -204,7 +224,7 @@ Task(
   """
 )
 
-Task(
+BackgroundJob(
   subagent_type="Explore",
   prompt="""
   You are a **Technical Architecture Expert** — 시스템 아키텍처 전문가 (15년 경력).
@@ -226,7 +246,7 @@ Task(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/architecture-analysis.md
 
-  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ architecture-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -234,7 +254,7 @@ Task(
   """
 )
 
-Task(
+BackgroundJob(
   subagent_type="Explore",
   prompt="""
   You are a **Red Team Agent** (악마의 변호인) — 모든 가정에 의문을 제기하는 전문가.
@@ -258,7 +278,7 @@ Task(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/redteam-analysis.md
 
-  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ redteam-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -266,56 +286,61 @@ Task(
   """
 )
 
-Task(
+BackgroundJob(
   subagent_type="Explore",
   prompt="""
   You are a **Domain Industry Researcher** for {산업군}.
+
+  Your job is not to perform a broad literature review. Your job is to produce only the missing domain context needed by the Process Expert and Technical Expert.
 
   Read these files for context:
   - <planning_dir>/spec.md
   - <planning_dir>/interview.md
   - <planning_dir>/research.md (있으면 — Step 5에서 수행한 초기 리서치)
 
-  Step 5에서 이미 논문/알고리즘 조사, 경쟁사 분석, 웹 리서치를 수행했을 수 있습니다.
-  research.md가 있으면 **기반으로 삼되**, 스펙과 인터뷰에서 확정된 방향에 맞춰 **2차 조사**를 수행하세요.
-  Step 5는 "넓게 훑기", 여기는 "방향 잡고 깊게 파기"입니다.
+  Step 5 may already contain web research, papers, algorithms, competitor analysis, or GitHub references.
+  Do not repeat that research. If research.md covers a topic, cite it and move on.
 
-  Then use **WebSearch** to perform 3 rounds of research:
+  First classify domain complexity:
+  - LOW: internal tool, developer tool, library, generic CRUD, no regulated industry, no domain-specific workflow.
+  - MEDIUM: industry workflow or external integration exists, but regulation/safety risk is modest.
+  - HIGH: regulated or high-risk domain such as medical, finance, payment, safety, logistics, manufacturing, legal/compliance.
 
-  ## Round 1: 산업 기술/솔루션 (기존)
-  1. **필수 기술/표준**: {산업군}에서 사용하는 기술 표준, 프로토콜 (검색 키워드: "{산업군} technology standards")
-  2. **오픈소스 솔루션**: GitHub stars 높은 관련 프로젝트 (URL + stars + 라이선스)
-  3. **SaaS/상용 솔루션**: 시장에 있는 서비스 (가격대 포함)
-  4. **규제/인증**: 법적 요구사항, 필수 인증 (예: HIPAA, PCI-DSS, GDPR)
-  5. **업계 사례**: 유사 시스템 구축 사례, 아키텍처 블로그/포스트
-  6. **SDK/API**: 연동에 사용되는 공식 SDK, API (예: PG 결제 API, FHIR API)
+  Research budget:
+  - LOW: do no WebSearch. Write a short stub with assumptions and skipped areas.
+  - MEDIUM: max 4 WebSearch/WebFetch operations total, max 4 sources.
+  - HIGH: max 8 WebSearch/WebFetch operations total, max 6 sources.
+  - No more than 2 sources per category.
+  - Do not perform competitor or algorithm deep dives unless spec/interview names them as central and Step 5 did not cover them.
+  - Stop when budget is hit. Write "Follow-up needed" instead of expanding scope.
 
-  ## Round 2: 논문/알고리즘 심화
-  spec.md에서 확정된 핵심 기능에 대해:
-  1. **관련 논문/알고리즘**: 이 기능을 구현하는 최신 알고리즘, 데이터 구조 검색
-  2. **구현 패턴 비교**: 알고리즘별 시간복잡도, 공간복잡도, 실제 성능 벤치마크
-  3. **구현 순서 권장**: 어떤 접근부터 시도하는 게 합리적인지
-  4. **라이브러리/프레임워크**: 해당 알고리즘을 구현한 검증된 라이브러리
-  - Step 5에서 이미 찾은 논문이 있으면 그 결과를 심화 (같은 논문 재검색 X)
+  Output format:
+  ## Domain Complexity
+  - Level: LOW/MEDIUM/HIGH
+  - Why:
 
-  ## Round 3: 경쟁사 심화
-  spec.md에서 확정된 방향 기준으로:
-  1. **경쟁사 기능 비교**: 우리 스펙의 각 기능이 경쟁사에서 어떻게 구현되었는지
-  2. **메뉴/화면 구조**: 경쟁사의 메뉴 트리, 네비게이션 패턴
-  3. **차별화 기회**: 경쟁사에 없는 기능, 우리만의 강점이 될 수 있는 것
-  4. **피해야 할 패턴**: 경쟁사에서 사용자 불만이 많은 UX/기능
-  - Step 5에서 이미 분석한 경쟁사가 있으면 그 결과를 심화 (동일 경쟁사 재방문하되 더 깊게)
+  ## Standards / Regulations (max 5)
+  | Name | Relevance | Source |
+  |------|-----------|--------|
 
-  For each finding:
-  - Name + URL (가능하면)
-  - Why it's relevant to this project
-  - Adoption level: widely-used / emerging / niche
+  ## Existing Solutions / APIs (max 5)
+  | Name | Type | Relevance | Source |
+  |------|------|-----------|--------|
+
+  ## Process Implications for Domain Process Expert (max 7)
+  - ...
+
+  ## Technical Implications for Domain Technical Expert (max 7)
+  - ...
+
+  ## Explicitly Skipped / Follow-up Needed
+  - ...
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
   Write results to: <planning_dir>/team-reviews/domain-research.md
 
-  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL research to the file above.
   Your return message must be ONLY: "✅ domain-research.md written. Technologies: N, Solutions: N, Regulations: N"
@@ -334,7 +359,7 @@ Task(
 ```
 # Phase B: 도메인 전문가 2명을 하나의 메시지에서 병렬 실행:
 
-Task(
+BackgroundJob(
   subagent_type="Explore",
   prompt="""
   You are a **{산업군} Process Expert** — 20년 경력의 {산업군} 업무 전문가.
@@ -344,11 +369,13 @@ Task(
   - <planning_dir>/spec.md
   - <planning_dir>/interview.md (사용자 요구사항 인터뷰 — 깊은 컨텍스트의 기반)
   - <planning_dir>/research.md (if exists — Step 5 초기 리서치: 논문/경쟁사/웹 1차 조사)
-  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치 v2)
+  - <planning_dir>/team-reviews/domain-research.md (bounded domain context)
   - <planning_dir>/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
 
   Use ALL inputs to ground your analysis. interview.md는 사용자가 진짜 원하는 게 무엇인지의 일차 출처입니다.
   domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
+  Do not perform WebSearch or fresh external research by default. Use domain-research.md as the research boundary. If evidence is missing, mark "Follow-up needed" instead of expanding scope.
+  Keep output bounded: cover max 10 business tasks/functions. If the spec has more, group related tasks.
 
   **Your job: spec의 각 기능/업무를 촘촘한 업무 흐름표로 작성합니다.**
   개발자가 이 문서만 보고도 "누가, 왜, 뭘, 어떤 권한으로, 어떤 결과를" 파악할 수 있어야 합니다.
@@ -387,7 +414,7 @@ Task(
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
-  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ domain-process-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -395,7 +422,7 @@ Task(
   """
 )
 
-Task(
+BackgroundJob(
   subagent_type="Explore",
   prompt="""
   You are a **{산업군} Technical Domain Expert** — {산업군} IT 시스템 구축 전문가.
@@ -405,11 +432,13 @@ Task(
   - <planning_dir>/spec.md
   - <planning_dir>/interview.md (사용자 요구사항 인터뷰 — 깊은 컨텍스트의 기반)
   - <planning_dir>/research.md (if exists — Step 5 초기 리서치: 논문/경쟁사/웹 1차 조사)
-  - <planning_dir>/team-reviews/domain-research.md (산업별 기술/솔루션 리서치 v2)
+  - <planning_dir>/team-reviews/domain-research.md (bounded domain context)
   - <planning_dir>/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
 
   Use ALL inputs to ground your analysis. interview.md는 사용자가 진짜 원하는 게 무엇인지의 일차 출처입니다.
   domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
+  Do not perform WebSearch or fresh external research by default. Use domain-research.md as the research boundary. If evidence is missing, mark "Follow-up needed" instead of expanding scope.
+  Keep output bounded: cover max 10 feature/technology areas. If the spec has more, group related areas.
 
   **Your job: spec의 각 기능에 필요한 기술 스택과 연동을 구체적으로 매핑합니다.**
   개발자가 이 문서만 보고도 "어떤 기술로, 뭘 연동하고, 어떤 규격을 지켜야 하는지" 파악할 수 있어야 합니다.
@@ -459,7 +488,7 @@ Task(
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
-  NEVER use AskUserQuestion. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ domain-technical-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
@@ -470,10 +499,10 @@ Task(
 
 #### External AI 모드: 도메인 전문가 CLI 실행
 
-3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 Claude-only 모드의 `Task(Explore)`를 **아래 Bash 실행으로 대체**합니다.
+3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 Claude-only/background subagent 모드를 **아래 Bash 실행으로 대체**합니다.
 `domain-research.md`는 동일하게 입력으로 전달합니다.
 
-> 고정 에이전트 (UX, Architecture, Red Team)는 항상 위의 Task(Explore)로 실행합니다.
+> 고정 에이전트 (UX, Architecture, Red Team)는 현재 CLI에서 사용 가능한 background subagent/worker 방식으로 실행합니다. Codex/Gemini에서 별도 worker가 없으면 메인 컨텍스트에서 순차 실행하되, 각 결과는 파일로 저장하고 1-2줄 요약만 남깁니다.
 
 **1. 프롬프트 파일 생성:**
 
@@ -487,6 +516,8 @@ You are a {산업군} Process Expert — 20년 경력의 {산업군} 업무 전�
 
 Analyze the spec, interview, and domain-research documents.
 Write a detailed business process document for developers.
+Do not browse or perform fresh research. Use the provided files only.
+Keep output bounded: cover max 10 business tasks/functions; group related tasks if needed. Mark missing evidence as "Follow-up needed".
 
 For EACH business task/function in the spec, output:
 
@@ -526,6 +557,8 @@ You are a {산업군} Technical Domain Expert — {산업군} IT 시스템 구�
 
 Analyze the spec, interview, and domain-research documents.
 Map concrete technologies to each feature area.
+Do not browse or perform fresh research. Use the provided files only.
+Keep output bounded: cover max 10 feature/technology areas; group related areas if needed. Mark missing evidence as "Follow-up needed".
 
 Output format:
 
@@ -570,14 +603,15 @@ Output in markdown format.
 PROMPT_EOF
 ```
 
-**2. Codex 실행** (timeout 30분):
+**2. Codex 실행** (기본 timeout 10분, 필요 시 `CODEX_DOMAIN_TIMEOUT_SECONDS`로 조정):
 
 > 모든 가용 입력을 sandwich로 합쳐서 stdin에 전달합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 조건부로 포함합니다.
 > `--json`은 최종 분석을 JSON으로 만드는 옵션이 아니라 이벤트 JSONL 출력용입니다. 도메인 분석 파일에는 마크다운 최종 응답만 필요하므로 `--output-last-message`를 사용합니다.
 > 멈춤 없는 자동 실행은 deprecated `--full-auto`가 아니라 `codex -a never exec --sandbox workspace-write`로 표현합니다. Codex가 보조 파일을 만들거나 명령 실행이 필요해도 승인 대기로 멈추지 않습니다.
 
 ```bash
-timeout 1800 bash -c '
+CODEX_DOMAIN_TIMEOUT_SECONDS="${CODEX_DOMAIN_TIMEOUT_SECONDS:-600}"
+timeout "$CODEX_DOMAIN_TIMEOUT_SECONDS" bash -c '
 echo "$(cat "<planning_dir>/team-reviews/domain-process-prompt.txt")
 
 ===== spec.md =====
@@ -589,7 +623,7 @@ $(cat "<planning_dir>/interview.md")
 ===== research.md (Step 5 초기 리서치, 있는 경우) =====
 $( [ -f "<planning_dir>/research.md" ] && cat "<planning_dir>/research.md" || echo "(파일 없음 — Step 5 미수행)" )
 
-===== domain-research.md (산업별 기술/솔루션 리서치 v2) =====
+===== domain-research.md (bounded domain context) =====
 $(cat "<planning_dir>/team-reviews/domain-research.md")
 
 ===== domain-dictionary.md (도메인 사전 v1, 있는 경우 — 용어를 정확히 따를 것) =====
@@ -604,7 +638,7 @@ CODEX_EXIT=$?
 
 # 실패 체크: timeout(124) 또는 빈 파일
 if [ $CODEX_EXIT -eq 124 ]; then
-  echo "[WARN] Codex timeout (30분 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Codex timeout (${CODEX_DOMAIN_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
 elif [ $CODEX_EXIT -ne 0 ]; then
   echo "[WARN] Codex 종료코드: $CODEX_EXIT" >> "<planning_dir>/team-reviews/external-ai.log"
 fi
@@ -617,7 +651,7 @@ fi
 
 > Gemini는 `@file` 문법으로 파일을 직접 첨부합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 존재 여부를 확인 후 인자로 추가합니다.
 > 백그라운드/자동화에서는 `--approval-mode yolo`와 `-p/--prompt`를 함께 사용합니다. positional prompt만 쓰면 Gemini CLI가 interactive 모드로 들어가 승인 대기에서 멈출 수 있습니다.
-> Gemini는 종종 응답이 늦거나 네트워크/서버 문제로 반환이 없을 수 있으므로 30분을 기다리지 않습니다. 기본 600초 안에 결과가 없으면 실패로 기록하고 폴백합니다.
+> Gemini는 종종 응답이 늦거나 네트워크/서버 문제로 반환이 없을 수 있으므로 장시간 기다리지 않습니다. 기본 600초 안에 결과가 없으면 실패로 기록하고 폴백합니다.
 
 ```bash
 GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
@@ -658,7 +692,7 @@ fi
 > | **Dual-AI** | Codex (위 2번) | Gemini (위 3번) |
 > | **Single-AI (Codex)** | Codex (process 프롬프트) | Codex (technical 프롬프트) |
 > | **Single-AI (Gemini)** | Gemini (process 프롬프트) | Gemini (technical 프롬프트) |
-> | **Claude-only** | Task(Explore) 위 그대로 | Task(Explore) 위 그대로 |
+> | **Claude-only** | Claude Explore subagent | Claude Explore subagent |
 >
 > **실패 폴백**: 실행 후 `external-ai.log`를 확인하고, 출력 파일이 비어있거나 오류면 해당 전문가만 폴백 재실행. Codex가 사용 가능하면 Codex로 먼저 폴백하고, Codex도 없거나 실패하면 Claude Explore로 폴백.
 > **폴백 판정**: `[ ! -s "output.md" ]` — 파일이 없거나 0바이트면 폴백 트리거.
@@ -736,5 +770,6 @@ fi
 | 산업군 식별 불가 | 범용 fallback 사용 (비즈니스 프로세스 분석가 + 시스템 통합 전문가) |
 | team-reviews/ 디렉토리 생성 실패 | planning_dir 루트에 직접 작성 |
 | **External AI 실행 실패** | `external-ai.log` 확인, 출력 파일이 비어있거나 오류 → 해당 전문가만 Claude Explore로 폴백 재실행 |
-| **External AI timeout (30분+)** | `timeout 1800`이 자동 kill (exit 124), 해당 전문가만 Claude Explore로 폴백 |
+| **External AI timeout** | configured timeout이 자동 kill (exit 124), 해당 전문가만 Claude Explore로 폴백 |
+| **API Error: Overloaded** | 완료된 파일은 보존. 실패한 에이전트만 단일 실행으로 1회 재시도하고, 재실패 시 warning stub 파일을 남긴 뒤 통합 단계에서 누락으로 표시 |
 | **Context limit reached** | 에이전트가 파일에 쓴 결과는 보존됨. `/compact` 후 재개하면 team-reviews/ 파일을 읽어 통합 진행. Resume 테이블에서 `+ spec → Step 9` 자동 매핑 |

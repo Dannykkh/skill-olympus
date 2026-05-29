@@ -81,7 +81,7 @@ Healer는 "manual fix required"로 분류합니다.
 
 ### 서브에이전트 검증 실행
 
-**Phase 1: 정적 검증** — Task(subagent_type="Explore") 2개 병렬 실행:
+**Phase 1: 정적 검증** — 현재 CLI의 background subagent/worker 2개 병렬 실행:
 
 1. **기능 검증 에이전트**: spec.md의 기능적 요구사항 vs 실제 코드
    - 각 요구사항별 구현 여부 (✅/❌)
@@ -95,11 +95,11 @@ Healer는 "manual fix required"로 분류합니다.
    - 문서화 상태
 
 ```
-# 두 에이전트를 하나의 메시지에서 병렬 실행:
+# 두 에이전트를 하나의 배치에서 병렬 실행:
 
-Task(
-  subagent_type="Explore",
-  prompt="""
+Background verification job:
+subagent_type="Explore"
+prompt="""
   기능 검증: spec.md 대비 구현 상태 확인
 
   1. <planning_dir>/spec.md를 읽고 기능적 요구사항 목록 추출
@@ -113,12 +113,11 @@ Task(
 
   - 엣지 케이스 처리 여부도 확인
   - 누락된 기능은 구체적으로 명시
-  """
-)
+"""
 
-Task(
-  subagent_type="Explore",
-  prompt="""
+Background verification job:
+subagent_type="Explore"
+prompt="""
   품질 검증: 비기능 요구사항 + 코드 품질 확인
 
   1. <planning_dir>/spec.md에서 비기능 요구사항 추출
@@ -132,8 +131,7 @@ Task(
   | 항목 | 상태 | 상세 |
   |------|------|------|
   | ... | ✅/❌ | ... |
-  """
-)
+"""
 ```
 
 두 에이전트의 결과를 합쳐 정적 검증 보고서 작성.

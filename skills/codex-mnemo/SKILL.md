@@ -10,6 +10,7 @@ triggers:
   - "이전에"
   - "handoff"
   - "핸드오프"
+  - "핸즈오프"
   - "세션 저장"
   - "codex 기억"
   - "codex memory"
@@ -27,6 +28,7 @@ Codex CLI 세션 간 컨텍스트 유지를 위한 장기기억 시스템입니�
 
 ```bash
 node skills/codex-mnemo/install.js              # 설치
+node skills/codex-mnemo/install.js --check      # 설치/notify 진단
 node skills/codex-mnemo/install.js --uninstall  # 제거
 ```
 
@@ -111,7 +113,6 @@ Codex CLI 대화
       → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
       → append-user: User 입력 저장
       → append-assistant: Assistant 응답 저장(전체)
-      → (optional) ddingdong-noti: Codex 완료 알림
     → conversations/YYYY-MM-DD-codex.md에 append
     → turn-id 기반 중복 방지
     → (optional) auto-continue-loop 설치 시 continue-loop 호출

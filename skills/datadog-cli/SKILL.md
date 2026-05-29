@@ -24,8 +24,8 @@ A CLI tool for AI agents to debug and triage using Datadog logs and metrics.
 
 이 스킬은 `config.json`에 설정이 필요합니다.
 
-1. `config.json`을 읽는다 (`skills/datadog-cli/config.json` 또는 `~/.claude/skills/datadog-cli/config.json`)
-2. 빈 필드가 있으면 사용자에게 AskUserQuestion으로 질문한다
+1. `config.json`을 읽는다 (`skills/datadog-cli/config.json` 또는 현재 CLI의 글로벌 스킬 경로)
+2. 빈 필드가 있으면 현재 CLI의 질문 방식으로 사용자에게 질문한다
 3. 답변을 `config.json`에 저장한다
 4. 이후 실행 시에는 `config.json`에서 자동으로 읽는다
 

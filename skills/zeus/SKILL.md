@@ -3,7 +3,7 @@ name: zeus
 description: >
   Zero-interaction full pipeline skill. 사용자가 한 줄 설명만 제공하면
   설계(zephermine) → 구현(agent-team) → 감리(argos) → Docker 구성 → 테스트(minos) 전체를 자동 완료.
-  AskUserQuestion 절대 호출 금지. /zeus로 실행. 제우스.
+  인터랙티브 질문 도구 절대 호출 금지. /zeus로 실행. 제우스.
 triggers:
   - "zeus"
   - "제우스"
@@ -48,7 +48,7 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 ## CRITICAL RULES
 
 0. **메타 요청 구분** — 사용자가 Zeus 자체를 점검/수정/설명하라고 한 경우에는 제품 파이프라인을 시작하지 말고 이 SKILL.md와 관련 런타임만 점검한다. 제품/기능을 "제우스로 진행"하라는 요청일 때만 Phase 0~6을 실행한다.
-1. **NEVER call AskUserQuestion** — 모든 결정은 자동선택 규칙으로 처리 (`Recommended` 우선, 없으면 자동 응답 테이블)
+1. **NEVER call interactive question tools** — 모든 결정은 자동선택 규칙으로 처리 (`Recommended` 우선, 없으면 자동 응답 테이블)
 2. **절대 멈추지 않는다** — 에러 시 기록하고 계속 진행
 3. **Phase 완료 즉시 다음 Phase 시작** — "다음을 진행합니다" 같은 중간 보고 금지. Phase 0→1→2→3→4→5→6을 한 턴에 연속 실행
 4. **[ZEUS-AUTO] 태그 + 결정 분류** — 자동 결정에는 태그와 분류를 표시:
@@ -64,13 +64,13 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 Zeus는 `zephermine → agent-team/workpm → argos → docker-deploy → minos → report`를 하나의 긴 작업으로 밀어붙이는 스킬입니다. 모델 지시만으로는 중간 보고 후 멈출 수 있으므로, 제품 파이프라인 요청으로 Zeus를 실행할 때는 Phase 0 전에 Chronos 자동 재개 가드를 부트스트랩합니다.
 
 CLI별 재개 방식:
-- Claude Code: `.claude/loop-state.md` + Stop `loop-stop.*` 훅
+- Claude Code: `.claude/loop-state.md` + Claude stop lifecycle hook
 - Codex: `.codex/loop-state.md` + notify `save-turn -> continue-loop -> codex exec resume --last`
 - Gemini: `.chronos/loop-state.md` + AfterAgent/worker 루프
 
 **부트스트랩 조건:**
 - 사용자 요청이 Zeus 자체 점검/문서 수정이 아니라 제품/기능 구현 파이프라인일 것
-- `auto-continue-loop/scripts/setup-loop.ps1` 또는 `.sh`를 찾을 수 있을 것. 현재 프로젝트의 `skills/auto-continue-loop/`를 먼저 쓰고, 없으면 현재 CLI의 글로벌 스킬 경로(`~/.claude/skills`, `~/.codex/skills`, `~/.gemini/skills`)를 사용한다.
+- `auto-continue-loop/scripts/setup-loop.ps1` 또는 `.sh`를 찾을 수 있을 것. 현재 프로젝트의 `skills/auto-continue-loop/`를 먼저 쓰고, 없으면 현재 CLI의 글로벌 스킬 경로를 사용한다.
 - 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Gemini: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 말고 기존 루프를 존중할 것. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않는다.
 
 **Windows PowerShell:**
@@ -155,11 +155,11 @@ Phase 6에서만 완료 조건을 출력합니다:
 
 ## Phase 1: Planning (zephermine 26단계)
 
-zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을 자동선택으로 대체**.
+zephermine SKILL.md를 읽고 26단계를 따르되, **모든 사용자 질문을 자동선택으로 대체**.
 
-**AskUserQuestion 자동선택 규칙 (Recommended First):**
+**질문 자동선택 규칙 (Recommended First):**
 1. 질문 옵션에 `(Recommended)` 라벨이 있으면 해당 옵션을 자동 선택
-2. multiSelect 질문이면 `(Recommended)` 옵션을 모두 선택
+2. 다중 선택 질문이면 `(Recommended)` 옵션을 모두 선택
 3. `(Recommended)` 옵션이 없으면 아래 자동 응답 테이블의 단계별 기본값 사용
 4. 모든 자동 선택 결과는 `[ZEUS-AUTO]` 태그로 로그 기록
 
@@ -188,18 +188,18 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 AskUserQuestion을
 ```
 Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
     ▼
-TeamCreate 도구 사용 가능?
+Native team tool 사용 가능?
   ├── ✅ → 포세이돈(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
   └── ❌ → 다이달로스(daedalus) — PM이 직접 리서치 없이 구현 관리
 ```
 
-**판별 방법**: Phase 2 시작 시 TeamCreate 도구 호출을 시도. 성공하면 포세이돈, 실패하면 다이달로스.
+**판별 방법**: Phase 2 시작 시 현재 CLI의 병렬 팀/서브에이전트 기능이 사용 가능한지 확인. 사용 가능하면 포세이돈 계열, 불가하면 다이달로스.
 
-**경로 A — 포세이돈** (TeamCreate 사용 가능):
+**경로 A — 포세이돈** (병렬 팀/서브에이전트 사용 가능):
 - Claude: `skills/agent-team/SKILL.md` / Codex: `skills/agent-team-codex/SKILL.md`
 - Step 0(산출물 검토) → Step 1(index 파싱) → Step 2(Wave Plan, [ZEUS-AUTO] 즉시 "실행") → Step 3~4(Task + Wave) → Step 5(Code Review) → Step 6(체크리스트) → Step 7(Activity Log) → Step 8(Final Report)
 
-**경로 B — 다이달로스** (TeamCreate 사용 불가):
+**경로 B — 다이달로스** (병렬 팀/서브에이전트 사용 불가):
 - `skills/orchestrator/commands/workpm.md` Phase 2부터 실행 (5단계 워크플로우: Phase 1 리서치 → **2 도면** → 3 영향도 → 4 구현 → 5 점검. 젭마인 산출물이 있으므로 Phase 1 건너뜀)
 
 **공통 규칙:**

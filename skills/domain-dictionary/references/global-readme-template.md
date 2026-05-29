@@ -6,7 +6,7 @@
 ## 폴더 구조
 
 ```
-~/.claude/memory/domain-dictionaries/
+~/.agent-memory/domain-dictionaries/
 ├── README.md          ← 이 파일
 ├── ecommerce.md       ← 이커머스
 ├── healthcare.md      ← 의료
@@ -24,12 +24,12 @@
 
 ### 새 프로젝트 시작 (zephermine 또는 직접 호출)
 1. 도메인 자동 추정 (인터뷰의 `[Industry]` 태그 또는 사용자 선택)
-2. 해당 도메인 파일이 비어있지 않으면 → 후보 용어 multiSelect 제시
+2. 해당 도메인 파일이 비어있지 않으면 → 후보 용어 번호 목록 제시
 3. 사용자가 ✅한 용어만 프로젝트 사전 v1 시드로 사용
 
 ### 프로젝트 종료 (zephermine Step 11)
 1. 이번 프로젝트에서 새로 정의/다듬어진 용어 추출
-2. multiSelect로 글로벌 반영 선택지 제시
+2. 번호 목록으로 글로벌 반영 선택지 제시
 3. 사용자가 ✅한 항목만 글로벌 도메인 파일에 추가
 4. 출처 메타데이터 함께 기록 (어느 프로젝트, 언제, 확신도)
 
@@ -61,8 +61,8 @@
 
 ## 다른 CLI 공유
 
-Claude/Codex/Gemini가 같은 글로벌 사전을 공유할 수 있습니다 (mnemo 패턴과 동일).
-구현은 `domain-dictionary` 스킬의 `references/global-sync.md`를 참조.
+Claude/Codex/Gemini가 같은 글로벌 사전을 공유할 수 있습니다.
+기본 위치는 `~/.agent-memory/domain-dictionaries/`이며, `AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수로 바꿀 수 있습니다. 구현은 `domain-dictionary` 스킬의 `references/global-sync.md`를 참조.
 
 ## 직접 편집
 
@@ -72,7 +72,7 @@ Claude/Codex/Gemini가 같은 글로벌 사전을 공유할 수 있습니다 (mn
 
 위에 나열되지 않은 도메인이 필요하면 자유롭게 새 파일을 추가하세요:
 ```
-~/.claude/memory/domain-dictionaries/{your-domain}.md
+~/.agent-memory/domain-dictionaries/{your-domain}.md
 ```
 
 스킬이 자동 인식합니다.

@@ -20,24 +20,24 @@ This step assumes `sections/index.md` already exists.
 └── ...
 ```
 
-## Parallel Execution Strategy
+## Batched Execution Strategy
 
-**Launch one subagent per section in a single message** for maximum parallelization:
+Write sections in dependency-aware batches. Do not launch every missing section at once.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  PARALLEL SUBAGENT APPROACH                         │
+│  BATCHED SUBAGENT APPROACH                          │
 │                                                     │
 │  1. Parse index.md to get SECTION_MANIFEST list     │
 │  2. Check which sections already exist              │
-│  3. Launch ALL missing sections as parallel Tasks:  │
+│  3. Group missing sections by dependency layer      │
+│  4. Launch at most 3 section jobs per batch:        │
 │                                                     │
-│     Task(prompt="Write section-01-...")             │
-│     Task(prompt="Write section-02-...")             │
-│     Task(prompt="Write section-03-...")             │
-│     ... (all in ONE message)                        │
+│     job: Write section-01-...                       │
+│     job: Write section-02-...                       │
+│     job: Write section-03-...                       │
 │                                                     │
-│  4. Wait for all subagents to complete              │
+│  5. Wait for the batch, then launch next batch      │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
@@ -54,36 +54,35 @@ section-03-api
 END_MANIFEST -->
 ```
 
-### Launch Parallel Tasks
+### Launch Batched Section Jobs
 
-For each section in the manifest, include a Task in a single message:
+For each dependency layer, include at most 3 section jobs in one batch. Use the current CLI's background subagent/worker mechanism if available; otherwise write the sections sequentially.
 
-```python
-Task(
-  subagent_type="general-purpose",
-  prompt="""
-  Write section file: section-01-foundation
+```text
+Job prompt:
+Write section file: section-01-foundation
 
-  Inputs:
-  - <planning_dir>/plan.md
-  - <planning_dir>/sections/index.md
-  - <planning_dir>/flow-diagrams/index.md (있으면 참조 — 이 섹션의 담당 노드 확인)
+Inputs:
+- <planning_dir>/plan.md
+- <planning_dir>/sections/index.md
+- <planning_dir>/flow-diagrams/index.md (있으면 참조 — 이 섹션의 담당 노드 확인)
 
-  Output: <planning_dir>/sections/section-01-foundation.md
+Output: <planning_dir>/sections/section-01-foundation.md
 
-  Requirements: [see Section File Template below]
-  """
-)
+Requirements: [see Section File Template below]
 
-Task(
-  subagent_type="general-purpose",
-  prompt="Write section file: section-02-config ..."
-)
+Job prompt:
+Write section file: section-02-config ...
 
-# ... one Task per section
+# ... next batch after this batch completes
 ```
 
-**Why parallel?** Each section is independent - they all read from the same source files (`plan.md`, `index.md`) but write to different output files.
+**Why batched?** Sections can be independent, but all tasks read the same large source files. Launching every section at once can trigger API overload or context pressure. A batch size of 3 keeps throughput while preserving reliability.
+
+If a batch hits `Overloaded`, timeout, or context-limit symptoms:
+1. Retry failed sections one at a time.
+2. Reduce each prompt to only the specific section manifest entry plus relevant files.
+3. Preserve any completed section files and continue from missing sections.
 
 ### Resume Handling
 

@@ -3,6 +3,7 @@
 //
 // Usage:
 //   node skills/codex-mnemo/install.js              # install
+//   node skills/codex-mnemo/install.js --check      # health check
 //   node skills/codex-mnemo/install.js --uninstall  # uninstall
 //
 // Codex-Mnemo core components:
@@ -12,10 +13,12 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { execFileSync } = require("child_process");
 
 // ── Config ──
 const args = process.argv.slice(2);
 const isUninstall = args.includes("--uninstall");
+const isCheck = args.includes("--check") || args.includes("--doctor");
 const isWindows = process.platform === "win32";
 
 // Source directory (location of this script)
@@ -47,6 +50,57 @@ function removeFile(filePath) {
   } catch {
     return false;
   }
+}
+
+function readText(filePath) {
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch {
+    return "";
+  }
+}
+
+function quoteSh(value) {
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
+}
+
+function commandExists(command) {
+  if (!command) return false;
+  const normalized = command.replace(/\\/g, "/");
+  const looksLikePath = /[/:\\]/.test(command);
+  if (looksLikePath) {
+    return fs.existsSync(path.normalize(command));
+  }
+
+  try {
+    if (isWindows) {
+      execFileSync("where.exe", [command], {
+        stdio: "ignore",
+        timeout: 5000,
+      });
+    } else {
+      execFileSync("sh", ["-lc", `command -v ${quoteSh(command)}`], {
+        stdio: "ignore",
+        timeout: 5000,
+      });
+    }
+    return true;
+  } catch {
+    if (isWindows && !/\.(exe|cmd|bat)$/i.test(normalized)) {
+      return commandExists(`${command}.exe`);
+    }
+    return false;
+  }
+}
+
+function getPreferredPowerShell() {
+  const winPs = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe";
+  if (fs.existsSync(winPs)) return winPs;
+
+  const pwsh = "C:/Program Files/PowerShell/7/pwsh.exe";
+  if (fs.existsSync(pwsh)) return pwsh;
+  if (commandExists("pwsh")) return "pwsh";
+  return "powershell.exe";
 }
 
 // ── AGENTS.md rules merge ──
@@ -103,9 +157,7 @@ function escapeRegex(str) {
 function buildNotifyCommand(hooksDir) {
   const d = normalizePath(hooksDir);
   if (isWindows) {
-    const pwsh = "C:/Program Files/PowerShell/7/pwsh.exe";
-    const winPs = "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe";
-    const shell = fs.existsSync(pwsh) ? pwsh : winPs;
+    const shell = getPreferredPowerShell();
     return [shell, "-ExecutionPolicy", "Bypass", "-File", `${d}/save-turn.ps1`];
   } else {
     return ["bash", `${d}/save-turn.sh`];
@@ -162,7 +214,161 @@ function removeNotifyAssignmentsEverywhere(content) {
   return kept.join("\n");
 }
 
-function upsertTuiNotifications(content) {
+function parseTomlStringArray(block) {
+  const values = [];
+  let i = 0;
+  while (i < block.length) {
+    const quote = block[i];
+    if (quote !== "'" && quote !== '"') {
+      i += 1;
+      continue;
+    }
+
+    i += 1;
+    let value = "";
+    while (i < block.length) {
+      const ch = block[i];
+      if (quote === "'" && ch === "'" && block[i + 1] === "'") {
+        value += "'";
+        i += 2;
+        continue;
+      }
+      if (quote === '"' && ch === "\\" && i + 1 < block.length) {
+        value += block[i + 1];
+        i += 2;
+        continue;
+      }
+      if (ch === quote) {
+        i += 1;
+        break;
+      }
+      value += ch;
+      i += 1;
+    }
+    values.push(value);
+  }
+  return values;
+}
+
+function readNotifyArgs(content) {
+  const lines = stripLineEndings(content).split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*notify\s*=/.test(lines[i])) continue;
+
+    let block = lines[i];
+    while (!/\]/.test(block) && i + 1 < lines.length) {
+      i += 1;
+      block += `\n${lines[i]}`;
+    }
+    return parseTomlStringArray(block);
+  }
+  return [];
+}
+
+function getNotifyScriptPath(notifyArgs) {
+  for (let i = 0; i < notifyArgs.length; i++) {
+    const arg = notifyArgs[i];
+    if (/^-File$/i.test(arg) && notifyArgs[i + 1]) {
+      return notifyArgs[i + 1];
+    }
+  }
+
+  return notifyArgs.find((arg) => /\.(ps1|sh)$/i.test(arg)) || "";
+}
+
+function notifyArgsMentionSaveTurn(notifyArgs) {
+  return notifyArgs.some((arg) => /save-turn\.(ps1|sh)/i.test(arg));
+}
+
+function scriptChainsSaveTurn(scriptPath) {
+  if (!scriptPath) return false;
+  const normalized = path.normalize(scriptPath);
+  const text = readText(normalized);
+  return /save-turn\.(ps1|sh)/i.test(text);
+}
+
+function notifyChainsSaveTurn(notifyArgs) {
+  if (notifyArgsMentionSaveTurn(notifyArgs)) return true;
+  return scriptChainsSaveTurn(getNotifyScriptPath(notifyArgs));
+}
+
+function notifyLooksLikeDesktopOrIdeNotification(notifyArgs) {
+  const haystack = [
+    ...notifyArgs,
+    readText(path.normalize(getNotifyScriptPath(notifyArgs))),
+  ].join("\n");
+  return /(ddingdong-noti|ide-response-notify|BurntToast|New-BurntToastNotification|notify-send|ShowBalloonTip)/i.test(
+    haystack,
+  );
+}
+
+function repairNotifyShell(notifyArgs) {
+  if (!isWindows || notifyArgs.length === 0) return notifyArgs;
+  if (commandExists(notifyArgs[0])) return notifyArgs;
+
+  return [getPreferredPowerShell(), ...notifyArgs.slice(1)];
+}
+
+function quotePowerShell(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function writeNotifyWrapper(hooksDir, previousNotifyArgs) {
+  if (!previousNotifyArgs || previousNotifyArgs.length === 0) return null;
+
+  ensureDir(hooksDir);
+  if (isWindows) {
+    const wrapperPath = path.join(hooksDir, "codex-mnemo-notify-wrapper.ps1");
+    const saveTurnPath = normalizePath(path.join(hooksDir, "save-turn.ps1"));
+    const previous = previousNotifyArgs.map(quotePowerShell).join(", ");
+    const content = [
+      "# codex-mnemo-notify-wrapper.ps1",
+      "# Generated by skills/codex-mnemo/install.js. Runs Mnemo, then the previous Codex notify command.",
+      '$ErrorActionPreference = "SilentlyContinue"',
+      `& ${quotePowerShell(saveTurnPath)} @args`,
+      `$previous = @(${previous})`,
+      "if ($previous.Count -gt 0) {",
+      "    $cmd = $previous[0]",
+      "    $rest = @()",
+      "    if ($previous.Count -gt 1) { $rest = $previous[1..($previous.Count - 1)] }",
+      "    & $cmd @rest @args",
+      "}",
+      "exit 0",
+      "",
+    ].join("\n");
+    fs.writeFileSync(wrapperPath, content, "utf8");
+    return [
+      getPreferredPowerShell(),
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      normalizePath(wrapperPath),
+    ];
+  }
+
+  const wrapperPath = path.join(hooksDir, "codex-mnemo-notify-wrapper.sh");
+  const saveTurnPath = normalizePath(path.join(hooksDir, "save-turn.sh"));
+  const previous = previousNotifyArgs
+    .map((arg) => `'${String(arg).replace(/'/g, "'\\''")}'`)
+    .join(" ");
+  const content = [
+    "#!/usr/bin/env bash",
+    "# Generated by skills/codex-mnemo/install.js. Runs Mnemo, then the previous Codex notify command.",
+    "set +e",
+    `bash '${saveTurnPath.replace(/'/g, "'\\''")}' "$@"`,
+    `previous=( ${previous} )`,
+    'if [ "${#previous[@]}" -gt 0 ]; then',
+    '  "${previous[@]}" "$@"',
+    "fi",
+    "exit 0",
+    "",
+  ].join("\n");
+  fs.writeFileSync(wrapperPath, content, "utf8");
+  fs.chmodSync(wrapperPath, 0o755);
+  return ["bash", normalizePath(wrapperPath)];
+}
+
+function disableTuiNotifications(content) {
   const lines = stripLineEndings(content).split("\n");
   const tuiHeader = lines.findIndex((l) => /^\s*\[tui\]\s*$/.test(l));
   if (tuiHeader >= 0) {
@@ -176,19 +382,19 @@ function upsertTuiNotifications(content) {
     let found = false;
     for (let i = tuiHeader + 1; i < end; i++) {
       if (/^\s*notifications\s*=/.test(lines[i])) {
-        lines[i] = "notifications = true";
+        lines[i] = "notifications = false";
         found = true;
         break;
       }
     }
     if (!found) {
-      lines.splice(end, 0, "notifications = true");
+      lines.splice(end, 0, "notifications = false");
     }
     return lines.join("\n");
   }
 
   let updated = removeLine(content, /^\s*tui\.notifications\s*=/);
-  updated = insertRootLine(updated, "tui.notifications = true");
+  updated = insertRootLine(updated, "tui.notifications = false");
   return updated;
 }
 
@@ -197,7 +403,7 @@ function stringifyNotify(args) {
   return `notify = [${escaped.join(", ")}]`;
 }
 
-function installTomlNotify(configPath, notifyArgs) {
+function installTomlNotify(configPath, notifyArgs, hooksDir) {
   let content = "";
   try {
     content = fs.readFileSync(configPath, "utf8");
@@ -205,8 +411,28 @@ function installTomlNotify(configPath, notifyArgs) {
     content = "";
   }
 
-  const newLine = stringifyNotify(notifyArgs);
+  const existingNotifyArgs = readNotifyArgs(content);
   const hadNotify = /^\s*notify\s*=/m.test(content);
+  let finalNotifyArgs = notifyArgs;
+
+  if (
+    hadNotify &&
+    existingNotifyArgs.length > 0 &&
+    notifyLooksLikeDesktopOrIdeNotification(existingNotifyArgs)
+  ) {
+    console.log("      Removing existing desktop/IDE notification chain");
+  } else if (hadNotify && notifyChainsSaveTurn(existingNotifyArgs)) {
+    finalNotifyArgs = repairNotifyShell(existingNotifyArgs);
+    console.log("      Refreshing existing save-turn notify chain");
+  } else if (hadNotify && existingNotifyArgs.length > 0 && hooksDir) {
+    const wrapperNotifyArgs = writeNotifyWrapper(hooksDir, existingNotifyArgs);
+    if (wrapperNotifyArgs) {
+      finalNotifyArgs = wrapperNotifyArgs;
+      console.log("      Preserving existing notify via codex-mnemo wrapper");
+    }
+  }
+
+  const newLine = stringifyNotify(finalNotifyArgs);
   console.log(
     hadNotify
       ? "      Replacing existing notify config with codex-mnemo format"
@@ -215,7 +441,7 @@ function installTomlNotify(configPath, notifyArgs) {
 
   content = removeNotifyAssignmentsEverywhere(content);
   content = insertRootLine(content, newLine);
-  content = upsertTuiNotifications(content);
+  content = disableTuiNotifications(content);
 
   if (content.length > 0 && !content.endsWith("\n")) {
     content += "\n";
@@ -225,6 +451,7 @@ function installTomlNotify(configPath, notifyArgs) {
 
   ensureDir(path.dirname(configPath));
   fs.writeFileSync(configPath, content, "utf8");
+  return finalNotifyArgs;
 }
 
 function removeTomlNotify(configPath) {
@@ -312,9 +539,13 @@ function install() {
   // [2/3] config.toml notify settings
   console.log("\n[2/3] Configuring config.toml notify...");
   const notifyArgs = buildNotifyCommand(hooksDir);
-  installTomlNotify(configPath, notifyArgs);
-  console.log(`      ${stringifyNotify(notifyArgs)}`);
-  console.log("      tui.notifications = true");
+  const installedNotifyArgs = installTomlNotify(
+    configPath,
+    notifyArgs,
+    hooksDir,
+  );
+  console.log(`      ${stringifyNotify(installedNotifyArgs)}`);
+  console.log("      tui.notifications = false");
   console.log("      Done!");
 
   // [3/3] Install AGENTS.md rules
@@ -345,6 +576,97 @@ function install() {
 `);
 }
 
+// ── Health Check ──
+function check() {
+  console.log(`
+╔═══════════════════════════════════════════════════════════════╗
+║  CODEX-MNEMO: Health Check                                    ║
+╚═══════════════════════════════════════════════════════════════╝
+`);
+
+  const hooksDir = path.join(codexDir, "hooks");
+  const configPath = path.join(codexDir, "config.toml");
+  const agentsMdPath = path.join(codexDir, "AGENTS.md");
+  let issues = 0;
+
+  console.log("[1/3] Checking hook files...");
+  const hookFiles = isWindows
+    ? [
+        "save-turn.ps1",
+        "append-user.ps1",
+        "append-assistant.ps1",
+        "codex-hook-bridge.js",
+      ]
+    : [
+        "save-turn.sh",
+        "append-user.sh",
+        "append-assistant.sh",
+        "codex-hook-bridge.js",
+      ];
+  for (const hookFile of hookFiles) {
+    const filePath = path.join(hooksDir, hookFile);
+    if (fs.existsSync(filePath)) {
+      const stat = fs.statSync(filePath);
+      console.log(`      OK ${hookFile} (${stat.size} bytes)`);
+    } else {
+      console.log(`      MISSING ${hookFile}`);
+      issues += 1;
+    }
+  }
+
+  console.log("\n[2/3] Checking config.toml notify...");
+  const config = readText(configPath);
+  if (!config) {
+    console.log(`      MISSING ${configPath}`);
+    issues += 1;
+  } else {
+    const notifyArgs = readNotifyArgs(config);
+    if (notifyArgs.length === 0) {
+      console.log("      MISSING notify assignment");
+      issues += 1;
+    } else {
+      const command = notifyArgs[0];
+      const executableOk = commandExists(command);
+      console.log(`      notify command: ${command}`);
+      console.log(`      command executable: ${executableOk ? "yes" : "no"}`);
+      if (!executableOk) issues += 1;
+
+      const scriptPath = getNotifyScriptPath(notifyArgs);
+      if (scriptPath) {
+        const scriptExists = fs.existsSync(path.normalize(scriptPath));
+        console.log(`      notify script: ${scriptPath}`);
+        console.log(`      script exists: ${scriptExists ? "yes" : "no"}`);
+        if (!scriptExists) issues += 1;
+      }
+
+      const hasSaveTurn = notifyChainsSaveTurn(notifyArgs);
+      console.log(`      save-turn chained: ${hasSaveTurn ? "yes" : "no"}`);
+      if (!hasSaveTurn) issues += 1;
+    }
+  }
+
+  console.log("\n[3/3] Checking AGENTS.md rules...");
+  const agentsMd = readText(agentsMdPath);
+  const hasRules = agentsMd.includes(MARKER_START) && agentsMd.includes(MARKER_END);
+  const hasTags = /응답 키워드 규칙/.test(agentsMd);
+  const hasSearch = /과거 대화 검색 규칙/.test(agentsMd);
+  console.log(`      mnemo block: ${hasRules ? "yes" : "no"}`);
+  console.log(`      response tags: ${hasTags ? "yes" : "no"}`);
+  console.log(`      past search: ${hasSearch ? "yes" : "no"}`);
+  if (!hasRules || !hasTags || !hasSearch) issues += 1;
+
+  console.log("");
+  if (issues === 0) {
+    console.log("All checks passed. Codex-Mnemo is installed.");
+  } else {
+    console.log(`${issues} issue(s) found. Reinstall or refresh with:`);
+    console.log("  node skills/codex-mnemo/install.js");
+  }
+  console.log("");
+
+  process.exit(issues > 0 ? 1 : 0);
+}
+
 // ── Uninstall ──
 function uninstall() {
   console.log(`
@@ -365,9 +687,11 @@ function uninstall() {
     "append-assistant.ps1",
     "codex-hook-bridge.js",
     "sync-sessions.ps1",
+    "codex-mnemo-notify-wrapper.ps1",
     "save-turn.sh",
     "append-user.sh",
     "append-assistant.sh",
+    "codex-mnemo-notify-wrapper.sh",
   ];
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {
@@ -416,7 +740,9 @@ if (!fs.existsSync(codexDir)) {
   ensureDir(codexDir);
 }
 
-if (isUninstall) {
+if (isCheck) {
+  check();
+} else if (isUninstall) {
   uninstall();
 } else {
   install();

@@ -1,5 +1,6 @@
 ﻿# loop-stop.ps1 - Stop 훅: 루프 활성화 시 세션 종료를 가로채서 같은 프롬프트를 재투입
-# 상태 파일: .claude/loop-state.md
+# 상태 파일: .claude/.codex/.chronos/loop-state.md 중 먼저 발견된 것
+# (CLI별 setup-loop가 자기 디렉토리에 만들기 때문에 3곳 모두 검사해야 모든 CLI에서 작동)
 
 $ErrorActionPreference = "Stop"
 
@@ -8,10 +9,14 @@ $ErrorActionPreference = "Stop"
 # 결국 ConvertFrom-Json이 'invalid object' 에러로 실패함.
 try { [Console]::InputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 $hookInput = [Console]::In.ReadToEnd()
-$stateFile = ".claude/loop-state.md"
+
+# 상태 파일 탐색: Claude(.claude), Codex(.codex), Gemini(.chronos) 순.
+# 이전에는 ".claude/loop-state.md"만 봐서 Gemini 세션의 .chronos 상태를 못 찾는 버그가 있었음.
+$stateCandidates = @(".claude/loop-state.md", ".codex/loop-state.md", ".chronos/loop-state.md")
+$stateFile = $stateCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 # 상태 파일 없으면 루프 비활성 — 그냥 통과
-if (-not (Test-Path $stateFile)) {
+if (-not $stateFile) {
     exit 0
 }
 
@@ -102,29 +107,23 @@ try {
     exit 0
 }
 
-# 완료 감지 1: AI가 "더 이상 할 게 없다" 패턴 출력
-# 오탐 방지: 전체 출력이 아닌 마지막 500자만 검사
-$tailOutput = if ($lastOutput.Length -gt 500) { $lastOutput.Substring($lastOutput.Length - 500) } else { $lastOutput }
+# 완료 감지 1: AI가 'Chronos Complete' 마커 출력
+# 명시적 마커만 검사하므로 tail-500 가드는 불필요 (전체 출력 검사).
+# 가드가 있으면 마커 뒤에 긴 설명/표/태그가 붙을 때 미탐(끝 500자 밖으로 밀림)이 발생.
 $donePatterns = @(
-    'Chronos Complete',
-    '더 이상.*(할|수정할|고칠).*(없|작업이 없)',
-    'all issues.*fixed',
-    'no more.*issues',
-    '남은.*이슈.*없',
-    '모든.*이슈.*수정.*완료',
-    '모든.*작업.*완료'
+    'Chronos Complete'
 )
 foreach ($p in $donePatterns) {
-    if ($tailOutput -match $p) {
+    if ($lastOutput -match $p) {
         Write-Host "loop: AI가 작업 완료를 보고했습니다. 루프를 종료합니다."
         Remove-Item $stateFile -Force
         exit 0
     }
 }
 
-# 완료 감지 2: <promise> 매칭 (정확 일치 또는 포함 매칭)
+# 완료 감지 2: <promise> 매칭 (정확 일치 또는 포함 매칭) — 전체 출력 검사
 if ($completionPromise -and $completionPromise -ne "null") {
-    $promiseMatch = [regex]::Match($tailOutput, '<promise>(.*?)</promise>')
+    $promiseMatch = [regex]::Match($lastOutput, '<promise>(.*?)</promise>')
     if ($promiseMatch.Success) {
         $promiseValue = $promiseMatch.Groups[1].Value.Trim()
         # 정확 일치 또는 포함 매칭 (공백/줄바꿈 차이 허용)
@@ -135,7 +134,7 @@ if ($completionPromise -and $completionPromise -ne "null") {
         }
     }
     # <promise> 태그가 있기만 하면 완료로 간주 (completion_promise 없이 태그만 쓴 경우)
-    if ($tailOutput -match '<promise>') {
+    if ($lastOutput -match '<promise>') {
         Write-Host "loop: <promise> 태그 감지 — 완료로 판정"
         Remove-Item $stateFile -Force
         exit 0

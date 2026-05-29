@@ -15,7 +15,7 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
    - Step 2: Playwright 코드 생성 (references/playwright-codegen.md 참조)
    - Step 3: 서버 준비
    - Step 4: 테스트 실행
-   - Step 5: 브라우저 탐색 QA (references/browser-explorer.md 참조, Playwright MCP 사용)
+   - Step 5: 브라우저 탐색 QA (references/browser-explorer.md 참조, 탐색 스크립트 생성·실행 → 이슈 회수. `--explore-mcp` 시 Playwright MCP fallback)
    - Step 6: Healer Loop (references/healer-loop.md 참조)
    - Step 7: 결과 보고
 3. 각 단계에서 실패하면 사용자에게 보고하고 다음 단계 진행 여부를 확인합니다.
@@ -31,4 +31,10 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
 /minos --fix-test-only           # 구현 코드 수정 금지
 /minos --explore-only            # 브라우저 탐색 QA만 실행
 /minos --no-explore              # 브라우저 탐색 QA 스킵
+/minos --no-explore-active       # 탐색 QA 패시브 수집만 (인터랙션 스킵)
+/minos --explore-mcp             # 탐색 QA를 Playwright MCP 방식으로 (fallback)
 ```
+
+> 탐색 QA(Step 5)는 기본적으로 탐색 스크립트(`tests/explore/*.spec.ts`)를 생성·실행하고
+> 결과 `report.json`에서 이슈만 추출합니다. Playwright만 있으면 동작하며, MCP 도구는
+> `--explore-mcp` fallback에서만 사용됩니다.

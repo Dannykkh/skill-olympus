@@ -4,10 +4,12 @@
 
 ## 글로벌 사전 폴더
 
-위치: `~/.claude/memory/domain-dictionaries/`
+위치: `~/.agent-memory/domain-dictionaries/`
+
+`AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수가 있으면 그 값을 우선합니다. 이 경로는 Claude/Codex/Gemini가 함께 쓰는 사용자 자산 위치입니다.
 
 ```
-~/.claude/memory/domain-dictionaries/
+~/.agent-memory/domain-dictionaries/
 ├── README.md          ← 사용 안내
 ├── ecommerce.md       ← 이커머스 공통 용어
 ├── healthcare.md      ← 의료 공통 용어
@@ -25,17 +27,14 @@
 
 ```bash
 # 스킬 시작 시 체크
-GLOBAL_DICT_DIR="$HOME/.claude/memory/domain-dictionaries"
+GLOBAL_DICT_DIR="${AGENT_DOMAIN_DICTIONARY_HOME:-$HOME/.agent-memory/domain-dictionaries}"
 if [ ! -d "$GLOBAL_DICT_DIR" ]; then
   mkdir -p "$GLOBAL_DICT_DIR"
-  # README 시드 복사 (스킬 references에서)
-  cp "$HOME/.claude/skills/domain-dictionary/references/global-readme-template.md" \
-     "$GLOBAL_DICT_DIR/README.md"
+  # README 시드 복사 (현재 CLI의 domain-dictionary skill references에서)
+  cp "<current-skill-dir>/references/global-readme-template.md" "$GLOBAL_DICT_DIR/README.md"
   echo "글로벌 도메인사전 폴더 생성: $GLOBAL_DICT_DIR"
 fi
 ```
-
-(Codex는 `~/.codex/skills/...`, Gemini는 `~/.gemini/skills/...` 경로로 변경)
 
 ## 도메인 자동 추정
 
@@ -68,12 +67,18 @@ options:
   - 기타 (직접 입력)
 ```
 
+질문 도구 호환성:
+- 기본은 일반 텍스트 번호 목록입니다.
+- 구조화 질문 도구는 현재 CLI가 정확히 지원할 때만 사용합니다.
+- 여러 항목 선택은 `1, 3, 5`처럼 번호로 받습니다. 구조화 다중 선택 payload는 지원 여부가 확인된 경우에만 보냅니다.
+- `Invalid tool parameters`가 한 번이라도 나면 같은 payload를 재시도하지 말고 일반 텍스트로 전환합니다.
+
 ## Phase 2 시드 (Step 8 끝): 글로벌 → 프로젝트
 
 zephermine Step 8 끝 부산물 동작:
 
 1. 글로벌 사전 파일(`{도메인}.md`) 존재 확인
-2. **있으면**: 후보 용어 multiSelect로 사용자에게 제시
+2. **있으면**: 후보 용어를 번호 목록으로 사용자에게 제시
 3. **없으면**: 글로벌 시드 없이 spec/interview에서만 추출
 4. 사용자가 ✅한 용어만 프로젝트 사전 v1 시드에 포함
 
@@ -81,7 +86,7 @@ zephermine Step 8 끝 부산물 동작:
 question: "이 프로젝트에 가져올 ecommerce 도메인 공통 용어를 선택하세요.
 글로벌 사전에서 12개 용어를 발견했습니다. 이 프로젝트에 필요한 것만 가져옵니다."
 header: "Global Seed"
-multiSelect: true
+selection: "multiple numbers by default; structured multiple-selection only if supported"
 options:
   - label: "Cart (장바구니)"
     description: "결제 전 임시 상품 목록"
@@ -101,7 +106,7 @@ Phase 2가 짧거나 단순한 프로젝트면 자동 건너뜀(spec.md에 핵�
 ### 반영 절차
 
 1. 프로젝트 사전 v3에서 신규 추가된 용어 또는 글로벌과 다른 정의 추출
-2. 사용자에게 multiSelect로 글로벌 반영 여부 확인 (Step 11 multiSelect 3번)
+2. 사용자에게 번호 목록으로 글로벌 반영 여부 확인 (Step 11 확인 3번)
 3. 선택된 항목을 글로벌 사전에 추가하면서 **출처 메타데이터** 포함
 
 ### 출처 메타데이터 형식
@@ -192,9 +197,8 @@ Phase 2가 짧거나 단순한 프로젝트면 자동 건너뜀(spec.md에 핵�
 
 ## 다른 CLI 호환
 
-이 글로벌 사전은 **Claude/Codex/Gemini 모두 공유**합니다 (mnemo 패턴과 동일):
-- Claude: `~/.claude/memory/domain-dictionaries/`
-- Codex: `~/.codex/memory/domain-dictionaries/` (sync 스크립트가 동기화)
-- Gemini: `~/.gemini/memory/domain-dictionaries/` (sync 스크립트가 동기화)
+이 글로벌 사전은 **Claude/Codex/Gemini 모두 공유**합니다.
 
-또는 단일 위치 공유: `~/.claude/memory/domain-dictionaries/`를 모든 CLI가 참조하도록 심볼릭 링크 또는 환경 변수 설정 (구현은 install 스크립트에서 결정).
+- 기본 공통 위치: `~/.agent-memory/domain-dictionaries/`
+- 환경 변수 override: `AGENT_DOMAIN_DICTIONARY_HOME`
+- 기존 CLI별 위치(`~/.claude`, `~/.codex`, `~/.gemini`)가 있으면 마이그레이션 입력으로만 참고하고, 새 기록은 공통 위치에 작성합니다.

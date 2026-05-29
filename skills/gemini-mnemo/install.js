@@ -4,6 +4,7 @@
 // Usage:
 //   node skills/gemini-mnemo/install.js              # install
 //   node skills/gemini-mnemo/install.js --uninstall  # uninstall
+//   node skills/gemini-mnemo/install.js --check      # health check
 //
 // Gemini-Mnemo core components:
 //   - Hook: save-turn (auto-saves User+Assistant conversations via AfterAgent event)
@@ -17,6 +18,7 @@ const os = require("os");
 // ── Config ──
 const args = process.argv.slice(2);
 const isUninstall = args.includes("--uninstall");
+const isCheck = args.includes("--check") || args.includes("--doctor");
 const isWindows = process.platform === "win32";
 
 // Source directory (location of this script)
@@ -128,13 +130,21 @@ function mergeHooksConfig(settingsPath, hookCommand) {
   settings.hooks = settings.hooks || {};
   settings.hooks.AfterAgent = settings.hooks.AfterAgent || [];
 
-  // Check if existing gemini-mnemo hook exists
-  const exists = settings.hooks.AfterAgent.some(h =>
-    Array.isArray(h.hooks) &&
-    h.hooks.some(cmd => cmd && typeof cmd.command === "string" && cmd.command.includes("save-turn"))
-  );
+  // Update existing Gemini-Mnemo hooks to the current platform command.
+  // Older Windows installs may still contain bash "C:/..." commands.
+  let updated = false;
+  for (const h of settings.hooks.AfterAgent) {
+    if (!Array.isArray(h.hooks)) continue;
+    for (const cmd of h.hooks) {
+      if (cmd && typeof cmd.command === "string" && cmd.command.includes("save-turn")) {
+        cmd.type = cmd.type || "command";
+        cmd.command = hookCommand;
+        updated = true;
+      }
+    }
+  }
 
-  if (!exists) {
+  if (!updated) {
     settings.hooks.AfterAgent.push({
       matcher: "",
       hooks: [{
@@ -243,6 +253,115 @@ function removeContextFileName(settingsPath) {
   }
 
   writeJson(settingsPath, settings);
+}
+
+// ── Health check ──
+function normalizeHookFilePath(filePath) {
+  return filePath.replace(/\//g, path.sep);
+}
+
+function extractHookScriptPath(command) {
+  const match = command.match(/-File\s+"([^"]+)"|bash\s+"([^"]+)"/);
+  return match ? (match[1] || match[2]) : "";
+}
+
+function check() {
+  console.log(`
+╔═══════════════════════════════════════════════════════════════╗
+║  GEMINI-MNEMO: Health Check                                  ║
+╚═══════════════════════════════════════════════════════════════╝
+`);
+
+  const hooksDir = path.join(geminiDir, "hooks");
+  const settingsPath = path.join(geminiDir, "settings.json");
+  const agentsMdPath = path.join(geminiDir, "AGENTS.md");
+  let issues = 0;
+
+  console.log("[1/3] Checking hook files...");
+  const hookFile = isWindows ? "save-turn.ps1" : "save-turn.sh";
+  const hookPath = path.join(hooksDir, hookFile);
+  if (fs.existsSync(hookPath)) {
+    const stat = fs.statSync(hookPath);
+    console.log(`      OK ${hookFile} (${stat.size} bytes)`);
+  } else {
+    console.log(`      MISSING ${hookFile}`);
+    console.log("      Fix: node skills/gemini-mnemo/install.js");
+    issues++;
+  }
+
+  console.log("\n[2/3] Checking settings.json AfterAgent hook...");
+  const settings = readJson(settingsPath);
+  const afterAgent = Array.isArray(settings.hooks?.AfterAgent) ? settings.hooks.AfterAgent : [];
+  const hookCommands = [];
+  for (const entry of afterAgent) {
+    if (!Array.isArray(entry.hooks)) continue;
+    for (const hook of entry.hooks) {
+      if (hook && typeof hook.command === "string" && hook.command.includes("save-turn")) {
+        hookCommands.push(hook.command);
+      }
+    }
+  }
+
+  if (hookCommands.length === 0) {
+    console.log("      MISSING AfterAgent save-turn hook");
+    console.log("      Fix: node skills/gemini-mnemo/install.js");
+    issues++;
+  } else {
+    const expectedRunner = isWindows ? "powershell" : "bash";
+    const expectedScript = isWindows ? "save-turn.ps1" : "save-turn.sh";
+    for (const command of hookCommands) {
+      console.log(`      command: ${command}`);
+      const lower = command.toLowerCase();
+      if (!lower.includes(expectedRunner) || !lower.includes(expectedScript.toLowerCase())) {
+        console.log(`      MISMATCH expected ${expectedRunner} with ${expectedScript}`);
+        console.log("      Fix: node skills/gemini-mnemo/install.js");
+        issues++;
+      }
+
+      const scriptPath = extractHookScriptPath(command);
+      if (scriptPath) {
+        const normalized = normalizeHookFilePath(scriptPath);
+        if (fs.existsSync(normalized)) {
+          console.log(`      script exists: ${normalized}`);
+        } else {
+          console.log(`      MISSING script: ${normalized}`);
+          issues++;
+        }
+      } else {
+        console.log("      Could not parse hook script path");
+        issues++;
+      }
+    }
+  }
+
+  const contextFiles = normalizeContextFileNames(settings.context?.fileName);
+  if (contextFiles.includes("AGENTS.md")) {
+    console.log("      context.fileName includes AGENTS.md");
+  } else {
+    console.log("      MISSING context.fileName AGENTS.md");
+    issues++;
+  }
+
+  console.log("\n[3/3] Checking AGENTS.md rules...");
+  try {
+    const content = fs.readFileSync(agentsMdPath, "utf8");
+    if (content.includes(MARKER_START) && content.includes(MARKER_END)) {
+      console.log("      Mnemo rules block present");
+    } else {
+      console.log("      MISSING Gemini-Mnemo rules block");
+      issues++;
+    }
+  } catch {
+    console.log("      MISSING AGENTS.md");
+    issues++;
+  }
+
+  if (issues > 0) {
+    console.log(`\n${issues} issue(s) found. Run: node skills/gemini-mnemo/install.js`);
+    process.exit(1);
+  }
+
+  console.log("\nAll checks passed. Gemini-Mnemo is installed.");
 }
 
 // ── Install ──
@@ -369,7 +488,9 @@ if (!fs.existsSync(geminiDir)) {
   ensureDir(geminiDir);
 }
 
-if (isUninstall) {
+if (isCheck) {
+  check();
+} else if (isUninstall) {
   uninstall();
 } else {
   install();

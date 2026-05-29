@@ -153,12 +153,16 @@ function mergeHooksConfig(settingsPath, hooksConfig) {
                    : newCmd.includes("save-response") ? "save-response"
                    : newCmd;
 
-      // Check if a hook with the same identifier already exists
-      const exists = settings.hooks[event].some(h => {
+      // Replace existing Mnemo hooks with the current platform command.
+      // This repairs older Windows installs that still point at bash/*.sh.
+      const existingIndex = settings.hooks[event].findIndex(h => {
         const existingCmd = h.hooks?.[0]?.command || h.command || "";
         return existingCmd.includes(hookId);
       });
-      if (!exists) {
+
+      if (existingIndex >= 0) {
+        settings.hooks[event][existingIndex] = hook;
+      } else {
         settings.hooks[event].push(hook);
       }
     }
@@ -368,18 +372,30 @@ function check() {
   console.log("\n[2/3] Checking settings.json hook registration...");
   const settings = readJson(settingsPath);
 
-  // Stop hook (save-response)
-  const stopHooks = settings.hooks?.Stop || [];
-  const hasStop = stopHooks.some(h => {
-    const cmd = h.hooks?.[0]?.command || h.command || "";
-    return cmd.includes("save-response");
-  });
-  if (hasStop) {
-    const cmd = stopHooks.find(h => (h.hooks?.[0]?.command || h.command || "").includes("save-response"));
+  const expectedExt = isWindows ? ".ps1" : ".sh";
+  const expectedRunner = isWindows ? "powershell" : "bash";
+
+  function validateRegisteredHook(label, hooks, hookId) {
+    const cmd = hooks.find(h => (h.hooks?.[0]?.command || h.command || "").includes(hookId));
+    if (!cmd) {
+      console.log(`      ❌ ${label} hook not registered (${hookId} missing)`);
+      issues++;
+      return;
+    }
+
     const cmdStr = cmd?.hooks?.[0]?.command || cmd?.command || "";
-    console.log(`      ✅ Stop → save-response`);
+    console.log(`      ✅ ${label} → ${hookId}`);
     console.log(`         ${cmdStr}`);
-    // Verify the referenced file actually exists at the path
+
+    const lower = cmdStr.toLowerCase();
+    const expectedScript = `${hookId}${expectedExt}`;
+    if (!lower.includes(expectedRunner) || !lower.includes(expectedScript.toLowerCase())) {
+      console.log(`         ❌ Platform command mismatch: expected ${expectedRunner} with ${expectedScript}`);
+      console.log(`         → Fix: node skills/mnemo/install.js`);
+      issues++;
+    }
+
+    // Verify the referenced file actually exists at the path.
     const match = cmdStr.match(/-File\s+"([^"]+)"|bash\s+"([^"]+)"/);
     if (match) {
       const filePath = match[1] || match[2];
@@ -391,37 +407,15 @@ function check() {
         console.log(`         → Path is registered in settings.json but the actual file is missing!`);
         issues++;
       }
+    } else {
+      console.log(`         ❌ Could not parse hook script path`);
+      issues++;
     }
-  } else {
-    console.log(`      ❌ Stop hook not registered (save-response missing)`);
-    issues++;
   }
 
-  // PostToolUse hook (save-tool-use)
-  const ptuHooks = settings.hooks?.PostToolUse || [];
-  const hasPtu = ptuHooks.some(h => {
-    const cmd = h.hooks?.[0]?.command || h.command || "";
-    return cmd.includes("save-tool-use");
-  });
-  if (hasPtu) {
-    console.log(`      ✅ PostToolUse → save-tool-use`);
-  } else {
-    console.log(`      ❌ PostToolUse hook not registered (save-tool-use missing)`);
-    issues++;
-  }
-
-  // UserPromptSubmit hook (save-conversation)
-  const upsHooks = settings.hooks?.UserPromptSubmit || [];
-  const hasUps = upsHooks.some(h => {
-    const cmd = h.hooks?.[0]?.command || h.command || "";
-    return cmd.includes("save-conversation");
-  });
-  if (hasUps) {
-    console.log(`      ✅ UserPromptSubmit → save-conversation`);
-  } else {
-    console.log(`      ❌ UserPromptSubmit hook not registered (save-conversation missing)`);
-    issues++;
-  }
+  validateRegisteredHook("Stop", settings.hooks?.Stop || [], "save-response");
+  validateRegisteredHook("PostToolUse", settings.hooks?.PostToolUse || [], "save-tool-use");
+  validateRegisteredHook("UserPromptSubmit", settings.hooks?.UserPromptSubmit || [], "save-conversation");
 
   // 3. CLAUDE.md rules
   console.log("\n[3/3] Checking CLAUDE.md long-term memory rules...");

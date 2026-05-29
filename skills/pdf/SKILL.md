@@ -356,7 +356,7 @@ python ... markdown_to_pdf.py preview spec.md
 python ... markdown_to_pdf.py setup
 ```
 
-### 페이지 구성 옵션 (AskUserQuestion 권장)
+### 페이지 구성 옵션 (현재 CLI의 질문 방식 권장)
 
 마크다운을 PDF로 만들 때, 다음을 사용자에게 물어보고 적용하세요:
 

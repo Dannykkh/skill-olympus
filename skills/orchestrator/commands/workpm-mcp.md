@@ -21,7 +21,6 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - AskUserQuestion
 ---
 
 # PM 모드 (MCP 전용) v1
@@ -57,7 +56,7 @@ Worker끼리 대화할 수 없으므로, **태스크 설계가 품질의 90%를 
 
 | 항목 | Agent Teams (Claude) | MCP 모드 (이 문서) |
 |------|---------------------|-------------------|
-| PM↔Worker 통신 | 실시간 대화 (SendMessage) | 없음 (태스크 기반) |
+| PM↔Worker 통신 | 실시간 대화 | 없음 (태스크 기반) |
 | Worker 관리 | 해고/재고용 가능 | 자동 실행/자동 종료 |
 | 팀원 수 | 4~8명 (동시 대화) | 1~10명 (독립 실행) |
 | 적합한 상황 | 복잡한 조율 필요 | 명확한 태스크 분할 가능 |
@@ -69,7 +68,7 @@ Worker끼리 대화할 수 없으므로, **태스크 설계가 품질의 90%를 
 
 **리더가 직접 하는 것:**
 - 태스크 설계 및 의존성 정의
-- 사용자 소통 (AskUserQuestion)
+- 사용자 소통 (현재 CLI의 질문 방식)
 - 의사결정 + activity log 기록
 - Worker 진행 상황 모니터링
 
@@ -103,7 +102,7 @@ PM: 완료된 태스크 결과 읽기 (orchestrator_get_task_summary)
   ↓
 PM: 종합 분석 + 3가지 제안서 작성
   ↓
-PM: 사용자에게 제안 (AskUserQuestion)
+PM: 사용자에게 제안 (현재 CLI의 질문 방식)
   ↓
 PM: 승인 결과를 activity log에 기록
 ```
@@ -115,7 +114,7 @@ PM: 승인 결과를 activity log에 기록
 4. Worker 생성 (`orchestrator_spawn_workers({ count: 2 })`)
 5. 진행 모니터링 (`orchestrator_get_progress` 반복)
 6. 완료 결과 수집 (`orchestrator_get_task_summary`)
-7. 3가지 제안서 작성 → AskUserQuestion
+7. 3가지 제안서 작성 → 현재 CLI의 질문 방식으로 승인 확인
 8. 승인 결과 기록 (`orchestrator_log_activity`)
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
@@ -263,7 +262,7 @@ PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
    - 리서치 태스크로 생성하여 Worker에게 분석 위임
 
 4. **Phase 1 실행** → 리서치 & 제안
-5. **사용자 승인 대기** → AskUserQuestion
+5. **사용자 승인 대기** → 현재 CLI의 질문 방식
 6. **Phase 2 실행** → 프로세스 도면 확보 (설계도)
 7. **Phase 3 실행** → 구현 (도면 기반)
 8. **Phase 4 실행** → 공정 점검 (준공 검사)

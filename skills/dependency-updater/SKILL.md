@@ -87,7 +87,7 @@ User Request
 │ • Report what was updated                           │
 ├─────────────────────────────────────────────────────┤
 │ Step 5: PROMPT FOR MAJOR UPDATES                    │
-│ • AskUserQuestion for each MAJOR update             │
+│ • Ask the user for each MAJOR update                │
 │ • Show current → new version                        │
 ├─────────────────────────────────────────────────────┤
 │ Step 6: APPLY APPROVED MAJORS                       │

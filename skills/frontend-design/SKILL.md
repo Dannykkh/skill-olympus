@@ -24,7 +24,7 @@ Before making aesthetic choices, check if the project already has a design syste
 
 프론트엔드 생성/재디자인 시 **사용자에게 디자인 스타일을 질문**합니다.
 
-AskUserQuestion:
+현재 CLI의 질문 방식:
 
 ```
 question: "어떤 느낌으로 만들까요?"

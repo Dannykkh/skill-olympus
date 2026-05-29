@@ -1,167 +1,103 @@
-# Claude Code 응답 완료 알림 — IDE 연동 가이드
+# IDE Integration Guide
 
-linuxserverai IDE에서 Claude Code의 응답 완료를 감지하기 위한 구현 가이드.
+이 문서는 Claude Code, Codex, Gemini를 IDE에서 관찰할 때의 지원 범위를 정리합니다.
 
-## 개요
+## Policy
 
-Claude Code는 **글로벌 훅 + 프로젝트 로컬 훅**을 모두 실행합니다.
-IDE 연동은 프로젝트 로컬 훅으로 처리합니다.
+기본 설치는 데스크톱/IDE 응답 완료 알림을 제공하지 않습니다.
 
+- `ide-response-notify.*`, `ddingdong-noti.*`, `BurntToast`, `notify-send`, UDP 신호 전송을 설치하지 않습니다.
+- CLI 훅은 Mnemo 저장, Chronos 재개, 사후 검증처럼 실제 워크플로우에 필요한 작업만 수행합니다.
+- IDE는 새 훅을 추가하지 않고 프로젝트 로컬 산출물을 읽어 상태를 갱신합니다.
+- Codex의 `notify`는 Codex lifecycle entrypoint입니다. 데스크톱 알림이 아니라 `save-turn` 실행 경로로만 사용합니다.
+
+## Supported Artifacts
+
+IDE가 읽어도 되는 파일은 아래로 제한합니다.
+
+| 파일 | 용도 | 비고 |
+|---|---|---|
+| `conversations/YYYY-MM-DD.md` | 저장된 대화 확인 | Mnemo가 turn 단위로 갱신 |
+| `MEMORY.md` | 장기기억 인덱스 확인 | 100줄/5KB 이하 유지 |
+| `memory/*.md` | 정제된 장기기억 확인 | 필요한 항목만 읽기 |
+| `memory/.mnemo-status.md` | Mnemo 정리 필요 여부 확인 | 임계값 도달 시 생성/갱신 |
+
+`loop-state.md`는 Chronos 내부 상태입니다. IDE에서 읽기 전용 표시를 할 수는 있지만, 일반적인 응답 완료 감지나 사용자 알림 용도로 사용하지 않습니다. 수정하거나 삭제하면 자동 재개 흐름이 깨질 수 있습니다.
+
+## CLI Behavior
+
+### Claude Code
+
+Claude Code는 native hook 이벤트가 있습니다. 이 저장소에서는 Mnemo 저장, Chronos, 검증 훅에 사용합니다.
+
+IDE 연동을 위해 별도의 `Stop` 훅을 추가하지 않습니다. 응답 이력은 Mnemo가 갱신하는 `conversations/` 파일에서 확인합니다.
+
+### Codex
+
+Codex는 `notify` 설정 하나가 lifecycle entrypoint입니다.
+
+지원되는 흐름:
+
+```text
+Codex turn complete
+  -> notify
+  -> save-turn
+  -> Mnemo 저장
+  -> 선택적 Chronos/codex-hook-bridge 체인
 ```
-응답 완료 → Stop 이벤트
-  → 글로벌 훅 실행 (save-response, loop-stop 등)
-  → 프로젝트 로컬 훅 실행 (.claude/settings.json)
-     → ide-response-notify 실행
-     → IDE가 감지
+
+`notify` 체인에 데스크톱 알림, 소리, IDE 팝업, UDP 전송을 추가하지 않습니다. UI 알림도 끕니다.
+
+```toml
+tui.notifications = false
 ```
 
----
+### Gemini
 
-## 구현
+Gemini도 Mnemo 저장 경로를 통해 대화 산출물을 갱신합니다. Claude 전용 `Stop` 훅이나 Codex 전용 `notify` 설정을 그대로 복사하지 않습니다.
 
-### 1. 훅 스크립트 (프로젝트 로컬)
+## IDE Read Model
 
-IDE가 프로젝트의 `.claude/hooks/`에 이 파일을 생성합니다.
+IDE가 상태를 보여줘야 한다면 파일 감시만 사용합니다.
 
-**Windows (PowerShell):**
+권장 감시 대상:
+
+```text
+conversations/
+MEMORY.md
+memory/.mnemo-status.md
+```
+
+감시 동작:
+
+1. 현재 프로젝트의 git root를 기준으로 경로를 계산합니다.
+2. `conversations/YYYY-MM-DD.md`의 변경을 감지하면 대화 패널을 갱신합니다.
+3. `memory/.mnemo-status.md`가 생기거나 바뀌면 정리 필요 상태만 표시합니다.
+4. 사용자가 요청하지 않는 한 팝업, 소리, 토스트를 띄우지 않습니다.
+
+## Removed Legacy Design
+
+이전 설계는 응답 완료 시 별도 훅이 `.claude/response-done.json`을 쓰거나 UDP로 IDE에 신호를 보냈습니다. 이 방식은 제거되었습니다.
+
+제거 대상:
+
+- `.claude/hooks/ide-response-notify.ps1`
+- `.claude/hooks/ide-response-notify.sh`
+- `.claude/settings.json`의 `ide-response-notify` `Stop` 훅 등록
+- `ddingdong-noti.*`
+- `BurntToast`, `notify-send`, `ShowBalloonTip` 기반 알림
+- 응답 완료 감지용 UDP 리스너
+
+## Migration Check
+
+프로젝트와 전역 설치본에서 아래 패턴이 남아 있으면 제거합니다.
 
 ```powershell
-# .claude/hooks/ide-response-notify.ps1
-$ErrorActionPreference = "SilentlyContinue"
-
-try {
-    $hookInput = $input | Out-String
-    $hook = $hookInput | ConvertFrom-Json
-
-    $projectPath = if ($hook.cwd) { $hook.cwd } else { $PWD.Path }
-    $sessionId = if ($hook.session_id) { $hook.session_id } else { "" }
-
-    # IDE에 알리는 방법 (택 1)
-    # 방법 A: 신호 파일
-    $signalDir = Join-Path $projectPath ".claude"
-    $signal = @{
-        project   = $projectPath
-        sessionId = $sessionId
-        timestamp = (Get-Date -Format "o")
-    } | ConvertTo-Json -Compress
-    [System.IO.File]::WriteAllText(
-        (Join-Path $signalDir "response-done.json"),
-        $signal,
-        [System.Text.Encoding]::UTF8)
-
-    # 방법 B: UDP (IDE가 리스너를 돌리는 경우)
-    # $bytes = [System.Text.Encoding]::UTF8.GetBytes($signal)
-    # $udp = [System.Net.Sockets.UdpClient]::new()
-    # $udp.Send($bytes, $bytes.Length, "127.0.0.1", 9999) | Out-Null
-    # $udp.Dispose()
-} catch {}
-
-exit 0
+rg -n "ide-response-notify|ddingdong-noti|BurntToast|notify-send|ShowBalloonTip|response-done\.json" .
 ```
 
-**Linux/Mac (Bash):**
+Codex는 설치 점검으로 데스크톱/IDE 알림이 `save-turn` 앞뒤에 남아 있지 않은지 확인합니다.
 
-```bash
-#!/bin/bash
-# .claude/hooks/ide-response-notify.sh
-INPUT=$(cat)
-PROJECT_PATH=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null)
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
-TIMESTAMP=$(date -Iseconds)
-
-# 신호 파일 생성
-cat > "$PROJECT_PATH/.claude/response-done.json" << EEOF
-{"project":"$PROJECT_PATH","sessionId":"$SESSION_ID","timestamp":"$TIMESTAMP"}
-EEOF
-
-exit 0
+```powershell
+node skills/codex-mnemo/install.js --check
 ```
-
-### 2. 프로젝트 로컬 settings.json
-
-IDE 설치 시 프로젝트의 `.claude/settings.json`에 등록합니다.
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "type": "command",
-        "command": "powershell -ExecutionPolicy Bypass -File .claude/hooks/ide-response-notify.ps1"
-      }
-    ]
-  }
-}
-```
-
-> 기존 Stop 훅이 있으면 배열에 **추가** (덮어쓰기 아님).
-
-### 3. IDE 쪽 — 감지
-
-**방법 A: FileSystemWatcher (신호 파일 감시)**
-
-```csharp
-// 프로젝트별로 watcher 생성
-var watcher = new FileSystemWatcher
-{
-    Path = Path.Combine(projectPath, ".claude"),
-    Filter = "response-done.json",
-    EnableRaisingEvents = true
-};
-
-watcher.Changed += (s, e) =>
-{
-    var json = File.ReadAllText(e.FullPath);
-    var evt = JsonSerializer.Deserialize<ResponseEvent>(json);
-    Dispatcher.Invoke(() => ShowNotification(evt));
-};
-```
-
-**방법 B: UDP (여러 프로젝트 통합 감지)**
-
-```csharp
-// 하나의 리스너로 모든 프로젝트 수신
-var udp = new UdpClient(9999);
-while (true)
-{
-    var result = await udp.ReceiveAsync();
-    var json = Encoding.UTF8.GetString(result.Buffer);
-    var evt = JsonSerializer.Deserialize<ResponseEvent>(json);
-    Dispatcher.Invoke(() => FindTab(evt.Project).ShowNotification());
-}
-```
-
-### 어떤 방법을 선택할지
-
-| | 방법 A (파일) | 방법 B (UDP) |
-|---|---|---|
-| **프로젝트 1개** | 간단 | 과함 |
-| **프로젝트 여러 개** | watcher 여러 개 | 리스너 1개로 통합 |
-| **IDE가 서버 돌려야?** | 아니오 | 아니오 (수신만) |
-| **구현 복잡도** | 매우 간단 | 간단 |
-
----
-
-## 데이터 흐름
-
-```
-Claude Code 응답 완료
-  ↓
-Stop 이벤트
-  ↓
-글로벌 훅: save-response (mnemo 저장)     ← 기존, 건드리지 않음
-로컬 훅: ide-response-notify              ← IDE가 등록
-  ↓
-.claude/response-done.json 생성 (또는 UDP)
-  ↓
-IDE FileSystemWatcher (또는 UdpClient)
-  ↓
-해당 탭에 알림
-```
-
-## 주의사항
-
-- 로컬 훅이므로 **이 프로젝트에서만** 동작 (다른 프로젝트 영향 없음)
-- `exit 0`이므로 실패해도 Claude Code 동작에 영향 없음
-- IDE가 꺼져 있으면 신호 파일만 남고, 다음에 IDE가 읽으면 됨
-- 글로벌 훅(skill-olympus)은 수정 불필요

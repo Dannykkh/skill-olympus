@@ -358,14 +358,12 @@ Layer 3: Skills (On-demand Analysis)
 
 > 이 섹션은 TermSnap CodeMapService가 자동 관리합니다. 수동 편집하지 마세요.
 
-코드 검색 시 `codemap/index.md`를 먼저 참조하세요.
-- `codemap/index.md` — 전체 파일 카테고리 요약
-- `codemap/projects.md` — 하위 프로젝트/manifest/참조 요약
-- `codemap/services.md` — 서비스 클래스/메서드 목록
-- `codemap/viewmodels.md` — ViewModel 클래스/메서드 목록
-- `codemap/views.md` — WPF View/Window/Panel 목록
-- `codemap/webclient.md` — React 컴포넌트/훅/유틸 목록
-- 각 항목은 가능하면 파일 내 라인 번호까지 함께 제공
-- 기타 경로 기반 카테고리는 `codemap/index.md`에서 확인
+코드 위치를 찾을 때 다음 순서로 진행하세요. 앞 단계에서 충분한 정보를 얻으면 다음 단계는 건너뜁니다.
+
+1. **`codemap/index.md`** — 카테고리 + 파일 수 요약. 어느 카테고리를 봐야 할지 먼저 확인.
+2. **해당 카테고리 `.md` grep** — 통째 read 금지. 항목 옆 `(L123)` 라인 번호는 그대로 `Read(file, offset=L, limit=N)` 사용.
+3. **못 찾으면 일반 grep/Glob** — codemap이 stale일 수 있음. 의심되면 사용자에게 "코드맵 갱신"을 권장.
+
+코드 위치 답변 시 `file:line` 형식 사용 (예: `RAGService.cs:53`).
 
 <!-- CODEMAP_RULES_END -->

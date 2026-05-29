@@ -196,30 +196,6 @@ function Get-Sha1([string]$text) {
     }
 }
 
-function Invoke-NotificationHook {
-    param(
-        [string]$Title = "Codex CLI",
-        [string]$Message = "작업이 완료되었습니다"
-    )
-
-    $notifyHook = Join-Path $HOME ".codex\hooks\ddingdong-noti.ps1"
-    if (-not (Test-Path $notifyHook)) { return }
-
-    $prevTitle = $env:AGENT_NOTIFY_TITLE
-    $prevMessage = $env:AGENT_NOTIFY_MESSAGE
-
-    try {
-        $env:AGENT_NOTIFY_TITLE = $Title
-        $env:AGENT_NOTIFY_MESSAGE = $Message
-        & $notifyHook
-    } catch {
-        Write-DebugLog "notify-chain-failed: $($_.Exception.Message)"
-    } finally {
-        if ($null -ne $prevTitle) { $env:AGENT_NOTIFY_TITLE = $prevTitle } else { Remove-Item Env:AGENT_NOTIFY_TITLE -ErrorAction SilentlyContinue }
-        if ($null -ne $prevMessage) { $env:AGENT_NOTIFY_MESSAGE = $prevMessage } else { Remove-Item Env:AGENT_NOTIFY_MESSAGE -ErrorAction SilentlyContinue }
-    }
-}
-
 function Get-NodeCommand {
     foreach ($candidate in @("node", "node.exe")) {
         $command = Get-Command $candidate -ErrorAction SilentlyContinue
@@ -580,23 +556,6 @@ try {
 
 Write-DebugLog "saved: baseDir=$baseDir, file=$convFile, userLen=$($userText.Length), respLen=$($response.Length), turnId=$turnId"
 $hookSummary = Invoke-CodexHookBridge -BaseDir $baseDir -PayloadObject $payload
-$hookWarnings = 0
-$hookErrors = 0
-try { $hookWarnings = [int]$hookSummary.warnings } catch {}
-try { $hookErrors = [int]$hookSummary.errors } catch {}
-
-$notifyTitle = "Codex CLI"
-$notifyMessage = "작업이 완료되었습니다"
-if ($hookErrors -gt 0) {
-    $notifyTitle = "Codex Hook Alert"
-    $notifyMessage = "작업 완료, hook 오류 $hookErrors개"
-    if ($hookWarnings -gt 0) {
-        $notifyMessage += " / 경고 $hookWarnings개"
-    }
-} elseif ($hookWarnings -gt 0) {
-    $notifyMessage = "작업 완료, hook 경고 $hookWarnings개"
-}
-Invoke-NotificationHook -Title $notifyTitle -Message $notifyMessage
 
 # ─────────────────────────────────────────────
 # Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)

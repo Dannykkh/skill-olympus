@@ -1,15 +1,24 @@
 #!/bin/bash
 # loop-stop.sh - Stop 훅: 루프 활성화 시 세션 종료를 가로채서 같은 프롬프트를 재투입
-# 상태 파일: .claude/loop-state.md
+# 상태 파일: .claude/.codex/.chronos/loop-state.md 중 먼저 발견된 것
+# (CLI별 setup-loop가 자기 디렉토리에 만들기 때문에 3곳 모두 검사해야 모든 CLI에서 작동)
 
 set -euo pipefail
 
 HOOK_INPUT=$(cat)
 
-STATE_FILE=".claude/loop-state.md"
+# 상태 파일 탐색: Claude(.claude), Codex(.codex), Gemini(.chronos) 순.
+# 이전에는 ".claude/loop-state.md"만 봐서 Gemini 세션의 .chronos 상태를 못 찾는 버그가 있었음.
+STATE_FILE=""
+for candidate in ".claude/loop-state.md" ".codex/loop-state.md" ".chronos/loop-state.md"; do
+    if [ -f "$candidate" ]; then
+        STATE_FILE="$candidate"
+        break
+    fi
+done
 
 # 상태 파일 없으면 루프 비활성 — 그냥 통과
-if [ ! -f "$STATE_FILE" ]; then
+if [ -z "$STATE_FILE" ]; then
     exit 0
 fi
 
@@ -93,18 +102,18 @@ if [ $JQ_EXIT -ne 0 ]; then
     exit 0
 fi
 
-# 완료 감지 1: AI가 "더 이상 할 게 없다" 패턴 출력
-# 오탐 방지: 전체 출력이 아닌 마지막 500자만 검사 (중간에 "Chronos Complete"가 언급만 된 경우 무시)
-TAIL_OUTPUT=$(echo "$LAST_OUTPUT" | tail -c 500)
-if echo "$TAIL_OUTPUT" | grep -qiE '(Chronos Complete|더 이상.*(할|수정할|고칠).*(없|작업이 없)|all issues.*fixed|no more.*issues|남은.*이슈.*없|모든.*이슈.*수정.*완료|모든.*작업.*완료)'; then
+# 완료 감지 1: AI가 'Chronos Complete' 마커 출력
+# 명시적 마커만 검사하므로 tail-500 가드는 불필요 (전체 출력 검사).
+# 가드가 있으면 마커 뒤에 긴 설명/표/태그가 붙을 때 미탐(끝 500자 밖으로 밀림)이 발생.
+if echo "$LAST_OUTPUT" | grep -qiE 'Chronos Complete'; then
     echo "loop: AI가 작업 완료를 보고했습니다. 루프를 종료합니다."
     rm "$STATE_FILE"
     exit 0
 fi
 
-# 완료 감지 2: <promise>텍스트</promise> 매칭 (마지막 500자에서, 포함 매칭)
+# 완료 감지 2: <promise>텍스트</promise> 매칭 (전체 출력, 포함 매칭)
 if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
-    PROMISE_TEXT=$(echo "$TAIL_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+    PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
 
     if [ -n "$PROMISE_TEXT" ]; then
         # 정확 일치 또는 포함 매칭
@@ -116,7 +125,7 @@ if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
     fi
 
     # <promise> 태그가 있기만 하면 완료로 간주
-    if echo "$TAIL_OUTPUT" | grep -q '<promise>'; then
+    if echo "$LAST_OUTPUT" | grep -q '<promise>'; then
         echo "loop: <promise> 태그 감지 — 완료로 판정"
         rm "$STATE_FILE"
         exit 0

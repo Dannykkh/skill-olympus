@@ -13,12 +13,13 @@ Plan에서 독립적인 비즈니스/기술 프로세스 추출:
 - 프로세스 수: 핵심 3~8개 (너무 많으면 상위 레벨로 통합)
 - **단일 프로세스 프로젝트(CLI, 라이브러리)라도 최소 1개의 메인 흐름도를 생성**
 
-### 2. 서브에이전트 위임
+### 2. 서브에이전트/워커 위임
 
 각 프로세스별 다이어그램 생성:
 
 ```
-Task(subagent_type=Explore, prompt="""
+Run a background subagent/worker with this prompt:
+
 skills/flow-verifier/SKILL.md의 plan 모드와 skills/mermaid-diagrams/SKILL.md를 읽고 참조하세요.
 
 다음 프로세스의 Mermaid flowchart를 작성하세요:
@@ -34,7 +35,6 @@ API 엔드포인트: {관련 API 목록}
 - 각 노드에 관련 API 엔드포인트 또는 함수명 주석
 
 결과만 반환하세요 (파일 작성 금지).
-""")
 ```
 
 ### 3. 파일 저장

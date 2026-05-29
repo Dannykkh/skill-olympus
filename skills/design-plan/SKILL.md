@@ -79,7 +79,7 @@ Phase 1 (시스템) → Phase 2 (선택) → Phase 3 (구현) → Phase 4 (리�
 
 `frontend-design` 스킬의 프리셋을 사용자에게 제시합니다.
 
-AskUserQuestion:
+현재 CLI의 질문 방식:
 
 ```
 question: "어떤 느낌으로 만들까요?"
@@ -103,7 +103,7 @@ options:
 
 ### 1-2. 산업/프로젝트 타입 확인
 
-AskUserQuestion:
+현재 CLI의 질문 방식:
 
 ```
 question: "어떤 종류의 서비스인가요?"
@@ -159,7 +159,7 @@ options:
 
 ## Phase 2: 레퍼런스 수집 (선택)
 
-AskUserQuestion:
+현재 CLI의 질문 방식:
 
 ```
 question: "참고할 디자인이 있나요?"

@@ -378,7 +378,7 @@ Submit without navigation (no history entry):
 ```tsx
 import { useFetcher } from "react-router";
 
-export default function Task() {
+export default function UpdateTaskForm() {
   const fetcher = useFetcher();
 
   return (
