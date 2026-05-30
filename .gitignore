@@ -81,3 +81,37 @@ docs/launch/
 skills/pdf/test/out/
 skills/pdf/test/sample.pdf
 skills/pdf/test/sample.preview.html
+
+# 스킬 배포와 무관한 개인 워크플로우/자료
+claude-code-guide.html
+latest
+start-claude.bat
+archive/
+
+# IDE / 편집기
+.terminal
+.terminal/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS 메타데이터
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 빌드 / 캐시
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+build/
+
+# 임시 / 디버그
+*.bak
+*.tmp
+nul
+tmp-*.log
+*-debug.log
