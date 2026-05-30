@@ -88,9 +88,7 @@ latest
 start-claude.bat
 archive/
 
-# IDE / 편집기
-.terminal
-.terminal/
+# IDE / 편집기 (.termsnap은 line 48에서 별도 처리)
 .vscode/
 .idea/
 *.swp
