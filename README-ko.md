@@ -187,6 +187,16 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.4.2 — Chronos 강화 + 크로스-CLI parity (2026.05)
+
+- **done-pattern 오탐 제거** — Stop 훅의 느슨한 서술형 정규식(`모든.*작업.*완료`, `더 이상.*고칠.*없` 등)이 사이클 중간의 진행 보고를 완료로 오인해 루프를 죽이고 있었음. `Chronos Complete` 마커와 `<promise>` 태그만 종료 신호로 인정하도록 정리 (문서화된 종료 계약과 일치)
+- **tail-500 가드 제거** — 마지막 500자만 검사하는 가드 때문에 마커가 메시지 상단에 있고 뒤에 긴 설명이 붙으면 종료 신호가 놓쳐졌음. 명시적 마커만 보는 새 로직에선 가드의 본래 목적(오탐 방지)이 사라져 미탐만 남았기에 제거
+- **Gemini state-path 버그 수정** — `loop-stop.ps1/.sh`가 `.claude/loop-state.md`만 보고 있어서 Gemini의 `.chronos/loop-state.md`를 못 찾아 Chronos가 Gemini에서 전혀 작동하지 않던 버그. 이제 `.claude/`, `.codex/`, `.chronos/` 3개 경로를 순서대로 탐색
+- **알림 fanout 제거** — Mnemo 인스톨러와 save-turn 훅에서 데스크톱/IDE 알림 체인 제거. save-turn, Chronos, hook-bridge 흐름은 유지
+- **Codex 호환성 감사 갱신** — `notify → ide-response-notify-wrapper → save-turn → continue-loop → codex exec resume --last` 체인 처음부터 끝까지 검증
+- **메모리 정제** — memory-distill 정기 운용 결과 gotchas/learned 항목 정리
+- **스트레스 테스트** — Claude에서 5회 반복 카운터 루프로 재투입 메커니즘(block + reason 재투입) 끝단까지 검증
+
 ### v4.4.1 — mnemo 점검 패치 (2026.05)
 
 - **mnemo-status notify 훅 (LLM 호출 X)** — Stop/save-turn 훅이 raw jsonl 누적량 + 마지막 핸드오프 일수 체크 → 임계값(500건/14일) 도달 시 `memory/.mnemo-status.md` 작성 + stderr 한 줄. 텍스트 출력만, LLM 호출 0건
@@ -420,7 +430,8 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
-| **[v4.4.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.1)** | **2026-05-11** | **mnemo 점검 패치** — Stop/save-turn `notify_mnemo_status` 훅 (`memory/.mnemo-status.md` + stderr, LLM 호출 X로 사용자 인지); SKILL.md/config.json을 실제 설계와 일치(자동분석기 없음); `list_handoffs.py`가 `YYYY-MM-DD-{slug}` 파일명 파싱; `check_staleness.py --all` 일괄 모드; Codex EXCLUDE에 `gemini-mnemo` 추가 |
+| **[v4.4.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.2)** | **2026-05-30** | **Chronos 강화 + 크로스-CLI parity** — done-pattern 오탐 제거(`Chronos Complete` + `<promise>`만 종료); tail-500 가드 제거(전체 출력 마커 검사); Gemini state-path 버그 수정(3-경로 탐색 `.claude/.codex/.chronos`); Mnemo/save-turn 알림 fanout 제거; Claude에서 5회 재투입 스트레스 테스트 |
+| [v4.4.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.1) | 2026-05-11 | **mnemo 점검 패치** — Stop/save-turn `notify_mnemo_status` 훅 (`memory/.mnemo-status.md` + stderr, LLM 호출 X로 사용자 인지); SKILL.md/config.json을 실제 설계와 일치(자동분석기 없음); `list_handoffs.py`가 `YYYY-MM-DD-{slug}` 파일명 파싱; `check_staleness.py --all` 일괄 모드; Codex EXCLUDE에 `gemini-mnemo` 추가 |
 | [v4.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.0) | 2026-05-08 | **/memory-distill + Dreaming 동등 자기개선** — 신규 사용자 트리거 스킬 (`--scan`/`--apply`/`--rebuild` 모드, 중복 병합, SUPERSEDED 모순 처리, 아카이브 백업); gotcha-analyzer cleanup-low → 메인 세션 모델 상속 (Opus/GPT-5.5/3.1-Pro 분석 품질); 임계값 20→50 (안전망 격하); 다층 정제 트리거 |
 | [v4.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.3.0) | 2026-05-05 | **므네모 메모리 정합성 점검** — 핸드오프 docs/handoffs/로 이전(크로스 CLI 공유); 핸드오프 시 gotcha/learned 자동 추출(검토 없음, secret 마스킹); 항목 형식 강화(source/tags/제목/길이); source 필드 48개 백필; 3 CLI parity 검증 |
 | [v4.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.2.0) | 2026-05-04 | Markdown → 출판품질 PDF — pdf 스킬에 변환기 추가(playwright + Pretendard), 한국 기본값(A4 + 25mm), Clio Phase 3-4 자동 통합 |

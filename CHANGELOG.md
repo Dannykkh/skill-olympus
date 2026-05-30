@@ -2,6 +2,60 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.2] - 2026-05-30
+
+### Fixed — Chronos Hardening + Cross-CLI Parity
+
+3-CLI에 걸친 Chronos 자동 재투입 메커니즘의 결함 3가지를 발견하고 수정. 한 사이클 돌고 멈추거나, 메시지 길이 때문에 종료 신호가 미탐되거나, Gemini에선 아예 작동하지 않던 문제들이 동시에 있었음. 5회 반복 카운터 스트레스 테스트로 재투입 메커니즘 end-to-end 검증.
+
+#### Fixed — done-pattern 조기 종료 오탐
+
+Stop 훅의 종료 감지 정규식에 `모든.*작업.*완료`, `더 이상.*고칠.*없`, `남은.*이슈.*없` 등 느슨한 서술형 패턴 6개가 있어, AI가 사이클 중간에 진행 보고를 할 때(예: "1번 버그 수정. 모든 작업이 완료되었으니 다음 사이클로 넘어가겠습니다") 이를 완료 선언으로 오인해 루프를 조기 종료시키던 문제. SKILL.md가 명시한 종료 계약("`Chronos Complete` 마커 또는 `<promise>` 태그만 종료")과 코드가 모순되고 있었음. 명시적 마커만 남기도록 정리.
+
+대상 파일 (8개, 소스 + Claude/Codex/Gemini 활성 복사본):
+- `hooks/loop-stop.{ps1,sh}`
+- `skills/auto-continue-loop/scripts/continue-loop.{ps1,sh}`
+- `.agents/hooks/`, `~/.claude/hooks/`, `~/.codex/hooks/`, `~/.gemini/hooks/`
+
+재현 테스트: 6개 진행-보고 문장 중 5개가 OLD에선 조기 종료 트리거, NEW에선 모두 "계속"으로 판정. `Chronos Complete` 1건만 "종료" → PASS.
+
+#### Fixed — tail-500 가드로 인한 종료 신호 미탐
+
+종료 감지가 마지막 500자만 검사하던 가드(`$tailOutput = $lastOutput.Substring(...)`) 때문에 `<promise>` 태그가 메시지 상단에 있고 뒤에 긴 설명/표/태그가 붙으면 종료 신호가 끝 500자 밖으로 밀려나 미탐 발생. 이 가드의 본래 목적은 위에서 제거한 느슨한 패턴의 오탐 방지였으나, 명시적 마커만 보는 새 로직에선 가드의 존재 이유가 사라지고 미탐 위험만 남음. 전체 출력 검사로 변경.
+
+재현 테스트: 507자 메시지(promise 상단 + 긴 설명)에서 OLD=False(놓침), NEW=True(종료) → PASS.
+
+#### Fixed — Gemini state-path 하드코딩 (Gemini Chronos 완전 무력화)
+
+`loop-stop.ps1/.sh`가 `$stateFile = ".claude/loop-state.md"` 하나만 보고 있었음. setup-loop는 Gemini 세션이면 `.chronos/loop-state.md`에 상태를 만들지만, loop-stop은 `.claude/`를 찾아 없으니 그냥 통과 → Gemini에서 Chronos가 절대 작동하지 않던 버그.
+
+3-경로 탐색으로 변경: `.claude/`, `.codex/`, `.chronos/` 순서로 먼저 발견된 것 사용.
+
+```powershell
+$stateCandidates = @(".claude/loop-state.md", ".codex/loop-state.md", ".chronos/loop-state.md")
+$stateFile = $stateCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+```
+
+행동 시뮬레이션: `.chronos/loop-state.md`만 만들어둔 상태에서 훅 실행 → 정상 탐지 및 처리(이전 버그라면 조용히 통과 + 파일 잔존).
+
+#### Changed — 알림 fanout 제거 (Mnemo 인스톨러/save-turn)
+
+Mnemo 인스톨러와 save-turn 훅에서 데스크톱/IDE 알림 체인을 제거. save-turn, Chronos 체인, hook-bridge 흐름은 유지. 더 portable한 워크플로우로 정리.
+
+#### Verified — Codex 호환성 감사
+
+체인 구조 end-to-end 검증: `notify (config.toml)` → `ide-response-notify-wrapper.ps1` → `save-turn.ps1` → `continue-loop.ps1` → `codex exec resume --last`. continue-loop.ps1의 상태 파일 탐색은 이미 3-경로 지원.
+
+#### Verified — Claude 재투입 스트레스 테스트
+
+5회 반복 카운터 루프로 메커니즘 end-to-end 입증. iteration 1~4 진행 보고만 출력(promise 없음) → Stop 훅 `decision: block` + reason 재투입 → 다음 iteration. iteration 5에서 `<promise>5회 도달</promise>` → 매칭 → state file 삭제 → 종료. 재투입 4회 발동 직접 확인.
+
+#### Cleaned — Memory 정제
+
+gotchas/learned 항목 정제(memory-distill 정기 운용 결과). Mnemo/Chronos 런타임 잡파일(`docs/chronos/`, `memory/.mnemo-status.md`)은 이미 `.gitignore`로 처리되어 추가 작업 불필요.
+
+---
+
 ## [4.4.1] - 2026-05-11
 
 ### Fixed — mnemo 점검 패치 (의도와 문구 일치 + 인지 안내 + 누락 보강)
