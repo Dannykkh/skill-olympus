@@ -7,6 +7,7 @@ set -euo pipefail
 PROMPT_PARTS=()
 MAX_ITERATIONS=50
 COMPLETION_PROMISE="null"
+GOAL_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -49,6 +50,10 @@ HELP_EOF
             COMPLETION_PROMISE="$2"
             shift 2
             ;;
+        --goal-mode)
+            GOAL_MODE=true
+            shift
+            ;;
         *)
             PROMPT_PARTS+=("$1")
             shift
@@ -57,6 +62,19 @@ HELP_EOF
 done
 
 PROMPT="${PROMPT_PARTS[*]}"
+
+# goal 모드 하드 가드: 네이티브 /goal이 Stop 게이트를 담당하므로, 폴백 상태 파일을
+# 만들지 않고 3곳(.claude/.codex/.chronos)의 기존 loop-state.md를 모두 제거한다.
+# → Stop 훅(loop-stop)이 발동할 대상이 사라져 이중 재투입 충돌이 코드 레벨에서 불가능.
+if [ "$GOAL_MODE" = true ]; then
+    removed=0
+    for p in ".claude/loop-state.md" ".codex/loop-state.md" ".chronos/loop-state.md"; do
+        if [ -f "$p" ]; then rm -f "$p"; removed=$((removed + 1)); fi
+    done
+    echo "Chronos goal 모드: 네이티브 /goal이 Stop 게이트를 담당합니다."
+    echo "loop-state.md 정리: ${removed}개 제거 — Stop 훅 비활성(충돌 방지)."
+    exit 0
+fi
 
 if [[ -z "$PROMPT" ]]; then
     echo "할 일을 알려주세요!" >&2

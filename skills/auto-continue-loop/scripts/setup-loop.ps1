@@ -9,6 +9,7 @@ param(
 $maxIterations = 50
 $completionPromise = "null"
 $promptParts = @()
+$goalMode = $false
 $i = 0
 
 while ($i -lt $Arguments.Count) {
@@ -49,6 +50,9 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
             }
             $completionPromise = $Arguments[$i]
         }
+        "--goal-mode" {
+            $goalMode = $true
+        }
         default {
             $promptParts += $Arguments[$i]
         }
@@ -57,6 +61,21 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
 }
 
 $prompt = $promptParts -join " "
+
+# goal 모드 하드 가드: 네이티브 /goal이 Stop 게이트를 담당하므로, 폴백 상태 파일을
+# 만들지 않고 3곳(.claude/.codex/.chronos)의 기존 loop-state.md를 모두 제거한다.
+# → Stop 훅(loop-stop)이 발동할 대상이 사라져 이중 재투입 충돌이 코드 레벨에서 불가능.
+if ($goalMode) {
+    $guardTargets = @(".claude/loop-state.md", ".codex/loop-state.md", ".chronos/loop-state.md")
+    $removed = 0
+    foreach ($p in $guardTargets) {
+        if (Test-Path $p) { Remove-Item $p -Force; $removed++ }
+    }
+    Write-Host "Chronos goal 모드: 네이티브 /goal이 Stop 게이트를 담당합니다."
+    Write-Host "loop-state.md 정리: ${removed}개 제거 — Stop 훅 비활성(충돌 방지)."
+    exit 0
+}
+
 if (-not $prompt) {
     Write-Error "할 일을 알려주세요!`n`n  예시: /loop TODO API 만들어줘 --max-iterations 20"
     exit 1
