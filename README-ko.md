@@ -187,6 +187,14 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.5.0 — 크로노스 × 네이티브 /goal 통합 (2026.06)
+
+- **/goal 래퍼로 재정의** — 네이티브 `/goal`("Set a goal Claude checks before stopping")이 Claude Code와 Codex에 추가됨. 크로노스는 이제 루프를 직접 돌리는 대신 `/goal`(지속성 엔진) 위에 규율을 얹음: 검증 게이트, 우선순위 사이클, 감사 로그
+- **목표문 생성 모델 (자동 호출 없음)** — 크로노스는 `/goal`을 프로그램적으로 호출할 수 없음(슬래시 커맨드 도구 부재). 대신 규율을 녹인 goal 목표문을 생성·제시하고, 사용자가 `/goal`로 한 번 설정. 초안의 "자동 위임" 표현은 실현 불가능한 환상이라 제거
+- **3계층 지속성 폴백** — `/goal`(1순위) → Stop 훅·notify(2순위) → 직접 루프(3순위). 훅을 보존해 Gemini·구버전에서도 크로노스가 작동(parity)
+- **훅 충돌 하드 가드** — `setup-loop --goal-mode`가 `.claude/.codex/.chronos`의 기존 `loop-state.md`를 모두 제거해 Stop 훅이 재투입할 대상을 없앰. 규율이 아니라 코드 레벨에서 충돌 불가. `.ps1`/`.sh` 격리 테스트로 검증
+- **Codex vs Claude /goal 차이 문서화** — 진입 문법은 같으나 완료 판정이 다름(Codex는 직접 명령 실행, Claude 평가자는 대화 출력만 봄). 목표문에 "검증 결과를 대화에 출력" + turn 상한을 넣어 양쪽 호환
+
 ### v4.4.2 — Chronos 강화 + 크로스-CLI parity (2026.05)
 
 - **done-pattern 오탐 제거** — Stop 훅의 느슨한 서술형 정규식(`모든.*작업.*완료`, `더 이상.*고칠.*없` 등)이 사이클 중간의 진행 보고를 완료로 오인해 루프를 죽이고 있었음. `Chronos Complete` 마커와 `<promise>` 태그만 종료 신호로 인정하도록 정리 (문서화된 종료 계약과 일치)
@@ -430,6 +438,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.5.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.5.0)** | **2026-06-05** | **크로노스 × 네이티브 /goal 통합** — /goal 래퍼로 재정의(goal=지속성, 크로노스=검증 게이트/우선순위/로그); 목표문 생성 모델(자동 호출 없음 — 목표문 생성, 사용자가 /goal 한 번 설정); 3계층 폴백(goal → 훅/notify → 직접)으로 Gemini parity; 하드 가드 `setup-loop --goal-mode`가 loop-state 제거해 훅 충돌을 코드 레벨에서 차단(.ps1/.sh 테스트); Codex vs Claude 판정 차이 문서화 |
 | **[v4.4.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.2)** | **2026-05-30** | **Chronos 강화 + 크로스-CLI parity** — done-pattern 오탐 제거(`Chronos Complete` + `<promise>`만 종료); tail-500 가드 제거(전체 출력 마커 검사); Gemini state-path 버그 수정(3-경로 탐색 `.claude/.codex/.chronos`); Mnemo/save-turn 알림 fanout 제거; Claude에서 5회 재투입 스트레스 테스트 |
 | [v4.4.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.1) | 2026-05-11 | **mnemo 점검 패치** — Stop/save-turn `notify_mnemo_status` 훅 (`memory/.mnemo-status.md` + stderr, LLM 호출 X로 사용자 인지); SKILL.md/config.json을 실제 설계와 일치(자동분석기 없음); `list_handoffs.py`가 `YYYY-MM-DD-{slug}` 파일명 파싱; `check_staleness.py --all` 일괄 모드; Codex EXCLUDE에 `gemini-mnemo` 추가 |
 | [v4.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.0) | 2026-05-08 | **/memory-distill + Dreaming 동등 자기개선** — 신규 사용자 트리거 스킬 (`--scan`/`--apply`/`--rebuild` 모드, 중복 병합, SUPERSEDED 모순 처리, 아카이브 백업); gotcha-analyzer cleanup-low → 메인 세션 모델 상속 (Opus/GPT-5.5/3.1-Pro 분석 품질); 임계값 20→50 (안전망 격하); 다층 정제 트리거 |
