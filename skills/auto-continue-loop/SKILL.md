@@ -1,14 +1,18 @@
 ---
 name: auto-continue-loop
 description: >
-  끊김 없는 자율 루프. Claude는 Stop 훅, Codex는 notify 자동 재개로 AI가 작업을 끝까지 완수하도록 강제합니다.
-  FIND → FIX → VERIFY 사이클을 반복하며, --max-iterations와 --completion-promise로 제어합니다.
-  /chronos 또는 /loop로 실행. Also known as 크로노스.
+  네이티브 /goal(Stop 게이트)을 녹여 쓰는 자율 작업 규율 스킬. 주 진입점은 /chronos.
+  goal은 "끝까지 안 멈추기"(지속성)를 담당하고, 크로노스는 goal이 못 하는 것 — 자가 판단이 아닌
+  실제 테스트 실행 검증, 우선순위 사이클(Critical>High>Medium>Low), 한 사이클 한 이슈, 감사 로그 — 을 더합니다.
+  크로노스는 goal을 자동 호출하지 않고, 규율을 녹인 goal 목표문을 생성·제시합니다(설정은 /goal 입력 한 번).
+  goal이 없는 환경(Gemini/구버전)에서는 Stop 훅·notify 자동 재개로 폴백합니다.
+  --max-iterations와 --completion-promise로 제어. /chronos 또는 /loop로 실행. Also known as 크로노스.
 triggers:
   - "auto-continue-loop"
   - "chronos"
   - "크로노스"
   - "loop"
+  - "goal"
   - "다음 진행"
   - "계속 진행"
   - "진행하자"
@@ -26,38 +30,104 @@ auto_apply: false
 # Chronos (크로노스)
 
 > **Chronos**(크로노스: 시간의 신) — 끝없이 돌아가는 시간의 수레바퀴.
-> AI가 끝내려 해도 훅 체인이 강제로 계속시킨다.
+> 수레바퀴를 굴리는 힘(지속성)은 네이티브 `/goal`이 제공하고,
+> 크로노스는 그 위에서 **무엇을 검증하고 어떤 순서로 돌지**를 규율한다.
 
-**Claude Stop 훅 / Codex notify 자동 재개** + **FIND → FIX → VERIFY 자율 사이클**.
-AI가 "다 했다"고 착각해도 시스템 레벨에서 완료 조건을 검증합니다.
+**주 진입점은 `/chronos`입니다.** 사용자는 대부분 크로노스를 호출하고, 크로노스가 그 안에 `/goal`을 녹여 씁니다.
+goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 아는 판단력*(검증 규율)입니다.
+
+---
+
+## /goal과 크로노스 — 역할 분리
+
+2026년 5월 Claude Code와 Codex에 네이티브 `/goal`("Set a goal Claude checks before stopping")이 들어왔습니다.
+이건 **멈추기 전에 목표 달성을 체크하는 Stop 게이트**로, 크로노스의 `loop-stop` 훅과 **같은 레이어**입니다.
+그래서 둘은 "자동 위임" 관계가 아니라 **역할을 나누는** 관계입니다.
+
+| 레이어 | 담당 | 제공 주체 |
+|--------|------|-----------|
+| **지속성** (끝까지 돌리기, Stop마다 목표 체크) | 목표가 충족될 때까지 세션을 살림 | **네이티브 `/goal`** (폴백: 훅·notify) |
+| **검증 게이트** (무엇으로 멈출지) | 자가 판단이 아니라 **실제 테스트 명령 실행** + `<promise>` 매칭 | **크로노스** |
+| **구조** (어떤 순서로 돌지) | FIND→FIX→VERIFY + 우선순위 + 한 사이클 한 이슈 + 최소 변경 | **크로노스** |
+| **흔적** (무엇을 했는지) | `docs/chronos/chronos-log.md` 감사 로그 | **크로노스** |
+| **흐름 검증** (제대로 됐는지) | flow-verifier로 구현 흐름 대조 (선택) | **크로노스** |
+
+> **`/goal` 단독과의 결정적 차이:** goal은 목표 달성을 *모델이 자가 판단*하면 멈춥니다.
+> 크로노스는 그 위에 **검증 게이트**를 두어, 테스트 명령이 실제로 PASS하기 전에는 완료를 선언하지 못하게 합니다 —
+> "다 된 것 같다"와 "검증으로 확인됐다"를 분리합니다.
+
+### 크로노스는 goal을 자동 호출하지 않습니다 (중요)
+
+스킬은 프롬프트 지시문이고, `/goal`은 사용자 입력으로 켜지는 네이티브 커맨드입니다.
+크로노스가 런타임에 `/goal`을 프로그램적으로 띄우는 도구는 없습니다. 따라서 통합은 이렇게 동작합니다:
+
+1. 크로노스가 **검증·우선순위·완료조건·로그 규칙을 녹인 goal 목표문**을 생성해 제시
+2. 사용자가 그 목표문을 `/goal`로 설정 (입력 한 번)
+3. 이후 네이티브 goal이 Stop마다 체크하고, 크로노스 규율대로 진행
+
+"크로노스를 호출하면 goal이 자동으로 돌아간다"가 아니라, **"크로노스가 goal을 잘 쓰도록 목표문을 짜주고, 켜는 건 사용자"**입니다.
+
+---
+
+## 지속성 엔진 선택 (3계층 폴백)
+
+크로노스 규율(검증 게이트·구조·로그)은 **어떤 엔진을 쓰든 동일**하게 적용됩니다. 다른 건 "무엇이 세션을 끝까지 살리느냐"뿐입니다.
+
+| 우선순위 | 엔진 | 조건 | 크로노스의 연동 방식 |
+|----------|------|------|----------------------|
+| **1순위** | 네이티브 `/goal` | Claude/Codex에 `/goal` 존재 | goal 목표문 **생성·제시** → 사용자가 `/goal` 설정 |
+| **2순위** | Stop 훅 / notify 재개 | `/goal` 없음 + 훅 인프라 설치됨 | `setup-loop`로 상태 파일 생성 → 훅이 재투입 |
+| **3순위** | 직접 루프 | 위 둘 다 불가 (Gemini, 폴백) | 메인 컨텍스트에서 직접 사이클 반복 |
+
+> goal과 훅은 같은 Stop 게이트라 **동시에 켜면 중복**됩니다. 1순위(goal)를 쓸 때는 `setup-loop`로 상태 파일을 만들지 않으므로
+> 훅이 재투입할 대상이 없어 충돌하지 않습니다. 둘 중 하나만 게이트를 담당합니다.
 
 ---
 
 ## 동작 원리
 
-```
-/chronos 버그 다 고쳐줘 --max-iterations 20 --completion-promise '모든 테스트 통과'
+### 1순위 — goal 목표문 생성 + 연동
 
-→ 1. setup-loop.sh가 CLI별 상태 파일 생성 (`.claude/`, `.codex/`, `.chronos/loop-state.md`)
-→ 2. AI가 크로노스 로직 수행 (스코프 감지, FIND→FIX→VERIFY)
-→ 3. AI turn이 끝나거나 세션이 종료되려 함
-→ 4. CLI별 훅 체인이 상태 파일을 재검증
+```
+/chronos 버그 다 고쳐줘 --completion-promise '모든 테스트 통과'
+
+→ 1. 스코프 감지 + 검증 게이트(테스트 명령) 감지 + 로그 초기화
+→ 2. 크로노스가 goal 목표문을 생성해 제시:
+     ┌─────────────────────────────────────────────────────────┐
+     │ /goal 아래 규율로 진행하고, 충족되면 멈춰라:              │
+     │  - src/ 안에서 한 번에 한 이슈씩 FIND→FIX→VERIFY          │
+     │  - 우선순위 Critical>High>Medium>Low                      │
+     │  - 매 수정 후 `npm test` 실행해 PASS 확인 (자가 판단 금지)│
+     │  - 각 사이클을 docs/chronos/chronos-log.md에 기록         │
+     │  - 모든 테스트 PASS를 확인하면 <promise>모든 테스트 통과</promise> 출력 │
+     └─────────────────────────────────────────────────────────┘
+→ 3. 사용자가 이 목표문을 /goal로 설정 (입력 한 번)
+→ 4. 네이티브 goal이 Stop마다 "목표 충족?" 체크 → 미충족이면 다음 턴 계속
+→ 5. 매 턴 크로노스 규율 적용: 한 사이클 한 이슈, 우선순위 순, 검증 실행, 로그 append
+→ 6. 검증 PASS + <promise> 출력 → goal 게이트 통과 → 정지
+```
+
+### 2순위 — Stop 훅 / notify 폴백 (goal 없는 환경)
+
+```
+→ 1. setup-loop.sh가 CLI별 상태 파일 생성 (.claude/ · .codex/ · .chronos/loop-state.md)
+→ 2. AI가 크로노스 사이클 수행 (FIND→FIX→VERIFY)
+→ 3. turn 종료/세션 종료 시도 → 훅 체인이 상태 파일 재검증해 재투입:
      - Claude: loop-stop.sh(Stop 훅)가 block + 같은 프롬프트 재투입
      - Codex: save-turn notify → continue-loop → codex exec resume --last
-     - Gemini: chronos-worker가 같은 규칙으로 다음 사이클 수행
-→ 5. AI가 이전 결과(파일, git 히스토리)를 보면서 다시 작업
-→ 6. 반복...
-→ 7. AI가 <promise>모든 테스트 통과</promise> 출력 → 훅이 매칭 → 종료
+→ 4. <promise>조건</promise> 출력 → 훅이 매칭 → 상태 파일 삭제 → 종료
 ```
 
-**사용자 개입 0회. "다음" 입력 불필요.**
+### 3순위 — 직접 루프 폴백
+
+지속성 엔진이 없으면 메인 컨텍스트에서 직접 사이클을 반복합니다. `--max-iterations`까지 또는 검증 게이트 통과까지 진행하되, 컨텍스트 한도에 유의합니다.
 
 ---
 
 ## 사용법
 
 ```bash
-# 기본 — 자동 스코프 감지, 무제한 반복
+# 기본 — 자동 스코프 감지, 엔진 자동 판별
 /chronos
 
 # 특정 작업 지시
@@ -66,25 +136,33 @@ AI가 "다 했다"고 착각해도 시스템 레벨에서 완료 조건을 검�
 # 특정 디렉토리 대상
 /chronos src/backend/
 
-# 최대 반복 제한
+# 최대 반복 제한 (훅/직접 루프에서 강제, goal에서는 budget 힌트)
 /chronos 인증 버그 고쳐줘 --max-iterations 10
 
-# 완료 조건 지정
+# 완료 조건 지정 (검증 게이트 — 모든 엔진 공통)
 /chronos E2E 테스트 전부 통과시켜줘 --completion-promise '모든 테스트 통과'
 
-# 중단 (사용자가 터미널에서 직접 실행 — Claude가 rm을 호출하지 않습니다)
+# 정해진 할일만 순서대로 (체크리스트형)
+/chronos 아래만 순서대로 완료하고 종료, 이 외 작업 금지: 1) ... 2) ... 3) ... --completion-promise '3개 완료'
+
+# 중단
+#  - goal 사용 중: 세션에서 /goal 해제 (esc 또는 /goal stop)
+#  - 훅 폴백: cancel-loop 스크립트
 bash  skills/auto-continue-loop/scripts/cancel-loop.sh
 pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 ```
 
 **공식 호출명:** `/chronos` (별칭: `/loop`, `크로노스`)
 
+> **언제 무엇을 쓰나:** 그냥 "끝까지 돌리기"만 필요하면 네이티브 `/goal` 단독으로 충분합니다.
+> "검증으로 멈추고, 우선순위대로, 흔적을 남기며" 돌리고 싶으면 `/chronos`를 쓰세요 — goal을 그 규율에 맞게 녹여줍니다.
+
 ### 옵션
 
-| 옵션 | 설명 | 기본값 |
-|------|------|--------|
-| `--max-iterations <N>` | 최대 반복 횟수 | **50** |
-| `--completion-promise '<조건>'` | 완료 조건 (`<promise>` 태그로 매칭) | 없음 (AI 완료 보고 시 자동 종료) |
+| 옵션 | 설명 | 기본값 | 엔진별 적용 |
+|------|------|--------|-------------|
+| `--max-iterations <N>` | 최대 반복 횟수 | **50** | 훅/직접: 강제 종료 / goal: budget 힌트 |
+| `--completion-promise '<조건>'` | 검증 게이트 (`<promise>` 태그로 매칭) | 없음 (작업 소진 시 자동 종료) | 모든 엔진 공통 (goal 목표문에도 주입) |
 
 ---
 
@@ -99,9 +177,9 @@ pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 
 ---
 
-## Phase 0: 스코프 확인
+## Phase 0: 스코프 + 엔진 + 목표문
 
-루프 시작 전 스코프를 확정합니다.
+루프 시작 전 스코프를 확정하고, 엔진을 판별하고, (1순위면) goal 목표문을 짭니다.
 
 ### 0-1. 스코프 결정
 
@@ -112,7 +190,7 @@ pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 2. `git diff --name-only`로 최근 변경된 파일 영역
 3. 프로젝트 루트 전체
 
-### 0-2. 테스트 프레임워크 감지
+### 0-2. 검증 게이트(테스트 프레임워크) 감지
 
 ```
 package.json → npm test / npx jest / npx vitest
@@ -123,48 +201,40 @@ tsconfig.json → npx tsc --noEmit
 없음 → "수동 확인 필요" 모드
 ```
 
-### 0-3. 상태 파일 생성 + 시작 알림
+감지된 명령이 곧 **검증 게이트**입니다. 매 사이클 이 명령을 실행해 PASS를 확인해야 완료가 허용됩니다(자가 판단 금지).
 
-`setup-loop.sh`(또는 `.ps1`)를 실행하여 공유 상태 파일을 생성합니다.
-Claude는 `.claude/loop-state.md`, Codex는 `.codex/loop-state.md`, Gemini는 `.chronos/loop-state.md`를 사용합니다.
+### 0-3. 엔진 판별 + (1순위) 목표문 제시 / (폴백) 상태 초기화
+
+[지속성 엔진 선택](#지속성-엔진-선택-3계층-폴백)에 따라 엔진을 정합니다.
+
+- **1순위(goal 가용):** [동작 원리 1순위](#1순위--goal-목표문-생성--연동)의 형식으로 **goal 목표문을 생성해 제시**하고, 사용자가 `/goal`로 설정하도록 안내합니다. 상태 파일은 만들지 않습니다(훅 충돌 방지). 로그(`docs/chronos/`)만 초기화합니다.
+- **2·3순위(폴백):** `setup-loop.sh`(또는 `.ps1`)로 공유 상태 파일을 생성합니다. Claude는 `.claude/loop-state.md`, Codex는 `.codex/loop-state.md`, Gemini는 `.chronos/loop-state.md`를 사용합니다.
 
 ```
 크로노스(Chronos) 시작
+엔진: {네이티브 /goal | Stop 훅·notify | 직접 루프}
 스코프: {디렉토리/파일 목록}
-검증: {감지된 테스트 명령}
+검증 게이트: {감지된 테스트 명령}
 반복: 최대 {N}회 (또는 무제한)
 완료 조건: {조건} (또는 없음)
 로그: docs/chronos/chronos-log.md
 
-중단: `bash skills/auto-continue-loop/scripts/cancel-loop.sh` (또는 `.ps1`)
+{1순위면} → 아래 목표문을 /goal로 설정하세요:
+{생성된 goal 목표문}
+{폴백이면} → 중단: bash skills/auto-continue-loop/scripts/cancel-loop.sh
 ```
 
 ---
 
 ## Phase 1: 루프 실행
 
-### CLI별 실행 방식
+### 사이클 규칙 (엔진 공통 — 크로노스 규율)
 
-| CLI | 방식 | 도구 |
-|-----|------|------|
-| **Claude** | Agent 서브에이전트 + Stop 훅 가드 | `Agent({ subagent_type: "chronos-worker" })` + `hooks/loop-stop.*` |
-| **Codex** | spawn_agent + notify 자동 재개 | `spawn_agent` + `save-turn` → `continue-loop` → `codex exec resume --last` |
-| **Gemini** | chronos-worker 호출 | `.gemini/agents/chronos-worker.md` |
-| **폴백** | 직접 루프 | 메인 컨텍스트에서 직접 실행 |
-
-CLI 감지:
-- `Agent` 도구 → Claude
-- `spawn_agent` 도구 → Codex
-- `chronos-worker` 에이전트 → Gemini
-- 모두 없음 → 직접 루프
-
-### 사이클 규칙
-
-매 사이클에서 4단계를 수행:
+지속성 엔진이 무엇이든, 매 사이클 4단계를 수행합니다:
 
 1. **FIND**: 스코프 내에서 가장 심각한 미수정 이슈 1개, 또는 직전 사이클에서 승격된 next-action 선택
 2. **FIX**: 최소 변경 원칙 — 이슈 해결에 필요한 최소한의 코드만 수정
-3. **VERIFY**: 검증 명령 실행. 실패 시 같은 사이클 내 최대 3회 재시도. 3회 실패 → SKIP
+3. **VERIFY**: 검증 게이트 명령 실행. 실패 시 같은 사이클 내 최대 3회 재시도. 3회 실패 → SKIP
 4. **LOG**: `docs/chronos/chronos-log.md`에 append
 
 ### 우선순위
@@ -180,6 +250,7 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 mkdir -p docs/chronos
 echo '# Chronos Log' > docs/chronos/chronos-log.md
 echo "Started: $(date -Iseconds)" >> docs/chronos/chronos-log.md
+echo 'Engine: {네이티브 /goal | 훅·notify | 직접}' >> docs/chronos/chronos-log.md
 echo 'Scope: {스코프}' >> docs/chronos/chronos-log.md
 
 # 매 사이클
@@ -190,27 +261,30 @@ echo 'Verify: ... → PASS' >> docs/chronos/chronos-log.md
 echo '────────────────────────────────────────' >> docs/chronos/chronos-log.md
 ```
 
-### 종료 조건
+### 종료 조건 (검증 게이트)
 
 **AI가 루프를 끝내는 방법은 딱 2가지:**
 
 1. **할 게 없으면** → `Chronos Complete`를 포함한 최종 보고 출력
-2. **완료 조건 달성** → `<promise>조건</promise>` 출력
+2. **완료 조건 달성** → 검증 게이트 PASS 확인 후 `<promise>조건</promise>` 출력
 
-**그 외에는 AI가 종료를 판단하지 않는다.** 훅이 알아서 처리한다:
-- 위 패턴 미감지 → Claude Stop 훅이 block + 같은 프롬프트 재투입 → AI는 계속 작업
-- `--max-iterations` 도달 (기본 50회) → 훅이 강제 종료
+**그 외에는 AI가 종료를 판단하지 않는다.** 지속성 엔진이 알아서 계속시킨다:
+- **네이티브 `/goal`**: 검증 게이트 미충족 시 goal이 Stop에서 "목표 미달"로 판정 → 다음 턴 계속
+- **훅 폴백**: 위 패턴 미감지 → Claude Stop 훅이 block + 같은 프롬프트 재투입
+- `--max-iterations` 도달 (기본 50회) → 폴백 엔진이 강제 종료
 - stale 2시간 초과 → 훅이 자동 종료
 
 **AI가 절대 하지 않는 것:**
 - "루프를 종료할까요?" 질문 ❌
+- 검증 게이트를 건너뛰고 `<promise>` 출력 ❌ (테스트 PASS 없이 완료 선언 금지)
 - loop-state.md 삭제 시도 ❌
 - "이만 마치겠습니다" 같은 임의 종료 ❌ (할 게 남았으면 계속)
 
 ### 금지 사항
 
-- **`loop-state.md` 절대 접근 금지** — `.claude/`, `.codex/`, `.chronos/` 아래 상태 파일은 읽기(Read), 수정(Edit), 삭제(rm/Remove) 모두 금지. 이 파일은 훅/notify 체인만 관리한다. AI가 이 파일을 건드리면 루프가 깨진다.
-- **루프 종료를 직접 시도 금지** — "루프를 종료할까요?", "loop-state.md를 삭제할까요?" 같은 질문 금지. 종료는 훅이 자동 처리하거나 사용자가 cancel-loop 스크립트로 수행한다.
+- **`loop-state.md` 절대 접근 금지** (훅 폴백 사용 시) — `.claude/`, `.codex/`, `.chronos/` 아래 상태 파일은 읽기/수정/삭제 모두 금지. 훅/notify 체인만 관리한다.
+- **루프 종료를 직접 시도 금지** — 종료는 검증 게이트 통과 시 엔진이 처리하거나, 사용자가 중단(`/goal` 해제 또는 cancel-loop)으로 수행한다.
+- **검증 없는 완료 선언 금지** — 검증 게이트가 정의돼 있으면 PASS를 실제로 확인하기 전에 `<promise>`/`Chronos Complete`를 출력하지 않는다.
 - AskUserQuestion 호출 금지
 - 전체 이슈 목록 나열 금지
 - 한 번에 여러 이슈 동시 수정 금지
@@ -226,8 +300,9 @@ echo '────────────────────────�
 
 ```
 ══ Chronos Complete ══════════════════
+Engine: {네이티브 /goal | 훅·notify | 직접}
 Total cycles: {N}
-Iterations: {N} (훅/notify 재투입 횟수)
+Iterations: {N} (엔진 재투입 횟수)
 Fixed: {N}건
 Skipped: {N}건
 Remaining: {N}건
@@ -245,10 +320,10 @@ Remaining:
 
 ---
 
-## 상태 파일 (.claude/.codex/.chronos loop-state.md) — AI 접근 금지
+## 상태 파일 (.claude/.codex/.chronos loop-state.md) — 훅 폴백 전용, AI 접근 금지
 
-> **⚠️ 이 파일은 훅 전용입니다. AI는 절대 읽거나 수정하거나 삭제하지 않습니다.**
-> 훅(loop-stop.sh/ps1)이 자동으로 생성, 업데이트, 삭제합니다.
+> **⚠️ 이 파일은 2순위(훅/notify) 폴백 엔진에서만 사용됩니다. AI는 절대 읽거나 수정하거나 삭제하지 않습니다.**
+> 훅(loop-stop.sh/ps1)이 자동으로 생성, 업데이트, 삭제합니다. 네이티브 `/goal`(1순위)은 이 파일을 쓰지 않습니다.
 
 ```markdown
 ---
@@ -268,14 +343,14 @@ started_at: "2026-03-12T10:00:00Z"
 
 | 주체 | 할 수 있는 것 | 할 수 없는 것 |
 |------|-------------|-------------|
-| **AI** | FIND→FIX→VERIFY 사이클 수행, 로그 기록 | loop-state.md 읽기/수정/삭제 |
-| **훅** | loop-state.md 생성/업데이트/삭제, 재투입 판단 | 코드 수정, 테스트 실행 |
-| **사용자** | cancel-loop 스크립트로 수동 중단 | - |
+| **AI (크로노스 규율)** | FIND→FIX→VERIFY 사이클, 검증 게이트 실행, goal 목표문 생성, 로그 기록 | loop-state.md 읽기/수정/삭제, `/goal` 자동 호출 |
+| **지속성 엔진** | Stop 게이트 판정, 재투입, loop-state.md 관리(폴백) | 코드 수정, 테스트 실행 |
+| **사용자** | `/goal` 설정/해제, cancel-loop 스크립트로 수동 중단 | - |
 
 **AI가 루프를 끝내는 유일한 방법:**
 - 할 작업이 없으면 `Chronos Complete`를 포함한 최종 보고를 출력
-- 완료 조건이 있으면 `<promise>조건</promise>`를 출력
-- → 훅이 이 패턴을 감지하고 상태 파일을 삭제하여 루프 종료
+- 완료 조건이 있으면 검증 게이트 PASS 확인 후 `<promise>조건</promise>`를 출력
+- → 엔진이 이 패턴을 감지하고 루프를 종료 (훅 폴백은 상태 파일을 삭제)
 
 ---
 
@@ -291,9 +366,14 @@ Get-Content docs/chronos/chronos-log.md -Wait
 
 ---
 
-## 훅 설정
+## 엔진 배선
 
-### Claude Code
+### 네이티브 `/goal` (1순위)
+
+별도 설치가 필요 없습니다. `/goal`이 있는 Claude/Codex에서 크로노스가 규율을 녹인 목표문을 제시하고, 사용자가 `/goal`로 켭니다.
+크로노스는 `/goal`을 자동 호출하지 않습니다(슬래시 커맨드 호출 도구 부재). 목표문 생성·제시까지가 크로노스의 역할입니다.
+
+### Claude Code 훅 (2순위 폴백)
 
 `hooks/loop-stop.sh` (Linux/Mac) 또는 `hooks/loop-stop.ps1` (Windows)를
 settings.json의 Stop 이벤트에 등록:
@@ -308,10 +388,12 @@ settings.json의 Stop 이벤트에 등록:
 }
 ```
 
-### Codex CLI
+> `/goal`을 쓰는 환경에서도 이 훅은 무해합니다 — 크로노스가 1순위로 goal을 쓰면 상태 파일을 만들지 않으므로 훅이 재투입할 대상이 없습니다.
+
+### Codex CLI (2순위 폴백)
 
 Codex는 `Stop` 이벤트가 없으므로 root `hooks/loop-stop.*`를 직접 쓰지 않습니다.
-대신 `codex-mnemo`의 notify 훅이 `save-turn` 뒤에서 Chronos를 체인합니다.
+대신 `codex-mnemo`의 notify 훅이 `save-turn` 뒤에서 Chronos를 체인합니다. (`/goal` 지원 빌드라면 1순위로 목표문 연동)
 
 1. `node scripts/sync-codex-assets.js`
 2. `node skills/codex-mnemo/install.js`
@@ -325,15 +407,16 @@ Codex 재개는 background `codex exec resume --last`로 수행되며, 현재 �
 
 | 파일 | 역할 |
 |------|------|
-| `hooks/loop-stop.sh` | Stop 훅 — 세션 종료 가로채기 (Linux/Mac) |
-| `hooks/loop-stop.ps1` | Stop 훅 — 세션 종료 가로채기 (Windows) |
-| `skills/auto-continue-loop/scripts/setup-loop.sh` | 루프 시작 스크립트 (Linux/Mac) |
-| `skills/auto-continue-loop/scripts/setup-loop.ps1` | 루프 시작 스크립트 (Windows) |
+| `hooks/loop-stop.sh` | Stop 훅 — 세션 종료 가로채기, 2순위 폴백 (Linux/Mac) |
+| `hooks/loop-stop.ps1` | Stop 훅 — 세션 종료 가로채기, 2순위 폴백 (Windows) |
+| `skills/auto-continue-loop/scripts/setup-loop.sh` | 폴백 루프 시작 스크립트 (Linux/Mac) |
+| `skills/auto-continue-loop/scripts/setup-loop.ps1` | 폴백 루프 시작 스크립트 (Windows) |
 | `skills/auto-continue-loop/scripts/continue-loop.sh` | Codex notify → background resume (Linux/Mac) |
 | `skills/auto-continue-loop/scripts/continue-loop.ps1` | Codex notify → background resume (Windows) |
 | `skills/codex-mnemo/hooks/save-turn.sh` | Codex notify 오케스트레이터 + Chronos 체인 |
 | `skills/codex-mnemo/hooks/save-turn.ps1` | Codex notify 오케스트레이터 + Chronos 체인 |
-| `skills/auto-continue-loop/agents/chronos-worker.md` | Gemini용 서브에이전트 정의 |
+| `skills/auto-continue-loop/agents/chronos-worker.md` | Gemini용 서브에이전트 정의 (3순위 직접 루프) |
+| `skills/flow-verifier/SKILL.md` | 구현 흐름 검증 통합 (선택 레이어) |
 | `skills/code-reviewer/SKILL.md` | 코드 리뷰 기준 참조 |
 | `skills/systematic-debugging/SKILL.md` | 디버깅 방법론 참조 |
 | `agents/security-reviewer.md` | 보안 이슈 기준 참조 |
