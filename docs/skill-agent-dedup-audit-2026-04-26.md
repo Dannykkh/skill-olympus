@@ -48,12 +48,14 @@ These exact-name overlaps are not immediate deletion candidates because the agen
 
 | Name | Keep reason |
 |---|---|
-| `api-tester` | Passive/API expert agent + explicit API testing skill |
+| `api-tester` | 정정(2026-06-09): passive 아님(`auto_apply` 없음, spawn 0회) + 동명 스킬이 상위호환. 역할 분리 근거는 부정확. 유지 사유는 제거 churn(크로스-CLI 전파) 대비 이득이 작아서 |
 | `code-reviewer` | Passive review criteria + explicit review workflow |
 | `database-schema-designer` | Passive DB design guidance + explicit schema workflow |
 | `dotnet-coding-standards` | Passive .NET rules + detailed skill examples |
 | `fullstack-coding-standards` | Passive rules + detailed skill examples |
 | `wpf-coding-standards` | Passive WPF rules + detailed skill examples |
+
+> **정정 노트 (2026-06-09)**: 위 표의 `api-tester` 근거가 부정확했음. 실제로 api-tester 에이전트는 passive가 아니고(`auto_apply` 없음), 2,910 세션 중 spawn 0회이며, 동명 스킬이 내용상 상위호환임 — "역할 분리"가 성립하지 않음. 재조사 결과 **유지 결정 자체는 유효**(제거 시 repo ~10곳 + 크로스-CLI 전파 churn 대비 이득이 메뉴 한 줄로 작음). 나머지 5개 행(code-reviewer, database-schema-designer, dotnet/fullstack/wpf-coding-standards)의 근거는 정확함. 상세: 2026-06 에이전트/스킬 정리 조사.
 
 Embedded duplicates retained for self-contained skill packaging:
 
