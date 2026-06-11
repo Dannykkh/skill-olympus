@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.7.0] - 2026-06-11
+
+### Changed — 네이티브 결합 감사 후속 정리 (5건)
+
+2026-06-10 전체 결합 감사(병렬 Explore 에이전트 5개)에서 나온 수정 대상을 일괄 반영.
+
+- **zeus** — Auto-Continue Contract에 네이티브 `/goal` 관계 명시: zero-interaction 원칙상 훅 자동 재개를 기본 엔진으로 유지(goal은 사용자 입력 필요), 단 사용자가 `/goal`을 미리 설정한 경우 setup-loop 부트스트랩 생략(이중 Stop 게이트 방지 — 크로노스 `--goal-mode`와 동일 원칙)
+- **agent-team** — `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var 요구를 구버전 호환 항목으로 강등 (현행 Claude Code는 Teams 도구 기본 제공)
+- **메모리 경계 명시 (4파일)** — mnemo/memory-distill/memory-compact description + CLAUDE.md 메모리 규칙에 "프로젝트 루트 3계층 메모리는 Claude 네이티브 auto-memory(~/.claude/projects/)와 별개" 경계 추가, 중복 기록 방지 규칙 포함
+- **orchestrator** — 네이티브(Agent Teams/spawn_agent) vs MCP 모드 선택 기준표 추가 (규모/CLI/파일잠금 기준)
+- **auto-continue-loop** — flow-verifier가 주장하던 `--flow-verify` 옵션의 수신측 정의를 크로노스 옵션 테이블에 추가 (반쪽 연동 해소)
+- **zephermine** — 네이티브 plan mode와의 구분 명시: plan mode는 단일 작업 계획 게이트, 젭마인은 다운스트림이 소비하는 아티팩트 생산 파이프라인. plan mode는 쓰기 금지라 그 안에서 젭마인 실행 금지 경고 추가
+- **clio v2.1.0 — humanizer 한국어 윤문 연동** — v4.6.0에서 강화한 humanizer 한국어 모듈이 정작 한국어 문서를 대량 생산하는 클리오에 연결돼 있지 않던 공백 해소. Phase 3에 2단계 적용: 생성 시 번역투/AI 문체 금지 제약 주입 + 생성 후 S1 패턴 윤문 패스(과잉편집 가드 준수, USER-MANUAL > PRD > TECHNICAL 우선순위)
+- **minos / argos** — 네이티브 `/run`·`/verify`와의 역할 구분 한 줄 명시 (자체 절차가 의도된 설계임을 표기). argos 연관 스킬 표의 code-reviewer 항목도 v4 기준으로 정정 — diff 기반 자재검사(시공 중) vs spec 기반 준공검사(아르고스)는 입력·시점이 달라 diff 엔진으로 대체 불가
+
+### Fixed — chronos 구 별칭 /loop 폐기 (네이티브 /loop 충돌)
+
+Claude Code에 네이티브 `/loop`(주기 반복 실행기: 인터벌 또는 자가 페이싱으로 프롬프트/커맨드 재투입)가 들어오면서 크로노스의 별칭 `/loop`와 이름이 충돌. Claude에서 `/loop` 입력 시 네이티브가 우선 매칭되어 별칭이 사실상 무력화됐고, Codex/Gemini에서만 크로노스로 연결되는 크로스-CLI 불일치가 생김. 호출명 통일 정책에 따라 별칭을 전 CLI에서 폐기.
+
+- `skills/auto-continue-loop/SKILL.md` — description/triggers/공식 호출명에서 `/loop`·`loop` 제거, 폐기 사유 명기. "/goal(Stop 게이트) vs /loop(반복 실행기) vs /chronos(루프 규율)" 3종 비교표 추가
+- `skills/codex-mnemo/templates/agents-md-rules.md`, `skills/gemini-mnemo/templates/agents-md-rules.md` — 우선 고정 alias에서 `/loop` 제거
+- `QUICK-REFERENCE.md` — 경로 테이블 갱신
+
+### Changed — code-reviewer v4: 네이티브 엔진 위임 + 정책 레이어 분리
+
+Claude(`/code-review`)와 Codex(`/review`, `codex review --base`) 양쪽에 네이티브 리뷰 엔진이 생기면서, code-reviewer 스킬이 직접 수행하던 일반 리뷰가 중복이 됨. v3.0.0 → v4.0.0으로 재구성하여 리뷰 엔진과 정책 레이어를 분리.
+
+- **엔진 위임 (Step 2 신설)** — CLI 감지 후 경로 분기: 경로 A(Claude → 네이티브 code-review 스킬, effort high), 경로 B(Codex → `codex review --base` / `--uncommitted` / 비대화형 `codex exec review`), 경로 C(Gemini 등 네이티브 없음 → 기존 풀 경로 폴백). 네이티브 호출 실패 시에도 경로 C 폴백
+- **정책 레이어 P1~P5 (공통)** — 네이티브가 못 하는 것만 담당: P1 Scope Drift 감지, P2 도메인 보강 패스(LLM 출력 신뢰 경계, Enum 완전성, 비동기/동기 혼합, 컬럼명 안전 — 경로 A/B만), P3 Suppressions, P4 Fix-First(AUTO-FIX/ASK 분류), P5 통합 보고서(Engine/source 표기 추가)
+- **경계 명시** — `/code-review ultra`는 사용자 트리거 전용(과금)이라 스킬이 호출하지 않으며 권유 안내도 하지 않음. 포세이돈 Step 5 자재검사 teammate는 Skill 도구 접근이 보장되지 않으므로 경로 C 체크리스트 임베드 방식 유지
+- **풀 경로 보존** — v3의 2-Pass Critical 체크리스트, Specialist 병렬 dispatch, Adversarial Review는 경로 C 상세로 전부 유지 (Gemini parity + 폴백 + teammate 임베드 소스)
+
+### Docs — Codex 네이티브 /review 문서화
+
+`docs/resources/codex-cli.md`에 그동안 누락돼 있던 Codex 내장 리뷰 기능(TUI `/review`, `codex review --base/--uncommitted`, `codex exec review`, GitHub `@codex review`) 섹션 추가.
+
 ## [4.6.0] - 2026-06-10
 
 ### Added — Humanizer 한국어 윤문 모듈 + 절차적 가드
