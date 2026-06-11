@@ -15,7 +15,7 @@
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
 
-A production agent harness for **Claude Code**, **Codex CLI**, and **Gemini CLI** —
+A production agent harness and **loop-engineering stack** for **Claude Code**, **Codex CLI**, and **Gemini CLI** —
 named after the Twelve Olympians, forged across 3 months of daily real-product builds.
 
 ```bash
@@ -24,6 +24,13 @@ named after the Twelve Olympians, forged across 3 months of daily real-product b
 
 One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 **No questions asked. No blueprints needed. No human in the loop.**
+
+> **Built for the loop-engineering era.** Agents don't run on a single prompt — they run on loops:
+> act → observe → verify, repeated until an **objectively verifiable completion criterion** is met.
+> Olympus was built that way from the start — Chronos (verification gate that runs real tests),
+> Minos (fix-until-pass), Argos (AC cross-check), Clio (GO/NO-GO). Since v4.7.0 these loops run
+> on top of CLI-native features (`/goal` stop gate, `/code-review`, Agent Teams) —
+> the harness is the foundation, the loop is the operating model.
 
 ---
 
@@ -185,6 +192,22 @@ and her remembering crosses every session, every CLI, every dawn.
 ---
 
 ## What's New
+
+### v4.7.0 — Native Harness Integration (June 2026)
+
+> Groundwork for loop engineering — aligning the loop's parts (stop gate, review engine, team tools) with CLI-native features.
+
+- **code-reviewer v4 — engine delegation + policy layer** — generic review is delegated to native engines (Claude `/code-review`, Codex `codex review --base`); the skill keeps only what natives can't do: Scope Drift detection, domain checklists (LLM output trust boundary, enum completeness), Fix-First triage, unified report. Gemini falls back to the full path (2-Pass + specialists). `/code-review ultra` (billed) is never invoked nor suggested
+- **Chronos legacy `/loop` alias retired** — name collision with native `/loop` (interval re-runner) hijacked the alias on Claude. Removed across all CLIs + goal (stop gate) / loop (re-runner) / chronos (loop discipline) comparison table
+- **Audit follow-ups (5 parallel Explore agents)** — zeus × /goal relationship (hook auto-resume stays default for zero-interaction; bootstrap skipped when a goal is pre-set to avoid double stop gates), agent-team experimental env var demoted to legacy, project-root memory vs native auto-memory boundary in 4 files, orchestrator native-vs-MCP selection criteria, chronos `--flow-verify` receiver definition, zephermine vs native plan-mode distinction
+- **clio v2.1.0 — humanizer Korean copyediting hookup** — translationese/AI-style constraints injected at generation + post-generation S1 pass (USER-MANUAL > PRD > TECHNICAL priority)
+- **Codex native `/review` documented** — TUI `/review`, `codex review --base/--uncommitted`, `codex exec review` in `docs/resources/codex-cli.md`
+
+### v4.6.0 — Humanizer Korean Writing Module (June 2026)
+
+- **Korean translationese module (67 patterns, 10 categories)** — comma-after-connective (4.84x vs human writing, strongest single signal), ~성/~적/~화 nominalization, progressive overuse, literal pronoun translation. Quantitative first-pass scan + genre guardrails (essay/paper/blog/script/formal)
+- **Severity tiers + over-editing guard** — S1 (always remove) / S2 (clusters only) / S3 (overlaps only) across 24 English + 67 Korean patterns; 30% change-rate warning / 50% hard stop against meaning damage
+- **Copyediting procedure** — do-not masking (proper nouns, numbers, quotes), risk-ordered rewriting, live change-rate tracking + rollback (based on im-not-ai v2.0 taxonomy)
 
 ### v4.5.0 — Chronos × Native /goal Integration (June 2026)
 

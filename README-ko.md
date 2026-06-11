@@ -15,7 +15,7 @@
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
 
-**Claude Code**, **Codex CLI**, **Gemini CLI**를 위한 프로덕션 에이전트 하네스 ―
+**Claude Code**, **Codex CLI**, **Gemini CLI**를 위한 프로덕션 에이전트 하네스이자 **루프 엔지니어링 스택** ―
 12명의 올림포스 신의 이름으로, 3개월간 매일 실전 프로덕트를 만들며 다듬어졌습니다.
 
 ```bash
@@ -24,6 +24,12 @@
 
 한 줄. 열두 신. 설계 → 구현 → 감리 → 테스트 → 출항.
 **질문 없이. 청사진 없이. 인간의 손길 없이.**
+
+> **루프 엔지니어링 시대의 설계.** 에이전트는 프롬프트 한 번이 아니라 act → observe → verify를
+> **객관적으로 검증 가능한 완료 기준**까지 반복하는 루프로 움직입니다. 올림푸스는 처음부터 그렇게
+> 지어졌습니다 — 크로노스(실제 테스트 실행 검증 게이트), 미노스(fix-until-pass), 아르고스(AC 대조),
+> 클리오(GO/NO-GO). v4.7.0부터 이 루프들은 CLI 네이티브 기능(`/goal` Stop 게이트, `/code-review`,
+> Agent Teams) 위에서 돕니다 — 하네스는 기반, 루프는 운영 모델.
 
 ---
 
@@ -186,6 +192,22 @@ chmod +x install.sh && ./install.sh
 ---
 
 ## 최신 업데이트
+
+### v4.7.0 — 네이티브 하니스 결합 (2026.06)
+
+> 루프 엔지니어링의 기반 공사 — 루프의 부품(Stop 게이트, 리뷰 엔진, 팀 도구)을 CLI 네이티브 기능과 정렬.
+
+- **code-reviewer v4 — 엔진 위임 + 정책 레이어** — 일반 리뷰는 네이티브 엔진(Claude `/code-review`, Codex `codex review --base`)에 위임하고, 스킬은 네이티브가 못 하는 것만 담당: Scope Drift 감지, 도메인 체크리스트(LLM 출력 신뢰 경계, Enum 완전성), Fix-First 분류, 통합 보고서. Gemini는 풀 경로(2-Pass + Specialist) 폴백. `/code-review ultra`(과금)는 호출·권유 모두 금지
+- **크로노스 구 별칭 `/loop` 폐기** — 네이티브 `/loop`(주기 반복 실행기)와 이름 충돌로 Claude에서 가로채기 발생. 전 CLI에서 별칭 제거 + goal(Stop 게이트) / loop(반복 실행기) / chronos(루프 규율) 3종 비교표
+- **네이티브 결합 감사 후속 (병렬 Explore 5개)** — zeus /goal 관계 명시(zero-interaction이라 훅 자동 재개가 기본, goal 기설정 시 이중 Stop 게이트 방지), agent-team experimental env var 구버전 강등, 메모리 경계 4파일(프로젝트 루트 3계층 ≠ 네이티브 auto-memory), orchestrator 네이티브/MCP 선택 기준표, 크로노스 `--flow-verify` 수신 정의, 젭마인 vs 네이티브 plan mode 구분
+- **clio v2.1.0 — humanizer 한국어 윤문 연동** — 문서 생성 시 번역투/AI 문체 금지 제약 주입 + 생성 후 S1 윤문 패스 (USER-MANUAL > PRD > TECHNICAL 우선순위)
+- **Codex 네이티브 `/review` 문서화** — TUI `/review`, `codex review --base/--uncommitted`, `codex exec review`를 `docs/resources/codex-cli.md`에 정리
+
+### v4.6.0 — Humanizer 한국어 윤문 모듈 (2026.06)
+
+- **한국어 번역투 모듈 (10분류 67패턴)** — 연결어미 뒤 쉼표(인간 글의 4.84배, 단일 최강 신호), ~성/~적/~화 명사화, 진행형 과다, 대명사 직역 등 한국어 고유 AI 신호. 정량 1차 스캔 + 장르별 가드레일(에세이/논문/블로그/대본/격식체)
+- **심각도 등급 + 과잉편집 가드** — 영어 24 + 한국어 67 패턴에 S1(항상 제거)/S2(군집만)/S3(중첩만) 부여. 변경률 30% 경고 / 50% 중단으로 의미 훼손 방지
+- **윤문 절차 노하우** — do-not 사전 마스킹(고유명사·숫자·인용 보호), 위험도순 수정, 변경률 실시간 추적 + 롤백 (im-not-ai v2.0 분류 참고)
 
 ### v4.5.0 — 크로노스 × 네이티브 /goal 통합 (2026.06)
 
