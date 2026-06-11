@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.7.1] - 2026-06-11
+
+### Added — ui-ux-auditor 시각 검증 (스크린샷 관찰 채점)
+
+아프로디테 파이프라인의 구조적 약점 해소: 12신 중 유일하게 결과물을 안 보고(Grep 코드 검사 + 모델 자가채점) 판정하던 디자인 영역에 관찰 기반 게이트를 추가. 사용자 피드백 "자동화 테스트만으로는 부족, 실제 브라우저 확인 필수"의 디자인 영역 적용.
+
+- **Step 2.5 시각 검증 신설** — dev server 준비(minos Step 3 감지 순서 재사용) → 주요 페이지 스크린샷 캡처(데스크톱 1440×900 / 모바일 390×844 × 라이트/다크) → 스크린샷을 이미지로 직접 읽어 관찰 채점
+- **캡처 경로 이중화** — 1순위 로컬 `npx playwright screenshot`(MCP 불필요, 3-CLI 공통), 2순위 Playwright/chrome-devtools MCP
+- **충돌 규칙** — Grep 결과와 관찰이 다르면 **관찰이 이김** (코드에 `dark:`가 있어도 화면에서 안 보이면 실패)
+- **폴백 투명성** — 서버 구동 불가 시 정적 스캔으로 폴백하되 스코어카드에 "관찰 미반영" + 등급 `*` 표기
+- design-plan(아프로디테) Phase 4가 시각 검증을 필수로 명시, 기존 "8영역" 표기 오류도 9영역으로 정정
+
+### Fixed — clio v2.1.1: GO/NO-GO 판정식 구멍 2개 보완
+
+- minos 결과를 판정식에 반영 (PASS=GO 조건 / CONDITIONAL=CONDITIONAL GO / FAIL=NO-GO) — 기존엔 수집만 하고 판정에 미반영
+- 공허한 GO 차단 — 테스트 0개는 "전체 통과"로 인정하지 않음 (테스트 부재 시 최대 CONDITIONAL GO)
+- `--force`/`--docs-only` 게이트 우회 시 산출물 상단에 미통과/미수행 표기 의무화
+
 ## [4.7.0] - 2026-06-11
 
 ### Changed — 네이티브 결합 감사 후속 정리 (5건)

@@ -37,7 +37,7 @@ auto_apply: false
   Phase 1: design-system-starter     → 디자인 토큰 생성
   Phase 2: frontend-design (DB 매칭) → 팔레트/폰트/스타일 선택
   Phase 3: frontend-design (구현)    → 실제 코딩
-  Phase 4: ui-ux-auditor             → 8영역 감사
+  Phase 4: ui-ux-auditor             → 9영역 감사 + 시각 검증 (스크린샷 관찰)
            web-design-guidelines     → 가이드라인 준수 체크
 
   보조:
@@ -200,7 +200,12 @@ options:
 
 ### 4-1. UI/UX 감사
 
-`ui-ux-auditor` 스킬 실행 — **9영역 자동 감사 + 0-10 채점**:
+`ui-ux-auditor` 스킬 실행 — **9영역 자동 감사 + 시각 검증 + 0-10 채점**:
+
+> **시각 검증 필수**: Grep 정적 스캔은 1차 신호일 뿐, dev server를 띄워 스크린샷
+> (데스크톱/모바일 × 라이트/다크)을 찍고 **렌더링된 화면을 직접 보고** 채점합니다.
+> 관찰과 코드 추정이 충돌하면 관찰이 이깁니다. 서버 구동 불가 시에만 정적 스캔으로
+> 폴백하며 등급에 `*`(신뢰도 제한)를 표기합니다.
 1. 다크모드
 2. 반응형
 3. 접근성
@@ -279,7 +284,7 @@ options:
 |------|------|-------|
 | design-system-starter | 디자인 토큰 생성 | 1 |
 | frontend-design | 미학 적용 + DB 매칭 + 구현 (auto_apply) | 2~3 |
-| ui-ux-auditor | 8영역 UI/UX 감사 | 4 |
+| ui-ux-auditor | 9영역 UI/UX 감사 + 시각 검증(스크린샷) | 4 |
 | web-design-guidelines | Web Interface Guidelines 체크 | 4 |
 | stitch (loop 모드) | Stitch 멀티페이지 생성 (선택) | 3 |
 | stitch (react 모드) | HTML → React 변환 (선택) | 3 |
@@ -295,6 +300,6 @@ options:
 | `skills/frontend-design/references/font-pairings.csv` | 73개 폰트 페어링 |
 | `skills/frontend-design/references/design-styles.csv` | 84개 디자인 스타일 |
 | `skills/design-system-starter/SKILL.md` | 디자인 토큰 생성 |
-| `skills/ui-ux-auditor/SKILL.md` | UI/UX 8영역 감사 |
+| `skills/ui-ux-auditor/SKILL.md` | UI/UX 9영역 감사 + 시각 검증 |
 | `skills/web-design-guidelines/SKILL.md` | Web Interface Guidelines |
 | `agents/ui-ux-designer.md` | 디자인 비평 에이전트 |

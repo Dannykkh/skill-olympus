@@ -1,6 +1,6 @@
 ---
 name: ui-ux-auditor
-description: "웹 프로젝트 UI/UX 9영역 자동 감사 + 0-10 채점 + 코드 수정. 다크모드, 반응형, 접근성, 로딩상태, 폼UX, 네비게이션, 타이포그래피, 애니메이션, AI Slop 탐지. /ui-ux-auditor로 실행."
+description: "웹 프로젝트 UI/UX 9영역 자동 감사 + 스크린샷 시각 검증 + 0-10 채점 + 코드 수정. Grep 정적 스캔(1차 신호) 후 렌더링된 화면을 직접 관찰해 채점(관찰이 코드 추정을 이김). 다크모드, 반응형, 접근성, 로딩상태, 폼UX, 네비게이션, 타이포그래피, 애니메이션, AI Slop 탐지. /ui-ux-auditor로 실행."
 ---
 
 # UI/UX Auditor — 9영역 감사 + 0-10 채점 + 자동 수정
@@ -42,7 +42,9 @@ index.html + vite → Vite SPA
 
 ---
 
-## Step 2: 8영역 UI/UX 감사
+## Step 2: 9영역 정적 스캔 (Grep — 1차 신호)
+
+> 이 단계의 Grep 결과는 **1차 신호**입니다. 최종 채점은 Step 2.5의 시각 검증(렌더링 관찰)이 우선합니다.
 
 ### 2-1. 다크/라이트 모드 호환성
 
@@ -220,9 +222,62 @@ See [ai-slop-blacklist.md](../frontend-design/references/ai-slop-blacklist.md) �
 
 ---
 
-## Step 2.5: 영역별 0-10 채점
+## Step 2.5: 시각 검증 — 스크린샷 관찰 (Visual Pass)
 
-8+1개 영역을 각각 0-10으로 채점합니다.
+> 디자인의 진실은 코드가 아니라 **렌더링된 화면**에 있습니다.
+> Grep은 후보를 찾고, 점수는 화면을 직접 보고 매깁니다.
+
+### 2.5-1. 서버 준비
+
+1. 이미 실행 중인 dev server가 있으면 재사용 (헬스체크: `curl -s -o /dev/null -w "%{http_code}" http://localhost:{port}`)
+2. 없으면 minos Step 3의 감지 순서 재사용: docker-compose → Dev Server (`npm run dev` 등) → 정적 빌드 프리뷰
+3. **서버 구동 불가 시**: 시각 검증을 건너뛰되, 스코어카드에 "정적 스캔만 수행 — 관찰 미반영" 명시 + 등급에 `*` 표기 (신뢰도 제한)
+
+### 2.5-2. 캡처 매트릭스
+
+주요 페이지(라우트 상위 5개 이내)에 대해 캡처:
+
+| 축 | 값 |
+|----|----|
+| Viewport | 데스크톱 `1440,900` / 모바일 `390,844` |
+| 컬러 스킴 | `light` / `dark` (다크모드 지원 프로젝트만) |
+
+**캡처 방법 (우선순위):**
+
+1. **로컬 Playwright CLI** — MCP 불필요, 3-CLI 공통:
+   ```bash
+   npx playwright screenshot --viewport-size="1440,900" --color-scheme=light \
+     --wait-for-timeout=3000 --full-page \
+     "http://localhost:3000/" docs/ui-audit/screenshots/home-desktop-light.png
+   npx playwright screenshot --viewport-size="390,844" --color-scheme=dark \
+     --wait-for-timeout=3000 --full-page \
+     "http://localhost:3000/" docs/ui-audit/screenshots/home-mobile-dark.png
+   ```
+2. Playwright MCP / chrome-devtools MCP가 연결돼 있으면 `browser_navigate` + `browser_take_screenshot` 사용 가능
+
+저장 규칙: `docs/ui-audit/screenshots/{page}-{viewport}-{scheme}.png`
+
+### 2.5-3. 관찰 채점
+
+각 스크린샷 파일을 **이미지로 직접 읽어**(Read 도구 — Claude/Codex/Gemini 모두 이미지 입력 지원) 관찰합니다:
+
+| 영역 | 화면에서 보는 것 (코드로 못 잡는 것) |
+|------|--------------------------------------|
+| 다크모드 | 안 보이는 텍스트/아이콘, 조합으로만 발생하는 대비 붕괴 |
+| 반응형 | 모바일 캡처의 가로 스크롤, 요소 겹침/잘림, 터치 타겟 밀집 |
+| 타이포/간격 | 시각 계층이 실제로 느껴지는지, 간격 리듬의 일관성 |
+| 네비게이션 | 활성 상태가 눈에 보이는지, 위치 일관성 |
+| AI Slop | 보라 그라데이션, 3열 대칭, 천편일률적 인상 — 화면에서 한눈에 판별 |
+| 전체 인상 | "돈 주고 쓰고 싶은 화면인가" — 한 줄 총평 (ui-ux-designer 에이전트 관점) |
+
+**충돌 규칙: Grep 결과와 관찰이 다르면 관찰이 이깁니다.**
+예: 코드에 `dark:` 클래스가 있어도 화면에서 텍스트가 안 보이면 실패. 코드에 고정폭이 있어도 화면에서 안 깨지면 P3로 강등.
+
+---
+
+## Step 2.7: 영역별 0-10 채점
+
+8+1개 영역을 각각 0-10으로 채점합니다. **시각 검증을 수행한 경우 관찰 결과가 최종 점수**이고, Grep 결과는 보조 근거입니다.
 
 **채점 기준:**
 - **0-3**: 심각한 문제 다수 — 즉시 수정 필요
@@ -272,7 +327,8 @@ UI/UX 감사 스코어카드
 | 애니메이션 | 6/10 | reduced-motion 미대응 |
 | AI Slop | 8/10 | 3열 그리드 1건 |
 
-총점: 6.4/10 (등급: C)
+시각 검증: {수행 — 스크린샷 N장 (docs/ui-audit/screenshots/) | 미수행 (서버 구동 불가)}
+총점: 6.4/10 (등급: C)      ← 시각 검증 미수행 시 등급에 * 표기 (예: C*)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
