@@ -18,7 +18,7 @@ triggers:
 auto_apply: false
 license: MIT
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # Clio (클리오) — 마무리투수 + 역사의 뮤즈
@@ -259,6 +259,20 @@ spec이 있으면, **설계 대비 구현 누락**을 탐지합니다:
 **용어 색인 자동 생성**: 3종 문서 모두에 마지막 부록으로 "용어 색인" 섹션 자동 추가 (사전을 alphabetical로 나열, 한글 표기 + 한 줄 정의).
 
 신규 멤버 온보딩 시 USER-MANUAL.md 한 장으로 도메인 어휘 + 사용법을 동시에 학습 가능.
+
+### Phase 3 공통: 한국어 윤문 (humanizer 연동)
+
+한국어로 생성되는 문서는 humanizer 한국어 모듈을 두 단계로 적용합니다.
+
+**생성 시 (제약 주입):** 문서 생성 서브에이전트 프롬프트에 포함 —
+- 번역투 금지: 연결어미 뒤 쉼표 습관("하며,"·"하고,"), ~성/~적/~화 명사화 남발, 불필요한 진행형, 대명사 직역("그것은"·"이것은")
+- AI 문체 금지: 과장 수식어, 3개 나열 습관, 공허한 마무리 문장
+
+**생성 후 (윤문 패스):** 3종 문서 완성 후 humanizer 한국어 모듈로 1회 점검 —
+- S1 등급(항상 제거) 패턴 중심, 정량 지표(연결어미 뒤 쉼표 밀도 등)로 빠르게 진단
+- 과잉편집 가드 준수: 변경률 30% 경고 / 50% 중단. 고유명사·수치·코드 블록·도메인사전 표기는 수정 금지
+- 우선순위: USER-MANUAL.md(외부 공유) > PRD.md > TECHNICAL.md(S1만)
+- 상세 패턴: `skills/humanizer/references/korean-translationese.md`
 
 ### 3-1. PRD — `docs/clio/latest/PRD.md`
 
@@ -598,6 +612,7 @@ npm start
 | minos | Playwright QA 실사 | Phase 1에서 결과 수집 |
 | flow-verifier | 프로세스 흐름도 생성/검증 | Phase 2에서 활용 |
 | documentation | 문서 생성 에이전트 | Phase 3 템플릿 참조 |
+| humanizer | 한국어 윤문 (번역투/AI 문체 제거) | Phase 3 생성 시 제약 주입 + 생성 후 윤문 패스 |
 | mermaid-diagrams | Mermaid 문법 가이드 | Phase 2 다이어그램 생성 시 참조 |
 | release-notes | 버전 + CHANGELOG | Phase 4 이후 후속 |
 | shipping-and-launch | 배포 전 체크리스트 | Phase 4 이후 후속 |
@@ -617,4 +632,5 @@ npm start
 | `skills/minos/SKILL.md` | QA 시나리오 생성 + Playwright 테스트 |
 | `skills/mermaid-diagrams/SKILL.md` | Mermaid 문법 가이드 |
 | `skills/pdf/SKILL.md` | Markdown → 출판 PDF (Phase 3-4에서 호출) |
+| `skills/humanizer/references/korean-translationese.md` | 한국어 번역투 패턴 (Phase 3 윤문 패스) |
 | `skills/pdf/scripts/markdown_to_pdf.py` | PDF 변환 스크립트 (weasyprint) |
