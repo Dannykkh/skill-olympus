@@ -6,12 +6,12 @@ description: >
   실제 테스트 실행 검증, 우선순위 사이클(Critical>High>Medium>Low), 한 사이클 한 이슈, 감사 로그 — 을 더합니다.
   크로노스는 goal을 자동 호출하지 않고, 규율을 녹인 goal 목표문을 생성·제시합니다(설정은 /goal 입력 한 번).
   goal이 없는 환경(Gemini/구버전)에서는 Stop 훅·notify 자동 재개로 폴백합니다.
-  --max-iterations와 --completion-promise로 제어. /chronos 또는 /loop로 실행. Also known as 크로노스.
+  --max-iterations와 --completion-promise로 제어. /chronos로 실행. Also known as 크로노스.
+  주의: 네이티브 /loop(주기 반복 실행기)와는 별개 — 구 별칭 /loop는 충돌로 폐기됨.
 triggers:
   - "auto-continue-loop"
   - "chronos"
   - "크로노스"
-  - "loop"
   - "goal"
   - "다음 진행"
   - "계속 진행"
@@ -168,10 +168,18 @@ bash  skills/auto-continue-loop/scripts/cancel-loop.sh
 pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 ```
 
-**공식 호출명:** `/chronos` (별칭: `/loop`, `크로노스`)
+**공식 호출명:** `/chronos` (별칭: `크로노스`)
 
-> **언제 무엇을 쓰나:** 그냥 "끝까지 돌리기"만 필요하면 네이티브 `/goal` 단독으로 충분합니다.
-> "검증으로 멈추고, 우선순위대로, 흔적을 남기며" 돌리고 싶으면 `/chronos`를 쓰세요 — goal을 그 규율에 맞게 녹여줍니다.
+> **구 별칭 `/loop` 폐기 (2026-06-11):** Claude Code에 네이티브 `/loop`(주기 반복 실행기)가 들어오면서
+> 이름이 충돌해 크로노스 별칭에서 제거했습니다. 크로스-CLI 호출명 통일 정책에 따라 Codex/Gemini에서도 동일하게 제거.
+
+> **언제 무엇을 쓰나 (네이티브 3종과의 구분):**
+>
+> | 도구 | 본질 | 쓰는 상황 |
+> |------|------|----------|
+> | 네이티브 `/goal` | Stop 게이트 (멈춤 방지) | "끝까지 돌리기"만 필요할 때 — 단독으로 충분 |
+> | 네이티브 `/loop` | 반복 실행기 (인터벌/자가 페이싱 재투입) | 폴링·정기 작업: "5분마다 배포 확인", "주기적으로 X 실행". 완료 기준·검증 게이트 없음 |
+> | `/chronos` | 루프 규율 (검증 게이트 + 우선순위 + 감사 로그) | "검증으로 멈추고, 우선순위대로, 흔적을 남기며" 돌릴 때 — goal을 그 규율에 맞게 녹여줌 |
 
 ### 옵션
 
@@ -179,6 +187,7 @@ pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 |------|------|--------|-------------|
 | `--max-iterations <N>` | 최대 반복 횟수 | **50** | 훅/직접: 강제 종료 / goal: budget 힌트 |
 | `--completion-promise '<조건>'` | 검증 게이트 (`<promise>` 태그로 매칭) | 없음 (작업 소진 시 자동 종료) | 모든 엔진 공통 (goal 목표문에도 주입) |
+| `--flow-verify` | flow-verifier 연동 — 루프 시작 전 프로세스 도면 생성(Phase 0.5), 완료 선언 전 도면 대 실제 코드 흐름 대조. 불일치는 다음 사이클 수정 대상으로 승격 | off | 모든 엔진 공통 (상세: `skills/flow-verifier/SKILL.md`의 "Chronos 통합") |
 
 ---
 

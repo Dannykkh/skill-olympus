@@ -81,7 +81,7 @@ Codex는 Claude처럼 커스텀 slash command 레지스트리를 직접 제공�
 - `workpm`, `pmworker`처럼 slash 없이 쓰는 canonical 이름도 단독 요청이면 explicit invocation으로 처리하세요.
 
 **우선 고정 alias:**
-- `/chronos`, `/loop`, `크로노스` → `auto-continue-loop`
+- `/chronos`, `크로노스` → `auto-continue-loop` (구 별칭 `/loop`는 Claude 네이티브 /loop와 충돌해 폐기)
 - `/zephermine`, `젭마인`, `제퍼마인`, `제퍼미네` → `zephermine`
 - `/zeus`, `제우스` → `zeus`
 - `/aphrodite`, `아프로디테` → `design-plan`

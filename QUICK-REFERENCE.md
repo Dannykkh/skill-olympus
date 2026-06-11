@@ -266,7 +266,7 @@ claude plugin install voltagent-qa-sec
 | `skills/argos/` | 감리/검증 — 정적·런타임·API·도면 대조 5단계 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
-| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/loop, /chronos) |
+| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — 네이티브 /loop와 별개) |
 | `skills/seo-audit/` | SEO+AEO+GEO 감사 — robots.txt, 사이트맵, 메타태그, JSON-LD, 이미지, 링크, 성능, AI크롤러, 답변엔진, 생성형AI (10영역) |
 | `skills/autoresearch/` | 스킬 프롬프트 자동 최적화 — Hill Climbing 루프로 SKILL.md 개선 (Karpathy autoresearch 패턴) |
 | `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
