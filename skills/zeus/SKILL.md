@@ -63,6 +63,10 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 
 Zeus는 `zephermine → agent-team/workpm → argos → docker-deploy → minos → report`를 하나의 긴 작업으로 밀어붙이는 스킬입니다. 모델 지시만으로는 중간 보고 후 멈출 수 있으므로, 제품 파이프라인 요청으로 Zeus를 실행할 때는 Phase 0 전에 Chronos 자동 재개 가드를 부트스트랩합니다.
 
+**네이티브 /goal과의 관계:** Claude/Codex에는 네이티브 `/goal`(Stop 게이트)이 있고, 크로노스는 이를 1순위 지속성 엔진으로 씁니다. 그러나 `/goal`은 사용자 입력으로만 켜지므로(스킬이 자동 호출 불가), zero-interaction이 원칙인 Zeus는 **사용자 입력이 필요 없는 훅 자동 재개를 기본 엔진으로 유지**합니다. 단:
+- 사용자가 `/zeus` 실행 전에 `/goal`을 이미 설정했다고 밝힌 경우 → goal이 지속성을 담당하므로 **setup-loop 부트스트랩을 생략**합니다 (goal + 훅 이중 Stop 게이트 방지 — 크로노스 `--goal-mode`와 동일한 충돌 방지 원칙)
+- 파이프라인을 멈추고 `/goal` 설정을 요청하지 않습니다 (zero-interaction 위반)
+
 CLI별 재개 방식:
 - Claude Code: `.claude/loop-state.md` + Claude stop lifecycle hook
 - Codex: `.codex/loop-state.md` + notify `save-turn -> continue-loop -> codex exec resume --last`

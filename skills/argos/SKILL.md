@@ -144,6 +144,9 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 2
 
 빌드, 테스트, E2E를 실행하여 검증합니다.
 
+> 네이티브 `/run`·`/verify`와의 관계: 둘은 단발 동작 확인용이고, 이 Phase는 감리 보고서에 들어갈
+> 구조화된 검증 결과(빌드/테스트/E2E 파싱)를 만들기 위한 자체 절차입니다 — 의도된 설계.
+
 1. **프로젝트 감지**: package.json, pom.xml, pyproject.toml 등에서 기술 스택 자동 감지
 2. **빌드 검증**: `npm run build`, `mvn compile` 등 실행
 3. **단위 테스트**: `npm test`, `pytest` 등 실행 + 결과 파싱 (통과/실패/스킵)
@@ -394,7 +397,7 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 | agent-team (포세이돈) | 구현 수행 | 검증 전 선행 단계 (젭마인 산출물 기반) |
 | daedalus (다이달로스) | 구현 수행 | 검증 전 선행 단계 (젭마인 없이 직접 진행) |
 | minos | Playwright 실사 테스트 | 검증 후 후행 단계 |
-| code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할, 시공 중 자동 실행 |
+| code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할 — diff 기반 PR 사전 리뷰(v4: 네이티브 엔진 위임), 시공 중 실행. 아르고스는 spec 대비 준공검사라 diff 엔진으로 대체 불가 |
 
 ---
 

@@ -24,6 +24,15 @@ PM (Project Manager)이 태스크를 분배하고, Worker들이 병렬로 수행
 > 이 MCP 모드는 대규모(섹션 10+), 크로스-CLI 혼합, 장시간 작업에 적합합니다.
 > `/daedalus --mcp`로 진입합니다.
 
+**네이티브 vs MCP 선택 기준:**
+
+| 상황 | 진입점 | 이유 |
+|------|--------|------|
+| 일반 프로젝트 (Claude/Codex, 섹션 10개 미만) | `/daedalus` (네이티브) | Claude=Agent Teams, Codex=spawn_agent — 설치 불필요, 실시간 팀원 통신 |
+| 대규모(섹션 10+) / 장시간 / 크로스-CLI 혼합 | `/daedalus --mcp` (이 모드) | 태스크 보드가 외부 저장돼 세션 한도와 무관 |
+| Gemini 단독 (네이티브 팀 도구 없음) | `/daedalus --mcp` | 유일한 병렬 경로 |
+| 파일 잠금(hard lock)이 필요한 병렬 수정 | `/daedalus --mcp` | `orchestrator_lock_file` — 네이티브 팀은 소유권 규칙(soft)뿐 |
+
 ## 설치
 
 ```bash

@@ -170,6 +170,9 @@ package.json "playwright" → 버전 확인
 
 감지 순서: docker-compose.yml → Dev Server → Django → 사용자 안내
 
+> 네이티브 `/run`과의 관계: /run은 단발 실행·확인용이고, 이 Step은 테스트 수명주기에 묶인 서버 준비
+> (포트 정리·헬스체크·종료)라 자체 절차가 기본입니다. 자체 감지가 모두 실패하면 /run의 실행 패턴을 참고.
+
 환경별 서버 실행, 포트 정리, 헬스체크 상세: See [server-setup.md](references/server-setup.md)
 
 ---

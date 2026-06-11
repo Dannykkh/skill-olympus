@@ -95,8 +95,8 @@ Phase 0 시작 시 자동 판별:
 ## Prerequisites
 
 ### Claude 모드
-- Agent Teams 활성화: `settings.json`에 `"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}`
-- `"teammateMode": "in-process"` 또는 `"tmux"` 설정
+- 현행 Claude Code는 Agent Teams 도구(TeamCreate/SendMessage/TaskCreate 등)를 **기본 제공** — 별도 설정 불필요
+- (구버전 호환) Teams 도구가 안 보이면: `settings.json`에 `"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}` + `"teammateMode": "in-process"` 또는 `"tmux"`
 - ⚠️ **TeamCreate 시 반드시 `mode: "bypassPermissions"` 지정** — 미지정 시 teammate가 파일 쓰기 권한 승인 대기 상태에 빠져 무한 대기
 - ⚠️ **SendMessage 시 반드시 `summary` 파라미터 포함** — string message만 보내면 `error: summary is required` 에러 발생
 
@@ -389,7 +389,7 @@ Lead 의사결정 로그: conversations/{date}-team-poseidon.md
 
 | 측면 | agent-team (이 스킬) | orchestrator (기존) |
 |------|---------------------|---------------------|
-| 설치 | 불필요 (env var / CLI 내장) | MCP 서버 빌드 필요 |
+| 설치 | 불필요 (CLI 내장 — 구버전만 env var) | MCP 서버 빌드 필요 |
 | 지원 CLI | Claude + Codex (네이티브) | Claude + Codex + Gemini (MCP) |
 | 파일 충돌 방지 | 소유권 규칙 (soft) | MCP lock_file (hard) |
 | 태스크 관리 | Claude: TaskCreate, Codex: spawn_agent | orchestrator MCP 도구 |

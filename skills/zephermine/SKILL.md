@@ -17,6 +17,12 @@ auto_apply: false
 
 Orchestrates a multi-step planning process: Research → Interview → Spec Synthesis → Team Analysis → Plan → External Review → Sections → Verify
 
+> **네이티브 plan mode와의 구분:** Claude의 plan mode(EnterPlanMode)는 "이 작업을 어떻게 구현할까"를 다루는
+> 단일 작업용 계획 승인 게이트이고, 젭마인은 다운스트림(포세이돈·아르고스·미노스·제우스·견적)이 소비하는
+> **디스크 아티팩트**(plan.md, sections/, flow-diagrams/, qa-scenarios)를 만드는 설계 파이프라인입니다.
+> 단일 버그픽스·소규모 리팩토링은 plan mode, 기능/제품 단위 설계는 젭마인.
+> 주의: plan mode는 파일 쓰기 금지 모드이므로 **plan mode 안에서 젭마인을 실행하지 마세요** — 산출물 생성이 막힙니다.
+
 ## CRITICAL: First Actions
 
 **BEFORE anything else**, do these in order:

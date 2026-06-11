@@ -5,6 +5,7 @@ description: >
   사용자 트리거 스킬. 핸드오프 의존이 약할 때 의지로 호출. Dreaming-like
   rebuild 모드 지원 (기존 정제 .md + 새 관찰 통합 + 중복/모순 제거).
   /memory-distill로 실행. 또한 핸드오프 자동 정제와 동일 로직을 공유.
+  대상은 프로젝트 루트 memory/ 전용 — Claude 네이티브 auto-memory(~/.claude/projects/)와 무관.
 triggers:
   - "memory-distill"
   - "메모리 정제"
