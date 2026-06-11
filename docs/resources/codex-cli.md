@@ -101,6 +101,23 @@ codex -a never exec -m gpt-5.5 \
 
 ---
 
+## 네이티브 코드 리뷰 (/review)
+
+> Codex CLI 내장 리뷰 기능. `code-reviewer` 스킬 v4의 Codex 엔진 경로(경로 B)가 이를 사용합니다.
+
+| 사용 방식 | 명령 | 용도 |
+|----------|------|------|
+| TUI | `/review` | 메뉴에서 리뷰 대상 선택 (uncommitted / base branch / commit) |
+| CLI | `codex review --base main` | 베이스 브랜치 대비 diff 리뷰 (PR 전 점검) |
+| CLI | `codex review --uncommitted` | staged/unstaged/untracked 변경 리뷰 |
+| 비대화형 | `codex exec review` | 자동화 파이프라인용 (`codex review`에는 `--json` 없음) |
+| GitHub | `@codex review` (PR 코멘트) | Codex cloud 리뷰 |
+
+> 일반 버그/품질 리뷰는 이 네이티브 엔진에 위임하고, Scope Drift 감지·도메인 체크리스트·Fix-First
+> 분류 같은 정책 레이어는 `skills/code-reviewer/`가 담당합니다.
+
+---
+
 ## 주요 특징
 
 - **최종 응답 저장**: 자동화에서는 `--output-last-message <file>`로 최종 응답만 파일에 저장
@@ -117,4 +134,4 @@ codex -a never exec -m gpt-5.5 \
 
 ---
 
-**문서 작성일:** 2026-02-02
+**문서 작성일:** 2026-02-02 / **갱신일:** 2026-06-10 (네이티브 /review 문서화)
