@@ -193,6 +193,12 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.7.1 — 아프로디테 시각 검증 + 클리오 게이트 강화 (2026.06)
+
+- **ui-ux-auditor 시각 검증** — Grep 정적 스캔(1차 신호) 후 dev server를 띄워 스크린샷(데스크톱 1440×900/모바일 390×844 × 라이트/다크)을 찍고 **렌더링된 화면을 직접 관찰해 채점**. 관찰과 코드 추정이 충돌하면 관찰이 이김. 서버 구동 불가 시에만 정적 폴백 + 등급 `*` 표기. 결함 4종(다크모드 대비 붕괴·보라 그라데이션·3열 대칭·고정폭 오버플로)을 심은 스모크 테스트로 4/4 관찰 검출 실증
+- **clio v2.1.1 — GO/NO-GO 판정식 보완** — minos 결과를 판정식에 반영(PASS/CONDITIONAL/FAIL), 테스트 0개의 공허한 GO 차단(최대 CONDITIONAL GO), `--force`/`--docs-only` 우회 시 산출물에 미통과 표기 의무화
+- **아프로디테 경계 명시** — Phase 3 구현 범위를 "외관 한정"으로: 토큰·마크업·스타일·비주얼 인터랙션은 담당, 상태·API·비즈니스 로직은 포세이돈/다이달로스 몫 (파이프라인 모드 로직 변경 금지)
+
 ### v4.7.0 — 네이티브 하니스 결합 (2026.06)
 
 > 루프 엔지니어링의 기반 공사 — 루프의 부품(Stop 게이트, 리뷰 엔진, 팀 도구)을 CLI 네이티브 기능과 정렬.
@@ -460,6 +466,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.7.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.1)** | **2026-06-11** | **아프로디테 시각 검증 + 클리오 게이트 강화** — ui-ux-auditor가 스크린샷을 직접 관찰해 채점(관찰>Grep, 결함 4종 스모크 테스트 4/4 검출 실증); clio v2.1.1 판정식 보완(minos 반영, 공허한 GO 차단, 우회 표기); 아프로디테 구현 범위 외관 한정 명시 |
 | **[v4.7.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.0)** | **2026-06-11** | **네이티브 하니스 결합** — code-reviewer v4 (엔진 위임: Claude /code-review · Codex `codex review --base`, 정책 레이어 P1~P5 — Scope Drift/Fix-First/도메인 체크리스트, Gemini 풀 경로 폴백); 크로노스 구 별칭 `/loop` 폐기(네이티브 /loop 이름 충돌) + goal/loop/chronos 비교표; 감사 후속(제우스 /goal 관계 + 이중 Stop 게이트 가드, agent-team env var 구버전 강등, 프로젝트 루트 메모리 vs 네이티브 auto-memory 경계 4파일, orchestrator 네이티브/MCP 선택 기준표, 크로노스 `--flow-verify` 수신 정의); clio v2.1.0 humanizer 한국어 윤문 연동; 젭마인 vs 네이티브 plan mode 구분 |
 | **[v4.6.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.6.0)** | **2026-06-10** | **휴머나이저 한국어 윤문 모듈** — 10분류(A~J) 67 번역투 패턴, 정량 1차 스캔(연결어미 뒤 쉼표 4.84배 신호), 장르 가드레일, S1/S2/S3 심각도, 절차적 과잉편집 가드(do-not 마스킹, 변경률 롤백); im-not-ai v2.0 분류 흡수; 3-CLI 배포 |
 | **[v4.5.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.5.0)** | **2026-06-05** | **크로노스 × 네이티브 /goal 통합** — /goal 래퍼로 재정의(goal=지속성, 크로노스=검증 게이트/우선순위/로그); 목표문 생성 모델(자동 호출 없음 — 목표문 생성, 사용자가 /goal 한 번 설정); 3계층 폴백(goal → 훅/notify → 직접)으로 Gemini parity; 하드 가드 `setup-loop --goal-mode`가 loop-state 제거해 훅 충돌을 코드 레벨에서 차단(.ps1/.sh 테스트); Codex vs Claude 판정 차이 문서화 |
