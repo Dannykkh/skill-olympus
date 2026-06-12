@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.0] - 2026-06-13
+
+### Added — 크로노스 루프 프로그래밍: 주차(PARK) + Owner Decision Brief + 재진입 규약
+
+Peter Steinberger의 maintainer-orchestrator 루프 분석에서 증류한 "루프는 의지가 아니라 구조로 유지된다" 원칙의 적용. 막힌 이슈 하나가 루프 전체를 멈추지 못하게 하는 3종 규율.
+
+- **주차(PARK)** — 유효 사유 4가지(검증 3회 실패 / 권한 경계 / 외부 접근 부재 / 제품 결정)로만 주차 가능. 사유 없는 "막힘" 선언은 회피로 간주, 주차 전 갈 수 있는 데까지(재현/원인 분석/권한 안의 수정) 진행 의무
+- **Owner Decision Brief** — 주차 이슈는 결재 가능 상태로 보고: 무엇/왜 지금/증거/트레이드오프/추천(의무 — 기술 분석을 사용자에게 떠넘기지 않음)/정확한 선택지. 사용자의 일은 4지선다(추천대로 승인/반려/접근 권한 1개 부여/문서화된 대안 택일)
+- **재진입 규약(READ)** — 매 사이클 FIND 전 감사 로그 재독, 기억과 로그가 어긋나면 로그가 이김. 새 세션이 chronos-log.md만으로 루프 재개 — 루프 상태는 컨텍스트 윈도우가 아니라 파일에 있음
+- **goal 목표문 필수 요소 6번 추가** — 주차만 남으면 Brief 보고로 종료 허용(거짓 promise 출력 금지). 주차-only 큐에서 goal 게이트가 영원히 미달 판정하는 데드락 방지
+- chronos-worker(Gemini 3순위 경로) 2사본에 동일 규율 반영
+- README 영/한 v4.8.0 섹션 + 루프 구조 다이어그램(`docs/assets/chronos-loop-programming.svg`)
+
+### Added — 제우스 Decision Ledger (사후 결재 장부)
+
+- `[ZEUS-AUTO:taste]` 결정을 결정 + 근거 + 기각한 대안 + **되돌리는 법** 규격으로 승격, 되돌리기 쉬운(reversible) 기본값 우선 명시
+- Phase 6 리포트 Taste Decisions 섹션을 Decision Ledger로 개편, Next Steps에 장부 검토 항목 추가
+- zero-interaction 유지 — 질문을 사전에 하지 않는 대신 결재를 사후로 이동
+
+### Fixed — 크로노스 훅을 주차 정책과 정렬 (거짓 promise 보상 제거)
+
+- loop-stop.ps1/.sh, continue-loop.ps1/.sh의 "`<promise>` 태그만 있으면 완료" 분기 제거 — 내용이 불일치하는 promise는 종료 대신 재투입. 거짓 promise를 기계가 보상하면 SKILL.md의 검증 게이트가 무력화됨
+- 멀티라인 promise 매칭 보강, 재투입 너지 메시지에 주차 규칙 주입(막힌 이슈는 사유와 함께 주차, 주차는 할 작업으로 세지 않음, 최종 보고에 Brief)
+- 검증: loop-stop.ps1 기능 테스트 4/4(불일치 거부 / 정확 일치 종료 / 주차-only Chronos Complete 종료 / 마커 없음 재투입), .sh 동일 로직 + 문법 검증
+
+### Fixed — codex-mnemo notify 판정 순서 (save-turn 체인 래퍼 보존)
+
+- IDE 알림 제거 검사가 save-turn 체인 검사보다 먼저 실행되어, "save-turn 체인 + 자체 알림"을 겸하는 외부 래퍼까지 제거하던 문제 수정 — Codex notify는 단일 슬롯이라 외부 도구 통합이 재설치로 조용히 끊겼음 (실측 후 교정)
+- 체인 검사 우선으로 겸용 래퍼는 보존(Refreshing 분기), save-turn을 체인하지 않는 순수 알림 체인만 제거. 설치기 재실행으로 보존 검증
+
 ## [4.7.1] - 2026-06-11
 
 ### Added — ui-ux-auditor 시각 검증 (스크린샷 관찰 채점)
