@@ -415,15 +415,19 @@ function installTomlNotify(configPath, notifyArgs, hooksDir) {
   const hadNotify = /^\s*notify\s*=/m.test(content);
   let finalNotifyArgs = notifyArgs;
 
-  if (
+  // 판정 순서 중요: save-turn 체인 검사가 IDE 알림 검사보다 먼저여야 한다.
+  // 외부 도구가 "save-turn 체인 + 자체 알림"을 겸하는 래퍼를 notify에 설치한 경우,
+  // IDE 알림 검사를 먼저 하면 save-turn을 정상 체인 중인 래퍼까지 제거해
+  // 외부 도구의 notify 통합이 조용히 끊긴다 (2026-06-13 실제 발생).
+  if (hadNotify && notifyChainsSaveTurn(existingNotifyArgs)) {
+    finalNotifyArgs = repairNotifyShell(existingNotifyArgs);
+    console.log("      Refreshing existing save-turn notify chain");
+  } else if (
     hadNotify &&
     existingNotifyArgs.length > 0 &&
     notifyLooksLikeDesktopOrIdeNotification(existingNotifyArgs)
   ) {
     console.log("      Removing existing desktop/IDE notification chain");
-  } else if (hadNotify && notifyChainsSaveTurn(existingNotifyArgs)) {
-    finalNotifyArgs = repairNotifyShell(existingNotifyArgs);
-    console.log("      Refreshing existing save-turn notify chain");
   } else if (hadNotify && existingNotifyArgs.length > 0 && hooksDir) {
     const wrapperNotifyArgs = writeNotifyWrapper(hooksDir, existingNotifyArgs);
     if (wrapperNotifyArgs) {
