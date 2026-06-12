@@ -302,6 +302,8 @@ should_stop_loop() {
     fi
 
     if [ -n "$promise" ] && [ "$promise" != "null" ]; then
+        # 내용이 일치하지 않는 promise는 종료로 인정하지 않는다 — 거짓/불일치 promise를
+        # 종료로 보상하면 검증 게이트가 무력화됨 (SKILL.md "거짓 promise 출력 금지"와 짝).
         local promise_text=""
         promise_text="$(printf '%s' "$output" | perl -0777 -ne 'if (/<promise>(.*?)<\/promise>/s) { my $x=$1; $x =~ s/^\s+|\s+$//g; print $x; }' 2>/dev/null || true)"
         if [ -n "$promise_text" ]; then
@@ -309,10 +311,7 @@ should_stop_loop() {
             if [ "$promise_text" = "$promise" ] || echo "$promise_text" | grep -qF "$promise" || echo "$promise" | grep -qF "$promise_text"; then
                 return 0
             fi
-        fi
-        # <promise> 태그가 있기만 하면 완료로 간주
-        if printf '%s' "$output" | grep -q '<promise>'; then
-            return 0
+            debug_log "promise-mismatch: got '$promise_text' expected '$promise' — not a completion"
         fi
     fi
 
@@ -430,11 +429,12 @@ LOG_FILE="$DOCS_DIR/codex-resume.log"
     printf 'Continue from the current repository state.\n'
     printf -- '- Inspect the latest files, tests, logs, and diff before acting.\n'
     printf -- '- Promote the top actionable next step immediately instead of stopping.\n'
+    printf -- "- Park blocked issues in docs/chronos/chronos-log.md with a reason ('Parked: {issue} - {reason}') and move on; parked issues do not count as actionable work.\n"
     printf -- '- Do not ask the user to continue.\n'
     printf -- '- Keep changes inside the saved scope and avoid unrelated refactors.\n'
-    printf -- "- If no actionable in-scope work remains, output 'Chronos Complete'.\n"
+    printf -- "- If no actionable in-scope work remains, output 'Chronos Complete' with the final report (one Owner Decision Brief per parked issue).\n"
     if [ -n "$COMPLETION_PROMISE" ] && [ "$COMPLETION_PROMISE" != "null" ]; then
-        printf -- '- If the completion condition is satisfied, output <promise>%s</promise>.\n' "$COMPLETION_PROMISE"
+        printf -- '- Only after the verification gate actually passes, output <promise>%s</promise>. Never output a promise that is not literally true.\n' "$COMPLETION_PROMISE"
     fi
 } > "$PROMPT_FILE"
 

@@ -133,16 +133,15 @@ function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
     }
 
     if ($completionPromise -and $completionPromise -ne "null") {
-        $promiseMatch = [regex]::Match($lastOutput, '<promise>(.*?)</promise>')
+        # (?s)로 여러 줄 promise도 매칭. 내용이 일치하지 않는 promise는 종료로 인정하지 않는다 —
+        # 거짓/불일치 promise를 종료로 보상하면 검증 게이트가 무력화됨 (SKILL.md "거짓 promise 출력 금지"와 짝).
+        $promiseMatch = [regex]::Match($lastOutput, '(?s)<promise>(.*?)</promise>')
         if ($promiseMatch.Success) {
             $promiseValue = $promiseMatch.Groups[1].Value.Trim()
             if ($promiseValue -eq $completionPromise -or $promiseValue -match [regex]::Escape($completionPromise) -or $completionPromise -match [regex]::Escape($promiseValue)) {
                 return $true
             }
-        }
-        # <promise> 태그가 있기만 하면 완료로 간주
-        if ($lastOutput -match '<promise>') {
-            return $true
+            Write-DebugLog "promise-mismatch: got '$promiseValue' expected '$completionPromise' — not a completion"
         }
     }
 
@@ -294,13 +293,14 @@ $resumePrompt = @(
     "Continue from the current repository state.",
     "- Inspect the latest files, tests, logs, and diff before acting.",
     "- Promote the top actionable next step immediately instead of stopping.",
+    "- Park blocked issues in docs/chronos/chronos-log.md with a reason ('Parked: {issue} - {reason}') and move on; parked issues do not count as actionable work.",
     "- Do not ask the user to continue.",
     "- Keep changes inside the saved scope and avoid unrelated refactors.",
-    "- If no actionable in-scope work remains, output 'Chronos Complete'."
+    "- If no actionable in-scope work remains, output 'Chronos Complete' with the final report (one Owner Decision Brief per parked issue)."
 )
 
 if ($completionPromise -and $completionPromise -ne "null") {
-    $resumePrompt += "- If the completion condition is satisfied, output <promise>$completionPromise</promise>."
+    $resumePrompt += "- Only after the verification gate actually passes, output <promise>$completionPromise</promise>. Never output a promise that is not literally true."
 }
 
 $resumePromptText = ($resumePrompt -join "`n")

@@ -112,6 +112,10 @@ if echo "$LAST_OUTPUT" | grep -qiE 'Chronos Complete'; then
 fi
 
 # 완료 감지 2: <promise>텍스트</promise> 매칭 (전체 출력, 포함 매칭)
+# 내용이 일치하지 않는 promise는 종료로 인정하지 않는다 — 거짓/불일치 promise를 종료로
+# 보상하면 검증 게이트가 무력화됨 (SKILL.md "거짓 promise 출력 금지"와 짝).
+# 불일치 시 루프가 계속 돌고, 재투입 systemMessage가 정확한 promise 문구를 다시 알려준다 (max_iterations 상한).
+# ("태그만 있으면 완료" 분기는 불일치 promise까지 종료시키는 효과뿐이라 제거함)
 if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
     PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
 
@@ -122,13 +126,7 @@ if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
             rm "$STATE_FILE"
             exit 0
         fi
-    fi
-
-    # <promise> 태그가 있기만 하면 완료로 간주
-    if echo "$LAST_OUTPUT" | grep -q '<promise>'; then
-        echo "loop: <promise> 태그 감지 — 완료로 판정"
-        rm "$STATE_FILE"
-        exit 0
+        echo "loop: <promise> 내용 불일치 — 종료로 인정하지 않음 (기대: $COMPLETION_PROMISE)"
     fi
 fi
 
@@ -150,10 +148,10 @@ mv "$TEMP_FILE" "$STATE_FILE"
 
 # 시스템 메시지 구성
 MAX_LABEL=$([ "$MAX_ITERATIONS" -gt 0 ] && echo "${MAX_ITERATIONS}회" || echo "무제한")
-COMMON_MSG="Chronos loop ${NEXT_ITERATION}/${MAX_LABEL} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 더 이상 할 작업이 없으면 반드시 'Chronos Complete'를 포함하여 최종 보고를 출력하세요."
+COMMON_MSG="Chronos loop ${NEXT_ITERATION}/${MAX_LABEL} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 막힌 이슈는 사유와 함께 로그에 주차(Parked:)하고 다음 이슈로 넘어가세요 — 주차된 이슈는 할 작업으로 세지 않습니다. 더 이상 할 작업이 없으면 반드시 'Chronos Complete'를 포함한 최종 보고(주차 이슈마다 Owner Decision Brief)를 출력하세요."
 
 if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
-    SYSTEM_MSG="${COMMON_MSG} 또는 완료 조건 달성 시: <promise>$COMPLETION_PROMISE</promise>"
+    SYSTEM_MSG="${COMMON_MSG} 또는 완료 조건 달성 시(검증 PASS를 실제로 확인한 후에만): <promise>$COMPLETION_PROMISE</promise>"
 else
     SYSTEM_MSG="$COMMON_MSG"
 fi

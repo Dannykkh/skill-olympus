@@ -122,8 +122,13 @@ foreach ($p in $donePatterns) {
 }
 
 # 완료 감지 2: <promise> 매칭 (정확 일치 또는 포함 매칭) — 전체 출력 검사
+# (?s)로 여러 줄 promise도 매칭. 내용이 일치하지 않는 promise는 종료로 인정하지 않는다 —
+# 거짓/불일치 promise를 종료로 보상하면 검증 게이트가 무력화됨 (SKILL.md "거짓 promise 출력 금지"와 짝).
+# 불일치 시 루프가 계속 돌고, 재투입 systemMessage가 정확한 promise 문구를 다시 알려준다 (max_iterations 상한).
+# (이전의 "태그만 있으면 완료" 분기는 promise 미설정용이라는 주석과 달리 이 블록 안에서는
+#  그 경우에 도달할 수 없었고, 실제 효과는 불일치 promise까지 종료시키는 것뿐이라 제거함)
 if ($completionPromise -and $completionPromise -ne "null") {
-    $promiseMatch = [regex]::Match($lastOutput, '<promise>(.*?)</promise>')
+    $promiseMatch = [regex]::Match($lastOutput, '(?s)<promise>(.*?)</promise>')
     if ($promiseMatch.Success) {
         $promiseValue = $promiseMatch.Groups[1].Value.Trim()
         # 정확 일치 또는 포함 매칭 (공백/줄바꿈 차이 허용)
@@ -132,12 +137,7 @@ if ($completionPromise -and $completionPromise -ne "null") {
             Remove-Item $stateFile -Force
             exit 0
         }
-    }
-    # <promise> 태그가 있기만 하면 완료로 간주 (completion_promise 없이 태그만 쓴 경우)
-    if ($lastOutput -match '<promise>') {
-        Write-Host "loop: <promise> 태그 감지 — 완료로 판정"
-        Remove-Item $stateFile -Force
-        exit 0
+        Write-Host "loop: <promise> 내용 불일치 — 종료로 인정하지 않음 (기대: $completionPromise)"
     }
 }
 
@@ -159,10 +159,10 @@ Set-Content -Path $stateFile -Value $newContent -NoNewline
 
 # 시스템 메시지 구성
 $maxLabel = if ($maxIter -gt 0) { "${maxIter}회" } else { "무제한" }
-$commonMsg = "Chronos loop ${nextIter}/${maxLabel} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 더 이상 할 작업이 없으면 반드시 'Chronos Complete'를 포함하여 최종 보고를 출력하세요."
+$commonMsg = "Chronos loop ${nextIter}/${maxLabel} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 막힌 이슈는 사유와 함께 로그에 주차(Parked:)하고 다음 이슈로 넘어가세요 — 주차된 이슈는 할 작업으로 세지 않습니다. 더 이상 할 작업이 없으면 반드시 'Chronos Complete'를 포함한 최종 보고(주차 이슈마다 Owner Decision Brief)를 출력하세요."
 
 if ($completionPromise -and $completionPromise -ne "null") {
-    $sysMsg = "${commonMsg} 또는 완료 조건 달성 시: <promise>$completionPromise</promise>"
+    $sysMsg = "${commonMsg} 또는 완료 조건 달성 시(검증 PASS를 실제로 확인한 후에만): <promise>$completionPromise</promise>"
 } else {
     $sysMsg = $commonMsg
 }
