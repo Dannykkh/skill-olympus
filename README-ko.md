@@ -201,7 +201,6 @@ chmod +x install.sh && ./install.sh
 > 루프는 모델이 계속하겠다고 마음먹어서 도는 게 아닙니다. 멈추기 어려운 구조가 있어야 돕니다.
 > 기계가 박동을 만들고, 상태는 컨텍스트 밖 감사 로그에 남깁니다.
 > 막힌 이슈는 루프를 세우지 않고 주차하며, 사람에게는 결재 가능한 브리프만 넘깁니다.
-> Peter Steinberger의 maintainer-orchestrator 루프에서 뽑아낸 패턴입니다.
 
 <p align="center">
   <img src="docs/assets/chronos-loop-programming.svg" alt="크로노스 루프 프로그래밍 사이클" width="860">

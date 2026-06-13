@@ -202,7 +202,6 @@ and her remembering crosses every session, every CLI, every dawn.
 > Five failure modes, five structural cures: heartbeat in the machine, state outside the
 > context window, blockers parked instead of blocking, idle work defined, and the human
 > taken off the critical path with decision-ready briefs.
-> Patterns distilled from Peter Steinberger's published maintainer-orchestrator loop.
 
 <p align="center">
   <img src="docs/assets/chronos-loop-programming.svg" alt="Chronos loop programming cycle" width="860">
