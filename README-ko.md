@@ -196,6 +196,10 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.8.1 — mnemo 루트 결정 수정 (2026.06)
+
+자동저장 훅이 *마지막* cwd를 기준으로 삼던 탓에, 비-git 프로젝트에서 하위 폴더(`reference/1week` 등)로 `cd`하면 `conversations/`·`memory/`가 그 하위 폴더에 흩어졌습니다. 이제 루트 결정을 2-pass 후보 평가로 바꿔, Pass 1은 git 루트가 잡히는 첫 후보(git repo는 어느 하위 폴더에서도 정규화), Pass 2는 비-git이면 **세션 시작 cwd**를 앵커로 써서 전역 `cd`가 유지돼도 루트가 흔들리지 않습니다. HOME 자체가 git 저장소인 환경도 방어합니다(HOME은 후보 제외, git 루트가 HOME이면 dotfiles repo로 보고 건너뜀). 8개 훅(save-response/save-conversation/save-tool-use/reconcile-conversations × ps1·sh)에 적용하고 설치본을 동기화했습니다. PS 7/7 · SH 7/7 시나리오 테스트 통과.
+
 ### v4.8.0 — 루프 프로그래밍: 주차, 브리프, 재진입 (2026.06)
 
 > 루프는 모델이 계속하겠다고 마음먹어서 도는 게 아닙니다. 멈추기 어려운 구조가 있어야 돕니다.
@@ -488,6 +492,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.8.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.1)** | **2026-06-14** | **mnemo 루트 결정 수정** — 비-git 프로젝트에서 하위 폴더로 `cd` 해도 `conversations/`·`memory/`가 하위 폴더가 아닌 프로젝트 루트에 저장; 2-pass 루트 결정(git 루트 우선, 없으면 세션 시작 cwd) + HOME-git 가드; 8개 훅(ps1·sh)·설치본 적용, PS 7/7 · SH 7/7 |
 | **[v4.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.0)** | **2026-06-13** | **루프 프로그래밍: 주차, 브리프, 재진입** — 크로노스 주차 규칙(사유 없는 막힘 선언은 회피로 처리) + Owner Decision Brief(추천안과 선택지를 함께 넘기는 결재 브리프) + 재진입 규약(로그가 기억보다 우선, 새 세션도 감사 로그로 재개) + 주차만 남은 큐의 데드락 가드(거짓 `<promise>` 종료 차단, ps1 4/4 테스트, 여러 줄 매칭 보강) + 제우스 결정 장부(근거, 기각한 대안, 되돌리는 법) + codex-mnemo notify 판정 순서 수정(save-turn 체인 래퍼 보존) |
 | **[v4.7.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.1)** | **2026-06-11** | **아프로디테 시각 검증 + 클리오 게이트 강화** — ui-ux-auditor가 스크린샷을 직접 관찰해 채점(관찰>Grep, 결함 4종 스모크 테스트 4/4 검출 실증); clio v2.1.1 판정식 보완(minos 반영, 공허한 GO 차단, 우회 표기); 아프로디테 구현 범위 외관 한정 명시 |
 | **[v4.7.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.0)** | **2026-06-11** | **네이티브 하니스 결합** — code-reviewer v4 (엔진 위임: Claude /code-review · Codex `codex review --base`, 정책 레이어 P1~P5 — Scope Drift/Fix-First/도메인 체크리스트, Gemini 풀 경로 폴백); 크로노스 구 별칭 `/loop` 폐기(네이티브 /loop 이름 충돌) + goal/loop/chronos 비교표; 감사 후속(제우스 /goal 관계 + 이중 Stop 게이트 가드, agent-team env var 구버전 강등, 프로젝트 루트 메모리 vs 네이티브 auto-memory 경계 4파일, orchestrator 네이티브/MCP 선택 기준표, 크로노스 `--flow-verify` 수신 정의); clio v2.1.0 humanizer 한국어 윤문 연동; 젭마인 vs 네이티브 plan mode 구분 |

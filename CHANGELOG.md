@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.1] - 2026-06-14
+
+### Fixed — mnemo 훅 프로젝트 루트 결정: 비-git 프로젝트 하위 폴더 오저장 방지
+
+비-git 프로젝트에서 Bash로 하위 폴더(`reference/1week` 등)에 `cd`하면(작업 디렉터리가 이후 호출까지 유지됨) mnemo 자동저장 훅이 프로젝트 루트가 아니라 그 하위 폴더에 `conversations/`·`memory/`·`MEMORY.md`를 만들던 문제 수정.
+
+- **루트 결정을 2-pass 후보 평가로 교체** — 후보(세션 시작 cwd → 마지막 cwd → transcript 디코딩 → PWD) 중 Pass 1 = git 루트가 잡히는 첫 후보(git repo는 어느 하위 폴더에서도 정규화), Pass 2 = 비-git이면 세션 시작(launch) cwd를 앵커로 사용. 전역 `cd`가 마지막 cwd를 옮겨도 launch cwd가 프로젝트 루트를 가리킴
+- **HOME-git 가드** — HOME 자체가 git 저장소인 환경 방어: HOME을 후보에서 제외 + git 루트가 HOME이면 dotfiles repo로 보고 건너뜀
+- 8개 훅(save-response/save-conversation/save-tool-use/reconcile-conversations × ps1·sh)에 동일 적용, 설치본(.claude/.codex/.gemini)·.agents 동기화. PowerShell 7/7 · Bash 7/7 시나리오 테스트 통과
+
+### Removed
+
+- agents/·hooks/에 잘못 추적되던 빈 memory scaffold 8개 제거 (gitignore 대상이 과거 커밋에 포함됐던 것)
+
 ## [4.8.0] - 2026-06-13
 
 ### Added — 크로노스 루프 프로그래밍: 주차(PARK) + Owner Decision Brief + 재진입 규약
