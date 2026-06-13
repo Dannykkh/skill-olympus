@@ -18,61 +18,59 @@ fi
 # ── 프로젝트 루트 결정 (save-response.sh와 동일 로직) ──────────
 get_claude_project_root() {
     local transcript_path="$1"
+    local home_dir="${HOME:-$USERPROFILE}"
 
+    _w2u() {
+        local p="$1"
+        if [[ "$p" =~ ^([A-Za-z]): ]]; then
+            local d="${BASH_REMATCH[1],,}"; p="/${d}/${p:3}"; p="${p//\\//}"
+        fi
+        printf '%s' "$p"
+    }
+
+    local first_cwd="" last_cwd="" decoded=""
     if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-        local cwd
-        cwd=$(tail -n 200 "$transcript_path" 2>/dev/null \
+        first_cwd=$(grep -m 1 -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' "$transcript_path" 2>/dev/null \
+            | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' | sed 's|\\\\|\\|g')
+        last_cwd=$(tail -n 200 "$transcript_path" 2>/dev/null \
             | grep -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' \
-            | tail -n 1 \
-            | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' \
-            | sed 's|\\\\|\\|g')
-        if [ -n "$cwd" ]; then
-            local cwd_unix="$cwd"
-            if [[ "$cwd" =~ ^([A-Za-z]):\\ ]]; then
-                local drive="${BASH_REMATCH[1]}"
-                cwd_unix="/${drive,,}/${cwd:3}"
-                cwd_unix="${cwd_unix//\\//}"
-            fi
-            if [ -d "$cwd_unix" ]; then
-                local git_root
-                git_root=$(git -C "$cwd_unix" rev-parse --show-toplevel 2>/dev/null)
-                if [ -n "$git_root" ]; then
-                    echo "$git_root"
-                    return 0
-                fi
-                echo "$cwd_unix"
-                return 0
-            fi
-        fi
+            | tail -n 1 | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' | sed 's|\\\\|\\|g')
     fi
-
     if [ -n "$transcript_path" ]; then
-        local parent
-        parent=$(basename "$(dirname "$transcript_path")")
+        local parent; parent=$(basename "$(dirname "$transcript_path")")
         if [[ "$parent" =~ ^([A-Za-z])--(.+)$ ]]; then
-            local drive="${BASH_REMATCH[1],,}"
-            local rest="${BASH_REMATCH[2]//-//}"
-            local decoded="/$drive/$rest"
-            if [ -d "$decoded" ]; then
-                local git_root
-                git_root=$(git -C "$decoded" rev-parse --show-toplevel 2>/dev/null)
-                if [ -n "$git_root" ]; then
-                    echo "$git_root"
-                    return 0
-                fi
-                echo "$decoded"
-                return 0
-            fi
+            decoded="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]//-//}"
         fi
     fi
 
-    local root="$PWD"
-    local git_root
-    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
-    if [ -n "$git_root" ]; then
-        root="$git_root"
-    fi
-    echo "$root"
+    # 후보: launch cwd -> last cwd -> decoded -> PWD (HOME은 후보에서 제외)
+    local home_u; home_u=$(_w2u "$home_dir")
+    local -a candidates=()
+    local c
+    for c in "$first_cwd" "$last_cwd" "$decoded"; do
+        [ -z "$c" ] && continue
+        c=$(_w2u "$c")
+        [ "${c%/}" = "${home_u%/}" ] && continue
+        candidates+=("$c")
+    done
+    candidates+=("$PWD")
+
+    # Pass 1: git 루트가 잡히는 첫 후보 (단, git 루트가 HOME이면 dotfiles repo로 간주해 제외)
+    local git_root gr_u
+    for c in "${candidates[@]}"; do
+        if [ -d "$c" ]; then
+            git_root=$(git -C "$c" rev-parse --show-toplevel 2>/dev/null)
+            if [ -n "$git_root" ]; then
+                gr_u=$(_w2u "$git_root")
+                [ "${gr_u%/}" = "${home_u%/}" ] || { echo "$git_root"; return 0; }
+            fi
+        fi
+    done
+    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)
+    for c in "${candidates[@]}"; do
+        [ -d "$c" ] && { echo "$c"; return 0; }
+    done
+    echo "$PWD"
 }
 
 PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")

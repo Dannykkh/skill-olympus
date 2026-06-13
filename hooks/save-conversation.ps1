@@ -46,56 +46,64 @@ function Exit-MnemoError {
 function Get-ClaudeProjectRoot {
     param([string]$TranscriptPath)
 
+    $userHome = $env:USERPROFILE
+    $homeNorm = if ($userHome) { $userHome.TrimEnd('\') } else { $null }
+
+    $firstCwd = $null; $lastCwd = $null
     if ($TranscriptPath -and (Test-Path $TranscriptPath)) {
         try {
-            $lines = Get-Content $TranscriptPath -Tail 200 -Encoding UTF8 -ErrorAction SilentlyContinue
-            $cwd = $null
-            for ($i = $lines.Count - 1; $i -ge 0; $i--) {
-                if ($lines[$i] -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
-                    $cwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'
-                    break
+            foreach ($line in [System.IO.File]::ReadLines($TranscriptPath, [System.Text.Encoding]::UTF8)) {
+                if ($line -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
+                    $firstCwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'; break
                 }
             }
-            if ($cwd -and (Test-Path $cwd)) {
-                try {
-                    $gitRoot = & git -C $cwd rev-parse --show-toplevel 2>$null
-                    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-                        return $gitRoot.Replace('/', '\')
-                    }
-                } catch {}
-                return $cwd
+        } catch {}
+        try {
+            $tail = Get-Content $TranscriptPath -Tail 200 -Encoding UTF8 -ErrorAction SilentlyContinue
+            for ($i = $tail.Count - 1; $i -ge 0; $i--) {
+                if ($tail[$i] -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
+                    $lastCwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'; break
+                }
             }
         } catch {}
     }
 
+    $decoded = $null
     if ($TranscriptPath) {
         try {
             $parent = Split-Path -Leaf (Split-Path $TranscriptPath -Parent)
             if ($parent -match '^([A-Za-z])--(.+)$') {
-                $drive = $Matches[1]
-                $rest = $Matches[2] -replace '-', '\'
-                $decoded = "${drive}:\$rest"
-                if (Test-Path $decoded) {
-                    try {
-                        $gitRoot = & git -C $decoded rev-parse --show-toplevel 2>$null
-                        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-                            return $gitRoot.Replace('/', '\')
-                        }
-                    } catch {}
-                    return $decoded
-                }
+                $decoded = "$($Matches[1]):\$($Matches[2] -replace '-', '\')"
             }
         } catch {}
     }
 
-    $root = $PWD.Path
-    try {
-        $gitRoot = git rev-parse --show-toplevel 2>$null
-        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-            $root = $gitRoot.Replace('/', '\')
+    # 후보: launch cwd -> last cwd -> decoded -> PWD (HOME 제외, 중복 제거)
+    $candidates = New-Object System.Collections.Generic.List[string]
+    foreach ($c in @($firstCwd, $lastCwd, $decoded)) {
+        if ($c -and (-not $homeNorm -or $c.TrimEnd('\') -ne $homeNorm) -and (-not $candidates.Contains($c))) {
+            $candidates.Add($c)
         }
-    } catch {}
-    return $root
+    }
+    if (-not $candidates.Contains($PWD.Path)) { $candidates.Add($PWD.Path) }
+
+    # Pass 1: git 루트가 잡히는 첫 후보 (git 루트가 HOME이면 dotfiles repo로 보고 제외)
+    foreach ($cand in $candidates) {
+        if (Test-Path $cand) {
+            try {
+                $gitRoot = & git -C $cand rev-parse --show-toplevel 2>$null
+                if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                    $win = $gitRoot.Replace('/', '\')
+                    if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) { return $win }
+                }
+            } catch {}
+        }
+    }
+    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)
+    foreach ($cand in $candidates) {
+        if (Test-Path $cand) { return $cand }
+    }
+    return $PWD.Path
 }
 
 function Ensure-MemoryScaffold {
