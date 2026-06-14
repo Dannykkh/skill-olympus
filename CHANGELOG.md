@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.2] - 2026-06-15
+
+### Added — 크로노스 PARK 전 능력 에스컬레이션 사다리
+
+검증 실패를 사람에게 주차(PARK)하기 전, 모델 능력을 한 칸 올려 한 번 더 시도하는 단계 도입. 기존엔 3회 재시도 실패 시 즉시 PARK였으나, 사람에게 결정을 떠넘기기 전 모델 능력으로 풀 수 있는 길을 먼저 소진한다. baskduf/FableCodex의 Capability Ceiling 아이디어를 chronos 규율에 맞게 적응.
+
+- **에스컬레이션 사다리** — 재시도(사이클 내 3회) → 능력 1회 상향(추론 effort↑ / 더 강한 모델 / 둘 다 불가하면 focused review pass) → 그래도 실패해야 PARK. 같은 방식 재시도만으로 한 주차는 무효, 에스컬레이션은 이슈당 1회, 결과는 Owner Decision Brief 증거란에 기록
+- SKILL.md에 "에스컬레이션 사다리" 전용 섹션 신설 + VERIFY 단계·PARK 표·주차 규칙·Owner Decision Brief 증거란·goal 목표문 필수 요소(6번)·예시 박스 반영
+- chronos-worker(루트/skills 2사본, Gemini 3순위 경로) Verify 단계 동일 반영
+- README 영/한 v4.8.0 섹션에 에스컬레이션 항목 추가
+- 3-CLI 전역 설치본(.claude/.codex/.gemini) 동기화 완료
+
 ## [4.8.1] - 2026-06-14
 
 ### Fixed — mnemo 훅 프로젝트 루트 결정: 비-git 프로젝트 하위 폴더 오저장 방지
