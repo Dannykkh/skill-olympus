@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.4] - 2026-06-15
+
+### Added — 프롬프트 규율 가드레일 상시 적용 (3-CLI always-on)
+
+스킬을 호출해야만 적용되던 프롬프트 디시플린을, 스킬 없이 묻는 일반 턴에도 상시 적용되도록 mnemo 주입 템플릿에 가드레일 섹션 추가. 설치 시 각 CLI의 always-on 파일(CLAUDE.md / AGENTS.md)에 주입된다.
+
+- **상시 가드레일 3종(의례 없는 항목만 → 과적용 위험 최소화):** 사실은 출처/도구로 확인(`[확인 필요]` 표기), 검증은 외부 신호로(자기판단 금지), 페르소나는 톤 전용(정확도 보장 X)
+- **무거운 의례(ToT/ReAct/반복개선)는 인라인하지 않고 스킬로 라우팅** — 2계층 상호보완: 가드레일은 일반 턴, 스킬은 트리거된 깊이
+- 맨 위 가드: 단순 턴엔 추가 절차 없이 바로 답(과적용 금지)
+- `claude-md-rules.md` + `codex/gemini agents-md-rules.md` 3종 동일 적용, 3-CLI 라이브 설정에 주입 확인
+
+근거: "LLMs Cannot Self-Correct Reasoning Yet"(ICLR'24), "When 'A Helpful Assistant' Is Not Really Helpful"(EMNLP'24). v4.8.3 스킬 보완의 상시화 버전.
+
 ## [4.8.3] - 2026-06-15
 
 ### Added — 프롬프트 기법 감사 기반 스킬 보완 (3패턴 일괄)
