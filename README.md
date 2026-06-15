@@ -354,6 +354,108 @@ Each skill works standalone or as part of the pipeline.
 
 ---
 
+## How the Gods Work — Practical Guide
+
+> The myth above is the flavor. Here is the plain version: what each god is *for* (which work it handles), how you *call* it, and what *files* you get back. Every god works standalone; chained in order, they form the pipeline.
+
+### Strategy & validation — before a line of code
+
+**`/hermes` — Business case (Wayfinder)**
+- **When:** validating whether an idea is worth building — demand, market, money.
+- **Use:** `/hermes` (aliases: 헤르메스, 사업성)
+- **Process:** demand validation → BMC → TAM/SAM/SOM → revenue & pricing → GTM → North Star → cohort. Generates 2-3 scored business-model candidates before committing to one.
+- **Output:** `docs/hermes/{project}.md` (analysis + Mermaid) + a domain-term seed Zephermine reuses.
+- **Next:** `/athena` to pressure-test, or `/zephermine` to design.
+
+**`/athena` — CEO challenge (Strategist)**
+- **When:** deciding *should this be built at all?* before committing resources.
+- **Use:** `/athena` (aliases: 아테나, ceo) — auto-reads `docs/hermes/*.md` if present.
+- **Process:** demand confidence → moat → scope mode → ROI → verdict.
+- **Output:** `docs/athena/{project}.md` — GO / CONDITIONAL GO / NO-GO + scope recommendation (Reduce / Expand / Pivot / Kill).
+- **Next:** `/zephermine` if GO.
+
+### Design — turn intent into a buildable spec
+
+**`/zephermine` — Deep design (Architect)**
+- **When:** a feature/product needs a thorough spec before implementation.
+- **Use:** `/zephermine [spec-path]` (aliases: 젭마인, 제퍼마인)
+- **Process:** research → 26-step interview → spec synthesis → 5-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios.
+- **Output:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
+- **Next:** `/agent-team` (build) or `/argos` (inspect).
+
+**`/aphrodite` — Design system (Beauty)**
+- **When:** a UI project needs consistent tokens/visuals before the frontend build.
+- **Use:** `/aphrodite` (aliases: 아프로디테)
+- **Process:** design-system-starter (tokens; palette/font scored on a weighted rubric) → frontend plan → review.
+- **Output:** `design-system.md` (colors, fonts, tokens) + frontend build plan.
+- **Next:** `/agent-team` / `/workpm` to implement.
+
+### Build — write the code
+
+**`/agent-team` (`/poseidon`) — Parallel build (Sea Lord)**
+- **When:** a spec with `sections/` exists and you want parallel implementation.
+- **Use:** `/agent-team <planning_dir>` (aliases: 포세이돈)
+- **Process:** dependency graph → wave grouping → teammates build in waves → mandatory post-merge integration gate (build + full test suite + one E2E).
+- **Output:** implemented code + verification report; the integration gate is the sole completion authority (code-existence checks are pre-checks only).
+- **Next:** `/argos`, `/minos`.
+
+**`/workpm` (`/daedalus`) — Build without a spec (Master Builder)**
+- **When:** no design exists and you want a PM that goes straight to implementation.
+- **Use:** `/workpm` (aliases: 다이달로스)
+- **Process:** research → 3 proposals scored on fit/risk/effort → flow diagram → implement → verify (tests/lint, bounded retries); activity log externalized for resume.
+- **Output:** working code + decision/activity log.
+- **Next:** `/argos`, `/minos`.
+
+### Verify — prove it works
+
+**`/argos` — Construction inspection (Watchman)**
+- **When:** after build — confirm the code matches the design artifacts.
+- **Use:** `/argos [planning_dir]` (aliases: 아르고스, 감리)
+- **Process:** static analysis → runtime checks → API-spec match → QA-scenario checklist → flow-diagram-vs-code → security (Phase 0–7).
+- **Output:** `<planning_dir>/verify-report.md`.
+- **Next:** fix findings, then `/minos`.
+
+**`/minos` — E2E test loop (Judge)**
+- **When:** you need real browser/E2E tests that actually pass, not "looks done".
+- **Use:** `/minos` (aliases: 미노스)
+- **Process:** scenarios (from `qa-scenarios.md` or auto-generated) → Playwright code → run → fix-until-pass → browser-exploration QA.
+- **Output:** `tests/e2e/{feature}.spec.ts` + `tests/api/{feature}-api.spec.ts` + pass results.
+- **Next:** `/clio`.
+
+### Deliver — write it down
+
+**`/clio` — Closer + docs (Chronicler)**
+- **When:** the work is done and you need a GO/NO-GO call plus deliverable docs.
+- **Use:** `/clio` (aliases: 클리오; legacy `/closer`)
+- **Process:** pipeline GO/NO-GO (reads argos/minos + runs build/test) → source-based flow extraction → PRD / technical / manual generation → doc fact-check gate.
+- **Output:** `docs/clio/latest/` → `CHECKLIST.md`, `flow-diagrams/`, `PRD.md`, `TECHNICAL.md`, `USER-MANUAL.md`, `FINAL-REPORT.md`.
+- **Next:** ship.
+
+### Always running — orchestration, loop, memory
+
+**`/zeus` — One command, the whole council (Sovereign)**
+- **When:** you want a whole SaaS from one sentence, zero questions.
+- **Use:** `/zeus "Build X. React + Spring Boot"` (aliases: 제우스)
+- **Process:** chains hermes/athena → zephermine → agent-team → argos → docker → minos → clio; all decisions automated and logged to a reversible Decision Ledger.
+- **Output:** a running app + `docs/zeus/zeus-report.md` (SUCCESS is bound to the minos pass-rate + a green build).
+- **Next:** review the Decision Ledger.
+
+**`/chronos` — Tireless fix loop (Time)**
+- **When:** "fix everything in X until tests pass" — autonomous and resumable.
+- **Use:** `/chronos [scope] --completion-promise '...'` (aliases: 크로노스)
+- **Process:** FIND → FIX → VERIFY (a real test run, not self-judgment) per cycle, priority-ordered, one issue per cycle; blocked issues are parked with an Owner Decision Brief, with a capability-escalation step before parking.
+- **Output:** fixes + `docs/chronos/chronos-log.md` audit log (the loop resumes from the log, not memory).
+- **Next:** —
+
+**`mnemo` — Cross-CLI memory (Keeper)**
+- **When:** always — and whenever you ask "what did we do before?"
+- **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks.
+- **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Gemini; past-conversation search; auto handoff near the context limit.
+- **Output:** `MEMORY.md` (index) + `memory/*.md` (semantic) + `conversations/*.md` (episodic).
+- **Next:** —
+
+---
+
 ## Cross-CLI Support
 
 Same skills, same memory, same experience across 3 CLIs.
