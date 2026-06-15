@@ -353,16 +353,31 @@ See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 
 ## Phase 4: Plan
 
-상세 구현 계획 수립 + 외부 LLM 리뷰 + 사용자 검토 단계.
+전략 후보 비교·선택 → 상세 구현 계획 수립 + 외부 LLM 리뷰 + 사용자 검토 단계.
 
-### 12. Generate Implementation Plan
-
-Create detailed plan → `<planning_dir>/plan.md`
+### 12. Generate Implementation Plan (전략 후보 비교 → 선택 → 작성)
 
 **Inputs:** `spec.md` + `team-review.md` + `domain-process-analysis.md` + `domain-technical-analysis.md`
 
-Address all "Critical Findings". Step 11에서 채택된 항목만 반영.
-Write for an unfamiliar reader — fully self-contained document.
+단일 계획을 선형으로 바로 쓰지 않는다. 넓은 설계 결정은 **후보를 만들어 채점한 뒤 고른다(Tree of Thoughts).**
+plan.md 하나를 바로 쓰면 외부 리뷰(Step 13)는 "그 하나"를 다듬을 뿐, 더 나은 접근 자체를 놓친다.
+
+**12a. 전략 후보 2-3개 생성** — 서로 *다른 접근*이어야 한다(동일 계획의 변주 금지). 예: 점진적 스트랭글러 vs 빅뱅 재작성, 모놀리식 우선 vs 모듈 경계 우선, 자체 구현 vs 외부 의존. 분기의 독립성을 위해 **병렬 서브에이전트로 각 후보를 생성**하는 것을 권장(앵커링 방지). 각 후보는 6-10줄 개요: 핵심 접근, 주요 컴포넌트, 시퀀싱, 가정.
+
+**12b. 루브릭 채점** — 후보를 아래 기준으로 1-5점 채점(표로 출력). 감이 아니라 **근거 한 줄씩**. 채점 없이 후보만 나열하고 끝내지 않는다.
+
+| 기준 | 무엇을 보나 |
+|------|------------|
+| 요구사항 충족 | spec.md Problem Statement(P1/P2) + team-review Critical Findings를 얼마나 커버 |
+| 도메인 적합성 | domain-process/technical 분석 및 사전 v3와 정합 |
+| 리스크/복잡도 | 실패 표면·미지수가 적을수록 고점 |
+| 점진성·되돌리기 | 작은 단위로 배포·검증·롤백 가능할수록 고점 |
+| 노력/비용 | 구현 규모가 작을수록 고점 |
+
+**12c. 선택 + 작성** — 최고점 후보를 채택하되, 차점 후보의 더 나은 아이디어는 흡수(graft)한다. 동점이거나 트레이드오프가 첨예하면 그 사실을 명시.
+선택한 전략으로 상세 계획을 작성 → `<planning_dir>/plan.md`. Address all "Critical Findings", Step 11에서 채택된 항목만 반영. Write for an unfamiliar reader — fully self-contained document.
+
+**plan.md 필수 머리 섹션 — `## 전략 선택 (Strategy Decision)`:** 채택 전략 + 채점표 + 기각한 후보와 사유 + (해당 시) 남은 트레이드오프를 기록한다. 이는 외부 리뷰(Step 13)·감리(argos)가 "왜 이 접근인가"를 검증하는 앵커이며, 후속 세션이 결정을 되짚을 수 있게 한다.
 
 ### 13. External Review
 

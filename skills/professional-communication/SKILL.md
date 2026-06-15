@@ -83,6 +83,16 @@ What I need from you:
 
 Subject line matters: "Project X: Status Update and Next Steps" is findable and actionable. "Project updates" is neither.
 
+## Pre-Send Check (required before sending)
+
+Do not assert facts without a source check. Before sending, confirm every factual detail against the actual source, not memory:
+
+- Names and titles — check the directory, thread, or org chart.
+- Dates and deadlines — check the calendar or ticket, not recall.
+- Ticket/PR/issue status — open it and confirm it is actually in the state you claim.
+
+If any item cannot be confirmed, flag it as `[unverified]` rather than stating it as fact.
+
 ## Jargon Translation
 
 When writing for non-technical audiences, replace implementation terms with outcomes:

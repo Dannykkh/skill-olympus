@@ -188,6 +188,14 @@ If the user wants to test:
 2. Be ready to iterate based on feedback
 3. Update the file with improvements as needed
 
+### Step 7: Score and Hill-Climb the Command (Optional, Recommended)
+
+For non-trivial commands, prefer a scored loop over one-shot manual iteration:
+
+1. Derive a quality checklist (3-6 yes/no criteria) from **references/best-practices.md** — e.g. clear trigger, single responsibility, correct tool usage, concrete file paths, no placeholders.
+2. Run `/autoresearch <command-file>` with that checklist. It hill-climbs the prompt one change at a time, keeping improvements and reverting regressions until the criteria hold.
+3. Skip this for trivial commands where Step 6 is sufficient.
+
 ## Quick Tips
 
 **For detailed guidance, load the bundled references:**

@@ -228,7 +228,7 @@ Native team tool 사용 가능?
 
 1. `<planning_dir>` 경로를 Phase 1에서 받아서 전달
 2. argos Phase 0~7 순차 실행 → `verify-report.md` 생성 (Phase 6은 design-system.md 있을 때만, Phase 7 보안은 항상)
-3. 검증 결과 자동 승인 (zeus는 무중단)
+3. 검증 결과 자동 승인 (zeus는 무중단) — 단, argos 통과/미통과 **항목 수치**를 zeus-log.md에 기록. "실행됨"이 아니라 통과 수치가 SUCCESS 판정의 근거다 (→ references/final-report-format.md 판정 기준)
 
 **폴백 조건 (Phase 3은 skip 금지):**
 - 설계 산출물이 없어도 **정적 분석(코드 품질/보안)은 항상 실행**
@@ -260,7 +260,7 @@ Native team tool 사용 가능?
 3. minos Step 1~6 실행:
    - Step 3: Phase 4에서 서버 이미 실행 중이면 헬스체크만
    - Step 5: Healer 루프 (최대 5회)
-4. 결과 집계
+4. 결과 집계 — minos **통과율(통과/전체)**을 zeus-log.md에 기록 (SUCCESS 판정의 필수 근거. 통과율 없이 SUCCESS 금지)
 
 **폴백 조건 (Phase 5는 skip 금지):**
 - 서버 시작 불가 → `--api-only` 모드로 minos 실행

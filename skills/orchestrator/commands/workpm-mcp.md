@@ -100,9 +100,9 @@ PM: 진행 모니터링 (orchestrator_get_progress, 주기적 확인)
   ↓
 PM: 완료된 태스크 결과 읽기 (orchestrator_get_task_summary)
   ↓
-PM: 종합 분석 + 3가지 제안서 작성
+PM: 종합 분석 + 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort)
   ↓
-PM: 사용자에게 제안 (현재 CLI의 질문 방식)
+PM: 채점표 + 추천안을 사용자에게 제안 (현재 CLI의 질문 방식)
   ↓
 PM: 승인 결과를 activity log에 기록
 ```
@@ -114,7 +114,7 @@ PM: 승인 결과를 activity log에 기록
 4. Worker 생성 (`orchestrator_spawn_workers({ count: 2 })`)
 5. 진행 모니터링 (`orchestrator_get_progress` 반복)
 6. 완료 결과 수집 (`orchestrator_get_task_summary`)
-7. 3가지 제안서 작성 → 현재 CLI의 질문 방식으로 승인 확인
+7. 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort, 근거 한 줄씩) → 현재 CLI의 질문 방식으로 채점표+추천안 제시·승인 (채점 없이 나열 금지)
 8. 승인 결과 기록 (`orchestrator_log_activity`)
 
 ### Phase 2: 프로세스 도면 확보 (설계도)

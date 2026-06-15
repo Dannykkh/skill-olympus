@@ -295,6 +295,21 @@ Max = 120 points
 | D | 60-69% (72-83) | Below Average — significant issues |
 | F | <60% (<72) | Poor — needs fundamental redesign |
 
+### Step 4.5: Independent Adversarial Cross-Check (독립 교차검증)
+
+> ⚠️ Steps 1~4 are one model's self-introspection ("Does Claude already know this?"). Scores from unaided
+> self-judgment are unreliable — intrinsic self-correction without external feedback often fails to catch its
+> own errors. Before finalizing scores, cross-check with an INDEPENDENT lens.
+
+1. **Independent scoring pass** — spawn a separate subagent with the same SKILL.md but the OPPOSITE stance:
+   "Refute the Steps 1~4 verdict — are items marked [E] Expert actually [R] Redundant that Claude already
+   knows? Are the scores too generous?" Re-score all 8 dimensions independently.
+2. **Reconcile** — compare per-dimension scores. Any dimension differing by ≥3 points: re-examine the evidence
+   and converge to an agreed score. If no agreement, take the conservative (lower) score and note it in the report.
+3. **[R] Redundant requires an external signal** — do not delete-recommend on self-judgment alone. Back each
+   "Redundant" verdict with an external signal where possible: the same content in official docs/examples, or a
+   codebase grep showing it already exists. No external signal → do not recommend deletion on "Claude knows it" alone.
+
 ### Step 5: Generate Report
 
 ```markdown

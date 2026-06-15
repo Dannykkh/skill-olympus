@@ -32,6 +32,8 @@ READMEs answer questions your audience will have. Different audiences need diffe
 3. What's the quickest path to "it works"?
 4. Anything notable to highlight?
 
+> **Before finalizing:** Do not assert commands without a run check. Actually run every install/usage command you drafted and confirm it works — do not rely on recall of how the tooling behaves. Mark any command you cannot run as `[unverified]`. (The Reviewing path already checks content against project state; the Creating path must verify the commands it introduces.)
+
 **Adding a section:**
 1. What needs documenting?
 2. Where should it go in the existing structure?

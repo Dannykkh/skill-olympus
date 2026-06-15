@@ -61,11 +61,16 @@
 
 ## 결과 판정 기준
 
+> 판정은 "도구가 돌았다"가 아니라 **외부 통과 신호**에 묶는다. minos 통과율과 빌드 green이 SUCCESS의 필수 조건이다.
+> Phase 3(argos)·Phase 5(minos)를 사후 결재로 자동 승인하더라도, "실행됨"이 아니라 **통과 수치**를 기록한다.
+
 | 조건 | 결과 |
 |------|------|
-| Phase 1~5 모두 성공 | SUCCESS |
-| Phase 2 또는 5 일부 실패 | PARTIAL |
+| Phase 1~4 성공 + minos 통과율 100%(또는 합의된 임계치) + 빌드 green | SUCCESS |
+| 일부 미달 (테스트 일부 실패, argos 미통과 항목 존재 등) | PARTIAL — 미달 수치 명기 |
 | FATAL 에러로 중단 | FAILED |
+
+**금지:** 테스트가 실패 상태인데 SUCCESS로 판정. 자동 승인은 통과율·미통과 항목 수치를 리포트에 남길 때만 유효하다(수치 없는 "실행됨" 승인 금지).
 
 ---
 
@@ -79,7 +84,8 @@ Phase 6 시작 전 반드시 확인:
 | 2 | `zeus-log.md`에 agent-team 기록 | Phase 2 폴백 실행 |
 | 3 | `zeus-log.md`에 argos 실행 기록 | Phase 3 실행 |
 | 4 | `zeus-log.md`에 서버 실행 시도 기록 | Phase 4 실행 |
-| 5 | minos 실행 기록 (QA 결과 파일 또는 로그) | Phase 5 실행 |
+| 5 | minos 실행 기록 + **통과율 수치** (QA 결과 파일 또는 로그) | Phase 5 실행 |
 
 **하나라도 없는 상태에서 리포트를 작성하는 것은 금지.**
+**5번은 "실행됨"만으로 부족 — 통과율 수치가 기록돼야 SUCCESS 판정이 가능하다(실행 여부 ≠ 통과 여부).**
 컨텍스트가 부족하면 `zeus-state.json`에 `currentPhase: "testing"`을 저장하고 핸드오프.
