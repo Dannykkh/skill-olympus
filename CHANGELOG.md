@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.3] - 2026-06-15
+
+### Added — 프롬프트 기법 감사 기반 스킬 보완 (3패턴 일괄)
+
+검증된 프롬프트 기법(Tree of Thoughts, 자기검증 한계 ICLR'24, 페르소나 무용 EMNLP'24, 메타프롬프트) 기준으로 ~21개 스킬을 감사하고, 갭을 3패턴으로 묶어 일괄 보완. 모두 chronos 보강(v4.8.2)과 같은 원리 — "자가판단 금지, 외부 검증으로만 멈춤".
+
+**패턴 A — 자기판단 게이트에 외부근거 강제:**
+- **agent-team / agent-team-codex**: 검증 통합 게이트를 선택→필수 완료권한(빌드+전체테스트+E2E)으로 승격. Grep 기반 AC는 사전점검으로 강등
+- **zeus**: SUCCESS 판정을 minos 통과율+빌드 green에 바인딩, argos/minos 자동승인 시 통과 수치 기록 의무
+- **skill-judge**: 독립 adversarial 교차검증(Step 4.5) 추가 — 반대 입장 재채점 + 조정, Redundant 판정은 외부 신호 의무
+- **clio**: Phase 3 문서 사실 검증 게이트 — 소스 미확인 수치/식별자는 `[확인 필요]`
+- **ko-en-translator**: 의료/법률 고위험 용어 외부 용어집 조회 의무
+- **writing-specialist**: 사실 검증 패스 + 페르소나는 톤 전용 명시
+- **professional-communication / crafting-effective-readmes**: 발송 전 사실 확인 / 명령 실행 검증
+
+**패턴 B — 단일경로 → 대안 생성+채점 (ToT):**
+- **zephermine**: Step 12를 전략 후보 2-3개 생성·루브릭 채점·선택으로 확장 + plan.md `## 전략 선택` 앵커
+- **workpm (native/MCP)**: 제안 3개를 fit/risk/effort 루브릭으로 채점(사용자 떠넘김 방지)
+- **biz-strategy**: 경쟁 비즈니스모델 2-3개 수요/해자/단위경제 채점
+- **architect**: 매트릭스 작성 전 후보 2-3개 생성 강제
+- **design-plan**: 팔레트/폰트 가중 루브릭 채점
+
+**패턴 C — autoresearch 엔진 재사용:**
+- **command-creator / manage-skills**: 생성물을 `/autoresearch` hill-climbing 루프에 연결
+
+전 항목 3-CLI 동기화(.claude/.codex/.gemini). 출처 아이디어: baskduf/FableCodex Capability Ceiling, "LLMs Cannot Self-Correct Reasoning Yet"(ICLR'24), "When 'A Helpful Assistant' Is Not Really Helpful"(EMNLP'24).
+
 ## [4.8.2] - 2026-06-15
 
 ### Added — 크로노스 PARK 전 능력 에스컬레이션 사다리
