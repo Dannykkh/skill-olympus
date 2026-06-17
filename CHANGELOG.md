@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.5] - 2026-06-17
+
+### Fixed — mnemo notify 임계값 누적 카운터 버그 (delta 전환)
+
+`save-response`/`save-turn` 훅의 mnemo-status notify가 `observations.jsonl` **누적 total**(>=500)로 판정해, 누적이 한 번 임계를 넘기면 `/memory-distill`을 돌려도 파일이 비워지지 않아(append-only) **매 턴 영구히 경고가 뜨던** 문제를 수정. 실제로 이 레포는 누적 1780건이라 경고가 상시 발화 중이었다.
+
+- **판정 기준을 누적 total → delta(마지막 정제 이후 새 raw)로 전환.** 기준선은 `memory/.mnemo-distill-offset` 마커(`<gotchas> <learned> <ref_epoch>`)에 기록
+- **정제 자동 감지 + baseline 리셋:** `gotchas/learned`의 정제 `.md` 최신 mtime이 마커보다 새로우면 정제가 일어난 것으로 보고 baseline을 현재 누적값으로 리셋 → 정제하면 경고가 실제로 사라짐. 별도 producer 배선(SKILL/handoff 수정) 불필요
+- **임계 미만이면 묵은 `.mnemo-status.md` 자동 정리**
+- **임계값:** 누적 500 → delta 200, 핸드오프 14일은 유지. 메시지도 "새 관찰 N건(누적 M)"으로 변경
+- **적용 범위:** Claude `save-response` + Codex/Gemini `save-turn` + 동면 `save-response` 복사본까지 ps1/sh 16개 파일 전부. PowerShell 파서 + `bash -n` 구문 검증, 실제 함수 추출 4시나리오(정상/임계초과/정제후리셋/임계미만) 동작 검증 통과
+- `skills/project-gotchas/config.json`: `notify_threshold_total` → `notify_threshold_new_observations`(delta 의미)로 갱신
+
 ## [4.8.4] - 2026-06-15
 
 ### Added — 프롬프트 규율 가드레일 상시 적용 (3-CLI always-on)
