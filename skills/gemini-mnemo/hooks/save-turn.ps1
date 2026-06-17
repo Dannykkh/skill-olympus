@@ -314,16 +314,49 @@ function Notify-MnemoStatus {
                 Sort-Object LastWriteTime -Descending | Select-Object -First 1
             if ($latest) { $days = [int](((Get-Date) - $latest.LastWriteTime).TotalDays) }
         }
-        if ($total -lt 500 -and $days -lt 14) { return }
+        # --- delta 기반 판정 (cumulative total -> 마지막 정제 이후 delta) ---
+        # observations.jsonl은 절대 비워지지 않아 누적 total로 판정하면 한 번 임계를 넘긴 뒤
+        # 영구히 경고가 뜬다. gotchas/learned 정제 .md의 최신 mtime이 마커보다 새로우면
+        # 정제가 일어난 것으로 보고 baseline을 현재 누적값으로 리셋한다.
+        $markerFile = Join-Path $Root 'memory\.mnemo-distill-offset'
+        $refEpoch = 0
+        foreach ($sub in @('gotchas', 'learned')) {
+            $subDir = Join-Path $Root "memory\$sub"
+            if (Test-Path $subDir) {
+                Get-ChildItem -Path $subDir -Filter '*.md' -ErrorAction SilentlyContinue | ForEach-Object {
+                    $e = [int64]([DateTimeOffset]$_.LastWriteTimeUtc).ToUnixTimeSeconds()
+                    if ($e -gt $refEpoch) { $refEpoch = $e }
+                }
+            }
+        }
+        $baseG = -1; $baseL = -1; $markerRef = -1
+        if (Test-Path $markerFile) {
+            try {
+                $parts = ((Get-Content $markerFile -Raw -ErrorAction SilentlyContinue).Trim() -split '\s+')
+                if ($parts.Count -ge 3) { $baseG = [int64]$parts[0]; $baseL = [int64]$parts[1]; $markerRef = [int64]$parts[2] }
+            } catch { $baseG = -1 }
+        }
+        if ($baseG -lt 0 -or $refEpoch -gt $markerRef) {
+            $baseG = $gCount; $baseL = $lCount
+            try { [System.IO.File]::WriteAllText($markerFile, "$gCount $lCount $refEpoch", (New-Object System.Text.UTF8Encoding $false)) } catch {}
+        }
+        $delta = ($gCount - $baseG) + ($lCount - $baseL)
+        if ($delta -lt 0) { $delta = 0 }
+        # 임계: 마지막 정제 이후 새 관찰 200건 또는 마지막 핸드오프 14일 초과
+        if ($delta -lt 200 -and $days -lt 14) {
+            $sf = Join-Path $Root 'memory\.mnemo-status.md'
+            if (Test-Path $sf) { Remove-Item $sf -Force -ErrorAction SilentlyContinue }
+            return
+        }
         $statusDir = Join-Path $Root 'memory'
         if (-not (Test-Path $statusDir)) {
             New-Item -ItemType Directory -Path $statusDir -Force -ErrorAction SilentlyContinue | Out-Null
         }
         $statusFile = Join-Path $statusDir '.mnemo-status.md'
         $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-        $content = "# mnemo status`n`n- raw observations: **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: ``/memory-distill --rebuild`` 또는 핸드오프`n- updated: $now`n"
+        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: ``/memory-distill --rebuild`` 또는 핸드오프`n- updated: $now`n"
         [System.IO.File]::WriteAllText($statusFile, $content, $Utf8NoBom)
-        [Console]::Error.WriteLine("[mnemo] raw $total 건 / 마지막 핸드오프 $days 일 전 -> /memory-distill --rebuild 권장")
+        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> /memory-distill --rebuild 권장")
     } catch {}
 }
 Notify-MnemoStatus -Root $ProjectRoot

@@ -473,18 +473,49 @@ notify_mnemo_status() {
             [ "$mtime" -gt 0 ] && days=$(( (now - mtime) / 86400 ))
         fi
     fi
-    if [ "$total" -lt 500 ] && [ "$days" -lt 14 ]; then return 0; fi
+    # --- delta 기반 판정 (cumulative total -> 마지막 정제 이후 delta) ---
+    # observations.jsonl은 비워지지 않아 누적 total로 판정하면 한 번 임계를 넘긴 뒤
+    # 영구히 경고가 뜬다. gotchas/learned 정제 .md의 최신 mtime이 마커보다 새로우면
+    # 정제가 일어난 것으로 보고 baseline을 현재 누적값으로 리셋한다.
+    local marker="$root/memory/.mnemo-distill-offset"
+    local ref_epoch=0 e sub f
+    for sub in gotchas learned; do
+        [ -d "$root/memory/$sub" ] || continue
+        for f in "$root/memory/$sub"/*.md; do
+            [ -f "$f" ] || continue
+            e=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
+            [ "$e" -gt "$ref_epoch" ] && ref_epoch=$e
+        done
+    done
+    local base_g=-1 base_l=-1 marker_ref=-1
+    if [ -f "$marker" ]; then
+        read -r base_g base_l marker_ref < "$marker" 2>/dev/null
+        [ -z "$base_g" ] && base_g=-1
+        [ -z "$base_l" ] && base_l=-1
+        [ -z "$marker_ref" ] && marker_ref=-1
+    fi
+    if [ "$base_g" -lt 0 ] || [ "$ref_epoch" -gt "$marker_ref" ]; then
+        base_g=$g_count; base_l=$l_count
+        echo "$g_count $l_count $ref_epoch" > "$marker" 2>/dev/null || true
+    fi
+    local delta=$(( (g_count - base_g) + (l_count - base_l) ))
+    [ "$delta" -lt 0 ] && delta=0
+    # 임계: 마지막 정제 이후 새 관찰 200건 또는 마지막 핸드오프 14일 초과
+    if [ "$delta" -lt 200 ] && [ "$days" -lt 14 ]; then
+        rm -f "$root/memory/.mnemo-status.md" 2>/dev/null || true
+        return 0
+    fi
     local status_file="$root/memory/.mnemo-status.md"
     mkdir -p "$root/memory" 2>/dev/null || true
     {
         echo "# mnemo status"
         echo ""
-        echo "- raw observations: **${total}** (gotchas ${g_count} + learned ${l_count})"
+        echo "- 새 관찰(정제 이후): **${delta}** / 누적 **${total}** (gotchas ${g_count} + learned ${l_count})"
         echo "- last handoff: **${days}일 전**"
         echo "- 권장: \`/memory-distill --rebuild\` 또는 핸드오프"
         echo "- updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     } > "$status_file" 2>/dev/null || true
-    echo "[mnemo] raw ${total}건 / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
+    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
 }
 MNEMO_ROOT="$PWD"
 GIT_ROOT_TMP=$(git rev-parse --show-toplevel 2>/dev/null)
