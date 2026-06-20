@@ -6,7 +6,7 @@ PM + Multi-AI Worker 병렬 처리를 위한 MCP 서버입니다.
 
 - **파일 락킹**: 다중 Worker 간 파일 충돌 방지
 - **태스크 의존성 관리**: 선행 태스크 완료 후 자동 언블록
-- **Multi-AI 지원**: Claude, Codex (GPT-5.2), Gemini 3 Pro 통합
+- **Multi-AI 지원**: Claude, Codex, Gemini 통합 (각 CLI 기본 모델 사용)
 - **자동 Fallback**: 설치된 AI CLI만 자동 감지하여 사용
 
 ## 설치

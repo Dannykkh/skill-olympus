@@ -62,13 +62,13 @@ export function detectAIProviders(): DetectionResult {
       name: 'codex',
       ...checkCLI('codex', '--version'),
       command: 'codex',
-      description: 'OpenAI Codex CLI (GPT-5.2)'
+      description: 'OpenAI Codex CLI'
     },
     {
       name: 'gemini',
       ...checkCLI('gemini', '--version'),
       command: 'gemini',
-      description: 'Google Gemini CLI (Gemini 3 Pro)'
+      description: 'Google Gemini CLI'
     }
   ];
 

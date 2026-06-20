@@ -70,14 +70,14 @@ function Get-AvailableAIProviders {
 
     if (Test-AIProvider "codex") {
         $providers += "codex"
-        Write-ColorOutput "  [✓] Codex CLI 감지됨 (OpenAI GPT-5.2)" "Green"
+        Write-ColorOutput "  [✓] Codex CLI 감지됨 (OpenAI)" "Green"
     } else {
         Write-ColorOutput "  [✗] Codex CLI 없음" "Gray"
     }
 
     if (Test-AIProvider "gemini") {
         $providers += "gemini"
-        Write-ColorOutput "  [✓] Gemini CLI 감지됨 (Google Gemini 3 Pro)" "Green"
+        Write-ColorOutput "  [✓] Gemini CLI 감지됨 (Google)" "Green"
     } else {
         Write-ColorOutput "  [✗] Gemini CLI 없음" "Gray"
     }
