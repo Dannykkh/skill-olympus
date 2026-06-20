@@ -28,7 +28,6 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **Fetch MCP** | 웹페이지 URL 내용 읽기 (Anthropic 공식) | [상세](./fetch-mcp.md) |
 | **Toss Payments MCP** | PG 결제 연동 (10분) | [상세](./toss-payments-mcp.md) |
 | **Context7 MCP** | 라이브러리 문서 실시간 검색 | [상세](./context7-mcp.md) |
-| **PAL MCP** | Multi-Model 오케스트레이션 (50+ LLM) | [상세](./pal-mcp.md) |
 | **Playwright MCP** | 브라우저 자동화 (Microsoft) | [상세](./playwright-mcp.md) |
 | **GitHub MCP** | GitHub API 통합 (공식) | [상세](./github-mcp.md) |
 | **Office-PowerPoint-MCP** | PPT 자동화 (32 도구, 25 템플릿) | [상세](./office-powerpoint-mcp.md) |
@@ -38,21 +37,9 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 
 | 리소스 | 설명 | 문서 |
 |--------|------|------|
-| **Codex CLI** | OpenAI Codex CLI (GPT-5.2) 통합 | [상세](./codex-cli.md) |
-| **Gemini CLI** | Google Gemini 3 Pro CLI 통합 | [상세](./gemini-cli.md) |
+| **Codex CLI** | OpenAI Codex CLI 통합 | [상세](./codex-cli.md) |
+| **Gemini CLI** | Google Gemini CLI 통합 | [상세](./gemini-cli.md) |
 | **Humanizer Skill** | AI 글쓰기 패턴 제거 (24개 패턴) | [상세](./humanizer-skill.md) |
-
-### Multi-Agent & Orchestration
-
-| 리소스 | 설명 | 문서 |
-|--------|------|------|
-| **claude-flow** | Multi-agent 스웜, LLM 간 자동 전환 | [상세](./claude-flow.md) |
-
-### Multi-LLM Integration
-
-| 리소스 | 설명 | 문서 |
-|--------|------|------|
-| **Multi-LLM Integration Guide** | 최신 LLM 모델/API 정보 활용 가이드 (Context7, PAL MCP, 스킬 컬렉션) | [상세](./multi-llm-integration.md) |
 
 ### OCR & 문서 인식
 
@@ -94,11 +81,7 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **에이전트 컬렉션** | [awesome-claude-code-subagents](./awesome-claude-code-subagents.md) |
 | **GitHub 자동화** | [GitHub MCP](./github-mcp.md) |
 | **라이브러리 문서** | [Context7 MCP](./context7-mcp.md) |
-| **Multi-LLM 통합** | [Multi-LLM Integration Guide](./multi-llm-integration.md) |
-| **최신 모델 정보** | [Multi-LLM Integration Guide](./multi-llm-integration.md) |
 | **세션 핸드오프** | [softaworks/agent-toolkit](./softaworks-agent-toolkit.md) |
-| **Multi-Agent 스웜** | [claude-flow](./claude-flow.md) |
-| **Multi-Model MCP** | [PAL MCP](./pal-mcp.md) |
 | **문서 인식/OCR** | [OCR & 문서 인식 가이드](./ocr-document-recognition.md) |
 | **PDF 처리** | [OCR & 문서 인식 가이드](./ocr-document-recognition.md) |
 
@@ -126,13 +109,11 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 |------|--------|
 | Skills & Plugins | 8 |
 | External AI CLI Integration | 4 |
-| MCP Servers | 8 |
-| Multi-Agent & Orchestration | 1 |
-| Multi-LLM Integration | 1 |
+| MCP Servers | 7 |
 | OCR & 문서 인식 | 1 |
 | Curation Lists | 2 |
-| **총계** | **25+** |
+| **총계** | **22+** |
 
 ---
 
-**마지막 업데이트:** 2026-02-08
+**마지막 업데이트:** 2026-06-20
