@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.6] - 2026-06-20
+
+### Bug Fixes
+- **orchestrator**: provider 설명에서 stale 모델 라벨(GPT-5.2 / Gemini 3 Pro) 제거. detectAIProviders가 CLI명만 표시 — 워커는 각 CLI 기본 모델로 실행되므로(모델 비지정) 라벨에 모델명이 불필요하고 stale만 유발했음. README/launch.ps1 + 3-CLI 설치본까지 정리 (5529fe2)
+
+### Documentation
+- **resources**: 방치된 외부 도구 문서 3건(multi-llm-integration, pal-mcp, claude-flow) 삭제 + README 인덱스 정리. 모두 4~5개월 미갱신·미사용 서드파티 도구 소개. External AI CLI 테이블 모델 라벨도 제거, 통계 25+→22+ (ff90cc1)
+
 ## [4.8.5] - 2026-06-17
 
 ### Fixed — mnemo notify 임계값 누적 카운터 버그 (delta 전환)
