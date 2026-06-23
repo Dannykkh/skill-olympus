@@ -8,7 +8,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ## Overview
 
-This guide covers essential PDF processing operations using Python libraries and command-line tools. For advanced features, JavaScript libraries, and detailed examples, see REFERENCE.md. If you need to fill out a PDF form, read FORMS.md and follow its instructions.
+This guide covers essential PDF processing operations using Python libraries and command-line tools. For advanced features, JavaScript libraries, and detailed examples, see reference.md. If you need to fill out a PDF form, read forms.md and follow its instructions.
 
 ## Quick Start
 
@@ -304,7 +304,7 @@ with open("encrypted.pdf", "wb") as output:
 | Create PDFs | reportlab | Canvas or Platypus |
 | Command line merge | qpdf | `qpdf --empty --pages ...` |
 | OCR scanned PDFs | pytesseract | Convert to image first |
-| Fill PDF forms | pdf-lib or pypdf (see FORMS.md) | See FORMS.md |
+| Fill PDF forms | pdf-lib or pypdf (see forms.md) | See forms.md |
 | **Markdown → 출판품질 PDF** | **scripts/markdown_to_pdf.py** | **아래 섹션 참조** |
 
 ---
@@ -324,7 +324,7 @@ with open("encrypted.pdf", "wb") as output:
 | 코드 폰트 | D2Coding → JetBrains Mono → monospace | 자동 다운로드 (SIL OFL 1.1) |
 | 페이지번호 | 하단 중앙 "N / M" | |
 | 날짜 형식 | YYYY년 M월 D일 | |
-| 외부 이미지 fetch | 차단 (트래커 방지) | weasyprint 기본 동작 |
+| 외부 이미지 fetch | 허용 (networkidle까지 대기) | Chromium이 외부 리소스를 로드 — 트래커 차단 아님 |
 
 ### 사용법
 
@@ -389,7 +389,7 @@ python ... markdown_to_pdf.py setup
 | `--cover` | 표지 페이지 추가 |
 | `--toc` | 목차 추가 |
 | `--watermark TEXT` | 대각선 워터마크 |
-| `--confidential` | 우측하단 CONFIDENTIAL 푸터 |
+| `--confidential` | 좌측하단 CONFIDENTIAL 푸터 (페이지번호는 우측) |
 | `--no-chapter-breaks` | H1마다 페이지 분할 안 함 |
 | `--skip-fonts` | 폰트 자동 다운로드 건너뜀 |
 | `--quiet` | 진행상황 출력 끔 |
@@ -406,7 +406,7 @@ exit:
   1 = 인자 오류 (입력파일 없음/.md 아님)
   2 = 렌더링 실패
   3 = 의존성 누락 (playwright/markdown 미설치)
-  4 = 네트워크 실패 (폰트 다운로드 불가)
+  4 = 네트워크 실패 (정의됨, 현재 미사용 — 폰트 다운로드 실패는 fallback 처리)
 ```
 
 캡처 예시:
@@ -452,8 +452,8 @@ python markdown_to_pdf.py generate --toc TECHNICAL.md
 
 ## Next Steps
 
-- For advanced pypdfium2 usage, see REFERENCE.md
-- For JavaScript libraries (pdf-lib), see REFERENCE.md
-- If you need to fill out a PDF form, follow the instructions in FORMS.md
-- For troubleshooting guides, see REFERENCE.md
+- For advanced pypdfium2 usage, see reference.md
+- For JavaScript libraries (pdf-lib), see reference.md
+- If you need to fill out a PDF form, follow the instructions in forms.md
+- For troubleshooting guides, see reference.md
 - **Markdown → 출판 PDF**: 위 섹션 참조 (한국 기본값: A4 + Pretendard)
