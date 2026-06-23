@@ -510,3 +510,4 @@ python scripts/docx_helpers.py
 - **python-docx**: `pip install python-docx` (Python 기반 문서 생성)
 - **LibreOffice**: PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
 - **Poppler**: `pdftoppm` for images
+- **defusedxml**: `pip install defusedxml` (unpack/pack/comment의 XML 직접 조작)

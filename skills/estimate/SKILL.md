@@ -237,8 +237,8 @@ number_format = '#,##0'
 # openpyxl 설치 확인
 pip install openpyxl 2>/dev/null || pip3 install openpyxl 2>/dev/null
 
-# Python 스크립트 생성 + 실행
-python estimate_generator.py
+# Python 헬퍼로 생성 + 실행
+python scripts/estimate_builder.py
 ```
 
 **출력:** `docs/estimate/estimate-{project-name}-{YYYY-MM-DD}.xlsx`

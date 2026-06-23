@@ -68,7 +68,7 @@ TODO: Add usage examples
 
 ## Development
 
-See [workflows.md](../../CLAUDE.md) for development guidelines.
+TODO: Add development guidelines.
 """
 
     readme_path = plugin_dir / "README.md"

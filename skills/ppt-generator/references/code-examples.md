@@ -4,7 +4,7 @@
 
 ```python
 from pptx.util import Inches, Pt
-from pptx.dml.color import RgbColor
+from pptx.dml.color import RGBColor
 
 def add_table_slide(self, title: str, headers: list[str], rows: list[list[str]]):
     """표가 포함된 슬라이드"""
@@ -26,10 +26,10 @@ def add_table_slide(self, title: str, headers: list[str], rows: list[list[str]])
         cell = table.cell(0, i)
         cell.text = header
         cell.fill.solid()
-        cell.fill.fore_color.rgb = RgbColor(0x2E, 0x75, 0xB6)
+        cell.fill.fore_color.rgb = RGBColor(0x2E, 0x75, 0xB6)
         para = cell.text_frame.paragraphs[0]
         para.font.bold = True
-        para.font.color.rgb = RgbColor(0xFF, 0xFF, 0xFF)
+        para.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
         para.font.size = Pt(12)
 
     for row_idx, row_data in enumerate(rows):
