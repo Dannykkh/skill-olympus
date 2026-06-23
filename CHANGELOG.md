@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.8.7] - 2026-06-23
+
+### Added — 루프 정직성: 완료 계약(028) + 독립 검증(034) + 훅 소진 표면화
+
+Forward-Future/loop-library 카탈로그의 028(completion-contract)·034(multi-LLM convergence) 패턴을 루프성 스킬과 훅 전반에 적용. 거짓 완료 방지와 검증 독립성을 강화했다.
+
+- **완료 계약 (028)** — 요구사항→증거 매핑 + `proved/weak/missing/contradicted` 4상태 채점 + **예산/반복 소진을 success로 보고 금지(exhausted)**. chronos·zeus·minos·autoresearch·argos·agent-team·workpm 7개 스킬의 종료 판정에 적용
+- **독립 검증 (034)** — autoresearch에 다른 모델 패밀리 독립 채점 게이트 추가(자기채점 오버피팅 방지), zeus argos 게이트에 위험 트리거 교차모델 수렴(결정론적 게이트 우선, 다른 모델은 백그라운드 병렬 — 구현 게이트는 느려지지 않음). chronos는 테스트 불가 산출물(스펙/설계/문서)에만 교차모델 VERIFY 적용
+- **훅 정직성** — loop-stop·continue-loop(ps1/sh 4파일)가 max-iter/stale 소진 시 `EXHAUSTED` 사유를 systemMessage/resume 프롬프트로 표면화하고, 마지막 허용 턴에 "정직한 미완 보고" 경고를 주입. 거짓/불일치 `<promise>` 거부는 기존 코드 유지. dry-run 런타임 검증 ps1 5/5, sh `bash -n` 통과
+- **헤르메스 grounding** — biz-strategy 시장 분석(TAM/SAM/SOM)에 출처 병기 + `[확인 필요]` 가드 추가. 출처 없는 환각 수치 방지(글로벌 "사실 근거" 규칙 정렬)
+- 실파일 인용 기반 감사로 갭 도출 — code-reviewer·skill-judge는 034를 이미 충족(패치 불요), ceo는 devil's advocate 내장으로 패치 불요로 판정
+
 ## [4.8.6] - 2026-06-20
 
 ### Bug Fixes

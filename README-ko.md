@@ -196,6 +196,10 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.8.7 — 루프 정직성: 완료 계약·독립 검증·소진 표면화 (2026.06)
+
+Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계약**(각 요구사항을 재현 가능한 증거에 매핑하고 `proved/weak/missing/contradicted`로 채점, **소진을 success로 보고 금지**)이 크로노스·제우스·minos·autoresearch·argos·agent-team·workpm의 종료 판정을 규율합니다. 한 행위자가 자기 산출물을 스스로 채점하던 자리에는 **교차모델 독립 검증**을 더했습니다 — autoresearch는 최종 챔피언을 다른 모델 패밀리로 재채점하고, 제우스 argos 게이트는 위험 트리거에서만 교차모델을 돌립니다(결정론적 빌드/테스트/정적 게이트가 먼저, 다른 모델은 백그라운드 — 구현 경로는 빠르게 유지). **훅 레벨**에서는 loop-stop·continue-loop가 max-iter/stale 소진 시 `EXHAUSTED`를 표면화하고 마지막 허용 턴에 정직 보고 경고를 주입합니다(dry-run 검증 ps1 5/5, sh 문법 검사). 헤르메스에는 grounding 가드를 추가 — TAM/SAM/SOM 수치에 출처 또는 `[확인 필요]` 명시를 요구합니다.
+
 ### v4.8.1 — mnemo 루트 결정 수정 (2026.06)
 
 자동저장 훅이 *마지막* cwd를 기준으로 삼던 탓에, 비-git 프로젝트에서 하위 폴더(`reference/1week` 등)로 `cd`하면 `conversations/`·`memory/`가 그 하위 폴더에 흩어졌습니다. 이제 루트 결정을 2-pass 후보 평가로 바꿔, Pass 1은 git 루트가 잡히는 첫 후보(git repo는 어느 하위 폴더에서도 정규화), Pass 2는 비-git이면 **세션 시작 cwd**를 앵커로 써서 전역 `cd`가 유지돼도 루트가 흔들리지 않습니다. HOME 자체가 git 저장소인 환경도 방어합니다(HOME은 후보 제외, git 루트가 HOME이면 dotfiles repo로 보고 건너뜀). 8개 훅(save-response/save-conversation/save-tool-use/reconcile-conversations × ps1·sh)에 적용하고 설치본을 동기화했습니다. PS 7/7 · SH 7/7 시나리오 테스트 통과.
@@ -595,6 +599,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.8.7](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.7)** | **2026-06-23** | **루프 정직성 (028/034)** — 완료 계약(요구사항→증거 4상태 채점, 소진≠성공)을 크로노스·제우스·minos·autoresearch·argos·agent-team·workpm에 적용; 교차모델 독립 검증(autoresearch 챔피언 재채점, 제우스 argos 위험 트리거 한정 — 결정론적 게이트 우선, 다른 모델은 백그라운드); 훅 레벨 `EXHAUSTED` 표면화 + 마지막 턴 정직 보고 경고(loop-stop·continue-loop ps1/sh, dry-run ps1 5/5); 헤르메스 TAM/SAM/SOM 출처 병기 grounding 가드 |
 | **[v4.8.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.1)** | **2026-06-14** | **mnemo 루트 결정 수정** — 비-git 프로젝트에서 하위 폴더로 `cd` 해도 `conversations/`·`memory/`가 하위 폴더가 아닌 프로젝트 루트에 저장; 2-pass 루트 결정(git 루트 우선, 없으면 세션 시작 cwd) + HOME-git 가드; 8개 훅(ps1·sh)·설치본 적용, PS 7/7 · SH 7/7 |
 | **[v4.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.0)** | **2026-06-13** | **루프 프로그래밍: 주차, 브리프, 재진입** — 크로노스 주차 규칙(사유 없는 막힘 선언은 회피로 처리) + Owner Decision Brief(추천안과 선택지를 함께 넘기는 결재 브리프) + 재진입 규약(로그가 기억보다 우선, 새 세션도 감사 로그로 재개) + 주차만 남은 큐의 데드락 가드(거짓 `<promise>` 종료 차단, ps1 4/4 테스트, 여러 줄 매칭 보강) + 제우스 결정 장부(근거, 기각한 대안, 되돌리는 법) + codex-mnemo notify 판정 순서 수정(save-turn 체인 래퍼 보존) |
 | **[v4.7.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.1)** | **2026-06-11** | **아프로디테 시각 검증 + 클리오 게이트 강화** — ui-ux-auditor가 스크린샷을 직접 관찰해 채점(관찰>Grep, 결함 4종 스모크 테스트 4/4 검출 실증); clio v2.1.1 판정식 보완(minos 반영, 공허한 GO 차단, 우회 표기); 아프로디테 구현 범위 외관 한정 명시 |
