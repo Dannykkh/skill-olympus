@@ -38,7 +38,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Security Review|agents/security-reviewer.md|
 |Web Preview + 디자인 토큰|agents/web-preview-guide.md,skills/design-system-starter/SKILL.md|
 |Stitch UI|agents/stitch-developer.md,skills/stitch/SKILL.md|
-|Agent Teams (Opus 4.6 병렬 실행)|skills/agent-team/SKILL.md|
+|Agent Teams (Opus 병렬 실행)|skills/agent-team/SKILL.md|
 |Codex Multi-Agent Team|skills/agent-team-codex/SKILL.md|
 
 ### Recommended Workflows
@@ -110,7 +110,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus 4.6) + Codex Multi-Agent |
+| 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, memory-distill, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + raw 관찰 정제(rebuild) + 스킬 프롬프트 자동 최적화 (Hill Climbing) |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 + 도메인 용어사전 (DDD Ubiquitous Language) |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
