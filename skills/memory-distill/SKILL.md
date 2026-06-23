@@ -184,7 +184,7 @@ memory/learned/
 설계 원칙:
 - **자동 분석기는 의도적으로 두지 않음** — LLM 호출 비용을 명시적 트리거에만 묶기 위함
 - 정제 발동은 사용자 의지(`/memory-distill`) 또는 세션 경계(핸드오프)에서만
-- 분석 모델은 frontmatter에 `model:` 미지정 → 호출자(메인 세션) 모델 상속 → Anthropic Dreaming(`model: claude-opus-4-7`) 동등 품질
+- 분석 모델은 frontmatter에 `model:` 미지정 → 호출자(메인 세션) 모델 상속 → Anthropic Dreaming 동등 품질
 - Stop 훅의 안내는 LLM 호출 X — 단순 텍스트 출력으로 사용자에게 정제 시기 알림
 
 `/memory-distill --rebuild`와 핸드오프 자동 추출은 **동일 로직**을 공유합니다.

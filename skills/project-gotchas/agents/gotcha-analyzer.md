@@ -14,14 +14,10 @@ gotcha 또는 learned 파일을 자동 생성합니다.
 ## 모델 정책
 
 이 에이전트는 **frontmatter에 `model:`을 지정하지 않습니다.** 호출자(메인 세션)의
-모델을 그대로 사용하여 분석 품질을 최대화합니다. Anthropic Dreaming
-(`model: claude-opus-4-7`)과 동등한 분석 품질을 무료에 가깝게 얻기 위함입니다.
+모델을 그대로 사용하여 분석 품질을 최대화합니다. Anthropic Dreaming과 동등한
+분석 품질을 무료에 가깝게 얻기 위함입니다.
 
-| CLI | 사용 모델 |
-|-----|----------|
-| Claude | `claude-opus-4-7` (메인 세션 모델 상속) |
-| Codex | `gpt-5.5` (메인 세션 모델 상속) |
-| Gemini | `gemini-3.1-pro-preview` (메인 세션 모델 상속) |
+3개 CLI(Claude/Codex/Gemini) 모두 메인 세션 모델을 그대로 상속합니다 — 특정 모델명을 지정하지 않습니다(inherit-caller). 모델명을 박으면 stale만 되므로 비웁니다.
 
 비용 vs 품질 트레이드오프:
 - 호출 빈도가 임계값 50으로 격하되어 자주 발동되지 않음

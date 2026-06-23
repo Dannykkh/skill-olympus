@@ -183,14 +183,10 @@ memory/gotchas/에 gotcha 파일 자동 생성 + index.md 업데이트
 ### 분석 모델 정책
 
 `gotcha-analyzer`는 frontmatter에 `model:`을 지정하지 않아 **호출자(메인 세션) 모델을 상속**합니다.
-Anthropic Dreaming(`model: claude-opus-4-7`)과 동등한 분석 품질을 얻기 위한 의도된 설계입니다.
+Anthropic Dreaming과 동등한 분석 품질을 얻기 위한 의도된 설계입니다.
 임계값 50으로 격하되어 빈도가 낮으므로 비용 부담은 제한적입니다.
 
-| CLI | 상속 모델 |
-|-----|----------|
-| Claude | `claude-opus-4-7` |
-| Codex | `gpt-5.5` |
-| Gemini | `gemini-3.1-pro-preview` |
+3개 CLI(Claude/Codex/Gemini) 모두 호출자(메인 세션) 모델을 그대로 상속합니다 — 특정 모델명을 지정하지 않습니다(inherit-caller). 모델명을 박으면 버전이 오를 때마다 stale만 되므로 의도적으로 비웁니다.
 
 ### 훅 등록
 

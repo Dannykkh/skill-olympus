@@ -8,11 +8,6 @@
   },
   "analyzer": {
     "model_policy": "inherit-caller",
-    "_note": "frontmatter model 미지정 → 호출자(메인 세션) 모델 상속. /memory-distill 또는 핸드오프 자동 추출 시에만 호출되며, 호출 시 Dreaming(opus)과 동등 품질로 분석.",
-    "expected_models": {
-      "claude": "claude-opus-4-7",
-      "codex": "gpt-5.5",
-      "gemini": "gemini-3.1-pro-preview"
-    }
+    "_note": "frontmatter model 미지정 → 호출자(메인 세션) 모델 상속. /memory-distill 또는 핸드오프 자동 추출 시에만 호출되며, 호출 시 Dreaming과 동등 품질로 분석. 특정 모델명은 박지 않음 — inherit-caller 정책상 모델명을 적으면 버전이 오를 때마다 stale만 됨."
   }
 }
