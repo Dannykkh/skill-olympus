@@ -687,7 +687,7 @@ orchestrator_reset()
 
 ## 참고
 
-- [MCP 서버 소스](../skills/orchestrator/mcp-server/)
-- [PM 스킬](../skills/orchestrator-pm/SKILL.md)
-- [Worker 스킬](../skills/orchestrator-worker/SKILL.md)
-- [launch.ps1 스크립트](../skills/orchestrator/mcp-server/scripts/launch.ps1)
+- [MCP 서버 소스](../mcp-server/)
+- [PM 워크플로우](../commands/workpm.md)
+- [Worker 워크플로우](../commands/pmworker.md)
+- [launch.ps1 스크립트](../mcp-server/scripts/launch.ps1)

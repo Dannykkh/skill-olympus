@@ -312,7 +312,7 @@ options:
 |------|------|
 | `skills/frontend-design/SKILL.md` | 미학 가이드 + 프리셋 + Banned Patterns |
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |
-| `skills/frontend-design/references/font-pairings.csv` | 73개 폰트 페어링 |
+| `skills/frontend-design/references/font-pairings.csv` | 84개 폰트 페어링 |
 | `skills/frontend-design/references/design-styles.csv` | 84개 디자인 스타일 |
 | `skills/design-system-starter/SKILL.md` | 디자인 토큰 생성 |
 | `skills/ui-ux-auditor/SKILL.md` | UI/UX 9영역 감사 + 시각 검증 |

@@ -646,4 +646,4 @@ npm start
 | `skills/mermaid-diagrams/SKILL.md` | Mermaid 문법 가이드 |
 | `skills/pdf/SKILL.md` | Markdown → 출판 PDF (Phase 3-4에서 호출) |
 | `skills/humanizer/references/korean-translationese.md` | 한국어 번역투 패턴 (Phase 3 윤문 패스) |
-| `skills/pdf/scripts/markdown_to_pdf.py` | PDF 변환 스크립트 (weasyprint) |
+| `skills/pdf/scripts/markdown_to_pdf.py` | PDF 변환 스크립트 (playwright/Chromium) |

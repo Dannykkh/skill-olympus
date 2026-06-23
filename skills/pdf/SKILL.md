@@ -311,7 +311,7 @@ with open("encrypted.pdf", "wb") as output:
 
 ## Markdown → 출판품질 PDF (한국 기본값)
 
-`scripts/markdown_to_pdf.py`는 weasyprint 기반 마크다운 → 출판품질 PDF 변환기입니다.
+`scripts/markdown_to_pdf.py`는 playwright(Chromium) 기반 마크다운 → 출판품질 PDF 변환기입니다.
 한국 환경에 맞게 A4/25mm 마진/Pretendard 폰트를 기본으로 사용합니다.
 
 ### 한국 기본값
@@ -405,7 +405,7 @@ exit:
   0 = 성공
   1 = 인자 오류 (입력파일 없음/.md 아님)
   2 = 렌더링 실패
-  3 = 의존성 누락 (weasyprint/markdown 미설치)
+  3 = 의존성 누락 (playwright/markdown 미설치)
   4 = 네트워크 실패 (폰트 다운로드 불가)
 ```
 
