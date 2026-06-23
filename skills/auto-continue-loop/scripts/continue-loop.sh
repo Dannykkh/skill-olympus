@@ -388,7 +388,7 @@ if ! [[ "$ITERATION" =~ ^[0-9]+$ ]] || ! [[ "$MAX_ITERATIONS" =~ ^[0-9]+$ ]]; th
 fi
 
 if [ "$MAX_ITERATIONS" -gt 0 ] && [ "$ITERATION" -ge "$MAX_ITERATIONS" ]; then
-    remove_state_file "loop-complete: max-iterations=$MAX_ITERATIONS"
+    remove_state_file "loop-exhausted: max-iterations=$MAX_ITERATIONS (not success)"
     exit 0
 fi
 
@@ -435,6 +435,9 @@ LOG_FILE="$DOCS_DIR/codex-resume.log"
     printf -- "- If no actionable in-scope work remains, output 'Chronos Complete' with the final report (one Owner Decision Brief per parked issue).\n"
     if [ -n "$COMPLETION_PROMISE" ] && [ "$COMPLETION_PROMISE" != "null" ]; then
         printf -- '- Only after the verification gate actually passes, output <promise>%s</promise>. Never output a promise that is not literally true.\n' "$COMPLETION_PROMISE"
+    fi
+    if [ "$MAX_ITERATIONS" -gt 0 ] && [ "$NEXT_ITERATION" -ge "$MAX_ITERATIONS" ]; then
+        printf -- '- NOTE: this is the final allowed iteration (%s/%s). If the work is not done, stop changing things and report the current state honestly as EXHAUSTED (incomplete): leave a requirement-to-evidence table, and do NOT output <promise> or "Chronos Complete" unless the verification gate actually passed.\n' "$NEXT_ITERATION" "$MAX_ITERATIONS"
     fi
 } > "$PROMPT_FILE"
 

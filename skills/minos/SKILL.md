@@ -284,7 +284,8 @@ WHILE (실패한 테스트 존재) AND (retry < max_retries):
   5. retry++
 
 IF retry >= max_retries:
-  남은 실패 → test.fixme() 표시 + 사용자 보고
+  남은 실패 → test.fixme() 표시 + exhausted(미해결, ≠통과)로 라벨 + 사용자 보고
+  → Healer 소진은 PASS가 아니다. "조건부 통과"로 둔갑시키지 않는다 (아래 판정 기준 참조)
 ```
 
 ### 원인 분류 체계
@@ -323,6 +324,10 @@ IF retry >= max_retries:
 | **PASS** | 자동 테스트 + 탐색 QA 전체 통과 | 배포 가능 |
 | **CONDITIONAL** | P0/P1 통과, P2/P3 일부 fixme 또는 탐색 QA 경고만 | 조건부 진행 |
 | **FAIL** | P0 또는 P1 실패 존재 (자동 테스트 또는 탐색 QA) | 수정 필수 |
+
+> **완료 계약 (028 — 거짓 완료 방지):** 각 시나리오의 "통과"는 그 시나리오의 Playwright assertion이 실제 green인 것을 증거로 한다.
+> Healer 소진으로 `test.fixme()` 처리된 항목은 통과가 아니라 `exhausted`(미해결)로 집계한다.
+> P0/P1에 `exhausted`가 하나라도 있으면 PASS/CONDITIONAL로 올리지 않고 **FAIL**로 판정한다 — 반복 소진을 조건부 통과로 둔갑시키지 않는다.
 
 ### QA 문서 업데이트
 

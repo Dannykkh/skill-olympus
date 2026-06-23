@@ -118,6 +118,24 @@ Phase 6에서만 완료 조건을 출력합니다:
 위 중 하나라도 없으면 Phase 6을 시작하지 말고, 누락된 phase를 먼저 실행.
 컨텍스트가 부족하여 누락 phase 실행이 불가능하면: `zeus-state.json`의 `currentPhase`를 누락 phase로 설정하고 핸드오프.
 
+### 완료 계약 (Completion Contract) — Phase별 증거 채점
+
+> Loop Library 028 기반. "실행됨"이 아니라 "증명됨"을 완료 기준으로 삼아, 부분 파이프라인이 완료로 둔갑하는 것을 막는다.
+
+실행 보장 게이트의 각 Phase 증거를 단순 존재 여부가 아니라 **4상태로 채점**해 `zeus-log.md`에 기록한다:
+
+| 상태 | 의미 |
+|------|------|
+| `proved` | 증거가 현재 산출물에서 재현됨 (예: minos 통과율 100%, argos 통과 수치 충족) |
+| `weak` | 실행은 됐으나 증거가 불충분 (예: 통과율 일부, 정적 분석만) |
+| `missing` | 해당 Phase 증거 없음 |
+| `contradicted` | 증거가 실패를 가리킴 (예: 빌드 실패, 테스트 레드) |
+
+- Phase 6 리포트의 SUCCESS 판정은 **5개 Phase 증거가 모두 `proved`일 때만** 허용된다.
+  하나라도 `weak`/`missing`/`contradicted`면 결과를 `PARTIAL` 또는 `BLOCKED`로 표기하고, 리포트에 미증명 항목을 명시한다.
+- **`--max-iterations`(20) 소진이나 컨텍스트 부족은 `exhausted`(미완)이며 success가 아니다.** 이 경우 거짓 완료 promise 대신 핸드오프를 남긴다.
+- 채점 결과는 Phase 6 리포트의 **요구사항→증거 표**(Decision Ledger 옆)에 모아 표시한다.
+
 ### 컨텍스트 보전 규칙
 
 - Phase 2 완료 후 컨텍스트가 80% 이상 사용되었다면, **Phase 3~6을 다음 세션으로 위임**:
@@ -230,6 +248,16 @@ Native team tool 사용 가능?
 2. argos Phase 0~7 순차 실행 → `verify-report.md` 생성 (Phase 6은 design-system.md 있을 때만, Phase 7 보안은 항상)
 3. 검증 결과 자동 승인 (zeus는 무중단) — 단, argos 통과/미통과 **항목 수치**를 zeus-log.md에 기록. "실행됨"이 아니라 통과 수치가 SUCCESS 판정의 근거다 (→ references/final-report-format.md 판정 기준)
 
+**교차모델 수렴 게이트 (034, 위험 트리거 시에만):**
+
+argos의 1차 감리는 결정론적이다 — 정적 분석·빌드·테스트 수치가 PASS/FAIL을 가른다. 다른 모델은 여기서 부르지 않는다(느리고 새 신호가 없다).
+아래 **위험 신호가 있는 변경에 한해**, 종료 직전 1회 교차모델 리뷰를 추가한다:
+
+- 위험 신호: 인증/결제/보안 경로, DB 마이그레이션, 공개 API 변경, 동시성/트랜잭션, 테스트가 없는 영역, 큰 diff.
+- 방식: Claude 구현분을 다른 패밀리(`gemini` 또는 Codex `/review`)가 1패스 리뷰 → 블로커만 수정. 정말 중요한 소수는 양쪽이 동일 버전을 승인할 때까지 최대 2라운드.
+- zero-interaction 유지: 리뷰는 백그라운드로 띄워 Phase 4와 병렬 진행한다. 한쪽 패밀리만 가용하면 single-model review로 라벨하고 consensus를 주장하지 않는다.
+- 결과(적용 여부·사유·승인 커밋)를 Decision Ledger에 `[ZEUS-AUTO:taste]`로 기록한다.
+
 **폴백 조건 (Phase 3은 skip 금지):**
 - 설계 산출물이 없어도 **정적 분석(코드 품질/보안)은 항상 실행**
 - 빌드 실패 → 보고서에 기록하고 Phase 4로 진행
@@ -274,6 +302,8 @@ Native team tool 사용 가능?
 [리포트 형식 및 결과 판정 기준 → references/final-report-format.md](references/final-report-format.md)
 
 `docs/zeus/zeus-report.md`에 저장. Phase 0~5 실행 증거가 모두 있어야 진입 가능.
+
+리포트에는 Decision Ledger와 함께 **완료 계약 요구사항→증거 표**(Phase별 `proved`/`weak`/`missing`/`contradicted`)를 포함한다. 5개 Phase가 모두 `proved`가 아니면 SUCCESS로 표기하지 않는다(완료 계약 규칙).
 
 ---
 

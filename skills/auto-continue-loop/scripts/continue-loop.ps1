@@ -258,7 +258,7 @@ $iter = [int]$iteration
 $maxIter = [int]$maxIterations
 
 if ($maxIter -gt 0 -and $iter -ge $maxIter) {
-    Remove-StateFile $stateFile "loop-complete: max-iterations=$maxIter"
+    Remove-StateFile $stateFile "loop-exhausted: max-iterations=$maxIter (not success)"
     exit 0
 }
 
@@ -301,6 +301,10 @@ $resumePrompt = @(
 
 if ($completionPromise -and $completionPromise -ne "null") {
     $resumePrompt += "- Only after the verification gate actually passes, output <promise>$completionPromise</promise>. Never output a promise that is not literally true."
+}
+
+if ($maxIter -gt 0 -and $nextIter -ge $maxIter) {
+    $resumePrompt += "- NOTE: this is the final allowed iteration ($nextIter/$maxIter). If the work is not done, stop changing things and report the current state honestly as EXHAUSTED (incomplete): leave a requirement-to-evidence table, and do NOT output <promise> or 'Chronos Complete' unless the verification gate actually passed."
 }
 
 $resumePromptText = ($resumePrompt -join "`n")

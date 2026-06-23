@@ -49,8 +49,8 @@ if ($startedAt) {
         $startTime = [DateTimeOffset]::Parse($startedAt)
         $elapsed = [DateTimeOffset]::UtcNow - $startTime
         if ($elapsed.TotalHours -ge 2) {
-            Write-Host "loop: started_at($startedAt)이 2시간 이상 경과. 이전 세션의 stale 루프를 자동 종료합니다."
             Remove-Item $stateFile -Force
+            @{ systemMessage = "Chronos EXHAUSTED: 2시간 초과 stale 루프 자동 종료 — 완료(success)가 아니라 미완료입니다. 이어서 진행하려면 /chronos를 다시 실행하세요." } | ConvertTo-Json -Compress
             exit 0
         }
     } catch {
@@ -75,10 +75,10 @@ if ($iteration -notmatch '^\d+$' -or $maxIterations -notmatch '^\d+$') {
 $iter = [int]$iteration
 $maxIter = [int]$maxIterations
 
-# 최대 반복 도달
+# 최대 반복 도달 — EXHAUSTED(미완료)로 종료. 성공과 구별되게 사유를 표면화한다.
 if ($maxIter -gt 0 -and $iter -ge $maxIter) {
-    Write-Host "loop: 최대 반복 횟수($maxIter)에 도달했습니다."
     Remove-Item $stateFile -Force
+    @{ systemMessage = "Chronos EXHAUSTED: 최대 반복($maxIter) 소진으로 종료 — 완료(success)가 아니라 미완료입니다. 마지막 보고가 'Chronos Complete'/<promise>가 아니면 작업은 끝나지 않은 것입니다. 이어서 진행하려면 /chronos를 다시 실행하세요." } | ConvertTo-Json -Compress
     exit 0
 }
 
@@ -165,6 +165,11 @@ if ($completionPromise -and $completionPromise -ne "null") {
     $sysMsg = "${commonMsg} 또는 완료 조건 달성 시(검증 PASS를 실제로 확인한 후에만): <promise>$completionPromise</promise>"
 } else {
     $sysMsg = $commonMsg
+}
+
+# 마지막 허용 반복이면(다음 턴이 상한) exhausted 정직 보고를 경고로 주입한다.
+if ($maxIter -gt 0 -and $nextIter -ge $maxIter) {
+    $sysMsg = "${sysMsg} | 주의: 이번이 마지막 허용 반복(${nextIter}/${maxIter})입니다. 작업이 끝나지 않았다면 더 손대지 말고 지금까지를 EXHAUSTED(미완)로 정직하게 보고하세요 — 요구사항→증거 표를 남기고, 검증 PASS를 실제로 확인하지 않았다면 <promise>나 'Chronos Complete'를 출력하지 마세요(거짓 완료 금지)."
 }
 
 # Stop 훅 block 응답

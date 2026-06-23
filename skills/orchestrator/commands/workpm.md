@@ -357,6 +357,7 @@ Task({
 2. `skills/flow-verifier/SKILL.md` verify 모드 참조 지시
 3. 검증 리포트 수신 → 판정 확인
 4. PARTIAL MATCH인 경우 → 누락 노드를 남은 팀원에게 추가 구현 지시
+5. PARTIAL/MISMATCH가 추가 구현 2라운드 내 해결되지 않으면 → "미완"으로 명시 보고 (통과로 올리지 않음, 소진=미완)
 5. 재검증 → FULL MATCH 달성 시 최종 보고
 6. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
 7. activity log에 최종 검증 결과 기록
