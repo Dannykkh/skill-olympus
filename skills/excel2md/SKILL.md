@@ -29,8 +29,6 @@ metadata:
 /excel2md data.xlsx --sheet "매출현황"        # 특정 시트
 /excel2md data.xlsx --output ./docs          # 출력 디렉토리
 /excel2md data.xlsx --no-images              # 이미지 제외
-/excel2md data.xlsx --analyze                # 구조 분석만 (변환 안 함)
-/excel2md data.xlsx --merge                  # 멀티시트 하나로 병합
 ```
 
 ---
@@ -190,8 +188,6 @@ pip install openpyxl
 | `--output` | `-o` | 출력 디렉토리 |
 | `--overwrite` | `-f` | 덮어쓰기 |
 | `--no-images` | | 이미지 제외 |
-| `--analyze` | | 구조 분석만 |
-| `--merge` | | 멀티시트 병합 |
 
 ## Helper Scripts
 
