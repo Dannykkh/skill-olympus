@@ -16,7 +16,7 @@ auto_apply: false
 # Agent Team Codex
 
 Codex CLI의 실험 기능 `multi_agent`를 사용해 작업을 병렬 분배하는 운영 스킬입니다.
-Claude 전용 Agent Teams(Opus 4.6) 대신 Codex의 `default/explorer/worker` 역할을 기준으로 실행합니다.
+Claude 전용 Agent Teams(Opus) 대신 Codex의 `default/explorer/worker` 역할을 기준으로 실행합니다.
 
 ## Prerequisites
 
