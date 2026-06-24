@@ -34,10 +34,14 @@ CREATE TABLE users (
 CREATE TABLE orders (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id),
-  total DECIMAL(10,2) NOT NULL,
-  INDEX idx_orders_user (user_id)
+  total DECIMAL(10,2) NOT NULL
 );
+
+-- 인덱스는 CREATE TABLE 밖에 분리 (MySQL/PostgreSQL 모두 동작)
+CREATE INDEX idx_orders_user ON orders(user_id);
 ```
+
+> 위 예시는 MySQL 기준입니다(`AUTO_INCREMENT`). PostgreSQL은 PK를 `BIGINT GENERATED ALWAYS AS IDENTITY`(또는 `BIGSERIAL`)로 쓰세요. 인덱스는 `CREATE INDEX`로 분리하면 양쪽에서 동작합니다(인라인 `INDEX ...`는 MySQL/MariaDB 전용 → Postgres 문법 에러). 이 스킬은 DB-First라 대상 DB에 맞춰 설계가 달라집니다.
 
 **What to include in your request:**
 - Entities (users, products, orders)
