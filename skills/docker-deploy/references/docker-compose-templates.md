@@ -30,10 +30,14 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    # 인증 플러그인: mysql:8.0+ 기본값 caching_sha2_password 사용(별도 옵션 불필요, 권장).
+    # --default-authentication-plugin은 8.0.27 deprecated → 8.4에서 제거(서버 기동 실패)라 삭제함.
+    # 레거시 클라이언트로 native_password가 꼭 필요하면 버전별로 추가:
+    #   8.0 → --default-authentication-plugin=mysql_native_password
+    #   8.4 → --mysql-native-password=ON   (mysql_native_password는 9.0에서 완전 제거)
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
-      --default-authentication-plugin=mysql_native_password
 
   api:
     image: ${PROJECT_NAME}-api:latest
