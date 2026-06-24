@@ -156,7 +156,7 @@ markdown_content = """
 - 고객 만족도 95% 달성
 """
 
-ppt = PPTGenerator('templates/corporate.pptx')
+ppt = PPTGenerator()  # 기본 테마 — 사용자 .pptx 템플릿을 인자로 넘기면 그 위에 생성
 ppt.markdown_to_slides(markdown_content)
 ppt.save('실적보고서.pptx')
 ```
@@ -178,7 +178,7 @@ presentation_data = {
     ]
 }
 
-ppt = PPTGenerator('templates/report.pptx')
+ppt = PPTGenerator()  # 기본 테마
 ppt.json_to_slides(presentation_data)
 ppt.save('매출분석.pptx')
 ```

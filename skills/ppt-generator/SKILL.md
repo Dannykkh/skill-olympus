@@ -21,16 +21,16 @@ python-pptx를 활용하여 템플릿 기반의 전문적인 PowerPoint 프레�
 pip install python-pptx Pillow
 ```
 
-## 템플릿 구조
+## 템플릿
 
+**번들 템플릿 파일은 제공하지 않습니다.** python-pptx의 기본 테마로 생성하거나, 직접 만든 `.pptx`를 템플릿으로 전달할 수 있습니다.
+
+```python
+PPTGenerator()                       # 기본 테마
+PPTGenerator("my-template.pptx")     # 사용자 제공 템플릿
 ```
-templates/
-├── default.pptx          # 기본 템플릿
-├── corporate.pptx        # 회사 브랜드 템플릿
-├── pitch-deck.pptx       # 투자자 피칭용
-├── report.pptx           # 보고서용
-└── minimal.pptx          # 미니멀 스타일
-```
+
+`template_path`가 없거나 파일이 존재하지 않으면 기본 테마로 폴백합니다(`scripts/pptx_helpers.py:42-45`).
 
 ## 핵심 코드
 
@@ -182,7 +182,7 @@ python scripts/pptx_helpers.py
 ## 체크리스트
 
 - [ ] python-pptx 설치됨
-- [ ] 템플릿 파일 준비 (`templates/` 폴더)
+- [ ] (선택) 사용자 템플릿 `.pptx` 준비 — 없으면 기본 테마
 - [ ] 이미지 경로 확인 (절대 경로 권장)
 - [ ] 한글 폰트 지원 확인
 - [ ] 출력 경로 쓰기 권한 확인
