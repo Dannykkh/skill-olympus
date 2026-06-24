@@ -34,7 +34,7 @@ metadata:
 ## Quick Start
 
 ```
-/hestia                         # 전체 스캔 + 정리
+/hestia                         # 전체 스캔 (기본 = 보고만, 삭제 안 함)
 /hestia scan                    # 스캔만 (보고만, 삭제 안 함)
 /hestia clean                   # 스캔 + 자동 삭제
 /hestia src/                    # 특정 디렉토리만
@@ -88,18 +88,19 @@ find src/ -type f \( -name "*.ts" -o -name "*.py" \) \
 ### 2-1. 미사용 Export
 
 ```bash
-# TypeScript/JavaScript
-npx ts-prune 2>/dev/null | grep -v "used in module" | head -30
+# TypeScript/JavaScript — knip 권장 (미사용 export·파일·의존성을 한 번에, --fix로 자동 제거)
+# ts-prune/depcheck/unimported는 2025년 archive/maintenance → knip이 통합 후속
+npx knip 2>/dev/null | head -40
 
+# 레거시 단일 목적 대안 (export만): npx ts-prune | grep -v "used in module"
 # 결과 예시:
 # src/utils/format.ts:15 - formatCurrency (unused)
-# src/services/legacy.ts:3 - OldService (unused)
 ```
 
 ### 2-2. 미사용 의존성
 
 ```bash
-# package.json 기반
+# JS/TS는 knip(2-1)이 의존성도 함께 탐지. depcheck는 레거시 대안 (2025 archive)
 npx depcheck 2>/dev/null | head -20
 
 # Python
@@ -113,7 +114,7 @@ pip-extra-reqs --ignore-requirement=dev src/ 2>/dev/null
 ### 2-3. 미사용 파일
 
 ```bash
-# import 체인에 없는 파일
+# JS/TS는 knip(2-1)이 미사용 파일도 함께 탐지. unimported는 레거시 대안 (knip으로 대체)
 npx unimported 2>/dev/null | head -20
 
 # 결과 예시:
