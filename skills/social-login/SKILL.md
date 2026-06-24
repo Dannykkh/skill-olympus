@@ -175,7 +175,9 @@ const googleLogin = async () => {
 import GoogleSignIn
 
 func googleLogin() {
-    guard let presentingVC = UIApplication.shared.windows.first?.rootViewController else { return }
+    // iOS 15+: UIApplication.shared.windows는 deprecated — connectedScenes 경유
+    guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+          let presentingVC = scene.keyWindow?.rootViewController else { return }
 
     GIDSignIn.sharedInstance.signIn(withPresenting: presentingVC) { result, error in
         guard let idToken = result?.user.idToken?.tokenString else { return }

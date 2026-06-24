@@ -163,24 +163,26 @@ function UserProfile() {
 ```typescript
 import { Grid } from '@mui/material';
 
-// 12-column grid
+// 12-column grid (v7 Grid v2: `item` prop 없음, breakpoint은 size prop)
 <Grid container spacing={2}>
-  <Grid item xs={12} md={6}>
+  <Grid size={{ xs: 12, md: 6 }}>
     Left half
   </Grid>
-  <Grid item xs={12} md={6}>
+  <Grid size={{ xs: 12, md: 6 }}>
     Right half
   </Grid>
 </Grid>
 
 // Responsive grid
 <Grid container spacing={3}>
-  <Grid item xs={12} sm={6} md={4} lg={3}>
+  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
     Card
   </Grid>
   {/* Repeat for more cards */}
 </Grid>
 ```
+
+> **v7 Grid 변경**: `@mui/material/Grid`는 이제 Grid v2 — `item` prop 제거, breakpoint은 `size={{ xs, md }}` 단일 prop. 구 `item`+`xs` 문법은 `@mui/material/GridLegacy`(deprecated)로 분리됨. 자동 변환: `npx @mui/codemod v7.0.0/grid-props <path>`.
 
 ### Typography
 

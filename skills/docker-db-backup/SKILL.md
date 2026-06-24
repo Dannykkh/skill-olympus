@@ -150,6 +150,7 @@ mysqldump \
     --single-transaction \
     --routines \
     --triggers \
+    --events \
     "$MYSQL_DATABASE" \
     | gzip > "$BACKUP_FILE"
 
@@ -296,13 +297,13 @@ MSYS_NO_PATHCONV=1 docker exec {프로젝트}-db-backup ls -lh /backups/
 | 덤프 도구 | `pg_dump` (이미지 내장) | `mysqldump` (이미지 내장) |
 | cron | Alpine `crond` 내장 | Debian이면 `cron` 설치 필요 |
 | 환경변수 prefix | `POSTGRES_` | `MYSQL_` |
-| 덤프 옵션 | `--no-owner --no-acl` | `--single-transaction --routines --triggers` |
+| 덤프 옵션 | `--no-owner --no-acl` | `--single-transaction --routines --triggers --events` |
 | 복원 명령 | `gunzip -c file.sql.gz \| psql -U user -d db` | `gunzip -c file.sql.gz \| mysql -u user -p db` |
 
 ## 주의사항
 
 - **backup-entrypoint.sh는 반드시 LF 줄바꿈**이어야 한다. Windows CRLF → 컨테이너에서 `/bin/sh: set: illegal option` 에러 발생
-- **DB 이미지 버전을 맞춰야** 한다. pg_dump/mysqldump 버전이 서버와 다르면 호환성 경고 또는 실패
+- **백업 도구 버전 ≥ DB 서버 버전.** pg_dump/mysqldump는 forward-compatible이 아니라, **구버전 도구로 newer 서버를 덤프하면 `server version mismatch`로 실패**한다. 백업 이미지를 DB 이미지와 **동일 태그**로 고정하라(DB를 올리면 백업 이미지도 같이 올림). MySQL은 버전이 같아야 `caching_sha2_password` 인증 핸드셰이크도 안전하다
 - **Docker volume `db_backups`**에 저장되므로 컨테이너 삭제해도 백업은 유지된다
 - 호스트로 백업을 꺼내려면: `docker cp {컨테이너}:/backups/{파일} ./`
 - `.env`의 `BACKUP_CRON_SCHEDULE`은 cron 5-field 표현식 (초 없음)
