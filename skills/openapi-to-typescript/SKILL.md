@@ -5,7 +5,7 @@ description: "Convert OpenAPI 3 JSON/YAML schemas into TypeScript interfaces, ty
 
 # OpenAPI to TypeScript
 
-Converts OpenAPI 3.0 specifications to TypeScript interfaces and type guards.
+Converts OpenAPI 3.0 and 3.1 specifications to TypeScript interfaces and type guards.
 
 **Input:** OpenAPI file (JSON or YAML)
 **Output:** TypeScript file with interfaces and type guards
@@ -20,7 +20,7 @@ Converts OpenAPI 3.0 specifications to TypeScript interfaces and type guards.
 ## Workflow
 
 1. Request the OpenAPI file path (if not provided)
-2. Read and validate the file (must be OpenAPI 3.0.x)
+2. Read and validate the file (must be OpenAPI 3.0.x or 3.1.x)
 3. Extract schemas from `components/schemas`
 4. Extract endpoints from `paths` (request/response types)
 5. Generate TypeScript (interfaces + type guards)
@@ -32,7 +32,7 @@ Converts OpenAPI 3.0 specifications to TypeScript interfaces and type guards.
 Check before processing:
 
 ```
-- Field "openapi" must exist and start with "3.0"
+- Field "openapi" must exist and start with "3.0" or "3.1"
 - Field "paths" must exist
 - Field "components.schemas" must exist (if there are types)
 ```
@@ -60,6 +60,21 @@ If invalid, report the error and stop.
 | `date-time`   | `string` (comment ISO)  |
 | `email`       | `string` (comment email)|
 | `uri`         | `string` (comment URI)  |
+
+### Nullable & Union (OpenAPI 3.0 vs 3.1)
+
+3.0과 3.1은 nullable·union 표현이 다릅니다 — 둘 다 처리하세요:
+
+| 입력 | 버전 | TypeScript |
+|------|------|------------|
+| `{type: string, nullable: true}` | 3.0 | `string \| null` |
+| `{type: ["string", "null"]}` | 3.1 | `string \| null` |
+| `{type: ["string", "integer"]}` | 3.1 | `string \| number` |
+| `example` / `examples: [...]` | 3.0 / 3.1 | JSDoc `@example` |
+
+- **3.0**: nullable은 `nullable: true`로만 표현. `type`은 항상 단일 문자열.
+- **3.1**: `nullable` 키워드 **없음** — `type`을 배열로(`["string","null"]`) 표현. `type` 배열은 그대로 TS union으로 매핑하고 `"null"` 멤버는 `| null`로 변환.
+- 3.1은 JSON Schema 2020-12 정합이라 `const`(→ 리터럴 타입), `examples`(배열), `$defs` 등이 올 수 있습니다. 모르는 키워드는 `unknown`으로 처리하고 경고.
 
 ### Complex Types
 
@@ -338,7 +353,7 @@ export function isApiError(value: unknown): value is ApiError {
 
 | Error | Action |
 |-------|--------|
-| OpenAPI version != 3.0.x | Report that only 3.0 is supported |
+| OpenAPI version not 3.0.x/3.1.x | Report that only 3.0.x and 3.1.x are supported |
 | $ref not found | List missing refs |
 | Unknown type | Use `unknown` and warn |
 | Circular reference | Use type alias with lazy reference |
