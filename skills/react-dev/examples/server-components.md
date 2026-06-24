@@ -9,14 +9,16 @@ Server Components can be async functions — await data fetching directly.
 ```typescript
 // app/users/[id]/page.tsx
 type PageProps = {
-  params: { id: string };
-  searchParams?: { tab?: string; edit?: string };
+  params: Promise<{ id: string }>;                          // Next.js 15+: Promise
+  searchParams?: Promise<{ tab?: string; edit?: string }>;
 };
 
 export default async function UserPage({ params, searchParams }: PageProps) {
   // Runs on server - no client bundle
-  const user = await fetchUser(params.id);
-  const posts = await fetchUserPosts(params.id);
+  const { id } = await params;            // Next.js 15+: params/searchParams는 await
+  const sp = await searchParams;
+  const user = await fetchUser(id);
+  const posts = await fetchUserPosts(id);
 
   return (
     <div>
@@ -25,9 +27,9 @@ export default async function UserPage({ params, searchParams }: PageProps) {
         <p>{user.email}</p>
       </header>
 
-      <UserTabs user={user} posts={posts} activeTab={searchParams?.tab} />
+      <UserTabs user={user} posts={posts} activeTab={sp?.tab} />
 
-      {searchParams?.edit === 'true' && (
+      {sp?.edit === 'true' && (
         <UserEditForm user={user} />
       )}
     </div>
@@ -49,15 +51,16 @@ Fetch multiple resources in parallel with Promise.all.
 
 ```typescript
 type DashboardProps = {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;   // Next.js 15+: Promise
 };
 
 export default async function Dashboard({ params }: DashboardProps) {
+  const { userId } = await params;       // Next.js 15+: await 필수
   // Parallel fetching
   const [user, stats, activity] = await Promise.all([
-    fetchUser(params.userId),
-    fetchUserStats(params.userId),
-    fetchRecentActivity(params.userId),
+    fetchUser(userId),
+    fetchUserStats(userId),
+    fetchRecentActivity(userId),
   ]);
 
   return (
@@ -288,9 +291,10 @@ Pass promises from Server to Client components, unwrap with use().
 
 ```typescript
 // Server Component
-async function UserPage({ params }: { params: { id: string } }) {
-  // Don't await - pass promise to client
-  const userPromise = fetchUser(params.id);
+async function UserPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;          // Next.js 15+: params는 await
+  // Don't await fetchUser - pass promise to client
+  const userPromise = fetchUser(id);
 
   return (
     <Suspense fallback={<UserSkeleton />}>

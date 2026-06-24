@@ -292,9 +292,10 @@ use() unwraps promises and context — enables new patterns for data fetching.
 
 ```typescript
 // Server Component
-async function UserPage({ params }: { params: { id: string } }) {
-  // Pass promise without awaiting
-  const userPromise = fetchUser(params.id);
+async function UserPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;          // Next.js 15+: params는 await
+  // Pass promise without awaiting fetchUser
+  const userPromise = fetchUser(id);
 
   return (
     <Suspense fallback={<UserSkeleton />}>

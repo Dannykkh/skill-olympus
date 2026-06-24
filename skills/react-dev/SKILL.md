@@ -255,8 +255,9 @@ React 19 Server Components run on server, can be async.
 **Async data fetching**:
 
 ```typescript
-export default async function UserPage({ params }: { params: { id: string } }) {
-  const user = await fetchUser(params.id);
+export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;          // Next.js 15+: params는 Promise (await 필수)
+  const user = await fetchUser(id);
   return <div>{user.name}</div>;
 }
 ```
