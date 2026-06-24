@@ -185,6 +185,21 @@ Config: `"observability": { "enabled": true, "head_sampling_rate": 1 }`
 
 ---
 
+## Performance
+
+```bash
+wrangler check startup                       # Worker 시작(startup) 단계 CPU 프로파일 생성
+wrangler check startup --args="--no-bundle"  # deploy를 --no-bundle로 할 때
+```
+
+`wrangler check startup`은 Worker의 **시작 단계 CPU 프로파일**을 만들어, 시작 시간 한도를 초과하는 스크립트를 찾게 해줍니다. 생성된 프로파일을 Chrome DevTools로 import하거나 VSCode에서 열어 flamegraph로 분석합니다.
+
+- 측정은 **로컬 머신 CPU** 기준이라 Cloudflare 실제 시작 시간과 절대값이 다릅니다 — "전체 시간"이 아니라 "어디에 시간이 쓰이는지"를 보는 용도.
+- 시작 시간 한도 초과로 배포가 실패하면 Wrangler가 자동으로 CPU 프로파일을 생성합니다.
+- 주의: `wrangler check`는 이 `startup` 서브커맨드뿐 — 설정 검증 명령이 아닙니다(설정/빌드 검증은 `wrangler deploy --dry-run`).
+
+---
+
 ## Testing with Vitest
 
 ```bash
