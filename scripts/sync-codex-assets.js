@@ -72,11 +72,36 @@ function isInsideNodeModules(srcRoot, candidatePath) {
   return rel.split(path.sep).includes("node_modules");
 }
 
-function copyDir(src, dest, skipNodeModules = false) {
-  const filter = skipNodeModules
-    ? (candidatePath) => !isInsideNodeModules(src, candidatePath)
-    : undefined;
+function copyDir(src, dest, skipNodeModules = false, skipSkillMd = false) {
+  const skillMdSrc = skipSkillMd ? path.resolve(src, "SKILL.md") : null;
+  const filter =
+    skipNodeModules || skipSkillMd
+      ? (candidatePath) => {
+          if (skipNodeModules && isInsideNodeModules(src, candidatePath)) return false;
+          // SKILL.md는 syncSkills가 원자적으로 먼저 복사하므로 cpSync(force)가
+          // unlink-재기록하지 않게 제외 — "failed to read SKILL.md" 윈도우 차단.
+          if (skillMdSrc && path.resolve(candidatePath) === skillMdSrc) return false;
+          return true;
+        }
+      : undefined;
   fs.cpSync(src, dest, { recursive: true, force: true, filter });
+}
+
+function atomicCopyFile(src, dest) {
+  // temp에 복사 후 atomic rename — 동시 reader가 부재/절단 파일을 보지 않게 함
+  // (sync 중 "failed to read SKILL.md" 윈도우 제거). rename 불가 시 직접 복사로 폴백.
+  const tmp = `${dest}.${process.pid}.tmp`;
+  try {
+    fs.copyFileSync(src, tmp);
+    fs.renameSync(tmp, dest);
+  } catch {
+    try {
+      fs.rmSync(tmp, { force: true });
+    } catch {
+      // no-op
+    }
+    fs.copyFileSync(src, dest);
+  }
 }
 
 function removeDestEntriesMissingFromSource(src, dest, skipNodeModules = false) {
@@ -119,7 +144,7 @@ function filesMatch(src, dest) {
 
 function copyFileIfChanged(src, dest) {
   if (filesMatch(src, dest)) return;
-  fs.copyFileSync(src, dest);
+  atomicCopyFile(src, dest);
 }
 
 function listDirectories(dirPath) {
@@ -131,10 +156,10 @@ function listDirectories(dirPath) {
     .sort((a, b) => a.localeCompare(b));
 }
 
-function installDir(src, dest) {
+function installDir(src, dest, skipSkillMd = false) {
   const skipNodeModules = hasNestedNodeModules(src) && fs.existsSync(dest);
   ensureDir(dest);
-  copyDir(src, dest, skipNodeModules);
+  copyDir(src, dest, skipNodeModules, skipSkillMd);
   removeDestEntriesMissingFromSource(src, dest, skipNodeModules);
 }
 
@@ -240,7 +265,7 @@ function syncSkills(destDir, skillNames, mode) {
       ensureDir(dest);
       copyFileIfChanged(skillMd, path.join(dest, "SKILL.md"));
     }
-    installDir(src, dest);
+    installDir(src, dest, true);
   }
 }
 
