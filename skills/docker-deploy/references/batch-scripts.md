@@ -165,9 +165,9 @@ echo       Docker 정상 실행 중
 REM 기존 서비스 중지 (볼륨 유지)
 echo.
 echo [2/5] 기존 서비스 중지 중...
-docker-compose down
+docker compose down
 if errorlevel 1 (
-    echo [경고] docker-compose down 실패, 강제 중지 시도...
+    echo [경고] docker compose down 실패, 강제 중지 시도...
     docker stop !PROJECT_NAME!-api !PROJECT_NAME!-frontend !PROJECT_NAME!-db >nul 2>&1
     docker rm !PROJECT_NAME!-api !PROJECT_NAME!-frontend >nul 2>&1
 )
@@ -203,7 +203,7 @@ echo       이미지 로드 완료
 REM 서비스 재시작
 echo.
 echo [4/5] 서비스 시작 중...
-docker-compose up -d
+docker compose up -d
 if errorlevel 1 (
     echo [오류] 서비스 시작 실패
     pause
@@ -285,7 +285,7 @@ if errorlevel 1 (
 )
 
 echo [2/4] 기존 서비스 및 데이터 삭제 중...
-docker-compose down -v
+docker compose down -v
 
 echo [3/4] Docker 이미지 로드 중...
 if exist "!PROJECT_NAME!-all.tar" (
@@ -297,7 +297,7 @@ if exist "!PROJECT_NAME!-all.tar" (
 
 echo [4/4] 서비스 시작 중...
 docker pull mysql:8.0 >nul 2>&1
-docker-compose up -d
+docker compose up -d
 
 echo.
 echo 서비스 초기화 대기 중... (약 30초)
@@ -385,8 +385,8 @@ echo !PROJECT_NAME! 로그 보기
 echo [1] 전체  [2] API  [3] Frontend  [4] DB
 set /p "CHOICE=선택: "
 
-if "%CHOICE%"=="1" docker-compose logs -f
-if "%CHOICE%"=="2" docker-compose logs -f api
-if "%CHOICE%"=="3" docker-compose logs -f frontend
-if "%CHOICE%"=="4" docker-compose logs -f db
+if "%CHOICE%"=="1" docker compose logs -f
+if "%CHOICE%"=="2" docker compose logs -f api
+if "%CHOICE%"=="3" docker compose logs -f frontend
+if "%CHOICE%"=="4" docker compose logs -f db
 ```
