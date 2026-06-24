@@ -125,7 +125,7 @@ async def read_user(
     user = await user_service.get_user(user_id, db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return UserResponse.from_orm(user)
+    return UserResponse.model_validate(user)
 ```
 
 ---
@@ -134,7 +134,7 @@ async def read_user(
 
 ```python
 # schemas/user.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
@@ -142,7 +142,7 @@ class UserBase(BaseModel):
     employee_id: str = Field(..., min_length=3, max_length=50)
     username: str = Field(..., min_length=3, max_length=100)
     full_name: str = Field(..., max_length=100)
-    role: str = Field(..., regex="^(SystemAdmin|QAManager|Tester|Viewer)$")
+    role: str = Field(..., pattern="^(SystemAdmin|QAManager|Tester|Viewer)$")
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
@@ -156,8 +156,7 @@ class UserResponse(UserBase):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 ```
 
 ---
