@@ -254,7 +254,7 @@ marp slide.md --html
 # PDF output
 marp slide.md --pdf --allow-local-files
 
-# PDF without page numbers
+# 발표자 노트를 PDF 주석으로 포함 (페이지 번호 제거 아님)
 marp slide.md --pdf --pdf-notes
 ```
 
@@ -326,7 +326,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Marp Build
         uses: docker://marpteam/marp-cli:latest
@@ -334,7 +334,7 @@ jobs:
           args: slides.md --pdf --allow-local-files
 
       - name: Upload PDF
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: slides
           path: slides.pdf
@@ -349,7 +349,7 @@ jobs:
     args: slides.md -o index.html
 
 - name: Deploy to Pages
-  uses: peaceiris/actions-gh-pages@v3
+  uses: peaceiris/actions-gh-pages@v4
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
     publish_dir: ./

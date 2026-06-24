@@ -140,7 +140,7 @@ pip install --upgrade package-name
 
 # Security
 pip-audit
-safety check
+safety scan
 ```
 
 ### Go
@@ -228,7 +228,7 @@ When dependencies are broken, run diagnosis:
 | **Version Conflict** | "Cannot resolve dependency tree" | Clean install, use overrides/resolutions |
 | **Peer Dependency** | "Peer dependency not satisfied" | Install required peer version |
 | **Security Vuln** | `npm audit` shows issues | `npm audit fix` or manual update |
-| **Unused Deps** | Bloated bundle | Run `depcheck` (Node) or equivalent |
+| **Unused Deps** | Bloated bundle | Run `knip` (Node; depcheck는 2025 archive) or equivalent |
 | **Duplicate Deps** | Multiple versions installed | Run `npm dedupe` or equivalent |
 
 ### Emergency Fixes
@@ -263,7 +263,7 @@ npm audit --json | jq '.metadata.vulnerabilities'
 
 # Python
 pip-audit
-safety check
+safety scan
 
 # Go
 govulncheck ./...
