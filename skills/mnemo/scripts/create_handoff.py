@@ -276,6 +276,14 @@ This is the session's implemented-feature map. Always fill **Implemented Feature
 |--------------|------|-------------|-----------------|
 | [TODO: Feature or area name] | [TODO: Responsibility] | [TODO: Non-goal/boundary] | [TODO: code/doc/spec path] |
 
+### Menu / Screen Map
+
+UI/메뉴가 있는 프로젝트만 작성 (CLI/library/backend-only는 `N/A` 또는 생략). 행 단위는 화면(screen/view), 메뉴는 그룹 컬럼.
+
+| Menu | Screen / View | Features on this screen | Route/Path | Status |
+|------|---------------|-------------------------|------------|--------|
+| [TODO: menu group — or N/A if no UI] | [TODO: screen/view name] | [TODO: feature A, B, C] | [TODO: /route] | [TODO: done / partial / planned] |
+
 ### Composition Diagram
 
 ```mermaid

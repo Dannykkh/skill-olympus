@@ -9,6 +9,7 @@ Use this template structure when creating handoff documents. The smart scaffold 
 - [Feature/Flow/Decision Snapshot](#featureflowdecision-snapshot)
   - [Implemented Features](#implemented-features)
   - [Feature Boundary](#feature-boundary)
+  - [Menu / Screen Map](#menu--screen-map)
   - [Composition Diagram](#composition-diagram)
   - [Flow Diagram](#flow-diagram)
   - [Decision Records](#decision-records)
@@ -61,6 +62,14 @@ This is the session's implemented-feature map. Always fill **Implemented Feature
 | Feature/Area | Does | Does Not Do | Source of Truth |
 |--------------|------|-------------|-----------------|
 | [Feature name] | [responsibility] | [non-goal/boundary] | [code/doc/spec path] |
+
+### Menu / Screen Map
+
+UI/메뉴가 있는 프로젝트만 작성 (CLI/library/backend-only는 `N/A` 또는 생략). **행 단위는 화면(screen/view), 메뉴는 그룹 컬럼** — 한 메뉴에 화면이 여럿일 수 있으므로 화면 단위로 상태를 잡는다. 단순 앱은 메뉴=화면 한 줄. `Status`로 다음 세션이 "이 화면 기능 이미 됐나"를 한눈에 본다.
+
+| Menu | Screen / View | Features on this screen | Route/Path | Status |
+|------|---------------|-------------------------|------------|--------|
+| [menu group] | [screen/view name] | [feature A, B, C] | [/route] | [done / partial / planned] |
 
 ### Composition Diagram
 

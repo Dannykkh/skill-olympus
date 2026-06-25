@@ -63,6 +63,7 @@ FEATURE_SESSION_REQUIRED_SECTIONS = [
 # Recommended sections
 RECOMMENDED_SECTIONS = [
     "Feature Boundary",
+    "Menu / Screen Map",
     "Flow Diagram",
     "Decision Records",
     "Architecture Overview",
