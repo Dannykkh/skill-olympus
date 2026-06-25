@@ -15,7 +15,7 @@ Before making aesthetic choices, check if the project already has a design syste
 
 1. `design-system.md` (젭마인 산출물) — 디자인 토큰, 색상, 타이포그래피, 톤/무드 정의
 2. `DESIGN.md` (Stitch 산출물) — 디자인 DNA, 토큰, 컴포넌트 규칙
-3. `tailwind.config.*` / `theme.ts` / CSS 변수 — 기존 테마 설정
+3. `tailwind.config.*` / `theme.ts` / CSS `@theme`·변수 — 기존 테마 설정 (Tailwind v4는 CSS-first `@import "tailwindcss"`+`@theme`이라 config 파일이 없을 수 있음; v3 JS config를 쓰면 `@config`로 명시 로드)
 
 **있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드를 존중하되, 더 대담하게 표현.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
