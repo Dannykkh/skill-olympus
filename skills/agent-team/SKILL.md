@@ -346,10 +346,11 @@ See [verification-protocol.md](references/verification-protocol.md)
 **검증 루프:**
 ```
 while (마스터 체크리스트 미통과 항목 존재):
-  1. 파일 존재 검증 (Files to Create/Modify 전수 확인)
-  2. Acceptance Criteria 대조 (코드 존재 여부 확인)
-  3. 도면 노드 검증 (flow-diagrams 존재 시)
-  4. 파일 소유권 검증
+  1. 파일 존재 검증 (Files to Create/Modify 전수 확인)        ← 사전 점검
+  2. Acceptance Criteria 대조 (코드 존재 여부 확인)            ← 사전 점검
+  3. 도면 노드 검증 (flow-diagrams 존재 시)                   ← 사전 점검
+  4. 파일 소유권 검증                                        ← 사전 점검
+  5. 통합 게이트 (유일한 완료 권한): 병합 결과에 빌드/타입체크 + 전체 테스트 1회 — 1~4는 사전 점검일 뿐, 이 게이트 통과로만 완료 (자동 PASS 금지). 상세 verification-protocol.md 5단계
 
   미통과 → 해당 teammate에 재지시 → 대기 → 재검증 (최대 2회)
   2회 후에도 미통과 → 사용자에게 보고 + 수동 개입 요청 (통과로 보고하지 않음 — 소진=미완)
