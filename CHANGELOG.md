@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.9.0] - 2026-06-25
+
+### Added — Always-on 디자인 가드레일 + 구현 전 조회 가드 + 핸드오프 Feature Map
+
+frontend-design의 `auto_apply`가 어떤 훅도 읽지 않는 no-op이라 일반 디자인 요청에 안티-슬롭 지침이 적용되지 않던 문제를 해결하고, "이미 구현된 걸 또 구현"·"핸드오프에 무엇을 구현했는지 안 남음" 두 통증을 닫았다.
+
+- **디자인 가드레일 always-on 주입** — 안티-슬롭 디자인 지침을 3-CLI always-on(CLAUDE.md/AGENTS.md)에 주입(호출 없이 항상 적용). 2026 웹 플랫폼 반영: 네이티브 스크롤 타임라인(`animation-timeline: view()/scroll()` 우선, 핀·스냅·WebGL만 GSAP+Lenis) · View Transitions API · 컨테이너 쿼리 · `:has()` · OKLCH. 한·영 글꼴 페어링 원칙(Pretendard 기본 + 눈누 탐색, 무게/대비 DNA를 맞춰 한 시스템). 압축 ~24%. 실증 검증(도파민/에디토리얼/브루탈 3종 렌더 + 브라우저 확인)
+- **구현 전 조회 가드(재구현 방지)** — "X 구현/추가" 요청에 코드 전 조회: codemap 먼저 → README/docs + 핸드오프 → grep, 신규/개선/중복 분류. 새 스킬/오케스트레이터는 인접 파이프라인(zeus·zephermine·agent-team)과도 대조. zephermine 코드베이스 리서치 보강
+- **핸드오프 Feature Map** — Feature/Flow/Decision Snapshot(구현 기능·기능 경계·구성도/흐름도·결정) + Menu/Screen Map(화면별 기능 + done/partial/planned 상태). 다이어그램은 기능 세션에만 필수(비기능 세션 면제). validator 강화(필수 섹션·조건부 다이어그램·h3 regex·verdict)
+- **agent-team·chronos 경계면 정합성** — "빌드 통과 ≠ 정상"(TS 제네릭이 런타임 mismatch 은닉) → API 응답 shape↔훅 타입·경로↔href 정적 교차비교를 통합 게이트 앞에(웹 한정). 완료 게이트 어휘 Claude/Codex parity. chronos FIND 도구 근거화(모델 직관 전 정적 신호) + chronos-worker parity
+
+### Fixed — 외부 도구/호환성 감사
+
+웹 검증 기반으로 stale 외부 도구·모델 라벨·문서-코드 불일치·버전 업그레이드 지뢰 정정.
+
+- **호환성 지뢰** — Pydantic v2(regex→pattern·from_orm→model_validate·Config→model_config), Next.js 15 async params/searchParams(Promise), MySQL 8.4(`--default-authentication-plugin` 제거), docker compose v2(스페이스), MUI v7 Grid(size), pg_dump 버전 매칭, OpenAPI 3.1 지원, Tailwind v4 `@config`/`@theme`
+- **stale 외부 도구** — wrangler 미존재 `check` → `deploy --dry-run`, GitHub Actions v3, marp `--pdf-notes`, hestia 폐기 도구(ts-prune/depcheck/unimported)→knip
+- **문서-코드 정합** — pdf(weasyprint→playwright 잔재), excel2md/ppt-generator 미구현 기능 문서 제거, dist stale 모델 라벨 src 동기화
+- **동기화** — SKILL.md 원자적 sync로 gotcha 028(codex+gemini 일시 누락) 제거
+
 ## [4.8.7] - 2026-06-23
 
 ### Added — 루프 정직성: 완료 계약(028) + 독립 검증(034) + 훅 소진 표면화

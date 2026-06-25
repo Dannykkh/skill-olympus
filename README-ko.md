@@ -15,7 +15,7 @@
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
 
-**Claude Code**, **Codex CLI**, **Gemini CLI**를 위한 프로덕션 에이전트 하네스이자 **루프 엔지니어링 스택** ―
+**Claude Code**, **Codex CLI**, **Gemini CLI**를 위한 프로덕션 에이전트 하네스 ― **하네스 엔지니어링**·**루프 엔지니어링** 스택,
 12명의 올림포스 신의 이름으로, 3개월간 매일 실전 프로덕트를 만들며 다듬어졌습니다.
 
 ```bash
@@ -195,6 +195,10 @@ chmod +x install.sh && ./install.sh
 ---
 
 ## 최신 업데이트
+
+### v4.9.0 — Always-on 디자인 가드레일 · 구현 전 조회 · 핸드오프 Feature Map (2026.06)
+
+세 가지 always-on 역량 + 호환성 감사. **디자인 가드레일 주입:** frontend-design의 안티-슬롭 지침은 스킬을 명시 호출할 때만 작동했다(`auto_apply`는 어떤 훅도 안 읽는 no-op) — 그래서 일반 디자인 요청은 "인터넷 평균"으로 수렴했다. 이제 압축 가드레일이 3-CLI always-on(CLAUDE.md/AGENTS.md)에 주입되고 2026 웹 플랫폼으로 갱신됐다 — 네이티브 스크롤 타임라인 우선(핀·스냅·WebGL만 GSAP·Lenis), View Transitions, 컨테이너 쿼리, `:has()`, OKLCH — 여기에 한·영 글꼴 페어링 원칙(Pretendard + 눈누, 무게/대비 DNA로 한 시스템). 압축 ~24%, 3종 방향(도파민/에디토리얼/브루탈)으로 브라우저 검증. **구현 전 조회 가드:** "X 구현" 요청에 기존을 먼저 조회(codemap → README/핸드오프 → grep)해 신규/개선/중복 분류하고, 인접 파이프라인(zeus·zephermine·agent-team)과도 대조 — "이미 있는 걸 또 구현"하는 루프를 닫는다. **핸드오프 Feature Map:** 모든 핸드오프가 Feature/Flow/Decision Snapshot + Menu/Screen Map(화면별 기능 + done/partial/planned 상태)을 남기며, 다이어그램은 기능 세션에만 필수. **agent-team·chronos**에 정적 경계면 정합성 교차비교("빌드 통과 ≠ 정상" — TS 제네릭이 API↔훅 계약 불일치를 숨김)와 chronos FIND의 도구 신호 근거화를 추가. **호환성 감사:** Pydantic v2, Next.js 15 async params, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4, stale 도구/모델 라벨.
 
 ### v4.8.7 — 루프 정직성: 완료 계약·독립 검증·소진 표면화 (2026.06)
 
@@ -599,6 +603,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.9.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.9.0)** | **2026-06-25** | **Always-on 디자인 가드레일 · 구현 전 조회 · 핸드오프 Feature Map** — 안티-슬롭 디자인 지침을 3-CLI always-on에 주입(frontend-design `auto_apply`는 no-op이었음), 2026 웹 플랫폼 갱신(네이티브 `animation-timeline` 우선, View Transitions, 컨테이너 쿼리, `:has()`, OKLCH) + 한·영 글꼴 페어링, 압축 ~24%, 3방향 브라우저 검증; 구현 전 조회 가드(codemap 먼저 → 핸드오프 → grep → 분류, 인접 파이프라인 대조); 핸드오프 Feature/Flow/Decision Snapshot + Menu/Screen Map; **harness-engineering** 경계면 정합성 교차비교(agent-team·chronos, build-pass≠correct) + **loop-engineering** 도구 근거 FIND(chronos); 호환성 감사(Pydantic v2, Next.js 15, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4) |
 | **[v4.8.7](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.7)** | **2026-06-23** | **루프 정직성 (028/034)** — 완료 계약(요구사항→증거 4상태 채점, 소진≠성공)을 크로노스·제우스·minos·autoresearch·argos·agent-team·workpm에 적용; 교차모델 독립 검증(autoresearch 챔피언 재채점, 제우스 argos 위험 트리거 한정 — 결정론적 게이트 우선, 다른 모델은 백그라운드); 훅 레벨 `EXHAUSTED` 표면화 + 마지막 턴 정직 보고 경고(loop-stop·continue-loop ps1/sh, dry-run ps1 5/5); 헤르메스 TAM/SAM/SOM 출처 병기 grounding 가드 |
 | **[v4.8.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.1)** | **2026-06-14** | **mnemo 루트 결정 수정** — 비-git 프로젝트에서 하위 폴더로 `cd` 해도 `conversations/`·`memory/`가 하위 폴더가 아닌 프로젝트 루트에 저장; 2-pass 루트 결정(git 루트 우선, 없으면 세션 시작 cwd) + HOME-git 가드; 8개 훅(ps1·sh)·설치본 적용, PS 7/7 · SH 7/7 |
 | **[v4.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.0)** | **2026-06-13** | **루프 프로그래밍: 주차, 브리프, 재진입** — 크로노스 주차 규칙(사유 없는 막힘 선언은 회피로 처리) + Owner Decision Brief(추천안과 선택지를 함께 넘기는 결재 브리프) + 재진입 규약(로그가 기억보다 우선, 새 세션도 감사 로그로 재개) + 주차만 남은 큐의 데드락 가드(거짓 `<promise>` 종료 차단, ps1 4/4 테스트, 여러 줄 매칭 보강) + 제우스 결정 장부(근거, 기각한 대안, 되돌리는 법) + codex-mnemo notify 판정 순서 수정(save-turn 체인 래퍼 보존) |

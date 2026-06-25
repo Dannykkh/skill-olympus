@@ -15,7 +15,7 @@
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
 
-A production agent harness and **loop-engineering stack** for **Claude Code**, **Codex CLI**, and **Gemini CLI** —
+A production agent harness for **Claude Code**, **Codex CLI**, and **Gemini CLI** — a **harness-engineering** and **loop-engineering** stack,
 named after the Twelve Olympians, forged across 3 months of daily real-product builds.
 
 ```bash
@@ -195,6 +195,10 @@ and her remembering crosses every session, every CLI, every dawn.
 ---
 
 ## What's New
+
+### v4.9.0 — Always-on Design Guardrail · Consult-Before-Implement · Handoff Feature Map (June 2026)
+
+Three always-on capabilities, plus a compatibility audit. **Design guardrail injection:** frontend-design's anti-slop guidance only fired when the skill was explicitly invoked (the `auto_apply` field is read by no hook — a no-op), so casual design requests defaulted to "internet-average" output. The condensed guardrail is now injected into the 3-CLI always-on context (CLAUDE.md/AGENTS.md), updated to the 2026 web platform — native scroll-driven `animation-timeline` first (GSAP·Lenis only for pin/snap/WebGL), View Transitions API, container queries, `:has()`, OKLCH — plus a Korean/Latin font-pairing principle (Pretendard + noonnu, matched by weight/contrast DNA). Condensed ~24% and browser-verified on three distinct directions (dopamine SaaS / editorial / brutalist). **Consult-before-implement guard:** "implement X" requests now check existing work first (codemap → README/handoffs → grep), classify new/improve/duplicate, and compare against adjacent pipelines (zeus·zephermine·agent-team) — closing the "re-implementing what already exists" loop. **Handoff feature map:** every handoff records a Feature/Flow/Decision Snapshot + a Menu/Screen Map (screen-level features with done/partial/planned status), with diagrams required only for feature-bearing sessions. **agent-team·chronos** gain a static boundary-coherence cross-check ("build passes ≠ correct" — TS generics hide API↔hook contract mismatches) and chronos grounds its FIND in tool signals before model intuition. **Compatibility audit:** Pydantic v2, Next.js 15 async params, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4, and stale tool/model labels across the utility skills.
 
 ### v4.8.7 — Loop Honesty: Completion Contract, Independent Verify, Exhaustion Surfacing (June 2026)
 
@@ -602,6 +606,7 @@ Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **[v4.9.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.9.0)** | **2026-06-25** | **Always-on design guardrail · consult-before-implement · handoff feature map** — anti-slop design guidance injected into the 3-CLI always-on context (frontend-design `auto_apply` was a no-op), updated to the 2026 web platform (native scroll-driven `animation-timeline` first, View Transitions, container queries, `:has()`, OKLCH) + Korean/Latin font pairing, condensed ~24%, browser-verified on 3 directions; consult-before-implement guard (codemap-first → handoffs → grep → classify, compare adjacent pipelines); handoff Feature/Flow/Decision Snapshot + Menu/Screen Map; **harness-engineering** boundary-coherence cross-check on agent-team·chronos (build-pass≠correct) + **loop-engineering** tool-grounded FIND on chronos; compat audit (Pydantic v2, Next.js 15, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4) |
 | **[v4.8.7](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.7)** | **2026-06-23** | **Loop honesty (028/034)** — completion contract (requirement→evidence, 4-state scoring, exhaustion≠success) across Chronos·Zeus·minos·autoresearch·argos·agent-team·workpm; independent cross-model verify (autoresearch champion re-score; Zeus argos risk-gated cross-model — deterministic gate first, other model in background); hook-layer `EXHAUSTED` surfacing + final-turn honest-report warning (loop-stop·continue-loop ps1/sh, dry-run ps1 5/5); Hermes TAM/SAM/SOM source-citation grounding guard |
 | **[v4.8.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.1)** | **2026-06-14** | **mnemo root-resolution fix** — auto-save hooks no longer misplace `conversations/`·`memory/` into a subfolder when you `cd` deeper in a non-git project; 2-pass project-root (git root if any candidate resolves, else session-launch cwd) + HOME-as-git-repo guard; applied across 8 hooks (ps1·sh) + installed copies, PS 7/7 · SH 7/7 |
 | **[v4.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.0)** | **2026-06-13** | **Loop programming: park, brief, re-entry** — Chronos PARK rule (4 reasons; reasonless "blocked" = evasion) + Owner Decision Brief (decision-ready escalation, mandatory recommendation, 4-way owner choice) + re-entry protocol (log beats memory; new-session resume from audit log); deadlock guard for parked-only queues (no untrue `<promise>`; hooks stop rewarding mismatched tags — ps1 tested 4/4, multiline match added, park rule in re-injection nudges); Zeus Decision Ledger (rationale + alternatives + how-to-reverse, post-hoc approval); codex-mnemo notify order fix (save-turn-chaining wrappers preserved across reinstalls) |
