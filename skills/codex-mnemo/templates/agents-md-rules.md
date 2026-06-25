@@ -23,8 +23,8 @@ AI 기본값은 "인터넷의 평균"(Inter·보라/파랑 그라데이션 hero�
 - **타이포가 주역**: 개성 있는 디스플레이 + 정제된 본문. 2026은 serif headline+sans 본문, 표현적 이탤릭이 강세. `Inter`/시스템 폰트를 기본값으로 쓰지 말 것(= AI 슬롭 신호). **한글은 Pretendard 기본**, 더 개성 있는 한글 폰트는 [눈누(noonnu.cc)](https://noonnu.cc)에서 상업용 무료로 탐색.
 - **색**: AI 기본 "보라/파랑 그라데이션" 금지. 단 2026은 **의도된 대담·고채도(도파민/레트로퓨처)도 유효** — 차분한 중립이든 대담한 채도든 한쪽을 의도적으로. 지배색 1 + 날카로운 액센트, 순수 `#000` 대신 near-black. 신규 색은 **`oklch()`로 작성**(2026 권장 — 지각 균일로 대비 예측·접근성 유리, HEX는 폴백), chroma ≤0.15는 sRGB·0.2+는 P3 광색역.
 - **레이아웃**: 똑같은 3열 카드·균일 라운드·가운데 vague hero 금지 → 비대칭·그리드 전면화·의도된 밀도/여백.
-- **반응형·모던 CSS(2026)**: 컴포넌트 반응형은 뷰포트 미디어쿼리 말고 **컨테이너 쿼리**(`container-type: inline-size` + `@container`, baseline) — 카드가 사이드바/본문 어디 놓이든 자기 폭에 적응. 미디어쿼리는 페이지 전역(내비·전역 타이포·print)에만. 페이지/뷰 전환은 **View Transitions API**(SPA `document.startViewTransition()`=baseline, MPA `@view-transition{navigation:auto}`=동일 출처·점진적 향상). 둘 다 JS(ResizeObserver·수동 전환) 대체. 상태/내용 기반 스타일은 **`:has()`**(첫 부모 셀렉터, baseline)로 JS DOM 검사 대체 — `.container`처럼 구체 앵커에(`body`/`*` 금지), 내부엔 `>`/`+` 조합자로 범위 한정(성능).
-- **모션·접근성**: `transform`/`opacity`만 애니메이트, orchestrated 로드 한 번 > 흩뿌린 마이크로, `prefers-reduced-motion` 존중. **스크롤 연동(2026 주류)**은 네이티브 CSS `animation-timeline: view()/scroll()` 우선(컴포지터 스레드=jank 제로) — 핀/스냅/복잡 시퀀스·WebGL만 GSAP ScrollTrigger(+Lenis). 스크롤 효과도 reduced-motion 폴백 필수, 메인스레드 `scroll` 리스너 남용 금지(모바일 LCP/CLS·SEO). `h-screen` 대신 `min-h-[100dvh]`.
+- **반응형·모던 CSS(2026)**: 컴포넌트 반응형은 미디어쿼리 말고 **컨테이너 쿼리**(미디어쿼리는 페이지 전역만), 페이지/뷰 전환은 **View Transitions API**(점진적 향상), 상태/내용 기반 스타일은 **`:has()`** 부모 셀렉터로 JS DOM 검사 대체 — 셋 다 baseline·JS 대체. 정확한 구문·폴백·성능 주의는 `/frontend-design`.
+- **모션·접근성**: `transform`/`opacity`만 애니메이트, orchestrated 로드 한 번 > 흩뿌린 마이크로, `prefers-reduced-motion` 존중. **스크롤 연동(2026 주류)**은 네이티브 CSS `animation-timeline` 우선(jank 제로), 핀/스냅/WebGL만 GSAP+Lenis — 메인스레드 `scroll` 리스너 남용 금지. `h-screen` 대신 `min-h-[100dvh]`. 상세는 `/frontend-design`.
 - **카피**: "Elevate/Seamless/Next-Gen/Build the future"류 AI 카피·제네릭 이름·뻔한 숫자(99.99%) 금지.
 - **기준**: 결과가 AI 생성기(Google Stitch 등) 기본 출력보다 못하면 안 됨 — "의도가 보이는" 디자인일 것.
 
