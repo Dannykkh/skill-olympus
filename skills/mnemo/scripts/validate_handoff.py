@@ -44,14 +44,20 @@ SECRET_PATTERNS = [
     (r'xox[baprs]-[a-zA-Z0-9-]+', "Slack token"),
 ]
 
-# Required sections for a complete handoff
+# Required sections for every handoff
 REQUIRED_SECTIONS = [
     "Current State Summary",
     "Feature/Flow/Decision Snapshot",
     "Implemented Features",
-    "Composition Diagram",
     "Important Context",
     "Immediate Next Steps",
+]
+
+# Required ONLY for feature-bearing sessions (Implemented Features lists real features).
+# Non-feature handoffs (docs/config/refactor/exploration) need not draw diagrams —
+# forcing a composition diagram on a typo fix is ceremony, not signal.
+FEATURE_SESSION_REQUIRED_SECTIONS = [
+    "Composition Diagram",
 ]
 
 # Recommended sections
@@ -74,10 +80,45 @@ def check_todos(content: str) -> tuple[bool, list[str]]:
     return len(todos) == 0, todos
 
 
-def check_required_sections(content: str) -> tuple[bool, list[str]]:
+def is_feature_session(content: str) -> bool:
+    """A handoff is 'feature-bearing' if its Implemented Features table lists at least
+    one real feature row — not the scaffold placeholder ([...]/TODO) and not an explicit
+    none/N/A. Composition/Flow diagrams are required only for feature-bearing sessions."""
+    m = re.search(r'#{1,6}\s*Implemented Features', content, re.IGNORECASE)
+    if not m:
+        return False
+    rest = content[m.end():]
+    nxt = re.search(r'\n#{1,6}\s', rest)
+    table = rest[:nxt.start()] if nxt else rest
+    for line in table.splitlines():
+        line = line.strip()
+        if not line.startswith('|'):
+            continue
+        cells = [c.strip() for c in line.strip('|').split('|')]
+        if not cells:
+            continue
+        first = cells[0]
+        low = first.lower()
+        # separator row (---, :--:) or header row
+        if first and set(first) <= set('-: '):
+            continue
+        if low in ('feature/change', 'feature', 'feature/area', ''):
+            continue
+        # placeholder → not a real feature row
+        if first.startswith('[') or 'todo' in low:
+            continue
+        # explicit none/N/A, optionally followed by a reason ("none - docs only")
+        head = re.split(r'[\s\-—–:]+', low, 1)[0]
+        if head in ('none', 'n/a', 'na', '없음', '해당') or low in ('-', ''):
+            continue
+        return True
+    return False
+
+
+def check_required_sections(content: str, required_sections: list) -> tuple[bool, list[str]]:
     """Check that required sections exist and have content."""
     missing = []
-    for section in REQUIRED_SECTIONS:
+    for section in required_sections:
         # Look for section header
         pattern = rf'(?:^|\n)#{{1,6}}\s*{re.escape(section)}'
         match = re.search(pattern, content, re.IGNORECASE)
@@ -220,9 +261,15 @@ def validate_handoff(filepath: str) -> dict:
     content = path.read_text(encoding="utf-8")
     base_path = path.parent.parent.parent  # Go up from docs/handoffs/
 
+    # Feature-bearing sessions must also draw the composition diagram; others need not.
+    feature_session = is_feature_session(content)
+    required_sections = list(REQUIRED_SECTIONS)
+    if feature_session:
+        required_sections += FEATURE_SESSION_REQUIRED_SECTIONS
+
     # Run checks
     todos_clear, remaining_todos = check_todos(content)
-    required_complete, missing_required = check_required_sections(content)
+    required_complete, missing_required = check_required_sections(content, required_sections)
     missing_recommended = check_recommended_sections(content)
     secrets_found = scan_for_secrets(content)
     existing_files, missing_files = check_file_references(content, str(base_path))
@@ -237,6 +284,7 @@ def validate_handoff(filepath: str) -> dict:
         "filepath": str(path),
         "score": score,
         "rating": rating,
+        "feature_session": feature_session,
         "todos_clear": todos_clear,
         "remaining_todos": remaining_todos[:5],  # Limit output
         "todo_count": len(remaining_todos) if not todos_clear else 0,
@@ -269,6 +317,12 @@ def print_report(result: dict):
         print(f"\n[FAIL] {result['todo_count']} TODO placeholders found:")
         for todo in result['remaining_todos']:
             print(f"       - {todo[:50]}...")
+
+    # Feature-session classification (drives whether diagrams are required)
+    if result.get('feature_session'):
+        print("\n[INFO] Feature-bearing session - Composition Diagram required")
+    else:
+        print("\n[INFO] Non-feature session - diagrams optional (Implemented Features lists no real feature)")
 
     # Required sections
     if result['required_complete']:

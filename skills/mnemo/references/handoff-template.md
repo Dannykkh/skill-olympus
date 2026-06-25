@@ -48,7 +48,7 @@ Use this template structure when creating handoff documents. The smart scaffold 
 
 ## Feature/Flow/Decision Snapshot
 
-This is the session's implemented-feature map. The handoff must write the implemented features and draw the session-level composition/flow diagrams from the work just completed. If TermSnap CodeMap/Wiki/Report exists, link it as supporting evidence; do not treat this section as a replacement for CodeMap.
+This is the session's implemented-feature map. Always fill **Implemented Features** and **Feature Boundary**. **Composition/Flow diagrams are required only for feature-bearing sessions** — a session that implemented or changed a feature. For non-feature handoffs (docs/config/refactor/exploration only), set Implemented Features to a single `none — <reason>` row and replace each diagram body with `N/A — <reason>` (or omit the diagram subsections); forcing a diagram on a typo fix is ceremony, not signal. If TermSnap CodeMap/Wiki/Report exists, link it as supporting evidence; do not treat this section as a replacement for CodeMap.
 
 ### Implemented Features
 
