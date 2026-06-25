@@ -56,6 +56,22 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 
 ---
 
+## Harness and Loop Engineering
+
+Zeus is the harness layer: one non-interactive request is kept alive, decomposed, implemented, inspected, deployed, tested, and reported without handing "next steps" back to the user. In this repo that means `skills/zeus/SKILL.md` bootstraps Chronos persistence, drives Zephermine planning, routes implementation through Poseidon (`agent-team-codex` on Codex), then requires Argos, Docker, Minos, and a final evidence report before SUCCESS is allowed.
+
+<p align="center">
+  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Zeus harness engineering pipeline from Chronos guard through Zephermine, Poseidon, Argos, Docker, Minos, and evidence report" width="1100">
+</p>
+
+Chronos is the loop layer under that harness. It prefers native `/goal`, falls back to the Codex notify chain (`save-turn -> continue-loop -> codex exec --skip-git-repo-check resume --last -`), and only stops on `Chronos Complete` or an exact matching `<promise>`. Exhaustion is reported as incomplete, blockers are parked with Owner Decision Briefs, and each cycle returns to READ -> FIND -> FIX -> VERIFY -> LOG.
+
+<p align="center">
+  <img src="docs/assets/chronos-loop-engineering-codex-imagegen.png" alt="Chronos loop engineering with native goal, Codex notify fallback, resume chain, verification cycle, completion contract, park, and exhausted outcomes" width="1100">
+</p>
+
+---
+
 ## Quick Start
 
 ```bash

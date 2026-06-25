@@ -55,6 +55,22 @@
 
 ---
 
+## 하네스 엔지니어링과 루프 엔지니어링
+
+제우스는 하네스 계층입니다. 한 줄의 비대화형 요청을 살아 있게 유지하고, 설계로 분해하고, 구현하고, 감리하고, 배포하고, 테스트하고, 증거 리포트까지 마친 뒤에야 SUCCESS를 허용합니다. 이 레포에서는 `skills/zeus/SKILL.md`가 Chronos 지속성 가드를 부트스트랩하고, Zephermine 설계, Poseidon(`agent-team-codex`) 구현, Argos 감리, Docker, Minos, 최종 증거 리포트를 순서대로 묶습니다.
+
+<p align="center">
+  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Chronos 가드에서 Zephermine, Poseidon, Argos, Docker, Minos, 증거 리포트로 이어지는 Zeus 하네스 엔지니어링 파이프라인" width="1100">
+</p>
+
+크로노스는 그 하네스 아래의 루프 계층입니다. 우선 네이티브 `/goal`을 쓰고, 필요하면 Codex notify 체인(`save-turn -> continue-loop -> codex exec --skip-git-repo-check resume --last -`)으로 폴백합니다. 종료는 `Chronos Complete` 또는 정확히 일치하는 `<promise>`만 인정하고, 소진은 미완으로 보고하며, 막힌 이슈는 Owner Decision Brief로 주차하고, 각 사이클은 READ -> FIND -> FIX -> VERIFY -> LOG로 돌아갑니다.
+
+<p align="center">
+  <img src="docs/assets/chronos-loop-engineering-codex-imagegen.png" alt="네이티브 goal, Codex notify 폴백, resume 체인, 검증 사이클, 완료 계약, PARK, EXHAUSTED를 포함한 Chronos 루프 엔지니어링" width="1100">
+</p>
+
+---
+
 ## 빠른 시작
 
 ```bash
