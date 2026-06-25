@@ -88,6 +88,9 @@ latest
 start-claude.bat
 archive/
 
+# 디자인 가드레일 테스트 산출물 (HTML, 로컬 전용)
+design-guardrail-test/
+
 # IDE / 편집기 (.termsnap은 line 48에서 별도 처리)
 .vscode/
 .idea/
