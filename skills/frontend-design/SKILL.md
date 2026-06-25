@@ -109,7 +109,7 @@ Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
 ## Frontend Aesthetics Guidelines
 
 Focus on:
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
+- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font. 2026 경향: serif 헤드라인 + sans 본문 페어링, 표현적 이탤릭. **한글 프로젝트는 Pretendard를 안전한 기본**으로, 더 개성 있는 한글 폰트는 [눈누(noonnu.cc)](https://noonnu.cc)에서 상업용 무료 라이선스(웹폰트/임베딩 허용)로 탐색.
 - **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
 - **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
 - **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
@@ -120,14 +120,14 @@ Focus on:
 > 공유 블랙리스트: [references/ai-slop-blacklist.md](references/ai-slop-blacklist.md) — 10항목 블랙리스트 + Hard Rejection 7개 + 폰트 블랙리스트/대안
 
 **Typography:**
-- `Inter` 금지 (프리미엄 디자인) → `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi` 사용
+- `Inter`/시스템 폰트를 기본값으로 쓰지 말 것 (= AI 슬롭 신호) → `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi`, `General Sans` 등. **한글: Pretendard 기본 + [눈누](https://noonnu.cc)에서 탐색**
 - 대시보드/소프트웨어 UI에 Serif 금지
 - 과도한 H1 크기 금지
 
 **Color:**
-- "AI Purple/Blue" 미학 금지 — 보라색 글로우, 네온 그라데이션 절대 금지
+- **기본값**으로 끌려간 "AI Purple/Blue"(보라 글로우, 디폴트 보라→파랑 그라데이션) 금지 — 단 2026은 **컨셉으로 선택한 대담·고채도(도파민/레트로퓨처)는 유효**. "무심코"는 금지, "의도적"은 OK
 - 순수 검정(#000000) 금지 → Zinc-950 또는 Charcoal 사용
-- 채도 80% 초과 액센트 금지
+- 채도 80% 초과는 **컨셉상 의도된 경우에만**(도파민/브랜드 강조) — 무심코 디폴트로 쓰는 건 금지
 - 그라데이션 텍스트 남용 금지
 - 액센트 색상은 **최대 1개**, 나머지는 Zinc/Slate 뉴트럴
 
