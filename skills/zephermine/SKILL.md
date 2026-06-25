@@ -203,7 +203,7 @@ See [research-protocol.md](references/research-protocol.md).
 See [research-protocol.md](references/research-protocol.md).
 
 Based on decisions from step 4, launch bounded research subagents:
-- **Codebase:** background subagent/worker → `<planning_dir>/research/codebase.md`
+- **Codebase:** background subagent/worker → `<planning_dir>/research/codebase.md` — **요청 기능이 이미 구현됐는지 먼저 확인**(`codemap/index.md` → 핵심어 grep → README/docs). 이미 있으면 신규 설계가 아니라 *개선*으로 분류해 spec/plan 머리에 "기존: {위치}/{경계}" 명시(재구현 방지).
 - **GitHub/Web/Academic/Competitor:** background subagent/worker with web search where available → one file per research type under `<planning_dir>/research/`
 - **Concurrency cap:** max 2 research agents at a time; if `API Error: Overloaded`/rate limit occurs, retry the failed item once with concurrency 1 and half budget
 
