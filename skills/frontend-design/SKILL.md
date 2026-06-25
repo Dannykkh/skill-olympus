@@ -111,7 +111,7 @@ Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
 Focus on:
 - **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font. 2026 경향: serif 헤드라인 + sans 본문 페어링, 표현적 이탤릭. **한글 프로젝트는 Pretendard를 안전한 기본**으로, 더 개성 있는 한글 폰트는 [눈누(noonnu.cc)](https://noonnu.cc)에서 상업용 무료 라이선스(웹폰트/임베딩 허용)로 탐색.
 - **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
+- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise. **스크롤 연동 모션은 2026 주류** — 네이티브 CSS 스크롤 타임라인(`animation-timeline: view()` / `scroll()`)을 1순위로(컴포지터 스레드 실행 → 메인스레드 jank 제로, 약 80% 케이스 커버). 핀(pin)·스크롤 스냅·복잡한 시퀀스·WebGL/스크롤리텔링만 GSAP ScrollTrigger(부드러운 스크롤은 Lenis, `gsap.ticker`와 동기화). JS 스크롤 효과는 모바일 LCP/CLS·SEO를 해치므로 남용 금지, 모든 스크롤 모션에 `prefers-reduced-motion` 폴백 필수.
 - **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
 - **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
 
@@ -140,6 +140,7 @@ Focus on:
 **Motion:**
 - `transform`과 `opacity`만 애니메이트 — `top`, `left`, `width`, `height` 애니메이트 금지
 - Spring Physics 기본: `type: "spring", stiffness: 100, damping: 20`
+- 스크롤 효과에 메인스레드 `scroll` 이벤트 리스너 직접 사용 금지 → CSS `animation-timeline`(우선) 또는 `IntersectionObserver`/GSAP ScrollTrigger로
 - 스크롤 컨테이너에 grain/noise 필터 금지 (성능)
 - `z-index` 남발 금지 — 시스템 레이어(navbar, modal, overlay)에만
 

@@ -23,7 +23,7 @@ AI 기본값은 "인터넷의 평균"(Inter·보라/파랑 그라데이션 hero�
 - **타이포가 주역**: 개성 있는 디스플레이 + 정제된 본문. 2026은 serif headline+sans 본문, 표현적 이탤릭이 강세. `Inter`/시스템 폰트를 기본값으로 쓰지 말 것(= AI 슬롭 신호). **한글은 Pretendard 기본**, 더 개성 있는 한글 폰트는 [눈누(noonnu.cc)](https://noonnu.cc)에서 상업용 무료로 탐색.
 - **색**: AI 기본 "보라/파랑 그라데이션" 금지. 단 2026은 **의도된 대담·고채도(도파민/레트로퓨처)도 유효** — 차분한 중립이든 대담한 채도든 한쪽을 의도적으로. 지배색 1 + 날카로운 액센트, 순수 `#000` 대신 near-black.
 - **레이아웃**: 똑같은 3열 카드·균일 라운드·가운데 vague hero 금지 → 비대칭·그리드 전면화·의도된 밀도/여백.
-- **모션·접근성**: `transform`/`opacity`만 애니메이트, orchestrated 로드 한 번 > 흩뿌린 마이크로, `prefers-reduced-motion` 존중. `h-screen` 대신 `min-h-[100dvh]`.
+- **모션·접근성**: `transform`/`opacity`만 애니메이트, orchestrated 로드 한 번 > 흩뿌린 마이크로, `prefers-reduced-motion` 존중. **스크롤 연동(2026 주류)**은 네이티브 CSS `animation-timeline: view()/scroll()` 우선(컴포지터 스레드=jank 제로) — 핀/스냅/복잡 시퀀스·WebGL만 GSAP ScrollTrigger(+Lenis). 스크롤 효과도 reduced-motion 폴백 필수, 메인스레드 `scroll` 리스너 남용 금지(모바일 LCP/CLS·SEO). `h-screen` 대신 `min-h-[100dvh]`.
 - **카피**: "Elevate/Seamless/Next-Gen/Build the future"류 AI 카피·제네릭 이름·뻔한 숫자(99.99%) 금지.
 - **기준**: 결과가 AI 생성기(Google Stitch 등) 기본 출력보다 못하면 안 됨 — "의도가 보이는" 디자인일 것.
 
