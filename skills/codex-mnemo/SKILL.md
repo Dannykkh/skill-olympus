@@ -135,3 +135,6 @@ Codex CLI 대화
 
 > 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.
 > Claude, Codex, Gemini가 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.
+> 핸드오프 작성 시 Mnemo의 공통 품질 계약을 따른다: `Feature/Flow/Decision Snapshot`에 구현 기능 목록,
+> 구성도, 기능 경계, 입력→처리→저장→표시 흐름, 주요 결정/대안/근거를 남긴다. CodeMap은 TermSnap 산출물이므로
+> 핸드오프는 CodeMap을 대체하지 않고 현재 세션의 구현 근거와 구성도를 작성한다.

@@ -260,6 +260,48 @@ def generate_handoff(
 
 [TODO: Write one paragraph describing what was being worked on, current status, and where things left off]
 
+## Feature/Flow/Decision Snapshot
+
+This is the session's implemented-feature map. The handoff must write the implemented features and draw the session-level composition/flow diagrams from the work just completed. If TermSnap CodeMap/Wiki/Report exists, link it as supporting evidence; do not treat this section as a replacement for CodeMap.
+
+### Implemented Features
+
+| Feature/Change | Visible Behavior | Entry Point | Implementation Anchors | Verification |
+|----------------|------------------|-------------|------------------------|--------------|
+| [TODO: Feature or change name] | [TODO: What user/agent can now do or observe] | [TODO: UI/API/command/hook/file] | [TODO: files/classes/methods] | [TODO: test/log/manual check] |
+
+### Feature Boundary
+
+| Feature/Area | Does | Does Not Do | Source of Truth |
+|--------------|------|-------------|-----------------|
+| [TODO: Feature or area name] | [TODO: Responsibility] | [TODO: Non-goal/boundary] | [TODO: code/doc/spec path] |
+
+### Composition Diagram
+
+```mermaid
+flowchart TB
+    Actor[TODO: User / Agent] --> Entry[TODO: Entry point]
+    Entry --> Feature[TODO: Implemented feature]
+    Feature --> Module[TODO: Module / service / component]
+    Module --> State[TODO: State / storage / generated artifact]
+    Feature --> Surface[TODO: UI / report / API / handoff surface]
+```
+
+### Flow Diagram
+
+```mermaid
+flowchart LR
+    Input[TODO: Input / trigger] --> Process[TODO: Processing]
+    Process --> Store[TODO: State / storage]
+    Store --> Surface[TODO: UI / report / API surface]
+```
+
+### Decision Records
+
+| Decision | Options Considered | Rationale | Record/Follow-up |
+|----------|--------------------|-----------|------------------|
+| [TODO: Decision] | [TODO: A / B / C] | [TODO: why] | [TODO: ADR/doc path or follow-up] |
+
 ## Codebase Understanding
 
 ### Architecture Overview
@@ -389,7 +431,7 @@ def main():
     print(f"\nNext steps:")
     print(f"1. Open {filepath}")
     print(f"2. Replace [TODO: ...] placeholders with actual content")
-    print(f"3. Focus especially on 'Important Context' and 'Immediate Next Steps'")
+    print(f"3. Focus especially on 'Feature/Flow/Decision Snapshot', 'Important Context', and 'Immediate Next Steps'")
     print(f"4. Run: python validate_handoff.py {filepath}")
     print(f"   (Checks for completeness and accidental secrets)")
 

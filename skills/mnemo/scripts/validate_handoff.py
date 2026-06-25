@@ -47,12 +47,18 @@ SECRET_PATTERNS = [
 # Required sections for a complete handoff
 REQUIRED_SECTIONS = [
     "Current State Summary",
+    "Feature/Flow/Decision Snapshot",
+    "Implemented Features",
+    "Composition Diagram",
     "Important Context",
     "Immediate Next Steps",
 ]
 
 # Recommended sections
 RECOMMENDED_SECTIONS = [
+    "Feature Boundary",
+    "Flow Diagram",
+    "Decision Records",
     "Architecture Overview",
     "Critical Files",
     "Files Modified",
@@ -73,7 +79,7 @@ def check_required_sections(content: str) -> tuple[bool, list[str]]:
     missing = []
     for section in REQUIRED_SECTIONS:
         # Look for section header
-        pattern = rf'(?:^|\n)##?\s*{re.escape(section)}'
+        pattern = rf'(?:^|\n)#{{1,6}}\s*{re.escape(section)}'
         match = re.search(pattern, content, re.IGNORECASE)
         if not match:
             missing.append(f"{section} (missing)")
@@ -95,7 +101,7 @@ def check_recommended_sections(content: str) -> list[str]:
     """Check which recommended sections are missing."""
     missing = []
     for section in RECOMMENDED_SECTIONS:
-        pattern = rf'(?:^|\n)##?\s*{re.escape(section)}'
+        pattern = rf'(?:^|\n)#{{1,6}}\s*{re.escape(section)}'
         if not re.search(pattern, content, re.IGNORECASE):
             missing.append(section)
     return missing
@@ -297,12 +303,15 @@ def print_report(result: dict):
     print(f"\n{'='*60}")
 
     # Final verdict
-    if result['score'] >= 70 and not result['secrets_found']:
-        print("Verdict: READY for handoff")
-        return True
-    elif result['secrets_found']:
+    if result['secrets_found']:
         print("Verdict: BLOCKED - Remove secrets before handoff")
         return False
+    elif not result['todos_clear'] or not result['required_complete']:
+        print("Verdict: NEEDS WORK - Complete required sections")
+        return False
+    elif result['score'] >= 70:
+        print("Verdict: READY for handoff")
+        return True
     else:
         print("Verdict: NEEDS WORK - Complete required sections")
         return False

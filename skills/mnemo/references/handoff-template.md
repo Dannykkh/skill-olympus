@@ -6,6 +6,12 @@ Use this template structure when creating handoff documents. The smart scaffold 
 
 - [Session Metadata](#session-metadata)
 - [Current State Summary](#current-state-summary)
+- [Feature/Flow/Decision Snapshot](#featureflowdecision-snapshot)
+  - [Implemented Features](#implemented-features)
+  - [Feature Boundary](#feature-boundary)
+  - [Composition Diagram](#composition-diagram)
+  - [Flow Diagram](#flow-diagram)
+  - [Decision Records](#decision-records)
 - [Codebase Understanding](#codebase-understanding)
   - [Architecture Overview](#architecture-overview)
   - [Critical Files](#critical-files)
@@ -39,6 +45,48 @@ Use this template structure when creating handoff documents. The smart scaffold 
 ## Current State Summary
 
 [One paragraph: What was being worked on, current status, and where things left off]
+
+## Feature/Flow/Decision Snapshot
+
+This is the session's implemented-feature map. The handoff must write the implemented features and draw the session-level composition/flow diagrams from the work just completed. If TermSnap CodeMap/Wiki/Report exists, link it as supporting evidence; do not treat this section as a replacement for CodeMap.
+
+### Implemented Features
+
+| Feature/Change | Visible Behavior | Entry Point | Implementation Anchors | Verification |
+|----------------|------------------|-------------|------------------------|--------------|
+| [Feature or change name] | [What user/agent can now do or observe] | [UI/API/command/hook/file] | [files/classes/methods] | [test/log/manual check] |
+
+### Feature Boundary
+
+| Feature/Area | Does | Does Not Do | Source of Truth |
+|--------------|------|-------------|-----------------|
+| [Feature name] | [responsibility] | [non-goal/boundary] | [code/doc/spec path] |
+
+### Composition Diagram
+
+```mermaid
+flowchart TB
+    Actor[User / Agent] --> Entry[Entry point]
+    Entry --> Feature[Implemented feature]
+    Feature --> Module[Module / service / component]
+    Module --> State[State / storage / generated artifact]
+    Feature --> Surface[UI / report / API / handoff surface]
+```
+
+### Flow Diagram
+
+```mermaid
+flowchart LR
+    Input[Input / trigger] --> Process[Processing]
+    Process --> Store[State / storage]
+    Store --> Surface[UI / report / API surface]
+```
+
+### Decision Records
+
+| Decision | Options Considered | Rationale | Record/Follow-up |
+|----------|--------------------|-----------|------------------|
+| [Decision] | [A / B / C] | [why] | [ADR/doc path or TODO] |
 
 ## Codebase Understanding
 
@@ -134,6 +182,6 @@ Use this template structure when creating handoff documents. The smart scaffold 
 When filling this template:
 1. Be specific and concrete - vague descriptions don't help the next agent
 2. Include file paths with line numbers where relevant (e.g., `src/auth.ts:142`)
-3. Prioritize the "Important Context" and "Immediate Next Steps" sections
+3. Prioritize the "Feature/Flow/Decision Snapshot", "Important Context", and "Immediate Next Steps" sections
 4. Don't include sensitive data (API keys, passwords, tokens)
 5. Focus on WHAT and WHY, not just WHAT - rationale is crucial for handoffs
