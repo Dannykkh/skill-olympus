@@ -89,7 +89,7 @@ If user selects yes, auto-generate search queries from spec:
 
 ### 4.4 Ask About Web Research
 
-Present the derived topics as a numbered checklist by default. Use structured multi-selection only if the current CLI explicitly supports it:
+Present the derived topics as a numbered checklist by default. Use structured multi-selection only if the current CLI explicitly supports it. When using the structured tool, send at most 4 `options` per call (5+ derived topics → use the plain numbered checklist or split into batches of 4; `AskUserQuestion` rejects >4 options with `Invalid tool parameters`):
 
 ```
 question: "Should I research current best practices for any of these topics?"
@@ -112,7 +112,7 @@ Ask as a bounded choice. Use a structured question tool only if supported:
 
 ```
 question: "관련 논문이나 알고리즘을 조사할까요?"
-header: "Academic Research"
+header: "논문 조사"
 options:
   - label: "Yes, search papers & algorithms"
     description: "관련 논문, 알고리즘, 데이터 구조, 구현 패턴을 조사합니다 (Google Scholar, arXiv 등)"
@@ -131,7 +131,7 @@ Ask as a bounded choice. Use a structured question tool only if supported:
 
 ```
 question: "경쟁 서비스/제품을 조사할까요?"
-header: "Competitor Analysis"
+header: "경쟁 분석"
 options:
   - label: "Yes, analyze competitors"
     description: "경쟁 서비스의 기능, 메뉴 구조, UX 패턴, 차별점을 분석합니다"

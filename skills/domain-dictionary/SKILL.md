@@ -134,11 +134,11 @@ CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 
 
 ### Step 4: 사용자 확인
 
-핵심 용어(상위 5~10개)를 일반 텍스트 번호 목록으로 확인합니다. 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용합니다.
+핵심 용어(상위 5~10개)를 일반 텍스트 번호 목록으로 확인합니다. 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용하며, 이때 한 호출당 `options`는 2~4개만 (5개 이상이면 일반 텍스트 번호 목록으로 받거나 4개씩 분할 — `AskUserQuestion`은 옵션 4개 초과 시 `Invalid tool parameters`). `header`도 12자 이내.
 
 ```
 "아래 용어 정의를 확인해주세요. 수정이 필요한 항목을 선택하세요."
-header: "Domain Dictionary"
+header: "도메인사전"
 selection: "multiple numbers by default; structured multiple-selection only if supported"
 options:
   - label: "✅ Cart = 장바구니"
