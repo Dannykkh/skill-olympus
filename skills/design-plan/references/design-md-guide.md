@@ -32,16 +32,16 @@ colors:
   on-primary: "#FFFFFF"       # primary 배경 위 텍스트 — 대비 짝꿍은 명시해 lint 통과
 typography:
   h1:
-    fontFamily: Space Grotesk
+    fontFamily: "Space Grotesk, Pretendard, sans-serif"   # 한글 UI면 라틴 폰트 뒤에 한글 웹폰트(Pretendard)를 스택으로 — 한글 글리프 폴백 방지
     fontSize: 3rem            # typography는 fontFamily + fontSize 필수, 나머지는 선택
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: "-0.02em"
   body-md:
-    fontFamily: DM Sans
+    fontFamily: "Pretendard, DM Sans, sans-serif"   # 한글 본문은 가독성 우선 — Pretendard를 앞에
     fontSize: 1rem           # 16px 본문
   label-caps:
-    fontFamily: DM Sans
+    fontFamily: "Pretendard, DM Sans, sans-serif"
     fontSize: 0.75rem
 rounded:
   sm: 4px
@@ -66,7 +66,9 @@ components:
 
 **규칙**
 - `typography.*`는 `fontFamily`+`fontSize` 필수. `fontWeight/lineHeight/letterSpacing/fontFeature/fontVariation`은 선택.
-- **폰트는 실제 로드**: `fontFamily`에 적은 폰트는 구현 시 `@import`/`<link>`로 **실제 로드**해야 함(이름만 쓰면 시스템 폴백, `document.fonts.check`로 확인). **한글 UI는 한글 웹폰트(Pretendard 등)도 폰트 스택에 함께** — 라틴 폰트(Space Grotesk 등)엔 한글 글리프가 없어 한글이 시스템 폴백된다.
+- **폰트는 실제 로드**: `fontFamily`에 적은 폰트는 구현 시 `@import`/`<link>`로 **실제 로드**해야 함(이름만 쓰면 시스템 폴백, `document.fonts.check('700 16px "X"')`로 확인).
+- **한글은 정본 스택에 함께(필수)**: `fontFamily`는 단일 이름이 아니라 **CSS 스택 문자열**로 적을 수 있다(`"라틴, 한글, sans-serif"`). 한글이 들어가는 UI는 라틴 폰트(Space Grotesk 등)에 한글 글리프가 없어 한글만 시스템 폴백되므로, **정본(DESIGN.md) 단계에서** 한글 웹폰트(Pretendard 등)를 스택에 함께 박는다 — 헤딩은 `"라틴, Pretendard, sans-serif"`(라틴 디스플레이는 라틴이 렌더, 한글만 Pretendard로 폴백). 정본이 라틴 단일값이면 Phase 3의 "토큰 그대로 사용"이 그 값을 전파해 한글이 깨진다(gotcha 041).
+  - **스택 순서 = 라틴 폰트의 운명(검증으로 확인, 2026-06-30)**: Pretendard는 라틴 글리프도 가지므로 **본문에 `"Pretendard, DM Sans, sans-serif"`처럼 Pretendard를 앞에 두면 라틴 본문까지 Pretendard로 렌더되고, 뒤의 DM Sans는 lazy-load라 한 번도 다운로드되지 않아 죽은 폰트가 된다**(`document.fonts.check('"DM Sans"')` → false). 한·영을 한 목소리로 통일하려면(한글 우선 제품) Pretendard-first가 맞고 라틴 본문 폰트는 생략해도 된다. 반대로 **라틴 본문은 페어링 폰트(DM Sans)로 보이고 한글만 Pretendard로** 떨어뜨리려면 `"DM Sans, Pretendard, sans-serif"`처럼 **라틴을 앞에** 둔다. 어느 쪽이든 `document.fonts.check`로 의도한 폰트가 실제 로드됐는지 확인.
 - `components.*`는 `backgroundColor/textColor/typography/rounded/padding`를 가지며 토큰을 중괄호로 참조.
 - **대비 짝꿍 명시**: 컴포넌트의 `backgroundColor`/`textColor`가 한 쌍이어야 lint의 contrast 규칙(4.5:1)이 동작합니다. `on-primary` 같은 전경색을 colors에 정의하세요.
 
