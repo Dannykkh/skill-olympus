@@ -66,6 +66,7 @@ components:
 
 **규칙**
 - `typography.*`는 `fontFamily`+`fontSize` 필수. `fontWeight/lineHeight/letterSpacing/fontFeature/fontVariation`은 선택.
+- **폰트는 실제 로드**: `fontFamily`에 적은 폰트는 구현 시 `@import`/`<link>`로 **실제 로드**해야 함(이름만 쓰면 시스템 폴백, `document.fonts.check`로 확인). **한글 UI는 한글 웹폰트(Pretendard 등)도 폰트 스택에 함께** — 라틴 폰트(Space Grotesk 등)엔 한글 글리프가 없어 한글이 시스템 폴백된다.
 - `components.*`는 `backgroundColor/textColor/typography/rounded/padding`를 가지며 토큰을 중괄호로 참조.
 - **대비 짝꿍 명시**: 컴포넌트의 `backgroundColor`/`textColor`가 한 쌍이어야 lint의 contrast 규칙(4.5:1)이 동작합니다. `on-primary` 같은 전경색을 colors에 정의하세요.
 
