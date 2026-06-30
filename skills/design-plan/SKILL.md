@@ -34,10 +34,11 @@ auto_apply: false
 ```
 /aphrodite가 오케스트레이션하는 스킬:
 
-  Phase 1: design-system-starter     → 디자인 토큰 생성
-  Phase 2: frontend-design (DB 매칭) → 팔레트/폰트/스타일 선택
-  Phase 3: frontend-design (구현)    → 실제 코딩
-  Phase 4: ui-ux-auditor             → 9영역 감사 + 시각 검증 (스크린샷 관찰)
+  Phase 1: design-system-starter     → DESIGN.md 생성 (YAML 토큰 + 산문 정본)
+  Phase 2: frontend-design (DB 매칭) → 팔레트/폰트/스타일 선택 → DESIGN.md에 박음
+  Phase 3: frontend-design (구현)    → DESIGN.md 토큰 기반 실제 코딩
+  Phase 4: design.md lint            → 기계 검증 (broken-ref/orphan/대비 4.5:1)
+           ui-ux-auditor             → 9영역 감사 + 시각 검증 (스크린샷 관찰)
            web-design-guidelines     → 가이드라인 준수 체크
 
   보조:
@@ -61,15 +62,18 @@ Phase 1 (시스템) → Phase 2 (선택) → Phase 3 (구현) → Phase 4 (리�
 ### 2. 기존 디자인 자산 확인
 
 ```
-📂 디자인 자산 확인:
-  design-system.md:    {있음/없음} (젭마인 산출물)
-  DESIGN.md:           {있음/없음} (Stitch 산출물)
-  tailwind.config.*:   {있음/없음} (기존 테마)
-  design-system/:      {있음/없음} (디자인 토큰)
+📂 디자인 자산 확인 (정본 우선순위):
+  DESIGN.md:           {있음/없음} ★ 정본 (YAML 토큰 + 산문)
+  design-tokens.json:  {있음/없음} (W3C DTCG — DESIGN.md로 흡수/파생)
+  design-system.md:    {있음/없음} (구 산문 — DESIGN.md로 이관)
+  tailwind.config.*:   {있음/없음} (export 파생물)
 ```
 
-**있으면**: 기존 자산을 기반으로 Phase 1 건너뜀
+**DESIGN.md 있으면**: 그대로 정본 채택 → Phase 4 lint만 돌리고 Phase 1 건너뜀
+**레거시(design-system.md/design-tokens.json)만 있으면**: DESIGN.md로 마이그레이션 후 진행
 **없으면**: Phase 1부터 시작
+
+> 마이그레이션·스키마·lint/export 상세: [`references/design-md-guide.md`](references/design-md-guide.md)
 
 ---
 
@@ -148,16 +152,19 @@ options:
 
 사용자가 선택하면 → 디자인 시스템 문서 생성.
 
-### 1-4. 디자인 시스템 생성
+### 1-4. DESIGN.md 생성 (정본)
 
-`design-system-starter` 스킬을 참조하여 `design-system.md` 생성:
+Phase 1~3에서 **선택된** 팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다 (값을 지어내지 말고 CSV에서 고른 값 그대로):
 
-- 선택된 색상 팔레트 → CSS 변수 / Tailwind config
-- 선택된 폰트 페어링 → Google Fonts import + font-family 정의
-- 프리셋 파라미터 (VARIANCE/MOTION/DENSITY) 기록
-- 간격, 라운딩, 그림자 등 기본 토큰
+- 선택된 **색상 팔레트**(color-palettes.csv) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작)
+- 선택된 **폰트 페어링**(font-pairings.csv) → `typography:` (heading/body/label, `fontFamily`+`fontSize` 필수)
+- 프리셋(VARIANCE/MOTION/DENSITY) + 간격/라운드 → `spacing:` / `rounded:`
+- 핵심 컴포넌트(button/card/input) → `components:` (토큰 중괄호 참조 `"{colors.primary}"`)
+- 채점 근거·선택 이유 → 산문 `##` 섹션 (왜 이 값인지)
 
-**출력:** `design-system.md` (프로젝트 루트 또는 `docs/`)
+> 상세 스케일 토큰이 필요하면 `design-system-starter`의 `design-tokens.json`을 병행하되 **정본은 DESIGN.md** (DTCG는 `export --format dtcg`로도 파생).
+
+**출력:** `DESIGN.md` (프로젝트 루트)
 
 ---
 
@@ -198,7 +205,7 @@ options:
 - **단독 모드** (처음부터 UI 생성): 정적 컴포넌트/페이지까지 생성하되, 데이터·로직이 필요한 부분은 mock + `TODO(기능)` 주석으로 남기고 포세이돈/다이달로스에 인계
 
 이 Phase에서는:
-- Phase 1에서 생성한 `design-system.md`를 참조
+- Phase 1에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지)
 - 선택된 프리셋 파라미터 적용 (VARIANCE/MOTION/DENSITY)
 - Phase 2 레퍼런스가 있으면 스타일 매칭
 - `frontend-design`의 Banned Patterns(AI Slop 금지) 적용
@@ -211,7 +218,24 @@ options:
 
 ## Phase 4: 디자인 리뷰
 
-구현 완료 후 자동으로 2개 리뷰를 실행합니다.
+구현 완료 후 자동으로 lint 게이트 + 2개 리뷰를 실행합니다.
+
+### 4-0. DESIGN.md lint (기계 검증 — 대화형 best-effort)
+
+토큰 계약(참조 무결성·대비)을 기계로 검증합니다. **단 `@google/design.md@0.3.0`은 TTY 전용**이라 헤드리스(에이전트/CI)에선 무출력·exit 0으로 no-op됨(실측) — 사람이 터미널에서 돌릴 때만 신호를 줍니다.
+
+```bash
+npx @google/design.md lint DESIGN.md      # macOS/Linux
+designmd lint DESIGN.md                    # Windows 별칭
+```
+
+- **broken-ref**(없는 토큰 참조) / **orphaned-tokens**(고아 색) / **contrast-ratio**(컴포넌트 bg/text 쌍 WCAG AA 4.5:1 미달)
+- **graceful fallback (필수)**: npx/네트워크 실패 **또는 헤드리스 무출력** 시 lint를 **건너뛰고** 보고에 `lint: 건너뜀` 표기 — 파이프라인 안 막음. **헤드리스 자동 enforcement는 lint가 아니라 ui-ux-auditor의 대비/시각 검증이 담당** (상세·재평가 조건은 [`references/design-md-guide.md`](references/design-md-guide.md)).
+- lint FAIL 항목(대화형에서 잡힌 경우)은 확인 없이 바로 DESIGN.md 토큰 수정 → 재실행.
+
+**export (선택):** `npx @google/design.md export --format tailwind DESIGN.md` → Tailwind 테마, `--format dtcg` → `design-tokens.json`.
+
+상세: [`references/design-md-guide.md`](references/design-md-guide.md)
 
 ### 4-1. UI/UX 감사
 
@@ -264,9 +288,9 @@ options:
 ✅ Aphrodite 완료! 미의 여신이 승인합니다.
 
 📁 산출물:
-  design-system.md    — 디자인 시스템 (색상, 폰트, 토큰)
-  구현 코드           — 프리셋 + DB 매칭 적용
-  리뷰 결과           — UI/UX 9영역 + 0-10 채점 + 가이드라인
+  DESIGN.md           — 디자인 정본 (YAML 토큰 + 산문 근거)
+  구현 코드           — DESIGN.md 토큰 + DB 매칭 적용
+  리뷰 결과           — design.md lint + UI/UX 9영역 + 0-10 채점 + 가이드라인
 
 📎 적용된 조합:
   프리셋: {선택한 프리셋}
@@ -289,6 +313,8 @@ options:
 | `--plan-only` | Phase 1~2만 (디자인 시스템 + 레퍼런스) | false |
 | `--review-only` | Phase 4만 (기존 코드 리뷰) | false |
 | `--no-review` | Phase 4 건너뜀 | false |
+| `--no-lint` | Phase 4의 design.md lint 건너뜀 | false |
+| `--export` | DESIGN.md → Tailwind/DTCG export 생성 | false |
 | `--stitch` | Stitch MCP 모드로 구현 | false |
 
 ---
@@ -297,10 +323,12 @@ options:
 
 | 스킬 | 역할 | Phase |
 |------|------|-------|
-| design-system-starter | 디자인 토큰 생성 | 1 |
+| design-system-starter | DESIGN.md 토큰층 보강 + DTCG 파생 | 1 |
 | frontend-design | 미학 적용 + DB 매칭 + 구현 (auto_apply) | 2~3 |
+| design.md lint | DESIGN.md 토큰 계약 기계 검증 (broken-ref/orphan/대비) | 4 |
 | ui-ux-auditor | 9영역 UI/UX 감사 + 시각 검증(스크린샷) | 4 |
 | web-design-guidelines | Web Interface Guidelines 체크 | 4 |
+| stitch (design 모드) | DESIGN.md ↔ Stitch 화면 양방향 (같은 스키마 공유) | 1·3 |
 | stitch (loop 모드) | Stitch 멀티페이지 생성 (선택) | 3 |
 | stitch (react 모드) | HTML → React 변환 (선택) | 3 |
 | seo-audit | SEO/AEO/GEO 감사 (후행, 선택) | - |
@@ -314,7 +342,8 @@ options:
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |
 | `skills/frontend-design/references/font-pairings.csv` | 84개 폰트 페어링 |
 | `skills/frontend-design/references/design-styles.csv` | 84개 디자인 스타일 |
-| `skills/design-system-starter/SKILL.md` | 디자인 토큰 생성 |
+| `skills/design-plan/references/design-md-guide.md` | DESIGN.md 정본 스키마 + lint/export + 마이그레이션 |
+| `skills/design-system-starter/SKILL.md` | 디자인 토큰 생성 (DTCG 파생) |
 | `skills/ui-ux-auditor/SKILL.md` | UI/UX 9영역 감사 + 시각 검증 |
 | `skills/web-design-guidelines/SKILL.md` | Web Interface Guidelines |
 | `agents/ui-ux-designer.md` | 디자인 비평 에이전트 |

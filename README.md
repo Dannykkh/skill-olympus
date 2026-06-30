@@ -411,7 +411,7 @@ Each skill works standalone or as part of the pipeline.
 - **When:** a UI project needs consistent tokens/visuals before the frontend build.
 - **Use:** `/aphrodite` (aliases: 아프로디테)
 - **Process:** design-system-starter (tokens; palette/font scored on a weighted rubric) → frontend plan → review.
-- **Output:** `design-system.md` (colors, fonts, tokens) + frontend build plan.
+- **Output:** `DESIGN.md` (YAML tokens + prose rationale — the canonical design context) + frontend build plan; lint-gated and exportable to Tailwind/DTCG.
 - **Next:** `/agent-team` / `/workpm` to implement.
 
 ### Build — write the code

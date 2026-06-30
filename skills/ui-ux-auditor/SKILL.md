@@ -55,6 +55,8 @@ text-white|text-black|bg-white|bg-black
 bg-zinc-[0-9]|bg-gray-[0-9]|bg-slate-[0-9]
 text-zinc-[0-9]|text-gray-[0-9]|text-slate-[0-9]
 border-zinc-|border-gray-|border-slate-
+# 네이티브 폼 컨트롤 (다크모드 자주 깨짐 — color-scheme 누락)
+<select|<option|color-scheme|::placeholder|appearance-none
 ```
 
 | 검사 항목 | 기준 |
@@ -63,6 +65,9 @@ border-zinc-|border-gray-|border-slate-
 | CSS 변수 충돌 | `:root` vs `[data-theme]` 우선순위 충돌 |
 | 테마 전환 | `next-themes`, `data-theme` 속성 적용 여부 |
 | 이미지/아이콘 | 다크모드에서 안 보이는 요소 (흰 배경 위 흰 아이콘 등) |
+| **select/option** | `<select>`의 `<option>`이 OS 기본색으로 렌더 → 다크에서 깨짐. 루트 `color-scheme: light dark` + option 배경/글자색 명시 필요 |
+| **컨테이너 div 배경** | 섹션/카드 `div` 배경색이 테마 토큰을 따르는지 (하드코딩 흰/검정 금지) |
+| **텍스트 반전** | 배경 반전 시 텍스트 색도 함께 반전되는지 (다크에서 검은 글자 잔존 금지) |
 
 ### 2-2. 반응형 디자인
 

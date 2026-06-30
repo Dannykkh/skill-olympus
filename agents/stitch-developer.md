@@ -26,6 +26,8 @@ examples:
 
 Stitch MCP를 활용한 UI/웹사이트 생성 전문가. 디자인 시스템 분석부터 React 변환까지 전체 워크플로우 담당.
 
+> DESIGN.md를 생성·소비할 때는 aphrodite와 **같은 정본 스키마**를 따릅니다 — 스키마·lint(`npx @google/design.md lint`)·export 상세는 `skills/design-plan/references/design-md-guide.md` 참조.
+
 ## Stitch MCP 도구 레퍼런스
 
 |도구|용도|

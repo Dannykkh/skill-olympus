@@ -51,6 +51,9 @@ metadata:
 기존 Stitch 프로젝트를 분석하여 디자인 시스템 문서를 생성합니다.
 새 스크린 생성 시 기존 디자인 언어와의 일관성을 보장하는 source of truth.
 
+> **스키마 통일**: 생성하는 `DESIGN.md`는 아프로디테와 **같은 정본 스키마**를 따릅니다 — 2층(YAML 토큰 + 산문), 토큰 중괄호 참조, `npx @google/design.md lint`로 검증. 스키마·lint·export 상세는 [`../design-plan/references/design-md-guide.md`](../design-plan/references/design-md-guide.md).
+> **체이닝**: aphrodite(CSV 정방향) ↔ stitch(화면 역방향)는 같은 DESIGN.md를 주고받습니다. aphrodite가 만든 DESIGN.md를 stitch 생성 컨텍스트로 쓰거나, stitch가 역추출한 DESIGN.md를 aphrodite가 lint·정교화합니다.
+
 ### Workflow
 
 1. **네임스페이스 탐색**: `list_projects`로 프로젝트 목록 조회
@@ -170,7 +173,8 @@ Stitch에서 생성된 정적 HTML을 프로덕션 React/TypeScript 컴포넌트
 
 | 파일 | 역할 |
 |------|------|
-| `DESIGN.md` | 디자인 시스템 source of truth |
+| `DESIGN.md` | 디자인 시스템 정본 (aphrodite와 공유 스키마) |
+| `../design-plan/references/design-md-guide.md` | DESIGN.md 스키마 + lint/export 가이드 |
 | `SITE.md` | 멀티페이지 사이트맵 + 로드맵 |
 | `next-prompt.md` | 루프 바톤 (Mode 3) |
 | `agents/stitch-developer.md` | Stitch 오케스트레이션 에이전트 |
