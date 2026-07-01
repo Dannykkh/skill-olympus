@@ -162,7 +162,7 @@ Phase 1~3에서 **선택된** 팔레트/폰트를 [`references/design-md-guide.m
 
 - 선택된 **색상 팔레트**(color-palettes.csv) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작)
 - 선택된 **폰트 페어링**(font-pairings.csv) → `typography:` (heading/body/label, `fontFamily`+`fontSize` 필수)
-  - **한글 UI면 Pretendard를 정본 스택에 함께 박는다 (필수)**: 라틴 페어링(Space Grotesk 등)엔 한글 글리프가 없어, 정본에 라틴 단일값만 적으면 Phase 3의 "토큰 그대로 사용"이 라틴값을 전파 → 한글이 시스템 폴백된다(gotcha 041). 한글이 들어가는 모든 `typography.*`의 `fontFamily`는 **스택**으로 — 예: `fontFamily: "Space Grotesk, Pretendard, sans-serif"`(헤딩), `"Pretendard, DM Sans, sans-serif"`(본문). 더 개성 있는 한글 폰트는 눈누(noonnu.cc)에서. 라틴 전용 데모일 때만 단일값 허용.
+  - **한글 UI 폰트 (필수)**: ① **먼저 한글 전용 페어링을 픽한다** — `font-pairings.csv`의 한글 행(#74-82: Hahmlet/Noto Serif KR/Gowun Batang 헤딩 + Pretendard/Noto Sans KR/Nanum Gothic 본문 등)은 한글·라틴 글리프를 모두 가져 폴백 함정을 **구조적으로 회피**(권장 경로). ② 굳이 라틴 페어링(Space Grotesk 등)을 쓸 때만 **Pretendard를 정본 스택에 함께 박는다** — 라틴엔 한글 글리프가 없어 라틴 단일값만 적으면 Phase 3의 "토큰 그대로 사용"이 전파돼 한글이 시스템 폴백된다(gotcha 041). 이때 `fontFamily`는 **스택**으로 — 예: `"Space Grotesk, Pretendard, sans-serif"`(헤딩), `"Pretendard, DM Sans, sans-serif"`(본문). 개성 한글 폰트는 눈누(noonnu.cc). 라틴 전용 데모만 단일값 허용.
 - 프리셋(VARIANCE/MOTION/DENSITY) + 간격/라운드 → `spacing:` / `rounded:`
 - 핵심 컴포넌트(button/card/input) → `components:` (토큰 중괄호 참조 `"{colors.primary}"`)
 - 채점 근거·선택 이유 → 산문 `##` 섹션 (왜 이 값인지)
