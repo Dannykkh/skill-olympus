@@ -64,11 +64,16 @@ function toPortablePath(absolutePath) {
   return normalizePath(absolutePath);
 }
 
+// 훅 타임아웃(초). Claude Code 기본 30초는 일시적 시스템 부하나 stdin EOF 지연 시
+// 초과되어 "hook timed out after 30s — output discarded" 경고와 함께 출력이 버려진다.
+// 평소 훅은 1초 미만이지만 여유를 위해 60초로 상향(에러 메시지의 "Raise the timeout" 권고).
+const HOOK_TIMEOUT_SECONDS = 60;
+
 // Hook entry builder helper (shared format for Claude/Gemini: matcher + hooks array)
-function hookEntry(matcher, command) {
+function hookEntry(matcher, command, timeout = HOOK_TIMEOUT_SECONDS) {
   return {
     matcher: matcher,
-    hooks: [{ type: "command", command: command }],
+    hooks: [{ type: "command", command: command, timeout: timeout }],
   };
 }
 
@@ -115,7 +120,7 @@ function buildClaudeHooksConfig(dir, isWindows) {
   const d = toPortablePath(dir);
   const ext = isWindows ? "ps1" : "sh";
   const cmd = isWindows
-    ? (script) => `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`
+    ? (script) => `powershell -NoProfile -ExecutionPolicy Bypass -File "${d}/${script}"`
     : (script) => `bash "${d}/${script}"`;
   const nodeCmd = (script) => `node "${d}/${script}"`;
 
@@ -170,7 +175,7 @@ function buildGeminiHooksConfig(dir, isWindows) {
   const d = toPortablePath(dir);
   const ext = isWindows ? "ps1" : "sh";
   const cmd = isWindows
-    ? (script) => `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`
+    ? (script) => `powershell -NoProfile -ExecutionPolicy Bypass -File "${d}/${script}"`
     : (script) => `bash "${d}/${script}"`;
   const nodeCmd = (script) => `node "${d}/${script}"`;
 

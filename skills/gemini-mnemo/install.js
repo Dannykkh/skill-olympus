@@ -116,10 +116,13 @@ function uninstallAgentsMdRules(agentsMdPath) {
 // ── Hook config (settings.json) ──
 // Gemini CLI uses the same settings.json hooks format as Claude Code
 
+// 훅 타임아웃(초). 기본 30초는 일시적 부하/stdin 지연 시 초과되어 출력이 버려짐 → 60초로 상향.
+const HOOK_TIMEOUT_SECONDS = 60;
+
 function buildHookCommand(hooksDir) {
   const d = normalizePath(hooksDir);
   if (isWindows) {
-    return `powershell -ExecutionPolicy Bypass -File "${d}/save-turn.ps1"`;
+    return `powershell -NoProfile -ExecutionPolicy Bypass -File "${d}/save-turn.ps1"`;
   } else {
     return `bash "${d}/save-turn.sh"`;
   }
@@ -139,6 +142,7 @@ function mergeHooksConfig(settingsPath, hookCommand) {
       if (cmd && typeof cmd.command === "string" && cmd.command.includes("save-turn")) {
         cmd.type = cmd.type || "command";
         cmd.command = hookCommand;
+        cmd.timeout = HOOK_TIMEOUT_SECONDS;
         updated = true;
       }
     }
@@ -149,7 +153,8 @@ function mergeHooksConfig(settingsPath, hookCommand) {
       matcher: "",
       hooks: [{
         type: "command",
-        command: hookCommand
+        command: hookCommand,
+        timeout: HOOK_TIMEOUT_SECONDS
       }]
     });
   }

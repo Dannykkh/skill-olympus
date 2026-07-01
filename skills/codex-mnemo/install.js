@@ -158,7 +158,7 @@ function buildNotifyCommand(hooksDir) {
   const d = normalizePath(hooksDir);
   if (isWindows) {
     const shell = getPreferredPowerShell();
-    return [shell, "-ExecutionPolicy", "Bypass", "-File", `${d}/save-turn.ps1`];
+    return [shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", `${d}/save-turn.ps1`];
   } else {
     return ["bash", `${d}/save-turn.sh`];
   }
@@ -339,6 +339,7 @@ function writeNotifyWrapper(hooksDir, previousNotifyArgs) {
     fs.writeFileSync(wrapperPath, content, "utf8");
     return [
       getPreferredPowerShell(),
+      "-NoProfile",
       "-ExecutionPolicy",
       "Bypass",
       "-File",

@@ -103,35 +103,32 @@ function uninstallClaudeMdRules(claudeMdPath) {
 }
 
 // ── Hooks Config ──
+// 훅 타임아웃(초). Claude Code 기본 30초는 일시적 시스템 부하/stdin EOF 지연 시 초과되어
+// "hook timed out after 30s — output discarded" 경고로 출력이 버려진다 → 60초로 상향.
+const HOOK_TIMEOUT_SECONDS = 60;
+
 function buildHooksConfig(hooksDir) {
   const d = normalizePath(hooksDir);
+  // matcher + timeout 포함 훅 엔트리 빌더 (Windows/bash 공통)
+  const entry = (matcher, command) => ({
+    matcher,
+    hooks: [{ type: "command", command, timeout: HOOK_TIMEOUT_SECONDS }],
+  });
 
   if (isWindows) {
     const cmd = (script) =>
-      `powershell -ExecutionPolicy Bypass -File "${d}/${script}"`;
+      `powershell -NoProfile -ExecutionPolicy Bypass -File "${d}/${script}"`;
     return {
-      UserPromptSubmit: [
-        { matcher: ".*", hooks: [{ type: "command", command: cmd("save-conversation.ps1") }] }
-      ],
-      PostToolUse: [
-        { matcher: ".*", hooks: [{ type: "command", command: cmd("save-tool-use.ps1") }] }
-      ],
-      Stop: [
-        { matcher: "", hooks: [{ type: "command", command: cmd("save-response.ps1") }] }
-      ]
+      UserPromptSubmit: [entry(".*", cmd("save-conversation.ps1"))],
+      PostToolUse: [entry(".*", cmd("save-tool-use.ps1"))],
+      Stop: [entry("", cmd("save-response.ps1"))],
     };
   } else {
     const cmd = (script) => `bash "${d}/${script}"`;
     return {
-      UserPromptSubmit: [
-        { matcher: ".*", hooks: [{ type: "command", command: cmd("save-conversation.sh") }] }
-      ],
-      PostToolUse: [
-        { matcher: ".*", hooks: [{ type: "command", command: cmd("save-tool-use.sh") }] }
-      ],
-      Stop: [
-        { matcher: "", hooks: [{ type: "command", command: cmd("save-response.sh") }] }
-      ]
+      UserPromptSubmit: [entry(".*", cmd("save-conversation.sh"))],
+      PostToolUse: [entry(".*", cmd("save-tool-use.sh"))],
+      Stop: [entry("", cmd("save-response.sh"))],
     };
   }
 }
