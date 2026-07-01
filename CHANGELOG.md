@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.10.0] - 2026-07-01
+
+### Added — DESIGN.md 정본 + 한글 폰트 실제 로드 가드레일
+
+실제 한글 UI로 `/aphrodite`를 끝까지 돌려 검증하며, "부를 때마다 색·폰트가 달라지는" 드리프트와 "한글이 조용히 시스템 폰트로 폴백되는" 두 통증을 닫았다.
+
+- **DESIGN.md 정본 채택** — 구글 `@google/design.md` 포맷(YAML 토큰 + 산문 2층)을 아프로디테 디자인 정본으로 채택하고, 구글이 빠뜨린 에이전트 배선·단일소스·검증을 더함. `design-md-guide.md` 신규(스키마 + lint/export + 레거시 마이그레이션), design-plan은 CSV 팔레트를 DESIGN.md에 고정해 재호출 드리프트 방지, mnemo 3-CLI 가드레일에 "DESIGN.md 먼저 읽기" 주입, stitch도 DESIGN.md 스키마로 통일·체이닝
+- **폰트 실제 로드(검증)** — 라틴 페어링만 픽하면 한글이 시스템 폰트로 조용히 폴백(Space Grotesk/DM Sans엔 한글 글리프 없음). "폰트 실제 로드" 규칙(@import/link 실제 로드 + `document.fonts.check` 확인 + 한글 UI는 Pretendard 등 한글 웹폰트 동반)을 mnemo 3-CLI 가드레일 + ui-ux-auditor 검증(grep 패턴)에 추가
+- **한글 전용 페어링 우선** — 실전 검증 결과, 한글 UI는 라틴 페어링에 Pretendard를 덧대기보다 `font-pairings.csv`의 한글 전용 페어링(Hahmlet/Noto Serif KR/Gowun Batang + Pretendard/Noto Sans KR 등)을 직접 픽하면 한 폰트가 한글·라틴을 다 커버해 폴백 함정(gotcha 041)을 구조적으로 회피. 덧대기 경로는 라틴 페어링을 쓸 때의 폴백으로 유지
+- **다크/라이트 테마 규칙** — 흔히 놓치는 3곳(컨테이너 `div` 배경 / 텍스트 반전 / `<select>` option `color-scheme`)을 mnemo 가드레일 + ui-ux-auditor 검증에 반영
+
+### Fixed — 훅 타임아웃 + AskUserQuestion 스키마
+
+- **훅 30초 타임아웃 방지** — Claude Code 기본 30초 훅 타임아웃이 일시적 부하나 stdin EOF 지연 시 초과되어 "hook timed out after 30s — output discarded" 경고와 함께 출력이 버려지던 문제. 훅 명령 생성기 4곳(install-hooks-config.js · mnemo/gemini-mnemo/codex-mnemo install.js) 전부에 timeout 60초 상향 + `powershell -NoProfile` 적용(프로파일 로드 비용 제거). Claude/Gemini 라이브 검증 완료
+- **한글 폰트 정본 강제** — 한글 시스템 폴백의 진짜 원인은 정본(DESIGN.md) typography를 라틴 단일값으로 박은 것(Phase 3 "토큰 그대로 사용"이 전파). 규칙이 footnote에만 있고 정본 생성 단계엔 없던 갭을 메움. `fontFamily`를 CSS 스택 문자열로(스택 순서 트레이드오프 명시) + Playwright 재검증
+- **AskUserQuestion 스키마 위반** — 구조화 질문 템플릿이 옵션 4개 초과·header 12자 초과로 'Invalid tool parameters'를 유발하던 문제. 아프로디테 프리셋(스타일/타입 7개)에 대표 4개 + Other 가드, zephermine research/domain 템플릿 header 한글 축약 + 옵션 4개 분할 가드
+
+### Documentation
+- **README** — Zeus 하니스 + Chronos 루프 흐름을 생성 PNG 다이어그램으로 영/한 README에 문서화
+
 ## [4.9.0] - 2026-06-25
 
 ### Added — Always-on 디자인 가드레일 + 구현 전 조회 가드 + 핸드오프 Feature Map
