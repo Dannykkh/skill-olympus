@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.10.1] - 2026-07-04
+
+### Bug Fixes
+- **install**: Claude 설치에서도 글로벌 `SKILLS-CATALOG.md`/`AGENTS-CATALOG.md`를 생성하고, Claude/Codex/Gemini mnemo 규칙이 각 CLI 전역 카탈로그를 우선 조회하도록 정리. `/chronos` 같은 스킬 호출이 현재 프로젝트 루트의 없는 카탈로그 파일을 읽다 실패하는 문제를 막음 (5054326)
+
 ## [4.10.0] - 2026-07-01
 
 ### Added — DESIGN.md 정본 + 한글 폰트 실제 로드 가드레일
