@@ -8,6 +8,7 @@ const { pruneStaleAssets } = require("../prune-stale-assets");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const installBat = path.join(repoRoot, "install.bat");
+const generateCatalogs = path.join(repoRoot, "scripts", "generate-catalogs.js");
 
 test("codex-only install.bat succeeds without a preexisting .claude directory", () => {
   if (process.platform !== "win32") {
@@ -81,4 +82,40 @@ test("stale Olympus assets are moved to backup while local-only assets remain", 
     fs.existsSync(path.join(tempHome, "_pruned-stale-olympus", "20260427-101112", "skills", "pmworker", "SKILL.md")),
     true,
   );
+});
+
+test("generate-catalogs creates global catalogs and honors excluded skills", () => {
+  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-catalog-test-"));
+  const result = spawnSync(
+    process.execPath,
+    [
+      generateCatalogs,
+      tempHome,
+      "--source",
+      "test",
+      "--exclude",
+      "agent-team-codex",
+      "--exclude",
+      "deploymonitor",
+    ],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      timeout: 30000,
+    },
+  );
+
+  assert.equal(
+    result.status,
+    0,
+    `generate-catalogs failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+  );
+
+  const skillsCatalog = fs.readFileSync(path.join(tempHome, "SKILLS-CATALOG.md"), "utf8");
+  const agentsCatalog = fs.readFileSync(path.join(tempHome, "AGENTS-CATALOG.md"), "utf8");
+
+  assert.match(skillsCatalog, /auto-continue-loop/);
+  assert.doesNotMatch(skillsCatalog, /agent-team-codex/);
+  assert.doesNotMatch(skillsCatalog, /deploymonitor/);
+  assert.match(agentsCatalog, /사용 가능한 글로벌 에이전트 카탈로그/);
 });

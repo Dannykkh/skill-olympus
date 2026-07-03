@@ -101,6 +101,7 @@ if [ "$MODE" = "uninstall" ]; then
     else
         echo "      [경고] Claude CLAUDE.md 없음, 건너뜀"
     fi
+    rm -f "$CLAUDE_DIR/SKILLS-CATALOG.md" "$CLAUDE_DIR/AGENTS-CATALOG.md"
 
     echo ""
     echo "[3/12] MCP 서버 설정은 별도 관리됩니다."
@@ -360,6 +361,19 @@ if [ "$HAS_CLAUDE" = "1" ]; then
         fi
     done
     echo "      완료!"
+
+    # Catalogs 생성 (글로벌)
+    echo ""
+    echo "[2.5/7] Catalogs 생성 중... (글로벌) [코어]"
+    if [ -f "$SCRIPT_DIR/scripts/generate-catalogs.js" ]; then
+        if node "$SCRIPT_DIR/scripts/generate-catalogs.js" "$CLAUDE_DIR" --source claude --exclude agent-team-codex --exclude deploymonitor; then
+            echo "      완료!"
+        else
+            echo "      [경고] Catalog 생성 실패"
+        fi
+    else
+        echo "      [경고] generate-catalogs.js 없음, 건너뜀"
+    fi
 
     # Hooks 설치 (mnemo 필수이므로 항상 설치)
     echo ""
@@ -670,6 +684,7 @@ if [ "$HAS_CLAUDE" = "1" ]; then
     echo "  [Claude]"
     echo "  - Skills: $CLAUDE_DIR/skills/"
     echo "  - Agents: $CLAUDE_DIR/agents/"
+    echo "  - Catalogs: $CLAUDE_DIR/SKILLS-CATALOG.md, $CLAUDE_DIR/AGENTS-CATALOG.md"
     echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
     echo "  - MCP 서버 설치 완료"
     echo "  - Orchestrator MCP 등록 완료"

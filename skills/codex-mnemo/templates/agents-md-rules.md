@@ -89,13 +89,18 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 
 ## 글로벌 스킬 & 에이전트 카탈로그
 
-설치된 모든 스킬은 `SKILLS-CATALOG.md`, 에이전트는 `AGENTS-CATALOG.md`에 목록화되어 있습니다.
+설치된 모든 스킬은 `~/.codex/SKILLS-CATALOG.md`, 에이전트는 `~/.codex/AGENTS-CATALOG.md`에 목록화되어 있습니다.
+
+**조회 순서:**
+1. Codex 전역 카탈로그: `~/.codex/SKILLS-CATALOG.md`, `~/.codex/AGENTS-CATALOG.md`
+2. 현재 프로젝트에 실제 파일이 있을 때만: `./SKILLS-CATALOG.md`, `./AGENTS-CATALOG.md`
+3. 둘 다 없으면 오류로 멈추지 말고 `~/.codex/skills/*/SKILL.md`, `~/.codex/agents/*.md`를 직접 탐색
 
 **필수 규칙:**
-- 사용자가 스킬을 요청하거나 `/명령어`를 입력하면, **반드시 `SKILLS-CATALOG.md`를 먼저 읽어** 사용 가능한 스킬을 확인하세요.
+- 사용자가 스킬을 요청하거나 `/명령어`를 입력하면, 위 조회 순서로 스킬 카탈로그를 확인하세요.
 - 스킬이 확인되면, 해당 스킬의 `skills/{스킬명}/SKILL.md`를 읽어 워크플로우를 따르세요.
-- 특정 전문 분야(아키텍처, DB, 보안 등) 작업 시 `AGENTS-CATALOG.md`에서 적합한 에이전트를 찾아 해당 `.md` 파일의 지침을 따르세요.
-- "어떤 스킬이 있어?", "뭘 할 수 있어?" 같은 질문에는 두 카탈로그의 목록을 기반으로 답하세요.
+- 특정 전문 분야(아키텍처, DB, 보안 등) 작업 시 위 조회 순서로 에이전트 카탈로그를 확인하고 해당 `.md` 파일의 지침을 따르세요.
+- "어떤 스킬이 있어?", "뭘 할 수 있어?" 같은 질문에는 카탈로그 목록을 기반으로 답하세요.
 
 ## Claude 호환 호출명 규칙
 
@@ -105,7 +110,7 @@ Codex는 Claude처럼 커스텀 slash command 레지스트리를 직접 제공�
 **핵심 규칙:**
 - 사용자 입력이 `/`로 시작하면, 우선 이를 skill 호출 의도로 해석합니다.
 - `/foo-bar` 형태면 `foo-bar`라는 skill 이름과 먼저 exact match 시도합니다.
-- exact match가 없으면, `SKILLS-CATALOG.md`에서 설명/별칭으로 매칭합니다.
+- exact match가 없으면, 위 조회 순서의 스킬 카탈로그에서 설명/별칭으로 매칭합니다.
 - 일치하는 skill이 있으면 Codex native slash command가 아니어도 **그 skill을 명시적으로 사용**하세요.
 - `workpm`, `pmworker`처럼 slash 없이 쓰는 canonical 이름도 단독 요청이면 explicit invocation으로 처리하세요.
 
@@ -126,7 +131,7 @@ Codex는 Claude처럼 커스텀 slash command 레지스트리를 직접 제공�
 **동작 방식:**
 - 예: 사용자가 `/chronos 인증 버그 고쳐줘`라고 입력하면, 이를 `auto-continue-loop` skill의 명시적 호출로 해석하고 해당 워크플로우를 따릅니다.
 - 예: 사용자가 `/seo-audit https://example.com`이라고 입력하면, `seo-audit` skill exact match로 해석합니다.
-- 예: 사용자가 `/없는명령어`라고 입력하면, `SKILLS-CATALOG.md`를 확인 후 실제 매칭 skill이 없다고 짧게 설명한 뒤 일반 요청으로 처리합니다.
+- 예: 사용자가 `/없는명령어`라고 입력하면, 위 조회 순서의 카탈로그를 확인 후 실제 매칭 skill이 없다고 짧게 설명한 뒤 일반 요청으로 처리합니다.
 
 ## 오케스트레이터 모드 자동 해석
 

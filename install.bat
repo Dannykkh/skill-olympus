@@ -132,6 +132,8 @@ if "%MODE%"=="uninstall" (
     ) else (
         echo       [WARN] Claude CLAUDE.md not found, skipping
     )
+    del /f /q "%CLAUDE_DIR%\SKILLS-CATALOG.md" >nul 2>nul
+    del /f /q "%CLAUDE_DIR%\AGENTS-CATALOG.md" >nul 2>nul
 
     echo.
     echo [3/12] MCP server settings are managed separately.
@@ -401,6 +403,20 @@ for /d %%D in ("%SCRIPT_DIR%skills\*") do (
     )
 )
 echo       Done!
+
+REM Generate Claude catalogs (global, core)
+echo.
+echo [2.5/7] Generating Catalogs... (global) [core]
+if exist "%SCRIPT_DIR%scripts\generate-catalogs.js" (
+    node "%SCRIPT_DIR%scripts\generate-catalogs.js" "%CLAUDE_DIR%" --source claude --exclude agent-team-codex --exclude deploymonitor
+    if !errorlevel! equ 0 (
+        echo       Done!
+    ) else (
+        echo       [WARN] Catalog generation failed: !errorlevel!
+    )
+) else (
+    echo       [WARN] generate-catalogs.js not found, skipping
+)
 
 REM Install Hooks (global, always installed for mnemo)
 echo.
@@ -749,6 +765,7 @@ if "!HAS_CLAUDE!"=="1" (
     echo   [Claude]
     echo   - Skills: %CLAUDE_DIR%\skills\
     echo   - Agents: %CLAUDE_DIR%\agents\
+    echo   - Catalogs: %CLAUDE_DIR%\SKILLS-CATALOG.md, %CLAUDE_DIR%\AGENTS-CATALOG.md
     echo   - CLAUDE.md memory rules registered
     echo   - MCP servers installed
     echo   - Orchestrator MCP registered
