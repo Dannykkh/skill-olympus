@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.11.0] - 2026-07-05
+
+### Features
+- **zephermine**: add an unknowns-first planning flow that records `research-decision.md`, creates `unknowns.md`, asks only architecture-changing blockers, and writes inferred interview assumptions when no live question is needed (2dd6ead)
+- **domain-dictionary**: make Zephermine context mode no-stop by default, auto-seeding clear global terms, auto-merging low-risk dictionary updates, and asking only on blocking conflicts (2dd6ead)
+- **workpm**: add blindspot passes and `implementation-notes.md` deviation logging so implementation sessions preserve conservative plan departures for the next run (2dd6ead)
+- **agent-team**: require workers to record implementation deviations with reasons, alternatives, and affected files (2dd6ead)
+- **clio**: add `CHANGE-QUIZ.md` generation so reviewers can verify they understand long agent-led changes before merge (2dd6ead)
+- **frontend-design**: add divergent static prototypes to surface unknown knowns before full implementation (2dd6ead)
+
+### Documentation
+- **readme**: document the v4.11.0 unknowns-first planning workflow in English and Korean READMEs (2dd6ead)
+
 ## [4.10.1] - 2026-07-04
 
 ### Bug Fixes
