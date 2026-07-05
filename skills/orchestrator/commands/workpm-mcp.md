@@ -100,6 +100,10 @@ PM: 진행 모니터링 (orchestrator_get_progress, 주기적 확인)
   ↓
 PM: 완료된 태스크 결과 읽기 (orchestrator_get_task_summary)
   ↓
+PM: blindspot pass 수행
+  → unknown unknowns, implicit assumptions, architecture-changing questions 정리
+  → 가장 영향 큰 질문은 사용자에게 먼저 확인
+  ↓
 PM: 종합 분석 + 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort)
   ↓
 PM: 채점표 + 추천안을 사용자에게 제안 (현재 CLI의 질문 방식)
@@ -114,8 +118,10 @@ PM: 승인 결과를 activity log에 기록
 4. Worker 생성 (`orchestrator_spawn_workers({ count: 2 })`)
 5. 진행 모니터링 (`orchestrator_get_progress` 반복)
 6. 완료 결과 수집 (`orchestrator_get_task_summary`)
-7. 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort, 근거 한 줄씩) → 현재 CLI의 질문 방식으로 채점표+추천안 제시·승인 (채점 없이 나열 금지)
-8. 승인 결과 기록 (`orchestrator_log_activity`)
+7. **Blindspot pass** — 명시 요구사항, 미정 결정, 암묵 기대, unknown unknowns, 아키텍처 변경 질문을 정리하고 activity log에 기록
+8. 답에 따라 아키텍처가 바뀌는 질문이 있으면 가장 큰 것부터 사용자에게 확인 (한 번에 한 질문)
+9. 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort, 근거 한 줄씩) → 현재 CLI의 질문 방식으로 채점표+추천안 제시·승인 (채점 없이 나열 금지)
+10. 승인 결과 기록 (`orchestrator_log_activity`)
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
@@ -196,13 +202,14 @@ PM: Phase 4 실행
 1. 승인된 제안서 기반 태스크 분해
 2. `orchestrator_create_task` — prompt에 **도면 경로** 포함, scope, depends_on 설정
 3. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
-4. AI 배정 (`ai_provider` 필드, 미지정 시 기본 AI)
-5. `orchestrator_spawn_workers` — Worker 생성
-6. `orchestrator_get_progress` — 반복 모니터링
-7. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
+4. 태스크 prompt에 `implementation-notes.md` 기록 규칙 포함: 계획 이탈이 필요하면 보수적 선택을 하고 `Deviations`에 사유/대안/영향 파일을 기록한 뒤 계속 진행
+5. AI 배정 (`ai_provider` 필드, 미지정 시 기본 AI)
+6. `orchestrator_spawn_workers` — Worker 생성
+7. `orchestrator_get_progress` — 반복 모니터링
+8. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
    - `skills/code-reviewer/SKILL.md` 참조 지시
    - 미통과 시 수정 태스크 생성 → 수정 후 재리뷰 (최대 2회)
-8. 자재검사 통과 → Phase 4 공정 점검으로 진행
+9. 자재검사 통과 → Phase 4 공정 점검으로 진행
 
 ### Phase 4: 공정 점검 (준공 검사)
 

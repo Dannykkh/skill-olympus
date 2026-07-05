@@ -6,7 +6,7 @@
 
 ## Domain Dictionary Integration (모든 전문가 공통)
 
-Step 8 끝에서 생성된 `<planning_dir>/domain-dictionary.md` v1 사전을 **모든 6명의 전문가**에게 컨텍스트로 주입하고, 분석 결과에 사전 변경 제안을 포함시킵니다. 이는 Phase 3 끝에서 v2(자동 병합) → v3(사용자 확인) 으로 진화하기 위한 입력입니다.
+Step 8 끝에서 생성된 `docs/domain-dictionary.md` v1 사전을 **모든 6명의 전문가**에게 컨텍스트로 주입하고, 분석 결과에 사전 변경 제안을 포함시킵니다. 이는 Phase 3 끝에서 v2(자동 병합) → v3(충돌만 확인) 으로 진화하기 위한 입력입니다.
 
 **아래 두 가지를 모든 6개 프롬프트(UX, Architecture, Red Team, Domain Researcher, Domain Process Expert, Domain Technical Expert)에 자동 적용하세요. 개별 프롬프트 본문에는 이미 명시되어 있지 않을 수 있으므로 zephermine SKILL.md Step 10 실행 시 메인 컨텍스트에서 추가합니다.**
 
@@ -15,7 +15,7 @@ Step 8 끝에서 생성된 `<planning_dir>/domain-dictionary.md` v1 사전을 **
 각 프롬프트의 "Read these files:" 목록 끝에 추가:
 
 ```
-- <planning_dir>/domain-dictionary.md (도메인사전 v1 — 분석 시 이 사전의 용어를 정확히 사용하세요. 사전이 없으면 이 항목 생략)
+- docs/domain-dictionary.md (도메인사전 v1 — 분석 시 이 사전의 용어를 정확히 사용하세요. 사전이 없으면 이 항목 생략)
 ```
 
 ### B. 출력에 Dictionary Updates 섹션 추가
@@ -29,19 +29,19 @@ Step 8 끝에서 생성된 `<planning_dir>/domain-dictionary.md` v1 사전을 **
 |------|------|------------|------|
 | ADD | {신규 용어} | {정의} | {왜 필요한지} |
 | REFINE | {기존 용어} | {다듬은 정의} | {기존 정의의 모호성} |
-| CONFLICT | {용어} | {A 또는 B?} | {두 의미가 함께 발견됨 — 사용자 결정 필요} |
+| CONFLICT | {용어} | {A 또는 B?} | {두 의미가 함께 발견됨 — Step 11 충돌 해결 필요} |
 | MERGE | {용어} → {다른 용어} | (병합) | {동의어 — 사전의 {다른 용어}와 같은 개념} |
 ```
 
 **행위 종류:**
 - **ADD**: 사전에 없는 신규 용어 발견
 - **REFINE**: 기존 정의가 모호하거나 부정확
-- **CONFLICT**: 두 다른 의미로 사용되고 있음 (자동 병합 ❌, Step 11 사용자 결정 필수)
+- **CONFLICT**: 두 다른 의미로 사용되고 있음 (자동 병합하지 않음, Step 11에서 핵심 충돌만 질문)
 - **MERGE**: 동의어 발견 (사전의 다른 용어와 같은 개념)
 
 **자동 병합 규칙 (Step 10 끝):**
 - ADD/REFINE/MERGE → 자동 병합 (사전 v1 → v2)
-- CONFLICT → Step 11 사용자 확인으로 미룸
+- CONFLICT → Step 11 충돌 해결로 미룸. DB/API/타입/UI/보안/정책을 바꾸는 핵심 충돌만 사용자에게 묻고, 비차단 충돌은 보수적 기본값으로 `[inferred]` 처리
 
 전문가 6명의 분석이 같은 어휘 위에서 이루어지면 결과물의 용어 일관성이 크게 향상됩니다.
 
@@ -370,10 +370,10 @@ BackgroundJob(
   - <planning_dir>/interview.md (사용자 요구사항 인터뷰 — 깊은 컨텍스트의 기반)
   - <planning_dir>/research.md (if exists — Step 5 초기 리서치: 논문/경쟁사/웹 1차 조사)
   - <planning_dir>/team-reviews/domain-research.md (bounded domain context)
-  - <planning_dir>/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
+  - docs/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
 
   Use ALL inputs to ground your analysis. interview.md는 사용자가 진짜 원하는 게 무엇인지의 일차 출처입니다.
-  domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
+  docs/domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
   Do not perform WebSearch or fresh external research by default. Use domain-research.md as the research boundary. If evidence is missing, mark "Follow-up needed" instead of expanding scope.
   Keep output bounded: cover max 10 business tasks/functions. If the spec has more, group related tasks.
 
@@ -395,7 +395,7 @@ BackgroundJob(
   - **출력**: 결과물, 상태 변경, 다음 업무 트리거
   - **예외 흐름**: 실패/거절/취소 시 어떻게 되는가
 
-  추가 분석 (제안 — 사용자 확인 후 채택):
+  추가 분석 (제안 — Step 11 정책으로 자동 통합/충돌만 확인):
 
   ⚠️ IMPORTANT: 아래 항목은 AI의 **제안**입니다. 반드시 채택해야 하는 것이 아닙니다.
   각 항목에 채택 우선순위를 표시하세요:
@@ -433,10 +433,10 @@ BackgroundJob(
   - <planning_dir>/interview.md (사용자 요구사항 인터뷰 — 깊은 컨텍스트의 기반)
   - <planning_dir>/research.md (if exists — Step 5 초기 리서치: 논문/경쟁사/웹 1차 조사)
   - <planning_dir>/team-reviews/domain-research.md (bounded domain context)
-  - <planning_dir>/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
+  - docs/domain-dictionary.md (if exists — 도메인 사전 v1: 분석 시 이 사전의 용어를 정확히 사용)
 
   Use ALL inputs to ground your analysis. interview.md는 사용자가 진짜 원하는 게 무엇인지의 일차 출처입니다.
-  domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
+  docs/domain-dictionary.md가 있으면 모든 용어를 사전과 정확히 일치시키세요 (다른 전문가와의 용어 일관성 확보).
   Do not perform WebSearch or fresh external research by default. Use domain-research.md as the research boundary. If evidence is missing, mark "Follow-up needed" instead of expanding scope.
   Keep output bounded: cover max 10 feature/technology areas. If the spec has more, group related areas.
 
@@ -470,7 +470,7 @@ BackgroundJob(
   | 영역 | 솔루션명 | GitHub Stars / 가격 | 적용 방법 |
   |------|---------|-------------------|----------|
 
-  ## 7. 누락 사항 (제안 — 사용자 확인 후 채택)
+  ## 7. 누락 사항 (제안 — Step 11 정책으로 자동 통합/충돌만 확인)
 
   ⚠️ IMPORTANT: 아래 항목은 AI의 **제안**입니다. 반드시 채택해야 하는 것이 아닙니다.
   각 항목에 채택 우선순위를 표시하세요:
@@ -532,7 +532,7 @@ For EACH business task/function in the spec, output:
 - 출력: 결과물, 상태 변경, 다음 업무 트리거
 - 예외 흐름: 실패/거절/취소 시 처리
 
-Also add (제안 — 사용자 확인 후 채택):
+Also add (제안 — Step 11 policy auto-integrates; ask only on blocking conflicts):
 
 ⚠️ IMPORTANT: 아래 항목은 AI의 제안입니다. 반드시 채택해야 하는 것이 아닙니다.
 각 항목에 채택 우선순위를 표시하세요:
@@ -585,7 +585,7 @@ Output format:
 | 영역 | 솔루션명 | Stars/가격 | 적용 방법 |
 |------|---------|-----------|----------|
 
-## 7. 누락 사항 (제안 — 사용자 확인 후 채택)
+## 7. 누락 사항 (제안 — Step 11 정책으로 자동 통합/충돌만 확인)
 
 ⚠️ IMPORTANT: 아래 항목은 AI의 제안입니다. 반드시 채택해야 하는 것이 아닙니다.
 각 항목에 채택 우선순위를 표시하세요:
@@ -627,7 +627,7 @@ $( [ -f "<planning_dir>/research.md" ] && cat "<planning_dir>/research.md" || ec
 $(cat "<planning_dir>/team-reviews/domain-research.md")
 
 ===== domain-dictionary.md (도메인 사전 v1, 있는 경우 — 용어를 정확히 따를 것) =====
-$( [ -f "<planning_dir>/domain-dictionary.md" ] && cat "<planning_dir>/domain-dictionary.md" || echo "(파일 없음 — Step 8 미수행)" )" \
+$( [ -f "docs/domain-dictionary.md" ] && cat "docs/domain-dictionary.md" || echo "(파일 없음 — Step 8 미수행)" )" \
   | codex -a never exec \
     --sandbox workspace-write \
     --skip-git-repo-check \
@@ -649,7 +649,7 @@ fi
 
 **3. Gemini 실행** (기본 timeout 10분, 필요 시 `GEMINI_TIMEOUT_SECONDS`로 조정):
 
-> Gemini는 `@file` 문법으로 파일을 직접 첨부합니다. `research.md`와 `domain-dictionary.md`는 단계에 따라 없을 수 있으므로 존재 여부를 확인 후 인자로 추가합니다.
+> Gemini는 `@file` 문법으로 파일을 직접 첨부합니다. `research.md`와 `docs/domain-dictionary.md`는 단계에 따라 없을 수 있으므로 존재 여부를 확인 후 인자로 추가합니다.
 > 백그라운드/자동화에서는 `--approval-mode yolo`와 `-p/--prompt`를 함께 사용합니다. positional prompt만 쓰면 Gemini CLI가 interactive 모드로 들어가 승인 대기에서 멈출 수 있습니다.
 > Gemini는 종종 응답이 늦거나 네트워크/서버 문제로 반환이 없을 수 있으므로 장시간 기다리지 않습니다. 기본 600초 안에 결과가 없으면 실패로 기록하고 폴백합니다.
 
@@ -659,8 +659,8 @@ timeout "$GEMINI_TIMEOUT_SECONDS" bash -c '
 EXTRA_FILES=""
 [ -f "<planning_dir>/research.md" ] && EXTRA_FILES="$EXTRA_FILES
 @<planning_dir>/research.md"
-[ -f "<planning_dir>/domain-dictionary.md" ] && EXTRA_FILES="$EXTRA_FILES
-@<planning_dir>/domain-dictionary.md"
+[ -f "docs/domain-dictionary.md" ] && EXTRA_FILES="$EXTRA_FILES
+@docs/domain-dictionary.md"
 
 gemini --approval-mode yolo \
   --output-format text \

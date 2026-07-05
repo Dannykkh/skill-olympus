@@ -9,13 +9,13 @@ spawn explorer to analyze {target_scope}, map dependency risks, and propose a wa
 ## 2) Worker 스폰
 
 ```text
-spawn worker for {owned_files}. implement {task_goal}. run related tests. edit only {owned_files}. log activity to conversations/{date}-team-poseidon.md (START/DECISION/ERROR/FILE/DONE). if docs/domain-dictionary.md exists, follow it strictly: use its english identifiers for code symbols, korean labels for UI strings, and never use forbidden terms listed in the dictionary.
+spawn worker for {owned_files}. implement {task_goal}. run related tests. edit only {owned_files}. keep implementation-notes.md updated; if an edge case forces a deviation from the plan, choose the conservative option, log it under "Deviations" with reason/alternative/affected files, and continue. log activity to conversations/{date}-team-poseidon.md (START/DECISION/ERROR/FILE/DONE). if docs/domain-dictionary.md exists, follow it strictly: use its english identifiers for code symbols, korean labels for UI strings, and never use forbidden terms listed in the dictionary.
 ```
 
 ## 3) Custom Worker 스폰
 
 ```text
-spawn fast_worker for {owned_files}. implement {task_goal}. keep output concise and run tests. follow docs/domain-dictionary.md if present.
+spawn fast_worker for {owned_files}. implement {task_goal}. keep output concise and run tests. keep implementation-notes.md updated; log plan deviations under "Deviations" with reason and affected files. follow docs/domain-dictionary.md if present.
 ```
 
 ## 4) 리드 통합 지시
@@ -31,7 +31,7 @@ spawn explorer to parse docs/plan/{plan_name}/sections/index.md, extract depende
 ```
 
 ```text
-spawn worker for {section_files}. implement section {section_id} from docs/plan/{plan_name}/sections/{section_file}. edit only assigned files and run tests. log activity to conversations/{date}-team-poseidon.md (START/DECISION/ERROR/FILE/DONE). if docs/domain-dictionary.md exists, follow it strictly: english identifiers for code, korean labels for UI, no forbidden terms.
+spawn worker for {section_files}. implement section {section_id} from docs/plan/{plan_name}/sections/{section_file}. edit only assigned files and run tests. keep implementation-notes.md updated; if an edge case forces a deviation from the section plan, choose the conservative option, log it under "Deviations" with reason/alternative/affected files, and continue. log activity to conversations/{date}-team-poseidon.md (START/DECISION/ERROR/FILE/DONE). if docs/domain-dictionary.md exists, follow it strictly: english identifiers for code, korean labels for UI, no forbidden terms.
 ```
 
 ## 6) 도메인사전 컨텍스트 (모든 worker 공통)

@@ -32,7 +32,7 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 간결하게 진행 순서만 출력:
 ```
 젭마인(Zephermine) 시작
-순서: Research → Interview → Spec → Team Review → Domain Dictionary → Plan → External Review → DB Schema → API Spec → Flow Diagrams → Sections → Operation Scenarios → QA Scenarios → Skill Discovery
+순서: Research → Blindspot → Interview → Spec(+Domain Dictionary v1) → Persona/Journey → Team Review(+Dictionary v3) → Plan → External Review → DB Schema → API Spec → Flow Diagrams → Sections → Operation Scenarios → QA Scenarios → Skill Discovery
 ```
 
 ### 2. Resolve Spec File Path
@@ -72,7 +72,7 @@ Determine session state by checking existing files:
    **resume 모드일 때는 archive 하지 않음** — 이어서 작업할 때는 기존 파일을 유지.
    사용자가 "새로 시작"이라고 명시하거나, 모든 단계가 완료된 상태에서 재실행할 때만 archive.
 4. Set `initial_file` = the spec file path
-4. If spec file doesn't exist, create an empty template:
+5. If spec file doesn't exist, create an empty template:
    ```markdown
    # Feature Spec
 
@@ -83,30 +83,32 @@ Determine session state by checking existing files:
    - [Requirement 1]
    - [Requirement 2]
    ```
-5. Scan for existing planning files (research.md, research/, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
+6. Scan for existing planning files (research-decision.md, research.md, research/, unknowns.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
 
    > 마스터 사전(`docs/domain-dictionary.md`)은 프로젝트 단일이므로 planning_dir 스캔에서 제외. planning_dir에는 변경 이력 델타만 보관.
 
-6. **Import upstream artifacts** — 사전 파이프라인 산출물이 있으면 컨텍스트로 로드:
+7. **Import upstream artifacts** — 사전 파이프라인 산출물이 있으면 컨텍스트로 로드:
    - `docs/athena/*.md` (excluding archive/) → Athena Go/No-Go 판정, 스코프 조정, MVP 범위
    - `docs/hermes/*.md` (excluding archive/) → Hermes 사업 분석 (BMC, TAM/SAM, GTM)
    - 있으면: interview-protocol.md Phase C의 기정 사실(given context)로 활용, 사업 관련 질문 생략
    - 없으면: 무시하고 정상 진행
 
-7. Determine mode and resume point:
+8. Determine mode and resume point:
 
 | Files Found | Mode | Resume From |
 |-------------|------|-------------|
 | None | new | Step 4 |
+| research-decision.md only | resume | Step 5 or Step 5A (depending on selected research) |
 | research/ partial files only | resume | Step 5 (finish/merge research) |
-| research only | resume | Step 6 (interview) |
-| research + interview | resume | Step 8 (spec synthesis) |
+| research.md only | resume | Step 5A (blindspot pass) |
+| research + unknowns | resume | Step 6 (interview or inferred interview) |
+| research + unknowns + interview | resume | Step 8 (spec synthesis) |
 | + spec | resume | Step 9 (persona) |
 | + personas-and-journeys.md | resume | Step 10 (team analysis) |
 | + team-review.md | resume | Step 12 (plan) |
 | + plan | resume | Step 13 (external review) |
 | + reviews | resume | Step 14 (integrate) |
-| + integration-notes | resume | Step 15 (user review) |
+| + integration-notes | resume | Step 15 (integrated plan checkpoint) |
 | + db-schema.md | resume | Step 17 (API spec) |
 | + api-spec.md | resume | Step 18 (flow diagrams) |
 | + flow-diagrams/ | resume | Step 19 (section index) |
@@ -119,13 +121,13 @@ Determine session state by checking existing files:
 |------|------|
 | spec.md 있고 `docs/domain-dictionary.md` 없음 | Step 8 끝부산물(사전 v1 생성)을 먼저 실행한 후 정해진 Resume Step으로 진행 |
 | team-review.md 있고 사전이 v1에 머무름 (Dictionary Updates 미반영) | Step 10 끝부산물(사전 v2 자동 병합)을 먼저 실행 |
-| plan.md 있고 사전이 v3 미확정 (`<planning_dir>/domain-dictionary-delta.md`에 v2→v3 항목 없음) | Step 11 끝부산물(사전 v3 최종화)을 먼저 실행 — 사용자 확인 |
+| plan.md 있고 사전이 v3 미확정 (`<planning_dir>/domain-dictionary-delta.md`에 v2→v3 항목 없음) | Step 11 끝부산물(사전 v3 최종화)을 먼저 실행 — 충돌만 확인 |
 
 **판정 방법**: `<planning_dir>/domain-dictionary-delta.md`의 `## v1 → v2`, `## v2 → v3` 섹션 존재 여부로 진행 단계 추정. 델타가 없으면 마스터 사전이 어떤 버전인지 모르므로 안전하게 v1부터 다시 실행.
 
 이 보정은 사용자가 Resume할 때 사전이 누락된 채로 다음 Phase가 진행되는 것을 막습니다.
 
-8. Create TODO list with TodoWrite based on current state
+9. Create TODO list with TodoWrite based on current state
 
 Print status:
 ```
@@ -164,24 +166,31 @@ Question tools differ by CLI. To avoid `Invalid tool parameters`, use plain text
 - Do not use structured multi-selection fields unless the current CLI explicitly supports them. Otherwise, show a numbered checklist and ask the user to answer with multiple numbers.
 - If a structured question tool fails once, immediately fall back to plain text and do not retry the same payload.
 
-This applies to Step 4, Step 6, Step 11, Step 15, Step 25, and the automatic `domain-dictionary` flow.
+Default no-stop policy:
+
+- Do not ask preference questions that can be inferred from the spec, codebase, research, or existing project conventions.
+- Ask only when the answer could materially change architecture, data model, security boundary, UX flow, rollout strategy, legal/compliance handling, or an irreversible external action.
+- If the question is non-blocking, choose the conservative default, mark it as `[inferred]` in the relevant artifact, and continue.
+- Put non-blocking uncertainty in `unknowns.md`, `interview.md`, `integration-notes.md`, or the final Open Questions section instead of stopping the workflow.
+
+This applies most strongly to Step 6 critical unknowns, Step 11 unresolved domain/dictionary conflicts, and Step 15 only when the user explicitly requested a review gate.
 
 ---
 
 ## Workflow
 
-26단계는 **6 Phase**로 그룹화됩니다. Phase는 단순 라벨이며 Step 번호는 변경되지 않습니다. 다른 스킬이 "Phase X 후 호출"로 참조할 때 사용합니다.
+26단계는 **6 Phase**로 그룹화됩니다. `5A. Blindspot Pass`는 Step 5와 6 사이의 보조 단계이며, 기존 Step 번호는 변경하지 않습니다. Phase는 단순 라벨이며 다른 스킬이 "Phase X 후 호출"로 참조할 때 사용합니다.
 
 | Phase | Step | 핵심 산출물 |
 |-------|------|-------------|
-| **Phase 1: Discovery** | 4-7 | research.md, interview.md |
-| **Phase 2: Spec** | 8-9 | spec.md, personas-and-journeys.md, **domain-dictionary.md v1** |
-| **Phase 3: Domain** | 10-11 | team-review.md, **domain-dictionary.md v3 (확정)** |
+| **Phase 1: Discovery** | 4-7 | research-decision.md, research.md, unknowns.md, interview.md |
+| **Phase 2: Spec** | 8-9 | spec.md, personas-and-journeys.md, **docs/domain-dictionary.md v1** |
+| **Phase 3: Domain** | 10-11 | team-review.md, **docs/domain-dictionary.md v3**, domain-dictionary-delta.md |
 | **Phase 4: Plan** | 12-15 | plan.md, integration-notes.md |
 | **Phase 5: Design** | 16-19 | db-schema.md, api-spec.md, flow-diagrams/, sections/ |
 | **Phase 6: Validation** | 20-26 | section-*.md, operation-scenarios.md, qa-scenarios.md |
 
-**도메인사전은 Step이 아니라 Step의 부산물입니다.** Step 8 끝에서 v1 초안, Step 10 끝에서 전문가 입력으로 v2 자동 병합, Step 11 끝에서 사용자 확인으로 v3 확정. 별도 단계가 추가되지 않으며, 각 Step 본문 끝의 평범한 단락으로 처리됩니다.
+**도메인사전은 Step이 아니라 Step의 부산물입니다.** Step 8 끝에서 v1 초안, Step 10 끝에서 전문가 입력으로 v2 자동 병합, Step 11 끝에서 충돌만 확인하고 v3 확정. 별도 단계가 추가되지 않으며, 각 Step 본문 끝의 평범한 단락으로 처리됩니다.
 
 ---
 
@@ -195,8 +204,9 @@ See [research-protocol.md](references/research-protocol.md).
 
 1. Read the spec file
 2. Extract potential research topics (technologies, patterns, integrations)
-3. Ask user about: codebase research / GitHub similar projects / web research / academic papers / competitor analysis
-4. Record which research types to perform in step 5
+3. Auto-select research scope from the spec, local repo, and risk level
+4. Ask only if the research choice changes scope/cost/compliance and no conservative default exists
+5. Record selected and skipped research types in `<planning_dir>/research-decision.md`
 
 ### 5. Execute Research
 
@@ -209,17 +219,29 @@ Based on decisions from step 4, launch bounded research subagents:
 
 Subagents return only 1-2 line summaries. Main context combines `<planning_dir>/research/*.md` → `<planning_dir>/research.md`.
 
-Skip entirely if user chose no research in step 4.
+Skip Step 5 only when Step 4 auto-selection finds no useful research target. Record that decision in `research-decision.md`.
+
+### 5A. Blindspot Pass
+
+Before the interview, convert research findings into an unknowns map. Write `<planning_dir>/unknowns.md` with:
+
+- Known knowns: explicit requirements already stated by the user or discovered in existing code/docs
+- Known unknowns: decisions the user has not made yet
+- Unknown knowns: likely implicit preferences, conventions, taste, or "obvious once seen" expectations
+- Unknown unknowns: risks, hidden dependencies, edge cases, domain assumptions, or validation gaps the user may not know to ask about
+- Architecture-changing questions: 3-7 questions where the answer could change data models, APIs, security boundaries, UX flow, or rollout strategy
+
+Use `unknowns.md` to drive Step 6. Ask the highest-impact architecture-changing question first, one question at a time when a single answer could materially redirect the plan. If there are no critical blockers, synthesize inferred answers and continue without a live interview.
 
 ### 6. Detailed Interview
 
 See [interview-protocol.md](references/interview-protocol.md)
 
-Run in main context. Informed by: initial spec + research findings. Use the Question Tool Compatibility rules above.
+Run in main context. Informed by: initial spec + research findings + `unknowns.md`. Use the Question Tool Compatibility and Default no-stop policy above.
 
 ### 7. Save Interview Transcript
 
-Write Q&A to `<planning_dir>/interview.md`
+Write Q&A or inferred assumptions to `<planning_dir>/interview.md`. Include Soft Gate summaries even when no live questions were asked.
 
 ---
 
@@ -232,7 +254,7 @@ Spec과 Persona를 합성하고, 도메인사전 v1 초안을 자동 생성하�
 Combine into `<planning_dir>/spec.md`:
 - Initial input + research findings + interview answers + Test Scenarios
 
-**필수 포함: Context Map 섹션** — interview.md의 Gate 1 결과에서 가져옴:
+**필수 포함: Context Map 섹션** — interview.md의 Soft Gate 1 결과 또는 inferred summary에서 가져옴:
 
 ```markdown
 ## Context Map
@@ -256,7 +278,7 @@ Combine into `<planning_dir>/spec.md`:
 {기술 스택, 기존 코드, 인프라 요약}
 ```
 
-**필수 포함: Problem Statement 섹션** — interview.md의 Gate 2 결과에서 가져옴:
+**필수 포함: Problem Statement 섹션** — interview.md의 Soft Gate 2 결과 또는 inferred summary에서 가져옴:
 
 ```markdown
 ## Problem Statement
@@ -276,15 +298,15 @@ Combine into `<planning_dir>/spec.md`:
 |-----------|--------|-----------|-----------|
 | {기술적 위험} | High/Med/Low | High/Med/Low | {대응 방안} |
 
-**조건부 생성: Design System** — 인터뷰 Phase S-1(디자인 비전)이 수집된 경우:
+**조건부 생성: Design System** — 인터뷰 Phase S-1(디자인 비전)이 수집되었거나 spec/research/unknowns에서 추론 가능한 경우:
 See [design-system-guide.md](references/design-system-guide.md)
 `<planning_dir>/design-system.md` 생성. UI/프론트엔드가 없는 프로젝트는 자동 건너뜀.
 
 **필수 포함: Test Scenarios 섹션** — 각 주요 기능마다 정상/에러/엣지 케이스.
 See [test-scenario-guide.md](references/test-scenario-guide.md)
 
-**Step 8 끝부산물 — 도메인사전 v1 초안 생성** (사용자 개입 최소):
-spec.md 작성 직후 `domain-dictionary` 스킬을 컨텍스트 모드로 자동 호출. 입력은 spec.md + interview.md. 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능)이 있으면 후보 용어를 번호 목록으로 1회 확인(사용자 개입 1회 — 글로벌 → 프로젝트 시드). 글로벌이 비어있으면 사용자 개입 없음. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타(`<planning_dir>/domain-dictionary-delta.md`). 핵심 용어 5개 미만이면 자동 건너뜀. 자세한 절차는 [domain-dictionary/references/global-sync.md](../domain-dictionary/references/global-sync.md).
+**Step 8 끝부산물 — 도메인사전 v1 초안 생성** (사용자 개입 없음):
+spec.md 작성 직후 `domain-dictionary` 스킬을 컨텍스트 모드로 자동 호출. 입력은 spec.md + interview.md. 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능)이 있으면 명확히 맞는 후보 용어만 자동 시드하고, 애매한 후보는 `[inferred-skip]`로 델타에 기록합니다. 글로벌이 비어있으면 사용자 개입 없이 프로젝트 사전만 만듭니다. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타(`<planning_dir>/domain-dictionary-delta.md`). 핵심 용어 5개 미만이면 자동 건너뜀. 자세한 절차는 [domain-dictionary/references/global-sync.md](../domain-dictionary/references/global-sync.md).
 
 ### 9. User Persona & Journey Map
 
@@ -318,7 +340,7 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 **Phase B — 2개 병렬 (Phase A 완료 후):** Domain Process Expert / Domain Technical Expert
 
 - Domain experts do not perform fresh web research by default.
-- They synthesize `spec.md`, `interview.md`, `research.md`, `domain-research.md`, and `domain-dictionary.md`.
+- They synthesize `spec.md`, `interview.md`, `research.md`, `domain-research.md`, and `docs/domain-dictionary.md`.
 - External AI domain experts are time-boxed; timeout/failure falls back to Claude or a warning stub.
 
 > Phase B 실행 CLI: Codex/Gemini 가용 여부에 따라 분배. 없으면 Claude Explore로 폴백.
@@ -332,20 +354,22 @@ Results → `<planning_dir>/team-reviews/` (개별 6개) + `<planning_dir>/team-
 **Step 10 끝부산물 — 도메인사전 v2 자동 병합** (사용자 개입 없음):
 6개 전문가의 `## Dictionary Updates` 섹션을 추출하여 v1 → v2로 자동 병합. ADD(신규 추가)/REFINE(정의 다듬음)/MERGE(동의어 통합)는 자동 적용, CONFLICT(전문가 간 의견 갈림)는 자동 병합하지 않고 Step 11로 미룸. 갱신 대상: `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`.
 
-### 11. User Confirmation of Domain Expert Suggestions
+### 11. Domain Conflict Resolution and Dictionary Finalization
 
 See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 
-**Step 11은 세 가지 결정을 순서대로 확인합니다.**
+**Step 11은 자동 통합이 기본입니다.**
 
-기본은 일반 텍스트 번호 목록입니다. 구조화 질문 도구가 다중 선택을 명시 지원할 때만 한 화면 선택형으로 묶고, 항목이 많으면 2-3개 질문 단위로 나눕니다.
+일반 도메인 전문가 제안, ADD/REFINE/MERGE 사전 변경, 명확한 글로벌 사전 후보는 보수적 기준으로 자동 채택 또는 보류하고 이유를 기록합니다. 사용자에게 묻는 경우는 다음뿐입니다.
 
-1. **도메인 전문가 추가 제안** (기존) — 채택된 항목만 Step 12 Plan에 반영
-2. **사전 변경 제안** (신규) — Step 10 자동 병합 시 CONFLICT로 미뤄진 항목 + 사용자 검토가 필요한 핵심 용어
-3. **글로벌 사전 반영 제안** (신규) — 이번 프로젝트에서 새로 정의/다듬어진 용어 중 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`)에 추가할 것 선택
+1. **충돌 용어** — DB/API/타입/화면 문구에 들어갈 핵심 용어가 둘 이상으로 갈리고, 자동 통일이 이후 산출물을 크게 바꿀 때
+2. **정책성 제안** — 보안, 개인정보, 결제, 법적 책임, 운영 프로세스를 바꾸는 제안일 때
+3. **글로벌 사전 반영** — 전역 사전에 쓰기 작업을 해야 하는데 프로젝트 특수 용어인지 범용 용어인지 판단이 불가능할 때
 
-**Step 11 끝부산물 — 도메인사전 v3 최종화** (사용자 개입 끝, 자동 반영만):
-사용자 결정을 반영하여 마스터(`docs/domain-dictionary.md`)를 v3로 확정, 델타에 최종 변경 이력 기록, 글로벌 반영 선택 항목을 `~/.agent-memory/domain-dictionaries/{도메인}.md`에 출처 메타데이터와 함께 추가.
+질문이 필요하면 한 번에 하나만 묻습니다. 그 외 항목은 `accepted-by-default`, `deferred-by-default`, `inferred-skip` 중 하나로 `<planning_dir>/domain-dictionary-delta.md`와 `team-review.md`에 기록하고 계속 진행합니다.
+
+**Step 11 끝부산물 — 도메인사전 v3 최종화**:
+마스터(`docs/domain-dictionary.md`)를 v3로 확정, 델타에 최종 변경 이력 기록, 글로벌 반영 항목은 출처 메타데이터와 함께 추가합니다. 전역 쓰기가 애매하면 전역 반영을 건너뛰고 프로젝트 사전만 확정합니다.
 
 **Phase 4 이후로 이 사전은 변경되지 않습니다.** Plan, DB Schema, API Spec, Sections는 모두 v3을 따릅니다.
 
@@ -393,21 +417,16 @@ Analyze `<planning_dir>/reviews/`. You are the authority on what to integrate.
 1. Write `<planning_dir>/integration-notes.md` (통합/미통합 이유 기록)
 2. Update `<planning_dir>/plan.md` with integrated changes
 
-### 15. User Review of Integrated Plan
+### 15. Integrated Plan Checkpoint
 
-Ask in plain text. Use a structured question tool only if it supports a single short confirmation:
-```
-The plan has been updated with external feedback. You can now review and edit plan.md.
+Do not stop for plan approval by default. Write `<planning_dir>/integration-notes.md`, update `<planning_dir>/plan.md`, and continue to Step 16.
 
-If you want Claude's help editing the plan, open a separate Claude session - this session
-is mid-workflow and can't assist with edits until the workflow completes.
+Stop here only when:
+- the user explicitly asked for a plan review gate before detailed design
+- the external reviews expose an unresolved critical contradiction
+- the remaining decision would materially change architecture, data model, security boundary, UX flow, rollout strategy, or compliance handling
 
-When you're done reviewing, select "Done" to continue.
-```
-
-Options: "Done reviewing"
-
-Wait for user confirmation before proceeding.
+When stopping is required, ask one plain-text question that names the blocking decision and the recommended default.
 
 ---
 
@@ -489,6 +508,7 @@ See [operation-qa-guide.md](references/operation-qa-guide.md)
 ### 23. Final Status
 
 Verify all files were created successfully:
+- `research-decision.md` and `unknowns.md` (Discovery trace)
 - All section files from SECTION_MANIFEST
 - `spec.md`에 `## Context Map`과 `## Problem Statement` 섹션이 있는지 확인
 - Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
@@ -498,13 +518,15 @@ Verify all files were created successfully:
 - `design-system.md` + `personas-and-journeys.md` (UI가 있는 프로젝트)
 - `operation-scenarios.md` + `qa-scenarios.md`
 - `team-reviews/domain-research.md` + `domain-process-analysis.md` + `domain-technical-analysis.md`
+- `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`
 
 ### 24. Output Summary
 
 ```
 ZEPHERMINE: Planning Complete
 
-Generated: research/interview/spec/personas-and-journeys/team-review/plan/
+Generated: research-decision/unknowns/research/interview/spec/domain-dictionary/
+           personas-and-journeys/team-review/plan/
            api-spec/db-schema/design-system/integration-notes/
            operation-scenarios/qa-scenarios.md
            + team-reviews/ + reviews/ + flow-diagrams/ + sections/
@@ -528,8 +550,7 @@ Other options:
 2. `Glob("skills/*/SKILL.md")`로 이미 설치된 스킬 확인 + 키워드 매칭
 3. 미매칭 주요 키워드(최대 5개): `npx skills find "{keyword}"`
 4. 이미 설치된 관련 스킬 + 새로 설치 가능한 스킬 목록 출력
-5. 번호 목록으로 설치 선택 확인 ("건너뛰기" 포함). 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용
-   → 선택 시 `npx skills add {package} -g -y` 실행
+5. 설치는 묻지 않고 권장 목록만 출력합니다. `npx skills add ...` 같은 전역 설치 명령은 사용자가 명시적으로 설치를 요청한 경우에만 실행합니다.
 
 > 검색 결과가 없거나 모든 관련 스킬이 설치되어 있으면 자동 건너뛰기.
 
@@ -559,12 +580,12 @@ Other options:
 | 파일 | 내용 |
 |------|------|
 | [research-protocol.md](references/research-protocol.md) | Step 4-5 리서치 결정 기준, 서브에이전트 프롬프트 |
-| [interview-protocol.md](references/interview-protocol.md) | Step 6 인터뷰 질문 목록, 카테고리별 질문 전략 |
+| [interview-protocol.md](references/interview-protocol.md) | Step 6 Critical 질문 기준, 추론형 인터뷰 전략 |
 | [test-scenario-guide.md](references/test-scenario-guide.md) | Step 8 테스트 시나리오 형식, 케이스 작성 기준 |
 | [design-system-guide.md](references/design-system-guide.md) | Step 8 디자인 시스템 문서 구조 |
 | [persona-journey-guide.md](references/persona-journey-guide.md) | Step 9 페르소나/여정맵 형식 상세 |
 | [team-review-protocol.md](references/team-review-protocol.md) | Step 10 에이전트별 분석 프롬프트, Phase A/B 상세 |
-| [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 + 사전 변경 + 글로벌 반영 확인 절차 |
+| [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 + 사전 변경 + 글로벌 반영 충돌 해결 |
 | [external-review.md](references/external-review.md) | Step 13 Gemini/Codex 외부 리뷰 프롬프트 |
 | [schema-design-guide.md](references/schema-design-guide.md) | Step 16 DB 스키마 설계 절차, ERD/DDL 형식 |
 | [api-spec-guide.md](references/api-spec-guide.md) | Step 17 API 명세 형식, 엔드포인트 작성 규칙 |

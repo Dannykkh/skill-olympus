@@ -27,14 +27,14 @@ This document defines the research decision and execution flow.
 
 ## Step 4: Research Decision
 
-### Question Tool Compatibility
+### Default No-Stop Policy
 
-Use plain text numbered choices by default. Use a structured question tool only when the current CLI supports the exact schema.
+Research selection normally does not require a user question.
 
-- Structured calls: max 3 questions per call, each with 2-3 short options.
-- Do not use structured multi-selection fields unless the CLI explicitly supports them.
-- For multiple selections, show a numbered checklist and ask the user to reply with multiple numbers.
-- If `Invalid tool parameters` occurs once, do not retry the same payload; fall back to plain text.
+- Auto-select research from the spec, repo state, available docs, and risk profile.
+- Ask only when the research choice changes scope, cost, compliance handling, or requires an irreversible external action.
+- If unsure, choose the conservative lower-cost research path and record the assumption in `<planning_dir>/research-decision.md`.
+- Do not ask broad preference questions such as "Should I search GitHub?" or "Should I do web research?" unless the user explicitly requested a review gate.
 
 ### 4.1 Read and Analyze the Spec File
 
@@ -54,106 +54,86 @@ If the spec is vague, fall back to generic options:
 - "General best practices for {detected_language/framework}"
 - "Security considerations for {feature_type}"
 
-### 4.2 Ask About Codebase Research
+### 4.2 Auto-Detect Codebase Research
 
-Ask as a bounded choice. Use a structured question tool only if supported:
+Run codebase research automatically when any of these are true:
 
-```
-question: "Is there existing code I should research first?"
-header: "Codebase"
-options:
-  - label: "Yes, research the codebase"
-    description: "Analyze existing patterns, conventions, dependencies"
-  - label: "No existing code"
-    description: "This is a new project or standalone feature"
-```
+- `codemap/index.md`, README, docs, source directories, package manifests, solution files, or tests exist
+- the task looks like an addition or change to an existing system
+- the user mentions "existing", "current", "same pattern", "again", "fix", "upgrade", or a concrete module name
 
-### 4.3 Ask About GitHub Similar Projects
+Skip codebase research only when the workspace is clearly empty or the request is explicitly greenfield/standalone. Record the evidence either way.
 
-Ask as a bounded choice. Use a structured question tool only if supported:
+### 4.3 Auto-Select GitHub Similar Projects
 
-```
-question: "Should I search GitHub for similar projects to use as reference?"
-header: "GitHub"
-options:
-  - label: "Yes, find similar projects"
-    description: "Search GitHub for reference implementations, architecture patterns, proven solutions"
-  - label: "No, skip"
-    description: "Enough context from codebase and web research"
-```
+Run GitHub reference research only when it can materially reduce unknowns:
 
-If user selects yes, auto-generate search queries from spec:
+- the feature has common open-source reference implementations
+- the local codebase lacks an established pattern
+- the task involves architecture, workflow shape, plugins, CLIs, agent orchestration, or framework integration
+- the user explicitly asks for references or examples
+
+Otherwise skip and record: "Skipped GitHub research: local patterns/spec sufficient."
+
+Auto-generate search queries from spec:
 - `"{core_feature} {tech_stack}"` (예: "real-time chat nextjs")
 - `"{domain} {architecture_pattern}"` (예: "e-commerce microservices")
 - 스펙에서 추출한 기술 키워드 조합 (최대 3개 쿼리)
 
-### 4.4 Ask About Web Research
+### 4.4 Auto-Select Web Research
 
-Present the derived topics as a numbered checklist by default. Use structured multi-selection only if the current CLI explicitly supports it. When using the structured tool, send at most 4 `options` per call (5+ derived topics → use the plain numbered checklist or split into batches of 4; `AskUserQuestion` rejects >4 options with `Invalid tool parameters`):
+Run web research automatically when the answer is likely time-sensitive or external:
 
-```
-question: "Should I research current best practices for any of these topics?"
-header: "Web Research"
-selection: "multiple numbers by default; structured multiple-selection only if supported"
-options:
-  - label: "{derived_topic_1}"
-    description: "Based on spec mention of {X}"
-  - label: "{derived_topic_2}"
-    description: "Based on spec mention of {Y}"
-  - label: "{derived_topic_3}"
-    description: "Based on spec mention of {Z}"
-```
+- current SDK/API/library behavior, model/provider docs, pricing, standards, regulations, security guidance
+- unfamiliar or niche technology
+- high-risk integration such as auth, payments, medical, finance, cloud deploy, data privacy
+- user explicitly asks for "latest", "current", "research", "deep research", or source-backed recommendations
 
-If user selects "Other", follow up to get custom topics.
+Limit to max 3 derived topics. If more topics are possible, choose the three most likely to change the plan and put the rest in Open Questions.
 
-### 4.5 Ask About Academic Paper Research
+### 4.5 Auto-Select Academic Paper Research
 
-Ask as a bounded choice. Use a structured question tool only if supported:
+Run academic research only when the implementation depends on algorithms, ranking, search, optimization, ML/AI, evaluation methodology, simulation, cryptography, or performance benchmarking.
 
-```
-question: "관련 논문이나 알고리즘을 조사할까요?"
-header: "논문 조사"
-options:
-  - label: "Yes, search papers & algorithms"
-    description: "관련 논문, 알고리즘, 데이터 구조, 구현 패턴을 조사합니다 (Google Scholar, arXiv 등)"
-  - label: "No, skip"
-    description: "논문 조사 불필요"
-```
-
-If user selects yes, auto-generate search queries from spec:
+Auto-generate search queries from spec:
 - `"{core_algorithm} algorithm paper"` (예: "recommendation system collaborative filtering paper")
 - `"{domain} state of the art {year}"` (예: "real-time chat architecture 2025")
 - `"{feature} benchmark comparison"` (예: "vector search performance comparison")
 
-### 4.6 Ask About Competitor Analysis
+Skip for ordinary CRUD, UI, integration, documentation, and workflow automation tasks.
 
-Ask as a bounded choice. Use a structured question tool only if supported:
+### 4.6 Auto-Select Competitor Analysis
 
+Run competitor analysis only when product shape matters:
+
+- new product, SaaS, marketplace, public website, onboarding, pricing, menu structure, dashboard IA, or user workflow design
+- user explicitly asks for market/product/competitor perspective
+- `unknowns.md` flags unknown knowns around UX taste, expected feature set, or category norms
+
+If competitors are unknown, auto-search from the spec. Do not ask for competitor names unless the category is ambiguous enough that the wrong category would change the plan.
+
+### 4.7 Write `research-decision.md`
+
+Before Step 5, write `<planning_dir>/research-decision.md`:
+
+```markdown
+# Research Decision
+
+## Selected
+- Codebase: yes/no — {evidence}
+- Web: yes/no — {evidence}
+- GitHub: yes/no — {evidence}
+- Academic: yes/no — {evidence}
+- Competitors: yes/no — {evidence}
+
+## Assumptions
+- [inferred] {assumption}
+
+## Questions Deferred
+- {non-blocking unknown to revisit later}
 ```
-question: "경쟁 서비스/제품을 조사할까요?"
-header: "경쟁 분석"
-options:
-  - label: "Yes, analyze competitors"
-    description: "경쟁 서비스의 기능, 메뉴 구조, UX 패턴, 차별점을 분석합니다"
-  - label: "No, skip"
-    description: "경쟁 분석 불필요"
-```
 
-If user selects yes, ask follow-up as plain text or a supported bounded choice:
-
-```
-question: "알고 있는 경쟁 서비스가 있나요? (없으면 자동 검색합니다)"
-header: "Competitors"
-options:
-  - label: "직접 입력"
-    description: "경쟁사 이름이나 URL을 알려주세요"
-  - label: "자동 검색"
-    description: "스펙 기반으로 유사 서비스를 찾아보겠습니다"
-```
-
-### 4.7 Handle "No Research" Case
-
-If user selects no codebase AND no web research AND no GitHub research, skip step 5 entirely.
+If no research type is selected, skip Step 5 and proceed to Step 5A using the spec and local docs.
 
 ---
 
@@ -476,10 +456,10 @@ Recommended structure:
 
 | Case | Handling |
 |------|----------|
-| Spec file is vague | Present generic options based on detected language/framework |
-| User selects no research | Skip step 5, proceed to step 6 (interview) |
+| Spec file is vague | Select codebase research if available; otherwise use generic topics based on detected language/framework and record `[inferred]` assumptions |
+| No research selected | Skip Step 5, proceed to Step 5A using spec/local docs |
 | One subagent fails | Retry once as a single task with half budget; if still failing, write warning stub and continue |
 | `API Error: Overloaded` | Wait briefly, reduce concurrency to 1, retry the failed research item once |
-| All subagents fail | Ask user whether to retry with codebase-only research or proceed without research |
+| All subagents fail | Write warning stubs, proceed to Step 5A with local context; ask only if the task is high-risk and no conservative plan can be formed |
 | Only one research type | Run single subagent, write file with just that content |
 | GitHub search returns no relevant results | Note in research file, not a blocker |

@@ -7,6 +7,7 @@ The interview runs directly in this skill (not subagent) because user-facing que
 The interview should be informed by:
 - **Initial spec** (always available)
 - **Research findings** (if step 5 produced `research.md`)
+- **Unknowns map** (if step 5A produced `unknowns.md`)
 
 If research was done, use it to:
 - Skip questions already answered by research
@@ -16,23 +17,26 @@ If research was done, use it to:
 ## Philosophy
 
 - You are a senior architect **and product strategist** accountable for this implementation
-- 표면적 요구사항 뒤에 있는 **진짜 목표와 욕망**을 파악하라
-- 사용자가 "무엇"을 말하면, "왜"를 물어라
+- 표면적 요구사항 뒤에 있는 **진짜 목표와 욕망**을 파악하되, 작업을 멈춰가며 전부 묻지 않는다
+- 사용자가 "무엇"을 말했을 때 "왜"가 아키텍처/데이터/보안/UX/배포를 바꿀 때만 질문한다
 - 디자인은 기능의 부산물이 아니라 **의도적 선택** — 획일적 디자인을 경계하라
 - **쉬운 말로 질문하라** — 전문용어에는 반드시 괄호로 풀어쓰기를 붙여라
-- Surface everything the user knows but hasn't mentioned
+- Surface everything the user knows but hasn't mentioned as assumptions first; ask only about blockers
 - Assume the initial spec is incomplete
-- Extract context from user's head
+- Extract context from user's head only where inference would be risky
 
 ## Technique
 
-- Ask focused questions in small batches (max 3 questions per turn)
+- Default to no live interview when the spec, research, and `unknowns.md` are enough to form a conservative plan
+- Ask at most 3 blocking questions total before proceeding, unless the user explicitly asks for a deeper interview
+- Ask one question at a time when the answer could change architecture, data models, security boundaries, UX flow, or rollout strategy
 - Use plain text numbered questions for open-ended interview prompts
 - Use a structured question tool only for short bounded choices
-- Ask open-ended questions, not yes/no
+- Prefer a recommended default inside the question: "I will assume X unless you say Y"
 - Don't ask obvious questions already in spec
-- Dig deeper when answers reveal complexity
-- Summarize periodically to confirm understanding
+- Dig deeper only when answers reveal a new critical unknown
+- Summarize as `[inferred]` assumptions in `interview.md`; do not require confirmation by default
+- Prefer questions from `unknowns.md` over generic interview prompts; highest-impact unknowns come first
 - **쉬운 말로 질문하기**: 전문용어를 쓸 때는 반드시 괄호 안에 풀어서 설명을 붙여라. 사용자가 개발자가 아닐 수 있다. 초등학생도 이해할 수 있는 수준으로 질문하되, 전문성은 유지하라.
 
 ## Structured Tool Compatibility
@@ -83,9 +87,13 @@ If research was done, use it to:
 
 ## CPS Interview Framework
 
-인터뷰는 **3 Phase + 3 Gate** 구조로 진행합니다.
-각 Phase에서 2~4개 질문 후, Gate에서 사용자와 **합의 확인** 후 다음으로 넘어갑니다.
-Gate를 통과하지 않으면 다음 Phase로 진행하지 않습니다.
+인터뷰는 **3 Phase + 3 Soft Gate** 구조로 정리하지만, 기본 실행은 "질문 세션"이 아니라 "추론 + 필요한 질문만"입니다.
+
+- Phase C/P/S 질문 목록은 체크리스트입니다. 전부 묻지 않습니다.
+- `unknowns.md`의 Architecture-changing questions 중 Critical 항목만 우선합니다.
+- 각 Gate는 사용자 승인 절차가 아니라 `interview.md`에 남기는 요약 섹션입니다.
+- Gate에서 막는 경우는 그 결정을 틀리면 이후 설계가 크게 바뀌는 경우뿐입니다.
+- 막히지 않는 항목은 `[inferred]`로 표시하고 다음 Phase로 진행합니다.
 
 > **젭마인의 CPS = 구현 관점 CPS.**
 > 사업성 분석(시장, 수익모델, 경쟁전략)은 헤르메스(/hermes)의 영역.
@@ -123,15 +131,15 @@ Gate를 통과하지 않으면 다음 Phase로 진행하지 않습니다.
 - **산업군 파악**: 사용자의 답변에서 산업군을 식별하고, Step 10 Team Analysis에서
   도메인 전문가 에이전트의 페르소나를 동적으로 구성하는 데 활용.
   인터뷰 트랜스크립트에 `[Industry: {산업군}]` 태그를 명시적으로 기록.
-- 이해관계자가 여러 명이면, 각 역할별로 별도 앱/화면이 필요한지 반드시 확인
+- 이해관계자가 여러 명이면, 각 역할별로 별도 앱/화면이 필요한지 반드시 검토하고 필요 시 Critical 질문으로 승격
 - 에코시스템 질문에서 "없다"는 답이 나와도, 업무 흐름상 필요한 연동을 되물어 확인
 
-#### 🚧 Gate 1: 구현 전제 확인
+#### Soft Gate 1: 구현 전제 요약
 
-Phase C 질문이 끝나면, 파악한 내용을 **구조화된 요약**으로 정리하여 사용자에게 확인:
+Phase C 체크가 끝나면, 파악한 내용을 **구조화된 요약**으로 정리하여 `interview.md`에 기록합니다. 사용자 확인은 기본값이 아닙니다.
 
 ```
-Plain confirmation question (preferred; use a structured tool only if it supports a long prompt plus two short options):
+Plain confirmation question only when the premise is blocking:
 "지금까지 파악한 구현 전제를 정리했습니다:
 
 📌 목표: {궁극적 목표}
@@ -156,8 +164,8 @@ Plain confirmation question (preferred; use a structured tool only if it support
 (수정할 부분이 있으면 말씀해주세요 / 맞으면 '확인')"
 ```
 
-→ 사용자가 수정 요청: 해당 부분 재질문 → Gate 1 재시도
-→ 사용자가 확인: Phase P로 진행
+→ 차단 이슈가 아니면 `[inferred]` 표시 후 Phase P로 진행
+→ 차단 이슈라면 한 질문만 묻고, 답을 받은 뒤 진행
 
 ---
 
@@ -180,12 +188,12 @@ Plain confirmation question (preferred; use a structured tool only if it support
 - 감정 단어에 주목 — "답답한", "느린", "불안한" 등이 나오면 거기가 핵심 pain point
 - 기술적 난제가 "없다"는 답이 나와도, Phase C의 에코시스템을 보며 연동 복잡도를 되물어 확인
 
-#### 🚧 Gate 2: 핵심 문제 합의
+#### Soft Gate 2: 핵심 문제 요약
 
-Phase P 질문이 끝나면, 핵심 문제를 **1~3개로 수렴**하여 사용자에게 확인:
+Phase P 체크가 끝나면, 핵심 문제를 **1~3개로 수렴**하여 `interview.md`에 기록합니다. 사용자 확인은 기본값이 아닙니다.
 
 ```
-Plain confirmation question (preferred; use a structured tool only if it supports a long prompt plus two short options):
+Plain confirmation question only when the problem priority is blocking:
 "인터뷰를 통해 파악한 핵심 문제입니다:
 
 | # | 핵심 문제 | 영향 | 우선순위 |
@@ -198,8 +206,8 @@ Plain confirmation question (preferred; use a structured tool only if it support
 (수정/추가/삭제할 문제가 있으면 말씀해주세요 / 맞으면 '확인')"
 ```
 
-→ 사용자가 수정 요청: 해당 부분 재질문 → Gate 2 재시도
-→ 사용자가 확인: Phase S로 진행
+→ 차단 이슈가 아니면 `[inferred]` 표시 후 Phase S로 진행
+→ 차단 이슈라면 한 질문만 묻고, 답을 받은 뒤 진행
 
 ---
 
@@ -250,12 +258,12 @@ Phase S는 프로젝트 특성에 따라 해당하는 카테고리만 선택적�
 - 24시간 멈추면 안 되는지(가용성), 데이터 백업/복구 방법
 - 문제가 생기면 자동으로 알림이 오게 할지(모니터링), 누가 뭘 했는지 기록(감사 로그)
 
-#### 🚧 Gate 3: 솔루션 방향 확인
+#### Soft Gate 3: 솔루션 방향 요약
 
-Phase S 질문이 끝나면, 솔루션 방향을 **요약**하여 사용자에게 확인:
+Phase S 체크가 끝나면, 솔루션 방향을 **요약**하여 `interview.md`에 기록합니다. 사용자 확인은 기본값이 아닙니다.
 
 ```
-Plain confirmation question (preferred; use a structured tool only if it supports a long prompt plus two short options):
+Plain confirmation question only when the solution direction is blocking:
 "솔루션 방향을 정리했습니다:
 
 📌 차별화: {차별화 포인트}
@@ -268,29 +276,30 @@ Plain confirmation question (preferred; use a structured tool only if it support
 (수정할 부분이 있으면 말씀해주세요 / 맞으면 '확인')"
 ```
 
-→ 사용자가 수정 요청: 해당 부분 재질문 → Gate 3 재시도
-→ 사용자가 확인: 인터뷰 종료, 다음 스텝으로 진행
+→ 차단 이슈가 아니면 `[inferred]` 표시 후 인터뷰 종료, 다음 스텝으로 진행
+→ 차단 이슈라면 한 질문만 묻고, 답을 받은 뒤 진행
 
 ---
 
 ## When to Stop
 
-**Gate 3를 통과하면 인터뷰를 종료합니다.**
+**Critical blocker가 없으면 인터뷰를 시작하지 않고 종료할 수 있습니다.**
 
-Gate 실패(사용자 수정 요청) 시:
-1. 해당 Phase로 돌아가 보충 질문
-2. Gate 재시도
-3. 최대 2회 재시도 후에도 합의 안 되면, 현재까지 합의된 내용을 기록하고 진행
+인터뷰를 종료하고 다음 단계로 진행하는 조건:
+1. `unknowns.md`에 Critical architecture-changing question이 없음
+2. Critical 질문을 최대 3개까지 물었고 답을 받음
+3. 사용자가 "모르겠다", "알아서 해줘", "추천대로"라고 답함
+4. 남은 질문이 Plan의 Open Questions에 남겨도 되는 비차단 항목임
 
 사용자가 대부분의 질문에 "모르겠다" 또는 "알아서 해줘"로 답하면:
-- 해당 Phase의 Gate에서 AI가 추론한 내용을 제시하고 확인만 받기
-- 확인 없이 넘어가지는 않음 (Gate는 반드시 통과)
+- 보수적 기본값을 선택하고 `[inferred]`로 표시
+- 사용자가 직접 확인을 요청하지 않는 한 멈추지 않음
 
 ## Saving the Transcript
 
-After the interview, save the full Q&A to `<planning_dir>/interview.md`:
+After the interview, save the full Q&A plus inferred assumptions to `<planning_dir>/interview.md`. If no live questions were needed, write an inferred transcript with `Questions Asked: 0`.
 
-CPS Phase 구분과 Gate 결과를 포함하여 저장:
+CPS Phase 구분과 Soft Gate 결과를 포함하여 저장:
 
 ```markdown
 # Interview Transcript
@@ -302,7 +311,7 @@ CPS Phase 구분과 Gate 결과를 포함하여 저장:
 ### Q2: {질문}
 {답변}
 
-### 🚧 Gate 1 Result: ✅ Confirmed
+### Soft Gate 1 Result: Inferred or Confirmed
 **구현 전제 요약:**
 - 목표: {목표}
 - 산업: {산업} | 범위: {범위}
@@ -316,7 +325,7 @@ CPS Phase 구분과 Gate 결과를 포함하여 저장:
 ### Q3: {질문}
 {답변}
 
-### 🚧 Gate 2 Result: ✅ Confirmed
+### Soft Gate 2 Result: Inferred or Confirmed
 **핵심 문제:**
 | # | 문제 | 영향 | 우선순위 |
 |---|------|------|----------|
@@ -328,7 +337,7 @@ CPS Phase 구분과 Gate 결과를 포함하여 저장:
 ### Q4: {질문}
 {답변}
 
-### 🚧 Gate 3 Result: ✅ Confirmed
+### Soft Gate 3 Result: Inferred or Confirmed
 **솔루션 방향:**
 - 차별화: {포인트}
 - 디자인: {톤}

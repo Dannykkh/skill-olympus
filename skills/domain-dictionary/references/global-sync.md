@@ -78,36 +78,38 @@ options:
 zephermine Step 8 끝 부산물 동작:
 
 1. 글로벌 사전 파일(`{도메인}.md`) 존재 확인
-2. **있으면**: 후보 용어를 번호 목록으로 사용자에게 제시
+2. **있으면**: spec/interview와 명확히 맞는 후보 용어만 자동 시드
 3. **없으면**: 글로벌 시드 없이 spec/interview에서만 추출
-4. 사용자가 ✅한 용어만 프로젝트 사전 v1 시드에 포함
+4. 애매하거나 프로젝트 특수성이 강한 후보는 가져오지 않고 `<planning_dir>/domain-dictionary-delta.md`에 `[inferred-skip]`로 기록
+5. 사용자에게 묻는 경우는 글로벌 후보를 잘못 가져오면 DB/API/타입/UI/보안/정책이 바뀌는 핵심 충돌뿐
 
 ```
-question: "이 프로젝트에 가져올 ecommerce 도메인 공통 용어를 선택하세요.
-글로벌 사전에서 12개 용어를 발견했습니다. 이 프로젝트에 필요한 것만 가져옵니다."
-header: "Global Seed"
-selection: "multiple numbers by default; structured multiple-selection only if supported"
-options:
-  - label: "Cart (장바구니)"
-    description: "결제 전 임시 상품 목록"
-  - label: "Order (주문)"
-    description: "고객의 구매 요청"
-  - label: "SKU (상품 단위)"
-    description: "Stock Keeping Unit"
-  ...
+auto-seed:
+  - Cart (장바구니) — spec/interview에서 cart/order checkout 흐름 확인
+  - Order (주문) — 결제 완료 후 주문 관리가 핵심 흐름
+inferred-skip:
+  - SKU — 재고 단위가 spec/interview에 없음
+  - Fulfillment — 물류/배송 흐름이 이번 범위에 없음
 ```
 
 Phase 2가 짧거나 단순한 프로젝트면 자동 건너뜀(spec.md에 핵심 용어가 5개 미만).
 
 ## Phase 3 끝 (Step 11 끝): 프로젝트 → 글로벌
 
-사용자가 명시 선택한 항목만 글로벌에 반영. 자동 업그레이드 ❌.
+zephermine 컨텍스트 모드에서는 명확히 범용인 항목만 글로벌에 반영합니다. 애매하면 반영하지 않습니다.
+
+직접 호출 모드에서는 사용자 선택을 우선합니다.
 
 ### 반영 절차
 
 1. 프로젝트 사전 v3에서 신규 추가된 용어 또는 글로벌과 다른 정의 추출
-2. 사용자에게 번호 목록으로 글로벌 반영 여부 확인 (Step 11 확인 3번)
-3. 선택된 항목을 글로벌 사전에 추가하면서 **출처 메타데이터** 포함
+2. 다음 기준으로 자동 분류:
+   - clearly-global: 여러 프로젝트에서 재사용될 보편 용어
+   - project-specific: 이번 프로젝트 고유 용어
+   - conflict: 기존 글로벌 정의와 충돌
+3. clearly-global만 글로벌 사전에 추가하면서 **출처 메타데이터** 포함
+4. project-specific은 `[inferred-skip]`로 기록
+5. conflict는 기본 보류. 단, 이 충돌이 현재 plan을 바꾸면 한 질문만 묻습니다.
 
 ### 출처 메타데이터 형식
 
@@ -141,8 +143,9 @@ Phase 2가 짧거나 단순한 프로젝트면 자동 건너뜀(spec.md에 핵�
 
 기존 글로벌 정의와 새 프로젝트의 정의가 **다르면**:
 
-1. 자동 덮어쓰기 ❌
-2. 사용자에게 선택지 제시:
+1. 자동 덮어쓰기 금지
+2. 기본값은 C(글로벌화 보류)
+3. 이 충돌이 현재 plan의 DB/API/타입/UI/보안/정책을 바꾸는 경우에만 사용자에게 선택지 제시:
    - **A) 글로벌은 그대로, 프로젝트 정의는 별칭으로 추가**: 글로벌 `Order = 주문`, 프로젝트 `Order = 명령서` → 글로벌에 "법무 도메인에선 명령서 의미" 별칭 표기
    - **B) 프로젝트 정의로 글로벌 업데이트**: 글로벌 정의 수정 + "이전 정의" 이력 보존
    - **C) 글로벌화 보류**: 프로젝트 정의는 프로젝트에만 남기고 글로벌은 손대지 않음

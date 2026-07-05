@@ -182,6 +182,7 @@ Task #4를 확인하세요.
 3. 새 파일이 필요하면 담당 디렉토리 내에서만 생성
 4. 외부 패키지 설치가 필요하면 Lead에게 먼저 보고
 5. 구현 중 문제 발견 시 Lead에게 메시지로 보고
+6. 계획 이탈이 필요하면 보수적 선택을 하고 implementation-notes.md의 "Deviations"에 사유/대안/영향 파일을 기록한 뒤 계속 진행
 ```
 
 **⚠️ CRITICAL RETURN RULE:**

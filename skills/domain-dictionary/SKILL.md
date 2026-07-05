@@ -29,12 +29,14 @@ auto_apply: false
 
 스킬 첫 실행 시 글로벌 폴더를 자동 생성하고 `references/global-readme-template.md`를 README.md로 복사합니다. 기본 위치는 `~/.agent-memory/domain-dictionaries/`이며, `AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수가 있으면 그 값을 우선합니다. 사용자가 `install.bat`/`install.sh`를 다시 실행하지 않아도 됩니다.
 
-처음에는 글로벌 도메인 파일들이 비어있습니다(`ecommerce.md`, `healthcare.md` 등). 시간이 흐르면서 사용자의 zephermine 종료 시 명시 선택으로 누적됩니다 — 의도된 설계.
+처음에는 글로벌 도메인 파일들이 비어있습니다(`ecommerce.md`, `healthcare.md` 등). 시간이 흐르면서 zephermine 컨텍스트 모드의 명확한 범용 용어 또는 사용자의 직접 선택으로 누적됩니다 — 의도된 설계.
 
 ## 질문 도구 호환성
 
 CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 피하기 위해 기본은 일반 텍스트 번호 목록입니다.
 
+- zephermine 컨텍스트 모드에서는 질문하지 않는 것이 기본입니다. 충돌 용어가 DB/API/타입/UI/보안/정책을 바꿀 때만 한 질문씩 묻습니다.
+- 직접 호출 모드(`/domain-dictionary`)에서는 사용자가 사전 점검을 요청한 것이므로 핵심 충돌이나 수정 후보를 물을 수 있습니다.
 - 구조화 질문 도구는 짧은 단일/소수 선택에만 사용합니다.
 - 한 번에 최대 3개 질문, 질문당 2-3개 짧은 선택지만 보냅니다.
 - 다중 선택은 기본적으로 "1, 3, 5처럼 번호로 답해주세요" 방식으로 받습니다. 구조화 다중 선택 필드는 현재 CLI가 명시 지원할 때만 사용합니다.
@@ -59,11 +61,11 @@ CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 
 └── general.md         ← 도메인 무관 (User, Session, Audit...)
 ```
 
-### 관계: 참고형 + 선택적 채택 (자동 상속 ❌)
+### 관계: 참고형 + 보수적 자동 채택
 
-- 글로벌은 **씨앗만 제공**. 프로젝트 시작 시 사용자가 "어떤 용어 가져올래?" 명시 선택.
+- 글로벌은 **씨앗만 제공**. zephermine 컨텍스트 모드에서는 명확히 맞는 후보만 자동 시드하고, 애매하면 가져오지 않습니다.
 - 프로젝트 사전이 **최종 결정권자**. 글로벌과 다르게 정의해도 프로젝트가 우선.
-- 프로젝트 변경의 글로벌 자동 업그레이드 ❌. 사용자가 명시적으로 선택한 항목만 글로벌에 반영.
+- 프로젝트 변경의 글로벌 반영은 보수적으로 처리합니다. 명확히 범용인 용어만 출처 메타데이터와 함께 반영하고, 애매하면 `[inferred-skip]`로 기록합니다. 직접 호출 모드에서는 사용자 선택을 우선합니다.
 - 자세한 동기화 절차: [global-sync.md](references/global-sync.md)
 
 ## 모드 결정
@@ -74,7 +76,7 @@ CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 
 |-------|----------|------|
 | Phase 2 (Step 8 끝) | v1 초안 | spec.md, interview.md + 글로벌 사전 후보에서 추출. 사용자 개입 없음 |
 | Phase 3 (Step 10 끝) | v2 자동 병합 | 6개 전문가의 `## Dictionary Updates`를 자동 병합. CONFLICT는 미룸 |
-| Phase 3 (Step 11 끝) | v3 확정 | 사용자 확인 결과 반영 + 글로벌 반영 명시 선택 |
+| Phase 3 (Step 11 끝) | v3 확정 | 충돌만 확인 + 명확한 글로벌 반영 자동 처리, 애매하면 스킵 |
 
 **산출 위치:**
 - 마스터: `<project>/docs/domain-dictionary.md` (없으면 생성, 있으면 갱신)
@@ -87,7 +89,7 @@ CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 
 ### 3. 갱신 모드 (이미 마스터 사전이 있는 경우)
 - 입력: 기존 마스터 + 새 변경사항
 - 동작: 신규 용어 병합 (기존 항목 덮어쓰지 않음), 변경 이력에 행 추가
-- 충돌 시 사용자 확인
+- 충돌 시 zephermine 컨텍스트 모드는 핵심 충돌만 질문하고, 직접 호출 모드는 사용자 확인
 
 ## 워크플로우
 
@@ -132,9 +134,11 @@ CLI마다 질문 도구 스키마가 다릅니다. `Invalid tool parameters`를 
 - **위치**: `src/cart/` 모듈 전체
 ```
 
-### Step 4: 사용자 확인
+### Step 4: 충돌 점검
 
-핵심 용어(상위 5~10개)를 일반 텍스트 번호 목록으로 확인합니다. 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용하며, 이때 한 호출당 `options`는 2~4개만 (5개 이상이면 일반 텍스트 번호 목록으로 받거나 4개씩 분할 — `AskUserQuestion`은 옵션 4개 초과 시 `Invalid tool parameters`). `header`도 12자 이내.
+**zephermine 컨텍스트 모드:** 핵심 용어(상위 5~10개)를 자동 확정하고, 충돌만 점검합니다. 사용자 질문은 DB/API/타입/UI/보안/정책을 바꿀 수 있는 충돌에 한정합니다. 나머지는 `accepted-by-default`, `inferred`, `inferred-skip`으로 델타에 기록하고 진행합니다.
+
+**직접 호출 모드:** 사용자가 사전 점검을 요청한 것이므로 핵심 용어(상위 5~10개)를 일반 텍스트 번호 목록으로 확인할 수 있습니다. 구조화 다중 선택 UI는 현재 CLI가 명시 지원할 때만 사용하며, 이때 한 호출당 `options`는 2~4개만 (5개 이상이면 일반 텍스트 번호 목록으로 받거나 4개씩 분할 — `AskUserQuestion`은 옵션 4개 초과 시 `Invalid tool parameters`). `header`도 12자 이내.
 
 ```
 "아래 용어 정의를 확인해주세요. 수정이 필요한 항목을 선택하세요."
@@ -148,7 +152,7 @@ options:
   ...
 ```
 
-수정 요청 항목은 추가 질문으로 구체화.
+수정 요청 항목은 추가 질문으로 구체화. zephermine 컨텍스트 모드에서 사용자가 "알아서"라고 답하면 추천 기본값으로 진행합니다.
 
 ### Step 5: 출력 (마스터 + 델타 + 글로벌 반영)
 
@@ -156,7 +160,7 @@ options:
 
 1. **마스터 갱신**: `<project>/docs/domain-dictionary.md`
 2. **델타 작성**: `<planning_dir>/domain-dictionary-delta.md` (이번 feature 변경 이력)
-3. **글로벌 반영** (사용자 선택 시): `~/.agent-memory/domain-dictionaries/{도메인}.md`에 항목 추가 + 출처 메타데이터
+3. **글로벌 반영**: 명확히 범용인 항목만 `~/.agent-memory/domain-dictionaries/{도메인}.md`에 출처 메타데이터와 함께 추가. 애매하면 스킵 기록
 
 **코드베이스 모드 (직접 호출)**: 마스터 직접 갱신만.
 
@@ -217,15 +221,14 @@ graph TD
 - ADD Wishlist (출처: Domain Researcher) — 찜 정의
 - REFINE Order (출처: Process Expert) — 결제 시점 명확화
 
-## v2 → v3 (Step 11 사용자 확정)
-- ✅ Cart 채택, Basket 거부 (CONFLICT 해소)
-- ✅ Wishlist 추가 확정
-- ✅ Order 다듬음 확정
+## v2 → v3 (Step 11 최종 확정)
+- accepted-by-default: Wishlist 추가
+- inferred: Order 다듬음 확정
+- user-confirmed: Cart 채택, Basket 거부 (CONFLICT 해소)
 
-## Global Dictionary Sync (사용자 명시 선택)
-- ✅ Wishlist → ~/.agent-memory/domain-dictionaries/ecommerce.md
-- ✅ Bundle → ecommerce.md
-- ❌ FlashSale → 프로젝트 특수성으로 보류
+## Global Dictionary Sync
+- added: Wishlist → ~/.agent-memory/domain-dictionaries/ecommerce.md
+- inferred-skip: FlashSale → 프로젝트 특수성으로 보류
 ```
 
 ### Step 6: 후속 안내
@@ -248,7 +251,7 @@ graph TD
 
 1. 기존 용어와 신규 용어를 비교
 2. 신규 용어만 추가 (기존 항목 덮어쓰지 않음)
-3. 충돌 시(같은 영문, 다른 정의) 사용자 확인
+3. 충돌 시(같은 영문, 다른 정의) zephermine 컨텍스트 모드는 핵심 충돌만 질문하고, 직접 호출 모드는 사용자 확인
 4. 변경 이력 표에 행 추가:
    ```markdown
    | 2026-04-28 | + Wishlist 추가 | 신규 기능 도입 |
@@ -259,7 +262,7 @@ graph TD
 
 - **영-한 매핑이 핵심**: 한국 현장의 영-한 혼용을 명시적으로 처리
 - **외부 표준 우선 검토**: 의료(FHIR/ICD-10), 금융(ISO 20022) 등 표준이 있으면 출발점으로 활용
-- 용어 분쟁이 있으면 **사용자 결정 우선** — AI는 추천만
+- 용어 분쟁이 있으면 **사용자 결정 우선**. 단, zephermine 컨텍스트 모드는 비차단 분쟁을 `[inferred]`로 기록하고 계속 진행
 - 한 번 결정된 규범 용어는 변경 시 반드시 변경 이력 기록 (이력 보존)
 - 사전은 **살아있는 문서** — 기능이 추가되면 갱신, 새 멤버 온보딩 시 첫 자료
 - **분량 제한**: 핵심 용어 30개 이내. 더 많아지면 BoundedContext별로 분할 (`domain-dictionary-{context}.md`)
@@ -282,4 +285,4 @@ graph TD
 | `references/global-sync.md` | 글로벌 사전 폴더 구조, 도메인 자동 추정, 동기화 절차 |
 | `<project>/docs/domain-dictionary.md` | **마스터** 사전 (프로젝트 단일, 진실의 원천) |
 | `<planning_dir>/domain-dictionary-delta.md` | 델타 — 이번 feature에서 추가/변경된 이력 |
-| `~/.agent-memory/domain-dictionaries/{도메인}.md` | 글로벌 사전 — 사용자 자산, 명시 선택으로만 추가됨 |
+| `~/.agent-memory/domain-dictionaries/{도메인}.md` | 글로벌 사전 — 사용자 자산, 명확한 범용 용어 또는 명시 선택으로만 추가됨 |
