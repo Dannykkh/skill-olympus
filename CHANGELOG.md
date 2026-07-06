@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Bug Fixes
+- **install**: install Orchestrator MCP dependencies in each target global install path (`~/.claude`, `~/.codex`, `~/.gemini`) before registration. Fresh Codex installs no longer register a broken `orchestrator` MCP that exits during `initialize` because `node_modules` is missing.
+
 ## [4.11.0] - 2026-07-05
 
 ### Features

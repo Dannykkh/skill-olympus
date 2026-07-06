@@ -500,22 +500,30 @@ echo.
 echo [7/7] Registering Orchestrator MCP... - Claude [required]
 if 1==1 (
     REM 글로벌 설치 경로 사용 (레포 경로가 아닌 CLAUDE_DIR — 다른 PC에서도 동작)
-    set "ORCH_DIST=%CLAUDE_DIR%\skills\orchestrator\mcp-server\dist\index.js"
-    set "ORCH_SDK=%CLAUDE_DIR%\skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "ORCH_DIR=%CLAUDE_DIR%\skills\orchestrator\mcp-server"
+    set "ORCH_DIST=!ORCH_DIR!\dist\index.js"
+    set "ORCH_SDK=!ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "ORCH_SQLITE=!ORCH_DIR!\node_modules\better-sqlite3\package.json"
     set "NEED_ORCH_BUILD=0"
     if not exist "!ORCH_DIST!" set "NEED_ORCH_BUILD=1"
     if not exist "!ORCH_SDK!" set "NEED_ORCH_BUILD=1"
+    if not exist "!ORCH_SQLITE!" set "NEED_ORCH_BUILD=1"
     if "!NEED_ORCH_BUILD!"=="1" (
-        echo       Building MCP server...
-        cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
+        echo       Installing MCP server dependencies...
+        cd /d "!ORCH_DIR!" && call npm install >nul 2>nul && call npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
-    if exist "!ORCH_DIST!" (
+    set "ORCH_READY=1"
+    if not exist "!ORCH_DIST!" set "ORCH_READY=0"
+    if not exist "!ORCH_SDK!" set "ORCH_READY=0"
+    if not exist "!ORCH_SQLITE!" set "ORCH_READY=0"
+    if "!ORCH_READY!"=="1" (
         claude mcp remove orchestrator -s user >nul 2>nul
         claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
         echo       Orchestrator MCP registered
     ) else (
-        echo       [WARN] MCP server build failed, skipping
+        echo       [WARN] MCP server dependencies/build failed, skipping
+        echo              Run manually: cd /d "!ORCH_DIR!" ^&^& npm install ^&^& npm run build
     )
 )
 
@@ -614,21 +622,26 @@ REM Codex Orchestrator MCP (required)
 echo.
 echo   Registering Codex Orchestrator MCP... [required]
 if 1==1 (
-    set "CODEX_ORCH_DIST=!CODEX_DIR!\skills\orchestrator\mcp-server\dist\index.js"
-    set "CODEX_ORCH_SDK=!CODEX_DIR!\skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
-    set "CODEX_ORCH_SQLITE=!CODEX_DIR!\skills\orchestrator\mcp-server\node_modules\better-sqlite3\package.json"
+    set "CODEX_ORCH_DIR=!CODEX_DIR!\skills\orchestrator\mcp-server"
+    set "CODEX_ORCH_DIST=!CODEX_ORCH_DIR!\dist\index.js"
+    set "CODEX_ORCH_SDK=!CODEX_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "CODEX_ORCH_SQLITE=!CODEX_ORCH_DIR!\node_modules\better-sqlite3\package.json"
     set "NEED_CODEX_ORCH_BUILD=0"
     if not exist "!CODEX_ORCH_DIST!" set "NEED_CODEX_ORCH_BUILD=1"
     if not exist "!CODEX_ORCH_SDK!" set "NEED_CODEX_ORCH_BUILD=1"
     if not exist "!CODEX_ORCH_SQLITE!" set "NEED_CODEX_ORCH_BUILD=1"
     if "!NEED_CODEX_ORCH_BUILD!"=="1" (
-        echo       Building MCP server...
-        cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
+        echo       Installing MCP server dependencies...
+        cd /d "!CODEX_ORCH_DIR!" && call npm install >nul 2>nul && call npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
+    set "CODEX_ORCH_READY=1"
+    if not exist "!CODEX_ORCH_DIST!" set "CODEX_ORCH_READY=0"
+    if not exist "!CODEX_ORCH_SDK!" set "CODEX_ORCH_READY=0"
+    if not exist "!CODEX_ORCH_SQLITE!" set "CODEX_ORCH_READY=0"
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
-        if exist "!CODEX_ORCH_DIST!" (
+        if "!CODEX_ORCH_READY!"=="1" (
             set "CODEX_ORCH_DIST_NORM=!CODEX_ORCH_DIST:\=/!"
             call codex mcp remove orchestrator >nul 2>nul
             call codex mcp add --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
@@ -638,7 +651,8 @@ if 1==1 (
                 set "CODEX_ORCH_RESULT=Register failed"
             )
         ) else (
-            set "CODEX_ORCH_RESULT=Skip: build failed"
+            set "CODEX_ORCH_RESULT=Skip: dependencies/build failed"
+            echo       [WARN] Run manually: cd /d "!CODEX_ORCH_DIR!" ^&^& npm install ^&^& npm run build
         )
     ) else (
         set "CODEX_ORCH_RESULT=Skip: codex CLI not found"
@@ -719,19 +733,26 @@ REM Gemini Orchestrator MCP (required)
 echo.
 echo   Registering Gemini Orchestrator MCP... [required]
 if 1==1 (
-    set "GEMINI_ORCH_DIST=!GEMINI_DIR!\skills\orchestrator\mcp-server\dist\index.js"
-    set "GEMINI_ORCH_SDK=!GEMINI_DIR!\skills\orchestrator\mcp-server\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "GEMINI_ORCH_DIR=!GEMINI_DIR!\skills\orchestrator\mcp-server"
+    set "GEMINI_ORCH_DIST=!GEMINI_ORCH_DIR!\dist\index.js"
+    set "GEMINI_ORCH_SDK=!GEMINI_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
+    set "GEMINI_ORCH_SQLITE=!GEMINI_ORCH_DIR!\node_modules\better-sqlite3\package.json"
     set "NEED_GEMINI_ORCH_BUILD=0"
     if not exist "!GEMINI_ORCH_DIST!" set "NEED_GEMINI_ORCH_BUILD=1"
     if not exist "!GEMINI_ORCH_SDK!" set "NEED_GEMINI_ORCH_BUILD=1"
+    if not exist "!GEMINI_ORCH_SQLITE!" set "NEED_GEMINI_ORCH_BUILD=1"
     if "!NEED_GEMINI_ORCH_BUILD!"=="1" (
-        echo       Building MCP server...
-        cd /d "%SCRIPT_DIR%skills\orchestrator\mcp-server" && npm install >nul 2>nul && npm run build >nul 2>nul
+        echo       Installing MCP server dependencies...
+        cd /d "!GEMINI_ORCH_DIR!" && call npm install >nul 2>nul && call npm run build >nul 2>nul
         cd /d "%SCRIPT_DIR%"
     )
+    set "GEMINI_ORCH_READY=1"
+    if not exist "!GEMINI_ORCH_DIST!" set "GEMINI_ORCH_READY=0"
+    if not exist "!GEMINI_ORCH_SDK!" set "GEMINI_ORCH_READY=0"
+    if not exist "!GEMINI_ORCH_SQLITE!" set "GEMINI_ORCH_READY=0"
     where gemini >nul 2>nul
     if !errorlevel! equ 0 (
-        if exist "!GEMINI_ORCH_DIST!" (
+        if "!GEMINI_ORCH_READY!"=="1" (
             set "GEMINI_ORCH_DIST_NORM=!GEMINI_ORCH_DIST:\=/!"
             call gemini mcp remove orchestrator >nul 2>nul
             call gemini mcp add orchestrator node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
@@ -741,7 +762,8 @@ if 1==1 (
                 set "GEMINI_ORCH_RESULT=Register failed"
             )
         ) else (
-            set "GEMINI_ORCH_RESULT=Skip: build failed"
+            set "GEMINI_ORCH_RESULT=Skip: dependencies/build failed"
+            echo       [WARN] Run manually: cd /d "!GEMINI_ORCH_DIR!" ^&^& npm install ^&^& npm run build
         )
     ) else (
         set "GEMINI_ORCH_RESULT=Skip: gemini CLI not found"
