@@ -79,16 +79,21 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 
 | DB | 파일 | 항목 수 | 내용 |
 |----|------|---------|------|
+| **스타일 레시피** | [references/style-recipes/index.md](references/style-recipes/index.md) | 12종 | 완결된 미학 캡슐 — 경계 선언 + hex 토큰 + 한·영 폰트 스택 + 패턴 + Avoid. **프리셋보다 구체적인 시작점** |
+| **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 9종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis — 복붙 가능한 검증 값 |
 | **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 161개 | 산업별(SaaS, 이커머스, 헬스케어 등) 색상 세트 (Primary~Border 18컬럼) |
-| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 73개 | Heading+Body 조합, Google Fonts URL, Tailwind Config 포함 |
+| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 84개 | Heading+Body 조합, Google Fonts URL, Tailwind Config 포함 (한글 페어링 #74~84) |
 | **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트 |
 
 **사용법:**
-1. 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트 검색
-2. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조
-3. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색
+1. **레시피 우선**: 요구와 맞는 스타일 레시피가 있으면 그 레시피 1개 파일만 Read → 토큰/패턴을 시작점으로 (두 레시피 혼합 금지). 액센트는 CSV 팔레트로 변주 가능
+2. 맞는 레시피가 없으면: 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트 검색
+3. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조
+4. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색
+5. 구현 중 그림자/blur/리빌 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조
 
-> Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT)
+> Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT),
+> style/technique recipes adapted from [MengTo/Skills](https://github.com/MengTo/Skills) (MIT)
 
 ## Design Thinking
 
@@ -195,9 +200,15 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 사용자가 "봐야 알 것 같다", "디자인 취향을 설명하기 어렵다", "방향을 모르겠다"고 하면 구현 전에 가벼운 프로토타입을 만든다.
 
 - 백엔드/API 연결 없이 동일 요구사항의 HTML 또는 React 정적 화면 3-4개를 서로 다른 방향으로 만든다
-- 각 방향은 색/타이포/밀도/레이아웃이 분명히 달라야 하며, 같은 카드 그리드의 변주로 만들지 않는다
+- 각 방향은 색/타이포/밀도/레이아웃이 분명히 달라야 하며, 같은 카드 그리드의 변주로 만들지 않는다 — 방향 후보는 `references/style-recipes/`에서 서로 다른 레시피를 고르면 빠르다
 - 사용자가 고른 방향에서 "좋은 점/싫은 점"을 추출해 `design-system.md` 또는 구현 지시로 고정한다
 - 확정 전 프로토타입은 throwaway로 취급하고, 실제 구현에 그대로 복붙하지 않는다
+
+**방향 확정 후 반복 규율 (variants > rerolls):**
+- 첫 결과에서 **레이아웃 + 위계 + 카피를 먼저 고정**한다 — 이것이 "시스템".
+- 이후 반복은 전체 재생성(reroll)이 아니라 **한 번에 변수 1~2개만** 바꾸는 변형(variant)으로: 액센트 색 / 배경 톤 / 카드 배치 / 크롭·앵글.
+- 수정 지시에 "다른 건 바꾸지 마", "히어로는 유지"를 명시해 이미 잘 된 부분의 파괴를 방지한다.
+- 같은 취향을 반복 설명하지 말고 파일로 고정한다 — 레퍼런스는 `docs/design-refs/`(아프로디테 Phase 2 슈퍼프롬프트), 토큰은 DESIGN.md.
 
 ### 1단계: 기본 생성
 먼저 기능에 집중하여 페이지/컴포넌트를 만든다. 디자인은 신경쓰지 않는다.

@@ -34,9 +34,11 @@ auto_apply: false
 ```
 /aphrodite가 오케스트레이션하는 스킬:
 
-  Phase 1: design-system-starter     → DESIGN.md 생성 (YAML 토큰 + 산문 정본)
-  Phase 2: frontend-design (DB 매칭) → 팔레트/폰트/스타일 선택 → DESIGN.md에 박음
-  Phase 3: frontend-design (구현)    → DESIGN.md 토큰 기반 실제 코딩
+  Phase 1: 스타일 레시피 + DB 매칭    → 레시피/팔레트/폰트 선택 → DESIGN.md 생성 (YAML 토큰 + 산문 정본)
+           (frontend-design/references/style-recipes/ + CSV DB + design-system-starter)
+  Phase 2: 레퍼런스 자산화            → 레퍼런스 → 섹션 해부 슈퍼프롬프트 파일 (docs/design-refs/)
+           (references/reference-capture-guide.md)
+  Phase 3: frontend-design (구현)    → DESIGN.md 토큰 + 슈퍼프롬프트 + technique-recipes 기반 코딩
   Phase 4: design.md lint            → 기계 검증 (broken-ref/orphan/대비 4.5:1)
            ui-ux-auditor             → 9영역 감사 + 시각 검증 (스크린샷 관찰)
            web-design-guidelines     → 가이드라인 준수 체크
@@ -56,7 +58,7 @@ auto_apply: false
 ```
 Aphrodite(아프로디테) — 미의 여신이 디자인을 이끕니다
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 1 (시스템) → Phase 2 (선택) → Phase 3 (구현) → Phase 4 (리뷰)
+Phase 1 (시스템) → Phase 2 (레퍼런스 자산화·선택) → Phase 3 (구현) → Phase 4 (리뷰)
 ```
 
 ### 2. 기존 디자인 자산 확인
@@ -126,7 +128,25 @@ options:
   - label: "기타 (직접 입력)"
 ```
 
-### 1-3. 디자인 DB 매칭
+### 1-3. 스타일 레시피 제시 (신규 — 레시피 우선 경로)
+
+프리셋 선택 직후, [`frontend-design/references/style-recipes/index.md`](../frontend-design/references/style-recipes/index.md)의
+**프리셋 → 레시피 후보 매핑**에서 레시피 2~3개를 카드로 제시합니다 (index만 읽고, 개별 레시피 파일은 선택 후에 Read):
+
+```
+📇 스타일 레시피 후보 (프리셋: 매거진):
+
+  1. editorial-tech   — 매거진 구성 × 테크 정밀. 다크 뉴트럴 + Fraunces/Hahmlet
+  2. book-serif-editorial — 책의 조판 규율. 크림 지면 + Libre Bodoni/고운바탕
+  3. framed-grid-agency  — 가시적 그리드 + 프레임 라인. Space Grotesk/Pretendard
+  4. 레시피 없이 CSV 매칭으로 (1-4로)
+```
+
+**레시피 선택 시**: 해당 레시피 파일의 `## DESIGN.md 컴파일` 값을 정본의 기반으로 사용하고,
+1-4의 CSV 매칭은 **액센트/팔레트 변주 제안**으로 축소 (무드·대비 구조는 레시피 유지).
+**레시피 미선택 시**: 아래 1-4 CSV 매칭 경로로 진행.
+
+### 1-4. 디자인 DB 매칭
 
 `frontend-design/references/`의 CSV 데이터에서 자동 매칭:
 
@@ -156,9 +176,9 @@ options:
 
 사용자가 선택하면 → 디자인 시스템 문서 생성.
 
-### 1-4. DESIGN.md 생성 (정본)
+### 1-5. DESIGN.md 생성 (정본)
 
-Phase 1~3에서 **선택된** 팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다 (값을 지어내지 말고 CSV에서 고른 값 그대로):
+Phase 1에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다 (값을 지어내지 말고 레시피의 `## DESIGN.md 컴파일` 또는 CSV에서 고른 값 그대로):
 
 - 선택된 **색상 팔레트**(color-palettes.csv) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작)
 - 선택된 **폰트 페어링**(font-pairings.csv) → `typography:` (heading/body/label, `fontFamily`+`fontSize` 필수)
@@ -173,7 +193,10 @@ Phase 1~3에서 **선택된** 팔레트/폰트를 [`references/design-md-guide.m
 
 ---
 
-## Phase 2: 레퍼런스 수집 (선택)
+## Phase 2: 레퍼런스 자산화 (선택)
+
+레퍼런스를 "첨부하고 끝"이 아니라 **재사용 가능한 슈퍼프롬프트 파일**로 변환합니다.
+절차·템플릿 상세: [`references/reference-capture-guide.md`](references/reference-capture-guide.md)
 
 현재 CLI의 질문 방식:
 
@@ -184,13 +207,23 @@ options:
   - label: "스크린샷 첨부"
     description: "Dribbble, Behance, 실제 사이트 스크린샷"
   - label: "URL 입력"
-    description: "참고 사이트 URL"
+    description: "참고 사이트 URL (라이브 캡처 후 분석)"
+  - label: "영상/HTML"
+    description: "화면 녹화 또는 HTML 소스"
   - label: "없음, AI에게 맡김"
     description: "Phase 1에서 선택한 조합으로 진행"
 ```
 
-**스크린샷/URL이 있으면**: Phase 3에서 해당 레퍼런스를 참조하여 구현
-**없으면**: Phase 1 디자인 시스템만으로 진행
+**레퍼런스가 있으면** (유형별 절차는 가이드 §1):
+
+1. **증거 확보** — URL이면 Playwright MCP로 warm scroll → 뷰포트 단위 캡처(정지마다 2초 정착 대기). 영상이면 ffprobe/ffmpeg 프레임 추출. HTML이면 인터랙션 키워드 grep(소스가 진실).
+2. **섹션 해부** — 모든 가시적 섹션을 순서대로 Purpose/Layout/Visual/Animation/Interaction/Scroll/Implementation notes로 분해. 모션 메커니즘은 정확히 명명(pinned/scrubbed/parallax/masked reveal 등).
+3. **슈퍼프롬프트 저장** — `docs/design-refs/YYYY-MM-DD-{slug}.md` (가이드 §2 템플릿). 첫 줄에 **영감 각색 vs 정확 재현** 모드 명시.
+
+> **경계**: 레퍼런스에서 가져오는 것은 구조·위계·모션·페이싱. 색·폰트의 정본은 DESIGN.md 토큰
+> (정확 재현 모드에서만 예외 — 이때 값을 DESIGN.md에 역반영).
+
+**없으면**: Phase 1 디자인 시스템만으로 진행 (스킵해도 파이프라인 정상)
 
 ---
 
@@ -211,9 +244,29 @@ options:
 
 이 Phase에서는:
 - Phase 1에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지)
+- Phase 1에서 레시피를 골랐으면 해당 스타일 레시피 파일의 패턴/Avoid를 함께 참조
 - 선택된 프리셋 파라미터 적용 (VARIANCE/MOTION/DENSITY)
-- Phase 2 레퍼런스가 있으면 스타일 매칭
+- Phase 2 슈퍼프롬프트(`docs/design-refs/*.md`)가 있으면 **구조·모션의 스펙**으로 사용 — 충돌 시 DESIGN.md 토큰이 우선
+- 그림자·blur·보더 그라데이션·텍스트 리빌 등 디테일은 [`frontend-design/references/technique-recipes.md`](../frontend-design/references/technique-recipes.md)의 검증된 값으로
 - `frontend-design`의 Banned Patterns(AI Slop 금지) 적용
+
+**구현 지시 스켈레톤 (섹션/컴포넌트 단위 작업 지시 시):**
+
+에이전트/서브태스크에 구현을 지시할 때는 소원("예쁘게")이 아니라 디자인 시스템처럼 지시합니다:
+
+```
+GOAL     — 무엇을, 누구를 위해, 성공 기준
+LAYOUT   — 그리드/배치/위계 (H1 → 서브 → 본문 → CTA)
+TYPE     — DESIGN.md typography 토큰 지정
+COLOR    — DESIGN.md colors 토큰 지정 (액센트 1개)
+COPY     — 실제 렌더할 문구 그대로 (placeholder 금지)
+CONSTRAINTS — 변경 금지 항목 명시
+NEGATIVE — 하지 말 것 (레시피 Avoid + Banned Patterns에서)
+```
+
+**반복 규율 (variants > rerolls)**: 첫 결과에서 레이아웃+위계+카피를 먼저 고정하고,
+이후 수정은 **한 번에 변수 1~2개만** 바꿉니다(액센트/배경 톤/카드 배치/크롭). 전체 재생성 금지 —
+"다른 건 바꾸지 마" / "히어로는 유지"를 지시에 명시해 이미 잘 된 부분의 파괴를 방지합니다.
 
 **Stitch 프로젝트인 경우:**
 - `/stitch loop` → 멀티페이지 생성
@@ -294,11 +347,13 @@ designmd lint DESIGN.md                    # Windows 별칭
 
 📁 산출물:
   DESIGN.md           — 디자인 정본 (YAML 토큰 + 산문 근거)
-  구현 코드           — DESIGN.md 토큰 + DB 매칭 적용
+  docs/design-refs/   — 레퍼런스 슈퍼프롬프트 (Phase 2 진행 시)
+  구현 코드           — DESIGN.md 토큰 + 레시피/DB 매칭 적용
   리뷰 결과           — design.md lint + UI/UX 9영역 + 0-10 채점 + 가이드라인
 
 📎 적용된 조합:
   프리셋: {선택한 프리셋}
+  레시피: {스타일 레시피명 또는 "CSV 매칭"}
   색상: {팔레트명}
   폰트: {Heading} + {Body}
   스타일: {디자인 스타일}
@@ -329,7 +384,7 @@ designmd lint DESIGN.md                    # Windows 별칭
 | 스킬 | 역할 | Phase |
 |------|------|-------|
 | design-system-starter | DESIGN.md 토큰층 보강 + DTCG 파생 | 1 |
-| frontend-design | 미학 적용 + DB 매칭 + 구현 (auto_apply) | 2~3 |
+| frontend-design | 미학 적용 + 레시피/DB 매칭 + 구현 (auto_apply) | 1~3 |
 | design.md lint | DESIGN.md 토큰 계약 기계 검증 (broken-ref/orphan/대비) | 4 |
 | ui-ux-auditor | 9영역 UI/UX 감사 + 시각 검증(스크린샷) | 4 |
 | web-design-guidelines | Web Interface Guidelines 체크 | 4 |
@@ -344,10 +399,13 @@ designmd lint DESIGN.md                    # Windows 별칭
 | 파일 | 역할 |
 |------|------|
 | `skills/frontend-design/SKILL.md` | 미학 가이드 + 프리셋 + Banned Patterns |
+| `skills/frontend-design/references/style-recipes/index.md` | 스타일 레시피 12종 카탈로그 + 프리셋 매핑 (Phase 1) |
+| `skills/frontend-design/references/technique-recipes.md` | 그림자/blur/보더/리빌/모션 복붙 레시피 (Phase 3) |
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |
 | `skills/frontend-design/references/font-pairings.csv` | 84개 폰트 페어링 |
 | `skills/frontend-design/references/design-styles.csv` | 84개 디자인 스타일 |
 | `skills/design-plan/references/design-md-guide.md` | DESIGN.md 정본 스키마 + lint/export + 마이그레이션 |
+| `skills/design-plan/references/reference-capture-guide.md` | 레퍼런스 자산화 절차 + 슈퍼프롬프트 템플릿 (Phase 2) |
 | `skills/design-system-starter/SKILL.md` | 디자인 토큰 생성 (DTCG 파생) |
 | `skills/ui-ux-auditor/SKILL.md` | UI/UX 9영역 감사 + 시각 검증 |
 | `skills/web-design-guidelines/SKILL.md` | Web Interface Guidelines |

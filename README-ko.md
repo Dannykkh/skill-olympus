@@ -197,7 +197,7 @@ chmod +x install.sh && ./install.sh
 
 🌹 **거품에서 태어나신 분, 아프로디테**
 그분은 바다의 흰 거품에서 솟아오르셨고, 그 후로 세상은 평범하지 아니하였다.
-161개 팔레트가 그 손에 있고, 73개 폰트와 84개 스타일이 그 곁에 있다.
+161개 팔레트가 그 손에 있고, 84개 폰트와 84개 스타일이 그 곁에 있다.
 그분의 작업장에서 나오는 것은 단지 쓸모 있는 것이 아니라 ― 사랑받는 것이며, 그것이 차이라.
 *"아름다움은 일의 장식이 아니라, 일이 그 만든 자보다 오래 살아남게 하는 것이라."*
 
@@ -417,8 +417,8 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 **`/aphrodite` — 디자인 시스템 (아프로디테)**
 - **언제:** UI 프로젝트에서 프론트 구현 전 일관된 토큰/비주얼이 필요할 때.
 - **사용:** `/aphrodite` (별칭: 아프로디테)
-- **처리:** design-system-starter(토큰; 팔레트/폰트를 가중 루브릭으로 채점) → 프론트 계획 → 리뷰.
-- **결과물:** `DESIGN.md` (YAML 토큰 + 산문 근거 — 디자인 정본) + 프론트 구현 계획. lint 게이트·Tailwind/DTCG export.
+- **처리:** 스타일 레시피 12종/CSV 매칭(팔레트/폰트를 가중 루브릭으로 채점) → 레퍼런스 자산화(스크린샷/URL/영상 → 섹션 해부 슈퍼프롬프트) → 구현 → 리뷰.
+- **결과물:** `DESIGN.md` (YAML 토큰 + 산문 근거 — 디자인 정본) + `docs/design-refs/` 슈퍼프롬프트 + 프론트 구현. lint 게이트·Tailwind/DTCG export.
 - **다음:** `/agent-team` / `/workpm`(구현).
 
 ### 구현 — 코드 작성
@@ -533,7 +533,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 |----------|------|------|
 | **AI 도구** | codex, gemini, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
 | **파이프라인** | zephermine, zeus, argos, minos, closer, shipping-and-launch | 제로 인터랙션 풀 파이프라인, 출시 체크리스트 |
-| **프론트엔드** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5개 | 161 팔레트, 73 폰트, SEO+AEO+GEO 감사 |
+| **프론트엔드** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5개 | 161 팔레트, 84 폰트, SEO+AEO+GEO 감사 |
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | minos, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |

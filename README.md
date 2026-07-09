@@ -197,7 +197,7 @@ She will ask the question the mortal fears most — *should this thing be made a
 
 🌹 **Aphrodite, Foam-Born**
 She rose from the white foam of the sea, and the world has not been plain since.
-A hundred and sixty-one palettes lie at her hand, three and seventy fonts, four and eighty styles.
+A hundred and sixty-one palettes lie at her hand, four and eighty fonts, four and eighty styles.
 What leaves her workshop is not merely useful — it is loved, and that is the difference.
 *"Beauty is not the ornament of the work. Beauty is what makes the work survive its maker."*
 
@@ -418,8 +418,8 @@ Each skill works standalone or as part of the pipeline.
 **`/aphrodite` — Design system (Beauty)**
 - **When:** a UI project needs consistent tokens/visuals before the frontend build.
 - **Use:** `/aphrodite` (aliases: 아프로디테)
-- **Process:** design-system-starter (tokens; palette/font scored on a weighted rubric) → frontend plan → review.
-- **Output:** `DESIGN.md` (YAML tokens + prose rationale — the canonical design context) + frontend build plan; lint-gated and exportable to Tailwind/DTCG.
+- **Process:** 12 named style recipes / CSV matching (palette/font scored on a weighted rubric) → reference capture (screenshot/URL/video → section-anatomy superprompt) → build → review.
+- **Output:** `DESIGN.md` (YAML tokens + prose rationale — the canonical design context) + `docs/design-refs/` superprompts + frontend build; lint-gated and exportable to Tailwind/DTCG.
 - **Next:** `/agent-team` / `/workpm` to implement.
 
 ### Build — write the code
@@ -534,7 +534,7 @@ Includes auto gotcha/learned tracking:
 |----------|--------|------------|
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
 | **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
-| **Frontend** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 73 fonts, SEO+AEO+GEO audit |
+| **Frontend** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 84 fonts, SEO+AEO+GEO audit |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
