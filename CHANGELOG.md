@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.12.2] - 2026-07-10
+
+### Bug Fixes
+- **hooks**: 비-git 경로에서도 프로젝트 루트 유지 — 루트 해석이 git rev-parse에만 의존해 비-git 프로젝트의 빌드 출력 폴더(`bin\Debug\net8.0-windows` 등)에 conversations/memory가 흩어지던 문제 수정. git 실패 시 2단 보정: ① 상위로 걸어 올라가며 기존 mnemo 루트 마커(`MEMORY.md`/`conversations/`) 탐색(HOME 제외), ② 빌드 출력 세그먼트(`bin|obj|dist|build|out|target|node_modules`) 첫 등장 앞에서 절단. Claude 훅 4종(save-conversation/save-tool-use/save-response/reconcile-conversations, ps1+sh)과 codex/gemini `save-turn`(ps1+sh) 총 12개 파일에 적용, codex/gemini `save-turn.sh`에는 v4.12.1의 HOME git-root 가드도 parity 반영 (2405df7)
+
 ## [4.12.1] - 2026-07-10
 
 ### Bug Fixes
