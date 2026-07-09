@@ -497,6 +497,37 @@ if (-not $baseDir) {
 # Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
 # conversations/는 진짜 프로젝트 루트에 생기도록 한다.
 # git이 없는 디렉토리면 baseDir 그대로 유지 (fail-open).
+# ── 비-git 프로젝트 루트 보정 (gotcha 047) ─────────────────────
+# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
+# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
+# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
+# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+function Get-NonGitProjectRoot {
+    param([string]$StartPath)
+    if (-not $StartPath) { return $StartPath }
+    $hn = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
+    try {
+        $cur = New-Object System.IO.DirectoryInfo($StartPath)
+        while ($cur) {
+            $curPath = $cur.FullName.TrimEnd('\')
+            if ($hn -and $curPath -eq $hn) { break }
+            if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
+                return $curPath
+            }
+            $cur = $cur.Parent
+        }
+    } catch {}
+    $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
+    if ($m.Success) {
+        $prefix = $m.Groups[1].Value
+        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn)) {
+            return $prefix
+        }
+    }
+    return $StartPath
+}
+
+$gitRootAdopted = $false
 if ($baseDir) {
     try {
         $gitRoot = & git -C $baseDir rev-parse --show-toplevel 2>$null
@@ -506,9 +537,14 @@ if ($baseDir) {
             $homeNorm = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
             if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) {
                 $baseDir = $win
+                $gitRootAdopted = $true
             }
         }
     } catch {}
+}
+# git 루트를 못 잡은 비-git 경로는 프로젝트 루트 보정 (gotcha 047)
+if ($baseDir -and -not $gitRootAdopted) {
+    $baseDir = Get-NonGitProjectRoot $baseDir
 }
 
 Ensure-MemoryScaffold $baseDir

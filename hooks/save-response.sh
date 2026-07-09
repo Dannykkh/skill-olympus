@@ -42,6 +42,38 @@ exit_mnemo_error() {
 #       (전역 `cd`로 작업 디렉터리가 옮겨진 뒤 그대로 유지되는 경우)
 # 해결: 후보(세션 시작 cwd -> 마지막 cwd -> transcript 디코딩 -> PWD)를 2-pass로 평가.
 #       Pass 1 = git 루트가 잡히는 첫 후보, Pass 2 = 비-git이면 세션 시작(launch) cwd.
+# ── 비-git 프로젝트 루트 보정 (gotcha 047) ──────────────────────
+# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
+# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
+# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
+# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+get_nongit_project_root() {
+    local start="$1"
+    if [ -z "$start" ]; then printf '%s\n' "$start"; return; fi
+    local home_dir="${HOME:-$USERPROFILE}"
+    home_dir="${home_dir%/}"
+    local cur="$start"
+    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
+        if [ -n "$home_dir" ] && [ "${cur%/}" = "$home_dir" ]; then break; fi
+        if [ -f "$cur/MEMORY.md" ] || [ -d "$cur/conversations" ]; then
+            printf '%s\n' "$cur"; return
+        fi
+        local parent
+        parent=$(dirname "$cur")
+        [ "$parent" = "$cur" ] && break
+        cur="$parent"
+    done
+    local stripped="$start"
+    while printf '%s' "$stripped" | grep -qE '[/\\](bin|obj|dist|build|out|target|node_modules)([/\\]|$)'; do
+        stripped=$(printf '%s' "$stripped" | sed -E 's#[/\\](bin|obj|dist|build|out|target|node_modules)([/\\].*)?$##')
+    done
+    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; }; then
+        printf '%s\n' "$stripped"
+    else
+        printf '%s\n' "$start"
+    fi
+}
+
 get_claude_project_root() {
     local transcript_path="$1"
     local home_dir="${HOME:-$USERPROFILE}"
@@ -92,11 +124,11 @@ get_claude_project_root() {
             fi
         fi
     done
-    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)
+    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)를 비-git 루트 보정 후 반환
     for c in "${candidates[@]}"; do
-        [ -d "$c" ] && { echo "$c"; return 0; }
+        [ -d "$c" ] && { get_nongit_project_root "$c"; return 0; }
     done
-    echo "$PWD"
+    get_nongit_project_root "$PWD"
 }
 
 # ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────

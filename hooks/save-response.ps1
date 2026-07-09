@@ -61,6 +61,36 @@ function Exit-MnemoError {
 #       (전역 `cd`로 작업 디렉터리가 옮겨진 뒤 그대로 유지되는 경우)
 # 해결: 후보(세션 시작 cwd -> 마지막 cwd -> transcript 디코딩 -> PWD)를 2-pass로 평가.
 #       Pass 1 = git 루트가 잡히는 첫 후보, Pass 2 = 비-git이면 세션 시작(launch) cwd.
+# ── 비-git 프로젝트 루트 보정 (gotcha 047) ─────────────────────
+# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
+# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
+# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
+# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+function Get-NonGitProjectRoot {
+    param([string]$StartPath)
+    if (-not $StartPath) { return $StartPath }
+    $hn = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
+    try {
+        $cur = New-Object System.IO.DirectoryInfo($StartPath)
+        while ($cur) {
+            $curPath = $cur.FullName.TrimEnd('\')
+            if ($hn -and $curPath -eq $hn) { break }
+            if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
+                return $curPath
+            }
+            $cur = $cur.Parent
+        }
+    } catch {}
+    $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
+    if ($m.Success) {
+        $prefix = $m.Groups[1].Value
+        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn)) {
+            return $prefix
+        }
+    }
+    return $StartPath
+}
+
 function Get-ClaudeProjectRoot {
     param([string]$TranscriptPath)
 
@@ -117,11 +147,11 @@ function Get-ClaudeProjectRoot {
             } catch {}
         }
     }
-    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)
+    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)를 비-git 루트 보정 후 반환
     foreach ($cand in $candidates) {
-        if (Test-Path $cand) { return $cand }
+        if (Test-Path $cand) { return (Get-NonGitProjectRoot $cand) }
     }
-    return $PWD.Path
+    return (Get-NonGitProjectRoot $PWD.Path)
 }
 
 # ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────

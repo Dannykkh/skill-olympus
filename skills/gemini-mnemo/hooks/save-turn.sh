@@ -194,9 +194,51 @@ done
 if [ -z "$PROJECT_ROOT" ]; then
     PROJECT_ROOT="$PWD"
 fi
+# ── 비-git 프로젝트 루트 보정 (gotcha 047) ──────────────────────
+# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
+# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
+# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
+# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+get_nongit_project_root() {
+    local start="$1"
+    if [ -z "$start" ]; then printf '%s\n' "$start"; return; fi
+    local home_dir="${HOME:-$USERPROFILE}"
+    home_dir="${home_dir%/}"
+    local cur="$start"
+    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
+        if [ -n "$home_dir" ] && [ "${cur%/}" = "$home_dir" ]; then break; fi
+        if [ -f "$cur/MEMORY.md" ] || [ -d "$cur/conversations" ]; then
+            printf '%s\n' "$cur"; return
+        fi
+        local parent
+        parent=$(dirname "$cur")
+        [ "$parent" = "$cur" ] && break
+        cur="$parent"
+    done
+    local stripped="$start"
+    while printf '%s' "$stripped" | grep -qE '[/\\](bin|obj|dist|build|out|target|node_modules)([/\\]|$)'; do
+        stripped=$(printf '%s' "$stripped" | sed -E 's#[/\\](bin|obj|dist|build|out|target|node_modules)([/\\].*)?$##')
+    done
+    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; }; then
+        printf '%s\n' "$stripped"
+    else
+        printf '%s\n' "$start"
+    fi
+}
+
+GIT_ROOT_ADOPTED=""
 GIT_ROOT_NORMALIZED=$(git -C "$PROJECT_ROOT" rev-parse --show-toplevel 2>/dev/null)
 if [ -n "$GIT_ROOT_NORMALIZED" ]; then
-    PROJECT_ROOT="$GIT_ROOT_NORMALIZED"
+    # HOME 자체가 git repo(dotfiles)면 채택 금지 — HOME 오배치 방지 (gotcha 033)
+    HOME_NORM="${HOME:-$USERPROFILE}"
+    HOME_NORM="${HOME_NORM%/}"
+    if [ -z "$HOME_NORM" ] || [ "${GIT_ROOT_NORMALIZED%/}" != "$HOME_NORM" ]; then
+        PROJECT_ROOT="$GIT_ROOT_NORMALIZED"
+        GIT_ROOT_ADOPTED=1
+    fi
+fi
+if [ -n "$PROJECT_ROOT" ] && [ -z "$GIT_ROOT_ADOPTED" ]; then
+    PROJECT_ROOT="$(get_nongit_project_root "$PROJECT_ROOT")"
 fi
 
 # 대화 디렉토리 및 파일
