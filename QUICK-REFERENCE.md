@@ -266,7 +266,7 @@ claude plugin install voltagent-qa-sec
 | `skills/argos/` | 감리/검증 — 정적·런타임·API·도면 대조 5단계 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
-| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — 네이티브 /loop와 별개) |
+| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — 엔진: /goal 1순위, /loop 심장박동 1.5순위 `--heartbeat`) |
 | `skills/seo-audit/` | SEO+AEO+GEO 감사 — robots.txt, 사이트맵, 메타태그, JSON-LD, 이미지, 링크, 성능, AI크롤러, 답변엔진, 생성형AI (10영역) |
 | `skills/autoresearch/` | 스킬 프롬프트 자동 최적화 — Hill Climbing 루프로 SKILL.md 개선 (Karpathy autoresearch 패턴) |
 | `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
@@ -302,7 +302,7 @@ claude plugin install voltagent-qa-sec
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
-| `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 디자인시스템→DB매칭→구현→리뷰 (/aphrodite) |
+| `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 스타일레시피/DB매칭→레퍼런스 자산화→구현→리뷰 (/aphrodite) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
 | `skills/deprecation-and-migration/` | 코드 부채 정리 + 마이그레이션 — 레거시 폐기 계획, API 버전 전환, Strangler Fig 패턴, 부채 감사 (/deprecate) |
 | `skills/documentation-and-adrs/` | ADR(Architecture Decision Records) — 아키텍처 결정 기록 + 인덱스 관리 + MEMORY.md 연동 (/adr) |
