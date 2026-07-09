@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.12.1] - 2026-07-10
+
+### Bug Fixes
+- **hooks**: 훅 stdin 워치독 fail-open — Claude "UserPromptSubmit hook timed out after 60s"의 원인(활성 턴 중 제출 시 stdin 미전달로 무한 대기)을 15초 bounded read + 조용한 종료로 차단. PS 5.1의 `[Console]::In` 동기 블로킹 함정은 `OpenStandardInput`+StreamReader로 우회하고, 워치독 초과 시 즉시 종료(미완료 stdin read가 남은 채 native 명령 호출 시 PS 5.1 stdin 전달 행, 실측 재현). codex/gemini `save-turn`에 stdin fallback 워치독 + HOME git-root 가드(dotfiles repo로의 대화 오배치 방지), chronos `continue-loop`은 payload 소스를 argv → pipeline → stdin(bounded)으로 재정렬해 save-turn 체인 행 제거 (cea7a8b)
+
+### Documentation
+- **readme**: v4.12.0 마일스톤·릴리즈 테이블 항목 추가 (5e050aa)
+- **fonts**: `document.fonts.check()` 한글 unicode-range 서브셋 false-negative 주의 병기 (d0bcaea)
+
 ## [4.12.0] - 2026-07-09
 
 ### Features
