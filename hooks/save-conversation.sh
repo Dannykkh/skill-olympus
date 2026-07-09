@@ -181,7 +181,14 @@ EOF
     fi
 }
 
-INPUT_JSON=$(cat)
+# stdin 워치독: 활성 턴 진행 중 제출된 프롬프트는 stdin이 전달되지 않을 수 있어
+# 무한 대기 → 훅 타임아웃(60s) 에러가 발생함. 15초 내 미도착 시 fail-open으로 조용히 종료.
+# (미저장분은 SessionStart reconcile이 transcript에서 backfill)
+if command -v timeout >/dev/null 2>&1; then
+    INPUT_JSON=$(timeout 15 cat) || exit 0
+else
+    INPUT_JSON=$(cat)
+fi
 if [ -z "$INPUT_JSON" ]; then exit 0; fi
 
 if ! command -v jq >/dev/null 2>&1; then

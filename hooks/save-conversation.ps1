@@ -202,7 +202,15 @@ function Ensure-MemoryScaffold {
 }
 
 try {
-    $rawInput = [Console]::In.ReadToEnd()
+    # stdin 워치독: 활성 턴 진행 중 제출된 프롬프트는 stdin이 전달되지 않을 수 있어
+    # 무한 대기 → 훅 타임아웃(60s) 에러가 발생함. 15초 내 미도착 시 fail-open으로 조용히 종료.
+    # (미저장분은 SessionStart reconcile이 transcript에서 backfill)
+    # 주의: [Console]::In은 SyncTextReader 래퍼라 ReadToEndAsync()도 동기 블로킹됨 →
+    #       OpenStandardInput 스트림에 StreamReader를 직접 붙여야 진짜 비동기로 읽힌다.
+    $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
+    $readTask = $stdinReader.ReadToEndAsync()
+    if (-not $readTask.Wait(15000)) { exit 0 }
+    $rawInput = $readTask.Result
     if (-not $rawInput) { exit 0 }
     $json = $rawInput | ConvertFrom-Json
 } catch {

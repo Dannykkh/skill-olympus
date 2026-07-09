@@ -125,7 +125,12 @@ EOF
 }
 
 # stdin에서 JSON 페이로드 읽기
-INPUT=$(cat)
+# stdin 워치독: stdin이 전달되지 않으면 무한 대기 → 15초 내 미도착 시 fail-open (gotcha 046)
+if command -v timeout >/dev/null 2>&1; then
+    INPUT=$(timeout 15 cat) || exit 0
+else
+    INPUT=$(cat)
+fi
 if [ -z "$INPUT" ]; then
     exit 0
 fi

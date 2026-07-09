@@ -11,16 +11,22 @@ debug_log() {
 }
 
 read_payload() {
+    # payload 소스 우선순위: argv(파일/문자열) → stdin(bounded)
+    # 기존엔 stdin을 먼저 읽었으나, stdin이 열린 채 전달되면 무한 대기로 체인 전체가 행이 됨 (gotcha 046)
     local payload=""
-    if [ ! -t 0 ]; then
-        payload="$(cat 2>/dev/null || true)"
-    fi
-
-    if [ -z "$payload" ] && [ "${1:-}" != "" ]; then
+    if [ "${1:-}" != "" ]; then
         if [ -f "$1" ]; then
             payload="$(cat "$1" 2>/dev/null || true)"
         else
             payload="$1"
+        fi
+    fi
+
+    if [ -z "$payload" ] && [ ! -t 0 ]; then
+        if command -v timeout >/dev/null 2>&1; then
+            payload="$(timeout 15 cat 2>/dev/null || true)"
+        else
+            payload="$(cat 2>/dev/null || true)"
         fi
     fi
 

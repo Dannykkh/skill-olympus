@@ -158,16 +158,24 @@ function readStdin() {
   return new Promise((resolve, reject) => {
     let input = '';
 
+    // stdin 워치독: 활성 턴 진행 중 제출된 프롬프트는 stdin이 전달되지 않을 수 있어
+    // 무한 대기 → 훅 타임아웃(60s) 에러가 발생함. 15초 내 미도착 시 fail-open으로 조용히 종료.
+    const watchdog = setTimeout(() => resolve(''), 15000);
+
     process.stdin.setEncoding('utf8');
     process.stdin.on('data', (chunk) => {
       input += chunk;
     });
 
     process.stdin.on('end', () => {
+      clearTimeout(watchdog);
       resolve(input);
     });
 
-    process.stdin.on('error', reject);
+    process.stdin.on('error', (err) => {
+      clearTimeout(watchdog);
+      reject(err);
+    });
   });
 }
 

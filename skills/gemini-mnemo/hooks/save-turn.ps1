@@ -143,7 +143,13 @@ function Ensure-MemoryScaffold {
 # stdin에서 JSON 페이로드 파싱
 $payload = $null
 try {
-    $rawInput = [Console]::In.ReadToEnd()
+    # stdin 워치독: stdin이 전달되지 않으면 무한 대기 → 15초 내 미도착 시 fail-open (gotcha 046)
+    # 주의: [Console]::In은 SyncTextReader라 async 메서드도 동기 블로킹됨 →
+    #       OpenStandardInput 스트림에 StreamReader를 직접 붙여야 진짜 비동기로 읽힌다.
+    $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
+    $readTask = $stdinReader.ReadToEndAsync()
+    if (-not $readTask.Wait(15000)) { exit 0 }
+    $rawInput = $readTask.Result
     if (-not $rawInput) { exit 0 }
     $payload = $rawInput | ConvertFrom-Json
 } catch {
@@ -186,7 +192,12 @@ if (-not $ProjectRoot) { $ProjectRoot = $PWD.Path }
 try {
     $gitRoot = & git -C $ProjectRoot rev-parse --show-toplevel 2>$null
     if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-        $ProjectRoot = $gitRoot.Replace('/', '\')
+        $win = $gitRoot.Replace('/', '\')
+        # HOME 자체가 git repo(dotfiles)면 git root 채택 금지 — HOME/conversations 오배치 방지 (gotcha 033)
+        $homeNorm = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
+        if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) {
+            $ProjectRoot = $win
+        }
     }
 } catch {}
 

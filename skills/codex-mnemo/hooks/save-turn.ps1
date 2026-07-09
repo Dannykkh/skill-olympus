@@ -391,7 +391,20 @@ if ($lastArg) {
 
 if (-not $payload) {
     try {
-        $payload = Parse-JsonSafe ([Console]::In.ReadToEnd())
+        # stdin 워치독: notify는 payload를 argv로 전달하므로 stdin은 fallback일 뿐 —
+        # stdin이 열린 채 닫히지 않으면 무한 대기(좀비 프로세스)가 되므로 15초로 제한 (gotcha 046)
+        # 주의 1: [Console]::In은 SyncTextReader라 async 메서드도 동기 블로킹됨 →
+        #         OpenStandardInput 스트림에 StreamReader를 직접 붙여야 진짜 비동기로 읽힌다.
+        $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
+        $readTask = $stdinReader.ReadToEndAsync()
+        if ($readTask.Wait(15000)) {
+            $payload = Parse-JsonSafe $readTask.Result
+        } else {
+            # 주의 2: 워치독 초과 시 계속 진행 금지 — 미완료 stdin read가 남은 상태에서
+            # native 명령(git 등)을 호출하면 PS 5.1의 stdin 전달 대기에 걸려 행이 된다 (실측 재현).
+            Write-DebugLog "stdin watchdog timeout (15s) — fail-open exit"
+            exit 0
+        }
     } catch {}
 }
 
@@ -488,7 +501,12 @@ if ($baseDir) {
     try {
         $gitRoot = & git -C $baseDir rev-parse --show-toplevel 2>$null
         if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-            $baseDir = $gitRoot.Replace('/', '\')
+            $win = $gitRoot.Replace('/', '\')
+            # HOME 자체가 git repo(dotfiles)면 git root 채택 금지 — HOME/conversations 오배치 방지 (gotcha 033)
+            $homeNorm = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
+            if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) {
+                $baseDir = $win
+            }
         }
     } catch {}
 }

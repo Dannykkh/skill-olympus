@@ -148,7 +148,19 @@ function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
     return $false
 }
 
-$payload = ([Console]::In.ReadToEnd()).Trim()
+# payload 소스 우선순위: argv(파일/문자열) → 파이프라인 $input → stdin(bounded)
+# 기존엔 stdin을 먼저 읽었으나, save-turn 체인에서 stdin이 열린 채 전달되면 무한 대기로
+# save-turn 프로세스 전체가 행이 됨 (gotcha 046). argv가 주 전달 경로이므로 먼저 확인한다.
+$payload = $null
+if ($args.Count -gt 0) {
+    $candidate = $args[-1]
+    if (Test-Path $candidate) {
+        $payload = (Get-Content $candidate -Raw)
+    } else {
+        $payload = $candidate
+    }
+    if ($payload) { $payload = $payload.Trim() }
+}
 if (-not $payload) {
     try {
         $pipelineParts = @()
@@ -158,13 +170,19 @@ if (-not $payload) {
         $payload = ($pipelineParts -join [Environment]::NewLine).Trim()
     } catch {}
 }
-if (-not $payload -and $args.Count -gt 0) {
-    $candidate = $args[-1]
-    if (Test-Path $candidate) {
-        $payload = (Get-Content $candidate -Raw)
-    } else {
-        $payload = $candidate
-    }
+if (-not $payload) {
+    try {
+        # stdin 워치독: 15초 내 미도착 시 fail-open 종료 — 미완료 stdin read가 남은 채
+        # native 명령을 호출하면 PS 5.1 stdin 전달 대기에 걸려 행이 된다 (gotcha 046).
+        # [Console]::In은 SyncTextReader라 async도 동기 블로킹 → OpenStandardInput에 직접 StreamReader.
+        $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
+        $readTask = $stdinReader.ReadToEndAsync()
+        if ($readTask.Wait(15000)) {
+            $payload = "$($readTask.Result)".Trim()
+        } else {
+            exit 0
+        }
+    } catch {}
 }
 
 if (-not $payload) {
