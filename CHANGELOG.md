@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.12.0] - 2026-07-09
+
+### Features
+- **aphrodite**: MengTo/Skills(MIT) 정독 후 선택 흡수 업그레이드 — 스타일 레시피 12종(`frontend-design/references/style-recipes/`, 경계 선언 + hex 토큰 + 한·영 폰트 스택 + Tuning Knobs + DESIGN.md 컴파일 매핑, 전 색 쌍 WCAG 대비 계산 검증), 테크닉 레시피 9종(`technique-recipes.md` — 그림자/blur/보더 그라데이션/텍스트 리빌/GSAP+Lenis 검증 값), Phase 2 레퍼런스 자산화(스크린샷/URL/영상/HTML → 섹션 해부 슈퍼프롬프트 `docs/design-refs/`, `reference-capture-guide.md`), Phase 3 구현 지시 스켈레톤(GOAL~NEGATIVE) + variants>rerolls 규율. 원본의 결함(hex/폰트 부재 draft 산문, macOS 전용 `sips` 캡처)은 CSV DB 바인딩과 Playwright 절차로 보완 (518324b)
+- **chronos**: "루프가 중간에 멈춤" 두 원인 차단 — ① 1.5순위 heartbeat 엔진(`--heartbeat`, Claude 전용): /goal 설정 생략 시 엔진 없이 돌다 멈추던 갭을 네이티브 /loop 인터벌 재진입으로 해소(멱등 재진입 + `setup-loop --goal-mode` 하드 가드 공유) ② 점수형 완료 조건 명문화: 품질 점수(90점 이상 등)는 자동 감지되지 않으므로 `--completion-promise`에 3요소(임계값·측정 방법·대화 출력) 필수 (9dfdd65)
+
+### Documentation
+- **quick-reference**: 아프로디테 파이프라인(스타일레시피→레퍼런스 자산화)·크로노스 엔진 구성(/goal 1순위, /loop 심장박동 1.5순위) 반영 (52b918d)
+
 ## [4.11.1] - 2026-07-06
 
 ### Bug Fixes
