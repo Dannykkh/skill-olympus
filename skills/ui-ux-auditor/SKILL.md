@@ -189,7 +189,7 @@ font-family|@import.*fonts|<link.*fonts|Pretendard|noonnu
 | 줄 간격 | 본문 `leading-relaxed` (1.625) 이상 |
 | 섹션 간격 | 일관된 간격 패턴 (예: 섹션 간 `py-12`, 카드 간 `gap-6`) |
 | 폰트 일관성 | 같은 용도에 같은 크기/굵기 사용 |
-| **폰트 실제 로드** | `font-family`에 쓴 폰트가 `@import`/`<link>`로 실제 로드됐는지 — 누락 시 시스템 폴백 (`document.fonts.check('700 16px "X"')`로 확인) |
+| **폰트 실제 로드** | `font-family`에 쓴 폰트가 `@import`/`<link>`로 실제 로드됐는지 — 누락 시 시스템 폴백 (`document.fonts.check('700 16px "X"')`로 확인 — 한글 등 서브셋 폰트는 로드돼도 check() false 가능, face status로 확인·gotcha 045) |
 | **한글 웹폰트** | 한글 포함 UI에 한글 웹폰트(Pretendard 등) 로드 여부 — 라틴 폰트엔 한글 글리프 없어 한글이 시스템 폴백 |
 
 ### 2-8. 애니메이션 & 전환
