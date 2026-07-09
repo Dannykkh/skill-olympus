@@ -212,6 +212,10 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.12.0 — 스타일 레시피 · 레퍼런스 자산화 · 크로노스 심장박동 (2026.07)
+
+아프로디테가 MengTo/Skills(MIT) 정독 후 좋은 것만 흡수했습니다. **스타일 레시피 12종:** 하나의 미학을 "경계 선언 + hex 토큰 + 한·영 폰트 스택 + Tuning Knobs + Avoid"로 캡슐화 — 원본의 값 없는 산문 한계를 CSV DB 바인딩으로 보완했고, 전 색 쌍을 WCAG 계산으로 검증했습니다(4.5:1 미달 3건 사전 수정). **테크닉 레시피 9종:** 그림자·progressive blur·보더 그라데이션·텍스트 리빌·GSAP+Lenis의 복붙 가능한 검증 값. **레퍼런스 자산화(Phase 2 개편):** 스크린샷/URL/영상/HTML을 섹션 해부 슈퍼프롬프트(`docs/design-refs/`)로 변환해 버전 관리되는 파일 자산으로. **크로노스 heartbeat:** `/goal` 설정을 건너뛰면 엔진 없이 돌다 멈추던 갭을 네이티브 `/loop` 인터벌 재진입(`--heartbeat`)으로 해소, 점수형 완료 조건(90점 게이트)은 `--completion-promise` 3요소(임계값·측정 방법·대화 출력)로 명문화. editorial-tech 레시피로 샘플 페이지를 만들어 파이프라인 전체(한글 폴백 렌더·모션·반응형·대비)를 실측 검증했습니다(gotcha 045: `document.fonts.check()` 서브셋 false-negative 발견·보정).
+
 ### v4.11.0 — Unknowns-first 계획 · 가벼워진 젭마인 흐름 · 구현 학습 루프 (2026.07)
 
 젭마인이 넓은 선호 질문으로 멈추는 대신, 무엇을 모르는지부터 좁혀 계획합니다. **Unknowns-first 탐색:** Step 4가 스펙과 위험도에 따라 코드베이스/웹/GitHub/논문/경쟁사 리서치를 자동 선택하고 `research-decision.md`를 남긴 뒤, Step 5A가 `unknowns.md`에 known knowns, known unknowns, unknown knowns, unknown unknowns, 아키텍처를 바꿀 질문을 정리합니다. **가벼운 인터뷰:** Step 6은 아키텍처, 데이터 모델, 보안 경계, UX 흐름, 롤아웃, 컴플라이언스를 바꿀 critical blocker만 묻고, 나머지는 추론한 전제로 기록한 뒤 계속 진행합니다. **멈추지 않는 도메인사전:** `domain-dictionary`는 명확한 글로벌 용어를 자동 시드하고 ADD/REFINE/MERGE를 자동 병합하며, 산출물을 크게 바꾸는 충돌에서만 질문합니다. **구현 학습 루프:** workpm과 agent-team 프롬프트는 `implementation-notes.md`의 Deviations를 남기고, Clio는 `CHANGE-QUIZ.md`를 만들 수 있으며, frontend-design은 구현 전에 여러 정적 프로토타입으로 "보면 아는" 선호를 끌어낼 수 있습니다.
@@ -627,6 +631,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.12.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.12.0)** | **2026-07-09** | **스타일 레시피 · 레퍼런스 자산화 · 크로노스 심장박동** — 스타일 레시피 12종(hex+한·영 폰트 스택 바인딩, WCAG 계산 검증) + 테크닉 레시피 9종(그림자/blur/보더/리빌/GSAP+Lenis) + Phase 2 레퍼런스 자산화(섹션 해부 슈퍼프롬프트); 크로노스 1.5순위 heartbeat 엔진(`--heartbeat`, 네이티브 /loop 인터벌 재진입) + 점수형 완료 조건 명문화; editorial-tech 샘플 실측 검증 + gotcha 045(fonts.check 서브셋 false-negative) 보정 |
 | **[v4.11.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.11.0)** | **2026-07-05** | **Unknowns-first 계획 · 가벼워진 젭마인 흐름 · 구현 학습 루프** — 젭마인이 리서치를 자동 선택해 `research-decision.md`를 남기고, 인터뷰 전에 `unknowns.md`를 작성하며, 아키텍처를 바꾸는 blocker만 질문하고 나머지는 추론 전제로 진행; domain-dictionary는 저위험 용어를 자동 시드/병합하고 핵심 충돌에서만 질문; workpm/agent-team은 `implementation-notes.md` Deviations를 남기고, Clio는 `CHANGE-QUIZ.md`, frontend-design은 분기 프로토타입으로 unknown knowns를 구현 전에 드러냄 |
 | **[v4.10.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.10.0)** | **2026-07-01** | **DESIGN.md 정본 · 한글 폰트 실제 로드 가드레일 · 훅 타임아웃/스키마 수정** — 구글 `@google/design.md` 포맷을 아프로디테 정본으로 채택(design-md-guide 신규, 팔레트 고정으로 드리프트 방지, 3-CLI always-on "DESIGN.md 먼저 읽기"); 한글 폰트 실제 로드(@import + `document.fonts.check`, 한글 전용 페어링 우선으로 시스템 폴백 회피, gotcha 041); 다크/라이트 규칙(컨테이너 `div` 배경 · 텍스트 반전 · `<select>` `color-scheme`); 훅 30초 타임아웃 방지(생성기 4곳 60초 + `-NoProfile`); AskUserQuestion 스키마 수정(옵션 4개 · header 12자) |
 | **[v4.9.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.9.0)** | **2026-06-25** | **Always-on 디자인 가드레일 · 구현 전 조회 · 핸드오프 Feature Map** — 안티-슬롭 디자인 지침을 3-CLI always-on에 주입(frontend-design `auto_apply`는 no-op이었음), 2026 웹 플랫폼 갱신(네이티브 `animation-timeline` 우선, View Transitions, 컨테이너 쿼리, `:has()`, OKLCH) + 한·영 글꼴 페어링, 압축 ~24%, 3방향 브라우저 검증; 구현 전 조회 가드(codemap 먼저 → 핸드오프 → grep → 분류, 인접 파이프라인 대조); 핸드오프 Feature/Flow/Decision Snapshot + Menu/Screen Map; **harness-engineering** 경계면 정합성 교차비교(agent-team·chronos, build-pass≠correct) + **loop-engineering** 도구 근거 FIND(chronos); 호환성 감사(Pydantic v2, Next.js 15, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4) |
