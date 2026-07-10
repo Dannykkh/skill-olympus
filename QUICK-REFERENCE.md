@@ -280,6 +280,7 @@ claude plugin install voltagent-qa-sec
 | `skills/agent-team/` | Agent Teams 병렬 실행 — Opus 네이티브 (zephermine 섹션 기반) + Activity Log |
 | `skills/agent-team-codex/` | Codex CLI multi_agent 기반 병렬 실행 + Activity Log |
 | `skills/mermaid-diagrams/` | Mermaid 다이어그램 (ERD 포함) |
+| `skills/data-visualization/` | 차트 선택 가이드 + Python 시각화 패턴 (Anthropic 공식 벤더링) |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |
 | `agents/frontend-react.md` | React + Zustand + TanStack |

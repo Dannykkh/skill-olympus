@@ -216,6 +216,7 @@
     { "id": "codex-mnemo", "tags": ["*"], "priority": "optional" },
     { "id": "command-creator", "tags": ["*"], "priority": "optional" },
     { "id": "daily-meeting-update", "tags": ["*"], "priority": "optional" },
+    { "id": "data-visualization", "tags": ["*"], "priority": "optional" },
     { "id": "datadog-cli", "tags": ["*"], "priority": "optional" },
     { "id": "docx", "tags": ["*"], "priority": "optional" },
     { "id": "domain-dictionary", "tags": ["*"], "priority": "recommended" },

@@ -52,7 +52,7 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 | 📋 **Launch checklist** | `/launch` — pre-launch quality gates, staged rollout plan, rollback playbook |
 | 📐 **Decision records** | `/adr` — architecture decisions with alternatives, trade-offs, and superseded tracking |
 
-**96 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
+**97 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
 
 ---
 
@@ -86,7 +86,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **96 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **97 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -532,13 +532,13 @@ Includes auto gotcha/learned tracking:
 
 ## What's Inside
 
-### Skills (96)
+### Skills (97)
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
 | **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
-| **Frontend** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor + 5 more | 161 palettes, 84 fonts, SEO+AEO+GEO audit |
+| **Frontend** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 161 palettes, 84 fonts, SEO+AEO+GEO audit, chart selection guide |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
