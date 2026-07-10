@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.13.0] - 2026-07-10
+
+### Features
+- **skills**: Anthropic 공식 data-visualization 스킬 벤더링 — `skills/data-visualization/SKILL.md` 신규 (원본: anthropics/knowledge-work-plugins `data/skills/data-visualization`, Apache-2.0, 본문 무수정). 데이터 관계별 차트 선택 가이드(추세/비교/순위/분포/상관/흐름), 차트 안티패턴(파이 6개 초과·3D·이중축), Python(matplotlib/seaborn/plotly) 코드 패턴, 디자인 원칙, 접근성 체크리스트. frontmatter는 레포 규칙에 맞게 조정(`/data-visualization` 호출 가능 + 한국어 트리거), Credits/Related Files/연관 스킬 역할 분담(design-plan·mermaid-diagrams) 부록. 문서 5종 동기화(AGENTS/README/README-ko 96→97, QUICK-REFERENCE, smart-setup-registry) (be9013d)
+
+### Documentation
+- **readme**: 릴리즈 테이블에 v4.12.1/v4.12.2/v4.13.0 항목 추가 (영/한)
+
 ## [4.12.2] - 2026-07-10
 
 ### Bug Fixes
