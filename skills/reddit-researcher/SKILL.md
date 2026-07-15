@@ -3,7 +3,7 @@ name: reddit-researcher
 description: "Reddit에서 잠재 고객과 수요를 찾아주는 시장 조사 스킬. 키워드 기반 포스트 수집, 리드 스코어링, Pain Point 분류, 경쟁사 언급 추적. /reddit-researcher로 실행."
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Reddit Researcher — 시장 조사 + 리드 스코어링
@@ -87,7 +87,20 @@ config.json 읽기
 
 ### 수집 방법 (우선순위 순)
 
-**방법 1: Reddit JSON API (권장)**
+> **2026-07 기준**: Reddit `.json` 엔드포인트(www/old/api.reddit.com 모두)는 비로그인 CLI 요청에 대부분 **403**을 반환합니다 (브라우저 User-Agent를 붙여도 차단). 반면 **old.reddit.com HTML 페이지는 정상(200)** 응답합니다. JSON API는 프로브 1회만 시도하고, 차단이면 즉시 HTML 경로로 전환하세요. 요청마다 재시도하면 대기 시간이 누적되어 스킬이 멈춘 것처럼 보입니다.
+
+**방법 0: 차단 프로브 (필수, 최초 1회)**
+
+수집 시작 전 JSON API에 딱 1회 테스트 요청:
+
+```
+https://www.reddit.com/r/{첫 subreddit}/search.json?q={첫 keyword}&restrict_sr=1&limit=1
+```
+
+- 200 → 방법 1 (JSON API) 사용
+- 403/429/기타 실패 → **이번 실행 전체에서 JSON API를 건너뛰고** 방법 2로 전환 (요청별 재시도 금지)
+
+**방법 1: Reddit JSON API (프로브 통과 시에만)**
 
 ```
 URL: https://www.reddit.com/r/{subreddit}/search.json?q={keyword}&restrict_sr=1&sort=relevance&t=month&limit=25
@@ -115,18 +128,40 @@ WebFetch로 호출하여 JSON 파싱. 응답 구조:
 }
 ```
 
-**방법 2: WebSearch 보조**
+**방법 2: old.reddit.com HTML 검색 (기본 경로, 2026-07 동작 검증)**
 
-JSON API가 차단되면 WebSearch로 대체:
+```
+URL: https://old.reddit.com/r/{subreddit}/search?q={keyword}&restrict_sr=1&sort=relevance&t=month
+```
+
+WebFetch로 호출하여 HTML에서 추출. 검색 결과 1건당 아래 마커가 포함됩니다:
+
+| 필드 | HTML 마커 |
+|------|-----------|
+| title + permalink | `<a ... class="search-title ...">제목</a>` (href가 포스트 URL) |
+| ups | `search-score">N points` |
+| num_comments | `search-comments ...">N comments` |
+| author | `class="author ..."` 링크 텍스트 |
+| created_utc | `search-time">submitted` 옆 `<time datetime="...">` |
+| subreddit | permalink URL의 `/r/{subreddit}/` 부분 |
+
+- 페이지네이션: 결과 하단 next 링크의 `after=` 파라미터 (25건 단위)
+- 본문(selftext)은 검색 결과 페이지에 없음 → **필터 통과 + 예비 점수 상위 후보만** permalink를 old.reddit.com 도메인으로 WebFetch하여 본문 확보 (전건 fetch 금지, 호출 수 절약)
+
+**방법 3: 검색 엔진 폴백 (HTML까지 차단된 경우)**
+
+Tavily MCP(`mcp__tavily__*`)가 연결되어 있으면 우선 사용하고, 없으면 WebSearch:
+
 ```
 site:reddit.com/r/{subreddit} "{keyword}"
 ```
 
+이 경로는 upvote/댓글 수를 얻지 못하는 경우가 많습니다 → Step 3의 데이터 결측 규칙으로 스코어링을 보정합니다.
+
 ### Rate Limiting 규칙
 
 - 각 WebFetch 호출 사이 **최소 2초** 대기
-- 403 또는 429 에러 → 10초 대기 후 1회 재시도
-- 재시도 실패 → 해당 요청 건너뛰고 로그 기록
+- **Fast-fail**: 같은 방법에서 403/429가 2회 연속 발생 → 그 방법은 이번 실행에서 포기하고 다음 방법으로 전환 (요청별 10초 대기 재시도 금지 — 대기 누적으로 실행이 멈춘 것처럼 보이는 원인)
 - 총 API 호출 100회 초과 시 수집 중단
 
 ### 수집 데이터 포인트
@@ -182,6 +217,8 @@ site:reddit.com/r/{subreddit} "{keyword}"
 1점: upvote ≥ 5 또는 댓글 ≥ 3
 0점: 그 외
 ```
+
+> **데이터 결측 시 (검색 엔진 폴백 경로)**: upvote/댓글 수를 얻지 못한 포스트는 참여도 항목을 제외하고, `(획득 점수 / 8) × 10`을 반올림하여 10점 스케일로 정규화합니다. 리포트에 결측 여부를 표기합니다.
 
 ---
 
@@ -303,7 +340,9 @@ score,title,subreddit,author,ups,comments,date,url,pain_points,icp_match
 - Reddit API rate limit을 반드시 준수합니다 (요청 간 2초)
 - 개인정보(이메일, 연락처)를 수집하지 않습니다
 - 공개 포스트만 수집합니다 (비공개 서브레딧 접근 불가)
-- WebFetch가 차단될 수 있으며, 이 경우 WebSearch로 대체합니다
+- `.json` 엔드포인트는 비로그인 클라이언트에 403이 일반적입니다 → 프로브 1회 후 old.reddit.com HTML 경로 사용
+- HTML 경로까지 차단되면 검색 엔진 폴백(Tavily 우선, 없으면 WebSearch)으로 대체합니다
+- 차단 시 재시도 대기를 누적하지 않습니다 (fast-fail 후 다음 방법으로 전환)
 
 ---
 
