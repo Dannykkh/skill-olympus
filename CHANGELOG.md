@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **aphrodite/frontend-design**: MotionSites 공개 라이브러리와 무료 프롬프트 10개를 표본 분석해 `motion-first-prompt-playbook.md`를 추가. 결과 계약→구성→타입→색→재질→모션→반응형→실패 조건으로 이어지는 프롬프트 컴파일러, 방향 아키타입 8종, 대비 검증 색상 레인을 제공한다. 원문·유료 콘텐츠·브랜드 카피·에셋 URL은 복제하지 않고 구조만 합성한다.
+- **aphrodite coder-interface learning**: TraceDR, API Finder, Orca, Colorion CSS Loaders, React Bits의 공개 UI와 공식 저장소를 조사해 `coder-interface-pattern-playbook.md`를 추가. Data Instrument, Faceted Directory, Agent Workbench, Waiting State, Effect Stage 5종을 스타일보다 먼저 판별하고 정보 구조·밀도·상태 모델·효과 예산을 고정한다. 제품 UI, 프롬프트 라이브러리, 컴포넌트 소스, 상태 패턴의 추출 경계와 라이선스 확인 절차도 분리했다.
+- **frontend motion discipline**: pure-CSS 단일 색 토큰, 300ms 지연 표시, `aria-busy`/`role=status`, reduced-motion을 묶은 Accessible Loading State 레시피를 추가. React Bits류 효과는 목적·의존성·cleanup·입력 방식·모바일 성능·라이선스 게이트를 통과한 signature 장면 1곳에만 허용한다.
+- **aphrodite color diversity**: `color-palettes.csv`의 Accent가 주황 56/161, 초록 43/161로 편중된 사실을 확인하고 후보 구성 하드 게이트와 무의존성 Node 도구 `select-diverse-palettes.js`를 추가. CSV/playbook을 hue family로 분산하며 기본 초록/주황 0개, 근거가 있을 때만 최대 1개를 허용한다. `Parchment / Orange`의 17.8° hue가 red로 오분류되던 경계를 15°로 보정하고 회귀 테스트를 추가했다. CSV 행 순위 사용 금지, 고유성 15% 채점 반영, `paper-tech-light`와 `tech-green-dark`의 자동 1순위 매핑도 조건부 후보로 변경했다.
+- **cross-cli design guardrail**: Claude/Codex/Gemini mnemo 템플릿에 초록/주황 자동 수렴 방지와 기능형 화면 유형 우선 규칙을 동기화했다.
+
 ## [4.13.0] - 2026-07-10
 
 ### Features

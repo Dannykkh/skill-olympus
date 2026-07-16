@@ -54,6 +54,56 @@ IntersectionObserver, lenis, framer-motion
 
 발견한 인터랙션을 "재사용 가능한 아이디어 단위"로 분리 (구현 라인 수 아님) — 예: "마우스를 따라오는 히어로 파티클 필드".
 
+### E. 공개 프롬프트/디자인/컴포넌트 라이브러리 샘플링
+
+라이브러리는 한 작품을 정확 재현하는 레퍼런스와 다르게 처리합니다. 먼저 소스의 역할을
+분류하고, 그 역할에 맞는 것만 추출합니다.
+
+| 소스 유형 | 예 | 추출할 것 |
+|---|---|---|
+| Prompt / inspiration library | MotionSites | 결정 문법, 장면 구성, 모션 명명, 실패 조건 |
+| Product interface | TraceDR, API Finder, Orca | 정보 구조, 밀도, 상태 위계, 핵심 작업 흐름 |
+| Component / effect source | React Bits | 효과 카테고리, bounded preview, 의존성·성능·cleanup 게이트 |
+| State pattern source | CSS Loaders | 최소 마크업, 토큰, timing, 접근성, reduced-motion 계약 |
+
+목표는 개별 프롬프트·코드 수집이 아니라 **반복되는 선택 규칙과 빠진 다양성 축을 찾는 것**입니다.
+
+1. 공개 홈/카테고리에서 제목, 분류, 무료/유료 상태, 미디어 유형을 확인합니다.
+2. 공식 저장소가 있으면 README, LICENSE, 파일 구조를 확인합니다. 공개 사이트라는 이유만으로
+   오픈소스라고 가정하지 않습니다.
+3. Prompt library는 무료로 열람·복사 가능한 항목만 6~10개 표본화합니다. 유료 접근 우회는 금지합니다.
+4. Product interface는 첫 화면만 보지 말고 주 작업, 결과/상태, 오류·빈 상태, 모바일 역할을 캡처합니다.
+5. Component source는 아래 채택 게이트를 기록합니다:
+   - 구현 단계: CSS / DOM Motion / Canvas-WebGL
+   - 추가 의존성·번들 비용
+   - SSR/hydration과 mount/unmount cleanup
+   - reduced-motion, coarse pointer, keyboard
+   - 라이선스·고지·재배포 제한
+6. 각 표본에서 소스 유형에 맞는 항목만 추출합니다:
+   - 결과/작업 계약
+   - 구성과 위계
+   - 정보 밀도와 상태 모델
+   - 색의 역할 구조
+   - 타이포 역할
+   - 모션 메커니즘과 효과 예산
+   - 반응형 규칙
+   - 실패 조건
+7. 문구·브랜드 카피·외부 에셋 URL·긴 원문 프롬프트·외부 컴포넌트 소스는 저장하지 않습니다.
+8. 공통 패턴과 충돌 패턴을 나눕니다:
+   - **흡수**: 구체적인 섹션/작업 해부, 상태 위계, 명명된 모션, 성공 조건
+   - **변환**: `h-screen`→`100dvh`, 순흑→near-black, 라틴 전용 폰트→한글 폴백,
+     데모 팔레트→DESIGN.md 토큰
+   - **기각**: 유료 문구 복제, 소유하지 않은 미디어 URL, 같은 색/구성 반복,
+     cleanup·폴백 없는 무거운 효과
+9. 결과는 `docs/design-refs/YYYY-MM-DD-{library}-synthesis.md`로 저장하고 표본 수·캡처일·공개 범위·라이선스 경계를 적습니다.
+
+프롬프트 구조 합성은
+[`frontend-design/references/motion-first-prompt-playbook.md`](../../frontend-design/references/motion-first-prompt-playbook.md)의
+컴파일러와 색상 다양성 게이트를 기준으로 합니다.
+기능형 코더 UI와 컴포넌트 채택은
+[`frontend-design/references/coder-interface-pattern-playbook.md`](../../frontend-design/references/coder-interface-pattern-playbook.md)의
+Interface Mode와 효과 예산을 기준으로 합니다.
+
 ## 2. 슈퍼프롬프트 템플릿
 
 `docs/design-refs/YYYY-MM-DD-{slug}.md`로 저장. 섹션은 **레퍼런스의 실제 순서대로 전부** 기록합니다.

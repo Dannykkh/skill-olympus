@@ -303,7 +303,7 @@ claude plugin install voltagent-qa-sec
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
-| `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 스타일레시피/DB매칭→레퍼런스 자산화→구현→리뷰 (/aphrodite) |
+| `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 화면 유형 5종 판별→방향 3안+색상 다양성→스타일레시피/DB→레퍼런스 자산화→구현→리뷰 (/aphrodite) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
 | `skills/deprecation-and-migration/` | 코드 부채 정리 + 마이그레이션 — 레거시 폐기 계획, API 버전 전환, Strangler Fig 패턴, 부채 감사 (/deprecate) |
 | `skills/documentation-and-adrs/` | ADR(Architecture Decision Records) — 아키텍처 결정 기록 + 인덱스 관리 + MEMORY.md 연동 (/adr) |

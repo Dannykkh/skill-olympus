@@ -13,12 +13,29 @@ The user provides frontend requirements: a component, page, application, or inte
 
 Before making aesthetic choices, check if the project already has a design system:
 
-1. `design-system.md` (젭마인 산출물) — 디자인 토큰, 색상, 타이포그래피, 톤/무드 정의
-2. `DESIGN.md` (Stitch 산출물) — 디자인 DNA, 토큰, 컴포넌트 규칙
+1. `DESIGN.md` — 디자인 정본(YAML 토큰 + 산문 근거), 색상·타이포·간격·컴포넌트 규칙
+2. `design-system.md` / `design-tokens.json` — 레거시 또는 파생 디자인 자산
 3. `tailwind.config.*` / `theme.ts` / CSS `@theme`·변수 — 기존 테마 설정 (Tailwind v4는 CSS-first `@import "tailwindcss"`+`@theme`이라 config 파일이 없을 수 있음; v3 JS config를 쓰면 `@config`로 명시 로드)
 
-**있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드를 존중하되, 더 대담하게 표현.
+**있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드와 Interface Mode의 효과 예산 안에서 더 명료하게 표현.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
+
+## Interface-Type Gate
+
+스타일 프리셋보다 먼저 화면의 주 행동을 분류합니다. 랭킹·모니터링, 검색 디렉터리,
+agent IDE, 로딩 상태, 효과 문서라면
+[`references/coder-interface-pattern-playbook.md`](references/coder-interface-pattern-playbook.md)를
+읽고 다음 중 하나를 고릅니다.
+
+- `Data Instrument`
+- `Faceted Directory`
+- `Agent Workbench`
+- `Waiting State`
+- `Effect Stage`
+
+기능형 UI의 기본 장식 효과 수는 `0`입니다. 정보 위계, 상태 전달, 입력 피드백을 먼저 설계하고
+남는 예산에만 signature effect를 둡니다. React Bits 같은 컴포넌트 라이브러리는 디자인 방향이
+정해진 뒤 채택 게이트를 통과한 효과만 사용합니다.
 
 ## Design Style Presets
 
@@ -80,28 +97,49 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | DB | 파일 | 항목 수 | 내용 |
 |----|------|---------|------|
 | **스타일 레시피** | [references/style-recipes/index.md](references/style-recipes/index.md) | 12종 | 완결된 미학 캡슐 — 경계 선언 + hex 토큰 + 한·영 폰트 스택 + 패턴 + Avoid. **프리셋보다 구체적인 시작점** |
-| **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 9종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis — 복붙 가능한 검증 값 |
+| **Motion-first 프롬프트** | [references/motion-first-prompt-playbook.md](references/motion-first-prompt-playbook.md) | 방향 8종 | 공개 무료 프롬프트에서 합성한 구현 문법 + 색상 레인 + 초록/주황 편향 차단 |
+| **코더 UI 패턴** | [references/coder-interface-pattern-playbook.md](references/coder-interface-pattern-playbook.md) | 유형 5종 | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage의 정보 구조, 밀도, 상태, 모션 예산 |
+| **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | CSV/playbook을 hue family로 분산. 기본 초록/주황 0개, 근거 있을 때만 최대 1개 |
+| **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 10종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis/접근 가능한 로딩 상태 — 복붙 가능한 검증 값 |
 | **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 161개 | 산업별(SaaS, 이커머스, 헬스케어 등) 색상 세트 (Primary~Border 18컬럼) |
 | **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 84개 | Heading+Body 조합, Google Fonts URL, Tailwind Config 포함 (한글 페어링 #74~84) |
 | **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트 |
 
 **사용법:**
-1. **레시피 우선**: 요구와 맞는 스타일 레시피가 있으면 그 레시피 1개 파일만 Read → 토큰/패턴을 시작점으로 (두 레시피 혼합 금지). 액센트는 CSV 팔레트로 변주 가능
-2. 맞는 레시피가 없으면: 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트 검색
-3. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조
-4. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색
-5. 구현 중 그림자/blur/리빌 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조
+
+1. 먼저 `Interface-Type Gate`로 주 유형을 정합니다. 기능형 유형이면 `coder-interface-pattern-playbook.md`의 정보 구조와 모션 예산을 고정합니다.
+2. 방향이 모호하거나 결과 반복 불만이 있으면 `motion-first-prompt-playbook.md`를 읽고 구성·색·모션이 다른 방향 카드 3개를 만듭니다.
+3. **레시피 우선**: 선택된 방향과 맞는 스타일 레시피가 있으면 그 레시피 1개 파일만 Read → 토큰/패턴을 시작점으로 (두 레시피 혼합 금지). 액센트는 색상 레인/CSV 팔레트로 변주 가능
+4. 색상 후보는 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"`로 shortlist한 뒤 채점합니다. 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
+5. 맞는 레시피가 없으면: 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트를 색상 계열별로 검색
+6. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조
+7. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색
+8. 구현 중 그림자/blur/리빌/로딩 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조
 
 > Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT),
 > style/technique recipes adapted from [MengTo/Skills](https://github.com/MengTo/Skills) (MIT)
 
+## Motion-first Prompt Compiler
+
+사용자가 원하는 인상을 명확히 설명하지 못하거나 이전 출력이 비슷하게 반복됐으면 코딩 전에
+`references/motion-first-prompt-playbook.md`를 읽습니다.
+
+1. INTERFACE MODE, PRIMARY ACTION, INFORMATION+STATE, DENSITY+EFFECT BUDGET을 먼저 채운 뒤 GOAL, CONCEPT, COMPOSITION, TYPE, COLOR, MATERIAL, MOTION, MEDIA, RESPONSIVE, NEGATIVE, SUCCESS CHECK를 채웁니다.
+2. 후보 3개는 베이스 명도, 색상 계열, 레이아웃, 모션 중 최소 4개가 달라야 합니다.
+3. 초록·주황은 합쳐서 후보 3개 중 최대 1개이며, 브랜드/도메인 근거가 없으면 제외합니다.
+4. 공개 레퍼런스에서는 구조와 결정 문법만 배우고 프롬프트 문구, 카피, 에셋 URL을 복제하지 않습니다.
+5. 기능형 UI에서는 장식 효과보다 상태·밀도·비교 가능성을 먼저 검증합니다.
+6. 방향 선택 후 DESIGN.md에 값을 고정하고, 구현 단계에서는 전체 재생성 대신 변수 1~2개만 바꿉니다.
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:
+- **Interface mode first**: In functional UI, "bold" means decisive hierarchy, density, and state semantics—not decorative motion.
 - **Purpose**: What problem does this interface solve? Who uses it?
 - **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
 - **Constraints**: Technical requirements (framework, performance, accessibility).
 - **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+- **Direction fingerprint**: Base mode, layout axis, type contrast, hue family, material, and motion mechanism. If two candidates share four or more of these six, they are the same direction.
 
 **CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
 
@@ -117,6 +155,7 @@ Focus on:
 - **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font. 2026 경향: serif 헤드라인 + sans 본문 페어링, 표현적 이탤릭. **한글 프로젝트는 Pretendard를 안전한 기본**으로, 더 개성 있는 한글 폰트는 [눈누(noonnu.cc)](https://noonnu.cc)에서 상업용 무료 라이선스(웹폰트/임베딩 허용)로 탐색.
   - **한·영 페어링은 한 시스템으로(중요)**: 한글+라틴이 섞일 때 따로 놀지 않으려면 둘을 같은 시각 논리로 묶어라 — (1) 한 패밀리가 한·영을 모두 커버하거나(Pretendard/Wanted Sans/IBM Plex Sans KR 등), (2) 한글 폰트와 라틴 폰트의 **무게축·획 대비(contrast) DNA·x-height를 맞춰** 같은 목소리로. 검증된 조합 예: 송명(고대비 명조)×Fraunces(고대비 모던 세리프), 검은고딕(초헤비)×Space Grotesk(헤비 그로테스크), Gothic A1×Space Mono(기능적/모노). 한글엔 진짜 이탤릭이 거의 없으니 **한글 강조는 라틴 이탤릭에 의존하지 말고** 한글 serif·색·굵기·의도된 슬랜트(skewX)로 — 라틴 전용 이탤릭(Instrument Serif/Fraunces 등)에 한글을 넣으면 시스템 serif로 폴백해 의도가 깨진다.
 - **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes. **신규 색은 `oklch()`로 작성** (2026 권장 기본) — 지각 균일(equal L = 동일 밝기)이라 톤 스케일·대비 예측·접근성이 HEX/HSL보다 유리, HEX는 레거시 폴백으로. 광색역은 chroma ≤0.15면 sRGB 안전, 0.2+는 Display P3 영역(더 선명).
+  - **초록/주황 자동 수렴 금지**: 현재 팔레트 DB의 Accent는 두 계열 비중이 높습니다. CSV 첫 행이나 익숙한 성공 사례를 추천 순위로 쓰지 말고 hue family를 먼저 분산합니다. 후보 3개에는 서로 다른 색상 계열을 쓰며, 초록·주황은 합쳐 최대 1개만 허용합니다.
 - **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise. **스크롤 연동 모션은 2026 주류** — 네이티브 CSS 스크롤 타임라인(`animation-timeline: view()` / `scroll()`)을 1순위로(컴포지터 스레드 실행 → 메인스레드 jank 제로, 약 80% 케이스 커버). 핀(pin)·스크롤 스냅·복잡한 시퀀스·WebGL/스크롤리텔링만 GSAP ScrollTrigger(부드러운 스크롤은 Lenis, `gsap.ticker`와 동기화). JS 스크롤 효과는 모바일 LCP/CLS·SEO를 해치므로 남용 금지, 모든 스크롤 모션에 `prefers-reduced-motion` 폴백 필수. **페이지/뷰 전환은 View Transitions API** — SPA는 `document.startViewTransition()`(baseline), MPA는 `@view-transition { navigation: auto }`(동일 출처 양쪽 페이지, Chromium+Safari). 미지원 브라우저에선 애니 없이 정상 동작하는 점진적 향상이므로 지금 도입 OK, cross-document는 Speculation Rules로 목적지 프리로드.
 - **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density. **컴포넌트 반응형은 뷰포트 미디어쿼리가 아니라 컨테이너 쿼리**(`container-type: inline-size` + `@container`, 2024~ baseline widely available) — 카드가 사이드바/본문 어디 놓이든 자기 컨테이너 폭에 적응하므로 재사용 컴포넌트에 1순위. 미디어쿼리는 페이지 전역 레이아웃(내비 데스크톱→모바일, 전역 타이포·간격, print)에만. JS `ResizeObserver` 대체 → 메인스레드 부담↓. **상태/내용 기반 스타일은 `:has()`**(첫 부모 셀렉터, 2023~ baseline) — "에러 input 있는 폼 섹션 강조", "특정 자식 가진 카드만 변형" 같은 걸 JS DOM 검사 없이. 단 성능상 `.container`/`.gallery`처럼 구체적 앵커에만 걸고(`body`/`:root`/`*` 금지), 내부 셀렉터엔 `>`/`+` 조합자로 탐색 범위 한정. 미지원 대비 `@supports (selector(:has(*)))`.
 - **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
@@ -134,6 +173,7 @@ Focus on:
 
 **Color:**
 - **기본값**으로 끌려간 "AI Purple/Blue"(보라 글로우, 디폴트 보라→파랑 그라데이션) 금지 — 단 2026은 **컨셉으로 선택한 대담·고채도(도파민/레트로퓨처)는 유효**. "무심코"는 금지, "의도적"은 OK
+- **DB 기본값**으로 끌려간 초록/주황 액센트 금지 — 환경·상태·산업 신호·브랜드색처럼 명시적 이유가 있을 때만 사용
 - 순수 검정(#000000) 금지 → Zinc-950 또는 Charcoal 사용
 - 채도 80% 초과는 **컨셉상 의도된 경우에만**(도파민/브랜드 강조) — 무심코 디폴트로 쓰는 건 금지
 - 그라데이션 텍스트 남용 금지
@@ -174,9 +214,9 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 
 ```
 설계 단계 ──────────────────────────────────────────────
-  /design-system-starter    → 디자인 토큰, 색상, 폰트, 간격 정의
-  젭마인 Step 8             → design-system.md 자동 생성
-  /stitch design             → Stitch 프로젝트 DESIGN.md 생성
+  /aphrodite                → 화면 유형·방향·토큰을 DESIGN.md로 고정
+  /design-system-starter    → 세부 토큰 파생
+  /stitch design            → Stitch 프로젝트 DESIGN.md 생성
 
 구현 단계 ──────────────────────────────────────────────
   frontend-design (이 스킬) → auto_apply로 미학 자동 적용
@@ -185,14 +225,14 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 
 리뷰 단계 ──────────────────────────────────────────────
   ui-ux-designer 에이전트   → "이 디자인 괜찮아?" 비평/조언
-  /ui-ux-auditor            → 다크모드, 반응형, 접근성 등 8영역 감사
+  /ui-ux-auditor            → 다크모드, 반응형, 접근성 등 9영역 감사
   /web-design-guidelines    → Web Interface Guidelines 준수 체크
 ```
 
 **조합 예시:**
-1. `/design-system-starter` → design-system.md 생성
-2. 이 스킬(auto_apply)이 design-system.md를 감지 → 토큰 기반 미학 적용
-3. 구현 완료 후 `/ui-ux-auditor` → 8영역 감사로 품질 검증
+1. `/aphrodite` → Interface Mode + DESIGN.md 생성
+2. 이 스킬이 DESIGN.md와 관련 playbook을 읽어 구조·토큰·미학 적용
+3. 구현 완료 후 `/ui-ux-auditor` → 9영역 감사로 품질 검증
 
 ## Usage Patterns (3단계 활용법)
 
@@ -200,8 +240,9 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 사용자가 "봐야 알 것 같다", "디자인 취향을 설명하기 어렵다", "방향을 모르겠다"고 하면 구현 전에 가벼운 프로토타입을 만든다.
 
 - 백엔드/API 연결 없이 동일 요구사항의 HTML 또는 React 정적 화면 3-4개를 서로 다른 방향으로 만든다
-- 각 방향은 색/타이포/밀도/레이아웃이 분명히 달라야 하며, 같은 카드 그리드의 변주로 만들지 않는다 — 방향 후보는 `references/style-recipes/`에서 서로 다른 레시피를 고르면 빠르다
-- 사용자가 고른 방향에서 "좋은 점/싫은 점"을 추출해 `design-system.md` 또는 구현 지시로 고정한다
+- 기능형 UI면 먼저 `references/coder-interface-pattern-playbook.md`로 화면 유형과 효과 예산을 고정한다
+- 각 방향은 색/타이포/밀도/레이아웃이 분명히 달라야 하며, 같은 카드 그리드의 변주로 만들지 않는다 — `references/motion-first-prompt-playbook.md`의 서로 다른 3안 규칙으로 방향을 벌린 뒤 `references/style-recipes/`에서 레시피를 매칭한다
+- 사용자가 고른 방향에서 "좋은 점/싫은 점"을 추출해 `DESIGN.md` 또는 구현 지시로 고정한다
 - 확정 전 프로토타입은 throwaway로 취급하고, 실제 구현에 그대로 복붙하지 않는다
 
 **방향 확정 후 반복 규율 (variants > rerolls):**
@@ -211,7 +252,8 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 - 같은 취향을 반복 설명하지 말고 파일로 고정한다 — 레퍼런스는 `docs/design-refs/`(아프로디테 Phase 2 슈퍼프롬프트), 토큰은 DESIGN.md.
 
 ### 1단계: 기본 생성
-먼저 기능에 집중하여 페이지/컴포넌트를 만든다. 디자인은 신경쓰지 않는다.
+먼저 primary action, 정보 위계, 상태 모델, 반응형 순서를 확정합니다. 기능형 UI에서는 장식보다
+스캔·비교·조작 가능성을 먼저 검증하고, 표현형 UI에서는 첫 화면의 기억 장치 1개를 고정합니다.
 
 ### 2단계: 스킬 적용 (레퍼런스 없이)
 "use the frontend design skill to improve the design" — 이 스킬의 미학 가이드라인만으로 재디자인.

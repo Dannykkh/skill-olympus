@@ -34,8 +34,8 @@ auto_apply: false
 ```
 /aphrodite가 오케스트레이션하는 스킬:
 
-  Phase 1: 스타일 레시피 + DB 매칭    → 레시피/팔레트/폰트 선택 → DESIGN.md 생성 (YAML 토큰 + 산문 정본)
-           (frontend-design/references/style-recipes/ + CSV DB + design-system-starter)
+  Phase 1: 화면 유형 + 방향 컴파일     → 기능형/표현형 판별 → 구체 방향 3안 → 레시피/색상/폰트 → DESIGN.md
+           (coder-interface-pattern-playbook + motion-first + style-recipes/ + CSV DB)
   Phase 2: 레퍼런스 자산화            → 레퍼런스 → 섹션 해부 슈퍼프롬프트 파일 (docs/design-refs/)
            (references/reference-capture-guide.md)
   Phase 3: frontend-design (구현)    → DESIGN.md 토큰 + 슈퍼프롬프트 + technique-recipes 기반 코딩
@@ -80,6 +80,22 @@ Phase 1 (시스템) → Phase 2 (레퍼런스 자산화·선택) → Phase 3 (�
 ---
 
 ## Phase 1: 디자인 시스템 수립
+
+### 1-0. 화면 유형 판별
+
+스타일을 묻기 전에 사용자의 핵심 행동을 판별합니다. 요구사항만으로 명확하면 다시 묻지 않고 근거와 함께 자동 선택합니다.
+
+| Interface Mode | 신호 | 기본 장식 효과 |
+|---|---|---|
+| Data Instrument | 랭킹, 모니터링, 지표, 변화 비교 | 0 |
+| Faceted Directory | 검색, 필터, 카테고리, 후보 비교 | 0 |
+| Agent Workbench | agent, terminal, editor, browser, task queue | 0 |
+| Waiting State | 비동기 실행, 로딩, 진행, 장기 작업 | 상태에 비례 |
+| Effect Stage | 효과 탐색, 설정, 코드 미리보기 | stage당 1 |
+| Expressive Landing | 브랜드 소개, 캠페인, 포트폴리오 | 첫 화면 1 |
+
+기능형 5종이면 [`frontend-design/references/coder-interface-pattern-playbook.md`](../frontend-design/references/coder-interface-pattern-playbook.md)를
+읽고 정보 구조, 밀도, 상태 모델, 효과 예산을 먼저 고정합니다. 스타일 질문은 **표면과 타이포의 방향**을 고르는 보조 입력입니다.
 
 ### 1-1. 스타일 질문
 
@@ -128,49 +144,104 @@ options:
   - label: "기타 (직접 입력)"
 ```
 
-### 1-3. 스타일 레시피 제시 (신규 — 레시피 우선 경로)
+### 1-3. 구체 방향 카드 + 스타일 레시피 제시
 
-프리셋 선택 직후, [`frontend-design/references/style-recipes/index.md`](../frontend-design/references/style-recipes/index.md)의
-**프리셋 → 레시피 후보 매핑**에서 레시피 2~3개를 카드로 제시합니다 (index만 읽고, 개별 레시피 파일은 선택 후에 Read):
+프리셋 선택 직후, 형용사만 다른 후보를 내지 말고
+[`frontend-design/references/motion-first-prompt-playbook.md`](../frontend-design/references/motion-first-prompt-playbook.md)의
+프롬프트 컴파일러로 **서로 다른 구체 방향 3안**을 만듭니다.
+
+다음 상황에서는 이 단계가 필수입니다:
+
+- 사용자가 "구리다", "뻔하다", "맨날 비슷하다", "봐야 안다"고 말함
+- 브랜드 가이드·DESIGN.md·명확한 레퍼런스가 없음
+- 이전 출력과 같은 색상이나 레이아웃으로 수렴할 위험이 있음
+
+방향 3안은 구성, 베이스 명도, 액센트 색상 계열, 표면 재질, 모션 중 최소 4개가 달라야 합니다.
+초록·주황 계열은 합쳐서 3안 중 최대 1개만 허용하며, 브랜드/도메인 근거가 없으면 제외합니다.
+
+기능형 Interface Mode에서는 세 방향이 **효과의 종류**가 아니라 정보 구조와 밀도에서 달라야 합니다.
+
+- Data Instrument: 단일 넓은 표 / KPI+2열 비교 / anomaly-first layout
+- Faceted Directory: compact list / comparison table / media-aware cards
+- Agent Workbench: terminal 중심 / task 중심 / review 중심 pane hierarchy
+- Waiting State: inline / skeleton / step-progress는 예상 시간과 측정 가능성으로 결정
+- Effect Stage: CSS / DOM motion / Canvas-WebGL의 복잡도 단계로 분리
+
+각 방향 카드는 아래 정보를 포함합니다:
 
 ```
-📇 스타일 레시피 후보 (프리셋: 매거진):
-
-  1. editorial-tech   — 매거진 구성 × 테크 정밀. 다크 뉴트럴 + Fraunces/Hahmlet
-  2. book-serif-editorial — 책의 조판 규율. 크림 지면 + Libre Bodoni/고운바탕
-  3. framed-grid-agency  — 가시적 그리드 + 프레임 라인. Space Grotesk/Pretendard
-  4. 레시피 없이 CSV 매칭으로 (1-4로)
+DIRECTION — 이름
+MODE — Interface Mode + primary action
+COMPOSITION — 첫 뷰포트와 핵심 정보 흐름
+COLOR / TYPE / MATERIAL — DESIGN.md 후보 토큰
+MOTION — 상태 모션과 장식 효과 예산
+RECIPE — 스타일 레시피 1개
+NEGATIVE / SUCCESS — 실패 조건과 관찰 가능한 통과 기준
 ```
+
+표현형 예시는 motion-first playbook, 기능형 예시는 coder-interface playbook의 방향 카드를 사용합니다.
+
+그 다음 [`frontend-design/references/style-recipes/index.md`](../frontend-design/references/style-recipes/index.md)의
+**프리셋 → 레시피 후보 풀**에서 각 방향에 맞는 레시피를 매칭합니다. 표의 나열 순서는 추천
+순위가 아니며, 개별 레시피 파일은 사용자가 방향을 선택한 뒤 하나만 Read합니다.
 
 **레시피 선택 시**: 해당 레시피 파일의 `## DESIGN.md 컴파일` 값을 정본의 기반으로 사용하고,
-1-4의 CSV 매칭은 **액센트/팔레트 변주 제안**으로 축소 (무드·대비 구조는 레시피 유지).
-**레시피 미선택 시**: 아래 1-4 CSV 매칭 경로로 진행.
+1-4의 CSV 매칭 또는 playbook 색상 레인은 **액센트/팔레트 변주 제안**으로 축소합니다
+(무드·대비 구조는 레시피 유지).
+
+**레시피 미선택 시**: playbook의 방향 아키타입 + 색상 레인을 기반으로 아래 1-4 DB 매칭을 진행합니다.
 
 ### 1-4. 디자인 DB 매칭
 
 `frontend-design/references/`의 CSV 데이터에서 자동 매칭:
 
-1. **color-palettes.csv** → 프로젝트 타입에 맞는 팔레트 3개 추천
-2. **font-pairings.csv** → 스타일 키워드에 맞는 폰트 페어링 3개 추천
-3. **design-styles.csv** → 프리셋에 맞는 디자인 스타일 참조
+1. **select-diverse-palettes.js** → CSV + playbook 색상 레인을 hue family로 묶어 기계적으로 3개 shortlist
+2. **color-palettes.csv** → 프로젝트 타입에 맞는 원본 팔레트 데이터
+3. **font-pairings.csv** → 스타일 키워드에 맞는 폰트 페어링 3개 추천
+4. **design-styles.csv** → 프리셋에 맞는 디자인 스타일 참조
+
+색상 shortlist는 먼저 다음 명령으로 만듭니다:
+
+```bash
+node "<frontend-design skill dir>/scripts/select-diverse-palettes.js" \
+  --type "{프로젝트 타입}" \
+  --seed "{프로젝트 slug}"
+```
+
+레포 안에서 실행 중이면 `<frontend-design skill dir>`는 `skills/frontend-design`입니다. 전역 설치본이면
+현재 읽은 `frontend-design/SKILL.md`의 부모 디렉터리를 사용합니다.
+
+기본값은 초록/주황 후보 0개입니다. 브랜드색·도메인 신호 근거가 있을 때만
+`--max-signal 1`을 명시합니다. JSON shortlist를 만든 뒤 아래 루브릭으로 최종 채점합니다.
 
 ```
 📎 추천 디자인 조합:
 
   색상 팔레트 (3개 후보):
-  1. SaaS Trust Blue — Primary #2563EB + Accent #EA580C
-  2. Micro SaaS Indigo — Primary #6366F1 + Accent #059669
-  3. SaaS Enterprise — Primary #0F172A + Accent #3B82F6
+  1. Paper / Cobalt — 밝은 편집 지면 + 코발트 신호
+  2. Aubergine / Magenta — 야간 무대 + 마젠타 액센트
+  3. Graphite / Oxblood — 니어블랙 + 옥스블러드 신호
 
   폰트 페어링 (3개 후보):
-  1. Modern Professional — Poppins + Open Sans
-  2. Tech Startup — Space Grotesk + DM Sans
-  3. Clean Corporate — Outfit + Inter
+  1. Korean Modern Variable — Hahmlet + Noto Sans KR
+  2. Korean Tech Developer — IBM Plex Sans KR + IBM Plex Mono(code)
+  3. Tech Startup — Space Grotesk + DM Sans (+ Pretendard 한글 폴백)
 
-  디자인 스타일: Minimalism & Swiss Style
+  디자인 스타일: 후보별 방향 카드에 개별 매칭
 ```
 
-각 색상/폰트 조합을 가중 루브릭으로 채점합니다: 명도대비(contrast) 40% · 브랜드 적합성(brand-fit) 35% · 접근성(accessibility) 25%, 각 1~5점에 한 줄 근거. 후보별 가중 합계를 점수표로 제시합니다.
+**색상 후보 구성 하드 게이트:**
+
+1. CSV 행 순서를 추천 순위로 사용하지 않습니다.
+2. Accent를 red/orange/yellow/green/cyan/blue/violet/pink/neutral 계열로 분류합니다.
+3. 후보 3개는 서로 다른 계열이어야 하며, 초록·주황은 합쳐서 최대 1개입니다.
+4. 밝음/어두움/중간톤 중 최소 2개 모드를 포함합니다.
+5. 기존 DESIGN.md나 최근 `docs/design-refs/`와 같은 액센트 계열은 기본 후보에서 제외합니다.
+6. 초록·주황이 최종 1위면 브랜드색, 도메인 의미, 사용자 명시 중 하나를 근거로 적습니다.
+
+각 색상/폰트 조합을 가중 루브릭으로 채점합니다:
+명도대비(contrast) 30% · 브랜드 적합성(brand-fit) 30% · 접근성(accessibility) 25% ·
+고유성(distinctiveness) 15%, 각 1~5점에 한 줄 근거. 후보별 가중 합계를 점수표로 제시합니다.
 
 > 채점 없이 후보만 나열 금지 — 사용자가 감으로 고르도록 떠넘기지 말고 점수를 함께 보여줍니다. 최종 선택권은 사용자에게 있되, 점수와 추천을 근거로 제시합니다.
 
@@ -178,9 +249,9 @@ options:
 
 ### 1-5. DESIGN.md 생성 (정본)
 
-Phase 1에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다 (값을 지어내지 말고 레시피의 `## DESIGN.md 컴파일` 또는 CSV에서 고른 값 그대로):
+Phase 1에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다 (값을 지어내지 말고 레시피의 `## DESIGN.md 컴파일`, CSV, 또는 playbook 색상 레인에서 고른 값 그대로):
 
-- 선택된 **색상 팔레트**(color-palettes.csv) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작)
+- 선택된 **색상 팔레트**(레시피, color-palettes.csv, 또는 motion-first playbook의 색상 레인) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작)
 - 선택된 **폰트 페어링**(font-pairings.csv) → `typography:` (heading/body/label, `fontFamily`+`fontSize` 필수)
   - **한글 UI 폰트 (필수)**: ① **먼저 한글 전용 페어링을 픽한다** — `font-pairings.csv`의 한글 행(#74-82: Hahmlet/Noto Serif KR/Gowun Batang 헤딩 + Pretendard/Noto Sans KR/Nanum Gothic 본문 등)은 한글·라틴 글리프를 모두 가져 폴백 함정을 **구조적으로 회피**(권장 경로). ② 굳이 라틴 페어링(Space Grotesk 등)을 쓸 때만 **Pretendard를 정본 스택에 함께 박는다** — 라틴엔 한글 글리프가 없어 라틴 단일값만 적으면 Phase 3의 "토큰 그대로 사용"이 전파돼 한글이 시스템 폴백된다(gotcha 041). 이때 `fontFamily`는 **스택**으로 — 예: `"Space Grotesk, Pretendard, sans-serif"`(헤딩), `"Pretendard, DM Sans, sans-serif"`(본문). 개성 한글 폰트는 눈누(noonnu.cc). 라틴 전용 데모만 단일값 허용.
 - 프리셋(VARIANCE/MOTION/DENSITY) + 간격/라운드 → `spacing:` / `rounded:`
@@ -220,6 +291,10 @@ options:
 2. **섹션 해부** — 모든 가시적 섹션을 순서대로 Purpose/Layout/Visual/Animation/Interaction/Scroll/Implementation notes로 분해. 모션 메커니즘은 정확히 명명(pinned/scrubbed/parallax/masked reveal 등).
 3. **슈퍼프롬프트 저장** — `docs/design-refs/YYYY-MM-DD-{slug}.md` (가이드 §2 템플릿). 첫 줄에 **영감 각색 vs 정확 재현** 모드 명시.
 
+라이브러리 URL이면 가이드 §1-E의 **공개 라이브러리 샘플링** 절차를 따릅니다. 프롬프트
+라이브러리, 제품 UI, 컴포넌트 소스, 상태 패턴을 구분하고 각각 결정 문법, 정보 구조, 구현
+게이트, 접근성 계약만 추출합니다. 무료/공개 항목만 표본화하며 문구·코드·미디어를 무단 복제하지 않습니다.
+
 > **경계**: 레퍼런스에서 가져오는 것은 구조·위계·모션·페이싱. 색·폰트의 정본은 DESIGN.md 토큰
 > (정확 재현 모드에서만 예외 — 이때 값을 DESIGN.md에 역반영).
 
@@ -245,9 +320,12 @@ options:
 이 Phase에서는:
 - Phase 1에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지)
 - Phase 1에서 레시피를 골랐으면 해당 스타일 레시피 파일의 패턴/Avoid를 함께 참조
+- Phase 1에서 방향 카드를 골랐으면 `motion-first-prompt-playbook.md`의 프롬프트 컴파일러와 색상 다양성 게이트를 함께 참조
+- Phase 1에서 기능형 Interface Mode를 골랐으면 `coder-interface-pattern-playbook.md`의 정보 구조·상태·효과 예산을 구현 계약으로 사용
 - 선택된 프리셋 파라미터 적용 (VARIANCE/MOTION/DENSITY)
 - Phase 2 슈퍼프롬프트(`docs/design-refs/*.md`)가 있으면 **구조·모션의 스펙**으로 사용 — 충돌 시 DESIGN.md 토큰이 우선
-- 그림자·blur·보더 그라데이션·텍스트 리빌 등 디테일은 [`frontend-design/references/technique-recipes.md`](../frontend-design/references/technique-recipes.md)의 검증된 값으로
+- 그림자·blur·보더 그라데이션·텍스트 리빌·로딩 상태 등 디테일은 [`frontend-design/references/technique-recipes.md`](../frontend-design/references/technique-recipes.md)의 검증된 값으로
+- React Bits류 외부 효과는 목적·의존성·cleanup·reduced-motion·성능·라이선스 게이트를 모두 통과한 경우에만 도입
 - `frontend-design`의 Banned Patterns(AI Slop 금지) 적용
 
 **구현 지시 스켈레톤 (섹션/컴포넌트 단위 작업 지시 시):**
@@ -255,8 +333,11 @@ options:
 에이전트/서브태스크에 구현을 지시할 때는 소원("예쁘게")이 아니라 디자인 시스템처럼 지시합니다:
 
 ```
+MODE     — Interface Mode + primary action
 GOAL     — 무엇을, 누구를 위해, 성공 기준
 LAYOUT   — 그리드/배치/위계 (H1 → 서브 → 본문 → CTA)
+DENSITY  — 기본 노출량, 행 높이, pane 수
+STATE    — loading/empty/error/stale/permission/disconnected
 TYPE     — DESIGN.md typography 토큰 지정
 COLOR    — DESIGN.md colors 토큰 지정 (액센트 1개)
 COPY     — 실제 렌더할 문구 그대로 (placeholder 금지)
@@ -352,6 +433,8 @@ designmd lint DESIGN.md                    # Windows 별칭
   리뷰 결과           — design.md lint + UI/UX 9영역 + 0-10 채점 + 가이드라인
 
 📎 적용된 조합:
+  화면 유형: {Interface Mode}
+  효과 예산: {장식 효과 수 / 상태 모션 수 / 복잡도 단계}
   프리셋: {선택한 프리셋}
   레시피: {스타일 레시피명 또는 "CSV 매칭"}
   색상: {팔레트명}
@@ -400,7 +483,10 @@ designmd lint DESIGN.md                    # Windows 별칭
 |------|------|
 | `skills/frontend-design/SKILL.md` | 미학 가이드 + 프리셋 + Banned Patterns |
 | `skills/frontend-design/references/style-recipes/index.md` | 스타일 레시피 12종 카탈로그 + 프리셋 매핑 (Phase 1) |
-| `skills/frontend-design/references/technique-recipes.md` | 그림자/blur/보더/리빌/모션 복붙 레시피 (Phase 3) |
+| `skills/frontend-design/references/motion-first-prompt-playbook.md` | 공개 프롬프트 패턴 합성 + 방향 아키타입 8종 + 색상 다양성 게이트 |
+| `skills/frontend-design/references/coder-interface-pattern-playbook.md` | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage 유형 게이트 |
+| `skills/frontend-design/scripts/select-diverse-palettes.js` | CSV/playbook 색상 레인을 hue family로 분산하는 JSON shortlist 도구 |
+| `skills/frontend-design/references/technique-recipes.md` | 그림자/blur/보더/리빌/모션/로딩 복붙 레시피 (Phase 3) |
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |
 | `skills/frontend-design/references/font-pairings.csv` | 84개 폰트 페어링 |
 | `skills/frontend-design/references/design-styles.csv` | 84개 디자인 스타일 |

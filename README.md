@@ -422,7 +422,7 @@ Each skill works standalone or as part of the pipeline.
 **`/aphrodite` — Design system (Beauty)**
 - **When:** a UI project needs consistent tokens/visuals before the frontend build.
 - **Use:** `/aphrodite` (aliases: 아프로디테)
-- **Process:** 12 named style recipes / CSV matching (palette/font scored on a weighted rubric) → reference capture (screenshot/URL/video → section-anatomy superprompt) → build → review.
+- **Process:** interface-mode gate (data instrument/directory/agent workbench/waiting/effect stage) → 3 divergent direction cards (motion-first + hue diversity) → 12 named style recipes / CSV matching → reference capture (screenshot/URL/video/library → section-anatomy superprompt) → build → review.
 - **Output:** `DESIGN.md` (YAML tokens + prose rationale — the canonical design context) + `docs/design-refs/` superprompts + frontend build; lint-gated and exportable to Tailwind/DTCG.
 - **Next:** `/agent-team` / `/workpm` to implement.
 

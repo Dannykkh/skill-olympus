@@ -19,6 +19,7 @@
 | 7 | Masked Reveal (GSAP) | 마스크 뚫고 올라오는 텍스트 (ScrollTrigger) |
 | 8 | Marquee Loop | 무한 로고/태그 루프 |
 | 9 | GSAP + Lenis 시네마틱 모션 시스템 | 프리미엄 사이트 전체 모션 언어 |
+| 10 | Accessible Loading State | 지연 시간에 맞는 로더·진행 상태 + 접근성 |
 
 ---
 
@@ -446,3 +447,105 @@ gsap.utils.toArray("[data-magnetic]").forEach((element) => {
 - React/SPA: `gsap.context()` + `ctx.revert()`, 라우트 전환 전 ScrollTrigger kill.
 
 **QA 체크**: JS 꺼도 콘텐츠 보임 · reduced-motion에서 스무스 스크롤 하이재킹 없음 · 리빌은 1회 · 핀 섹션이 다음 섹션 안 덮음 · 터치에서 호버/커서 비활성 · 장식 모션을 다 빼도 페이지가 읽힘.
+
+---
+
+## 10. Accessible Loading State
+
+로더는 장식이 아니라 기다림의 이유와 현재 상태를 전달하는 UI입니다. 2026-07-17에
+[Colorion CSS Loaders](https://cssloaders.colorion.co/)의 공개 99개 pure-CSS 로더와 프롬프트
+구조를 조사해, 단일 색 토큰·최소 마크업·reduced-motion 계약을 일반화했습니다. 아래 코드는
+외부 스니펫을 복제하지 않은 프로젝트용 기본 구현입니다.
+
+### 지연 시간별 선택
+
+| 예상 시간 | 표현 |
+|---|---|
+| 0~300ms | 표시하지 않음 — 짧은 응답의 깜빡임 방지 |
+| 300ms~2s | 작은 spinner + 짧은 동사형 라벨 |
+| 2~10s | 콘텐츠 skeleton 또는 문맥형 라벨 |
+| 측정 가능 | determinate progress + 현재 단계 |
+| 10s 이상 | 단계 목록/로그 + 취소·백그라운드 실행 |
+
+### Markup
+
+```html
+<section class="loading-region" aria-busy="true" aria-label="검색 결과">
+  <div class="loading-state" role="status" aria-live="polite">
+    <span class="loading-state__spinner" aria-hidden="true"></span>
+    <span>검색 결과를 불러오는 중</span>
+  </div>
+</section>
+```
+
+### CSS
+
+```css
+.loading-state {
+  --loader-size: 1.25rem;
+  --loader-ink: currentColor;
+  --loader-duration: 760ms;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text-muted);
+}
+
+.loading-state__spinner {
+  inline-size: var(--loader-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 30deg,
+    color-mix(in oklch, var(--loader-ink) 16%, transparent) 0 72%,
+    var(--loader-ink) 72% 100%
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0);
+  animation: loading-spin var(--loader-duration) linear infinite;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(1turn); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-state__spinner {
+    animation: none;
+    background: var(--loader-ink);
+    opacity: 0.55;
+  }
+}
+```
+
+### React 표시 지연
+
+짧은 요청에 spinner가 번쩍이지 않게 300ms 이후에만 표시합니다. 요청이 끝나면 timer를 정리합니다.
+
+```tsx
+function useDelayedPending(pending: boolean, delay = 300) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!pending) {
+      setVisible(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setVisible(true), delay);
+    return () => window.clearTimeout(timer);
+  }, [pending, delay]);
+
+  return pending && visible;
+}
+```
+
+### 규칙
+
+- spinner는 `currentColor` 또는 DESIGN.md의 단일 semantic token을 사용합니다.
+- region에는 `aria-busy`, 상태 문구에는 `role="status"`와 보이는 텍스트를 제공합니다.
+- 작업이 끝나면 region의 `aria-busy`를 `false`로 되돌리고 상태 문구를 DOM에서 제거합니다.
+- 콘텐츠 형태를 알면 skeleton, 진행률을 알면 progress를 우선합니다.
+- 로더 색·속도·형태는 제품 안에서 한 계열로 통일합니다.
+- full-screen loader는 앱 초기 부팅, 인증 복구처럼 화면 전체가 실제로 잠긴 경우에만 씁니다.
+- 실패·시간 초과 시 spinner를 계속 돌리지 말고 오류, 재시도, 마지막 성공 시점을 표시합니다.
