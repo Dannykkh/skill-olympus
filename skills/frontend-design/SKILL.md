@@ -99,6 +99,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | **스타일 레시피** | [references/style-recipes/index.md](references/style-recipes/index.md) | 12종 | 완결된 미학 캡슐 — 경계 선언 + hex 토큰 + 한·영 폰트 스택 + 패턴 + Avoid. **프리셋보다 구체적인 시작점** |
 | **Motion-first 프롬프트** | [references/motion-first-prompt-playbook.md](references/motion-first-prompt-playbook.md) | 방향 8종 | 공개 무료 프롬프트에서 합성한 구현 문법 + 색상 레인 + 초록/주황 편향 차단 |
 | **코더 UI 패턴** | [references/coder-interface-pattern-playbook.md](references/coder-interface-pattern-playbook.md) | 유형 5종 | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage의 정보 구조, 밀도, 상태, 모션 예산 |
+| **블록 해부 카탈로그** | [references/layout-block-anatomy.md](references/layout-block-anatomy.md) | 블록 30종 | Marketing/App/Ecommerce 블록별 구조 계약(요소 순서·잉크 위계·강조 규칙) + 페이지 시퀀스 템플릿 + 와이어프레임-퍼스트 청사진 절차 |
 | **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | CSV/playbook을 hue family로 분산. 기본 초록/주황 0개, 근거 있을 때만 최대 1개 |
 | **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 10종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis/접근 가능한 로딩 상태 — 복붙 가능한 검증 값 |
 | **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 161개 | 산업별(SaaS, 이커머스, 헬스케어 등) 색상 세트 (Primary~Border 18컬럼) |
@@ -109,6 +110,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 
 1. 먼저 `Interface-Type Gate`로 주 유형을 정합니다. 기능형 유형이면 `coder-interface-pattern-playbook.md`의 정보 구조와 모션 예산을 고정합니다.
 2. 방향이 모호하거나 결과 반복 불만이 있으면 `motion-first-prompt-playbook.md`를 읽고 구성·색·모션이 다른 방향 카드 3개를 만듭니다.
+2-1. 페이지/섹션을 새로 만들 때는 `layout-block-anatomy.md`에서 블록 시퀀스와 해당 블록의 anatomy 계약(필수 요소·강조 1개 규칙·CTA 문법)을 확인하고 마크업 구조를 먼저 고정합니다 — 레퍼런스가 없을 때 즉흥 구조 금지.
 3. **레시피 우선**: 선택된 방향과 맞는 스타일 레시피가 있으면 그 레시피 1개 파일만 Read → 토큰/패턴을 시작점으로 (두 레시피 혼합 금지). 액센트는 색상 레인/CSV 팔레트로 변주 가능
 4. 색상 후보는 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"`로 shortlist한 뒤 채점합니다. 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
 5. 맞는 레시피가 없으면: 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트를 색상 계열별로 검색
@@ -117,7 +119,8 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 8. 구현 중 그림자/blur/리빌/로딩 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조
 
 > Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT),
-> style/technique recipes adapted from [MengTo/Skills](https://github.com/MengTo/Skills) (MIT)
+> style/technique recipes adapted from [MengTo/Skills](https://github.com/MengTo/Skills) (MIT),
+> block anatomy translated from [anelkabag/bag-ui](https://github.com/anelkabag/bag-ui) (MIT) block wireframes
 
 ## Motion-first Prompt Compiler
 

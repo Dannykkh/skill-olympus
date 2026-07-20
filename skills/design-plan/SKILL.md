@@ -38,7 +38,9 @@ auto_apply: false
            (coder-interface-pattern-playbook + motion-first + style-recipes/ + CSV DB)
   Phase 2: 레퍼런스 자산화            → 레퍼런스 → 섹션 해부 슈퍼프롬프트 파일 (docs/design-refs/)
            (references/reference-capture-guide.md)
-  Phase 3: frontend-design (구현)    → DESIGN.md 토큰 + 슈퍼프롬프트 + technique-recipes 기반 코딩
+  Phase 2.5: 레이아웃 청사진          → 블록 시퀀스 + 블록별 anatomy 계약 + ASCII 와이어프레임
+           (frontend-design/references/layout-block-anatomy.md)
+  Phase 3: frontend-design (구현)    → DESIGN.md 토큰 + 청사진 + 슈퍼프롬프트 + technique-recipes 기반 코딩
   Phase 4: design.md lint            → 기계 검증 (broken-ref/orphan/대비 4.5:1)
            ui-ux-auditor             → 9영역 감사 + 시각 검증 (스크린샷 관찰)
            web-design-guidelines     → 가이드라인 준수 체크
@@ -302,6 +304,28 @@ options:
 
 ---
 
+## Phase 2.5: 레이아웃 청사진 (블록 시퀀스 계약)
+
+구현 전에 페이지 구조를 **블록 단위로 고정**합니다. 색·폰트가 아니라 "요소 누락·위계 붕괴"가
+디자인 실패의 절반이므로, 그레이스케일 구조를 먼저 확정하고 스타일은 그 위에 얹습니다.
+
+절차·블록별 해부 계약(30종)·시퀀스 템플릿:
+[`frontend-design/references/layout-block-anatomy.md`](../frontend-design/references/layout-block-anatomy.md)
+
+1. **페이지 유형 → 블록 시퀀스 선택** — 카탈로그의 템플릿(SaaS 랜딩/이커머스/대시보드 등)을 시작점으로, 프로젝트 신호에 맞게 가감
+2. **블록별 anatomy 체크** — 각 블록의 필수 요소·잉크 위계·강조 규칙(블록당 정확히 1개)·CTA 문법 확인
+3. **청사진 산출** — 블록 시퀀스 표 + ASCII 와이어프레임을 `docs/design-refs/YYYY-MM-DD-layout-{slug}.md`로 저장
+4. **확인** — 인터랙티브 세션이면 사용자 승인 후 Phase 3 진행, 자동 파이프라인(zeus 등)이면 산출만 하고 계속
+
+우선순위 규칙:
+
+- **Phase 2 슈퍼프롬프트가 있으면**: 레퍼런스의 섹션 해부가 구조 정본 — anatomy 카탈로그는 누락 요소 점검용 보조
+- **레퍼런스가 없으면**: anatomy 카탈로그가 구조 스펙 역할 (즉흥 구조 금지)
+- **기능형 Interface Mode면**: `coder-interface-pattern-playbook.md`의 정보 구조 계약이 우선, anatomy는 pane 내부 체크리스트
+- VARIANCE가 높으면 요소는 유지하되 배치·리듬을 변주 (ai-slop-blacklist #10과 충돌 아님)
+
+---
+
 ## Phase 3: 구현 (외관 한정 — 디자이너의 경계)
 
 `frontend-design` 스킬이 자동 적용(auto_apply)되어 구현합니다.
@@ -323,6 +347,7 @@ options:
 - Phase 1에서 방향 카드를 골랐으면 `motion-first-prompt-playbook.md`의 프롬프트 컴파일러와 색상 다양성 게이트를 함께 참조
 - Phase 1에서 기능형 Interface Mode를 골랐으면 `coder-interface-pattern-playbook.md`의 정보 구조·상태·효과 예산을 구현 계약으로 사용
 - 선택된 프리셋 파라미터 적용 (VARIANCE/MOTION/DENSITY)
+- Phase 2.5 레이아웃 청사진(`docs/design-refs/*-layout-*.md`)의 블록 시퀀스·anatomy 계약을 **마크업 구조의 스펙**으로 사용 — 요소 누락 금지, 배치는 VARIANCE에 따라 변주
 - Phase 2 슈퍼프롬프트(`docs/design-refs/*.md`)가 있으면 **구조·모션의 스펙**으로 사용 — 충돌 시 DESIGN.md 토큰이 우선
 - 그림자·blur·보더 그라데이션·텍스트 리빌·로딩 상태 등 디테일은 [`frontend-design/references/technique-recipes.md`](../frontend-design/references/technique-recipes.md)의 검증된 값으로
 - React Bits류 외부 효과는 목적·의존성·cleanup·reduced-motion·성능·라이선스 게이트를 모두 통과한 경우에만 도입
@@ -335,7 +360,7 @@ options:
 ```
 MODE     — Interface Mode + primary action
 GOAL     — 무엇을, 누구를 위해, 성공 기준
-LAYOUT   — 그리드/배치/위계 (H1 → 서브 → 본문 → CTA)
+LAYOUT   — 그리드/배치/위계 (H1 → 서브 → 본문 → CTA) + 블록 anatomy 계약 (layout-block-anatomy.md 해당 블록 §)
 DENSITY  — 기본 노출량, 행 높이, pane 수
 STATE    — loading/empty/error/stale/permission/disconnected
 TYPE     — DESIGN.md typography 토큰 지정
@@ -428,7 +453,7 @@ designmd lint DESIGN.md                    # Windows 별칭
 
 📁 산출물:
   DESIGN.md           — 디자인 정본 (YAML 토큰 + 산문 근거)
-  docs/design-refs/   — 레퍼런스 슈퍼프롬프트 (Phase 2 진행 시)
+  docs/design-refs/   — 레퍼런스 슈퍼프롬프트 (Phase 2) + 레이아웃 청사진 (Phase 2.5)
   구현 코드           — DESIGN.md 토큰 + 레시피/DB 매칭 적용
   리뷰 결과           — design.md lint + UI/UX 9영역 + 0-10 채점 + 가이드라인
 
@@ -485,6 +510,7 @@ designmd lint DESIGN.md                    # Windows 별칭
 | `skills/frontend-design/references/style-recipes/index.md` | 스타일 레시피 12종 카탈로그 + 프리셋 매핑 (Phase 1) |
 | `skills/frontend-design/references/motion-first-prompt-playbook.md` | 공개 프롬프트 패턴 합성 + 방향 아키타입 8종 + 색상 다양성 게이트 |
 | `skills/frontend-design/references/coder-interface-pattern-playbook.md` | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage 유형 게이트 |
+| `skills/frontend-design/references/layout-block-anatomy.md` | 블록 해부 카탈로그 30종 + 시퀀스 템플릿 + 청사진 절차 (Phase 2.5) |
 | `skills/frontend-design/scripts/select-diverse-palettes.js` | CSV/playbook 색상 레인을 hue family로 분산하는 JSON shortlist 도구 |
 | `skills/frontend-design/references/technique-recipes.md` | 그림자/blur/보더/리빌/모션/로딩 복붙 레시피 (Phase 3) |
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |
