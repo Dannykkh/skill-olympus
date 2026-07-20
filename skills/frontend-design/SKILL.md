@@ -17,7 +17,11 @@ Before making aesthetic choices, check if the project already has a design syste
 2. `design-system.md` / `design-tokens.json` — 레거시 또는 파생 디자인 자산
 3. `tailwind.config.*` / `theme.ts` / CSS `@theme`·변수 — 기존 테마 설정 (Tailwind v4는 CSS-first `@import "tailwindcss"`+`@theme`이라 config 파일이 없을 수 있음; v3 JS config를 쓰면 `@config`로 명시 로드)
 
-**있으면**: 해당 디자인 시스템의 토큰(색상, 폰트, 간격)을 기반으로 아래 미학을 적용. 시스템의 톤/무드와 Interface Mode의 효과 예산 안에서 더 명료하게 표현.
+**있으면**: 토큰(색상, 폰트, 간격)만 뽑아 쓰지 말고 **DESIGN.md 전체를 Read** — 산문 계약(Spatial
+Model, State Contracts, Motion, Component Anatomy, Copy Rules 등)이 구도·상태·카피의 스펙입니다.
+`docs/design-refs/`가 있으면 최신 direction 카드/슈퍼프롬프트/레이아웃 청사진도 함께 Read해서
+구현 계약으로 사용합니다. **후속 수정 세션에도 동일 적용** — "버튼 하나 고치는" 세션이 산문 계약을
+안 읽으면 수정이 누적될수록 원래 디자인 의도에서 드리프트합니다. 토큰은 그대로, 산문 계약 위반 금지.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
 
 ## Interface-Type Gate

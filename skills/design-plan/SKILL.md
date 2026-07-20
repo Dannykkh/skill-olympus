@@ -183,6 +183,11 @@ NEGATIVE / SUCCESS — 실패 조건과 관찰 가능한 통과 기준
 
 표현형 예시는 motion-first playbook, 기능형 예시는 coder-interface playbook의 방향 카드를 사용합니다.
 
+> **방향 카드 저장 (필수)**: 사용자가 방향을 선택하면 선택된 카드 전문(MODE~NEGATIVE/SUCCESS)을
+> `docs/design-refs/YYYY-MM-DD-direction-{slug}.md`로 저장합니다. 방향 카드가 대화에만 남으면
+> Phase 3와 후속 세션이 소비할 수 없습니다 — 레퍼런스 없는 프로젝트도 컴파일된 프롬프트가
+> 파일로 남아야 합니다.
+
 그 다음 [`frontend-design/references/style-recipes/index.md`](../frontend-design/references/style-recipes/index.md)의
 **프리셋 → 레시피 후보 풀**에서 각 방향에 맞는 레시피를 매칭합니다. 표의 나열 순서는 추천
 순위가 아니며, 개별 레시피 파일은 사용자가 방향을 선택한 뒤 하나만 Read합니다.
@@ -341,8 +346,15 @@ options:
 - **파이프라인 모드** (포세이돈 구현 후): 기존 기능 코드에 디자인 시스템을 입히고 정교화. **로직 변경 금지** — 스타일·마크업·비주얼 인터랙션만 수정
 - **단독 모드** (처음부터 UI 생성): 정적 컴포넌트/페이지까지 생성하되, 데이터·로직이 필요한 부분은 mock + `TODO(기능)` 주석으로 남기고 포세이돈/다이달로스에 인계
 
+**구현 전 필수 Read (프롬프트 소비 게이트)**: 코드를 쓰기 전에 아래를 실제로 Read합니다.
+토큰만 읽고 구도를 즉흥 창작하는 것이 저품질의 주범입니다 — 산문 계약과 design-refs 프롬프트가
+있는데 안 읽었다면 그 구현은 스펙 위반입니다.
+
+1. `DESIGN.md` **전체** — YAML 토큰뿐 아니라 산문 계약(§Spatial Model, State Contracts, Motion, Component Anatomy, Copy Rules 등)까지
+2. `docs/design-refs/`의 최신 자산 3종 — direction 카드(1-3), 슈퍼프롬프트(Phase 2), 레이아웃 청사진(Phase 2.5) 중 존재하는 것 전부
+
 이 Phase에서는:
-- Phase 1에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지)
+- Phase 1에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지). 산문 계약은 구도·상태·카피의 스펙으로 동등하게 구속력 있음
 - Phase 1에서 레시피를 골랐으면 해당 스타일 레시피 파일의 패턴/Avoid를 함께 참조
 - Phase 1에서 방향 카드를 골랐으면 `motion-first-prompt-playbook.md`의 프롬프트 컴파일러와 색상 다양성 게이트를 함께 참조
 - Phase 1에서 기능형 Interface Mode를 골랐으면 `coder-interface-pattern-playbook.md`의 정보 구조·상태·효과 예산을 구현 계약으로 사용
@@ -355,7 +367,11 @@ options:
 
 **구현 지시 스켈레톤 (섹션/컴포넌트 단위 작업 지시 시):**
 
-에이전트/서브태스크에 구현을 지시할 때는 소원("예쁘게")이 아니라 디자인 시스템처럼 지시합니다:
+에이전트/서브태스크에 구현을 지시할 때는 소원("예쁘게")이 아니라 디자인 시스템처럼 지시합니다.
+각 줄은 즉석에서 짓지 말고 **위 필수 Read 파일에서 인용해** 채웁니다 (COMPOSITION은 direction
+카드/청사진에서, STATE는 DESIGN.md State Contracts에서, NEGATIVE는 레시피 Avoid에서).
+서브에이전트 디스패치 시에는 파일 경로만 주지 말고 **채워진 스켈레톤 전문을 프롬프트에 포함**합니다
+— 서브에이전트가 파일을 안 읽으면 게이트가 무력화됩니다:
 
 ```
 MODE     — Interface Mode + primary action
