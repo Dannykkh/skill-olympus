@@ -4,13 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
+## [4.14.0] - 2026-07-22
+
+### Features
 
 - **aphrodite/frontend-design**: MotionSites 공개 라이브러리와 무료 프롬프트 10개를 표본 분석해 `motion-first-prompt-playbook.md`를 추가. 결과 계약→구성→타입→색→재질→모션→반응형→실패 조건으로 이어지는 프롬프트 컴파일러, 방향 아키타입 8종, 대비 검증 색상 레인을 제공한다. 원문·유료 콘텐츠·브랜드 카피·에셋 URL은 복제하지 않고 구조만 합성한다.
-- **aphrodite coder-interface learning**: TraceDR, API Finder, Orca, Colorion CSS Loaders, React Bits의 공개 UI와 공식 저장소를 조사해 `coder-interface-pattern-playbook.md`를 추가. Data Instrument, Faceted Directory, Agent Workbench, Waiting State, Effect Stage 5종을 스타일보다 먼저 판별하고 정보 구조·밀도·상태 모델·효과 예산을 고정한다. 제품 UI, 프롬프트 라이브러리, 컴포넌트 소스, 상태 패턴의 추출 경계와 라이선스 확인 절차도 분리했다.
+- **aphrodite coder-interface learning**: TraceDR, API Finder, Orca, Colorion CSS Loaders, React Bits의 공개 UI와 공식 저장소를 조사해 `coder-interface-pattern-playbook.md`를 추가. Data Instrument, Faceted Directory, Agent Workbench, Waiting State, Effect Stage 5종을 스타일보다 먼저 판별하고 정보 구조·밀도·상태 모델·효과 예산을 고정한다. 제품 UI, 프롬프트 라이브러리, 컴포넌트 소스, 상태 패턴의 추출 경계와 라이선스 확인 절차도 분리했다 (b0dda8d).
 - **frontend motion discipline**: pure-CSS 단일 색 토큰, 300ms 지연 표시, `aria-busy`/`role=status`, reduced-motion을 묶은 Accessible Loading State 레시피를 추가. React Bits류 효과는 목적·의존성·cleanup·입력 방식·모바일 성능·라이선스 게이트를 통과한 signature 장면 1곳에만 허용한다.
 - **aphrodite color diversity**: `color-palettes.csv`의 Accent가 주황 56/161, 초록 43/161로 편중된 사실을 확인하고 후보 구성 하드 게이트와 무의존성 Node 도구 `select-diverse-palettes.js`를 추가. CSV/playbook을 hue family로 분산하며 기본 초록/주황 0개, 근거가 있을 때만 최대 1개를 허용한다. `Parchment / Orange`의 17.8° hue가 red로 오분류되던 경계를 15°로 보정하고 회귀 테스트를 추가했다. CSV 행 순위 사용 금지, 고유성 15% 채점 반영, `paper-tech-light`와 `tech-green-dark`의 자동 1순위 매핑도 조건부 후보로 변경했다.
 - **cross-cli design guardrail**: Claude/Codex/Gemini mnemo 템플릿에 초록/주황 자동 수렴 방지와 기능형 화면 유형 우선 규칙을 동기화했다.
+- **aphrodite layout-block-anatomy**: anelkabag/bag-ui(MIT)의 블록 와이어프레임 카탈로그를 구조 문법으로 번역해 `layout-block-anatomy.md` 신설. 블록 30종(Marketing 16 · App 8 · Ecommerce 6)의 해부 계약(요소 순서·잉크 위계·강조 규칙·CTA 문법)과 페이지 유형별 블록 시퀀스 템플릿 9종을 제공. design-plan에 Phase 2.5(레이아웃 청사진)로 배선해 구현 전 그레이스케일 구조를 먼저 고정한다 (2e0a710).
+- **aphrodite atmosphere/texture recipe**: `technique-recipes.md` §11 신설(그레인 오버레이·절제된 메시 그라데이션·반복 요소 강조 이탈·지속 비대칭·지루함 테스트). SKILL.md가 "atmosphere를 만들라"고 지시만 하고 검증된 CSS 값이 없어 구현에서 생략되던 것을 실제 랜딩 페이지 재현(Skill Olympus 자체 페이지)으로 확인하고 수정 — 색·폰트 규칙을 다 지켜도 flat 패널과 완전 균일 반복 그리드가 남는 "AI적 딱딱함"의 원인이었다 (2be4396).
+
+### Bug Fixes
+
+- **aphrodite prompt-consumption-gate**: 구현 시점(Phase 3) 필수 Read 게이트 신설 — DESIGN.md 산문 계약과 `docs/design-refs/`의 direction 카드·슈퍼프롬프트·레이아웃 청사진이 생산되고도 구현이 "토큰만 참조"해 소비되지 않던 문제 수정. 방향 카드 선택 시 파일 저장 의무화, 구현 지시 스켈레톤은 파일에서 인용해 채우도록 배선 (ad01573).
+- **skills**: reddit-researcher v1.1.0 — Reddit JSON API가 미인증 CLI 요청에 403을 반환하기 시작해 재시도 로직이 멈춘 것처럼 보이던 문제 수정. 1회 차단 감지 시 JSON API를 런 전체에서 건너뛰고 old.reddit.com HTML 검색을 주 수집 경로로 추가, Tavily MCP를 검색 폴백으로 우선 사용 (6b46f57).
+
+### Other Changes
+
+- **gitignore**: `docs/reddit-research/`(세션별 리드 리스트, Reddit 사용자명 포함)를 `docs/handoffs/` 등과 동일하게 로컬 전용으로 무시 (8ff8ad3).
 
 ## [4.13.0] - 2026-07-10
 

@@ -212,6 +212,14 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.14.0 — 레이아웃 블록 해부 · 질감 레시피 · 프롬프트 소비 게이트 (2026.07)
+
+한 바퀴 완주: 아프로디테로 실제 페이지를 만들어보고, 여전히 뻔하다는 걸 발견하고, 파이프라인을 고치고, 다시 만들고, 반복 — 이 프로젝트 자체의 랜딩 페이지(`dannykkh.github.io/skill-olympus`)로 끝까지 검증했습니다. **레이아웃 블록 해부:** bag-ui(MIT)의 블록 와이어프레임 카탈로그를 구조 문법으로 번역 — 30개 블록 해부 계약(Marketing/App/Ecommerce, 잉크 위계 3단계·강조 블록당 1개·CTA 문법·지속 비대칭)을 design-plan Phase 2.5로 배선해 구현 전에 구조부터 고정합니다. **프롬프트 소비 게이트:** DESIGN.md의 산문 계약과 `docs/design-refs/` 슈퍼프롬프트가 생산되고도 구현 시점에 강제로 읽히지 않던 문제 — Phase 3에 필수 Read 게이트를 넣고, 방향 카드는 대화가 아니라 파일로 저장하도록 했습니다. **질감/텍스처 레시피:** SKILL.md가 "그레인/메시/노이즈로 atmosphere를 만들라"고 지시만 하고 검증된 CSS 값이 없어 구현에서 증발하던 것을, `technique-recipes.md` §11(그레인 오버레이·절제된 메시 그라데이션·반복 요소 강조 이탈·지속 비대칭·지루함 테스트)로 채웠습니다. 재구현 과정에서 실제로 배포하지 않으면 안 보이는 버그 2건도 잡았습니다 — 한글 서브셋 웹폰트의 `document.fonts` API false-negative(네트워크 로드는 성공했는데 API는 "unloaded"로 보고), 모바일 CSS 셀렉터 버그(`.pipeline-grid > div`가 빈 gutter뿐 아니라 타임라인 전체를 삭제) — 둘 다 스크린샷 관찰로만 발견됐습니다.
+
+### v4.13.0 — 데이터 시각화 스킬 (2026.07)
+
+Anthropic 공식 `data-visualization` 스킬 벤더링(`anthropics/knowledge-work-plugins`, Apache-2.0, 본문 무수정) — 데이터 관계별 차트 선택 가이드(추세/비교/순위/분포/상관/흐름), 차트 안티패턴(파이 6개 초과, 3D, 이중축 주의), Python(matplotlib/seaborn/plotly) 코드 패턴, 디자인 원칙, 접근성 체크리스트.
+
 ### v4.12.0 — 스타일 레시피 · 레퍼런스 자산화 · 크로노스 심장박동 (2026.07)
 
 아프로디테가 MengTo/Skills(MIT) 정독 후 좋은 것만 흡수했습니다. **스타일 레시피 12종:** 하나의 미학을 "경계 선언 + hex 토큰 + 한·영 폰트 스택 + Tuning Knobs + Avoid"로 캡슐화 — 원본의 값 없는 산문 한계를 CSV DB 바인딩으로 보완했고, 전 색 쌍을 WCAG 계산으로 검증했습니다(4.5:1 미달 3건 사전 수정). **테크닉 레시피 9종:** 그림자·progressive blur·보더 그라데이션·텍스트 리빌·GSAP+Lenis의 복붙 가능한 검증 값. **레퍼런스 자산화(Phase 2 개편):** 스크린샷/URL/영상/HTML을 섹션 해부 슈퍼프롬프트(`docs/design-refs/`)로 변환해 버전 관리되는 파일 자산으로. **크로노스 heartbeat:** `/goal` 설정을 건너뛰면 엔진 없이 돌다 멈추던 갭을 네이티브 `/loop` 인터벌 재진입(`--heartbeat`)으로 해소, 점수형 완료 조건(90점 게이트)은 `--completion-promise` 3요소(임계값·측정 방법·대화 출력)로 명문화. editorial-tech 레시피로 샘플 페이지를 만들어 파이프라인 전체(한글 폴백 렌더·모션·반응형·대비)를 실측 검증했습니다(gotcha 045: `document.fonts.check()` 서브셋 false-negative 발견·보정).
@@ -631,6 +639,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.14.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.14.0)** | **2026-07-22** | **레이아웃 블록 해부 · 질감 레시피 · 프롬프트 소비 게이트** — bag-ui(MIT) 블록 와이어프레임 카탈로그를 구조 계약 30종으로 번역해 design-plan Phase 2.5로 배선; Phase 3에 DESIGN.md 산문 계약 + `docs/design-refs/` 슈퍼프롬프트 필수 Read 게이트 신설(생산은 됐지만 강제 소비가 안 되던 문제); `technique-recipes.md` §11로 그레인/메시/강조 이탈/지속 비대칭의 검증된 값 제공(기존엔 "atmosphere 만들라"는 지시만 있고 구현 값이 없어 증발); 이 프로젝트 자체 랜딩 페이지를 끝까지 배포해 세 갭을 전부 발견·수정(한글 웹폰트 `document.fonts` false-negative, 모바일 CSS 셀렉터 버그 포함) |
 | **[v4.13.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.13.0)** | **2026-07-10** | **데이터 시각화 스킬 (Anthropic 공식 벤더링)** — 데이터 관계별 차트 선택 가이드(추세/비교/순위/분포/상관/흐름), 차트 안티패턴(파이 6개 초과 금지, 3D 금지, 이중축 주의), Python(matplotlib/seaborn/plotly) 코드 패턴, 디자인 원칙, 접근성 체크리스트; Apache-2.0 출처 명기, `/data-visualization` 호출 가능, design-plan/mermaid-diagrams와 역할 분담 문서화; 96 → 97개 스킬 3-CLI 배포 |
 | [v4.12.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.12.2) | 2026-07-10 | **비-git 프로젝트 루트 가드** — git 루트가 없으면 상위로 걸어 올라가며 기존 mnemo 마커(`MEMORY.md`/`conversations/`, HOME 제외)를 찾고, 없으면 빌드 출력 세그먼트(bin/obj/dist 등) 앞에서 절단; `bin\Debug`·앱 데이터 폴더로 대화/메모리가 흩어지던 문제 차단; 12개 파일(Claude 훅 4종 + codex/gemini save-turn, ps1+sh) |
 | [v4.12.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.12.1) | 2026-07-10 | **훅 stdin 워치독 fail-open** — "UserPromptSubmit hook timed out after 60s"(활성 턴 중 제출 시 stdin 기아) 수정: 15초 bounded read + 조용한 종료, PS 5.1 `[Console]::In` 동기 블로킹 우회(OpenStandardInput+StreamReader), 워치독 초과 시 즉시 종료 규칙(미완료 read + native 스폰 = 행, 실측 재현), chronos continue-loop payload argv 우선 재정렬, codex/gemini save-turn HOME git-root 가드 |
