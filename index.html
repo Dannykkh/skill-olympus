@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Olympus — 세 CLI가 공유하는 스킬 판테온</title>
+<meta name="description" content="Claude Code, Codex, Gemini 세 CLI가 같은 워크플로우를 공유하는 스킬 라이브러리. 스킬 97개, 에이전트 41개.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Hahmlet:wght@400;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<style>
+  /* ── DESIGN.md 토큰 (정본 그대로) ─────────────────────────── */
+  :root {
+    --bg: #101014;
+    --surface: #17171C;
+    --text: #F4F4F5;
+    --copy: #A1A1AA;
+    --line: rgba(244, 244, 245, 0.14);
+    --line-strong: rgba(244, 244, 245, 0.28);
+    --accent: #E4B700;
+    --on-accent: #191919;
+    --serif: "Fraunces", "Hahmlet", serif;
+    --sans: "DM Sans", "Pretendard", sans-serif;
+    --mono: "JetBrains Mono", "IBM Plex Sans KR", monospace;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    word-break: keep-all; /* 한글 단어 중간 줄바꿈 방지 */
+  }
+
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px); }
+
+  .mono {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--copy);
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ── 1. Navbar: 희소 톱바, 링크 우측, 솔리드 CTA 1 ─────────── */
+  header {
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+  }
+  .wordmark { display: flex; align-items: baseline; gap: 10px; }
+  .wordmark .serif-mark {
+    font-family: var(--serif); font-size: 1.35rem; font-weight: 600;
+    letter-spacing: -0.01em; color: var(--text);
+  }
+  .nav-right { display: flex; align-items: center; gap: clamp(14px, 2.5vw, 30px); }
+  .nav-link {
+    font-size: 0.9rem; color: var(--copy);
+    border-bottom: 1px solid transparent; padding-bottom: 2px;
+    transition: color 150ms, border-color 150ms;
+  }
+  .nav-link:hover { color: var(--text); border-color: var(--line-strong); }
+  .btn-primary {
+    display: inline-block;
+    background: var(--accent); color: var(--on-accent);
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 9px 18px; border-radius: 2px; border: 1px solid var(--accent);
+    transition: transform 120ms var(--ease);
+  }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-outline {
+    display: inline-block;
+    color: var(--text); background: transparent;
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 9px 18px; border-radius: 2px; border: 1px solid var(--line-strong);
+    transition: border-color 150ms, transform 120ms var(--ease);
+  }
+  .btn-outline:hover { border-color: var(--text); }
+  .btn-outline:active { transform: translateY(1px); }
+
+  /* ── 2. Hero: 좌7 우4 비대칭, 3줄 오프셋 헤드라인 ──────────── */
+  /* 질감(technique-recipes §11-A/B) — 히어로 1곳에만, 액센트 hue 확장이라 새 색 발명 아님 */
+  .hero {
+    position: relative; isolation: isolate;
+    padding: clamp(64px, 9vw, 110px) 0 0;
+    background:
+      radial-gradient(ellipse 55% 45% at 12% 0%, color-mix(in oklch, var(--accent) 13%, transparent), transparent 70%),
+      radial-gradient(ellipse 45% 40% at 100% 15%, color-mix(in oklch, var(--accent) 6%, transparent), transparent 70%);
+  }
+  .hero::after {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    pointer-events: none; opacity: 0.045; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+  }
+  .hero-grid {
+    display: grid; grid-template-columns: 7fr 1fr 4fr; align-items: end;
+  }
+  .eyebrow { margin-bottom: 28px; }
+  .eyebrow .tick { color: var(--accent); margin-right: 10px; }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.6rem, 6vw, 4.4rem);
+    font-weight: 600; line-height: 1.08; letter-spacing: -0.02em;
+  }
+  h1 .l2 { display: block; padding-left: clamp(28px, 4vw, 72px); }
+  h1 .l3 { display: block; padding-left: clamp(56px, 8vw, 144px); }
+  .hero-copy { color: var(--copy); font-size: 0.98rem; padding-bottom: 8px; }
+  .hero-copy strong { color: var(--text); font-weight: 500; }
+  .hero-ctas { display: flex; gap: 14px; margin-top: 44px; }
+
+  /* masked reveal — 장식 효과 예산 1 (히어로 한정) */
+  .reveal { display: inline-block; overflow: hidden; vertical-align: bottom; }
+  .reveal > span {
+    display: inline-block; transform: translateY(110%);
+    animation: rise 600ms var(--ease) forwards;
+  }
+  @keyframes rise { to { transform: translateY(0); } }
+  .fade-in { opacity: 0; animation: appear 600ms var(--ease) forwards; }
+  @keyframes appear { to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal > span { transform: none; animation: none; }
+    .fade-in { opacity: 1; animation: none; }
+  }
+
+  /* 신명 스트립 — 미디어 폴백, 기둥 라인 (정적) */
+  .pantheon-strip {
+    margin-top: clamp(56px, 8vw, 88px);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: flex; overflow-x: auto; scrollbar-width: none;
+  }
+  .pantheon-strip::-webkit-scrollbar { display: none; }
+  .pantheon-strip span {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em;
+    color: var(--copy); white-space: nowrap;
+    padding: 14px 22px; border-right: 1px solid var(--line);
+  }
+  .pantheon-strip span:first-child { border-left: 1px solid var(--line); }
+
+  /* ── 3. Stats: 카드 금지, 스트립 + 세로 구분선 ─────────────── */
+  .stats { border-bottom: 1px solid var(--line); }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .stat {
+    padding: clamp(28px, 4vw, 44px) clamp(16px, 2.5vw, 32px);
+    border-right: 1px solid var(--line);
+  }
+  .stat:first-child { padding-left: 0; }
+  .stat:last-child { border-right: none; }
+  .stat-value {
+    font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.2rem);
+    font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .stat-value::after {
+    content: ""; display: block; width: 28px; height: 2px;
+    background: var(--accent); margin-top: 12px;
+  }
+  .stat-label { margin-top: 10px; }
+
+  /* ── 섹션 공통 ─────────────────────────────────────────────── */
+  section { padding: clamp(64px, 9vw, 96px) 0; }
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: clamp(36px, 5vw, 56px);
+  }
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+    font-weight: 600; line-height: 1.15; letter-spacing: -0.01em;
+  }
+
+  /* ── 4. 판테온 명부: 에디토리얼 목차 리스트 6행 ────────────── */
+  .roster { border-top: 1px solid var(--line); }
+  .roster-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 1.4fr auto;
+    align-items: baseline; gap: clamp(14px, 2.5vw, 32px);
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    transition: border-color 150ms;
+  }
+  .roster-row:hover { border-color: var(--line-strong); }
+  .roster-row:hover .roster-num { color: var(--accent); }
+  .roster-num { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--copy); transition: color 150ms; }
+  .roster-name {
+    font-family: var(--serif); font-size: clamp(1.25rem, 2.2vw, 1.6rem); font-weight: 600;
+  }
+  .roster-name em {
+    font-style: normal; font-family: var(--mono); font-size: 0.72rem;
+    letter-spacing: 0.14em; color: var(--copy); margin-left: 12px; text-transform: uppercase;
+  }
+  .roster-role { color: var(--copy); font-size: 0.95rem; }
+  .roster-cmd {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.04em;
+    color: var(--text); border: 1px solid var(--line-strong);
+    padding: 5px 12px; border-radius: 2px; white-space: nowrap;
+  }
+  .roster-more { padding-top: 20px; }
+
+  /* 강조 이탈(technique-recipes §11-C) — 06행 중 정확히 1행(제우스=all-in-one, 실제 제품 사실 근거) */
+  .roster-row.flagship {
+    grid-template-columns: 64px 1fr 1.4fr auto;
+    background: var(--surface);
+    margin: 0 calc(-1 * clamp(16px, 2.5vw, 28px));
+    padding: 26px clamp(16px, 2.5vw, 28px);
+    border-radius: 6px;
+    border-bottom-color: transparent;
+  }
+  .roster-row.flagship .roster-num { color: var(--accent); }
+  .roster-row.flagship .roster-name { font-size: clamp(1.5rem, 2.8vw, 2rem); }
+  .roster-row.flagship .roster-cmd { border-color: var(--accent); color: var(--accent); }
+  .flagship-tag {
+    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em;
+    color: var(--on-accent); background: var(--accent); white-space: nowrap;
+    padding: 2px 7px; border-radius: 2px; margin-left: 10px; vertical-align: middle;
+    display: inline-block; margin-top: 6px;
+  }
+
+  /* ── 5. 파이프라인: 세로 타임라인 5스텝 ────────────────────── */
+  /* 지속 비대칭(technique-recipes §11-D) — 히어로의 7:1:4 비율을 이 섹션에서 재사용 */
+  .pipeline-section { border-top: 1px solid var(--line); }
+  .pipeline-grid { display: grid; grid-template-columns: 7fr 1fr 4fr; }
+  .pipeline-note {
+    position: sticky; top: 88px; align-self: start;
+    border-left: 1px solid var(--line); padding-left: clamp(20px, 3vw, 32px);
+  }
+  .pipeline-note p { color: var(--copy); font-size: 0.95rem; margin-bottom: 20px; }
+  .pipeline-note .roster-cmd { display: inline-block; }
+  .pipe { position: relative; margin-left: 6px; padding-left: clamp(28px, 4vw, 44px); border-left: 1px solid var(--line-strong); }
+  .pipe-step { position: relative; padding: 0 0 clamp(32px, 4.5vw, 44px); max-width: 640px; }
+  .pipe-step:last-child { padding-bottom: 0; }
+  .pipe-step::before {
+    content: ""; position: absolute; top: 8px;
+    left: calc(-1 * clamp(28px, 4vw, 44px) - 4.5px);
+    width: 8px; height: 8px; border-radius: 0;
+    background: var(--bg); border: 1px solid var(--line-strong);
+  }
+  .pipe-num { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--copy); }
+  .pipe-name { font-family: var(--serif); font-size: 1.3rem; font-weight: 600; margin: 4px 0 6px; }
+  .pipe-desc { color: var(--copy); font-size: 0.95rem; }
+
+  /* ── 6. CTA 밴드: 좌 텍스트 / 우 버튼 1 ────────────────────── */
+  .cta-band {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 28px;
+    padding: clamp(28px, 4.5vw, 44px) clamp(24px, 4vw, 48px);
+  }
+  .cta-band h2 { margin-bottom: 8px; }
+  .cta-band p { color: var(--copy); font-size: 0.95rem; }
+  .cta-band code {
+    font-family: var(--mono); font-size: 0.85em; color: var(--text);
+    background: var(--bg); padding: 2px 8px; border-radius: 2px; border: 1px solid var(--line);
+  }
+
+  /* ── 7. Footer: 브랜드 넓게 + 링크 3칼럼 ───────────────────── */
+  footer { border-top: 1px solid var(--line); padding: clamp(48px, 7vw, 72px) 0 36px; }
+  .footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: clamp(28px, 4vw, 48px);
+  }
+  .footer-brand .serif-mark { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; }
+  .footer-brand p { color: var(--copy); font-size: 0.9rem; margin-top: 12px; max-width: 300px; }
+  .footer-col h3 { margin-bottom: 16px; }
+  .footer-col a {
+    display: block; color: var(--copy); font-size: 0.9rem; padding: 5px 0;
+    transition: color 150ms;
+  }
+  .footer-col a:hover { color: var(--text); }
+  .footer-bottom {
+    margin-top: clamp(40px, 6vw, 56px); padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* ── 반응형: 스택 순서와 축소 규칙 (direction 카드 RESPONSIVE) ── */
+  @media (max-width: 880px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-copy { margin-top: 32px; max-width: 480px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat { padding-left: 0; }
+    .stat:nth-child(2n) { border-right: none; }
+    .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--line); }
+    .roster-row { grid-template-columns: 44px 1fr auto; }
+    .roster-role { grid-column: 2 / 4; padding-left: 0; }
+    .roster-row.flagship { margin: 0 -20px; padding: 22px 20px; }
+    .pipeline-grid { grid-template-columns: 1fr; }
+    .pipeline-gutter { display: none; }
+    .pipeline-note {
+      position: static; border-left: none; padding-left: 0;
+      margin-top: clamp(32px, 5vw, 44px);
+      border-top: 1px solid var(--line); padding-top: 28px;
+    }
+    .cta-band { flex-direction: column; align-items: flex-start; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .nav-link { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="wordmark">
+      <span class="serif-mark">Olympus</span>
+      <span class="mono">Skill</span>
+    </a>
+    <nav class="nav-right" aria-label="주요 메뉴">
+      <a class="nav-link" href="#pantheon">판테온</a>
+      <a class="nav-link" href="#pipeline">파이프라인</a>
+      <a class="nav-link" href="#install">설치</a>
+      <a class="btn-primary" href="https://github.com/Dannykkh/skill-olympus">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 2. Hero -->
+  <div class="hero">
+    <div class="wrap">
+      <p class="eyebrow mono fade-in" style="animation-delay: 80ms">
+        <span class="tick">—</span>Claude Code · Codex · Gemini, 3-CLI 공용 스킬 라이브러리
+      </p>
+      <div class="hero-grid">
+        <h1 aria-label="설계는 젭마인, 구현은 포세이돈, 감리는 아르고스.">
+          <span class="reveal" aria-hidden="true"><span style="animation-delay: 120ms">설계는 젭마인,</span></span>
+          <span class="l2"><span class="reveal" aria-hidden="true"><span style="animation-delay: 240ms">구현은 포세이돈,</span></span></span>
+          <span class="l3"><span class="reveal" aria-hidden="true"><span style="animation-delay: 360ms">감리는 아르고스.</span></span></span>
+        </h1>
+        <div></div>
+        <p class="hero-copy fade-in" style="animation-delay: 480ms">
+          세 개의 CLI가 <strong>같은 워크플로우</strong>를 공유합니다.
+          요구사항 인터뷰부터 병렬 구현, 준공 감리, 문서 마감까지 —
+          스킬 97개가 한 사람의 개발을 팀의 개발로 바꿉니다.
+        </p>
+      </div>
+      <div class="hero-ctas fade-in" style="animation-delay: 560ms">
+        <a class="btn-primary" href="#install">설치 가이드</a>
+        <a class="btn-outline" href="https://github.com/Dannykkh/skill-olympus">저장소 열기</a>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="pantheon-strip" aria-hidden="true">
+        <span>Zeus</span><span>Poseidon</span><span>Aphrodite</span><span>Athena</span>
+        <span>Hermes</span><span>Argos</span><span>Minos</span><span>Clio</span>
+        <span>Chronos</span><span>Daedalus</span><span>Hestia</span><span>Mnemo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Stats -->
+  <div class="stats">
+    <div class="wrap stats-grid">
+      <div class="stat">
+        <div class="stat-value">97</div>
+        <div class="stat-label mono">스킬</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">41</div>
+        <div class="stat-label mono">에이전트</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">3</div>
+        <div class="stat-label mono">지원 CLI</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">12</div>
+        <div class="stat-label mono">스타일 레시피</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 판테온 명부 -->
+  <section id="pantheon">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>판테온 명부</h2>
+        <span class="mono">Pantheon Index — 06 / 12</span>
+      </div>
+      <div class="roster">
+        <a class="roster-row flagship" href="#">
+          <span class="roster-num">01</span>
+          <span class="roster-name">제우스<em>Zeus</em><span class="flagship-tag">ALL-IN-ONE</span></span>
+          <span class="roster-role">아래 02~06을 전부 순서대로 대신 실행합니다 — 질문 없이, 한 줄 설명만으로.</span>
+          <span class="roster-cmd">/zeus</span>
+        </a>
+        <a class="roster-row" href="#">
+          <span class="roster-num">02</span>
+          <span class="roster-name">포세이돈<em>Poseidon</em></span>
+          <span class="roster-role">설계 섹션을 의존성 웨이브로 나눠 에이전트 팀이 병렬 구현</span>
+          <span class="roster-cmd">/poseidon</span>
+        </a>
+        <a class="roster-row" href="#">
+          <span class="roster-num">03</span>
+          <span class="roster-name">아프로디테<em>Aphrodite</em></span>
+          <span class="roster-role">디자인 토큰 정본과 레이아웃 청사진으로 화면의 미학을 통제</span>
+          <span class="roster-cmd">/aphrodite</span>
+        </a>
+        <a class="roster-row" href="#">
+          <span class="roster-num">04</span>
+          <span class="roster-name">아르고스<em>Argos</em></span>
+          <span class="roster-role">설계 산출물 대비 구현을 대조하는 준공 검사 감리</span>
+          <span class="roster-cmd">/argos</span>
+        </a>
+        <a class="roster-row" href="#">
+          <span class="roster-num">05</span>
+          <span class="roster-name">크로노스<em>Chronos</em></span>
+          <span class="roster-role">우선순위 사이클로 이슈를 하나씩 잡는 자율 수정 루프</span>
+          <span class="roster-cmd">/chronos</span>
+        </a>
+        <a class="roster-row" href="#">
+          <span class="roster-num">06</span>
+          <span class="roster-name">므네모<em>Mnemo</em></span>
+          <span class="roster-role">대화를 자동 저장하고 세 CLI가 같은 기억을 공유하는 장기기억</span>
+          <span class="roster-cmd">/mnemo</span>
+        </a>
+      </div>
+      <p class="roster-more mono">외 — 아테나(전략) · 헤르메스(사업성) · 미노스(QA) · 클리오(문서) · 다이달로스(PM) · 헤스티아(위생)</p>
+    </div>
+  </section>
+
+  <!-- 5. 파이프라인 -->
+  <section id="pipeline" class="pipeline-section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>하나의 파이프라인</h2>
+        <span class="mono">Interview → Build → Audit → Ship</span>
+      </div>
+      <div class="pipeline-grid">
+        <div class="pipe">
+          <div class="pipe-step">
+            <div class="pipe-num">01 — 설계</div>
+            <div class="pipe-name">젭마인이 묻습니다</div>
+            <p class="pipe-desc">이해관계자 인터뷰와 도메인 분석으로 섹션 단위 구현 계획을 만듭니다. 코드보다 질문이 먼저입니다.</p>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">02 — 구현</div>
+            <div class="pipe-name">포세이돈이 팀을 부립니다</div>
+            <p class="pipe-desc">섹션 의존성을 분석해 웨이브로 묶고, 에이전트 팀이 병렬로 구현합니다.</p>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">03 — 감리</div>
+            <div class="pipe-name">아르고스가 대조합니다</div>
+            <p class="pipe-desc">spec, API 명세, QA 시나리오, 흐름도 — 설계 산출물 대비 구현을 항목별로 검증합니다.</p>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">04 — QA</div>
+            <div class="pipe-name">미노스가 심판합니다</div>
+            <p class="pipe-desc">QA 시나리오에서 Playwright 테스트를 생성하고, 통과할 때까지 수정 루프를 돕니다.</p>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">05 — 마감</div>
+            <div class="pipe-name">클리오가 기록합니다</div>
+            <p class="pipe-desc">GO/NO-GO 최종 점검과 함께 PRD, 기술 문서, 매뉴얼을 일괄 생성합니다.</p>
+          </div>
+        </div>
+        <div class="pipeline-gutter"></div>
+        <aside class="pipeline-note">
+          <p class="mono" style="color: var(--text); margin-bottom: 12px;">또는, 전부 한 번에</p>
+          <p>다섯 단계를 하나씩 실행할 수도 있고, <strong style="color: var(--text)">제우스</strong>에게 한 줄만 설명하면 질문 없이 순서대로 완주합니다.</p>
+          <a class="roster-cmd" href="#pantheon" style="border-color: var(--accent); color: var(--accent);">/zeus 보기 ↑</a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CTA 밴드 -->
+  <section id="install">
+    <div class="wrap">
+      <div class="cta-band">
+        <div>
+          <h2>세 CLI, 같은 팀.</h2>
+          <p><code>install.bat</code> 한 번이면 Claude Code · Codex · Gemini에 같은 스킬이 설치됩니다.</p>
+        </div>
+        <a class="btn-primary" href="https://github.com/Dannykkh/skill-olympus">시작하기</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 7. Footer -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="serif-mark">Olympus <span class="mono">Skill</span></div>
+        <p>Claude Code, Codex, Gemini가 같은 워크플로우를 공유하도록 만든 오픈소스 스킬 라이브러리입니다.</p>
+      </div>
+      <div class="footer-col">
+        <h3 class="mono">스킬</h3>
+        <a href="#pantheon">젭마인 — 설계</a>
+        <a href="#pantheon">제우스 — 파이프라인</a>
+        <a href="#pantheon">아프로디테 — 디자인</a>
+        <a href="#pantheon">크로노스 — 자율 루프</a>
+      </div>
+      <div class="footer-col">
+        <h3 class="mono">문서</h3>
+        <a href="https://github.com/Dannykkh/skill-olympus#readme">README</a>
+        <a href="https://github.com/Dannykkh/skill-olympus">Quick Reference</a>
+        <a href="https://github.com/Dannykkh/skill-olympus">에이전트 카탈로그</a>
+        <a href="https://github.com/Dannykkh/skill-olympus">설치 가이드</a>
+      </div>
+      <div class="footer-col">
+        <h3 class="mono">지원 CLI</h3>
+        <a href="https://github.com/Dannykkh/skill-olympus">Claude Code</a>
+        <a href="https://github.com/Dannykkh/skill-olympus">Codex</a>
+        <a href="https://github.com/Dannykkh/skill-olympus">Gemini</a>
+        <a href="https://github.com/Dannykkh/skill-olympus">크로스 CLI 동기화</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="mono">MIT License</span>
+      <span class="mono">Skill Olympus — 2026</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

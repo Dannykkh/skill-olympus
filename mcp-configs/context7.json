@@ -1,9 +1,0 @@
-{
-  "name": "context7",
-  "description": "Latest library docs search (free, no API key required)",
-  "requiresApiKey": false,
-  "config": {
-    "command": "npx",
-    "args": ["-y", "@upstash/context7-mcp@latest"]
-  }
-}

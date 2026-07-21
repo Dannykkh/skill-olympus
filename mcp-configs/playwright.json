@@ -1,9 +1,0 @@
-{
-  "name": "playwright",
-  "description": "Browser automation and E2E testing (free, no API key required)",
-  "requiresApiKey": false,
-  "config": {
-    "command": "npx",
-    "args": ["-y", "@playwright/mcp@latest"]
-  }
-}
