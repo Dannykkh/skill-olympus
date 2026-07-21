@@ -259,7 +259,7 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 - 첫 결과에서 **레이아웃 + 위계 + 카피를 먼저 고정**한다 — 이것이 "시스템".
 - 이후 반복은 전체 재생성(reroll)이 아니라 **한 번에 변수 1~2개만** 바꾸는 변형(variant)으로: 액센트 색 / 배경 톤 / 카드 배치 / 크롭·앵글.
 - 수정 지시에 "다른 건 바꾸지 마", "히어로는 유지"를 명시해 이미 잘 된 부분의 파괴를 방지한다.
-- 같은 취향을 반복 설명하지 말고 파일로 고정한다 — 레퍼런스는 `docs/design-refs/`(아프로디테 Phase 2 슈퍼프롬프트), 토큰은 DESIGN.md.
+- 같은 취향을 반복 설명하지 말고 파일로 고정한다 — 레퍼런스는 `docs/design-refs/`(아프로디테 Phase 1 슈퍼프롬프트), 토큰은 DESIGN.md.
 
 ### 1단계: 기본 생성
 먼저 primary action, 정보 위계, 상태 모델, 반응형 순서를 확정합니다. 기능형 UI에서는 장식보다

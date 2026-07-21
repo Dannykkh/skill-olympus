@@ -68,7 +68,7 @@ components:
 - `typography.*`는 `fontFamily`+`fontSize` 필수. `fontWeight/lineHeight/letterSpacing/fontFeature/fontVariation`은 선택.
 - **폰트는 실제 로드**: `fontFamily`에 적은 폰트는 구현 시 `@import`/`<link>`로 **실제 로드**해야 함(이름만 쓰면 시스템 폴백, `document.fonts.check('700 16px "X"')`로 확인 — 단 한글 등 unicode-range 서브셋 폰트는 로드돼도 check()가 false일 수 있으니 `[...document.fonts]` face status나 렌더 폭으로 확인, gotcha 045).
 - **한글 UI는 한글 전용 페어링을 우선(권장)**: `font-pairings.csv`의 한글 행(#74~82 — Hahmlet/Noto Serif KR/Gowun Batang 헤딩 + Pretendard/Noto Sans KR/Nanum Gothic 본문)은 한글·라틴 글리프를 모두 가져 **폴백 함정을 구조적으로 회피**한다. 라틴+Pretendard를 덧대기 전에 이 경로를 먼저 검토하라.
-- **(라틴 페어링을 쓸 때) 한글은 정본 스택에 함께(필수)**: `fontFamily`는 단일 이름이 아니라 **CSS 스택 문자열**로 적을 수 있다(`"라틴, 한글, sans-serif"`). 한글이 들어가는 UI는 라틴 폰트(Space Grotesk 등)에 한글 글리프가 없어 한글만 시스템 폴백되므로, **정본(DESIGN.md) 단계에서** 한글 웹폰트(Pretendard 등)를 스택에 함께 박는다 — 헤딩은 `"라틴, Pretendard, sans-serif"`(라틴 디스플레이는 라틴이 렌더, 한글만 Pretendard로 폴백). 정본이 라틴 단일값이면 Phase 3의 "토큰 그대로 사용"이 그 값을 전파해 한글이 깨진다(gotcha 041).
+- **(라틴 페어링을 쓸 때) 한글은 정본 스택에 함께(필수)**: `fontFamily`는 단일 이름이 아니라 **CSS 스택 문자열**로 적을 수 있다(`"라틴, 한글, sans-serif"`). 한글이 들어가는 UI는 라틴 폰트(Space Grotesk 등)에 한글 글리프가 없어 한글만 시스템 폴백되므로, **정본(DESIGN.md) 단계에서** 한글 웹폰트(Pretendard 등)를 스택에 함께 박는다 — 헤딩은 `"라틴, Pretendard, sans-serif"`(라틴 디스플레이는 라틴이 렌더, 한글만 Pretendard로 폴백). 정본이 라틴 단일값이면 Phase 5의 "토큰 그대로 사용"이 그 값을 전파해 한글이 깨진다(gotcha 041).
   - **스택 순서 = 라틴 폰트의 운명(검증으로 확인, 2026-06-30)**: Pretendard는 라틴 글리프도 가지므로 **본문에 `"Pretendard, DM Sans, sans-serif"`처럼 Pretendard를 앞에 두면 라틴 본문까지 Pretendard로 렌더되고, 뒤의 DM Sans는 lazy-load라 한 번도 다운로드되지 않아 죽은 폰트가 된다**(`document.fonts.check('"DM Sans"')` → false). 한·영을 한 목소리로 통일하려면(한글 우선 제품) Pretendard-first가 맞고 라틴 본문 폰트는 생략해도 된다. 반대로 **라틴 본문은 페어링 폰트(DM Sans)로 보이고 한글만 Pretendard로** 떨어뜨리려면 `"DM Sans, Pretendard, sans-serif"`처럼 **라틴을 앞에** 둔다. 어느 쪽이든 `document.fonts.check`로 의도한 폰트가 실제 로드됐는지 확인.
 - `components.*`는 `backgroundColor/textColor/typography/rounded/padding`를 가지며 토큰을 중괄호로 참조.
 - **대비 짝꿍 명시**: 컴포넌트의 `backgroundColor`/`textColor`가 한 쌍이어야 lint의 contrast 규칙(4.5:1)이 동작합니다. `on-primary` 같은 전경색을 colors에 정의하세요.
@@ -97,7 +97,7 @@ components:
 
 ## 4. 아프로디테 파이프라인에서의 생성
 
-Phase 1의 DB 매칭(`frontend-design/references/*.csv`) + 가중 루브릭 채점 결과를 그대로 DESIGN.md에 박습니다.
+Phase 3의 DB 매칭(`frontend-design/references/*.csv`) + 가중 루브릭 채점 결과를 그대로 DESIGN.md에 박습니다.
 
 1. 선택된 **색상 팔레트** → `colors:` (Primary/Accent/Neutral + `on-*` 전경색)
 2. 선택된 **폰트 페어링** → `typography:` (heading/body/label)
@@ -108,7 +108,7 @@ Phase 1의 DB 매칭(`frontend-design/references/*.csv`) + 가중 루브릭 채�
 > 상세 토큰(50~150개 스케일)이 필요하면 `design-system-starter`의 `design-tokens.json`(W3C DTCG)을
 > 병행 생성하되, **정본은 DESIGN.md**입니다. DTCG는 `export --format dtcg`로도 파생할 수 있습니다.
 
-## 5. Lint 게이트 (기계 검증 — Phase 4)
+## 5. Lint 게이트 (기계 검증 — Phase 6)
 
 스크린샷 시각 감사(ui-ux-auditor)는 1차 신호이고, **토큰 계약/대비는 lint로 외부 검증**합니다.
 

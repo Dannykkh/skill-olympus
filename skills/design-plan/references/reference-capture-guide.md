@@ -1,8 +1,8 @@
-# Reference Capture Guide — 레퍼런스 자산화 (Phase 2)
+# Reference Capture Guide — 레퍼런스 자산화 (Phase 1)
 
-> 아프로디테 Phase 2의 실행 가이드. 레퍼런스(스크린샷/URL/영상/HTML)를 "첨부 파일"로 끝내지 않고,
+> 아프로디테 Phase 1의 실행 가이드. 레퍼런스(스크린샷/URL/영상/HTML)를 "첨부 파일"로 끝내지 않고,
 > **섹션 해부 슈퍼프롬프트**라는 재사용 가능한 파일 자산으로 변환합니다.
-> 산출물은 `docs/design-refs/YYYY-MM-DD-{slug}.md` — Phase 3이 이 파일을 구현 스펙으로 사용합니다.
+> 산출물은 `docs/design-refs/YYYY-MM-DD-{slug}.md` — Phase 5가 이 파일을 구현 스펙으로 사용합니다.
 >
 > Credits: [MengTo/Skills](https://github.com/MengTo/Skills)(MIT)의 `video-to-superprompt`,
 > `html-to-interaction-prompts`, `stitched-full-page-capture` 워크플로우를 이 파이프라인에 맞게 각색.
@@ -182,8 +182,8 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 
 구체 기본값(duration/stagger/ease)은 `frontend-design/references/technique-recipes.md`의 값을 사용.
 
-## 5. Phase 3 인계 규칙
+## 5. Phase 5 인계 규칙
 
-- Phase 3은 **DESIGN.md(색·폰트·간격의 정본) + 이 슈퍼프롬프트(구조·모션의 스펙)** 두 파일을 함께 참조.
+- Phase 5는 **DESIGN.md(색·폰트·간격의 정본) + 이 슈퍼프롬프트(구조·모션의 스펙)** 두 파일을 함께 참조.
 - 충돌 시 우선순위: DESIGN.md 토큰 > 슈퍼프롬프트 > 임의 판단. (정확 재현 모드에서만 슈퍼프롬프트의 색 지시가 우선하며, 이 경우 그 값을 DESIGN.md에 역반영해 정본을 갱신.)
 - 슈퍼프롬프트가 여러 개면 적용 대상 페이지별로 매핑 표를 만들어 혼선 방지.
