@@ -20,6 +20,7 @@
 | 8 | Marquee Loop | 무한 로고/태그 루프 |
 | 9 | GSAP + Lenis 시네마틱 모션 시스템 | 프리미엄 사이트 전체 모션 언어 |
 | 10 | Accessible Loading State | 지연 시간에 맞는 로더·진행 상태 + 접근성 |
+| 11 | Atmosphere: Grain / Mesh / Emphasis Break | flat 패널의 "AI적 딱딱함" 방지 — 질감 1곳 + 반복 요소 강조 이탈 |
 
 ---
 
@@ -466,6 +467,90 @@ gsap.utils.toArray("[data-magnetic]").forEach((element) => {
 | 2~10s | 콘텐츠 skeleton 또는 문맥형 라벨 |
 | 측정 가능 | determinate progress + 현재 단계 |
 | 10s 이상 | 단계 목록/로그 + 취소·백그라운드 실행 |
+
+---
+
+## 11. Atmosphere: Grain / Mesh / Emphasis Break
+
+> **왜 이 §가 있는가**: SKILL.md Design Thinking은 "gradient mesh, noise texture, grain overlay로
+> atmosphere를 만들라"고 지시하지만, 그림자·blur·보더와 달리 **검증된 값이 없어서 구현에서
+> 가장 먼저 생략되는 항목**이었습니다(2026-07-20 확인). 결과는 규칙(대비·색상 다양성·금지 폰트)을
+> 다 지켜도 "완전히 flat한 패널 + 완벽하게 균일한 반복 그리드"가 남는 것 — 이것이 사용자가
+> 지적하는 "디자인적이지 않고 딱딱한 AI적 느낌"의 실체입니다. 색·폰트가 아니라 **질감의 부재와
+> 반복의 무결절성**이 원인.
+
+### 11-A. 그레인 오버레이 (CSS-only, 정적)
+
+JS/이미지 자산 없이 SVG `feTurbulence`를 data URI로 인라인. 텍스처 1개 시그니처 장면에만
+(motion-first playbook: "핵심 장면 1곳만 재질 언어 적용").
+
+```css
+.grain-surface {
+  position: relative;
+  isolation: isolate;
+}
+.grain-surface::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 0.05; /* 0.03~0.07 — 이 이상은 무아레/성능 부담 */
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+```
+
+- GPU 부담 없음(정적 background-image, 애니메이트 안 함). 스크롤 컨테이너에 노이즈 필터 애니메이션 금지(Banned Patterns 기존 규칙과 동일 이유).
+- 다크 배경엔 `mix-blend-mode: overlay`, 라이트 배경엔 `multiply`로 톤 유지.
+
+### 11-B. 절제된 그라데이션 메시 (색상 침범 없이)
+
+DESIGN.md 지배색 위에 **같은 hue family** 내에서만 명도 변주 — 새 색 발명이나 보라/파랑 디폴트 금지.
+
+```css
+.mesh-surface {
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 0%, color-mix(in oklch, var(--accent) 14%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, color-mix(in oklch, var(--accent) 8%, transparent), transparent 70%),
+    var(--bg);
+}
+```
+
+- 액센트 색만 극저채도로 확산 — "새 색"이 아니라 기존 토큰의 확장이므로 lint orphaned-tokens 안 걸림.
+- 적용 면적은 히어로 배경 1곳. 카드마다 반복하면 §요약의 "장식 효과 예산" 초과.
+
+### 11-C. 반복 요소 강조 이탈 (Emphasis Break)
+
+`layout-block-anatomy.md`의 pricing 강조 카드 1개 규칙을 **모든 반복 블록**으로 일반화합니다.
+동일 anatomy를 가진 행/카드가 3개 이상 반복되면, 그중 **정확히 1개**를 메시지상 근거 있는
+이유로 이탈시킵니다(크기·배경·타이포 중 1축). 무근거 랜덤 강조 금지 — "이게 왜 다른지"를
+카피나 제품 사실로 설명 가능해야 합니다.
+
+```
+예: 기능 목록 6행 중 "핵심/대표" 1개만 —
+  - 배경을 surface 토큰으로 채우거나
+  - 타이포를 1단계 키우거나
+  - 카운터를 액센트 색으로
+근거 예시: "이 항목이 나머지를 대체할 수 있는 all-in-one이라서" (실제 제품 사실)
+```
+
+이 규칙은 잉크 위계 3단계(공통 문법 #1)나 반복 요소 내부 구조 통일(공통 문법 #5)과 충돌하지
+않습니다 — 내부 anatomy는 동일하게 유지하되, 딱 1개 행에만 강조 축 1개를 적용합니다.
+
+### 11-D. 지속 비대칭 (Sustained Variance)
+
+히어로에서만 비대칭 그리드를 쓰고 이후 섹션이 전부 균등 컬럼(예: `repeat(4, 1fr)`)으로
+복귀하면, VARIANCE를 한 번 쓰고 포기한 것으로 읽힙니다. 히어로에서 확립한 그리드 비율
+(예: 7:1:4)을 **최소 1개 이상의 후속 섹션에서 폭이 다른 컬럼으로 재사용**해 우연이 아니라
+시스템임을 보입니다. 균등 그리드가 필요한 곳(Stats처럼 병렬 비교가 목적)은 컬럼 폭 대신
+11-C의 강조 이탈로 리듬을 만듭니다.
+
+### 11-E. 지루함 테스트 (Boring Test)
+
+구현 직후 자가 점검: **레이아웃에서 제품명·카피만 다른 걸로 바꿔도 이 구조가 다른 SaaS
+페이지에 그대로 쓰일 수 있는가?** 그렇다면 팔레트·폰트가 아무리 달라도 구조 자체가
+제네릭입니다. 통과 기준은 최소 1개 섹션에 **그 제품이 아니면 나올 수 없는 근거 기반 배치**
+(11-C 강조 이탈, 도메인 특화 시각화, 제품 사실을 반영한 리듬 변화)가 있는 것.
 
 ### Markup
 

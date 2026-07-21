@@ -165,7 +165,7 @@ Focus on:
   - **초록/주황 자동 수렴 금지**: 현재 팔레트 DB의 Accent는 두 계열 비중이 높습니다. CSV 첫 행이나 익숙한 성공 사례를 추천 순위로 쓰지 말고 hue family를 먼저 분산합니다. 후보 3개에는 서로 다른 색상 계열을 쓰며, 초록·주황은 합쳐 최대 1개만 허용합니다.
 - **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise. **스크롤 연동 모션은 2026 주류** — 네이티브 CSS 스크롤 타임라인(`animation-timeline: view()` / `scroll()`)을 1순위로(컴포지터 스레드 실행 → 메인스레드 jank 제로, 약 80% 케이스 커버). 핀(pin)·스크롤 스냅·복잡한 시퀀스·WebGL/스크롤리텔링만 GSAP ScrollTrigger(부드러운 스크롤은 Lenis, `gsap.ticker`와 동기화). JS 스크롤 효과는 모바일 LCP/CLS·SEO를 해치므로 남용 금지, 모든 스크롤 모션에 `prefers-reduced-motion` 폴백 필수. **페이지/뷰 전환은 View Transitions API** — SPA는 `document.startViewTransition()`(baseline), MPA는 `@view-transition { navigation: auto }`(동일 출처 양쪽 페이지, Chromium+Safari). 미지원 브라우저에선 애니 없이 정상 동작하는 점진적 향상이므로 지금 도입 OK, cross-document는 Speculation Rules로 목적지 프리로드.
 - **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density. **컴포넌트 반응형은 뷰포트 미디어쿼리가 아니라 컨테이너 쿼리**(`container-type: inline-size` + `@container`, 2024~ baseline widely available) — 카드가 사이드바/본문 어디 놓이든 자기 컨테이너 폭에 적응하므로 재사용 컴포넌트에 1순위. 미디어쿼리는 페이지 전역 레이아웃(내비 데스크톱→모바일, 전역 타이포·간격, print)에만. JS `ResizeObserver` 대체 → 메인스레드 부담↓. **상태/내용 기반 스타일은 `:has()`**(첫 부모 셀렉터, 2023~ baseline) — "에러 input 있는 폼 섹션 강조", "특정 자식 가진 카드만 변형" 같은 걸 JS DOM 검사 없이. 단 성능상 `.container`/`.gallery`처럼 구체적 앵커에만 걸고(`body`/`:root`/`*` 금지), 내부 셀렉터엔 `>`/`+` 조합자로 탐색 범위 한정. 미지원 대비 `@supports (selector(:has(*)))`.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
+- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays. **구현 값**: `technique-recipes.md` §11(그레인/메시/강조 이탈/지속 비대칭) — 지시만 읽고 넘어가지 말 것. flat 패널 + 완벽히 균일한 반복 그리드는 규칙(색·폰트·대비)을 다 지켜도 "딱딱한 AI적 느낌"의 가장 흔한 원인.
 
 ## Banned Patterns (AI Slop 방지)
 
@@ -188,9 +188,12 @@ Focus on:
 
 **Layout:**
 - `DESIGN_VARIANCE > 4`일 때 센터 정렬 Hero 섹션 금지 → 비대칭 강제
+- **비대칭을 히어로 1곳에서만 쓰고 이후 섹션이 전부 균등 그리드로 복귀 금지** → 히어로 그리드 비율을 최소 1개 후속 섹션에서 재사용(technique-recipes §11-D 지속 비대칭). 한 번 쓰고 포기한 비대칭은 "시도했다 안 했다"로 읽힘
 - 3열 카드 레이아웃 반복 금지 → 지그재그, 비대칭 그리드, 가로 스크롤 활용
+- 반복 블록(카드/행) 3개 이상이면 정확히 1개를 근거 있는 이유로 강조 이탈(technique-recipes §11-C) → 완전 균일 반복은 예산 지켜도 딱딱해 보임
 - `h-screen` 금지 → `min-h-[100dvh]` 사용 (모바일 레이아웃 점프 방지)
 - `VISUAL_DENSITY > 7`일 때 카드 남용 금지 → `border-t`, `divide-y`, 여백으로 대체
+- **지루함 테스트(Boring Test, §11-E)**: 제품명만 바꿔도 다른 SaaS에 그대로 쓰이는 구조면 팔레트·폰트와 무관하게 제네릭. 구현 완료 직후 자가 점검 필수
 
 **Motion:**
 - `transform`과 `opacity`만 애니메이트 — `top`, `left`, `width`, `height` 애니메이트 금지
