@@ -7,6 +7,8 @@ description: "웹 프로젝트 UI/UX 9영역 자동 감사 + 스크린샷 시각
 
 프로젝트의 UI/UX를 9개 카테고리로 스캔하고, 영역별 0-10 점수를 매긴 뒤, 발견된 문제를 우선순위별로 분류한 뒤 코드를 직접 수정합니다.
 
+> **세부 규칙 DB**: [references/ux-guidelines.csv](references/ux-guidelines.csv) — nextlevelbuilder/ui-ux-pro-max-skill(MIT)에서 흡수한 UX 이슈 99종(No/Category/Issue/Platform/Description/Do/Don't/Code Example Good/Code Example Bad/Severity). 아래 9영역 각각에 Category 컬럼으로 매핑돼 있으니, 채점 시 해당 영역 Category로 grep해 Do/Don't·코드 예시를 인용하세요. Web/Mobile/All/VisionOS로 플랫폼 태그가 붙어 있어 관련 없는 플랫폼 행은 건너뜁니다.
+
 **상호보완 관계:**
 - `ui-ux-designer` (에이전트): 디자인 **조언** — "이렇게 만들어라" (개발 중)
 - `ui-ux-auditor` (이 스킬): UI/UX **점검 + 수정** — "이게 문제니까 고쳐라" (개발 후)
@@ -89,6 +91,8 @@ overflow-x-auto|overflow-x-scroll
 | 텍스트 오버플로우 | `truncate`, `line-clamp` 누락으로 텍스트가 넘침 |
 | 고정 너비 | `w-[500px]` 같은 고정값 → 반응형 단위로 변환 |
 
+> `ux-guidelines.csv` Category=Responsive(8) + Touch(6, 모바일 프로젝트만) — 터치 타겟 스페이싱, 제스처 충돌, 탭 딜레이, 테이블 처리 등 세부 Do/Don't.
+
 ### 2-3. 접근성 (a11y)
 
 **Grep 탐지 패턴:**
@@ -110,7 +114,9 @@ outline-none|outline-0|focus:outline-none
 | 시맨틱 HTML | `<nav>`, `<main>`, `<article>`, `<section>` 사용 |
 | 포커스 표시 | `outline-none` 제거 → `focus-visible:ring` 대체 |
 
-### 2-4. 로딩 상태
+> `ux-guidelines.csv` Category=Accessibility(11) — Severity High가 8/11. 색상 단독 정보 전달 금지, 폼 라벨/에러 announce, skip link 등. Category=Animation의 Motion Sensitivity(#99, parallax/scroll-jacking 멀미) 행도 여기서 함께 확인.
+
+### 2-4. 로딩 상태 & 성능
 
 **Grep 탐지 패턴:**
 ```
@@ -120,6 +126,9 @@ loading\.tsx|loading\.jsx|Skeleton|skeleton
 loading="lazy"|lazy\(\)|React\.lazy|dynamic\(
 # 버튼 로딩 상태
 isLoading|isPending|disabled.*loading
+# 성능 — 렌더 블로킹/번들/폰트 (ux-guidelines.csv Category=Performance)
+<link.*stylesheet(?!.*preload)|<script(?!.*defer)(?!.*async)
+next/image|next/font|font-display
 ```
 
 | 검사 항목 | 기준 |
@@ -129,6 +138,12 @@ isLoading|isPending|disabled.*loading
 | 버튼 피드백 | 클릭 후 로딩 상태 (spinner, disabled) |
 | 이미지 레이지 로딩 | 뷰포트 밖 이미지에 `loading="lazy"` |
 | 빈 상태 | 데이터 없을 때 빈 상태 UI (Empty State) |
+| **이미지 최적화** | `next/image` 등 최적화 컴포넌트 사용, 원본 대용량 이미지 직접 서빙 금지 |
+| **폰트 로딩** | 렌더 블로킹 `<link rel=stylesheet>` → `preload+swap` 또는 `font-display: swap`(gotcha: Google Fonts CSS는 그 자체가 렌더 블로킹 — technique-recipes 폰트 preload 패턴 참조) |
+| **렌더 블로킹 리소스** | head의 동기 `<script>`(defer/async 없음), 대형 인라인 `<style>` |
+| **번들/코드 스플리팅** | 라우트 단위 `dynamic()`/`React.lazy` 분리 여부 |
+
+> `ux-guidelines.csv` Category=Performance(8, Severity 대부분 Medium) — 이미지 최적화, 캐싱, 3rd party 스크립트, 번들 사이즈 세부 기준.
 
 ### 2-5. 폼 UX
 
@@ -150,6 +165,8 @@ error|formState\.errors|fieldState
 | 자동 포커스 | 첫 입력 필드에 `autoFocus` |
 | 제출 버튼 | 비활성화 상태, 로딩 상태, 중복 제출 방지 |
 
+> `ux-guidelines.csv` Category=Forms(10) + Data Entry(1, 반복 편집엔 일괄 작업 제공) — 입력 타입, 비밀번호 표시, 모바일 키보드 타입 등.
+
 ### 2-6. 네비게이션 일관성
 
 **Grep 탐지 패턴:**
@@ -168,6 +185,8 @@ active|isActive|pathname|usePathname|useRouter
 | 뒤로가기 동작 | 브라우저 뒤로가기 정상 동작 확인 |
 | 브레드크럼 | 3단계 이상 깊이에서 경로 표시 |
 | 일관된 위치 | 네비게이션이 모든 페이지에서 동일 위치 |
+
+> `ux-guidelines.csv` Category=Navigation(6) + Search(2, 자동완성·No Results 데드엔드) + Onboarding(1, 튜토리얼 건너뛰기 자유).
 
 ### 2-7. 타이포그래피 & 간격
 
@@ -192,6 +211,8 @@ font-family|@import.*fonts|<link.*fonts|Pretendard|noonnu
 | **폰트 실제 로드** | `font-family`에 쓴 폰트가 `@import`/`<link>`로 실제 로드됐는지 — 누락 시 시스템 폴백 (`document.fonts.check('700 16px "X"')`로 확인 — 한글 등 서브셋 폰트는 로드돼도 check() false 가능, face status로 확인·gotcha 045) |
 | **한글 웹폰트** | 한글 포함 UI에 한글 웹폰트(Pretendard 등) 로드 여부 — 라틴 폰트엔 한글 글리프 없어 한글이 시스템 폴백 |
 
+> `ux-guidelines.csv` Category=Typography(6) + Layout(7, z-index/stacking context/viewport unit/컨테이너 폭) + Content(4, 말줄임/날짜·숫자 포맷/플레이스홀더).
+
 ### 2-8. 애니메이션 & 전환
 
 **Grep 탐지 패턴:**
@@ -211,6 +232,8 @@ AnimatePresence|pageTransition|layout
 | 과도한 애니메이션 | `prefers-reduced-motion` 미대응 시 경고 |
 | 성능 영향 | 레이아웃 트리거 애니메이션 (`width`, `height`) 지양 → `transform`, `opacity` 사용 |
 
+> `ux-guidelines.csv` Category=Interaction(8, focus/hover/active/disabled/에러·성공 피드백/확인 다이얼로그) + Feedback(6, 로딩 인디케이터/빈 상태/에러 복구/진행률/토스트) — 상태 전환·피드백 디테일.
+
 ### 2-9. AI Slop 탐지
 
 See [ai-slop-blacklist.md](../frontend-design/references/ai-slop-blacklist.md) — 공유 블랙리스트.
@@ -228,6 +251,10 @@ See [ai-slop-blacklist.md](../frontend-design/references/ai-slop-blacklist.md) �
 | 7 | 과사용 폰트 | `font-family.*Inter`, `font-family.*Roboto` (프라이머리로 사용 시) |
 
 **판정:** AI Slop 항목이 3개 이상 → P1, Hard Rejection 항목 발견 → P0
+
+> `ux-guidelines.csv` Category=AI Interaction(3, AI와 대화 중임을 고지·스트리밍 응답·피드백 루프) — 챗봇/AI 기능이 있는 프로젝트만 해당.
+
+**범위 밖(참고만):** `ux-guidelines.csv`의 Sustainability(2, 자동재생 영상·에셋 무게)와 Spatial UI(2, VisionOS 전용)는 이 9영역 어디에도 깔끔히 안 들어가고 해당 프로젝트가 드물어 정식 항목화하지 않음 — VisionOS/친환경 웹 프로젝트면 CSV에서 직접 grep.
 
 ---
 
@@ -301,7 +328,7 @@ See [ai-slop-blacklist.md](../frontend-design/references/ai-slop-blacklist.md) �
 | 2-1. 다크/라이트 모드 | 10% |
 | 2-2. 반응형 | 15% |
 | 2-3. 접근성 | 15% |
-| 2-4. 로딩 상태 | 10% |
+| 2-4. 로딩 상태 & 성능 | 10% |
 | 2-5. 폼 UX | 10% |
 | 2-6. 네비게이션 | 10% |
 | 2-7. 타이포그래피 & 간격 | 15% |
@@ -329,7 +356,7 @@ UI/UX 감사 스코어카드
 | 다크/라이트 모드 | 7/10 | 하드코딩 2건 |
 | 반응형 | 5/10 | 브레이크포인트 누락 |
 | 접근성 | 6/10 | alt 미작성 4건 |
-| 로딩 상태 | 3/10 | Skeleton 없음 |
+| 로딩 상태 & 성능 | 3/10 | Skeleton 없음, 폰트 렌더 블로킹 |
 | 폼 UX | 8/10 | — |
 | 네비게이션 | 9/10 | — |
 | 타이포/간격 | 7/10 | 간격 불일관 |
@@ -430,3 +457,4 @@ UI/UX 개선 완료
 | `ui-ux-designer` (에이전트) | 디자인 조언, 피드백 | 설계 방향 → auditor가 점검 |
 | `seo-audit` (스킬) | SEO 점검 | 릴리즈 전 SEO + UX 함께 점검 |
 | `web-design-guidelines` (스킬) | 웹 디자인 원칙 | 감사 기준의 근거 |
+| `references/ux-guidelines.csv` | UX 이슈 99종 Do/Don't + 코드 예시 | 9영역 채점의 세부 근거 (Credits: [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT) |
