@@ -15,10 +15,18 @@
 <meta property="og:description" content="Claude Code, Codex, Gemini 세 CLI가 같은 워크플로우를 공유하는 스킬 라이브러리. 스킬 97개, 에이전트 41개.">
 <meta property="og:url" content="https://dannykkh.github.io/skill-olympus/">
 <meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23101014'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='22' fill='%23E4B700' text-anchor='middle'%3E%CE%A9%3C/text%3E%3C/svg%3E">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Skill Olympus","alternateName":"스킬 올림푸스","description":"Claude Code, Codex, Gemini 세 CLI가 같은 워크플로우를 공유하는 스킬 라이브러리. 하네스 엔지니어링과 루프 엔지니어링 스택 — 스킬 97개, 에이전트 41개.","codeRepository":"https://github.com/Dannykkh/skill-olympus","programmingLanguage":["TypeScript","Shell"],"license":"https://opensource.org/licenses/MIT","url":"https://dannykkh.github.io/skill-olympus/","inLanguage":["ko","en"]}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Hahmlet:wght@400;600;700&amp;family=DM+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Hahmlet:wght@400;600;700&amp;family=DM+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+</noscript>
 <style>
   /* ── DESIGN.md 토큰 (정본 그대로) ─────────────────────────── */
   :root {
@@ -190,6 +198,23 @@
   }
   .stat-label { margin-top: 10px; }
 
+  /* ── 3.5 하네스·루프 엔지니어링: 2항 정의 블록 ─────────────── */
+  .hl-lead { color: var(--copy); max-width: 720px; margin-bottom: clamp(32px, 4.5vw, 48px); font-size: 1.02rem; }
+  .hl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 56px); }
+  .hl-item { border-left: 1px solid var(--line); padding-left: clamp(20px, 3vw, 32px); }
+  .hl-item:first-child { border-left: none; padding-left: 0; }
+  .hl-label { margin-bottom: 10px; }
+  .hl-item h3 { font-family: var(--serif); font-size: clamp(1.6rem, 2.6vw, 2rem); font-weight: 600; margin-bottom: 14px; }
+  .hl-item h3 .hl-en {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--copy); margin-left: 12px; vertical-align: middle;
+  }
+  .hl-item p { color: var(--copy); font-size: 0.95rem; }
+  .hl-item code {
+    font-family: var(--mono); font-size: 0.85em; color: var(--text);
+    background: var(--surface); padding: 2px 6px; border-radius: 2px; border: 1px solid var(--line);
+  }
+
   /* ── 섹션 공통 ─────────────────────────────────────────────── */
   section { padding: clamp(64px, 9vw, 96px) 0; }
   .section-head {
@@ -341,6 +366,7 @@
       <span class="mono">Skill</span>
     </a>
     <nav class="nav-right" aria-label="메뉴">
+      <a class="nav-link" href="#harness-loop">하네스·루프</a>
       <a class="nav-link" href="#pantheon">판테온</a>
       <a class="nav-link" href="#pipeline">파이프라인</a>
       <a class="nav-link" href="#install">설치</a>
@@ -419,6 +445,29 @@
     </div>
   </div>
 
+  <!-- 3.5 하네스·루프 엔지니어링 -->
+  <section id="harness-loop">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>하네스와 루프 엔지니어링</h2>
+        <span class="mono">Act → Observe → Verify</span>
+      </div>
+      <p class="hl-lead">에이전트는 프롬프트 한 번으로 안 끝납니다 — 실행하고, 관찰하고, 검증하는 루프로 동작합니다. Skill Olympus는 처음부터 그렇게 설계됐습니다.</p>
+      <div class="hl-grid">
+        <div class="hl-item">
+          <div class="hl-label mono">기반</div>
+          <h3>하네스<span class="hl-en">Harness</span></h3>
+          <p>제우스가 기반입니다. 하나의 비대화형 요청을 살려두고, 분해하고, 구현하고, 점검하고, 배포하고, 테스트하고, 보고까지 — 사용자에게 "다음 단계"를 되돌려주지 않습니다.</p>
+        </div>
+        <div class="hl-item">
+          <div class="hl-label mono">운영 모델</div>
+          <h3>루프<span class="hl-en">Loop</span></h3>
+          <p>크로노스가 그 위의 운영 모델입니다. 실제 테스트를 돌리는 검증 게이트(크로노스), 통과할 때까지 고치는 미노스, AC를 대조하는 아르고스, GO/NO-GO를 내리는 클리오 — v4.7.0부터 이 루프들은 네이티브 <code>/goal</code> stop gate 위에서 동작합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 4. 판테온 명부 -->
   <section id="pantheon">
     <div class="wrap">
@@ -446,9 +495,9 @@
 
         <a class="roster-row" href="#">
           <span class="roster-num">03</span>
-          <span class="roster-name">아프로디테<em>Aphrodite</em></span>
-          <span class="roster-role">디자인 토큰 정본과 레이아웃 청사진으로 화면의 미학을 통제</span>
-          <span class="roster-cmd">/aphrodite</span>
+          <span class="roster-name">미노스<em>Minos</em></span>
+          <span class="roster-role">QA 시나리오에서 Playwright 테스트를 생성하고, 통과할 때까지 수정 루프를 돕니다</span>
+          <span class="roster-cmd">/minos</span>
         </a>
         
 
@@ -470,13 +519,13 @@
 
         <a class="roster-row" href="#">
           <span class="roster-num">06</span>
-          <span class="roster-name">므네모<em>Mnemo</em></span>
-          <span class="roster-role">대화를 자동 저장하고 세 CLI가 같은 기억을 공유하는 장기기억</span>
-          <span class="roster-cmd">/mnemo</span>
+          <span class="roster-name">클리오<em>Clio</em></span>
+          <span class="roster-role">GO/NO-GO 최종 점검과 함께 PRD, 기술 문서, 매뉴얼을 일괄 생성합니다</span>
+          <span class="roster-cmd">/clio</span>
         </a>
         
       </div>
-      <p class="roster-more mono">외 — 아테나(전략) · 헤르메스(사업성) · 미노스(QA) · 클리오(문서) · 다이달로스(PM) · 헤스티아(위생)</p>
+      <p class="roster-more mono">외 — 아프로디테(디자인) · 므네모(장기기억) · 아테나(전략) · 헤르메스(사업성) · 다이달로스(PM) · 헤스티아(위생)</p>
       
     </div>
   </section>

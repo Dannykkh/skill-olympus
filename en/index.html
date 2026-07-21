@@ -15,10 +15,18 @@
 <meta property="og:description" content="A skill library that lets Claude Code, Codex, and Gemini share the same workflow. 97 skills, 41 agents.">
 <meta property="og:url" content="https://dannykkh.github.io/skill-olympus/en/">
 <meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23101014'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='22' fill='%23E4B700' text-anchor='middle'%3E%CE%A9%3C/text%3E%3C/svg%3E">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Skill Olympus","description":"A skill library that lets Claude Code, Codex, and Gemini share the same workflow — a harness-engineering and loop-engineering stack. 97 skills, 41 agents.","codeRepository":"https://github.com/Dannykkh/skill-olympus","programmingLanguage":["TypeScript","Shell"],"license":"https://opensource.org/licenses/MIT","url":"https://dannykkh.github.io/skill-olympus/en/","inLanguage":["ko","en"]}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Hahmlet:wght@400;600;700&amp;family=DM+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Hahmlet:wght@400;600;700&amp;family=DM+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+</noscript>
 <style>
   /* ── DESIGN.md 토큰 (정본 그대로) ─────────────────────────── */
   :root {
@@ -190,6 +198,23 @@
   }
   .stat-label { margin-top: 10px; }
 
+  /* ── 3.5 하네스·루프 엔지니어링: 2항 정의 블록 ─────────────── */
+  .hl-lead { color: var(--copy); max-width: 720px; margin-bottom: clamp(32px, 4.5vw, 48px); font-size: 1.02rem; }
+  .hl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 56px); }
+  .hl-item { border-left: 1px solid var(--line); padding-left: clamp(20px, 3vw, 32px); }
+  .hl-item:first-child { border-left: none; padding-left: 0; }
+  .hl-label { margin-bottom: 10px; }
+  .hl-item h3 { font-family: var(--serif); font-size: clamp(1.6rem, 2.6vw, 2rem); font-weight: 600; margin-bottom: 14px; }
+  .hl-item h3 .hl-en {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--copy); margin-left: 12px; vertical-align: middle;
+  }
+  .hl-item p { color: var(--copy); font-size: 0.95rem; }
+  .hl-item code {
+    font-family: var(--mono); font-size: 0.85em; color: var(--text);
+    background: var(--surface); padding: 2px 6px; border-radius: 2px; border: 1px solid var(--line);
+  }
+
   /* ── 섹션 공통 ─────────────────────────────────────────────── */
   section { padding: clamp(64px, 9vw, 96px) 0; }
   .section-head {
@@ -341,6 +366,7 @@
       <span class="mono">Skill</span>
     </a>
     <nav class="nav-right" aria-label="Menu">
+      <a class="nav-link" href="#harness-loop">Harness · Loop</a>
       <a class="nav-link" href="#pantheon">Pantheon</a>
       <a class="nav-link" href="#pipeline">Pipeline</a>
       <a class="nav-link" href="#install">Install</a>
@@ -419,6 +445,29 @@
     </div>
   </div>
 
+  <!-- 3.5 하네스·루프 엔지니어링 -->
+  <section id="harness-loop">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Harness and Loop Engineering</h2>
+        <span class="mono">Act → Observe → Verify</span>
+      </div>
+      <p class="hl-lead">Agents don't run on a single prompt — they run on loops: act, observe, verify. Skill Olympus was built that way from the start.</p>
+      <div class="hl-grid">
+        <div class="hl-item">
+          <div class="hl-label mono">Foundation</div>
+          <h3>Harness</h3>
+          <p>Zeus is the foundation. One non-interactive request is kept alive, decomposed, implemented, inspected, deployed, tested, and reported — without handing "next steps" back to you.</p>
+        </div>
+        <div class="hl-item">
+          <div class="hl-label mono">Operating Model</div>
+          <h3>Loop</h3>
+          <p>Chronos is the operating model on top of it. A verification gate that runs real tests (Chronos), fix-until-pass (Minos), AC cross-check (Argos), GO/NO-GO (Clio) — since v4.7.0 these loops run on the native <code>/goal</code> stop gate.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 4. 판테온 명부 -->
   <section id="pantheon">
     <div class="wrap">
@@ -447,9 +496,9 @@
         
         <a class="roster-row" href="#">
           <span class="roster-num">03</span>
-          <span class="roster-name">Aphrodite<em>Design</em></span>
-          <span class="roster-role">Locks down design tokens and layout blueprints, then governs the page's aesthetics.</span>
-          <span class="roster-cmd">/aphrodite</span>
+          <span class="roster-name">Minos<em>Test Loop</em></span>
+          <span class="roster-role">Generates Playwright tests from the QA scenarios and loops until they pass.</span>
+          <span class="roster-cmd">/minos</span>
         </a>
 
         
@@ -471,13 +520,13 @@
         
         <a class="roster-row" href="#">
           <span class="roster-num">06</span>
-          <span class="roster-name">Mnemo<em>Memory</em></span>
-          <span class="roster-role">Auto-saves every conversation so all three CLIs share the same memory.</span>
-          <span class="roster-cmd">/mnemo</span>
+          <span class="roster-name">Clio<em>Close</em></span>
+          <span class="roster-role">A final GO/NO-GO review, plus a PRD, technical docs, and a manual — generated in one pass.</span>
+          <span class="roster-cmd">/clio</span>
         </a>
       </div>
       
-      <p class="roster-more mono">Also in the pantheon — Athena (strategy) · Hermes (business case) · Minos (QA) · Clio (docs) · Daedalus (PM) · Hestia (hygiene)</p>
+      <p class="roster-more mono">Also in the pantheon — Aphrodite (design) · Mnemo (memory) · Athena (strategy) · Hermes (business case) · Daedalus (PM) · Hestia (hygiene)</p>
     </div>
   </section>
 
