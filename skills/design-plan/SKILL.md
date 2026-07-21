@@ -110,6 +110,10 @@ Phase 1 (Discovery) → Phase 2 (IA·사이트맵) → Phase 3 (디자인 시스
 필요한 요구사항 발굴은 `zephermine`의 몫이며, 아프로디테는 디자인 방향에 필요한 최소 컨텍스트만
 확인합니다.
 
+> **저장 (필수)**: 확인한 3줄(무엇/누구/핵심 행동)을 즉시 `docs/design-refs/YYYY-MM-DD-brief-{slug}.md`로
+> 저장합니다. 대화에만 남으면 세션이 끊겼을 때 다시 물어야 하고, Phase 2(IA)·Phase 3-0(Interface
+> Mode)이 매번 재추론하게 됩니다 — 가벼운 내용이라도 파일화가 기본입니다.
+
 ### 1-1. 레퍼런스 자산화 (선택)
 
 레퍼런스를 "첨부하고 끝"이 아니라 **재사용 가능한 슈퍼프롬프트 파일**로 변환합니다.
@@ -427,7 +431,7 @@ Phase 3에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md
 있는데 안 읽었다면 그 구현은 스펙 위반입니다.
 
 1. `DESIGN.md` **전체** — YAML 토큰뿐 아니라 산문 계약(§Spatial Model, State Contracts, Motion, Component Anatomy, Copy Rules 등)까지
-2. `docs/design-refs/`의 최신 자산 — sitemap(Phase 2), direction 카드(Phase 3-3), 슈퍼프롬프트(Phase 1), 레이아웃 청사진(Phase 4) 중 존재하는 것 전부
+2. `docs/design-refs/`의 최신 자산 — brief(Phase 1-0), sitemap(Phase 2), direction 카드(Phase 3-3), 슈퍼프롬프트(Phase 1-1), 레이아웃 청사진(Phase 4) 중 존재하는 것 전부
 
 이 Phase에서는:
 - Phase 3에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지). 산문 계약은 구도·상태·카피의 스펙으로 동등하게 구속력 있음
@@ -462,6 +466,13 @@ COPY     — 실제 렌더할 문구 그대로 (placeholder 금지)
 CONSTRAINTS — 변경 금지 항목 명시
 NEGATIVE — 하지 말 것 (레시피 Avoid + Banned Patterns에서)
 ```
+
+> **로그 저장 (필수)**: 채워진 스켈레톤은 디스패치 프롬프트에만 쓰고 사라지게 두지 않습니다.
+> 섹션을 디스패치하기 **직전에** `docs/design-refs/YYYY-MM-DD-impl-log-{slug}.md`에 순서대로
+> append합니다(섹션마다 별도 파일 금지 — 페이지/작업 단위로 로그 파일 1개에 전부 누적, 파일
+> 폭증 방지). 소스(DESIGN.md·design-refs)는 남아 있어도 "그때 정확히 어떤 LAYOUT/STATE/COPY를
+> 지시했는지"는 다시 만들지 않으면 사라지므로, 구현 후 감사·재현·"이 섹션만 다시 만들어줘" 요청에
+> 이 로그가 근거가 됩니다.
 
 **반복 규율 (variants > rerolls)**: 첫 결과에서 레이아웃+위계+카피를 먼저 고정하고,
 이후 수정은 **한 번에 변수 1~2개만** 바꿉니다(액센트/배경 톤/카드 배치/크롭). 전체 재생성 금지 —
@@ -546,7 +557,8 @@ designmd lint DESIGN.md                    # Windows 별칭
 
 📁 산출물:
   DESIGN.md           — 디자인 정본 (YAML 토큰 + 산문 근거)
-  docs/design-refs/   — 레퍼런스 슈퍼프롬프트(Phase 1) + 사이트맵(Phase 2) + 레이아웃 청사진(Phase 4)
+  docs/design-refs/   — brief(Phase 1) + 슈퍼프롬프트(Phase 1) + 사이트맵(Phase 2) + direction(Phase 3)
+                       + 레이아웃 청사진(Phase 4) + 구현 로그(Phase 5)
   구현 코드           — DESIGN.md 토큰 + 레시피/DB 매칭 적용
   리뷰 결과           — design.md lint + UI/UX 9영역 + 0-10 채점 + 가이드라인
 
