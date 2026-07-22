@@ -399,8 +399,9 @@ Phase 3에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md
 
 1. **페이지 유형 → 블록 시퀀스 선택** — Phase 2 사이트맵에 페이지가 여러 개면 각 페이지의 유형(2-1 표)마다 반복. 카탈로그의 템플릿(SaaS 랜딩/이커머스/대시보드 등)을 시작점으로, 프로젝트 신호에 맞게 가감
 2. **블록별 anatomy 체크** — 각 블록의 필수 요소·잉크 위계·강조 규칙(블록당 정확히 1개)·CTA 문법 확인
-3. **청사진 산출** — 블록 시퀀스 표 + ASCII 와이어프레임을 `docs/design-refs/YYYY-MM-DD-layout-{slug}.md`로 저장 (페이지가 여럿이면 페이지별로 구분)
-4. **확인** — 인터랙티브 세션이면 사용자 승인 후 Phase 5 진행, 자동 파이프라인(zeus 등)이면 산출만 하고 계속
+3. **스캐폴드 확인 (있으면 우선 사용)** — [`frontend-design/references/scaffolds/`](../frontend-design/references/scaffolds/)에 해당 블록의 렌더 검증된 시작 코드(Hero/Navbar/Footer/Pricing)가 있으면 Phase 5에서 처음부터 새로 짜지 말고 이 파일에서 시작 — anatomy 요소 누락 위험이 프롬프트만으로 작성할 때보다 낮음. 없는 블록은 기존대로 anatomy 산문 스펙으로 구현.
+4. **청사진 산출** — 블록 시퀀스 표 + ASCII 와이어프레임을 `docs/design-refs/YYYY-MM-DD-layout-{slug}.md`로 저장 (페이지가 여럿이면 페이지별로 구분)
+5. **확인** — 인터랙티브 세션이면 사용자 승인 후 Phase 5 진행, 자동 파이프라인(zeus 등)이면 산출만 하고 계속
 
 우선순위 규칙:
 
@@ -619,6 +620,7 @@ designmd lint DESIGN.md                    # Windows 별칭
 | `skills/frontend-design/references/motion-first-prompt-playbook.md` | 공개 프롬프트 패턴 합성 + 방향 아키타입 8종 + 색상 다양성 게이트 |
 | `skills/frontend-design/references/coder-interface-pattern-playbook.md` | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage 유형 게이트 |
 | `skills/frontend-design/references/layout-block-anatomy.md` | 블록 해부 카탈로그 30종 + 시퀀스 템플릿 + 청사진 절차 (Phase 4) |
+| `skills/frontend-design/references/scaffolds/` | 렌더 검증된 시작 코드 4종(Hero/Navbar/Footer/Pricing) — DESIGN.md 토큰 바인딩, anatomy 100% 커버 (Phase 4~5) |
 | `skills/frontend-design/scripts/select-diverse-palettes.js` | CSV/playbook 색상 레인을 hue family로 분산하는 JSON shortlist 도구 |
 | `skills/frontend-design/references/technique-recipes.md` | 그림자/blur/보더/리빌/모션/로딩 복붙 레시피 (Phase 5) |
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |

@@ -1,0 +1,153 @@
+<!--
+  Footer scaffold — layout-block-anatomy.md § Footer 계약을 커버:
+  브랜드 칼럼(넓게, 로고+설명) + 링크 칼럼 3개(각 타이틀+링크 4개) → divider → 저작권 + 소셜 아이콘.
+  구조는 anelkabag/bag-ui footer1.tsx(MIT) 확인 후 새로 작성 — 실제 소셜 URL·이메일 제거.
+-->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <p class="footer-logo">{{brand_name}}</p>
+        <p class="footer-desc">{{brand_one_line_description}}</p>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-col-title">{{col_1_title}}</p>
+        <ul class="footer-links">
+          <li><a href="{{col1_link1_href}}">{{col1_link1_label}}</a></li>
+          <li><a href="{{col1_link2_href}}">{{col1_link2_label}}</a></li>
+          <li><a href="{{col1_link3_href}}">{{col1_link3_label}}</a></li>
+          <li><a href="{{col1_link4_href}}">{{col1_link4_label}}</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-col-title">{{col_2_title}}</p>
+        <ul class="footer-links">
+          <li><a href="{{col2_link1_href}}">{{col2_link1_label}}</a></li>
+          <li><a href="{{col2_link2_href}}">{{col2_link2_label}}</a></li>
+          <li><a href="{{col2_link3_href}}">{{col2_link3_label}}</a></li>
+          <li><a href="{{col2_link4_href}}">{{col2_link4_label}}</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <p class="footer-col-title">{{col_3_title}}</p>
+        <ul class="footer-links">
+          <li><a href="{{col3_link1_href}}">{{col3_link1_label}}</a></li>
+          <li><a href="{{col3_link2_href}}">{{col3_link2_label}}</a></li>
+          <li><a href="{{col3_link3_href}}">{{col3_link3_label}}</a></li>
+          <li><a href="{{col3_link4_href}}">{{col3_link4_label}}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copyright">© {{year}} {{brand_name}}. {{license_or_rights_note}}</p>
+
+      <!-- 소셜 아이콘 — 없으면 이 div 삭제. 아이콘은 프로젝트에서 아이콘 세트(Radix/Phosphor/커스텀 SVG) 사용,
+           이모지 금지 -->
+      <div class="footer-social" aria-label="소셜 링크">
+        <a href="{{social_1_href}}" class="footer-social-link" aria-label="{{social_1_name}}">{{social_1_icon}}</a>
+        <a href="{{social_2_href}}" class="footer-social-link" aria-label="{{social_2_name}}">{{social_2_icon}}</a>
+        <a href="{{social_3_href}}" class="footer-social-link" aria-label="{{social_3_name}}">{{social_3_icon}}</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--color-line, rgba(128, 128, 128, 0.14));
+    padding: clamp(48px, 7vw, 72px) 0 36px;
+  }
+  .footer-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 64px);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: clamp(28px, 4vw, 48px);
+    margin-bottom: clamp(40px, 6vw, 56px);
+  }
+  .footer-logo {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-on-primary);
+    margin: 0 0 12px;
+  }
+  .footer-desc {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--color-copy);
+    max-width: 32ch;
+    margin: 0;
+  }
+  .footer-col-title {
+    font-family: var(--font-mono, var(--font-body));
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-copy);
+    margin: 0 0 16px;
+  }
+  .footer-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .footer-links a {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--color-copy);
+    text-decoration: none;
+    padding: 5px 0;
+    transition: color 150ms;
+  }
+  .footer-links a:hover { color: var(--color-on-primary); }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-line, rgba(128, 128, 128, 0.14));
+  }
+  .footer-copyright {
+    font-family: var(--font-mono, var(--font-body));
+    font-size: 0.8rem;
+    color: var(--color-copy);
+    margin: 0;
+  }
+  .footer-social {
+    display: flex;
+    gap: 8px;
+  }
+  .footer-social-link {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-copy);
+    text-decoration: none;
+    border-radius: var(--radius-sm, 4px);
+    transition: color 150ms;
+  }
+  .footer-social-link:hover { color: var(--color-on-primary); }
+
+  @media (max-width: 880px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .footer-brand {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

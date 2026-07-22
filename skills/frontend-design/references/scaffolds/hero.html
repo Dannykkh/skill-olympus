@@ -1,0 +1,174 @@
+<!--
+  Hero scaffold — layout-block-anatomy.md § Hero 계약을 커버:
+  eyebrow(선택) → 헤드라인(최대 2줄) → 서브텍스트(좁은 폭) → CTA 쌍(primary+outline)
+  → 소셜프루프(아바타+카운트, 선택) → 미디어/데코 패널(선택)
+  구조는 anelkabag/bag-ui hero1.tsx(MIT) 확인 후 새로 작성 — 브랜드 카피·모션·외부 URL 제거.
+  DESIGN.md 토큰 매핑: scaffolds/README.md 참조. 모션 없음 — technique-recipes.md에서 선택 추가.
+-->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy-col">
+      <p class="hero-eyebrow">{{eyebrow_optional}}</p>
+
+      <h1 class="hero-headline">{{headline_line_1}}<br />{{headline_line_2}}</h1>
+
+      <p class="hero-subtext">{{subtext_1_to_2_sentences}}</p>
+
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="{{primary_cta_href}}">{{primary_cta_label}}</a>
+        <a class="btn btn-outline" href="{{secondary_cta_href}}">{{secondary_cta_label}}</a>
+      </div>
+
+      <!-- 소셜프루프 — 없으면 이 div 통째로 삭제 (요소 있다/없다는 프로젝트 신호에 따라, 절반만 렌더 금지) -->
+      <div class="hero-social-proof">
+        <div class="avatar-stack" aria-hidden="true">
+          <span class="avatar"></span>
+          <span class="avatar"></span>
+          <span class="avatar"></span>
+          <span class="avatar"></span>
+        </div>
+        <p class="social-proof-text">
+          <strong>{{stat_number}}</strong> {{social_proof_caption}}
+        </p>
+      </div>
+    </div>
+
+    <!-- 미디어/데코 패널 — 스크린샷, 목업, 일러스트 등. 없으면 삭제하되 hero-copy-col만 남으면
+         VARIANCE>4에서 중앙정렬로 보이지 않게 좌측 정렬 유지 -->
+    <div class="hero-media-col" aria-hidden="true">
+      <div class="media-placeholder">
+        <span class="media-placeholder-label">{{media_description}}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: clamp(64px, 9vw, 110px) 0;
+  }
+  .hero-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 64px);
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: clamp(32px, 5vw, 64px);
+    align-items: center;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono, var(--font-body));
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-copy);
+    margin: 0 0 20px;
+  }
+  .hero-headline {
+    font-family: var(--font-heading);
+    font-size: clamp(2.4rem, 5.5vw, 4rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--color-on-primary);
+    margin: 0 0 20px;
+  }
+  .hero-subtext {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--color-copy);
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+  .hero-ctas {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: var(--radius-md, 8px);
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform 120ms ease, opacity 150ms ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border: 1px solid var(--color-accent);
+  }
+  .btn-primary:hover { opacity: 0.92; }
+  .btn-outline {
+    background: transparent;
+    color: var(--color-on-primary);
+    border: 1px solid var(--color-line, rgba(128, 128, 128, 0.3));
+  }
+  .btn-outline:hover { border-color: var(--color-on-primary); }
+  .btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .hero-social-proof {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar-stack {
+    display: flex;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--color-line, #ccc);
+    border: 2px solid var(--color-primary);
+    margin-left: -8px;
+  }
+  .avatar:first-child { margin-left: 0; }
+  .social-proof-text {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--color-copy);
+    margin: 0;
+  }
+  .social-proof-text strong { color: var(--color-on-primary); font-weight: 600; }
+
+  .hero-media-col {
+    position: relative;
+  }
+  .media-placeholder {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg, 16px);
+    border: 1px solid var(--color-line, rgba(128, 128, 128, 0.3));
+    background: color-mix(in oklch, var(--color-on-primary) 4%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .media-placeholder-label {
+    font-family: var(--font-mono, var(--font-body));
+    font-size: 0.75rem;
+    color: var(--color-copy);
+    text-align: center;
+    padding: 0 24px;
+  }
+
+  /* 반응형: 데스크톱 → 모바일 스택, 미디어 패널이 카피 아래로 */
+  @media (max-width: 880px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+    }
+    .hero-media-col {
+      order: 2;
+    }
+  }
+</style>

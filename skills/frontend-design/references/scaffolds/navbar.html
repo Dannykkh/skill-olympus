@@ -1,0 +1,152 @@
+<!--
+  Navbar scaffold — layout-block-anatomy.md § Navbar 계약을 커버:
+  로고(좌) → 링크 3~5개(중앙 또는 로고 옆) → 보조 액션(선택, 텍스트) + 솔리드 CTA 1개(우)
+  → 모바일 햄버거. 활성 상태(aria-current)와 스크롤 시 배경 전환 훅 포함.
+  구조는 anelkabag/bag-ui navbar1.tsx(MIT) 확인 후 새로 작성.
+-->
+<header class="navbar" data-scrolled="false">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-logo">{{brand_name}}</a>
+
+    <nav class="navbar-links" aria-label="주요 메뉴">
+      <a href="{{link_1_href}}" class="navbar-link">{{link_1_label}}</a>
+      <a href="{{link_2_href}}" class="navbar-link">{{link_2_label}}</a>
+      <a href="{{link_3_href}}" class="navbar-link">{{link_3_label}}</a>
+      <!-- 5개 넘으면 정보 과밀 — coder-interface-pattern-playbook.md 참조 -->
+    </nav>
+
+    <div class="navbar-actions">
+      <a href="{{secondary_action_href}}" class="navbar-secondary-link">{{secondary_action_label}}</a>
+      <a href="{{cta_href}}" class="btn btn-primary">{{cta_label}}</a>
+    </div>
+
+    <button class="navbar-burger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="navbar-mobile-menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- 모바일 메뉴 — JS로 aria-expanded 토글 시 표시. 토글 스크립트는 프로젝트 프레임워크에 맞춰 구현 -->
+  <nav id="navbar-mobile-menu" class="navbar-mobile-menu" aria-label="모바일 메뉴" hidden>
+    <a href="{{link_1_href}}" class="navbar-mobile-link">{{link_1_label}}</a>
+    <a href="{{link_2_href}}" class="navbar-mobile-link">{{link_2_label}}</a>
+    <a href="{{link_3_href}}" class="navbar-mobile-link">{{link_3_label}}</a>
+    <a href="{{cta_href}}" class="btn btn-primary navbar-mobile-cta">{{cta_label}}</a>
+  </nav>
+</header>
+
+<style>
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--color-primary);
+    border-bottom: 1px solid var(--color-line, rgba(128, 128, 128, 0.14));
+    /* 스크롤 시 blur 배경 전환을 쓰려면: data-scrolled="true"일 때 backdrop-filter 추가 */
+  }
+  .navbar-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 64px);
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .navbar-logo {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-on-primary);
+    text-decoration: none;
+  }
+  .navbar-links {
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 2.5vw, 32px);
+    flex: 1;
+    justify-content: center;
+  }
+  .navbar-link {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--color-copy);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+    transition: color 150ms, border-color 150ms;
+  }
+  .navbar-link:hover,
+  .navbar-link[aria-current="page"] {
+    color: var(--color-on-primary);
+    border-color: var(--color-line, rgba(128, 128, 128, 0.4));
+  }
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .navbar-secondary-link {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--color-copy);
+    text-decoration: none;
+  }
+  .navbar-secondary-link:hover { color: var(--color-on-primary); }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm, 4px);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .navbar-burger {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .navbar-burger span {
+    width: 20px;
+    height: 2px;
+    background: var(--color-on-primary);
+  }
+  /* [hidden] 속성이 기본 숨김을 담당 — display 선언은 반드시 :not([hidden])로 스코프해서
+     hidden 속성을 CSS가 이겨버리는 걸 방지 (실측 확인된 버그: display:flex를 무조건 걸면
+     hidden이어도 펼쳐져 보임) */
+  .navbar-mobile-menu:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    padding: 16px clamp(20px, 5vw, 64px) 24px;
+    border-bottom: 1px solid var(--color-line, rgba(128, 128, 128, 0.14));
+  }
+  .navbar-mobile-link {
+    font-family: var(--font-body);
+    color: var(--color-on-primary);
+    text-decoration: none;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-line, rgba(128, 128, 128, 0.1));
+  }
+  .navbar-mobile-cta {
+    margin-top: 12px;
+    justify-content: center;
+  }
+
+  @media (max-width: 880px) {
+    .navbar-links,
+    .navbar-actions {
+      display: none;
+    }
+    .navbar-burger {
+      display: flex;
+    }
+  }
+</style>
