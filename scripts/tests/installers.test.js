@@ -23,12 +23,16 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     USERPROFILE: tempHome,
   };
 
-  const command = "echo.| call install.bat --llm codex";
+  // NoDefaultCurrentDirectoryInExePath=1 환경에서는 cmd가 cwd에서 .bat를 찾지 않으므로
+  // 상대 이름이 아니라 절대경로로 호출해야 한다 (gotcha 036).
+  const command = `echo.| call "${installBat}" --llm codex`;
   const result = spawnSync("cmd.exe", ["/d", "/c", command], {
     cwd: repoRoot,
     env,
     encoding: "utf8",
     timeout: 120000,
+    // Node 기본 이스케이프가 command 안의 따옴표를 \"로 바꿔 cmd가 못 읽음 -> 원문 그대로 전달
+    windowsVerbatimArguments: true,
   });
 
   assert.equal(
