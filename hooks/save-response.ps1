@@ -7,6 +7,10 @@
 # - 진짜 실패(파싱 에러, IO 에러): .claude/mnemo-errors.log에 기록 후 exit 0
 # - $env:MNEMO_STRICT = '1' 이면 실패 시 exit 1 (디버깅용)
 
+# Grok 세션 가드: Grok Build는 ~/.claude/settings.json 훅도 로드함 (compat.claude).
+# Grok에서는 grok-mnemo 훅이 저장을 전담하므로 이중 저장 방지 위해 즉시 종료.
+if ($env:GROK_HOOK_EVENT) { exit 0 }
+
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

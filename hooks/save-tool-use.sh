@@ -8,6 +8,9 @@
 # - 진짜 실패(파싱 에러): .claude/mnemo-errors.log 기록 후 exit 0
 # - $MNEMO_STRICT='1' 이면 실패 시 exit 1
 
+# Grok 세션 가드: Grok envelope는 camelCase(toolName)라 오동작 가능 -> grok-mnemo가 전담.
+[ -n "${GROK_HOOK_EVENT:-}" ] && exit 0
+
 log_mnemo_error() {
     local ctx="$1"
     local msg="$2"

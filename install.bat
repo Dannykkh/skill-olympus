@@ -22,6 +22,7 @@ set "GEMINI_SYNC_RESULT=not-run"
 set "GEMINI_MCP_RESULT=not-run"
 set "GEMINI_ORCH_RESULT=not-run"
 set "GEMINI_HOOKS_RESULT=not-run"
+set "GROK_MNEMO_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 playwright chrome-devtools"
 set "LEGACY_MCP_SERVERS=sequential-thinking"
 
@@ -238,6 +239,21 @@ if "%MODE%"=="uninstall" (
     ) else (
         set "GEMINI_MNEMO_RESULT=Skip: no install.js"
         echo       [WARN] install.js not found, skipping
+    )
+
+    echo.
+    echo Removing Grok-Mnemo... [auto-skip if Grok not installed]
+    if exist "%SCRIPT_DIR%skills\grok-mnemo\install.js" (
+        node "%SCRIPT_DIR%skills\grok-mnemo\install.js" --uninstall
+        if !errorlevel! equ 0 (
+            set "GROK_MNEMO_RESULT=Removed"
+            echo       Done!
+        ) else (
+            set "GROK_MNEMO_RESULT=Remove failed"
+            echo       [WARN] Remove failed exit: !errorlevel!
+        )
+    ) else (
+        set "GROK_MNEMO_RESULT=Skip: no install.js"
     )
 
     echo.
@@ -771,6 +787,32 @@ if 1==1 (
     echo       !GEMINI_ORCH_RESULT!
 )
 
+REM ============================================
+REM   Grok Build
+REM ============================================
+REM Grok reads skills/agents/MCP/rules directly from ~/.claude/ via [compat.claude]
+REM defaults, so no sync is needed (see memory/learned/018). Only the mnemo hook
+REM needs an adapter (grok-mnemo).
+echo.
+echo   --- Grok Build ---
+echo.
+echo   Installing Grok-Mnemo... [optional: auto-skip if Grok not installed]
+if exist "%SCRIPT_DIR%skills\grok-mnemo\install.js" (
+    if exist "%USERPROFILE%\.grok" (
+        node "%SCRIPT_DIR%skills\grok-mnemo\install.js"
+        if !errorlevel! equ 0 (
+            set "GROK_MNEMO_RESULT=Installed"
+        ) else (
+            set "GROK_MNEMO_RESULT=Install failed"
+        )
+    ) else (
+        set "GROK_MNEMO_RESULT=Skip: Grok CLI not found"
+    )
+) else (
+    set "GROK_MNEMO_RESULT=Skip: no install.js"
+)
+echo       !GROK_MNEMO_RESULT!
+
 :install_done
 REM Restore CLAUDECODE env var
 set "CLAUDECODE=!SAVE_CLAUDECODE!"
@@ -807,6 +849,11 @@ if "!HAS_GEMINI!"=="1" (
     echo   - Hooks: !GEMINI_HOOKS_RESULT!
     echo   - MCP: !GEMINI_MCP_RESULT!
     echo   - Orchestrator: !GEMINI_ORCH_RESULT!
+)
+if exist "%USERPROFILE%\.grok" (
+    echo   [Grok]
+    echo   - Mnemo: !GROK_MNEMO_RESULT!
+    echo   - Skills/Agents/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
 )
 echo.
 echo   Restart CLI to apply changes.

@@ -17,6 +17,7 @@ GEMINI_SYNC_RESULT="미실행"
 GEMINI_MCP_RESULT="미실행"
 GEMINI_ORCH_RESULT="미실행"
 GEMINI_HOOKS_RESULT="미실행"
+GROK_MNEMO_RESULT="미실행"
 
 # ============================================
 #   사전 조건 확인
@@ -200,6 +201,20 @@ if [ "$MODE" = "uninstall" ]; then
     else
         GEMINI_MNEMO_RESULT="스킵(install.js 없음)"
         echo "      [경고] install.js 없음, 건너뜀"
+    fi
+
+    echo ""
+    echo "  Grok-Mnemo 제거 중... (Grok 미설치 시 자동 skip)"
+    if [ -f "$SCRIPT_DIR/skills/grok-mnemo/install.js" ]; then
+        if node "$SCRIPT_DIR/skills/grok-mnemo/install.js" --uninstall; then
+            GROK_MNEMO_RESULT="제거 완료"
+            echo "      완료!"
+        else
+            GROK_MNEMO_RESULT="제거 실패"
+            echo "      [경고] 제거 실패"
+        fi
+    else
+        GROK_MNEMO_RESULT="스킵(install.js 없음)"
     fi
 
     echo ""
@@ -667,6 +682,30 @@ fi
 
 fi # HAS_GEMINI
 
+# ============================================
+#   Grok Build
+# ============================================
+# Grok은 스킬/에이전트/MCP/규칙을 [compat.claude] 기본값으로 ~/.claude/에서 직접 읽으므로
+# sync가 필요 없다 (memory/learned/018 실측). mnemo 훅만 어댑터를 설치한다.
+echo ""
+echo "  --- Grok Build ---"
+echo ""
+echo "  Grok-Mnemo 설치 중... [선택: Grok 미설치 시 자동 skip]"
+if [ -f "$SCRIPT_DIR/skills/grok-mnemo/install.js" ]; then
+    if [ -d "$HOME/.grok" ]; then
+        if node "$SCRIPT_DIR/skills/grok-mnemo/install.js"; then
+            GROK_MNEMO_RESULT="설치 완료"
+        else
+            GROK_MNEMO_RESULT="설치 실패"
+        fi
+    else
+        GROK_MNEMO_RESULT="스킵(Grok CLI 없음)"
+    fi
+else
+    GROK_MNEMO_RESULT="스킵(install.js 없음)"
+fi
+echo "      $GROK_MNEMO_RESULT"
+
 # CLAUDECODE 환경변수 복원
 if [ -n "$SAVE_CLAUDECODE" ]; then
     export CLAUDECODE="$SAVE_CLAUDECODE"
@@ -704,6 +743,11 @@ if [ "$HAS_GEMINI" = "1" ]; then
     echo "  - Hooks: $GEMINI_HOOKS_RESULT"
     echo "  - MCP: $GEMINI_MCP_RESULT"
     echo "  - Orchestrator: $GEMINI_ORCH_RESULT"
+fi
+if [ -d "$HOME/.grok" ]; then
+    echo "  [Grok]"
+    echo "  - Mnemo: $GROK_MNEMO_RESULT"
+    echo "  - Skills/Agents/MCP: compat.claude 직접 읽기 (sync 불필요)"
 fi
 echo ""
 echo "  CLI를 재시작하면 적용됩니다."

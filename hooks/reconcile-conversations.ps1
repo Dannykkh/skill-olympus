@@ -7,6 +7,9 @@
 # - 조용히: 에러가 발생해도 세션 시작을 막지 않음 (fail-open)
 # - 멱등: 각 CLI의 사이드카 인덱스(.mnemo-index.json)가 Claude/Codex 네임스페이스 공유
 
+# Grok 세션 가드: Grok SessionStart마다 Claude/Codex reconcile 비용을 지불하지 않도록 즉시 종료.
+if ($env:GROK_HOOK_EVENT) { exit 0 }
+
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8

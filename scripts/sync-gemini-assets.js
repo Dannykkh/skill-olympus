@@ -476,6 +476,7 @@ function run() {
     "agent-team",      // Claude Agent Teams 전용 (TeamCreate/SendMessage)
     "mnemo",           // Claude 전용 장기기억. Gemini용은 gemini-mnemo
     "codex-mnemo",     // Codex 전용 장기기억
+    "grok-mnemo",      // Grok 전용 장기기억
     "agent-team-codex", // Codex 전용 에이전트팀
   ];
   const allSkillNames = listDirectories(skillsSrcDir);

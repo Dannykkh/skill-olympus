@@ -7,6 +7,10 @@
 # - 진짜 실패(파싱 에러): .claude/mnemo-errors.log 기록 후 exit 0
 # - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1
 
+# Grok 세션 가드: Grok envelope는 camelCase(toolName)라 이 스크립트가 오동작할 수 있음.
+# Grok에서는 grok-mnemo가 턴 단위 관찰을 전담하므로 즉시 종료.
+if ($env:GROK_HOOK_EVENT) { exit 0 }
+
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

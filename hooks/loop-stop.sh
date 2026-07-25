@@ -3,6 +3,9 @@
 # 상태 파일: .claude/.codex/.chronos/loop-state.md 중 먼저 발견된 것
 # (CLI별 setup-loop가 자기 디렉토리에 만들기 때문에 3곳 모두 검사해야 모든 CLI에서 작동)
 
+# Grok 세션 가드: Grok Stop 페이로드는 camelCase라 재투입 판단 불가 -> Grok 네이티브 기능 사용.
+[ -n "${GROK_HOOK_EVENT:-}" ] && exit 0
+
 set -euo pipefail
 
 HOOK_INPUT=$(cat)

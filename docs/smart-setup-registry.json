@@ -229,6 +229,7 @@
     { "id": "game-changing-features", "tags": ["*"], "priority": "optional" },
     { "id": "gemini", "tags": ["*"], "priority": "optional" },
     { "id": "gemini-mnemo", "tags": ["*"], "priority": "optional" },
+    { "id": "grok-mnemo", "tags": ["*"], "priority": "optional" },
     { "id": "humanizer", "tags": ["*"], "priority": "optional" },
     { "id": "marp-slide", "tags": ["*"], "priority": "optional" },
     { "id": "meme-factory", "tags": ["*"], "priority": "optional" },
