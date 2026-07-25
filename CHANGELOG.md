@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.15.0] - 2026-07-25
+
+### Features
+
+- **grok-mnemo**: Grok Build(xAI CLI) 장기기억 어댑터 신설 — Grok은 `[compat.claude]` 기본값으로 `~/.claude/`의 skills(99)/agents(41)/MCP/rules를 직접 읽는 것을 `grok inspect --json`으로 실측 확인, sync 스크립트 없이 자동 커버되므로 유일한 parity 갭인 mnemo 자동 저장만 어댑터로 해소. UserPromptSubmit+Stop 두 이벤트를 한 스크립트로 분기(`~/.grok/hooks/grok-mnemo.json` 등록): `prompt`의 `<user_query>` 래퍼 스트립, Stop은 `reason == "end_turn"`만 저장(세션 종료 observe 재발화 제외), `lastAssistantMessage` 직접 저장으로 transcript 파싱 불필요, `conversations/YYYY-MM-DD-grok.md` + observations(cli=grok). Claude mnemo 훅 5쌍(ps1+sh)에 `GROK_HOOK_EVENT` 가드를 추가해 Grok이 `~/.claude/settings.json` 훅을 함께 로드할 때의 이중/오분류 저장(Grok 프롬프트가 `-claude.md`에 오저장) 차단. install.bat/sh Grok 섹션(미설치 시 자동 skip), codex/gemini sync 제외 목록, 규칙 델타는 `~/.grok/rules/grok-mnemo.md`(공통 규칙은 Grok이 글로벌 CLAUDE.md를 직접 로드하므로 중복 주입 안 함). `grok -p` headless E2E로 저장·가드 검증 (deb47a6)
+
+### Bug Fixes
+
+- **tests**: installers.test의 install.bat 호출을 절대경로 + `windowsVerbatimArguments`로 수정 — `NoDefaultCurrentDirectoryInExePath=1` 환경에서 cmd가 cwd의 .bat를 탐색하지 않아 테스트가 실행조차 못 하고 실패하던 문제(gotcha 036 재발). 절대경로 인용부호는 Node 기본 이스케이프가 `\"`로 변형하므로 verbatim 전달 필요. 수정 후 3/3 통과 (5576365)
+
+### Other Changes
+
+- **docs**: codemap 섹션 자동 갱신 반영 — info.md 작업별 라우터 안내 (0d98d0e)
+
 ## [4.14.0] - 2026-07-22
 
 ### Features
