@@ -2,7 +2,7 @@
   "$schema": "smart-setup-registry",
   "version": "1.0.0",
   "description": "기술 태그별 리소스 매핑 데이터 (Single Source of Truth). /smart-setup 커맨드에서 사용.",
-  "lastUpdated": "2026-03-13",
+  "lastUpdated": "2026-07-26",
 
   "detection-rules": [
     { "file": "package.json", "match": "\"react\"", "tags": ["react"] },
@@ -274,7 +274,13 @@
     { "id": "social-login", "tags": ["react", "nextjs", "spring", "fastapi", "nodejs", "dotnet"], "priority": "optional" },
     { "id": "deprecation-and-migration", "tags": ["*"], "priority": "optional" },
     { "id": "documentation-and-adrs", "tags": ["*"], "priority": "optional" },
-    { "id": "shipping-and-launch", "tags": ["*"], "priority": "optional" }
+    { "id": "shipping-and-launch", "tags": ["*"], "priority": "optional" },
+    { "id": "frontend-design", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
+    { "id": "hestia", "tags": ["*"], "priority": "optional" },
+    { "id": "workpm", "tags": ["*"], "priority": "optional" },
+    { "id": "skill-evolve", "tags": ["*"], "priority": "optional" },
+    { "id": "youtube-transcript", "tags": ["*"], "priority": "optional" },
+    { "id": "health-data", "tags": ["*"], "priority": "optional" }
   ],
 
   "internal-agents": [
@@ -316,8 +322,19 @@
     { "id": "dotnet-coding-standards", "tags": ["dotnet", "aspnet", "csharp", "blazor"], "priority": "recommended" },
     { "id": "desktop-wpf", "tags": ["dotnet", "wpf", "csharp"], "priority": "essential" },
     { "id": "web-preview-guide", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "recommended" },
-    { "id": "bilingual-dev", "tags": ["*"], "priority": "optional" }
+    { "id": "bilingual-dev", "tags": ["*"], "priority": "optional" },
+    { "id": "wpf-coding-standards", "tags": ["dotnet", "wpf", "csharp"], "priority": "recommended" }
   ],
+
+  "excluded": {
+    "_comment": "의도적으로 smart-setup 추천에서 제외한 항목. 실제 skills/·agents/ 디렉토리와 대조할 때 '누락'으로 오판하지 않도록 사유를 남긴다.",
+    "internal-skills": [
+      { "id": "deploymonitor", "reason": "특정 배포 시스템(DeployMonitor) 전용 내부 워크플로우. 범용 추천 대상 아님" }
+    ],
+    "internal-agents": [
+      { "id": "chronos-worker", "reason": "auto-continue-loop가 스폰하는 내부 워커. 개별 설치·추천 대상 아님" }
+    ]
+  },
 
   "hooks": [
     { "id": "save-conversation", "tags": ["*"], "priority": "recommended" },

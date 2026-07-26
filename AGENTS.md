@@ -111,22 +111,22 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 네이티브 Agent Teams (Opus) + Codex Multi-Agent |
-| 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, memory-distill, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + raw 관찰 정제(rebuild) + 스킬 프롬프트 자동 최적화 (Hill Climbing) |
-| 📝 Documentation | api-handoff, crafting-effective-readmes, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely | 문서/다이어그램 + 도메인 용어사전 (DDD Ubiquitous Language) |
+| 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, memory-distill, skill-evolve, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + raw 관찰 정제(rebuild) + 스킬 프롬프트 자동 최적화 (Hill Climbing) + gotcha/learned 기반 스킬 자기개선 루프 |
+| 📝 Documentation | api-handoff, crafting-effective-readmes, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely, docx, pdf, excel2md | 문서/다이어그램 + 도메인 용어사전 (DDD Ubiquitous Language) + Office 문서 읽기/생성/편집 (Word/PDF/Excel) |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
-| 🎨 Frontend | design-plan (아프로디테), design-system-starter, theme-factory, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor, data-visualization | 화면 유형 게이트·방향 3안·색상 다양성 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + 테마 14종(한글 4종) + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 + 차트 선택 가이드 (Anthropic 공식 벤더링) |
-| 🛠️ Development | database-schema-designer, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login | 개발 도구 |
+| 🎨 Frontend | design-plan (아프로디테), frontend-design, design-system-starter, theme-factory, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor, data-visualization | 화면 유형 게이트·방향 3안·색상 다양성 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + 테마 14종(한글 4종) + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 + 차트 선택 가이드 (Anthropic 공식 벤더링) |
+| 🛠️ Development | database-schema-designer, supabase-postgres-best-practices, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, deploymonitor, wrangler, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login, health-data | 개발 도구 + Postgres 최적화 + Cloudflare Workers 배포 + 헬스 데이터(Health Connect/HealthKit) 연동 |
 | 🎯 Planning | game-changing-features, shipping-and-launch, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오) | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 |
+| 🧪 Testing | code-reviewer, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오), api-tester, test-driven-development, systematic-debugging, semgrep-rule-creator | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 + API 연동 테스트 + TDD 사이클 + 근본원인 디버깅 + Semgrep 커스텀 규칙 |
 | 📦 Git | commit-work, release-notes | Git 워크플로우 & 릴리즈 노트 자동화 (버전+CHANGELOG+태그) |
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |
 | 🎬 Media | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
 | 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
-| 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown | 유틸리티 |
+| 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown, youtube-transcript | 유틸리티 + YouTube 자막 추출/요약 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
-| 🧠 Memory/Session | mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + 메모리 크기 점검 및 압축 |
+| 🧠 Memory/Session | mnemo, codex-mnemo, gemini-mnemo, grok-mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + CLI별 어댑터 (Codex notify / Gemini AfterAgent / Grok camelCase envelope) + 메모리 크기 점검 및 압축 |
 
 ### Agents (42개)
 
