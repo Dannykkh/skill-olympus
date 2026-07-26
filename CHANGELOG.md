@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.16.1] - 2026-07-26
+
+### Documentation
+
+- **registry**: `smart-setup-registry`의 `lastUpdated`가 2026-03-13에 멈춰 있어 그 이후 추가된 리소스가 계속 빠져 있던 것을 동기화. 성격 때문에 제외된 것이 아니라 단순 갱신 누락이었음. internal-skills +6(`frontend-design` 2026-07-22, `hestia` 04-20, `skill-evolve` 04-13, `health-data` 04-06, `youtube-transcript` 03-14, `workpm` 03-13), internal-agents +1(`wpf-coding-standards`). tags는 기존 패턴을 따라 `frontend-design`은 design-plan과 동일한 프론트 스택 태그, 나머지는 스택 무관이라 `["*"]`(이미 등록된 범용 스킬 70개와 같은 기준), `wpf-coding-standards`는 기존 `desktop-wpf`와 동일 태그. 신설한 `excluded` 필드에 의도적 제외 2건의 사유를 데이터로 기록해(`deploymonitor` — 특정 배포 시스템 전용 내부 워크플로우, `chronos-worker` — auto-continue-loop가 스폰하는 내부 워커) 다음 대조 때 "누락"으로 오판하지 않도록 함. AGENTS.md 카테고리 표도 같은 이유로 17개가 미기재였던 것을 7개 카테고리에 배치(docx/pdf/excel2md, api-tester/test-driven-development/systematic-debugging/semgrep-rule-creator, supabase-postgres-best-practices/wrangler/deploymonitor/health-data, codex-mnemo/gemini-mnemo/grok-mnemo, frontend-design, skill-evolve, youtube-transcript). 검증: 실제 디렉토리 대비 미커버 0(skills 99, agents 41), AGENTS.md 미기재 0, 표기 개수 99 일치 (f1149c7)
+
 ## [4.16.0] - 2026-07-26
 
 ### Features
