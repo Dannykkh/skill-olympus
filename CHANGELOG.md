@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.16.0] - 2026-07-26
+
+### Features
+
+- **theme-factory**: Anthropic 공식 theme-factory를 레포에 벤더링하고 한글 테마 4종을 자체 추가 (테마 10종 → 14종). 기존 10종은 DejaVu Sans/FreeSans 등 라틴 전용 폰트를 지정해 한글이 시스템 폰트로 조용히 폴백되는 문제(gotcha 041)가 있었음. 신규: `hangeul-editorial`(Hahmlet + Noto Sans KR, 한지 배경 + 주홍), `hangeul-corporate`(Gothic A1 + IBM Plex Sans KR, 감청 + 강청), `hangeul-minimal`(Pretendard Variable 단일, 미색 + 자주), `hangeul-impact`(Black Han Sans + Nanum Gothic, 다크 기반 + 자홍). 폰트는 `frontend-design/references/font-pairings.csv`의 한글 행(#74-84)에서 선정, 색은 기존 10종에 편중된 초록/주황을 피해 서로 다른 hue family로 분산. 검증 3종: ① 대비는 각 테마의 지배 배경 기준 WCAG AA 4.5:1 전 항목 통과(초안에서 미달한 6쌍은 색 조정) ② 한글 글리프는 Google Fonts CSS의 `unicode-range`를 파싱해 완성형 한글 블록(U+AC00-D7A3) 커버를 폰트별로 확인, Pretendard는 `unicode-range`가 없는 static 대신 dynamic-subset variable 빌드로 교체하고 패밀리명이 정확히 `Pretendard Variable`(weight 45 920)임을 확인 ③ 실렌더는 HTML을 브라우저에서 face status + 렌더 폭(657px vs 폴백 772px)으로, PPTX를 PowerPoint COM 익스포트로 확인. SKILL.md에 쇼케이스 PDF가 1-10만 포함한다는 점(한글 테마는 텍스트 병기), 한국어 자료의 기본 테마 선택 규칙, 폰트 폴백 체인(Windows/macOS/Linux)과 웹폰트 실제 로드 주의사항을 반영. Codex/Gemini는 sync 스크립트로 배포하고 Grok은 `[compat.claude]`로 `~/.claude/`를 직접 읽는 것을 `grok inspect --json`으로 재확인(4-CLI 전부 인식). 문서 스킬 수 97 → 99 동기화 + smart-setup-registry 등록 (4aaa693)
+
 ## [4.15.0] - 2026-07-25
 
 ### Features
