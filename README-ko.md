@@ -51,7 +51,7 @@
 | 📋 **출시 체크리스트** | `/launch` — 프리런치 품질 게이트, 단계적 롤아웃, 롤백 플레이북 |
 | 📐 **결정 기록** | `/adr` — 아키텍처 결정을 대안·트레이드오프·이력과 함께 기록 |
 
-**97개 스킬 · 42개 에이전트 · 9개 훅 · 3개 CLI · 1개 신화**
+**99개 스킬 · 42개 에이전트 · 9개 훅 · 3개 CLI · 1개 신화**
 
 ---
 
@@ -85,7 +85,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-끝입니다. **97개 스킬, 42개 에이전트, 9개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
+끝입니다. **99개 스킬, 42개 에이전트, 9개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
 
 > Codex/Gemini가 미설치 시 해당 단계는 자동 스킵됩니다.
 
@@ -549,7 +549,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 |----------|------|------|
 | **AI 도구** | codex, gemini, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
 | **파이프라인** | zephermine, zeus, argos, minos, closer, shipping-and-launch | 제로 인터랙션 풀 파이프라인, 출시 체크리스트 |
-| **프론트엔드** | react-dev, frontend-design, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 161 팔레트, 84 폰트, SEO+AEO+GEO 감사, 차트 선택 가이드 |
+| **프론트엔드** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 161 팔레트, 84 폰트, 테마 14종(한글 4종), SEO+AEO+GEO 감사, 차트 선택 가이드 |
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | minos, auto-continue-loop, flow-verifier + 3개 | 크로노스 루프, Playwright QA |

@@ -304,6 +304,7 @@ claude plugin install voltagent-qa-sec
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
 | `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 화면 유형 5종 판별→방향 3안+색상 다양성→스타일레시피/DB→레퍼런스 자산화→구현→리뷰 (/aphrodite) |
+| `skills/theme-factory/` | 테마 팩토리 — 슬라이드/문서/HTML에 입히는 색·폰트 테마 14종 (한글 테마 4종 포함, Anthropic 공식 벤더링) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
 | `skills/deprecation-and-migration/` | 코드 부채 정리 + 마이그레이션 — 레거시 폐기 계획, API 버전 전환, Strangler Fig 패턴, 부채 감사 (/deprecate) |
 | `skills/documentation-and-adrs/` | ADR(Architecture Decision Records) — 아키텍처 결정 기록 + 인덱스 관리 + MEMORY.md 연동 (/adr) |
