@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.17.0] - 2026-07-30
+
+### Features
+
+- **mnemo**: `observations.jsonl` 누적 줄 수를 미정제 백로그로 오판하는 함정(gotcha 058)을 막는 진단 규칙을 설치 템플릿 3종(claude/codex/gemini)의 "JSONL 직접 읽기 금지" 블록 아래에 추가. 관찰 로그는 append-only로 절대 비워지지 않으므로 백로그 판정은 `.mnemo-status.md` 확인(훅이 delta 임계 판정 대행, 없으면 정상) 또는 `.mnemo-distill-offset` 마커 대비 증분(delta)으로만 하며 `wc -l` 누적값 단독 인용을 금지. v4.8.5에서 훅 트리거를 delta 기준으로 고친 것(gotcha 035)의 리더 측 대응 — 훅이 옳아도 LLM 세션이 진단 시 누적값을 읽으면 같은 오판이 재발함을 실측(누적 3,226줄을 백로그로 판정 → 실제 delta 74건, 임계 200 미만)한 뒤 승격. 현재 전역 설치본(`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/AGENTS.md`)과 전역 스킬 템플릿 복사본에도 동일 반영해 재설치 전 공백 제거, Grok은 `~/.claude/` 직접 읽기로 커버(learned 018). README/README-ko 메모리 섹션에 백로그 진단 한 줄 추가 (ce9e957)
+
 ## [4.16.1] - 2026-07-26
 
 ### Documentation
