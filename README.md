@@ -539,6 +539,7 @@ Session B: MEMORY.md auto-loaded → past search → context restored
 Includes auto gotcha/learned tracking:
 - **Errors** → `memory/gotchas/observations.jsonl` → Haiku analyzes patterns
 - **Successes** → `memory/learned/observations.jsonl` → Haiku detects workflows
+- **Backlog diagnosis** → observation logs are append-only and never truncated; backlog is judged by delta against the `.mnemo-distill-offset` marker (hooks handle this via `.mnemo-status.md`), never by cumulative line count
 
 ---
 

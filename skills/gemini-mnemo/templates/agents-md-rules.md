@@ -173,6 +173,10 @@ Gemini는 자체 transcript가 없으므로 다른 mitigation이 필요합니다
   2. `conversations/`에서 재검색
   3. 그래도 없으면 "관련 기록을 찾지 못했습니다"라고 솔직히 답변
 
+**⚠️ observations.jsonl 누적 줄 수 ≠ 백로그:**
+- `memory/{gotchas,learned}/observations.jsonl`은 append-only라 **절대 비워지지 않습니다**. 누적 줄 수(`wc -l`)를 "미정제 백로그"로 판정하지 마세요.
+- 백로그 진단: ① `memory/.mnemo-status.md`가 있으면 그 안내를 따름 (훅이 delta 임계 판정을 대행, 파일 없음 = 정상) ② 수동 확인은 `memory/.mnemo-distill-offset` 마커 대비 현재 줄 수의 **증분(delta)**으로만 판정.
+
 **핵심: 각 단계에서 답을 찾으면 거기서 멈추기. 더 깊이 들어갈 필요 없음.**
 
 **검색 트리거 (이런 표현이 나오면 검색):**

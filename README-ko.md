@@ -538,6 +538,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 오답노트/학습 패턴 자동 추적 포함:
 - **에러** → `memory/gotchas/observations.jsonl` → Haiku가 패턴 분석
 - **성공** → `memory/learned/observations.jsonl` → Haiku가 워크플로우 감지
+- **백로그 진단** → 관찰 로그는 append-only로 절대 비워지지 않으므로, 백로그 판정은 누적 줄 수가 아니라 `.mnemo-distill-offset` 마커 대비 증분(delta)으로 (훅이 `.mnemo-status.md`로 대행)
 
 ---
 
