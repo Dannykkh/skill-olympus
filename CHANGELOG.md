@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.18.0] - 2026-07-31
+
+### Features
+
+- **memory-distill**: 승격 기준 최초 명문화 — 지금까지 gotcha를 상시 가시 계층(CLAUDE.md 가드레일)이나 스킬 내장으로 올리는 판단은 암묵적("자주 물리는 것")이었는데, gotcha 8건 기반 T0 스크리닝 실측(40런, claude-fable-5, 격리 rename-window + 행동 카나리아)에서 유명/공개 함정 7건(BOM·cp949·한글 폰트 폴백·a:ea 등)은 모델이 실행 수준에서 이미 회피(발동률 0~20%)함을 확인, 상시 노출이 100줄 예산 낭비임이 드러나 기준을 명문화. memory-distill Phase 5(승격 판단) 신설 + gotcha-analyzer에 `**승격 판단**:` 표기 규약 추가: 유명/공개 함정은 승격 금지, 습관 재정의형(유일 생존 유형 — Join-Path 3-인수는 리플렉션 지목 3/3인데 실행 발동 3/5, "지식≠행동" 실측)과 레포 고유형(delta 마커 등 비공개 규약)만 상시 가시 후보, 경합 제약형은 스킬 내장 우선, 애매하면 금지(보수 기본값). 승격 실행은 스킬 범위 밖으로 두어 과잉 승격을 구조적으로 차단. 근거 데이터(Q1 실험 프로토콜·프로브 스펙 v0.2·힌트 누설 검사 24런·T0 스크리닝 결과·자동 체커)를 docs/research/에 동봉, 전역 설치본 7곳(claude/codex/gemini) 동기 반영 (14bdee7)
+
 ## [4.17.0] - 2026-07-30
 
 ### Features
