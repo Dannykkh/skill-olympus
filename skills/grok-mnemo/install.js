@@ -176,14 +176,20 @@ function install() {
 
   // [1/3] Copy hook script
   console.log("[1/3] Installing hook script...");
-  ensureDir(hooksDir);
 
   const src = hookScriptSrc();
   const dest = path.join(hooksDir, hookScriptName());
+  // 만들기 전에 먼저 검증한다. 예전에는 ensureDir()가 앞에 있어, 소스가 없으면
+  // 빈 hooks/ 디렉터리만 남기고 죽었다.
   if (!fs.existsSync(src)) {
-    console.error(`      Error: file not found: ${src}`);
+    console.error(`      Error: hook source file missing — nothing was installed:`);
+    console.error(`        - ${src}`);
+    console.error("      레포가 온전하지 않습니다. 다시 clone 하거나");
+    console.error("      skills/ 디렉터리를 복구하세요 (git checkout -- skills/).");
     process.exit(1);
   }
+
+  ensureDir(hooksDir);
   copyFile(src, dest);
   if (!isWindows) {
     fs.chmodSync(dest, 0o755);

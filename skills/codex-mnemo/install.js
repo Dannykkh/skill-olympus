@@ -487,7 +487,6 @@ function install() {
 
   // [1/3] Copy hook files
   console.log("[1/3] Installing hook files...");
-  ensureDir(hooksDir);
 
   const hookFiles = isWindows
     ? [
@@ -503,14 +502,28 @@ function install() {
         "codex-hook-bridge.js",
       ];
 
+  // Verify every source file before writing anything. The loop below used to
+  // exit(1) mid-way on the first missing file, leaving the earlier hooks copied
+  // and the rest not — a partial install that looks like a successful one.
+  // The hooks only work as a set, so all-or-nothing is the safe outcome.
+  const missingHooks = hookFiles.filter(
+    (f) => !fs.existsSync(path.join(sourceDir, "hooks", f))
+  );
+  if (missingHooks.length > 0) {
+    console.error("      Error: hook source file(s) missing — nothing was installed:");
+    for (const f of missingHooks) {
+      console.error(`        - ${path.join(sourceDir, "hooks", f)}`);
+    }
+    console.error("      The repository looks incomplete. Re-clone it, or restore");
+    console.error("      the skills/ directory (git checkout -- skills/).");
+    process.exit(1);
+  }
+
+  ensureDir(hooksDir);
+
   for (const hookFile of hookFiles) {
     const src = path.join(sourceDir, "hooks", hookFile);
     const dest = path.join(hooksDir, hookFile);
-
-    if (!fs.existsSync(src)) {
-      console.error(`      Error: File not found: ${src}`);
-      process.exit(1);
-    }
 
     copyFile(src, dest);
     if (!isWindows) {

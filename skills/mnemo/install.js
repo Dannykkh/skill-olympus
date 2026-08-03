@@ -494,10 +494,20 @@ function uninstall() {
 }
 
 // ── Run ──
+// Create the directory instead of bailing out. codex-mnemo and gemini-mnemo have
+// always done this ("directory not found, creating it") — only this script treated
+// a missing ~/.claude as fatal, which is what made a fresh machine install nothing.
+// The assets here are plain file copies, so they are valid without the claude CLI,
+// and Claude Code picks them up on its first run. Only MCP registration needs the
+// CLI, and install.bat/install.sh guard that step separately.
+// --check keeps failing loudly: nothing is installed if the directory is absent.
 if (!fs.existsSync(claudeDir)) {
-  console.error(`Error: Claude Code is not installed.`);
-  console.error(`       ${claudeDir} directory not found.`);
-  process.exit(1);
+  if (isCheck) {
+    console.error(`Error: ${claudeDir} not found — Mnemo is not installed.`);
+    process.exit(1);
+  }
+  console.log(`Note: ${claudeDir} directory not found, creating it.`);
+  ensureDir(claudeDir);
 }
 
 if (isCheck) {

@@ -384,22 +384,27 @@ function install() {
 
   // [1/3] Copy hook files
   console.log("[1/3] Installing hook files...");
-  ensureDir(hooksDir);
 
   const hookFile = isWindows ? "save-turn.ps1" : "save-turn.sh";
   const src = path.join(sourceDir, "hooks", hookFile);
   const dest = path.join(hooksDir, hookFile);
 
-  if (fs.existsSync(src)) {
-    copyFile(src, dest);
-    if (!isWindows) {
-      fs.chmodSync(dest, 0o755);
-    }
-    console.log(`      - ${hookFile}`);
-  } else {
-    console.error(`      Error: file not found: ${src}`);
+  // Verify before creating anything. ensureDir() used to run first, so a missing
+  // source left an empty hooks/ directory behind on the way out.
+  if (!fs.existsSync(src)) {
+    console.error(`      Error: hook source file missing — nothing was installed:`);
+    console.error(`        - ${src}`);
+    console.error("      The repository looks incomplete. Re-clone it, or restore");
+    console.error("      the skills/ directory (git checkout -- skills/).");
     process.exit(1);
   }
+
+  ensureDir(hooksDir);
+  copyFile(src, dest);
+  if (!isWindows) {
+    fs.chmodSync(dest, 0o755);
+  }
+  console.log(`      - ${hookFile}`);
   console.log("      Done!");
 
   // [2/3] settings.json AfterAgent hook + context.fileName config
