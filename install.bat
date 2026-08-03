@@ -14,6 +14,7 @@ set "CODEX_DIR=%USERPROFILE%\.codex"
 set "GEMINI_DIR=%USERPROFILE%\.gemini"
 set "CREATED_CLAUDE_DIR=0"
 set "HAS_CLAUDE_CLI=0"
+set "JQ_MISSING=0"
 set "CLAUDE_MCP_RESULT=not-run"
 set "CLAUDE_ORCH_RESULT=not-run"
 set "CODEX_MNEMO_RESULT=not-run"
@@ -33,9 +34,20 @@ set "LEGACY_MCP_SERVERS=sequential-thinking"
 REM ============================================
 REM   Prerequisites check
 REM ============================================
+REM Node.js는 대체가 없다 - 설치 로직 전체가 node 스크립트(install-select.js,
+REM safe-copy.js, install-hooks-config.js 등)라 여기서 중단하는 것이 맞다.
+REM 자동 설치는 하지 않는다: winget으로 깔아도 현재 cmd 세션의 PATH는 갱신되지
+REM 않아 그 실행에서는 여전히 node를 못 찾는다. 대신 명령어를 그대로 알려준다.
 where node >nul 2>nul || (
     echo [ERROR] Node.js is required but not found.
-    echo        Install from https://nodejs.org/
+    echo.
+    echo        Install with one of:
+    echo          winget install OpenJS.NodeJS.LTS
+    echo          choco install nodejs-lts
+    echo        Or download: https://nodejs.org/
+    echo.
+    echo        Then open a NEW terminal and re-run this installer
+    echo        ^(PATH is not refreshed in the current one^).
     pause
     exit /b 1
 )
@@ -75,15 +87,19 @@ where jq >nul 2>nul || (
         )
     )
 
+    REM jq가 없어도 중단하지 않는다. Windows에 등록되는 훅은 PowerShell(.ps1)이라
+    REM jq를 쓰지 않는다 - jq는 .sh 훅(Git Bash/WSL)의 JSON 파싱 전용이다.
+    REM 예전에는 여기서 exit /b 1로 끊어, 쓰지도 않는 의존성 때문에 설치 전체가
+    REM 실패했다(오프라인이거나 winget/choco가 없는 새 컴퓨터에서 재현).
     if "!JQ_INSTALLED!"=="0" (
-        echo [ERROR] jq installation failed.
-        echo        Install manually: winget install jqlang.jq
-        echo        Or download from: https://github.com/jqlang/jq/releases
-        echo        jq is required for hook scripts.
-        pause
-        exit /b 1
+        echo   [WARN] jq installation failed - continuing without it.
+        echo          Windows hooks run on PowerShell ^(.ps1^) and do not need jq.
+        echo          Only the .sh hooks ^(Git Bash / WSL^) require it.
+        echo          Install later: winget install jqlang.jq
+        set "JQ_MISSING=1"
+    ) else (
+        echo [PREREQ] jq installed successfully.
     )
-    echo [PREREQ] jq installed successfully.
 )
 
 REM Determine mode (scan all arguments)
@@ -897,6 +913,12 @@ if "!HAS_CLAUDE!"=="1" if "!HAS_CLAUDE_CLI!"=="0" (
     echo.
     echo   [SKIPPED] Claude MCP registration - claude CLI not found in PATH.
     echo             Install Claude Code, then re-run this installer to register MCP.
+)
+if "!JQ_MISSING!"=="1" (
+    echo.
+    echo   [SKIPPED] jq is not installed.
+    echo             PowerShell hooks work without it; the .sh hooks
+    echo             ^(Git Bash / WSL^) will not. Install: winget install jqlang.jq
 )
 echo.
 echo   Restart CLI to apply changes.

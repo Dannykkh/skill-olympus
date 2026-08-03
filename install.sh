@@ -20,15 +20,25 @@ GEMINI_HOOKS_RESULT="미실행"
 GROK_MNEMO_RESULT="미실행"
 CREATED_CLAUDE_DIR=0
 HAS_CLAUDE_CLI=0
+JQ_MISSING=0
 CLAUDE_MCP_RESULT="미실행"
 CLAUDE_ORCH_RESULT="미실행"
 
 # ============================================
 #   사전 조건 확인
 # ============================================
+# Node.js는 대체가 없다 - 설치 로직 전체가 node 스크립트(install-select.js,
+# safe-copy.js, install-hooks-config.js 등)라 여기서 중단하는 것이 맞다.
+# 자동 설치는 하지 않는다. 대신 설치 명령어를 그대로 알려준다.
 if ! command -v node >/dev/null 2>&1; then
     echo "[오류] Node.js가 필요하지만 설치되어 있지 않습니다."
-    echo "       https://nodejs.org/ 에서 설치하세요."
+    echo ""
+    echo "       설치 방법 (택 1):"
+    echo "         brew install node"
+    echo "         sudo apt install -y nodejs npm"
+    echo "         https://nodejs.org/"
+    echo ""
+    echo "       설치 후 새 셸에서 이 스크립트를 다시 실행하세요."
     exit 1
 fi
 
@@ -43,13 +53,18 @@ if ! command -v jq >/dev/null 2>&1; then
     elif command -v pacman >/dev/null 2>&1; then
         sudo pacman -S --noconfirm jq 2>/dev/null
     fi
+    # jq가 없어도 중단하지 않는다. 자산 설치(스킬/에이전트/훅 복사, settings.json,
+    # CLAUDE.md)는 전부 node로 돌아가 jq와 무관하다. 다만 이 플랫폼의 훅은 .sh라
+    # jq 없이는 훅이 동작하지 않으므로 경고 강도는 Windows보다 높다.
     if ! command -v jq >/dev/null 2>&1; then
-        echo "[오류] jq 설치 실패."
-        echo "       수동 설치: apt install jq / brew install jq"
-        echo "       jq는 훅 스크립트에 필요합니다."
-        exit 1
+        echo "  [경고] jq 설치 실패 - jq 없이 계속합니다."
+        echo "         자산 설치는 정상 진행되지만, .sh 훅(대화 저장 등)은"
+        echo "         JSON 파싱에 jq를 쓰므로 동작하지 않습니다."
+        echo "         수동 설치: brew install jq / sudo apt install -y jq"
+        JQ_MISSING=1
+    else
+        echo "[사전조건] jq 설치 완료."
     fi
-    echo "[사전조건] jq 설치 완료."
 fi
 
 # 모드 결정 (인자 전체 스캔)
@@ -789,6 +804,12 @@ if [ "$HAS_CLAUDE" = "1" ] && [ "$HAS_CLAUDE_CLI" = "0" ]; then
     echo ""
     echo "  [건너뜀] Claude MCP 등록 - PATH에서 claude CLI를 찾지 못했습니다."
     echo "           Claude Code 설치 후 이 스크립트를 다시 실행하면 등록됩니다."
+fi
+if [ "$JQ_MISSING" = "1" ]; then
+    echo ""
+    echo "  [경고] jq가 설치되지 않았습니다."
+    echo "         자산은 설치됐지만 .sh 훅(대화 저장 등)은 동작하지 않습니다."
+    echo "         설치: brew install jq / sudo apt install -y jq"
 fi
 echo ""
 echo "  CLI를 재시작하면 적용됩니다."
