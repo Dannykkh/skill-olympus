@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.18.2] - 2026-08-03
+
+### Bug Fixes
+
+- **install**: jq 설치 실패가 설치 전체를 중단시키던 문제. jq가 없으면 winget → choco → GitHub 직접 다운로드 3단계를 시도하고, 모두 실패하면 `exit 1`로 끊었다. 그런데 Windows에 등록되는 훅은 PowerShell(`.ps1` 8개 + `.js` 1개)이고 등록된 훅의 jq 참조는 0건이다 — jq는 `.sh` 훅(Git Bash/WSL)의 JSON 파싱 전용이라, Windows에서는 쓰지도 않는 의존성 때문에 설치 전체가 실패했다. 오프라인이거나 winget/choco가 없는 새 컴퓨터에서 재현된다. 이제 경고만 남기고 계속 진행하며 요약에 `[SKIPPED]`로 알린다. `install.sh`는 `.sh` 훅이 실제 실행 경로이므로 "자산은 설치됐지만 훅은 동작하지 않는다"로 경고 강도를 높였다. 검증: PATH에서 jq/winget/choco/powershell을 제거해 자동 설치 3단계를 전부 실패시킨 상태에서 `install.bat` exit 0 · 411줄 완주 · 스킬 97 / Codex 95 / Gemini 94, `install.sh`(apt/brew/yum/pacman 모두 없음) 동일 결과 (6af8e06)
+- **install**: Node.js 미설치 안내를 구체화. Node는 설치 로직 전체가 node 스크립트(`install-select.js`, `safe-copy.js`, `install-hooks-config.js`)라 대체가 없어 중단을 유지하되, 자동 설치는 하지 않는다 — winget으로 설치해도 현재 cmd 세션의 PATH는 갱신되지 않아 그 실행에서는 여전히 찾지 못하기 때문이다. 대신 설치 명령어(`winget install OpenJS.NodeJS.LTS` / `choco install nodejs-lts` / `brew install node` / `apt install nodejs npm`)와 "새 터미널에서 다시 실행" 안내를 명시한다 (6af8e06)
+
 ## [4.18.1] - 2026-08-03
 
 ### Bug Fixes
