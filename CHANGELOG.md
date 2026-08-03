@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.18.3] - 2026-08-03
+
+### Bug Fixes
+
+- **mnemo**: 훅 소스 파일이 없을 때 복사 루프 중간에 `exit 1`로 죽어 부분 설치가 남던 문제. `codex-mnemo`는 훅 4개를 순회하며 하나씩 복사하는데 두 번째가 없으면 첫 번째는 복사된 채 종료됐다 — 훅은 세트로 동작하므로 반쪽 상태는 성공처럼 보이면서 동작하지 않는다. 이제 쓰기 전에 전부 검증하고, 하나라도 없으면 누락 목록을 한 번에 보여준 뒤 아무것도 만들지 않고 종료한다(기존 설치도 덮어쓰다 만 상태가 되지 않는다). `gemini-mnemo`/`grok-mnemo`는 훅이 1개라 부분 설치는 없었지만 `ensureDir()`가 검증보다 앞서 빈 `hooks/` 디렉터리를 남겼다 — 순서를 바꿔 동일하게 맞췄다. 실측(레포 사본에서 훅 2개 삭제): 수정 전 `save-turn.ps1` 1개 잔존 → 수정 후 0개, `hooks/` 디렉터리도 미생성 (63ce197)
+- **mnemo**: `skills/mnemo/install.js`가 `~/.claude` 없으면 `exit 1`로 중단하던 비대칭. `codex-mnemo`(`:743`)와 `gemini-mnemo`(`:491`)는 예전부터 "directory not found, creating it"으로 만들어 왔는데 Claude용만 치명적으로 처리했다 — v4.18.1에서 `install.bat`/`install.sh`는 고쳤지만 이 스크립트는 빠져 있었다. 이제 만들어서 설치한다. 자산은 전부 파일 복사라 claude CLI 없이도 유효하고 Claude Code가 첫 실행 때 그대로 쓴다. `--check`는 그대로 `exit 1`로 실패한다(디렉터리가 없으면 설치된 것이 없으므로). 검증: 빈 홈에서 exit 0 · `~/.claude` 생성 + 훅 3개 + CLAUDE.md + settings.json · 직후 `--check` 통과 (63ce197)
+
 ## [4.18.2] - 2026-08-03
 
 ### Bug Fixes
