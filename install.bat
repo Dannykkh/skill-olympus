@@ -12,7 +12,10 @@ set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
 set "CODEX_DIR=%USERPROFILE%\.codex"
 set "GEMINI_DIR=%USERPROFILE%\.gemini"
-set "SKIPPED_CLAUDE=0"
+set "CREATED_CLAUDE_DIR=0"
+set "HAS_CLAUDE_CLI=0"
+set "CLAUDE_MCP_RESULT=not-run"
+set "CLAUDE_ORCH_RESULT=not-run"
 set "CODEX_MNEMO_RESULT=not-run"
 set "CODEX_SYNC_RESULT=not-run"
 set "CODEX_MCP_RESULT=not-run"
@@ -148,7 +151,8 @@ if "%MODE%"=="uninstall" (
     set "CLAUDECODE="
     where claude >nul 2>nul
     if !errorlevel! equ 0 (
-        claude mcp remove orchestrator -s user >nul 2>nul
+        REM `call` 필수 - npm shim(claude.cmd)을 call 없이 부르면 제어가 돌아오지 않는다.
+        call claude mcp remove orchestrator -s user >nul 2>nul
         echo       Done!
     ) else (
         echo       [WARN] claude CLI not found, skipping
@@ -349,18 +353,23 @@ echo   LLM: !LLMS!
 echo   Bundles: !BUNDLES!
 echo.
 
-REM Claude 자산은 %CLAUDE_DIR%가 있을 때만 설치한다.
-REM 예전에는 여기서 exit /b 1로 중단했는데, 그러면 Claude Code를 안 깔았거나
-REM 깔고 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Gemini
-REM 자산까지 통째로 설치되지 않았다. 자동 설치(비대화형)는 LLM을 전부 선택하므로
-REM 새 컴퓨터에서 아무것도 안 깔리는 원인이 됐다.
+REM %CLAUDE_DIR%가 없으면 만들어서 설치한다.
+REM 예전에는 여기서 exit /b 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고
+REM 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Gemini 자산까지
+REM 통째로 설치되지 않았다. 자동 설치(비대화형)는 LLM을 전부 선택하므로 새
+REM 컴퓨터에서 아무것도 안 깔리는 원인이 됐다.
+REM
+REM skills/agents/hooks/CLAUDE.md/settings.json은 전부 파일 복사라 claude CLI 없이도
+REM 유효하다. Grok Build는 compat.claude로 이 디렉터리를 직접 읽으므로 Claude Code가
+REM 없어도 실제로 쓰이고, 나중에 Claude Code를 깔면 재설치 없이 그대로 적용된다.
+REM claude CLI가 실제로 필요한 것은 MCP 등록뿐이므로 그 단계만 따로 판정한다
+REM (아래 HAS_CLAUDE_CLI — Codex의 `where codex` 가드와 같은 방식).
 if "!HAS_CLAUDE!"=="1" (
     if not exist "%CLAUDE_DIR%" (
-        echo   [WARN] Claude Code not detected - %CLAUDE_DIR% not found.
-        echo          Skipping Claude assets. Codex/Gemini install continues.
-        echo          Run Claude Code once, then re-run this installer.
-        set "HAS_CLAUDE=0"
-        set "SKIPPED_CLAUDE=1"
+        echo   [INFO] %CLAUDE_DIR% not found - creating it.
+        echo          Assets install there; Claude Code uses them on its first run.
+        mkdir "%CLAUDE_DIR%" 2>nul
+        set "CREATED_CLAUDE_DIR=1"
     )
 )
 
@@ -493,6 +502,10 @@ REM   Phase 1: Claude (settings.json + CLAUDE.md + MCP + Orchestrator)
 REM ============================================
 if "!HAS_CLAUDE!"=="0" goto :phase_codex
 
+REM MCP 등록은 claude CLI(`claude mcp add`)가 있어야 한다. 디렉터리 존재 여부와
+REM 무관하게 PATH로 판정한다 - Claude Code 미설치 상태에서 자산만 깐 경우가 있다.
+where claude >nul 2>nul && set "HAS_CLAUDE_CLI=1"
+
 REM Hook config for settings.json (component-based filtering)
 echo.
 echo [4/7] Configuring settings.json hooks... (Claude)
@@ -506,7 +519,7 @@ node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%sk
 REM Auto-install MCP servers (core)
 echo.
 echo [6/7] Installing MCP servers... - Claude default stable set [core]
-if 1==1 (
+if "!HAS_CLAUDE_CLI!"=="1" (
     echo.
     echo       Available MCP servers:
     node "%SCRIPT_DIR%install-mcp.js" --list
@@ -516,6 +529,10 @@ if 1==1 (
     node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
     echo.
     echo       Done. Additional install: node "%SCRIPT_DIR%install-mcp.js" --list
+    set "CLAUDE_MCP_RESULT=Installed"
+) else (
+    set "CLAUDE_MCP_RESULT=Skip: claude CLI not found"
+    echo       !CLAUDE_MCP_RESULT!
 )
 
 REM Register Orchestrator MCP server (required)
@@ -541,13 +558,22 @@ if 1==1 (
     if not exist "!ORCH_SDK!" set "ORCH_READY=0"
     if not exist "!ORCH_SQLITE!" set "ORCH_READY=0"
     if "!ORCH_READY!"=="1" (
-        claude mcp remove orchestrator -s user >nul 2>nul
-        claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
-        echo       Orchestrator MCP registered
+        REM 빌드는 CLI 유무와 무관하게 해둔다 - Claude Code를 나중에 깔고 재실행하면
+        REM 등록만 하면 되도록. 등록 자체는 claude CLI가 있어야 한다.
+        if "!HAS_CLAUDE_CLI!"=="1" (
+            REM `call` 필수 - PATH의 claude가 npm shim(claude.cmd)이면 call 없이 부를 때
+            REM 제어가 돌아오지 않아 install.bat이 여기서 통째로 끝난다(Codex/Gemini 미실행).
+            call claude mcp remove orchestrator -s user >nul 2>nul
+            call claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
+            set "CLAUDE_ORCH_RESULT=Registered"
+        ) else (
+            set "CLAUDE_ORCH_RESULT=Skip: claude CLI not found"
+        )
     ) else (
-        echo       [WARN] MCP server dependencies/build failed, skipping
-        echo              Run manually: cd /d "!ORCH_DIR!" ^&^& npm install ^&^& npm run build
+        set "CLAUDE_ORCH_RESULT=Skip: dependencies/build failed"
+        echo       [WARN] Run manually: cd /d "!ORCH_DIR!" ^&^& npm install ^&^& npm run build
     )
+    echo       !CLAUDE_ORCH_RESULT!
 )
 
 REM Mnemo healthcheck + auto-repair on failure (Claude)
@@ -838,8 +864,8 @@ if "!HAS_CLAUDE!"=="1" (
     echo   - Agents: %CLAUDE_DIR%\agents\
     echo   - Catalogs: %CLAUDE_DIR%\SKILLS-CATALOG.md, %CLAUDE_DIR%\AGENTS-CATALOG.md
     echo   - CLAUDE.md memory rules registered
-    echo   - MCP servers installed
-    echo   - Orchestrator MCP registered
+    echo   - MCP: !CLAUDE_MCP_RESULT!
+    echo   - Orchestrator: !CLAUDE_ORCH_RESULT!
 )
 if "!HAS_CODEX!"=="1" (
     echo   [Codex]
@@ -862,11 +888,15 @@ if exist "%USERPROFILE%\.grok" (
     echo   - Mnemo: !GROK_MNEMO_RESULT!
     echo   - Skills/Agents/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
 )
-if "!SKIPPED_CLAUDE!"=="1" (
+if "!CREATED_CLAUDE_DIR!"=="1" (
     echo.
-    echo   [SKIPPED] Claude assets were not installed.
-    echo             %CLAUDE_DIR% did not exist at install time.
-    echo             Run Claude Code once to create it, then re-run this installer.
+    echo   [NOTE] %CLAUDE_DIR% did not exist and was created by this installer.
+    echo          Assets are in place; Claude Code picks them up on its first run.
+)
+if "!HAS_CLAUDE!"=="1" if "!HAS_CLAUDE_CLI!"=="0" (
+    echo.
+    echo   [SKIPPED] Claude MCP registration - claude CLI not found in PATH.
+    echo             Install Claude Code, then re-run this installer to register MCP.
 )
 echo.
 echo   Restart CLI to apply changes.

@@ -18,6 +18,10 @@ GEMINI_MCP_RESULT="미실행"
 GEMINI_ORCH_RESULT="미실행"
 GEMINI_HOOKS_RESULT="미실행"
 GROK_MNEMO_RESULT="미실행"
+CREATED_CLAUDE_DIR=0
+HAS_CLAUDE_CLI=0
+CLAUDE_MCP_RESULT="미실행"
+CLAUDE_ORCH_RESULT="미실행"
 
 # ============================================
 #   사전 조건 확인
@@ -301,10 +305,22 @@ echo "  LLM: $LLMS"
 echo "  번들: $BUNDLES"
 echo ""
 
+# $CLAUDE_DIR가 없으면 만들어서 설치한다.
+# 예전에는 여기서 exit 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고 한 번도
+# 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Gemini 자산까지 통째로
+# 설치되지 않았다. 자동 설치(비대화형)는 LLM을 전부 선택하므로 새 컴퓨터에서
+# 아무것도 안 깔리는 원인이 됐다.
+#
+# skills/agents/hooks/CLAUDE.md/settings.json은 전부 파일 복사라 claude CLI 없이도
+# 유효하다. Grok Build는 compat.claude로 이 디렉터리를 직접 읽으므로 Claude Code가
+# 없어도 실제로 쓰이고, 나중에 Claude Code를 깔면 재설치 없이 그대로 적용된다.
+# claude CLI가 실제로 필요한 것은 MCP 등록뿐이므로 그 단계만 따로 판정한다
+# (아래 HAS_CLAUDE_CLI — Codex의 `command -v codex` 가드와 같은 방식).
 if [ "$HAS_CLAUDE" = "1" ] && [ ! -d "$CLAUDE_DIR" ]; then
-    echo "[오류] Claude가 선택되었지만 설치되어 있지 않습니다."
-    echo "       $CLAUDE_DIR 폴더를 찾을 수 없습니다."
-    exit 1
+    echo "  [안내] $CLAUDE_DIR 폴더가 없어 새로 만듭니다."
+    echo "         자산을 여기에 설치하며, Claude Code는 첫 실행 시 그대로 사용합니다."
+    mkdir -p "$CLAUDE_DIR"
+    CREATED_CLAUDE_DIR=1
 fi
 
 # ============================================
@@ -439,6 +455,10 @@ unset CLAUDECODE
 # ============================================
 if [ "$HAS_CLAUDE" = "1" ]; then
 
+# MCP 등록은 claude CLI(`claude mcp add`)가 있어야 한다. 디렉터리 존재 여부와
+# 무관하게 PATH로 판정한다 - Claude Code 미설치 상태에서 자산만 깐 경우가 있다.
+command -v claude >/dev/null 2>&1 && HAS_CLAUDE_CLI=1
+
 # settings.json 훅 설정 (컴포넌트 기반 필터링)
 echo ""
 echo "[4/7] settings.json 훅 설정 중... (Claude)"
@@ -452,7 +472,7 @@ node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/ski
 # MCP 서버 자동 설치 (코어)
 echo ""
 echo "[6/7] MCP 서버 설치 중... (Claude, 무료만 자동 설치) [코어]"
-if true; then
+if [ "$HAS_CLAUDE_CLI" = "1" ]; then
     echo ""
     echo "      사용 가능한 MCP 서버:"
     node "$SCRIPT_DIR/install-mcp.js" --list
@@ -462,6 +482,10 @@ if true; then
     node "$SCRIPT_DIR/install-mcp.js" context7 playwright chrome-devtools
     echo ""
     echo "      완료! (추가: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
+    CLAUDE_MCP_RESULT="설치 완료"
+else
+    CLAUDE_MCP_RESULT="스킵(claude CLI 없음)"
+    echo "      $CLAUDE_MCP_RESULT"
 fi
 
 # Orchestrator MCP 서버 등록 (필수 설치)
@@ -475,13 +499,20 @@ if true; then
         echo "      MCP 서버 빌드 중..."
         (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
+    # 빌드는 CLI 유무와 무관하게 해둔다 - Claude Code를 나중에 깔고 재실행하면
+    # 등록만 하면 되도록. 등록 자체는 claude CLI가 있어야 한다.
     if [ -f "$ORCH_DIST" ]; then
-        claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
-        claude mcp add orchestrator --scope user -- node "$ORCH_DIST" >/dev/null 2>&1
-        echo "      Orchestrator MCP 등록 완료"
+        if [ "$HAS_CLAUDE_CLI" = "1" ]; then
+            claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
+            claude mcp add orchestrator --scope user -- node "$ORCH_DIST" >/dev/null 2>&1
+            CLAUDE_ORCH_RESULT="등록 완료"
+        else
+            CLAUDE_ORCH_RESULT="스킵(claude CLI 없음)"
+        fi
     else
-        echo "      [경고] MCP 서버 빌드 실패, 건너뜀"
+        CLAUDE_ORCH_RESULT="스킵(빌드 실패)"
     fi
+    echo "      $CLAUDE_ORCH_RESULT"
 fi
 
 # Mnemo 헬스체크 + 실패 시 자동 복구 (Claude)
@@ -725,8 +756,8 @@ if [ "$HAS_CLAUDE" = "1" ]; then
     echo "  - Agents: $CLAUDE_DIR/agents/"
     echo "  - Catalogs: $CLAUDE_DIR/SKILLS-CATALOG.md, $CLAUDE_DIR/AGENTS-CATALOG.md"
     echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
-    echo "  - MCP 서버 설치 완료"
-    echo "  - Orchestrator MCP 등록 완료"
+    echo "  - MCP: $CLAUDE_MCP_RESULT"
+    echo "  - Orchestrator: $CLAUDE_ORCH_RESULT"
 fi
 if [ "$HAS_CODEX" = "1" ]; then
     echo "  [Codex]"
@@ -748,6 +779,16 @@ if [ -d "$HOME/.grok" ]; then
     echo "  [Grok]"
     echo "  - Mnemo: $GROK_MNEMO_RESULT"
     echo "  - Skills/Agents/MCP: compat.claude 직접 읽기 (sync 불필요)"
+fi
+if [ "$CREATED_CLAUDE_DIR" = "1" ]; then
+    echo ""
+    echo "  [안내] $CLAUDE_DIR 폴더가 없어 이 설치 스크립트가 새로 만들었습니다."
+    echo "         자산은 준비됐고, Claude Code는 첫 실행 시 그대로 사용합니다."
+fi
+if [ "$HAS_CLAUDE" = "1" ] && [ "$HAS_CLAUDE_CLI" = "0" ]; then
+    echo ""
+    echo "  [건너뜀] Claude MCP 등록 - PATH에서 claude CLI를 찾지 못했습니다."
+    echo "           Claude Code 설치 후 이 스크립트를 다시 실행하면 등록됩니다."
 fi
 echo ""
 echo "  CLI를 재시작하면 적용됩니다."
