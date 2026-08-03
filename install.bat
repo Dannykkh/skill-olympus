@@ -12,6 +12,7 @@ set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
 set "CODEX_DIR=%USERPROFILE%\.codex"
 set "GEMINI_DIR=%USERPROFILE%\.gemini"
+set "SKIPPED_CLAUDE=0"
 set "CODEX_MNEMO_RESULT=not-run"
 set "CODEX_SYNC_RESULT=not-run"
 set "CODEX_MCP_RESULT=not-run"
@@ -348,12 +349,18 @@ echo   LLM: !LLMS!
 echo   Bundles: !BUNDLES!
 echo.
 
+REM Claude 자산은 %CLAUDE_DIR%가 있을 때만 설치한다.
+REM 예전에는 여기서 exit /b 1로 중단했는데, 그러면 Claude Code를 안 깔았거나
+REM 깔고 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Gemini
+REM 자산까지 통째로 설치되지 않았다. 자동 설치(비대화형)는 LLM을 전부 선택하므로
+REM 새 컴퓨터에서 아무것도 안 깔리는 원인이 됐다.
 if "!HAS_CLAUDE!"=="1" (
     if not exist "%CLAUDE_DIR%" (
-        echo [ERROR] Claude was selected but is not installed.
-        echo        %CLAUDE_DIR% directory not found.
-        pause
-        exit /b 1
+        echo   [WARN] Claude Code not detected - %CLAUDE_DIR% not found.
+        echo          Skipping Claude assets. Codex/Gemini install continues.
+        echo          Run Claude Code once, then re-run this installer.
+        set "HAS_CLAUDE=0"
+        set "SKIPPED_CLAUDE=1"
     )
 )
 
@@ -854,6 +861,12 @@ if exist "%USERPROFILE%\.grok" (
     echo   [Grok]
     echo   - Mnemo: !GROK_MNEMO_RESULT!
     echo   - Skills/Agents/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
+)
+if "!SKIPPED_CLAUDE!"=="1" (
+    echo.
+    echo   [SKIPPED] Claude assets were not installed.
+    echo             %CLAUDE_DIR% did not exist at install time.
+    echo             Run Claude Code once to create it, then re-run this installer.
 )
 echo.
 echo   Restart CLI to apply changes.
