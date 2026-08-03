@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.18.1] - 2026-08-03
+
+### Bug Fixes
+
+- **install**: `claude mcp remove/add`를 `call` 없이 호출해 `install.bat`이 `[7/7]` Orchestrator 등록 지점에서 exit 0인 채로 통째로 끝나던 문제. PATH의 `claude`가 npm 전역 shim(`claude.cmd`)으로 해석되면 배치에서 다른 배치를 `call` 없이 부르는 순간 제어가 넘어가고 돌아오지 않아, Codex/Gemini/Grok 단계가 아예 실행되지 않았다. Codex/Gemini는 이미 `call codex mcp` / `call gemini mcp`를 쓰고 있었고 Claude만 누락(`install.bat:154,563,564`). `claude.exe`(네이티브 설치, `~/.local/bin`)가 PATH에서 먼저 잡히는 머신에서는 정상 동작해 PATH 순서에 따라 재현/미재현이 갈렸고, exit code와 `tail`로는 절단이 드러나지 않아 오래 눈에 띄지 않았다. 실측: 수정 전 로그 223줄(`[7/7]`에서 절단) → 수정 후 427줄로 Claude/Codex/Gemini/Grok 전부 완주 (e84a08c)
+- **install**: Claude Code 미설치(`~/.claude` 없음) 시 설치가 `exit 1`로 중단되던 문제. 비대화형 실행(`install-select.js`)은 LLM을 전부 자동 선택하므로, Claude Code를 아직 안 깔았거나 깔고 한 번도 실행하지 않은 새 컴퓨터에서는 Codex/Gemini 자산까지 통째로 설치되지 않았다. 이제 `~/.claude`를 만들어 자산을 설치하고, claude CLI가 실제로 필요한 MCP 등록만 `where claude`(sh는 `command -v claude`)로 따로 판정해 건너뛴다 — skills/agents/hooks/CLAUDE.md/settings.json은 전부 파일 복사라 CLI 없이도 유효하고, Grok Build는 `compat.claude`로 이 디렉터리를 직접 읽으므로 Claude Code가 없어도 실제로 쓰이며, 나중에 Claude Code를 깔면 재설치 없이 그대로 적용된다. 판정 기준을 "디렉터리 존재"에서 "CLI 존재"로 분리해 Codex의 `where codex` 가드와 방식을 통일했다. `install.sh`에도 동일 적용(61a446a는 `install.bat`만 고쳐 macOS/Linux는 여전히 중단됐다). 요약 출력도 실제 결과를 반영하도록 변경 — 기존에는 claude CLI 유무와 무관하게 "MCP servers installed / Orchestrator MCP registered"를 무조건 찍었다. 검증: 빈 홈 + PATH에서 claude 제거 시 `install.bat`/`install.sh` 모두 exit 0, 스킬 97 / 에이전트 42 / 훅 17 + settings.json + CLAUDE.md 설치, MCP만 스킵, Codex 95 / Gemini 94 정상 (61a446a, e84a08c)
+
 ## [4.18.0] - 2026-07-31
 
 ### Features
