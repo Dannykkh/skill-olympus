@@ -148,6 +148,48 @@ apiClient.ts → {domain}Service.ts → queries.ts / mutations.ts
 
 ---
 
+## 리소스 안전 규칙
+
+> **핵심**: 리소스를 만드는 편집에서 해제 코드를 같이 쓴다.
+> 생성은 있는데 해제 지점을 가리킬 수 없으면 누수다.
+> 예외는 앱 수명 싱글톤뿐 — 사고가 아니라 명시된 결정이어야 한다.
+
+### 생성-해제 짝 (스택별)
+
+|스택|생성|해제|
+|---|---|---|
+|JS/TS|`addEventListener`|`removeEventListener` (익명 함수는 제거 불가 — 참조 유지)|
+|JS/TS|`setInterval` / `setTimeout`|`clearInterval` / `clearTimeout`|
+|JS/TS|진행 중 `fetch`|`AbortController.abort()`|
+|JS/TS|`ResizeObserver` / `IntersectionObserver`|`disconnect()`|
+|React|`useEffect` 안의 구독/타이머|cleanup 함수 반환 (`return () => ...`)|
+|Node|스트림/소켓/파일 핸들|`close()` / `destroy()` — 에러 경로 포함|
+|Python|파일/커넥션/락|`with` 컨텍스트 매니저|
+|Python|asyncio task / `ThreadPoolExecutor`|`cancel()` / `shutdown()`|
+|Java|`AutoCloseable` (파일/커넥션)|try-with-resources|
+|Java|`ExecutorService` / 스케줄러|`shutdown()` (+ Spring `@PreDestroy`)|
+|C#|—|`dotnet-coding-standards` / `wpf-coding-standards` 참조|
+
+### 비동기 이후 상태 갱신
+
+- await 뒤 상태 갱신은 살아있음 가드 필수 — React는 cleanup의 취소 플래그 또는 `AbortSignal`로 언마운트 후 setState 차단 (TanStack Query 훅 사용 시 자동 처리)
+- 연속 요청(검색 자동완성 등)은 이전 요청 취소 + in-flight 가드로 중복 방지
+
+### 무제한 증가 금지
+
+- 캐시/맵/누적 배열에 상한 필수 (LRU, TTL, max size)
+- 서버 상태 캐시는 TanStack Query가 관리(`gcTime`) — 별도 커스텀 캐시가 보이면 상한부터 의심
+- Node `MaxListenersExceededWarning`은 리스너 누수 신호 — 상한을 올리지 말고 해제 누락을 찾는다
+
+### 싱글톤 / 무거운 리소스 재사용
+
+- DB 커넥션 풀, HTTP 클라이언트 등 무거운 리소스는 **싱글톤 재사용** — 요청마다 생성 금지
+- 프론트: 모듈 스코프 싱글톤 (`apiClient` 패턴) | Node: 모듈 캐싱이 곧 싱글톤 | Python/FastAPI: 모듈 전역 + `Depends` 주입
+- Java/Spring: 빈은 기본 싱글톤 → **가변 상태 필드 금지** (스레드 안전)
+- 앱 수명 리소스는 해제 예외 — 단, 주석/네이밍으로 의도를 명시
+
+---
+
 ## 체크리스트
 
 **백엔드:**
@@ -168,3 +210,10 @@ apiClient.ts → {domain}Service.ts → queries.ts / mutations.ts
 - [ ] BIGINT/DECIMAL이 string으로 전달되는가?
 - [ ] 날짜가 UTC 저장 + ISO 8601 직렬화인가?
 - [ ] 운영 환경에서 마이그레이션 도구 사용인가?
+
+**리소스 안전:**
+- [ ] 리스너/타이머/옵저버/구독 등록에 해제가 짝으로 있는가?
+- [ ] useEffect가 cleanup을 반환하는가? await 후 상태 갱신이 가드되는가?
+- [ ] 캐시/누적 자료구조에 상한(LRU/TTL)이 있는가?
+- [ ] DB 풀·HTTP 클라이언트가 싱글톤으로 재사용되는가?
+- [ ] (Java/Spring) 싱글톤 빈에 가변 상태 필드가 없는가?

@@ -304,6 +304,99 @@ function toUTCString(localDate: Date): string {
 
 ---
 
+## 리소스 안전 코드 예시
+
+> 패시브 에이전트의 "리소스 안전 규칙" 상세 예시. 원칙: 리소스를 만드는 편집에서 해제를 같이 쓴다.
+
+### React — useEffect cleanup (등록과 해제를 같은 자리에서)
+
+```typescript
+useEffect(() => {
+  const onResize = () => setWidth(window.innerWidth);
+  window.addEventListener('resize', onResize);      // 참조를 유지해야 제거 가능
+  const timer = setInterval(refresh, 30_000);
+
+  return () => {                                    // 등록한 것을 전부 해제
+    window.removeEventListener('resize', onResize);
+    clearInterval(timer);
+  };
+}, []);
+```
+
+### React — await 후 상태 갱신 가드
+
+서버 상태는 TanStack Query 훅이 표준 (취소/캐시 자동 처리).
+직접 비동기 효과가 불가피한 지점(SSE, 파일 다운로드, 비-Query 유틸)만 이 패턴 사용:
+
+```typescript
+useEffect(() => {
+  let alive = true;                                 // 언마운트 후 setState 차단
+  userService.getAll().then(users => {
+    if (alive) setUsers(users);
+  });
+  return () => { alive = false; };
+}, []);
+```
+
+### 상한 있는 캐시 (LRU)
+
+```typescript
+// 커스텀 캐시를 만들 때는 반드시 상한을 함께 만든다
+class BoundedCache<K, V> {
+  private map = new Map<K, V>();
+  constructor(private maxSize = 100) {}
+
+  get(key: K): V | undefined {
+    const v = this.map.get(key);
+    if (v !== undefined) { this.map.delete(key); this.map.set(key, v); } // 최근 사용으로 갱신
+    return v;
+  }
+
+  set(key: K, value: V) {
+    if (this.map.has(key)) this.map.delete(key);
+    else if (this.map.size >= this.maxSize) {
+      this.map.delete(this.map.keys().next().value!);                    // 가장 오래된 항목 제거
+    }
+    this.map.set(key, value);
+  }
+}
+```
+
+### Java — try-with-resources + ExecutorService 수명
+
+```java
+// 에러 경로에서도 해제가 보장된다
+try (Connection conn = dataSource.getConnection();
+     PreparedStatement ps = conn.prepareStatement(SQL)) {
+    // ...
+}
+
+// ExecutorService는 빈 소멸 시점에 정리
+@PreDestroy
+void shutdownExecutor() {
+    executor.shutdown();
+}
+```
+
+### Python — 컨텍스트 매니저 + 태스크 취소
+
+```python
+# 파일/커넥션/락은 with로 — 예외가 나도 해제된다
+async def export_csv(path: Path) -> None:
+    async with aiofiles.open(path, "w") as f:
+        await f.write(header)
+
+# 백그라운드 태스크는 참조를 보관하고 종료 시 취소한다
+class Poller:
+    def start(self) -> None:
+        self._task = asyncio.create_task(self._poll())
+
+    async def stop(self) -> None:
+        self._task.cancel()
+```
+
+---
+
 ## 환경 설정 예시
 
 ```
