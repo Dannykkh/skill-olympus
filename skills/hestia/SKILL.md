@@ -2,8 +2,9 @@
 name: hestia
 description: >
   코드베이스 청소 + 위생 점검 (헤스티아 — 화로의 여신). Dead Code 탐지,
-  미사용 export/의존성/파일 제거, LOC 측정, 코드 건강도 보고.
-  "정리해줘", "dead code", "코드 위생", "쓸모없는 코드" 요청에 실행.
+  미사용 export/의존성/파일 제거, LOC 측정, 의도적 단순화 마커(// minimal:)
+  부채 장부, 코드 건강도 보고.
+  "정리해줘", "dead code", "코드 위생", "쓸모없는 코드", "단순화 부채" 요청에 실행.
   /hestia로 실행.
 triggers:
   - "hestia"
@@ -161,6 +162,33 @@ grep -rE "^(export\s+)?(class|interface|type|enum)\s+[A-Z]\w+" --include="*.ts" 
 
 기술 인프라 용어 휴리스틱: `Manager`, `Handler`, `Factory`, `Builder`, `Cache`, `Queue`, `Worker`, `Pool`, `Adapter` 같은 GoF/구조 패턴 접미사가 붙으면 인프라로 분류.
 
+### 2-7. 의도적 단순화 마커 (minimal 부채 장부)
+
+코딩 표준(fullstack-coding-standards 최소 구현 원칙)의 `// minimal: <상한> — <업그레이드 시점>`
+마커를 수확해 부채 장부로 보고합니다. **삭제 대상 ❌** — 의도된 지름길의 추적 장부일 뿐,
+"later means never"로 썩는 것을 막는 게 목적입니다.
+
+```bash
+# 주석 스타일별 minimal 마커 수확 (// # -- <!--)
+grep -rn "// minimal:\|# minimal:\|-- minimal:\|<!-- minimal:" \
+  --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+  --include="*.py" --include="*.java" --include="*.cs" --include="*.sql" \
+  src/ app/ lib/ 2>/dev/null | head -30
+```
+
+장부 형식으로 보고:
+
+```
+📒 단순화 부채 장부 ({N}건)
+  1. src/api/orders.ts:42 — 전역 락 | 업그레이드: 처리량 문제 시 계좌별 락
+  2. app/report.py:88 — O(n²) 스캔 | 업그레이드: 1만 행 초과 시 인덱스 조인
+```
+
+판단 기준:
+- 상한 조건이 이미 도달한 것으로 보이는 마커 (예: "1만 행 초과 시" — 현재 데이터가 초과) → ⚠️ **업그레이드 권장** 표시
+- 마커에 상한/업그레이드 시점이 없는 것 → 형식 보완 권장 (`<상한> — <시점>`)
+- 업그레이드 실행 여부는 사용자 결정 — hestia는 장부만 만든다
+
 ### 스캔 결과 보고
 
 ```
@@ -172,6 +200,7 @@ grep -rE "^(export\s+)?(class|interface|type|enum)\s+[A-Z]\w+" --include="*.ts" 
   @deprecated 마커:  {N}개
   빈 파일/폴더:      {N}개
   사전 미등재 도메인: {N}개  (사전 있을 때만)
+  minimal 부채 장부:  {N}건  (보고 전용, 삭제 안 함)
   ──────────────────
   총 정리 대상:      {N}건
 ```
@@ -279,6 +308,7 @@ find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.ja
 
 | 파일 | 역할 |
 |------|------|
+| `agents/fullstack-coding-standards.md` | `// minimal:` 마커 규약 출처 (최소 구현 원칙) |
 | `skills/deprecation-and-migration/SKILL.md` | 라이브러리 교체/마이그레이션 (별도 스킬) |
 | `skills/argos/SKILL.md` | 감리 — 누락 탐지 + Healer (채우기) |
 | `skills/clio/SKILL.md` | 최종 기록 (정리 후 기록) |
