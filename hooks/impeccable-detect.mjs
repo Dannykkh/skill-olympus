@@ -1,6 +1,7 @@
 // impeccable-detect.mjs — PostToolUse 훅: UI 파일 편집 시 impeccable 결정론 검출기(59규칙) 실행
 // 등록: ~/.claude/settings.json PostToolUse (matcher: Edit|Write|MultiEdit)
-// 계약: 어떤 경우에도 exit 0 (턴을 깨지 않음). 발견이 있을 때만 stdout으로 요약 출력.
+// 계약: 어떤 경우에도 exit 0 (턴을 깨지 않음). 발견이 있을 때만 hookSpecificOutput.additionalContext
+// JSON으로 출력 — PostToolUse에서 exit 0 평문 stdout은 모델 컨텍스트에 주입되지 않음 (문서 확인 2026-08-05).
 // 근거: docs/research/2026-08-05-deep-research-impeccable.md — 금지 규칙은 프롬프트가 아니라 린터로.
 import { spawnSync } from 'node:child_process';
 import { existsSync, statSync, readFileSync } from 'node:fs';
@@ -45,7 +46,12 @@ try {
   if (byRule['low-contrast']) {
     lines.push('  (주의: 정적 모드는 다크 미디어 분기·호버 전환 색을 오짝으로 계산할 수 있음 — 렌더 확인으로 교차 검증)');
   }
-  console.log(lines.join('\n'));
+  console.log(JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'PostToolUse',
+      additionalContext: lines.join('\n'),
+    },
+  }));
 } catch {
   // 네트워크/파싱/타임아웃 실패 — 훅은 절대 턴을 깨지 않는다
 }
