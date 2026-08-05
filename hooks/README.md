@@ -60,6 +60,7 @@ Claude Code 훅 스크립트 모음입니다.
 | validate-api | API 파일 검증 | PostToolUse (Write/Edit) |
 | validate-docs | 문서 AI 패턴 검출 | PostToolUse (Write) |
 | format-code | 자동 코드 포맷팅 (Python/TS/JS/Java/CSS) | PostToolUse (Write/Edit) |
+| impeccable-detect.mjs | UI 파일 디자인 안티패턴 검출 (impeccable 59규칙, `npx impeccable detect`) — Node 단일 파일, 항상 exit 0 | PostToolUse (Edit/Write/MultiEdit) |
 
 ## Codex 브리지
 
