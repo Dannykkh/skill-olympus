@@ -96,8 +96,8 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 |----------|------|------|----------------------|
 | **1순위** | 네이티브 `/goal` | Claude/Codex에 `/goal` 존재 + 사용자가 목표문 설정 | goal 목표문 **생성·제시** → 사용자가 `/goal` 설정 |
 | **1.5순위** | 네이티브 `/loop` 심장박동 (Claude 전용) | `--heartbeat` 지정, 또는 사용자가 `/goal` 설정을 원치 않음 | 크로노스가 **Skill 도구로 `/loop`를 직접 호출** (인터벌 재진입 — 사용자 입력 불필요) |
-| **2순위** | Stop 훅 / notify 재개 | `/goal`·`/loop` 없음 + 훅 인프라 설치됨 | `setup-loop`로 상태 파일 생성 → 훅이 재투입 |
-| **3순위** | 직접 루프 | 위 모두 불가 (Gemini, 폴백) | 메인 컨텍스트에서 직접 사이클 반복 |
+| **2순위** | Stop 훅 / notify / AfterAgent 재개 | `/goal`·`/loop` 없음 + 훅 인프라 설치됨 (Claude Stop / Codex notify / Gemini AfterAgent) | `setup-loop`로 상태 파일 생성 → 훅이 재투입 |
+| **3순위** | 직접 루프 | 위 모두 불가 (훅 미설치 환경) | 메인 컨텍스트에서 직접 사이클 반복 |
 
 > goal·heartbeat·훅은 모두 같은 지속성 레이어라 **동시에 켜면 중복**됩니다. 1순위(goal)와 1.5순위(heartbeat) 진입 시
 > `setup-loop --goal-mode`가 3곳(.claude/.codex/.chronos)의 기존 `loop-state.md`를 모두 제거하고 새로 만들지 않으므로,
@@ -177,6 +177,7 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 → 3. turn 종료/세션 종료 시도 → 훅 체인이 상태 파일 재검증해 재투입:
      - Claude: loop-stop.sh(Stop 훅)가 block + 같은 프롬프트 재투입
      - Codex: save-turn notify → continue-loop → codex exec resume --last
+     - Gemini: AfterAgent 훅(loop-stop.ps1|sh)이 .chronos/loop-state.md 검사 (실세션 재투입 미실측 — 엔진 배선 참조)
 → 4. <promise>조건</promise> 출력 → 훅이 매칭 → 상태 파일 삭제 → 종료
 ```
 
@@ -630,6 +631,15 @@ Codex는 `Stop` 이벤트가 없으므로 root `hooks/loop-stop.*`를 직접 쓰
 3. `~/.codex/hooks/save-turn.ps1|sh`가 `~/.codex/skills/auto-continue-loop/scripts/continue-loop.ps1|sh`를 호출
 
 Codex 재개는 background `codex exec resume --last`로 수행되며, 현재 프로젝트의 `docs/chronos/codex-resume.log`에 로그가 남습니다.
+
+### Gemini CLI (2순위 폴백 — 실세션 미실측)
+
+`sync-gemini-assets.js`가 훅을 복사하고, `~/.gemini/settings.json`의 **AfterAgent** 이벤트에 `loop-stop.ps1|sh`가 등록됩니다.
+Gemini 세션(`GEMINI_SESSION_ID`)에서 setup-loop가 `.chronos/loop-state.md`를 만들면 AfterAgent가 같은 loop-stop 체인을 실행합니다.
+
+- ⚠️ **실세션 미실측**: 재투입이 성립하려면 Gemini 페이로드가 session/transcript 상당 필드를 제공하고
+  `decision: block` 재투입을 지원해야 합니다 (gotcha 017: 과거 Gemini는 transcript 부재 — 현행 버전 실측 필요).
+  실측 전까지는 3순위(직접 루프)를 예비 경로로 두세요.
 
 ---
 

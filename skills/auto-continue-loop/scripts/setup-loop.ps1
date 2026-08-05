@@ -19,7 +19,7 @@ while ($i -lt $Arguments.Count) {
 Chronos Loop — AI가 반복하며 작업을 완성합니다
 
 사용법:
-  /loop 할일 [옵션]
+  /chronos 할일 [옵션]
 
 옵션:
   --max-iterations <횟수>         최대 반복 횟수 (기본: 50, 0=무제한)
@@ -27,8 +27,8 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
   --help                         도움말
 
 예시:
-  /loop TODO API 만들어줘 --completion-promise '모든 테스트 통과' --max-iterations 20
-  /loop --max-iterations 10 인증 버그 고쳐줘
+  /chronos TODO API 만들어줘 --completion-promise '모든 테스트 통과' --max-iterations 20
+  /chronos --max-iterations 10 인증 버그 고쳐줘
 
 중단: pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 "@
@@ -77,7 +77,7 @@ if ($goalMode) {
 }
 
 if (-not $prompt) {
-    Write-Error "할 일을 알려주세요!`n`n  예시: /loop TODO API 만들어줘 --max-iterations 20"
+    Write-Error "할 일을 알려주세요!`n`n  예시: /chronos TODO API 만들어줘 --max-iterations 20"
     exit 1
 }
 

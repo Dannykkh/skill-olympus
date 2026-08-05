@@ -16,7 +16,7 @@ while [[ $# -gt 0 ]]; do
 Chronos Loop — AI가 반복하며 작업을 완성합니다
 
 사용법:
-  /loop 할일 [옵션]
+  /chronos 할일 [옵션]
 
 옵션:
   --max-iterations <횟수>         최대 반복 횟수 (기본: 50, 0=무제한)
@@ -24,9 +24,9 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
   -h, --help                     도움말
 
 예시:
-  /loop TODO API 만들어줘 --completion-promise '모든 테스트 통과' --max-iterations 20
-  /loop --max-iterations 10 인증 버그 고쳐줘
-  /loop 캐시 레이어 리팩토링해줘
+  /chronos TODO API 만들어줘 --completion-promise '모든 테스트 통과' --max-iterations 20
+  /chronos --max-iterations 10 인증 버그 고쳐줘
+  /chronos 캐시 레이어 리팩토링해줘
 
 중단:
   bash skills/auto-continue-loop/scripts/cancel-loop.sh
@@ -79,8 +79,8 @@ fi
 if [[ -z "$PROMPT" ]]; then
     echo "할 일을 알려주세요!" >&2
     echo "" >&2
-    echo "  예시: /loop TODO API 만들어줘 --max-iterations 20" >&2
-    echo "  도움말: /loop --help" >&2
+    echo "  예시: /chronos TODO API 만들어줘 --max-iterations 20" >&2
+    echo "  도움말: /chronos --help" >&2
     exit 1
 fi
 
