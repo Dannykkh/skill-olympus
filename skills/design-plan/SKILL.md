@@ -313,18 +313,29 @@ NEGATIVE / SUCCESS — 실패 조건과 관찰 가능한 통과 기준
 3-4의 CSV 매칭 또는 playbook 색상 레인은 **액센트/팔레트 변주 제안**으로 축소합니다
 (무드·대비 구조는 레시피 유지).
 
-**레시피 미선택 시**: playbook의 방향 아키타입 + 색상 레인을 기반으로 아래 3-4 DB 매칭을 진행합니다.
+**레시피 미선택 시**: playbook의 방향 아키타입 + 색상 레인을 기반으로 아래 3-4 후보 구성(유도 우선)을 진행합니다.
 
-### 3-4. 디자인 DB 매칭
+### 3-4. 색상·폰트 후보 구성 (유도 우선 · DB 폴백)
 
-`frontend-design/references/`의 CSV 데이터에서 자동 매칭:
+**색은 카탈로그에서 고르는 것이 아니라 제품의 의미에서 유도하는 것이 기본입니다.**
+(2026-08-04 실험: DB 경로 없이 제품의 세계에서 색을 유도한 조건이 승리 —
+docs/research/2026-08-05-deep-research-impeccable.md. 원 161행 중 과사용 스톡 accent 152행은
+2026-08-05 삭제 — 잔여 9행 + 플레이북 큐레이션 레인이 폴백 풀)
 
-1. **select-diverse-palettes.js** → CSV + playbook 색상 레인을 hue family로 묶어 기계적으로 3개 shortlist
-2. **color-palettes.csv** → 프로젝트 타입에 맞는 원본 팔레트 데이터
-3. **font-pairings.csv** → 스타일 키워드에 맞는 폰트 페어링 3개 추천
-4. **design-styles.csv** → 프리셋에 맞는 디자인 스타일 참조
+**경로 A — 제품 세계에서 유도 (기본):**
 
-색상 shortlist는 먼저 다음 명령으로 만듭니다:
+1. **재료 수집**: 브리프/제품에서 실물·재료·도메인 어휘를 3~5개 추출 — 제품이 다루는 사물,
+   사용자의 책상 위, 문화적 참조 (예: 한국어 노트 앱 "결" → 나뭇결, 먹, 원고지 괘선, 주묵 인주)
+2. **색 유도**: 그 재료에서 지배색(지면) 1 + 액센트 1을 유도하고 각각 한 줄 근거를 남긴다.
+   카테고리 연상("개발자 도구니까 다크+네온")은 유도가 아니라 기본값이다 — 제품 고유 명사가
+   근거에 없으면 다시 유도
+3. **대비 실측 (필수)**: 유도한 값은 DB의 WCAG 보정을 상속받지 못하므로 본문 4.5:1 / 큰 글자
+   3:1을 직접 계산해 확정하고 수치를 기록
+4. 후보 3안 구성 — 아래 하드 게이트와 루브릭은 경로 A/B 공통 적용
+
+**경로 B — DB 매칭 (폴백):** 도메인 신호가 빈약한 범용 도구이거나 완전 자동 파이프라인(zeus 등)에서
+유도 재료가 없을 때만. 스크립트가 과사용 스톡 accent를 기본 제외합니다(`--allow-stock`으로 해제,
+출력의 `stockAccent` 필드로 판별):
 
 ```bash
 node "<frontend-design skill dir>/scripts/select-diverse-palettes.js" \
@@ -334,9 +345,18 @@ node "<frontend-design skill dir>/scripts/select-diverse-palettes.js" \
 
 레포 안에서 실행 중이면 `<frontend-design skill dir>`는 `skills/frontend-design`입니다. 전역 설치본이면
 현재 읽은 `frontend-design/SKILL.md`의 부모 디렉터리를 사용합니다.
+기본값은 초록/주황 후보 0개입니다. 브랜드색·도메인 신호 근거가 있을 때만 `--max-signal 1`을 명시합니다.
 
-기본값은 초록/주황 후보 0개입니다. 브랜드색·도메인 신호 근거가 있을 때만
-`--max-signal 1`을 명시합니다. JSON shortlist를 만든 뒤 아래 루브릭으로 최종 채점합니다.
+**폰트 (공통)**: **font-pairings.csv** → 스타일 키워드에 맞는 폰트 페어링 3개. 비한글 과사용
+행 37개는 2026-08-05 삭제됨(47행 잔존). 한글 UI는 한글 행 #74~84 우선 — 전부 보존됐으며 한글
+커버리지·폴백 함정 정보가 이 CSV의 핵심 가치. 단 한글 행 중 과사용 폰트(IBM Plex 계열) 포함
+2건은 **`ai-slop-blacklist.md` 교차 확인** 후 근거 있을 때만 사용.
+
+**스타일 (공통)**: **design-styles.csv** → 프리셋에 맞는 스타일의 무드·체크리스트·기술 키워드
+**참조만**. **Colors 컬럼의 hex 복사 금지** — 순수 #000000/#FFFFFF·보라 지정 행이 존재하며(가드레일
+위반 값), 색 값의 정본은 경로 A 유도 결과 또는 DESIGN.md 토큰.
+
+경로와 무관하게 후보가 만들어지면 아래 루브릭으로 최종 채점합니다.
 
 ```
 📎 추천 디자인 조합:
@@ -367,15 +387,23 @@ node "<frontend-design skill dir>/scripts/select-diverse-palettes.js" \
 명도대비(contrast) 30% · 브랜드 적합성(brand-fit) 30% · 접근성(accessibility) 25% ·
 고유성(distinctiveness) 15%, 각 1~5점에 한 줄 근거. 후보별 가중 합계를 점수표로 제시합니다.
 
+**고유성은 카테고리 대비가 아니라 모델 편향 대비로 채점한다 (필수):**
+"이 카테고리에서 희소한가"가 아니라 "**AI가 이 브리프에 낼 법한 조합인가**"를 묻는다. Claude 편향
+클러스터 — ① 크림/웜 지면 + 고대비 세리프 디스플레이 + 테라코타/시그널레드 액센트,
+② 니어블랙 + 네온 액센트 + 글로우, ③ 브로드시트 헤어라인 + 이탤릭 세리프 + 트래킹 모노 라벨 —
+에 해당하면 고유성 최대 2점. 직전 산출물(`docs/design-refs/` 최근 기록)과 같은 액센트 계열은
+**소진된 것으로 취급**한다. (2026-08-04 실험: 이 조항이 없던 루브릭은 편향 클러스터 조합을
+고유성 5점 + 종합 1위로 선정했음)
+
 > 채점 없이 후보만 나열 금지 — 사용자가 감으로 고르도록 떠넘기지 말고 점수를 함께 보여줍니다. 최종 선택권은 사용자에게 있되, 점수와 추천을 근거로 제시합니다.
 
 사용자가 선택하면 → 디자인 시스템 문서 생성.
 
 ### 3-5. DESIGN.md 생성 (정본)
 
-Phase 3에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다 (값을 지어내지 말고 레시피의 `## DESIGN.md 컴파일`, CSV, 또는 playbook 색상 레인에서 고른 값 그대로):
+Phase 3에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md-guide.md`](references/design-md-guide.md) 스키마에 따라 `DESIGN.md`로 박습니다. **기반값은** 레시피의 `## DESIGN.md 컴파일`, CSV, 또는 playbook 색상 레인에서 시작하되, 근거(대비 확보, 한글 조판 폭, 도메인 의미 등)가 있으면 조정을 허용하고 그 근거를 산문 섹션에 남깁니다 — 무근거 즉흥 발명과 근거 있는 조정을 구분:
 
-- 선택된 **색상 팔레트**(레시피, color-palettes.csv, 또는 motion-first playbook의 색상 레인) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작)
+- 선택된 **색상 팔레트**(3-4 경로 A의 유도 팔레트 — 기본, 또는 레시피/color-palettes.csv/playbook 색상 레인) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색 — 대비 짝꿍 명시해야 lint contrast 동작. 유도 팔레트는 3-4에서 실측한 대비 수치를 산문에 기록)
 - 선택된 **폰트 페어링**(font-pairings.csv) → `typography:` (heading/body/label, `fontFamily`+`fontSize` 필수)
   - **한글 UI 폰트 (필수)**: ① **먼저 한글 전용 페어링을 픽한다** — `font-pairings.csv`의 한글 행(#74-82: Hahmlet/Noto Serif KR/Gowun Batang 헤딩 + Pretendard/Noto Sans KR/Nanum Gothic 본문 등)은 한글·라틴 글리프를 모두 가져 폴백 함정을 **구조적으로 회피**(권장 경로). ② 굳이 라틴 페어링(Space Grotesk 등)을 쓸 때만 **Pretendard를 정본 스택에 함께 박는다** — 라틴엔 한글 글리프가 없어 라틴 단일값만 적으면 Phase 5의 "토큰 그대로 사용"이 전파돼 한글이 시스템 폴백된다(gotcha 041). 이때 `fontFamily`는 **스택**으로 — 예: `"Space Grotesk, Pretendard, sans-serif"`(헤딩), `"Pretendard, DM Sans, sans-serif"`(본문). 개성 한글 폰트는 눈누(noonnu.cc). 라틴 전용 데모만 단일값 허용.
 - 프리셋(VARIANCE/MOTION/DENSITY) + 간격/라운드 → `spacing:` / `rounded:`
@@ -414,7 +442,13 @@ Phase 3에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md
 
 ## Phase 5: 구현 (외관 한정 — 디자이너의 경계)
 
-`frontend-design` 스킬이 자동 적용(auto_apply)되어 구현합니다.
+**미학 지침 로드 (필수 — auto_apply는 네이티브 필드가 아니라 자동 로드가 보장되지 않음):**
+
+- **Claude Code**: Skill 도구로 공식 플러그인 `frontend-design:frontend-design`을 호출해 미학 지침(모델 편향 클러스터 회피 포함)을 로드한다. 호출 실패 시에만 `skills/frontend-design/SKILL.md`를 Read로 폴백.
+- **Codex/Gemini 등 플러그인 없는 CLI**: `skills/frontend-design/SKILL.md`를 Read.
+- 충돌 시 우선순위: DESIGN.md 토큰(정본) > 플러그인/포크 미학 지침 > 이 스킬의 절차 규칙.
+
+> 근거: 2026-08-04 A/B/C 실험 — auto_apply 가정 하의 파이프라인(A)은 미학 코어 로드가 보장되지 않았고, 공식 플러그인 단독(B)이 실질 결함 최소 + 유일한 편향 클러스터 탈출. [docs/research/2026-08-05-deep-research-impeccable.md](../../docs/research/2026-08-05-deep-research-impeccable.md)
 
 **아프로디테의 구현 범위는 "외관"입니다:**
 
@@ -435,7 +469,7 @@ Phase 3에서 **선택된** 레시피/팔레트/폰트를 [`references/design-md
 2. `docs/design-refs/`의 최신 자산 — brief(Phase 1-0), sitemap(Phase 2), direction 카드(Phase 3-3), 슈퍼프롬프트(Phase 1-1), 레이아웃 청사진(Phase 4) 중 존재하는 것 전부
 
 이 Phase에서는:
-- Phase 3에서 생성한 `DESIGN.md`의 토큰을 참조 (색·타이포·간격·라운드를 그대로 사용 — 새 값 발명 금지). 산문 계약은 구도·상태·카피의 스펙으로 동등하게 구속력 있음
+- Phase 3에서 생성한 `DESIGN.md`의 토큰을 참조 (기본은 토큰 그대로. 구현 중 조정이 필요하면 — 예: 한글 헤드라인 폭에 따른 크기 조정 — **DESIGN.md에 역반영해 정본-구현 불일치를 남기지 않는 조건**으로 허용). 산문 계약은 구도·상태·카피의 스펙으로 동등하게 구속력 있음
 - Phase 3에서 레시피를 골랐으면 해당 스타일 레시피 파일의 패턴/Avoid를 함께 참조
 - Phase 3에서 방향 카드를 골랐으면 `motion-first-prompt-playbook.md`의 프롬프트 컴파일러와 색상 다양성 게이트를 함께 참조
 - Phase 3에서 기능형 Interface Mode를 골랐으면 `coder-interface-pattern-playbook.md`의 정보 구조·상태·효과 예산을 구현 계약으로 사용
@@ -546,7 +580,7 @@ designmd lint DESIGN.md                    # Windows 별칭
   - {항목 2}: {문제} → {수정 방법}
 ```
 
-**수정 필요한 항목이 있으면**: 확인 없이 바로 수정 → 재검증
+**수정 필요한 항목이 있으면**: 확인 없이 바로 수정 → 재검증. 단 **수정→재검증 루프는 2라운드가 상한**이다 — 2라운드 후에도 남는 항목은 고치지 말고 보고서에 잔여 이슈로 명시한다 (개방 루프 자가 QA는 토큰만 태우고 수렴하지 않음. impeccable "two rounds is the ceiling" 차용). 결정론 검출 훅(impeccable detect)이 설치돼 있으면 그 출력을 1차 신호로 쓰되, 정적 모드는 듀얼 테마·호버 전환에 오탐이 있으므로 시각 검증과 교차 확인한다.
 
 ---
 
@@ -621,7 +655,7 @@ designmd lint DESIGN.md                    # Windows 별칭
 | `skills/frontend-design/references/coder-interface-pattern-playbook.md` | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage 유형 게이트 |
 | `skills/frontend-design/references/layout-block-anatomy.md` | 블록 해부 카탈로그 30종 + 시퀀스 템플릿 + 청사진 절차 (Phase 4) |
 | `skills/frontend-design/references/scaffolds/` | 렌더 검증된 시작 코드 4종(Hero/Navbar/Footer/Pricing) — DESIGN.md 토큰 바인딩, anatomy 100% 커버 (Phase 4~5) |
-| `skills/frontend-design/scripts/select-diverse-palettes.js` | CSV/playbook 색상 레인을 hue family로 분산하는 JSON shortlist 도구 |
+| `skills/frontend-design/scripts/select-diverse-palettes.js` | CSV/playbook 색상 레인을 hue family로 분산하는 JSON shortlist 도구 (과사용 스톡 accent 기본 제외, `--allow-stock`으로 해제) — 3-4 경로 B 폴백 전용 |
 | `skills/frontend-design/references/technique-recipes.md` | 그림자/blur/보더/리빌/모션/로딩 복붙 레시피 (Phase 5) |
 | `skills/frontend-design/references/color-palettes.csv` | 161개 색상 팔레트 |
 | `skills/frontend-design/references/font-pairings.csv` | 84개 폰트 페어링 |

@@ -8,6 +8,32 @@ const SIGNAL_HUES = new Set(["green", "orange"]);
 const DEFAULT_COUNT = 3;
 const DEFAULT_MAX_SIGNAL = 0;
 
+// 과사용 스톡 accent 제외 (2026-08-05 분석: DB 161행 중 133행이 Tailwind 기본 hex —
+// docs/research/2026-08-05-deep-research-impeccable.md. "인터넷의 평균"을 후보에서 차단).
+// 판정 2중: (1) 아래 알려진 스톡 목록, (2) CSV 안에서 STOCK_FREQUENCY_THRESHOLD회 이상
+// 재사용된 accent (DB 자신의 중복이 과사용을 정의 — 목록 유지보수 불필요한 데이터 기반 규칙).
+const STOCK_FREQUENCY_THRESHOLD = 4;
+const KNOWN_STOCK_ACCENTS = new Set([
+  // Tailwind 기본 팔레트 500-700 셰이드 (UI accent로 쓰이는 대역)
+  "#EF4444", "#DC2626", "#B91C1C", // red
+  "#F97316", "#EA580C", "#C2410C", // orange
+  "#F59E0B", "#D97706", "#B45309", // amber
+  "#EAB308", "#CA8A04", "#A16207", // yellow
+  "#84CC16", "#65A30D", // lime
+  "#22C55E", "#16A34A", "#15803D", // green
+  "#10B981", "#059669", "#047857", // emerald
+  "#14B8A6", "#0D9488", "#0F766E", // teal
+  "#06B6D4", "#0891B2", "#0E7490", // cyan
+  "#0EA5E9", "#0284C7", // sky
+  "#3B82F6", "#2563EB", "#1D4ED8", // blue
+  "#6366F1", "#4F46E5", "#4338CA", // indigo
+  "#8B5CF6", "#7C3AED", "#6D28D9", // violet
+  "#A855F7", "#9333EA", // purple
+  "#D946EF", // fuchsia
+  "#EC4899", "#DB2777", "#BE185D", // pink
+  "#F43F5E", "#E11D48", "#BE123C", // rose
+]);
+
 function fail(message) {
   console.error(`[palette-select] ${message}`);
   process.exit(1);
@@ -21,6 +47,7 @@ function parseArgs(argv) {
     excludeHues: new Set(),
     maxSignal: DEFAULT_MAX_SIGNAL,
     auditOnly: false,
+    allowStock: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -54,15 +81,19 @@ function parseArgs(argv) {
       index += 1;
     } else if (arg === "--audit-only") {
       options.auditOnly = true;
+    } else if (arg === "--allow-stock") {
+      options.allowStock = true;
     } else if (arg === "--help" || arg === "-h") {
       console.error(
         [
           "Usage:",
           "  node select-diverse-palettes.js [--type SaaS] [--count 3]",
           "       [--seed project-name] [--exclude-hues green,orange]",
-          "       [--max-signal 1] [--audit-only]",
+          "       [--max-signal 1] [--audit-only] [--allow-stock]",
           "",
           "Default --max-signal is 0. Use 1 only with a brand/domain reason.",
+          "Overused stock accents (Tailwind defaults, high-frequency reuse) are",
+          "excluded by default; --allow-stock disables that filter.",
           "JSON is written to stdout. Status messages are written to stderr.",
         ].join("\n"),
       );
@@ -222,13 +253,29 @@ function stableHash(value) {
   return hash >>> 0;
 }
 
-function prepareRows(rows, options) {
+function buildStockCheck(rows) {
+  const counts = {};
+  for (const row of rows) {
+    const accent = String(row.Accent || "").toUpperCase();
+    if (accent) counts[accent] = (counts[accent] || 0) + 1;
+  }
+  return (accentHex) => {
+    const accent = String(accentHex || "").toUpperCase();
+    return (
+      KNOWN_STOCK_ACCENTS.has(accent) ||
+      (counts[accent] || 0) >= STOCK_FREQUENCY_THRESHOLD
+    );
+  };
+}
+
+function prepareRows(rows, options, stockCheck) {
   return rows
     .map((row) => ({
       ...row,
       id: `csv:${row.No}`,
       source: "color-palettes.csv",
       hueFamily: classifyHue(row.Accent),
+      isStock: stockCheck(row.Accent),
       mode: classifyMode(row.Background),
       relevance: relevanceScore(row["Product Type"], options.type),
       tieBreak: stableHash(
@@ -274,7 +321,7 @@ function auditRows(rows) {
   };
 }
 
-function loadPlaybookLanes(playbookPath, options) {
+function loadPlaybookLanes(playbookPath, options, stockCheck) {
   if (!fs.existsSync(playbookPath)) return [];
   const text = fs.readFileSync(playbookPath, "utf8");
   const lanePattern =
@@ -284,6 +331,7 @@ function loadPlaybookLanes(playbookPath, options) {
     .map((match) => {
       const [, laneName, background, foreground, accent, onAccent] = match;
       const hueFamily = classifyHue(accent);
+      const isStock = stockCheck(accent);
       return {
         id: `lane:${normalize(laneName).replace(/\s+/g, "-")}`,
         source: "motion-first-prompt-playbook.md",
@@ -314,12 +362,7 @@ function loadPlaybookLanes(playbookPath, options) {
     .filter((row) => !options.excludeHues.has(row.hueFamily));
 }
 
-function selectRows(rows, playbookLanes, options) {
-  const preparedRows = prepareRows(rows, options);
-  const relevantCsvRows = options.type
-    ? preparedRows.filter((row) => row.relevance > 0)
-    : preparedRows;
-  const candidates = [...relevantCsvRows, ...playbookLanes];
+function pickDiverse(candidates, options) {
   const selected = [];
   const usedHues = new Set();
   const usedModes = new Set();
@@ -361,8 +404,31 @@ function selectRows(rows, playbookLanes, options) {
     if (SIGNAL_HUES.has(chosen.hueFamily)) signalCount += 1;
   }
 
-  return selected.map((row) => ({
+  return selected;
+}
+
+function selectRows(rows, playbookLanes, options, stockCheck) {
+  const preparedRows = prepareRows(rows, options, stockCheck);
+  const relevantCsvRows = options.type
+    ? preparedRows.filter((row) => row.relevance > 0)
+    : preparedRows;
+  const allCandidates = [...relevantCsvRows, ...playbookLanes];
+  const freshCandidates = allCandidates.filter((candidate) => !candidate.isStock);
+
+  // 1차: 과사용 스톡 accent 제외한 풀에서 선택. 부족하면 스톡 포함 재시도 (무언 실패 금지).
+  let stockFallbackUsed = false;
+  let selected = pickDiverse(
+    options.allowStock ? allCandidates : freshCandidates,
+    options,
+  );
+  if (!options.allowStock && selected.length < options.count) {
+    stockFallbackUsed = true;
+    selected = pickDiverse(allCandidates, options);
+  }
+
+  const mapped = selected.map((row) => ({
     source: row.source,
+    stockAccent: row.isStock === true,
     no: row.No ? Number(row.No) : null,
     lane: row.laneName || null,
     productType: row["Product Type"],
@@ -385,6 +451,14 @@ function selectRows(rows, playbookLanes, options) {
     ring: row.Ring || null,
     notes: row.Notes,
   }));
+
+  return {
+    selected: mapped,
+    stockFallbackUsed,
+    stockDropped: options.allowStock
+      ? 0
+      : allCandidates.length - freshCandidates.length,
+  };
 }
 
 const options = parseArgs(process.argv.slice(2));
@@ -400,18 +474,28 @@ if (!fs.existsSync(csvPath)) fail(`palette database not found: ${csvPath}`);
 const rows = parseCsv(fs.readFileSync(csvPath, "utf8"));
 if (rows.length === 0) fail("palette database is empty or invalid");
 
+const stockCheck = buildStockCheck(rows);
 const audit = auditRows(rows);
-const playbookLanes = loadPlaybookLanes(playbookPath, options);
-const selection = options.auditOnly ? [] : selectRows(rows, playbookLanes, options);
+audit.stockAccentRows = rows.filter((row) => stockCheck(row.Accent)).length;
+const playbookLanes = loadPlaybookLanes(playbookPath, options, stockCheck);
+const result = options.auditOnly
+  ? { selected: [], stockFallbackUsed: false, stockDropped: 0 }
+  : selectRows(rows, playbookLanes, options, stockCheck);
+const selection = result.selected;
 
 if (!options.auditOnly && selection.length < options.count) {
   fail(
-    `could only select ${selection.length}/${options.count} palettes; relax --exclude-hues or --max-signal`,
+    `could only select ${selection.length}/${options.count} palettes; relax --exclude-hues, --max-signal, or pass --allow-stock`,
   );
 }
 
+if (result.stockFallbackUsed) {
+  console.error(
+    "[palette-select] warning: non-stock pool was too thin; fell back to including overused stock accents (rows marked stockAccent: true)",
+  );
+}
 console.error(
-  `[palette-select] rows=${audit.rows} green_orange=${audit.greenOrangeCount} (${audit.greenOrangePercent}%) selected=${selection.length}`,
+  `[palette-select] rows=${audit.rows} stock_accents=${audit.stockAccentRows} green_orange=${audit.greenOrangeCount} (${audit.greenOrangePercent}%) dropped_stock=${result.stockDropped} selected=${selection.length}`,
 );
 process.stdout.write(
   `${JSON.stringify(
@@ -427,6 +511,8 @@ process.stdout.write(
         distinctHueFamilies: true,
         preferDifferentModes: true,
         maxGreenOrangeCombined: options.maxSignal,
+        excludeOverusedStock: !options.allowStock,
+        stockFallbackUsed: result.stockFallbackUsed,
         csvOrderIsRanking: false,
       },
       audit,

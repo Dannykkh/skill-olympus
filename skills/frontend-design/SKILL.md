@@ -1,13 +1,18 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. Generates creative, polished code that avoids generic AI aesthetics.
+description: 아프로디테(design-plan) 파이프라인 전용 미학 참조 자산(레시피/CSV/anatomy/스캐폴드) + 공식 플러그인이 없는 CLI(Codex/Gemini)의 디자인 스킬. Claude Code의 일반 UI 요청은 공식 frontend-design 플러그인이 담당한다 (2026-08-04 A/B/C 실험 근거 — docs/research/2026-08-05-deep-research-impeccable.md).
 license: Anthropic (https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design)
 auto_apply: true
+disable-model-invocation: true
 ---
 
 This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
 
-The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
+**프레이밍**: 템플릿 같은 시안을 이미 거절해 본 클라이언트를 받은 소규모 스튜디오의 디자인 리드로 작업한다. 이 브리프에 고유한 팔레트·타이포·레이아웃을 의도적으로 결정하고, **근거를 댈 수 있는 미학적 리스크를 정확히 하나** 감수한다.
+
+**주제에 뿌리내리기 (Ground it in the subject)**: 브리프가 제품/주제를 못 박지 않았다면 디자인 전에 스스로 못 박는다 — 구체적 주제 1개, 오디언스, 페이지의 단일 임무를 선언. **고유한 선택은 주제의 세계(그 세계의 실물, 도구, 유물, 어휘)에서 나온다** — 색·폰트·구조·카피 전부에 해당하는 일반 원칙이다 (색상 유도는 Design Database 사용법 4번이 상세 절차). 사용자의 취향 기록·이전 디자인 정보가 있으면 힌트로 쓴다.
+
+> 이식 출처: Claude 공식 frontend-design 플러그인 최신본 (2026-08-05, A/B/C 실험에서 승리한 조건 B의 코어 — docs/research/2026-08-05-deep-research-impeccable.md)
 
 ## Design System First
 
@@ -105,10 +110,10 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | **코더 UI 패턴** | [references/coder-interface-pattern-playbook.md](references/coder-interface-pattern-playbook.md) | 유형 5종 | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage의 정보 구조, 밀도, 상태, 모션 예산 |
 | **블록 해부 카탈로그** | [references/layout-block-anatomy.md](references/layout-block-anatomy.md) | 블록 30종 | Marketing/App/Ecommerce 블록별 구조 계약(요소 순서·잉크 위계·강조 규칙) + 페이지 시퀀스 템플릿 + 와이어프레임-퍼스트 청사진 절차 |
 | **코드 스캐폴드** | [references/scaffolds/](references/scaffolds/) | 블록 4종 | Hero/Navbar/Footer/Pricing의 렌더 검증된 시작 코드(HTML+CSS, DESIGN.md 토큰 바인딩) — anatomy를 산문이 아니라 실제 마크업으로 강제 |
-| **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | CSV/playbook을 hue family로 분산. 기본 초록/주황 0개, 근거 있을 때만 최대 1개 |
+| **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | CSV/playbook을 hue family로 분산. 기본 초록/주황 0개 + 과사용 스톡 accent(Tailwind 기본 hex 등) 기본 제외(`--allow-stock`으로 해제) |
 | **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 10종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis/접근 가능한 로딩 상태 — 복붙 가능한 검증 값 |
-| **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 161개 | 산업별(SaaS, 이커머스, 헬스케어 등) 색상 세트 (Primary~Border 18컬럼) |
-| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 84개 | Heading+Body 조합, Google Fonts URL, Tailwind Config 포함 (한글 페어링 #74~84) |
+| **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 9개 | 산업별 색상 세트 (Primary~Border 18컬럼). 원 161행 중 과사용 스톡 accent 152행 삭제(2026-08-05) — 폴백은 플레이북 레인이 주력 |
+| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 47개 | Heading+Body 조합, Google Fonts URL 포함. 비한글 과사용 37행 삭제(2026-08-05), 한글 페어링 #74~84 전부 보존 |
 | **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트 |
 
 **사용법:**
@@ -117,10 +122,10 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 2. 방향이 모호하거나 결과 반복 불만이 있으면 `motion-first-prompt-playbook.md`를 읽고 구성·색·모션이 다른 방향 카드 3개를 만듭니다.
 2-1. 페이지/섹션을 새로 만들 때는 `layout-block-anatomy.md`에서 블록 시퀀스와 해당 블록의 anatomy 계약(필수 요소·강조 1개 규칙·CTA 문법)을 확인하고 마크업 구조를 먼저 고정합니다 — 레퍼런스가 없을 때 즉흥 구조 금지. Hero/Navbar/Footer/Pricing이면 `scaffolds/`의 렌더 검증된 코드부터 시작(처음부터 새로 짜지 않음).
 3. **레시피 우선**: 선택된 방향과 맞는 스타일 레시피가 있으면 그 레시피 1개 파일만 Read → 토큰/패턴을 시작점으로 (두 레시피 혼합 금지). 액센트는 색상 레인/CSV 팔레트로 변주 가능
-4. 색상 후보는 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"`로 shortlist한 뒤 채점합니다. 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
-5. 맞는 레시피가 없으면: 사용자가 "이커머스" → `color-palettes.csv`에서 E-commerce 팔레트를 색상 계열별로 검색
-6. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조
-7. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색
+4. **색은 유도가 기본, DB는 폴백**: 제품의 세계에서 재료(실물·도메인 어휘 3~5개)를 뽑아 지배색+액센트를 유도하고 대비를 실측하는 것이 1차 경로입니다(카탈로그 선택은 "인터넷의 평균"으로 수렴 — 과사용 스톡 152행은 삭제 완료). 유도 재료가 없을 때만 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"` shortlist를 폴백으로 사용합니다(잔여 9행 + 플레이북 레인). 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
+5. 색상 CSV의 잔여 행에 해당 산업이 있으면 참조 가능하나, 대부분 삭제됐으므로 유도(4번)와 플레이북 레인이 실질 경로입니다
+6. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조 — 무드·체크리스트·기술 키워드만 참조하고 **Colors 컬럼의 hex는 복사 금지**(순수 #000000/#FFFFFF·보라 지정 행 존재 — 색 정본은 유도 값/DESIGN.md 토큰)
+7. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색 — 비한글 과사용 행은 삭제됨(47행 잔존). 한글 UI는 한글 행 #74~84 우선(전부 보존, 한글 커버리지 정보 보유) — 과사용 폰트(IBM Plex 계열) 포함 2건만 `ai-slop-blacklist.md` 교차 확인
 8. 구현 중 그림자/blur/리빌/로딩 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조
 
 > Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT),
@@ -151,7 +156,19 @@ Before coding, understand the context and commit to a BOLD aesthetic direction:
 - **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
 - **Direction fingerprint**: Base mode, layout axis, type contrast, hue family, material, and motion mechanism. If two candidates share four or more of these six, they are the same direction.
 
+- **Hero는 논지(thesis)다**: 주제의 세계에서 가장 특징적인 것으로 연다 — 헤드라인, 이미지, 애니메이션, 라이브 데모, 인터랙티브 순간 중 주제에 맞는 형태로. "큰 숫자 + 작은 라벨 + 그라데이션 액센트"는 템플릿 답안이다.
+- **구조는 정보다**: 번호(01/02/03)·아이브로우·구분선·라벨 같은 구조 장치는 내용의 사실을 부호화할 때만 쓴다 — 실제 순서·실제 타임라인이 아니면 번호를 붙이지 않는다. 장식용 구조 장치는 제거.
+
 **CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
+
+### 2-Pass 프로세스: 계획 → 제네릭 자기검사 → 구현
+
+**캘리브레이션 — 현재 AI 디자인은 3개 클러스터로 수렴한다**: ① 웜 크림 지면(#F4F1EA 근방) + 고대비 세리프 디스플레이 + 테라코타/시그널레드 액센트, ② 니어블랙 + 애시드그린·버밀리언 단일 액센트, ③ 브로드시트 헤어라인 + 라운드 0 + 신문형 밀집 칼럼. 셋 다 어떤 브리프엔 정당하지만 **선택이 아니라 기본값이며 주제와 무관하게 나타난다** (2026-08-04 실험에서 세 조건 모두 ①에 착지). 브리프가 방향을 못 박으면 브리프가 이긴다 — 이 룩을 요구할 때 포함. 브리프가 축을 비워뒀으면 그 자유를 이 기본값들에 쓰지 않는다.
+
+1. **Pass 1 — 계획**: 콤팩트 토큰 계획을 만든다 — Color: 이름 붙인 hex 4~6개 / Type: 역할 2개 이상(절제해 쓰는 개성 디스플레이 + 보완 본문 + 필요시 유틸리티) / Layout: 한 문장 산문 + ASCII 와이어프레임 / **Signature: 이 페이지가 기억될 단 하나의 고유 요소**
+2. **제네릭 자기검사**: 구현 전에 계획을 브리프와 대조한다 — "비슷한 브리프를 스스로 시뮬레이션했을 때 같은 곳에 도달하는 부분"이 있으면 그 부분은 이 브리프를 위한 선택이 아니라 기본값이다. 수정하고 무엇을 왜 바꿨는지 말한다
+3. **Pass 2 — 구현**: 수정된 계획을 정확히 따르며 모든 색·타이포 결정을 계획에서 파생. **대담함은 한 곳에 쓴다** — Signature가 유일한 기억 장치, 주변은 조용하고 규율 있게. 떠나기 전 액세서리 하나 빼기(Chanel). 품질 바닥(모바일 반응형·키보드 포커스·reduced-motion)은 선언 없이 갖춘다
+4. **CSS 특이도 주의**: `.section a` 같은 타입+요소 셀렉터가 `.btn` 같은 클래스를 이기며 서로 상쇄되기 쉽다(특히 섹션 간 패딩/마진, 내비 안 버튼) — 실험 조건 B가 실제로 이 버그를 렌더 검증에서 잡았다
 
 Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
 - Production-grade and functional
@@ -223,6 +240,15 @@ NEVER use generic AI-generated aesthetics. No design should be the same. Vary be
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back.
 
+## Writing in Design (카피 원칙)
+
+카피는 장식이 아니라 **디자인 재료**다 — 이해를 돕고, 그래서 쓰기 쉽게 만들기 위해 존재한다. 간격과 색에 쏟는 의도를 카피에도 쏟는다.
+
+- **사용자 쪽에서 쓴다**: 시스템 구조가 아니라 사람이 인지·조작하는 대상으로 명명 — "웹훅 설정"이 아니라 "알림 관리". 팔지 말고 무엇을 하는지 평이하게. 영리함보다 구체성
+- **능동태 + 정확한 동사**: 컨트롤은 눌렀을 때 일어나는 일을 그대로 말한다 — "Submit"이 아니라 "변경사항 저장". 같은 행동은 흐름 내내 같은 이름("게시" 버튼 → "게시됨" 토스트) — 어휘 일관성이 길찾기 표지판
+- **실패와 빈 화면은 방향 제시의 순간**: 에러는 사과하지 않고 무엇이 잘못됐고 어떻게 고치는지 명확히. 빈 화면은 행동으로의 초대
+- **요소당 임무 하나**: 라벨은 라벨하고, 예시는 시연한다 — 몰래 두 역할을 겸하는 요소 금지. 어조는 브랜드·오디언스에 맞춘 평문, sentence case, 필러 없음
+
 ## Design Skills Workflow (디자인 스킬 조합)
 
 ```
@@ -232,7 +258,7 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
   /stitch design            → Stitch 프로젝트 DESIGN.md 생성
 
 구현 단계 ──────────────────────────────────────────────
-  frontend-design (이 스킬) → auto_apply로 미학 자동 적용
+  frontend-design            → Claude: 공식 플러그인 자동 적용 / Codex·Gemini: 이 스킬 본문
   /stitch loop              → Stitch MCP로 멀티페이지 생성
   /stitch react             → HTML → React 변환
 
