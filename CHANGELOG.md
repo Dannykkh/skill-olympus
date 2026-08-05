@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.19.0] - 2026-08-05
+
+### Features
+
+- **multi-agent**: 포세이돈(agent-team)·다이달로스(workpm)·제우스를 4-CLI 네이티브 멀티에이전트로 재편. agent-team에 4-CLI 실행 매트릭스 + CLI 감지 5단(TeamCreate→spawn_agent→spawn_subagent→에이전트명 도구→폴백), workpm은 5단계 워크플로우 공통 + 실행 프리미티브 표로 치환(표는 자체 내장 — Codex 설치본엔 agent-team이 제외되어 크로스 스킬 참조가 깨짐), orchestrator MCP는 ①네이티브 부재 구버전 폴백 ②hard file lock·외부 태스크 보드 정책 레이어로 재포지셔닝. zeus Phase 3에 ultracode ON 세션 한정 Workflow 검증 fan-out 분기(자동 호출 금지·zero-interaction 유지·완료 계약 불변). sync-gemini-assets에서 agent-team 제외 해제(Gemini 94→95 스킬). Gemini 경로는 공식 문서 근거 설계로 실스폰 미실측 — `/agents` 인식 실패 시 orchestrator 폴백 (aaf3b8c)
+- **argos**: Phase 1 품질 검증 중 spec과 무관한 일반 코드 품질 층을 code-reviewer v4와 같은 네이티브 경로로 위임 — 세션 내 v4 보고서 병합 우선 → Claude 네이티브 code-review(ultra 호출 금지) → Codex review → 폴백(현행 에이전트). spec 대비 기능 검증은 위임 불가 명시(네이티브 diff 엔진은 spec을 모름), Phase 7에 /security-review 관계(diff 한정 vs 전체 코드베이스+히스토리 감사) 명시 (2b58020)
+- **hooks**: impeccable 결정론 디자인 검출 훅 추가 — UI 파일 Write/Edit 시 `npx impeccable detect` 59규칙 실행, 발견 요약을 모델에 주입 (PostToolUse) (d32b89f)
+- **frontend-design**: 네이티브 우선 재편 — 포크는 disable-model-invocation으로 공식 플러그인에 자동호출 양보, v2.9.1 코어 이식(2-Pass 자기검사·3대 편향 클러스터·Writing in Design), 오염 CSV 행 삭제(color 161→9, font 84→47) (d99b9a1)
+- **humanizer**: 업스트림 재동기화 — blader v2.9.1(영문 33패턴·Voice Calibration) + im-not-ai v2.3(인젝션 방어·지배도 우선) 절차 흡수 (9055cf2)
+- **hestia**: `// minimal:` 의도적 단순화 마커 부채 장부 수확 추가 (a4c5bc2)
+- **coding-standards**: 조립 원칙(레고블록·하네스) + 최소 구현 사다리(6단·금지 추상화 3종·단순화 금지 예외) 추가 (9247b1b)
+- **fullstack-coding-standards**: 리소스 안전 규칙 추가 (a502160)
+
+### Bug Fixes
+
+- **hooks**: impeccable-detect 발견이 모델에 전달되지 않던 결함 수정 — PostToolUse에서 exit 0 평문 stdout은 컨텍스트에 주입되지 않음(공식 문서 확인). `hookSpecificOutput.additionalContext` JSON으로 전환, 실발화(Write 시 low-contrast 주입) 검증 완료 (6ae20fd)
+- **chronos**: Gemini를 "훅 없는 3순위 직접 루프"로 분류하던 것을 2순위(AfterAgent 훅 — `~/.gemini/settings.json`에 loop-stop 등록 실재)로 정정 + 엔진 배선에 Gemini 섹션 신설(실세션 재투입 미실측 경고, gotcha 017 연계). setup-loop 도움말·에러 예시가 폐기된(2026-06-11) `/loop` 별칭을 안내하던 잔재를 `/chronos`로 교체 (37b5784)
+- **hooks**: Temp 경로가 프로젝트 루트로 승격되어 대화·메모리가 Temp에 쌓이던 오염 차단 — Temp 계열 경로 가드 11개 파일 적용 (gotcha 065) (b939b89)
+- **hooks**: PS 5.1에서 stdin 워치독이 무효이던 문제 수정 — `ReadToEndAsync` 동기 블로킹을 `ReadAsync`로 교체 (gotcha 064) (1d1d882)
+
+### Documentation
+
+- **agents**: 코딩 표준에 조립 원칙(레고블록·하네스) 섹션 추가 (bd1ffbc)
+- **research**: pbakaus/impeccable 딥리서치 + 아프로디테 간섭 실험 보고서 — 실질 결함 B1≪C20≈A25, 네이티브 플러그인 단독만 모델 편향 클러스터 탈출 (6c03bc6)
+
 ## [4.18.3] - 2026-08-03
 
 ### Bug Fixes
