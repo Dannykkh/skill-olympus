@@ -204,6 +204,22 @@ if (-not $ProjectRoot) { $ProjectRoot = $PWD.Path }
 # 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
 # Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
 # Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
+# Temp에 스캐폴드를 만들면, 그 마커가 이후 세션의 walk-up까지 끌어당겨 대화가
+# 계속 Temp로 쌓인다. Temp 루트로 판정되면 호출부에서 저장을 skip한다 (fail-open).
+function Test-MnemoTempPath {
+    param([string]$Path)
+    if (-not $Path) { return $false }
+    $p = $Path.Replace('/', '\').TrimEnd('\')
+    foreach ($t in @($env:TEMP, $env:TMP)) {
+        if ($t) {
+            $tn = $t.Replace('/', '\').TrimEnd('\')
+            if ($p -eq $tn -or $p.StartsWith("$tn\", [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+        }
+    }
+    return ($p -match '(?i)[\\/]AppData[\\/]Local[\\/]Temp([\\/]|$)' -or $p -match '(?i)^([A-Za-z]:)?[\\/]tmp([\\/]|$)')
+}
+
 function Get-NonGitProjectRoot {
     param([string]$StartPath)
     if (-not $StartPath) { return $StartPath }
@@ -213,6 +229,7 @@ function Get-NonGitProjectRoot {
         while ($cur) {
             $curPath = $cur.FullName.TrimEnd('\')
             if ($hn -and $curPath -eq $hn) { break }
+            if (Test-MnemoTempPath $curPath) { break }
             if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
                 return $curPath
             }
@@ -222,10 +239,11 @@ function Get-NonGitProjectRoot {
     $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
     if ($m.Success) {
         $prefix = $m.Groups[1].Value
-        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn)) {
+        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn) -and (-not (Test-MnemoTempPath $prefix))) {
             return $prefix
         }
     }
+    if (Test-MnemoTempPath $StartPath) { return $null }
     return $StartPath
 }
 
@@ -246,6 +264,8 @@ try {
 if ($ProjectRoot -and -not $gitRootAdopted) {
     $ProjectRoot = Get-NonGitProjectRoot $ProjectRoot
 }
+# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
+if ((-not $ProjectRoot) -or (Test-MnemoTempPath $ProjectRoot)) { exit 0 }
 
 # 대화 디렉토리 및 파일
 $ConvDir = Join-Path $ProjectRoot "conversations"

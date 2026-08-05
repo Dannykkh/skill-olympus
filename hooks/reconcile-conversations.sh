@@ -24,6 +24,21 @@ fi
 # 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
 # Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
 # Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
+# Temp에 스캐폴드를 만들면 그 마커가 이후 세션까지 끌어당긴다. Temp 루트면 저장 skip.
+is_mnemo_temp_path() {
+    local p="${1%/}"
+    case "$p" in
+        /tmp|/tmp/*|/private/tmp|/private/tmp/*|/var/tmp|/var/tmp/*) return 0 ;;
+        */AppData/Local/Temp|*/AppData/Local/Temp/*) return 0 ;;
+    esac
+    if [ -n "${TMPDIR:-}" ]; then
+        local t="${TMPDIR%/}"
+        case "$p" in "$t"|"$t"/*) return 0 ;; esac
+    fi
+    return 1
+}
+
 get_nongit_project_root() {
     local start="$1"
     if [ -z "$start" ]; then printf '%s\n' "$start"; return; fi
@@ -32,6 +47,7 @@ get_nongit_project_root() {
     local cur="$start"
     while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
         if [ -n "$home_dir" ] && [ "${cur%/}" = "$home_dir" ]; then break; fi
+        if is_mnemo_temp_path "$cur"; then break; fi
         if [ -f "$cur/MEMORY.md" ] || [ -d "$cur/conversations" ]; then
             printf '%s\n' "$cur"; return
         fi
@@ -44,8 +60,10 @@ get_nongit_project_root() {
     while printf '%s' "$stripped" | grep -qE '[/\\](bin|obj|dist|build|out|target|node_modules)([/\\]|$)'; do
         stripped=$(printf '%s' "$stripped" | sed -E 's#[/\\](bin|obj|dist|build|out|target|node_modules)([/\\].*)?$##')
     done
-    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; }; then
+    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; } && ! is_mnemo_temp_path "$stripped"; then
         printf '%s\n' "$stripped"
+    elif is_mnemo_temp_path "$start"; then
+        printf '%s\n' ""
     else
         printf '%s\n' "$start"
     fi
@@ -86,9 +104,10 @@ get_claude_project_root() {
         [ -z "$c" ] && continue
         c=$(_w2u "$c")
         [ "${c%/}" = "${home_u%/}" ] && continue
+        is_mnemo_temp_path "$c" && continue
         candidates+=("$c")
     done
-    candidates+=("$PWD")
+    is_mnemo_temp_path "$PWD" || candidates+=("$PWD")
 
     # Pass 1: git 루트가 잡히는 첫 후보 (단, git 루트가 HOME이면 dotfiles repo로 간주해 제외)
     local git_root gr_u
@@ -97,7 +116,7 @@ get_claude_project_root() {
             git_root=$(git -C "$c" rev-parse --show-toplevel 2>/dev/null)
             if [ -n "$git_root" ]; then
                 gr_u=$(_w2u "$git_root")
-                [ "${gr_u%/}" = "${home_u%/}" ] || { echo "$git_root"; return 0; }
+                if [ "${gr_u%/}" != "${home_u%/}" ] && ! is_mnemo_temp_path "$gr_u"; then echo "$git_root"; return 0; fi
             fi
         fi
     done
@@ -109,6 +128,9 @@ get_claude_project_root() {
 }
 
 PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
+
+# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
+if [ -z "$PROJECT_ROOT" ]; then exit 0; fi
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$HOOK_DIR/.."

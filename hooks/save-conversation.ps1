@@ -52,6 +52,22 @@ function Exit-MnemoError {
 # 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
 # Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
 # Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
+# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
+# Temp에 스캐폴드를 만들면, 그 마커가 이후 세션의 walk-up까지 끌어당겨 대화가
+# 계속 Temp로 쌓인다. Temp 루트로 판정되면 호출부에서 저장을 skip한다 (fail-open).
+function Test-MnemoTempPath {
+    param([string]$Path)
+    if (-not $Path) { return $false }
+    $p = $Path.Replace('/', '\').TrimEnd('\')
+    foreach ($t in @($env:TEMP, $env:TMP)) {
+        if ($t) {
+            $tn = $t.Replace('/', '\').TrimEnd('\')
+            if ($p -eq $tn -or $p.StartsWith("$tn\", [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+        }
+    }
+    return ($p -match '(?i)[\\/]AppData[\\/]Local[\\/]Temp([\\/]|$)' -or $p -match '(?i)^([A-Za-z]:)?[\\/]tmp([\\/]|$)')
+}
+
 function Get-NonGitProjectRoot {
     param([string]$StartPath)
     if (-not $StartPath) { return $StartPath }
@@ -61,6 +77,7 @@ function Get-NonGitProjectRoot {
         while ($cur) {
             $curPath = $cur.FullName.TrimEnd('\')
             if ($hn -and $curPath -eq $hn) { break }
+            if (Test-MnemoTempPath $curPath) { break }
             if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
                 return $curPath
             }
@@ -70,10 +87,11 @@ function Get-NonGitProjectRoot {
     $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
     if ($m.Success) {
         $prefix = $m.Groups[1].Value
-        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn)) {
+        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn) -and (-not (Test-MnemoTempPath $prefix))) {
             return $prefix
         }
     }
+    if (Test-MnemoTempPath $StartPath) { return $null }
     return $StartPath
 }
 
@@ -115,11 +133,11 @@ function Get-ClaudeProjectRoot {
     # 후보: launch cwd -> last cwd -> decoded -> PWD (HOME 제외, 중복 제거)
     $candidates = New-Object System.Collections.Generic.List[string]
     foreach ($c in @($firstCwd, $lastCwd, $decoded)) {
-        if ($c -and (-not $homeNorm -or $c.TrimEnd('\') -ne $homeNorm) -and (-not $candidates.Contains($c))) {
+        if ($c -and (-not $homeNorm -or $c.TrimEnd('\') -ne $homeNorm) -and (-not (Test-MnemoTempPath $c)) -and (-not $candidates.Contains($c))) {
             $candidates.Add($c)
         }
     }
-    if (-not $candidates.Contains($PWD.Path)) { $candidates.Add($PWD.Path) }
+    if ((-not $candidates.Contains($PWD.Path)) -and (-not (Test-MnemoTempPath $PWD.Path))) { $candidates.Add($PWD.Path) }
 
     # Pass 1: git 루트가 잡히는 첫 후보 (git 루트가 HOME이면 dotfiles repo로 보고 제외)
     foreach ($cand in $candidates) {
@@ -128,7 +146,7 @@ function Get-ClaudeProjectRoot {
                 $gitRoot = & git -C $cand rev-parse --show-toplevel 2>$null
                 if ($LASTEXITCODE -eq 0 -and $gitRoot) {
                     $win = $gitRoot.Replace('/', '\')
-                    if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) { return $win }
+                    if ((-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) -and (-not (Test-MnemoTempPath $win))) { return $win }
                 }
             } catch {}
         }
@@ -271,6 +289,9 @@ if ($Prompt) {
 # UserPromptSubmit hook도 transcript_path가 payload에 포함됨 (Claude Code 표준)
 $transcriptPath = $json.transcript_path
 $ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath
+
+# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
+if (-not $ProjectRoot) { exit 0 }
 
 $ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
