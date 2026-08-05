@@ -1,6 +1,6 @@
 ---
 name: argos
-description: 준공검사 감리 스킬. 설계 산출물(spec, api-spec, qa-scenarios, flow-diagrams) 대비 구현 검증. 정적 분석 + 런타임 검증 + API 일치 + QA 시나리오 + 도면 대조. /argos로 실행.
+description: 준공검사 감리 스킬. 설계 산출물(spec, api-spec, qa-scenarios, flow-diagrams) 대비 구현 검증. 정적 분석 + 런타임 검증 + API 일치 + QA 시나리오 + 도면 대조. Phase 1의 일반 코드 품질 층은 네이티브 리뷰 엔진(Claude code-review / Codex review)에 위임(native-first), spec 대비 감리는 고유 영역. /argos로 실행.
 triggers:
   - "argos"
   - "아르고스"
@@ -136,7 +136,19 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 1
    - 타입 안전성
    - 문서화 상태
 
-두 에이전트의 결과를 합쳐 정적 검증 보고서 작성.
+**일반 코드 품질 층 — 네이티브 리뷰 엔진 위임 (native-first, code-reviewer v4와 동일 경로):**
+
+품질 검증 중 spec과 무관한 일반 코드 품질(버그·타입 안전성·중복)은 자체 스캔을 중복하지 않고 네이티브 결과를 재사용합니다:
+
+- **같은 세션에 code-reviewer(v4) 보고서가 이미 있으면** 그 발견을 그대로 병합 — 재실행 금지
+- Claude: Skill 목록에 `code-review`가 있으면 호출 (⚠️ `ultra` 호출 금지 — 클라우드 과금, 사용자 트리거 전용)
+- Codex: `codex review --uncommitted` 또는 `--base <브랜치>`
+- 네이티브 부재, 또는 감리 대상이 diff가 아니라 전체 코드베이스인 경우 → 현행 품질 검증 에이전트 유지 (폴백)
+
+병합 발견은 verify-report.md Phase 1에 `source: native`로 표기합니다.
+**spec 대비 기능 검증(1번 에이전트)은 위임 불가** — 네이티브 diff 엔진은 spec을 모릅니다.
+
+두 축(기능 검증 + 품질 검증/네이티브 병합)의 결과를 합쳐 정적 검증 보고서 작성.
 
 ### Phase 2: 런타임 검증
 
@@ -224,6 +236,10 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 6
 ### Phase 7: 보안 검증
 
 **항상 실행.** `security-reviewer` 에이전트의 인프라 우선 방법론을 적용.
+
+> 네이티브 `/security-review`와의 관계: 네이티브는 현재 브랜치의 pending changes(diff) 한정.
+> 이 Phase는 전체 코드베이스 + git 히스토리 + 의존성 감사라 대체 불가 — 단 같은 세션에서
+> 네이티브 security-review가 이미 실행됐으면 그 발견을 7-3에 병합하고 diff 범위 재스캔은 생략.
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 
@@ -399,7 +415,7 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 | agent-team (포세이돈) | 구현 수행 | 검증 전 선행 단계 (젭마인 산출물 기반) |
 | daedalus (다이달로스) | 구현 수행 | 검증 전 선행 단계 (젭마인 없이 직접 진행) |
 | minos | Playwright 실사 테스트 | 검증 후 후행 단계 |
-| code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할 — diff 기반 PR 사전 리뷰(v4: 네이티브 엔진 위임), 시공 중 실행. 아르고스는 spec 대비 준공검사라 diff 엔진으로 대체 불가 |
+| code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할 — diff 기반 PR 사전 리뷰(v4: 네이티브 엔진 위임), 시공 중 실행. 아르고스는 spec 대비 준공검사라 diff 엔진으로 대체 불가. 단 Phase 1의 일반 코드 품질 층은 같은 네이티브 엔진(v4 경로 A/B)을 재사용하며, 같은 세션의 v4 보고서가 있으면 재실행 없이 병합 |
 
 ---
 
