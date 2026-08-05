@@ -25,6 +25,19 @@ WPF 데스크톱 애플리케이션 코드 작성 시 항상 적용되는 규칙
 
 ---
 
+## 조립 원칙 (레고블록·하네스)
+
+> 기능은 서로를 모르는 독립 블록(ViewModel/컨트롤/서비스)으로 만들고, 연결은 조립 지점에서만 한다.
+
+|규칙|설명|
+|---|---|
+|ViewModel 간 직접 참조 금지|조합·통신은 상위 ViewModel, DI 서비스, Messenger(약결합 이벤트)로|
+|컨트롤 계약은 DP + 이벤트/ICommand|UserControl이 부모/형제를 캐스팅해 직접 접근 금지|
+|Service는 인터페이스로 주입|ViewModel은 구현이 아닌 인터페이스만 알 것 — 구현 교체 시 ViewModel 무수정|
+|화면 조립은 전용 서비스|INavigationService/IDialogService가 전담, ViewModel에서 View 직접 생성 금지|
+
+---
+
 ## 스레딩 규칙
 
 |규칙|설명|
@@ -79,6 +92,10 @@ WPF 데스크톱 애플리케이션 코드 작성 시 항상 적용되는 규칙
 - [ ] 코드비하인드에 비즈니스 로직이 없는가?
 - [ ] 모든 버튼이 Command 바인딩인가?
 - [ ] ViewModel이 DI로 주입되는가?
+
+**조립:**
+- [ ] ViewModel이 다른 ViewModel을 직접 참조하지 않는가?
+- [ ] UserControl이 DP/이벤트로만 외부와 통신하는가?
 
 **스레딩:**
 - [ ] DB/네트워크 호출이 `Task.Run` + `await`인가?
