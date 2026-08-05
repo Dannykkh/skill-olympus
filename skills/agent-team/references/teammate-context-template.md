@@ -232,7 +232,7 @@ teammate의 의사결정/에러/진행이 세션 종료 후에도 검색 가능�
   # Team Activity Log — YYYY-MM-DD
   ```
 - 기존 파일이 있으면 **Edit 도구로 끝에 추가**
-- Orchestrator MCP 사용 시 `orchestrator_log_activity`도 병행 호출
+- 폴백(orchestrator MCP) 경로에서만 `orchestrator_log_activity`도 병행 호출
 
 ## 컨텍스트 크기 관리
 

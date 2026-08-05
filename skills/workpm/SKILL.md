@@ -1,6 +1,6 @@
 ---
 name: workpm
-description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행. Claude는 native Agent Teams, Codex/Gemini는 orchestrator MCP 경로를 사용합니다.
+description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행. 4-CLI 모두 네이티브 멀티에이전트 경로 우선 (Claude Agent Teams / Codex spawn_agent / Gemini 서브에이전트 / Grok spawn_subagent), 네이티브 부재 구버전 CLI만 orchestrator MCP 폴백.
 triggers:
   - "workpm"
   - "daedalus"
@@ -28,18 +28,34 @@ auto_apply: false
 
 ## 실행 경로
 
+> **native-first 원칙** (learned/020): 워크플로우(5단계)는 공통, 실행 프리미티브만 CLI별 네이티브로 교체.
+
 | CLI | 실행 경로 | 기준 파일 |
 |-----|----------|----------|
 | Claude Code | Native Agent Teams | `skills/orchestrator/commands/workpm.md` |
-| Codex | Orchestrator MCP PM/Worker | `skills/orchestrator/commands/workpm-mcp.md` |
-| Gemini | Orchestrator MCP PM/Worker | `skills/orchestrator/commands/workpm-mcp.md` |
+| Codex | Native spawn_agent (같은 5단계, 프리미티브 교체) | `workpm.md` + 아래 프리미티브 표 |
+| Gemini | Native 서브에이전트 (같은 5단계, 사전 정의 에이전트 위임) | `workpm.md` + 아래 프리미티브 표 |
+| Grok | Native spawn_subagent (같은 5단계) | `workpm.md` + 아래 프리미티브 표 |
+| (폴백) | Orchestrator MCP PM/Worker — 네이티브 멀티에이전트 도구가 전부 없을 때만 | `skills/orchestrator/commands/workpm-mcp.md` |
+
+**CLI별 실행 프리미티브** (agent-team [wave-executor.md](../agent-team/references/wave-executor.md) "CLI별 실행 형식"과 동일 — CLI별 설치본에 agent-team이 없을 수 있어 여기 내장, 수정 시 양쪽 함께):
+
+| CLI | 팀원 생성 | 지시 전달 | 모니터링 | 정리 |
+|-----|----------|----------|----------|------|
+| **Claude** | `TeamCreate` | `SendMessage` (summary 필수) | `TaskList` 폴링 | shutdown → `TeamDelete` |
+| **Codex** | `spawn_agent` | `send_message` | `wait` 블로킹 | `close_agent` |
+| **Gemini** | 없음 (사전 정의 에이전트에 위임) | 에이전트명 도구 호출의 위임 프롬프트에 전부 포함 | 도구 반환 = 완료 보고 | 불필요 |
+| **Grok** | `spawn_subagent(subagent_type, prompt)` | prompt에 전부 포함 | 반환 요약 수신 | 불필요 |
+
+> ⚠️ Gemini 네이티브 경로는 공식 문서 근거 설계(2026-08-05)이며 실스폰 미실측 — `/agents` 인식 실패 시 폴백 경로 사용.
 
 `pmworker`는 레거시 호출명입니다. 별도 스킬로 보지 말고 이 다이달로스/오케스트레이터 경로로 라우팅합니다.
 
 ## 모델 선택 전략
 
 **"무엇을 만들지" 판단 → Opus, "어떻게 만들지" 실행 → Sonnet.**
-Codex/Gemini MCP 경로에서는 같은 의도를 `orchestrator_detect_providers`로 확인된 provider에 맞춰 매핑합니다.
+네이티브 경로에서는 각 CLI의 모델 지정 수단(Claude: TeamCreate model, Gemini: 에이전트 frontmatter model 등)으로,
+폴백(MCP) 경로에서는 `orchestrator_detect_providers`로 확인된 provider에 맞춰 같은 의도를 매핑합니다.
 
 | Phase | 팀원 역할 | 모델 |
 |-------|----------|------|
@@ -70,7 +86,7 @@ Codex/Gemini MCP 경로에서는 같은 의도를 `orchestrator_detect_providers
 
 ### Phase 4 (구현): teammate에게 사전 전달
 
-모든 구현 teammate 프롬프트에 사전 컨텍스트와 준수 규칙을 포함합니다. 자세한 형식은 `agent-team` 스킬의 [teammate-context-template.md](../agent-team/references/teammate-context-template.md) "도메인사전 강제 사용 지침" 섹션 참조 — 동일하게 적용.
+모든 구현 teammate 프롬프트에 사전 컨텍스트와 준수 규칙을 포함합니다. 자세한 형식은 `agent-team` 스킬의 [teammate-context-template.md](../agent-team/references/teammate-context-template.md) "도메인사전 강제 사용 지침" 섹션 참조 — 동일하게 적용. (Codex 설치본에는 agent-team이 없음 — `agent-team-codex`의 [prompt-templates.md](../agent-team-codex/references/prompt-templates.md)를 쓰되, 사전 컨텍스트+준수 규칙+금지 표현을 팀원 프롬프트에 포함한다는 원칙은 동일)
 
 ### Phase 5 (공정 점검): 사전 준수 검증
 
@@ -82,14 +98,16 @@ Codex/Gemini MCP 경로에서는 같은 의도를 `orchestrator_detect_providers
 
 ## 워크플로우
 
-CLI 런타임에 따라 단계 수가 다릅니다.
+경로에 따라 단계 수가 다릅니다.
 
 | 경로 | 단계 | 차이 |
 |-----|------|------|
-| Claude native | 5단계 | Phase 3에 영향도 분석 포함 |
-| Codex/Gemini MCP | 4단계 | 영향도 분석을 별도 Phase로 두지 않고 구현 계획에 흡수 |
+| 네이티브 (Claude/Codex/Gemini/Grok) | 5단계 | Phase 3에 영향도 분석 포함 |
+| 폴백 (orchestrator MCP) | 4단계 | 영향도 분석을 별도 Phase로 두지 않고 구현 계획에 흡수 |
 
 ## Start
 
-Claude Code에서는 `skills/orchestrator/commands/workpm.md`를 읽고 native 5단계 워크플로우를 따릅니다.
-Codex/Gemini에서는 `skills/orchestrator/commands/workpm-mcp.md`를 읽고 MCP 기반 PM/Worker 워크플로우를 따릅니다.
+1. **네이티브 경로** (기본): `skills/orchestrator/commands/workpm.md`를 읽고 5단계 워크플로우를 따릅니다.
+   Claude가 아닌 CLI는 workpm.md의 Agent Teams 프리미티브(TeamCreate/SendMessage/TaskList)를
+   위 "CLI별 실행 프리미티브" 표의 자기 CLI 행으로 치환해 수행합니다.
+2. **폴백 경로**: 네이티브 멀티에이전트 도구가 전부 없으면 `skills/orchestrator/commands/workpm-mcp.md`를 읽고 MCP 기반 PM/Worker 워크플로우를 따릅니다.

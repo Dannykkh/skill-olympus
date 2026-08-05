@@ -1,6 +1,6 @@
 ---
 name: agent-team
-description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. Claude Agent Teams + Codex spawn_agent 지원. /agent-team 또는 /poseidon으로 실행. 포세이돈.
+description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. 4-CLI 네이티브 멀티에이전트 지원 (Claude Agent Teams / Codex spawn_agent / Gemini 서브에이전트 / Grok spawn_subagent). /agent-team 또는 /poseidon으로 실행. 포세이돈.
 triggers:
   - "agent-team"
   - "포세이돈"
@@ -79,18 +79,28 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 
 ## CLI별 실행 모드
 
+> **native-first 원칙** (learned/020): 실행 엔진은 각 CLI의 네이티브 멀티에이전트에 위임하고,
+> orchestrator MCP는 네이티브가 없는 구버전 CLI의 폴백 + hard file-lock 정책 레이어로만 남긴다.
+
 | CLI | 실행 방식 | 도구 |
 |-----|----------|------|
 | **Claude** | Agent Teams (네이티브) | `TeamCreate` / `SendMessage` / `TaskCreate` / `TaskUpdate` |
 | **Codex** | spawn_agent (네이티브) | `spawn_agent` / `send_message` / `wait` / `close_agent` |
-| **Gemini** | orchestrator MCP 폴백 | `workpm-mcp` (동적 에이전트 생성 미지원) |
+| **Gemini** | 서브에이전트 (네이티브, v0.38+) | 에이전트명 도구 호출 또는 `@에이전트명` — 동적 팀원 생성 불가, 사전 정의 에이전트(`~/.gemini/agents/`)에 위임 |
+| **Grok** | spawn_subagent (네이티브) | `spawn_subagent(subagent_type, prompt)` — 최대 8 동시, 결과는 요약으로 회수 |
+| (폴백) | orchestrator MCP | 위 도구가 전부 없는 구버전 CLI만 — `workpm-mcp` |
+
+> ⚠️ Gemini 경로는 공식 문서 근거 설계(2026-08-05)이며 동기화 에이전트의 실스폰은 미실측.
+> 첫 실행 시 `/agents`로 에이전트 인식을 확인하고, 인식 실패 시 orchestrator 폴백으로 전환.
 
 ### CLI 감지 방법
 
-Phase 0 시작 시 자동 판별:
+Phase 0 시작 시 자동 판별 (위에서부터 순서대로):
 - `TeamCreate` 도구 사용 가능 → **Claude 모드**
 - `spawn_agent` 도구 사용 가능 → **Codex 모드**
-- 둘 다 없음 → 사용자에게 `workpm-mcp` (orchestrator) 안내
+- `spawn_subagent` 도구 사용 가능 → **Grok 모드**
+- 동기화된 에이전트명이 도구로 노출됨 (예: `backend-spring` — `/agents`로 확인) → **Gemini 모드**
+- 전부 없음 → **폴백**: 사용자에게 `workpm-mcp` (orchestrator) 안내
 
 ## Prerequisites
 
@@ -161,6 +171,17 @@ TeamCreate({
 ### Codex 모드
 - Codex CLI 설치 (`codex` 명령어 사용 가능)
 - full-auto 모드 권장 (`codex --approval-mode full-auto`)
+
+### Gemini 모드
+- Gemini CLI v0.38+ (서브에이전트 기본 활성 — `settings.json`의 `enableAgents`가 false면 켜기)
+- `~/.gemini/agents/`에 동기화된 에이전트 존재 (`scripts/sync-gemini-assets.js`) — `/agents`로 인식 확인
+- **동적 페르소나 생성 불가** → 팀원 = 사전 정의 에이전트 (expert-matching으로 선택). 섹션 내용은 위임 프롬프트에 전부 임베딩
+- 공식 문서에 병렬 실행 명시 없음 — 병렬 위임 실패 시 Wave 내 순차 위임으로 폴백
+
+### Grok 모드
+- Grok Build — `[compat.claude]` 기본값으로 `~/.claude/agents/`를 직접 읽음 (sync 불필요, learned/018)
+- `spawn_subagent(subagent_type, prompt)` — `subagent_type`은 매칭 에이전트, 없으면 `general-purpose`
+- 최대 8 동시 스폰. 자식 결과는 요약으로 회수되므로 완료 판정은 파일 실존 확인으로 교차 검증
 
 ### 공통
 - zephermine 계획 산출물 (sections/index.md + section-NN-*.md 파일들)
@@ -309,6 +330,14 @@ See [teammate-context-template.md](references/teammate-context-template.md)
 #### Codex 모드 (spawn_agent)
 Wave 단위로 agent spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 전문가 역할 포함.
 
+#### Gemini 모드 (서브에이전트 위임)
+Wave 단위로 에이전트명 도구 호출. expert-matching으로 고른 사전 정의 에이전트에
+섹션 파일 전체 내용 + 담당 파일 + 파일 소유권 규칙을 위임 프롬프트로 전달.
+
+#### Grok 모드 (spawn_subagent)
+Wave 단위로 spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 전문가 역할 포함,
+`subagent_type`은 매칭 에이전트 (없으면 `general-purpose`).
+
 **핵심 규칙**: teammate/agent는 lead의 대화 히스토리를 상속하지 않으므로, description/prompt에 섹션 파일 전체 내용을 반드시 임베딩해야 함.
 
 ### Step 4: Execute Waves
@@ -318,7 +347,7 @@ See [wave-executor.md](references/wave-executor.md)
 각 Wave별 실행 사이클:
 1. 선행 Task의 blockedBy 해소 여부 확인
 2. teammate/agent에게 지시 (담당 파일, 도면 노드, 파일 소유권 규칙 포함)
-3. 진행 상황 모니터링 (Claude: TaskList 폴링, Codex: wait 블로킹)
+3. 진행 상황 모니터링 (Claude: TaskList 폴링, Codex: wait 블로킹, Gemini/Grok: 도구 호출 반환이 곧 완료 보고 — 반환 요약을 체크리스트·파일 실존과 대조)
 4. 모든 Task completed → 다음 Wave로 진행
 
 **teammate 지시 핵심 요소:**
@@ -333,6 +362,7 @@ See [wave-executor.md](references/wave-executor.md)
 
 - Claude: `code-reviewer` 타입 teammate 투입
 - Codex: code review용 agent spawn
+- Gemini: `code-reviewer` 에이전트에 위임 / Grok: `spawn_subagent(subagent_type: 'code-reviewer')`
 - 미통과 시 → 수정 지시 → 재리뷰 (최대 2회)
 
 **검수 항목:** 기능/책임 단위 분리, 보안 취약점, 타입, SRP, DRY
@@ -365,7 +395,7 @@ while (마스터 체크리스트 미통과 항목 존재):
 모든 Wave 완료 후:
 1. `conversations/{YYYY-MM-DD}-team-poseidon.md` 읽기
 2. teammate별 활동 통계 집계 (기록 수, 에러 수, 파일 수)
-3. Orchestrator MCP 사용 시 `orchestrator_get_activity_log`로 JSONL 로그 확인
+3. 폴백(orchestrator MCP) 경로 사용 시에만 `orchestrator_get_activity_log`로 JSONL 로그 확인
 4. 요약을 Final Report에 포함
 
 ### Step 8: Final Report
@@ -394,13 +424,15 @@ Lead 의사결정 로그: conversations/{date}-team-poseidon.md
 
 | 측면 | agent-team (이 스킬) | orchestrator (기존) |
 |------|---------------------|---------------------|
-| 설치 | 불필요 (CLI 내장 — 구버전만 env var) | MCP 서버 빌드 필요 |
-| 지원 CLI | Claude + Codex (네이티브) | Claude + Codex + Gemini (MCP) |
+| 설치 | 불필요 (4-CLI 네이티브 내장 — 구버전만 env var) | MCP 서버 빌드 필요 |
+| 지원 CLI | Claude + Codex + Gemini + Grok (네이티브) | 네이티브 멀티에이전트가 없는 구버전 CLI |
 | 파일 충돌 방지 | 소유권 규칙 (soft) | MCP lock_file (hard) |
-| 태스크 관리 | Claude: TaskCreate, Codex: spawn_agent | orchestrator MCP 도구 |
-| 사용 조건 | zephermine 섹션 또는 자유 모드 | 어떤 계획이든 가능 |
+| 태스크 관리 | CLI별 네이티브 도구 | orchestrator MCP 도구 |
+| 사용 조건 | zephermine 섹션 또는 자유 모드 | 폴백 또는 hard lock 필요 시 |
 
-**공존 원칙:** zephermine 섹션 기반 → agent-team 권장 / Gemini 단독 → orchestrator 사용
+**공존 원칙 (native-first):** 실행은 항상 네이티브 우선. orchestrator는
+① 네이티브 멀티에이전트가 없는 구버전 CLI 폴백, ② hard file lock·크로스 CLI task ledger가
+꼭 필요한 대규모 동시 편집 — 이 두 경우에만 정책 레이어로 사용.
 
 ---
 
@@ -429,6 +461,8 @@ Step {N} complete: {summary}
 | 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → **teammate shutdown → TeamDelete** → 사용자에게 새 세션에서 재개 안내 |
 | spawn_agent 실패 (Codex) | Codex CLI 설치/권한 확인 → full-auto 모드 권장 → 재시도 |
 | agent wait 타임아웃 (Codex) | close_agent 후 재spawn → 섹션 범위 축소 고려 |
+| Gemini 에이전트 미인식 | `/agents`로 확인 → 없으면 `sync-gemini-assets.js` 재실행 → 그래도 실패 시 orchestrator 폴백 전환 |
+| spawn_subagent 실패 (Grok) | `grok inspect --json`으로 compat.claude agents 확인 → 재spawn 1회 → 실패 시 사용자 보고 |
 | 2회 재시도 후에도 실패 | 해당 섹션을 Lead가 직접 구현 (subagent 위임) 또는 사용자에게 보고 |
 
 ## Team Cleanup (필수 — 좀비 teammate 방지)

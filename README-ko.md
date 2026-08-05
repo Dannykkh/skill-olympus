@@ -607,7 +607,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 | 구성 요소 | 설명 |
 |-----------|------|
 | **Orchestrator MCP** | SQLite WAL 작업 큐, 파일 락, 의존성 해결 |
-| **workpm** | 통합 PM 엔트리포인트 (Agent Teams 또는 MCP 모드) |
+| **workpm** | 통합 PM 엔트리포인트 (CLI별 네이티브 멀티에이전트, MCP는 폴백) |
 | **pmworker** | 통합 Worker 엔트리포인트 (모든 CLI) |
 
 ---

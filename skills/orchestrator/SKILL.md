@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: PM-Worker 패턴의 Multi-AI 오케스트레이션 (MCP 기반). 대규모/크로스-CLI 프로젝트용. /daedalus --mcp로 실행. 일반 프로젝트는 네이티브 모드 권장.
+description: PM-Worker 패턴의 Multi-AI 오케스트레이션 (MCP 기반). 네이티브 멀티에이전트의 폴백 + 정책 레이어 (hard file lock, 외부 태스크 보드, 크로스-CLI 혼합). /daedalus --mcp로 실행. 일반 프로젝트는 네이티브 모드 권장.
 triggers:
   - "workpm"
   - "daedalus"
@@ -28,9 +28,9 @@ PM (Project Manager)이 태스크를 분배하고, Worker들이 병렬로 수행
 
 | 상황 | 진입점 | 이유 |
 |------|--------|------|
-| 일반 프로젝트 (Claude/Codex, 섹션 10개 미만) | `/daedalus` (네이티브) | Claude=Agent Teams, Codex=spawn_agent — 설치 불필요, 실시간 팀원 통신 |
+| 일반 프로젝트 (섹션 10개 미만) | `/daedalus` (네이티브) | 4-CLI 전부 네이티브 멀티에이전트 보유 (Claude=Agent Teams, Codex=spawn_agent, Gemini=서브에이전트, Grok=spawn_subagent) — 설치 불필요 |
 | 대규모(섹션 10+) / 장시간 / 크로스-CLI 혼합 | `/daedalus --mcp` (이 모드) | 태스크 보드가 외부 저장돼 세션 한도와 무관 |
-| Gemini 단독 (네이티브 팀 도구 없음) | `/daedalus --mcp` | 유일한 병렬 경로 |
+| 구버전 CLI (네이티브 멀티에이전트 도구 없음) | `/daedalus --mcp` | 유일한 병렬 경로 (폴백) |
 | 파일 잠금(hard lock)이 필요한 병렬 수정 | `/daedalus --mcp` | `orchestrator_lock_file` — 네이티브 팀은 소유권 규칙(soft)뿐 |
 
 ## 설치
@@ -69,10 +69,11 @@ orchestrator/
 | CLI | 권장 엔트리포인트 | 실제 동작 |
 |-----|-------------------|-------------|
 | **Claude** | `workpm` | Agent Teams 활용, 실시간 팀원 통신 |
-| **Codex** | `workpm` 또는 `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
-| **Gemini** | `workpm` 또는 `workpm-mcp` | MCP 도구만 사용, 태스크 기반 |
+| **Codex** | `workpm` | Native spawn_agent (명시적 MCP는 `workpm-mcp`) |
+| **Gemini** | `workpm` | Native 서브에이전트 (미실측 — 인식 실패 시 `workpm-mcp` 폴백) |
+| **Grok** | `workpm` | Native spawn_subagent |
 
-- `workpm`: 통합 PM 엔트리포인트. Claude에서는 Agent Teams 모드, Codex/Gemini에서는 `workpm-mcp` 경로로 라우팅
+- `workpm`: 통합 PM 엔트리포인트. 각 CLI의 네이티브 멀티에이전트로 실행, 네이티브 부재 시 `workpm-mcp`로 폴백
 - `workpm-mcp`: 명시적 MCP-only PM 엔트리포인트. 모든 CLI에서 동작
 
 ### Worker 모드 (모든 CLI 공통)

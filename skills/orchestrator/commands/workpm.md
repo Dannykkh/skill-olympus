@@ -365,10 +365,10 @@ Task({
 3. 검증 리포트 수신 → 판정 확인
 4. PARTIAL MATCH인 경우 → 누락 노드를 남은 팀원에게 추가 구현 지시
 5. PARTIAL/MISMATCH가 추가 구현 2라운드 내 해결되지 않으면 → "미완"으로 명시 보고 (통과로 올리지 않음, 소진=미완)
-5. 재검증 → FULL MATCH 달성 시 최종 보고
-6. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
-7. activity log에 최종 검증 결과 기록
-8. 팀원 전원 해고 + **TeamDelete 호출** (좀비 teammate 방지, 리소스 해제)
+6. 재검증 → FULL MATCH 달성 시 최종 보고
+7. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
+8. activity log에 최종 검증 결과 기록
+9. 팀원 전원 해고 + **TeamDelete 호출** (좀비 teammate 방지, 리소스 해제)
 
 ⚠️ **Phase 중간에 중단되더라도 TeamDelete 필수** — 에러/컨텍스트 한도 등으로 중단 시에도 반드시 팀 정리.
 
@@ -376,17 +376,21 @@ Task({
 
 ## 시작 절차
 
-1. **팀 생성 가용성 확인 (필수 — Phase 1 전에 반드시)**
+1. **실행 프리미티브 확인 (필수 — Phase 1 전에 반드시)**
 
    ```
-   TeamCreate 도구 사용 가능한가?
+   TeamCreate 도구 사용 가능한가? (Claude)
      ├─ ✅ 가능 → 팀 모드로 진행
-     └─ ❌ 불가 → 폴백 모드 결정:
-          ├─ 사용자에게 안내: "Agent Teams가 비활성 상태입니다.
-          │   settings.json에 아래 설정을 확인해주세요:
-          │   - env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1'
-          │   - teammateMode: 'in-process' 또는 'tmux'"
-          └─ 사용자가 설정 불가 시 → subagent(Task) 방식으로 Phase 진행
+     └─ ❌ 불가:
+          ├─ Claude가 아닌 CLI → TeamCreate 부재가 정상.
+          │   skills/workpm/SKILL.md의 "CLI별 실행 프리미티브" 표에 따라
+          │   자기 CLI 도구(spawn_agent / 서브에이전트 위임 / spawn_subagent)로 치환해 진행.
+          │   그 도구도 없으면 → workpm-mcp (orchestrator MCP) 폴백
+          ├─ Claude 구버전 → 사용자에게 안내:
+          │   "settings.json에 env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1'
+          │    + teammateMode: 'in-process' 또는 'tmux' 확인"
+          │   (현행 Claude Code는 Agent Teams 기본 제공 — 이 안내는 구버전만)
+          └─ 설정 불가 시 → subagent(Task) 방식으로 Phase 진행
    ```
 
    **팀 모드 시 TeamCreate 호출 규칙:**
@@ -395,13 +399,14 @@ Task({
    - 이전 실행에서 같은 팀명이 남아있을 수 있으므로, 생성 전 TeamDelete 시도 (에러 무시)
    - TeamCreate 실패 시: 1회 재시도 → 재실패 시 subagent 폴백
 
-2. **AI Provider 감지**
+2. **AI Provider 감지** — orchestrator MCP 설치 시에만
    - `orchestrator_detect_providers`로 설치된 AI CLI 확인
    - 미설치 CLI에는 절대 태스크 배정하지 않음
+   - MCP 미설치면 이 단계 생략 (네이티브 팀원만 사용)
 
 3. **플랜 파일 로드**
    $ARGUMENTS (경로가 주어진 경우 해당 파일 사용)
-   - 경로 없으면 `orchestrator_get_latest_plan`으로 최신 플랜 자동 로드
+   - 경로 없으면 `orchestrator_get_latest_plan`으로 최신 플랜 자동 로드 (MCP 미설치면 Glob으로 `docs/plan/**/plan.md` 최신 파일 탐색)
    - zephermine 산출물이 있으면 [Zephermine 산출물 활용](#zephermine-산출물-활용) 참조
 
 4. **프로젝트 분석** — ⚠️ 팀원에게 위임
@@ -419,6 +424,9 @@ Task({
 ---
 
 ## Activity Log 활용
+
+> orchestrator MCP 미설치 환경(순수 네이티브 모드)에서는 같은 내용을
+> `conversations/{YYYY-MM-DD}-team-daedalus.md`에 기록한다 (agent-team의 Activity Log 규칙과 동일).
 
 ### Decision 로깅
 
@@ -559,7 +567,7 @@ TeamCreate({ name: "impl-auth", model: "sonnet", mode: "bypassPermissions", ... 
 TeamCreate({ name: "reviewer", model: "opus", mode: "bypassPermissions", ... })
 ```
 
-### 외부 CLI 배정
+### 외부 CLI 배정 (MCP 모드 전용 — `aiProvider`는 orchestrator_create_task 파라미터)
 
 | 태스크 유형 | 담당 | 비고 |
 |------------|------|------|
@@ -572,7 +580,7 @@ TeamCreate({ name: "reviewer", model: "opus", mode: "bypassPermissions", ... })
 
 ---
 
-## Worker 관리
+## Worker 관리 (MCP 모드 전용)
 
 ### 자동 생성 (권장)
 

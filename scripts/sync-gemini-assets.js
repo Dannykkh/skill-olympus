@@ -473,7 +473,7 @@ function run() {
 
   // Claude 전용 스킬 제외 — Gemini에서 사용 불가한 도구(TeamCreate, SendMessage)에 의존하는 스킬
   const GEMINI_EXCLUDE_SKILLS = [
-    "agent-team",      // Claude Agent Teams 전용 (TeamCreate/SendMessage)
+    // agent-team은 2026-08-05 4-CLI 네이티브 재설계로 Gemini 서브에이전트 경로 지원 — 제외 해제
     "mnemo",           // Claude 전용 장기기억. Gemini용은 gemini-mnemo
     "codex-mnemo",     // Codex 전용 장기기억
     "grok-mnemo",      // Grok 전용 장기기억

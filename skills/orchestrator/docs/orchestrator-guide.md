@@ -196,12 +196,14 @@ npm run build
 
 | CLI | 명령어 | 모드 | 특징 |
 |-----|--------|------|------|
-| **Claude** | `workpm` | Agent Teams | 팀원과 실시간 대화, 해고/재고용 |
-| **Codex** | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
-| **Gemini** | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
+| **Claude** | `workpm` | Agent Teams (네이티브) | 팀원과 실시간 대화, 해고/재고용 |
+| **Codex** | `workpm` | spawn_agent (네이티브) | 폴백/대규모는 `workpm-mcp` |
+| **Gemini** | `workpm` | 서브에이전트 (네이티브, 미실측) | 인식 실패 시 `workpm-mcp` |
+| **Grok** | `workpm` | spawn_subagent (네이티브) | Claude 자산 직접 읽음 |
+| (공통 폴백) | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
 
-- `workpm`: Claude Agent Teams 활용. Native Agent Teams 기능으로 팀원 관리
-- `workpm-mcp`: orchestrator_* MCP 도구만 사용. 모든 CLI에서 동작
+- `workpm`: 각 CLI의 네이티브 멀티에이전트로 실행 (프리미티브 표는 `skills/workpm/SKILL.md`)
+- `workpm-mcp`: orchestrator_* MCP 도구만 사용. 구버전 폴백 + 대규모/hard lock 경로
 
 ### PM이 하는 일 (v2)
 

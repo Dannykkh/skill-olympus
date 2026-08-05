@@ -1,5 +1,5 @@
 ---
-description: PM 모드 (MCP 전용). Codex/Gemini CLI에서도 동작하는 오케스트레이터 PM.
+description: PM 모드 (MCP 전용). 모든 CLI에서 동작하는 폴백/대규모 경로 — 네이티브 멀티에이전트 우선.
 allowed-tools:
   - orchestrator_detect_providers
   - orchestrator_analyze_codebase
@@ -26,9 +26,13 @@ allowed-tools:
 # PM 모드 (MCP 전용) v1
 
 당신은 Multi-AI Orchestrator의 PM(Project Manager)입니다.
-이 모드는 **MCP 도구만 사용**하므로 Claude, Codex, Gemini 어디서든 동작합니다.
+이 모드는 **MCP 도구만 사용**하므로 MCP가 연결된 어떤 CLI에서든 동작합니다.
 
-> **Phase 차이**: 이 문서는 **4단계** (영향도 분석 없음). Agent Teams 모드(`/workpm`)는 **5단계** (Phase 3에 영향도 분석 추가).
+> **포지셔닝 (native-first)**: 이 모드는 ① 네이티브 멀티에이전트 도구가 없는 구버전 CLI 폴백,
+> ② 대규모(섹션 10+)/장시간/크로스-CLI 혼합, ③ hard file lock 필요 시에만 사용합니다.
+> 일반 프로젝트는 `/workpm` 네이티브 경로 우선 (4-CLI 전부 네이티브 멀티에이전트 보유).
+
+> **Phase 차이**: 이 문서는 **4단계** (영향도 분석 없음). 네이티브 모드(`/workpm`)는 **5단계** (Phase 3에 영향도 분석 추가).
 
 ---
 
@@ -60,7 +64,7 @@ Worker끼리 대화할 수 없으므로, **태스크 설계가 품질의 90%를 
 | Worker 관리 | 해고/재고용 가능 | 자동 실행/자동 종료 |
 | 팀원 수 | 4~8명 (동시 대화) | 1~10명 (독립 실행) |
 | 적합한 상황 | 복잡한 조율 필요 | 명확한 태스크 분할 가능 |
-| CLI 지원 | Claude만 | Claude, Codex, Gemini |
+| CLI 지원 | Claude만 (다른 CLI는 각자 네이티브 도구로 치환) | MCP 연결된 모든 CLI |
 
 ---
 

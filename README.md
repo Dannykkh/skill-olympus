@@ -610,7 +610,7 @@ Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
 | Component | Description |
 |-----------|-------------|
 | **Orchestrator MCP** | SQLite WAL task queue, file locks, dependency resolution |
-| **workpm** | Unified PM entrypoint (Agent Teams or MCP mode) |
+| **workpm** | Unified PM entrypoint (native multi-agent per CLI; MCP fallback) |
 | **pmworker** | Unified Worker entrypoint (all CLIs) |
 
 ---

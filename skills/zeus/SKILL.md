@@ -258,6 +258,20 @@ argos의 1차 감리는 결정론적이다 — 정적 분석·빌드·테스트 
 - zero-interaction 유지: 리뷰는 백그라운드로 띄워 Phase 4와 병렬 진행한다. 한쪽 패밀리만 가용하면 single-model review로 라벨하고 consensus를 주장하지 않는다.
 - 결과(적용 여부·사유·승인 커밋)를 Decision Ledger에 `[ZEUS-AUTO:taste]`로 기록한다.
 
+**Workflow 검증 fan-out (ultracode 세션 한정, Claude 전용):**
+
+> 정책: 스킬은 Workflow를 자동 호출하지 않는다 (과금 옵트인 전제). 이 분기는 시스템 리마인더가
+> **ultracode ON을 확인해준 세션에서만** 활성 — 그 외에는 존재하지 않는 것처럼 취급하고,
+> 파이프라인을 멈추고 ultracode를 켜달라고 요청하지도 않는다 (zero-interaction 유지).
+
+- 조건 3개 모두 충족 시: Claude 세션 + ultracode ON 확인됨 + Workflow 도구 가용
+- 동작: argos 1차 감리의 검증 항목(정적 분석·AC 대조·경계면 정합)을 Workflow로 fan-out —
+  차원별 finder 병렬 → 발견별 적대적 검증(반박 시도, 과반 생존만 채택) → 수치 집계
+- 산출은 동일: `verify-report.md` + zeus-log.md 통과 수치. **판정 기준·완료 계약 불변** — 엔진만 바뀌고 증거 형식은 같다
+- 교차모델 수렴 게이트(034)와의 관계: 위험 트리거 시 교차모델 리뷰는 그대로 유지 — Workflow fan-out은 argos 내부 검증의 병렬화이지 타 모델 리뷰의 대체가 아니다
+- ultracode OFF 또는 비-Claude CLI: 현행 argos 스킬 체이닝 그대로
+- Decision Ledger 기록: `[ZEUS-AUTO:mechanical] Phase 3 엔진: Workflow fan-out (ultracode ON 세션)`
+
 **폴백 조건 (Phase 3은 skip 금지):**
 - 설계 산출물이 없어도 **정적 분석(코드 품질/보안)은 항상 실행**
 - 빌드 실패 → 보고서에 기록하고 Phase 4로 진행

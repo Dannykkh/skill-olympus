@@ -137,6 +137,22 @@ Wave 2+ 실행 시, 선행 섹션의 결과를 teammate에게 전달:
 | Wave 전체 실패 | 이후 Wave도 중단, **teammate shutdown → TeamDelete 실행 후** 사용자에게 보고 |
 | 작업 완료 또는 중단 | **반드시 teammate shutdown → TeamDelete 순서로 호출** — shutdown 없이 TeamDelete하면 active member 잔존으로 실패 → 좀비 발생 |
 
+## CLI별 실행 형식
+
+위 사이클은 Claude(Agent Teams) 기준. 다른 CLI는 같은 사이클을 아래 도구로 수행한다:
+
+| CLI | 팀원 생성 | 지시 전달 | 모니터링 | 정리 |
+|-----|----------|----------|----------|------|
+| **Claude** | `TeamCreate` | `SendMessage` (summary 필수) | `TaskList` 폴링 | shutdown → `TeamDelete` |
+| **Codex** | `spawn_agent` | `send_message` | `wait` 블로킹 | `close_agent` |
+| **Gemini** | 없음 (사전 정의 에이전트) | 에이전트명 도구 호출의 위임 프롬프트에 전부 포함 | 도구 반환 = 완료 보고 | 불필요 (도구 호출 단위) |
+| **Grok** | `spawn_subagent(subagent_type, prompt)` | prompt에 전부 포함 | 반환 요약 수신 | 불필요 (자식 세션 자동 종료) |
+
+**Gemini/Grok 공통 주의:**
+- 중간 개입 채널이 없다 (fire-and-return). 지시 프롬프트에 완료 기준·담당 파일·소유권 규칙을 빠짐없이 담을 것.
+- 반환 요약을 그대로 믿지 말 것 — 담당 파일 실존(Glob/Read)과 Acceptance Criteria 대조로 교차 검증.
+- 실패 시 재위임 1회 → 그래도 실패면 Lead가 직접 서브태스크 분해 또는 사용자 보고.
+
 ## Delegate 모드 운용
 
 Lead(나)가 Delegate 모드(Shift+Tab)에서 운용할 때:
