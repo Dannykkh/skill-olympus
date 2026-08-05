@@ -391,20 +391,29 @@ if ($lastArg) {
 
 if (-not $payload) {
     try {
-        # stdin 워치독: notify는 payload를 argv로 전달하므로 stdin은 fallback일 뿐 —
-        # stdin이 열린 채 닫히지 않으면 무한 대기(좀비 프로세스)가 되므로 15초로 제한 (gotcha 046)
-        # 주의 1: [Console]::In은 SyncTextReader라 async 메서드도 동기 블로킹됨 →
-        #         OpenStandardInput 스트림에 StreamReader를 직접 붙여야 진짜 비동기로 읽힌다.
-        $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
-        $readTask = $stdinReader.ReadToEndAsync()
-        if ($readTask.Wait(15000)) {
-            $payload = Parse-JsonSafe $readTask.Result
-        } else {
-            # 주의 2: 워치독 초과 시 계속 진행 금지 — 미완료 stdin read가 남은 상태에서
-            # native 명령(git 등)을 호출하면 PS 5.1의 stdin 전달 대기에 걸려 행이 된다 (실측 재현).
+        # stdin 워치독 v2 (gotcha 063): notify는 payload를 argv로 전달하므로 stdin은 fallback일 뿐 —
+        # stdin이 열린 채 닫히지 않으면 무한 대기(좀비 프로세스)가 되므로 15초로 제한.
+        # 기존 StreamReader.ReadToEndAsync + Wait는 PS 5.1에서 동기 블로킹되어 워치독이 무효였음
+        # (실측: EOF까지 대기) → raw stream ReadAsync(byte[]) chunk 루프 + deadline만 진짜 비동기.
+        # 주의: 워치독 초과 시 계속 진행 금지 — 미완료 stdin read가 남은 상태에서
+        # native 명령(git 등)을 호출하면 PS 5.1의 stdin 전달 대기에 걸려 행이 된다 (실측 재현).
+        $mnemoDeadline = [DateTime]::UtcNow.AddSeconds(15)
+        $mnemoStdin = [Console]::OpenStandardInput()
+        $mnemoBuf = New-Object System.IO.MemoryStream
+        $mnemoChunk = New-Object byte[] 65536
+        $mnemoTimedOut = $false
+        while ($true) {
+            $mnemoReadTask = $mnemoStdin.ReadAsync($mnemoChunk, 0, $mnemoChunk.Length)
+            $mnemoRemainMs = [int][Math]::Max(0, ($mnemoDeadline - [DateTime]::UtcNow).TotalMilliseconds)
+            if (-not $mnemoReadTask.Wait($mnemoRemainMs)) { $mnemoTimedOut = $true; break }
+            if ($mnemoReadTask.Result -le 0) { break }
+            $mnemoBuf.Write($mnemoChunk, 0, $mnemoReadTask.Result)
+        }
+        if ($mnemoTimedOut) {
             Write-DebugLog "stdin watchdog timeout (15s) — fail-open exit"
             exit 0
         }
+        $payload = Parse-JsonSafe ([System.Text.Encoding]::UTF8.GetString($mnemoBuf.ToArray()))
     } catch {}
 }
 

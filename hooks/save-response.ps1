@@ -305,7 +305,25 @@ function Ensure-MemoryScaffold {
 }
 
 try {
-    $json = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    # stdin 워치독 v2 (gotcha 063): 기존엔 워치독 없는 블로킹 ReadToEnd라 stdin이 열린 채
+    # 닫히지 않으면 훅 타임아웃(60s)까지 매달렸음 (창 내 16회 실측).
+    # StreamReader.ReadToEndAsync + Wait는 PS 5.1에서 동기 블로킹이라 무효 —
+    # raw stream ReadAsync(byte[])만 PS 5.1/7 모두 진짜 비동기(실측) → chunk 루프 + deadline.
+    # 5초 내 미도착 시 fail-open. (미저장분은 SessionStart reconcile이 backfill)
+    $mnemoDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    $mnemoStdin = [Console]::OpenStandardInput()
+    $mnemoBuf = New-Object System.IO.MemoryStream
+    $mnemoChunk = New-Object byte[] 65536
+    while ($true) {
+        $mnemoReadTask = $mnemoStdin.ReadAsync($mnemoChunk, 0, $mnemoChunk.Length)
+        $mnemoRemainMs = [int][Math]::Max(0, ($mnemoDeadline - [DateTime]::UtcNow).TotalMilliseconds)
+        if (-not $mnemoReadTask.Wait($mnemoRemainMs)) { exit 0 }
+        if ($mnemoReadTask.Result -le 0) { break }
+        $mnemoBuf.Write($mnemoChunk, 0, $mnemoReadTask.Result)
+    }
+    $rawInput = [System.Text.Encoding]::UTF8.GetString($mnemoBuf.ToArray())
+    if (-not $rawInput) { exit 0 }
+    $json = $rawInput | ConvertFrom-Json
 } catch {
     Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"
 }

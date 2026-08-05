@@ -236,15 +236,24 @@ function Ensure-MemoryScaffold {
 }
 
 try {
-    # stdin 워치독: 활성 턴 진행 중 제출된 프롬프트는 stdin이 전달되지 않을 수 있어
-    # 무한 대기 → 훅 타임아웃(60s) 에러가 발생함. 15초 내 미도착 시 fail-open으로 조용히 종료.
-    # (미저장분은 SessionStart reconcile이 transcript에서 backfill)
-    # 주의: [Console]::In은 SyncTextReader 래퍼라 ReadToEndAsync()도 동기 블로킹됨 →
-    #       OpenStandardInput 스트림에 StreamReader를 직접 붙여야 진짜 비동기로 읽힌다.
-    $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
-    $readTask = $stdinReader.ReadToEndAsync()
-    if (-not $readTask.Wait(15000)) { exit 0 }
-    $rawInput = $readTask.Result
+    # stdin 워치독 v2 (gotcha 063, 실측 재검증): 활성 턴 진행 중 제출된 프롬프트는 stdin이
+    # 전달되지 않을 수 있어 무한 대기 → 훅 타임아웃(60s)까지 매달림.
+    # 기존 워치독(StreamReader.ReadToEndAsync + Wait)은 PS 5.1(.NET Framework)에서
+    # ReadToEndAsync가 동기 블로킹되어 Wait(timeout)에 도달하지 못해 무효였음 (실측: EOF까지 대기).
+    # raw stream의 ReadAsync(byte[])는 PS 5.1/7 모두 진짜 비동기(실측) → chunk 루프 + deadline.
+    # 5초 내 미도착 시 fail-open으로 조용히 종료. (미저장분은 SessionStart reconcile이 backfill)
+    $mnemoDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    $mnemoStdin = [Console]::OpenStandardInput()
+    $mnemoBuf = New-Object System.IO.MemoryStream
+    $mnemoChunk = New-Object byte[] 65536
+    while ($true) {
+        $mnemoReadTask = $mnemoStdin.ReadAsync($mnemoChunk, 0, $mnemoChunk.Length)
+        $mnemoRemainMs = [int][Math]::Max(0, ($mnemoDeadline - [DateTime]::UtcNow).TotalMilliseconds)
+        if (-not $mnemoReadTask.Wait($mnemoRemainMs)) { exit 0 }
+        if ($mnemoReadTask.Result -le 0) { break }
+        $mnemoBuf.Write($mnemoChunk, 0, $mnemoReadTask.Result)
+    }
+    $rawInput = [System.Text.Encoding]::UTF8.GetString($mnemoBuf.ToArray())
     if (-not $rawInput) { exit 0 }
     $json = $rawInput | ConvertFrom-Json
 } catch {

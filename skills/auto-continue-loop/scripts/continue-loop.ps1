@@ -172,16 +172,24 @@ if (-not $payload) {
 }
 if (-not $payload) {
     try {
-        # stdin 워치독: 15초 내 미도착 시 fail-open 종료 — 미완료 stdin read가 남은 채
-        # native 명령을 호출하면 PS 5.1 stdin 전달 대기에 걸려 행이 된다 (gotcha 046).
-        # [Console]::In은 SyncTextReader라 async도 동기 블로킹 → OpenStandardInput에 직접 StreamReader.
-        $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
-        $readTask = $stdinReader.ReadToEndAsync()
-        if ($readTask.Wait(15000)) {
-            $payload = "$($readTask.Result)".Trim()
-        } else {
-            exit 0
+        # stdin 워치독 v2 (gotcha 063): 15초 내 미도착 시 fail-open 종료 — 미완료 stdin read가
+        # 남은 채 native 명령을 호출하면 PS 5.1 stdin 전달 대기에 걸려 행이 된다.
+        # 기존 StreamReader.ReadToEndAsync + Wait는 PS 5.1에서 동기 블로킹되어 워치독이 무효였음
+        # (실측: EOF까지 대기) → raw stream ReadAsync(byte[]) chunk 루프 + deadline만 진짜 비동기.
+        $mnemoDeadline = [DateTime]::UtcNow.AddSeconds(15)
+        $mnemoStdin = [Console]::OpenStandardInput()
+        $mnemoBuf = New-Object System.IO.MemoryStream
+        $mnemoChunk = New-Object byte[] 65536
+        $mnemoTimedOut = $false
+        while ($true) {
+            $mnemoReadTask = $mnemoStdin.ReadAsync($mnemoChunk, 0, $mnemoChunk.Length)
+            $mnemoRemainMs = [int][Math]::Max(0, ($mnemoDeadline - [DateTime]::UtcNow).TotalMilliseconds)
+            if (-not $mnemoReadTask.Wait($mnemoRemainMs)) { $mnemoTimedOut = $true; break }
+            if ($mnemoReadTask.Result -le 0) { break }
+            $mnemoBuf.Write($mnemoChunk, 0, $mnemoReadTask.Result)
         }
+        if ($mnemoTimedOut) { exit 0 }
+        $payload = ([System.Text.Encoding]::UTF8.GetString($mnemoBuf.ToArray())).Trim()
     } catch {}
 }
 
