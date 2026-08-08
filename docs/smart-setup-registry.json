@@ -277,6 +277,7 @@
     { "id": "shipping-and-launch", "tags": ["*"], "priority": "optional" },
     { "id": "frontend-design", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
     { "id": "hestia", "tags": ["*"], "priority": "optional" },
+    { "id": "themis", "tags": ["*"], "priority": "optional" },
     { "id": "workpm", "tags": ["*"], "priority": "optional" },
     { "id": "skill-evolve", "tags": ["*"], "priority": "optional" },
     { "id": "youtube-transcript", "tags": ["*"], "priority": "optional" },

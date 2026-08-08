@@ -122,6 +122,7 @@ Codex는 Claude처럼 커스텀 slash command 레지스트리를 직접 제공�
 - `/aphrodite`, `아프로디테` → `design-plan`
 - `/minos`, `미노스`, `/qpassenger` (legacy), `큐패신저` → `minos`
 - `/clio`, `클리오`, `/closer` (legacy), `클로저` → `clio`
+- `/themis`, `테미스` → `themis`
 - `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → `agent-team-codex`
 - `/daedalus`, `다이달로스`, `workpm` → `workpm`
 - `/argos`, `아르고스` → `argos`

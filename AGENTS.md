@@ -82,7 +82,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 - 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/seo-audit`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다.
 - 내부 구현은 CLI별 실행 모델 차이를 반영해 달라질 수 있지만, 사용자 인터페이스와 핵심 결과는 맞춰야 합니다.
 - 단순 파일 복사만으로 parity를 판단하지 말고, 전역 설치본에서 실제로 동작하는지까지 검증합니다.
-- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모)
+- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모)
 
 ---
 
@@ -106,7 +106,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (99개)
+### Skills (100개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -118,7 +118,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🛠️ Development | database-schema-designer, supabase-postgres-best-practices, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, deploymonitor, wrangler, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login, health-data | 개발 도구 + Postgres 최적화 + Cloudflare Workers 배포 + 헬스 데이터(Health Connect/HealthKit) 연동 |
 | 🎯 Planning | game-changing-features, shipping-and-launch, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
-| 🧪 Testing | code-reviewer, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오), api-tester, test-driven-development, systematic-debugging, semgrep-rule-creator | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 + API 연동 테스트 + TDD 사이클 + 근본원인 디버깅 + Semgrep 커스텀 규칙 |
+| 🧪 Testing | code-reviewer, minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오), themis (테미스), api-tester, test-driven-development, systematic-debugging, semgrep-rule-creator | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 + 개인정보 전수 감사→국가별 처리방침 생성(ko/us/eu) + API 연동 테스트 + TDD 사이클 + 근본원인 디버깅 + Semgrep 커스텀 규칙 |
 | 📦 Git | commit-work, release-notes | Git 워크플로우 & 릴리즈 노트 자동화 (버전+CHANGELOG+태그) |
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |

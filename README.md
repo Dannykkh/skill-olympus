@@ -52,7 +52,7 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 | 📋 **Launch checklist** | `/launch` — pre-launch quality gates, staged rollout plan, rollback playbook |
 | 📐 **Decision records** | `/adr` — architecture decisions with alternatives, trade-offs, and superseded tracking |
 
-**99 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
+**100 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
 
 ---
 
@@ -86,7 +86,7 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **99 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+That's it. **100 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
 
 > Codex/Gemini steps auto-skip if the respective CLI is not installed.
 
@@ -501,7 +501,7 @@ Each skill works standalone or as part of the pipeline.
 
 **`mnemo` — Cross-CLI memory (Keeper)**
 - **When:** always — and whenever you ask "what did we do before?"
-- **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks.
+- **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks. Opt-out: `MNEMO_DISABLE=1` (version check: `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
 - **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Gemini; past-conversation search; auto handoff near the context limit.
 - **Output:** `MEMORY.md` (index) + `memory/*.md` (semantic) + `conversations/*.md` (episodic).
 - **Next:** —
@@ -549,7 +549,7 @@ Includes auto gotcha/learned tracking:
 
 ## What's Inside
 
-### Skills (97)
+### Skills (100)
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
@@ -558,7 +558,7 @@ Includes auto gotcha/learned tracking:
 | **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 161 palettes, 84 fonts, 14 themes (4 Hangul), SEO+AEO+GEO audit, chart selection guide |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
-| **Testing** | minos, auto-continue-loop, flow-verifier + 3 more | Chronos loop, Playwright QA |
+| **Testing** | minos, auto-continue-loop, flow-verifier, themis + 3 more | Chronos loop, Playwright QA, privacy-policy generator (Themis) |
 | **Memory** | mnemo, memory-compact, project-gotchas, memory-distill | 3-layer memory, auto learning, raw distillation (rebuild) |
 | **Docs** | mermaid-diagrams, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, presentations, documents, domain dictionary (DDD UL) |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |

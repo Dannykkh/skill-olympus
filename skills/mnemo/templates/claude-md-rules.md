@@ -88,6 +88,12 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 
 **적용 대상:** 사용자 입력과 Claude 응답 모두에 적용됩니다.
 
+## 저장 opt-out
+
+- 환경변수 `MNEMO_DISABLE=1`(또는 `true`/`yes`)을 설정하면 mnemo 자동 저장(대화/도구 기록/backfill)이 전부 비활성화됩니다. 기존 저장분은 삭제되지 않고 유지됩니다.
+- 특정 프로젝트만 끄려면 해당 프로젝트 `.claude/settings.json`의 `env` 블록에 `"MNEMO_DISABLE": "1"`을 추가하세요.
+- `OLYMPUS_UPDATE_CHECK_DISABLE=1`은 세션 시작 시 원격 버전 체크(GitHub GET 요청)를 끕니다.
+
 ## 글로벌 스킬 & 에이전트 카탈로그
 
 설치된 모든 스킬은 `~/.claude/SKILLS-CATALOG.md`, 에이전트는 `~/.claude/AGENTS-CATALOG.md`에 목록화되어 있습니다.
@@ -121,6 +127,7 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 - `/aphrodite`, `아프로디테` → `design-plan`
 - `/minos`, `미노스`, `/qpassenger` (legacy), `큐패신저` → `minos`
 - `/clio`, `클리오`, `/closer` (legacy), `클로저` → `clio`
+- `/themis`, `테미스` → `themis`
 - `/agent-team`, `/poseidon`, `포세이돈`, `poseidon` → `agent-team`
 - `/daedalus`, `다이달로스`, `workpm` → `workpm`
 - `/argos`, `아르고스` → `argos`

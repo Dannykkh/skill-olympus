@@ -14,6 +14,7 @@
 | 미노스 | `/minos` |
 | 대니즈팀 | `/agent-team` |
 | 클리오 | `/clio` |
+| 테미스 | `/themis` |
 | 릴리즈 | `/release` |
 | 견적 | `/estimate` |
 | 헤르메스 | `/hermes` |
@@ -298,6 +299,7 @@ claude plugin install voltagent-qa-sec
 | `skills/memory-distill/` | raw observations.jsonl → 정제 .md 변환 (사용자 트리거, rebuild 모드 지원) (/memory-distill) |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
 | `skills/clio/` | 역사의 뮤즈(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/clio) |
+| `skills/themis/` | 테미스(Themis) — 개인정보 수집/저장/전송/삭제 전수 감사(file:line 근거) + 국가별(한국/미국/EU) 개인정보처리방침 초안 생성 (/themis) |
 | `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (/release) |
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (/estimate) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
