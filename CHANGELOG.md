@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.20.2] - 2026-08-08
+
+### Code Refactoring
+
+- **themis**: 조문 검증에서 법령 MCP 의존 제거 — 국가법령정보센터(law.go.kr) WebFetch 단일 경로로 통일(지침 신선도 체크와 동일 패턴), 웹 도구 부재 시 [확인 필요] 폴백 유지. 공개 웹으로 충분한 확인에 별도 도구 의존을 제안할 이유가 없음 (e684bf4)
+
 ## [4.20.1] - 2026-08-08
 
 ### Features
