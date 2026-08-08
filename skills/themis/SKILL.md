@@ -124,6 +124,30 @@ metadata:
 | 미국 | `templates/policy-us.md` | CCPA/CPRA + FTC 관행 | 수집 카테고리 매핑(§1798.140) / 판매·공유 여부 / 소비자 권리 / 아동(COPPA) / 보존 / 보안 |
 | EU | `templates/policy-eu.md` | GDPR Art. 13/14 | Controller / 법적 근거(Art. 6) / 국외 이전(Chapter V) / 정보주체 권리 / 보존 / 감독기구 진정권 |
 
+### 한국판: 공식 지침 준거 + 신선도 체크
+
+한국판의 정본은 개인정보보호위원회 **「개인정보 처리방침 작성지침」**입니다. 지침은 계속 개정되므로
+버전을 핀하고 실행 시점에 신선도를 확인합니다:
+
+- **기준판**: 「개인정보 처리방침 작성지침(2025.4.)」 (2025-04-21 등록, [개인정보 포털 안내서](https://www.privacy.go.kr/front/bbs/bbsView.do?bbsNo=BBSMSTR_000000000049&bbscttNo=20806) · [개인정보위 원문](https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS217&mCode=D010030000&nttId=11134))
+- **신선도 체크 (실행 시)**: [개인정보 포털 안내서 게시판](https://www.privacy.go.kr/front/bbs/bbsList.do?bbsNo=BBSMSTR_000000000049)을 WebFetch해 기준판보다 새 개정판이 있는지 확인.
+  더 새 판이 있으면 그 판을 따르고 **"기준판이 갱신되었다"고 사용자에게 고지**.
+  웹 도구가 없는 환경이면 기준판으로 생성하되, 산출물에 "최신 지침 확인 권장 (기준판: 2025.4.)"을 표기
+- **2025.4.판에서 구체화된 항목** (해당 시 반영): 행태정보의 수집·이용·제공 및 거부 안내,
+  고충 처리 부서 연락처 기재, 정보주체 권리 행사 절차 구체화, 모바일 앱 공개 방식,
+  아동 대상 서비스의 아동용 처리방침. 부록의 소상공인용·공공기관용 예시도 참조 대상
+- 지침 PDF를 레포에 동봉하지 않는 이유: 라이선스(공공누리 유형) [확인 필요] + 개정 시 낡음 — 링크 참조가 정본
+
+### 조문 인용 검증 (선택 — 한국법령 MCP 연동)
+
+세션에 한국법령 MCP(법제처 국가법령정보센터 Open API 기반: `mcp-kr-legislation`,
+`korean-law-mcp` 등)가 연결되어 있으면:
+
+- 초안에 인용한 조문(제15조 수집, 제21조 파기, 제22조의2 아동, 제23조 민감정보, 제30조 처리방침 등)과
+  고시(개인정보의 안전성 확보조치 기준 등)를 **원문 조회로 검증** 후 인용
+- 미연결이면 조문 번호에 `[확인 필요]`를 유지하고, 체크리스트에 "법령 MCP 또는 국가법령정보센터에서
+  조문 확인" 항목을 등재 (새 MCP를 만들지 않는다 — 기존 것 연동이 원칙)
+
 ### 채우기 규칙
 
 - 감사에서 확인된 것 → 그대로 기술 (저장 경로·전송 목적지까지 구체적으로)
@@ -158,6 +182,14 @@ metadata:
 | `skills/themis/templates/policy-ko.md` | 한국 개인정보보호법 제30조 템플릿 |
 | `skills/themis/templates/policy-us.md` | 미국 CCPA/CPRA 템플릿 |
 | `skills/themis/templates/policy-eu.md` | EU GDPR Art. 13 템플릿 |
+
+## 외부 참조 (정본)
+
+| 참조 | 용도 |
+|------|------|
+| [개인정보 처리방침 작성지침(2025.4.)](https://www.privacy.go.kr/front/bbs/bbsView.do?bbsNo=BBSMSTR_000000000049&bbscttNo=20806) | 한국판 구조·문구 정본 (기준판) |
+| [개인정보 포털 안내서 게시판](https://www.privacy.go.kr/front/bbs/bbsList.do?bbsNo=BBSMSTR_000000000049) | 실행 시 신선도 체크 대상 |
+| 한국법령 MCP ([mcp-kr-legislation](https://github.com/ChangooLee/mcp-kr-legislation), [korean-law-mcp](https://github.com/chrisryugj/korean-law-mcp) 등) | 조문·고시 인용 검증 (선택 연동) |
 
 ## 다른 스킬과의 관계
 
