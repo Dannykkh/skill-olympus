@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.20.0] - 2026-08-08
+
+### Features
+
+- **themis**: 개인정보처리방침 생성 스킬 신설(테미스, 100번째 스킬) — 코드 전수 감사 5문항(수집/저장/동의/외부전송/삭제) + grep 힌트 5관점 + 함정 체크리스트(soft delete·append-only 로그·언인스톨 범위·마스킹 커버리지·자동 아웃바운드·gitignore `git ls-files` 실측), 운영자 인터뷰 14문항(신원·연락처/정책 결정/서비스 특성/법적 특수사항 — 코드로 알 수 없는 것만 질문), 국가별 템플릿 3종(개인정보보호법 제30조 / CCPA·CPRA §1798.140 매핑 / GDPR Art.13, 로컬 도구·서버형 분기). 원칙: file:line 근거 없는 항목 날조 금지([빈칸]+채움 안내), 법적 판단 [확인 필요] 분리, 법률 자문 아님 고지. 이 레포 자체를 도그푸딩한 실전 초안 3종 동봉(docs/privacy-policy-draft-{ko,us,eu}.md) (e55a91c)
+- **mnemo**: 저장 opt-out `MNEMO_DISABLE` — 4-CLI 저장 훅 15개 진입점(Claude 대화/응답/도구기록/backfill, Codex save-turn/sync-sessions, Gemini/Grok save-turn) 즉시 종료, 기존 저장분 유지. 버전 체크 opt-out `OLYMPUS_UPDATE_CHECK_DISABLE` — 세션 시작 GitHub GET 차단. 테미스 도그푸딩 감사가 드러낸 "끌 수 없는 저장 훅" 갭을 메우는 선행 기능. ps1/sh 켬·끔 대조 실행으로 검증 (2469ba8)
+
 ## [4.19.0] - 2026-08-05
 
 ### Features
