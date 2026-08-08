@@ -9,6 +9,9 @@
 # Note: Gemini는 JSONL transcript가 없어 reconcile이 불가능하다.
 #       훅이 실패하면 해당 턴은 영구 유실되므로 fail-open 로깅이 특히 중요하다.
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+if ($env:MNEMO_DISABLE -match '^(1|true|yes)$') { exit 0 }
+
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

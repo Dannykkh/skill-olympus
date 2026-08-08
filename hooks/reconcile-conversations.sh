@@ -206,8 +206,15 @@ invoke_reconcile() {
     fi
 }
 
-invoke_reconcile "$CLAUDE_SCRIPT" 'claude'
-invoke_reconcile "$CODEX_SCRIPT" 'codex'
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 backfill 저장을 건너뛴다 (개인정보처리방침 거부 방법).
+# 버전 체크·에러 배너는 저장이 아니므로 계속 실행 (버전 체크는 OLYMPUS_UPDATE_CHECK_DISABLE로 별도 제어).
+case "${MNEMO_DISABLE:-}" in
+    1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) ;;
+    *)
+        invoke_reconcile "$CLAUDE_SCRIPT" 'claude'
+        invoke_reconcile "$CODEX_SCRIPT" 'codex'
+        ;;
+esac
 
 # ── 업데이트 체크 (하루 1회, non-blocking) ──
 UPDATE_SCRIPT="$REPO_ROOT/scripts/update-check.sh"

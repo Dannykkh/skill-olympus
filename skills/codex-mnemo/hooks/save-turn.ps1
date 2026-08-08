@@ -3,6 +3,9 @@
 # - append-user.ps1: persist user message
 # - append-assistant.ps1: persist assistant message
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+if ($env:MNEMO_DISABLE -match '^(1|true|yes)$') { exit 0 }
+
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8

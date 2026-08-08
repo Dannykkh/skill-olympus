@@ -41,7 +41,7 @@ node skills/mnemo/install.js --uninstall  # 제거
 | **단순하게** | 파일 기반, DB 없음 |
 | **검색 가능하게** | 키워드 + 동의어 확장 |
 | **점진적 공개** | 필요한 깊이까지만 읽기 (Progressive Disclosure) |
-| **프라이버시** | `<private>` 태그로 민감 정보 제외 |
+| **프라이버시** | `<private>` 태그로 민감 정보 제외, `MNEMO_DISABLE=1`로 저장 전체 opt-out |
 
 ---
 
@@ -182,6 +182,7 @@ python scripts/check_staleness.py <handoff-file>
 | 키워드 태깅 | Claude가 `#tags:` 추가 |
 | 과거 검색 | "이전에 ~했었지?" (Progressive Disclosure) |
 | 민감 정보 제외 | `<private>API키</private>` → `[PRIVATE]` |
+| 저장 전체 끄기 (opt-out) | 환경변수 `MNEMO_DISABLE=1` — 모든 mnemo 훅(대화/도구 기록/backfill)이 즉시 종료, 기존 저장분은 유지 |
 | 지식 축적 | 중요 결정 시 자동 |
 | 세션 전환 | `python scripts/create_handoff.py` |
 | 세션 재개 | 핸드오프 파일 읽고 이어서 |

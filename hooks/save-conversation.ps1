@@ -10,6 +10,9 @@
 # Grok에서는 grok-mnemo 훅이 저장을 전담하므로 이중/오분류 저장 방지 위해 즉시 종료.
 if ($env:GROK_HOOK_EVENT) { exit 0 }
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+if ($env:MNEMO_DISABLE -match '^(1|true|yes)$') { exit 0 }
+
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

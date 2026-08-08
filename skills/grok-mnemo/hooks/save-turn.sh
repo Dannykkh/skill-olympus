@@ -14,6 +14,10 @@
 # - 실패는 .claude/mnemo-errors.log에 기록
 # - $MNEMO_STRICT='1' 이면 실패 시 exit 1
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+# (Grok Stop 이벤트는 stdout 출력 금지 규칙이 있으나, 조용한 exit 0은 안전)
+case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
+
 log_mnemo_error() {
     local ctx="$1"
     local msg="$2"

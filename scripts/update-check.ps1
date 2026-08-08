@@ -11,10 +11,14 @@
 #   OLYMPUS_DIR          — 레포 루트 오버라이드
 #   OLYMPUS_REMOTE_URL   — 원격 VERSION URL 오버라이드
 #   OLYMPUS_STATE_DIR    — 상태 디렉토리 오버라이드
+#   OLYMPUS_UPDATE_CHECK_DISABLE — 1|true|yes 면 버전 체크 비활성화 (원격 요청 없음)
 
 param([switch]$Force)
 
 $ErrorActionPreference = 'SilentlyContinue'
+
+# 버전 체크 opt-out: 세션 시작마다 나가는 원격 GET을 원치 않는 사용자를 위한 플래그 (개인정보처리방침 거부 방법)
+if ($env:OLYMPUS_UPDATE_CHECK_DISABLE -match '^(1|true|yes)$') { exit 0 }
 
 # ── 경로 설정 ──
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

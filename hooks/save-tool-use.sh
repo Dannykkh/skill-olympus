@@ -11,6 +11,9 @@
 # Grok 세션 가드: Grok envelope는 camelCase(toolName)라 오동작 가능 -> grok-mnemo가 전담.
 [ -n "${GROK_HOOK_EVENT:-}" ] && exit 0
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
+
 log_mnemo_error() {
     local ctx="$1"
     local msg="$2"

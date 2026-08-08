@@ -13,6 +13,10 @@
 # - 실패는 .claude/mnemo-errors.log에 기록
 # - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+# (Grok Stop 이벤트는 stdout 출력 금지 규칙이 있으나, 조용한 exit 0은 안전)
+if ($env:MNEMO_DISABLE -match '^(1|true|yes)$') { exit 0 }
+
 # UTF-8 인코딩 설정 (BOM 없음)
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

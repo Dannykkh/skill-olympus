@@ -11,6 +11,9 @@
 # Grok 세션 가드: Grok에서는 grok-mnemo 훅이 저장을 전담하므로 이중 저장 방지 위해 즉시 종료.
 [ -n "${GROK_HOOK_EVENT:-}" ] && exit 0
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
+
 # ── mnemo 에러 로깅 ──────────────────────────────────────────────
 log_mnemo_error() {
     local ctx="$1"

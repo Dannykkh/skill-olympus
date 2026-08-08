@@ -4,6 +4,9 @@
 # - append-user.sh: persist user message
 # - append-assistant.sh: persist assistant message
 
+# 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
+case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
+
 DEBUG_FILE="$HOME/.codex/hooks/save-turn-debug.log"
 
 debug_log() {
