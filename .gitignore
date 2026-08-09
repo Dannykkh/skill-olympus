@@ -78,6 +78,16 @@ skillmakingbook.md
 # Launch / marketing drafts (local only — 공개 전 personal note 포함)
 docs/launch/
 
+# 검증용 예제 앱 (node_modules/dist/PDF 포함 — 로컬 전용)
+examples/
+
+# 리서치 raw 산출물 + 공개 전 블로그 초안 (로컬 전용 — 정제 보고서만 추적)
+docs/research/raw/
+docs/research/*-blog-draft-*.md
+
+# 카드뉴스 마케팅 이미지 (로컬 전용)
+docs/assets/card-news/
+
 # pdf skill 테스트 산출물 (자동 생성)
 skills/pdf/test/out/
 skills/pdf/test/sample.pdf
