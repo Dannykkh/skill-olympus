@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [4.21.0] - 2026-08-10
+
+### Features
+
+- **design**: 아프로디테 경험 주도 재설계 + Stitch 실행 어댑터화 — design-plan을 소스 라우팅 → 사이트 벤치마크 해부(Adopt/Adapt/Avoid 판정) → 실제 렌더 3안 → Experience Contract(사용자 과업·메시지·CTA·신뢰·모바일 변환) → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프 파이프라인으로 개편, references 3종(site-benchmark·experience-contract·render-critique-loop)과 Experience Contract 검증 스크립트·테스트 동봉. stitch는 시각 방향을 스스로 발명하지 않는 실행 어댑터로 재정의 — 아프로디테 산출물(DESIGN.md·design-refs)을 Stitch MCP 작업으로 컴파일하며 google-labs-code/stitch-skills의 작업 계약·상태 관리·파일 전송 패턴을 선별 반영(references 5종 + scripts 3종 + `.stitch/` 런타임 상태). frontend-design 경계 재정렬, stitch-developer·web-preview-guide 동기화, 문서 5종 갱신 (59a41cf)
+- **zeus**: 스코프 게이트(pass/reduce/hold) 추가 — zero-interaction 실행에는 스코프 확장을 승인해줄 사용자가 없으므로, plan/sections 확정 후 계획에 없던 태스크·기능·의존성 추가 전 자문 3개(한 줄 목표 기여 / 지금 필요하게 만든 관찰된 근거 / 더 작은 대안)를 통과시키고 판정을 결정 장부에 기록. hold는 Phase 6 Decision Ledger에 Deferred로 표시해 사용자가 사후 승격하며, 계획된 섹션 구현·버그 수정·Phase 폴백은 게이트 대상에서 제외(규칙 6 "모든 Phase 강제 실행" 불약화). hosioobo/track의 오케스트레이션 수준 게이트 원칙 흡수 — 라이선스 부재로 원문은 복사하지 않고 원칙만 재작성 (91fb43c)
+
 ## [4.20.2] - 2026-08-08
 
 ### Code Refactoring

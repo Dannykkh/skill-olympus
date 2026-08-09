@@ -212,6 +212,10 @@ chmod +x install.sh && ./install.sh
 
 ## 최신 업데이트
 
+### v4.21.0 — 아프로디테 경험 주도 재설계 · Stitch 실행 어댑터화 · 제우스 스코프 게이트 (2026.08)
+
+아프로디테는 더 이상 색 토큰에서 시작하지 않습니다. 파이프라인이 소스 라우팅 → 사이트 벤치마크 해부(헤더·메시지·섹션 순서·CTA·신뢰·모바일 변환에 대한 근거 있는 Adopt/Adapt/Avoid 판정) → 실제 렌더 3안 → 사용자 과업·메시지·CTA·신뢰·반응형 동작을 담는 **Experience Contract** → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프로 개편됐고, 계약 형식은 검증 스크립트가 강제합니다. Stitch는 실행 어댑터로 재정의됐습니다: 아프로디테의 결정(`DESIGN.md`, design-refs)을 Stitch MCP 작업으로 컴파일하며 — 작업 계약·상태 관리·파일 전송 패턴은 google-labs-code/stitch-skills에서 선별 반영 — 스스로 시각 방향을 발명하지 않습니다. 제우스에는 **스코프 게이트**가 생겼습니다: zero-interaction 실행에는 스코프 확장을 승인해줄 사용자가 없으므로, 계획에 없던 태스크·기능·의존성은 자문 3개(한 줄 목표에 기여하는가? 지금 필요하게 만든 관찰된 근거는? 더 작은 대안은?)를 통과하고 pass/reduce/hold 판정을 결정 장부에 남겨야 하며, hold 항목은 Deferred로 표시돼 사용자가 사후 승격합니다 (hosioobo/track 원칙 흡수).
+
 ### v4.20.2 — 테미스: 공식 지침 핀 · 런타임 신선도 체크 (2026.08)
 
 (v4.20.1~v4.20.2) 한국판 경로가 개인정보보호위원회 공식 **「개인정보 처리방침 작성지침(2025.4.)」**에 고정됐습니다: 스킬에 지침 기준판을 핀해 두고, 생성 시점에 공식 게시판을 확인해 더 새 개정판이 있으면 그 판을 따르며 사용자에게 고지합니다(웹 도구 없는 환경은 기준판 + "최신 확인 권장" 표기로 폴백). ko 템플릿에는 2025.4. 구체화 항목 — 보호책임자와 분리된 고충 처리 부서 연락처, 행태정보 수집·거부 조항, 아동 개인정보 조항(제22조의2) — 이 들어갔습니다. 조문 인용은 law.go.kr 직접 조회로 검증하며, 잠시 넣었던 법령 MCP 선택 연동은 불필요한 의존이라 제거했습니다 — "지침이 계속 갱신된다" 문제는 인프라 소유가 아니라 런타임 확인으로 푸는 것이 맞습니다.
@@ -657,6 +661,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **아프로디테 경험 주도 재설계 + Stitch 실행 어댑터화 + 제우스 스코프 게이트** — design-plan 파이프라인: 소스 라우팅 → 벤치마크 해부(Adopt/Adapt/Avoid) → 실제 렌더 3안 → Experience Contract(과업·메시지·CTA·신뢰·모바일 변환, 검증 스크립트 강제) → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프; Stitch는 방향을 발명하지 않고 아프로디테 결정을 Stitch MCP 작업으로 컴파일(작업 계약·상태·전송 패턴은 google-labs-code/stitch-skills 선별 반영); 제우스는 계획 외 태스크·기능·의존성 추가 전 pass/reduce/hold 판정을 결정 장부에 기록, hold는 Deferred로 표시 (hosioobo/track 흡수) |
 | **[v4.20.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.2)** | **2026-08-08** | **테미스 지침 핀 + 런타임 신선도 체크** (v4.20.1~v4.20.2) — 한국판 초안을 개인정보위 작성지침(2025.4.)에 고정하고 생성 시 게시판 확인으로 개정판 감지·채택(사용자 고지, 웹 도구 없으면 기준판 폴백); ko 템플릿 2025.4. 정렬(고충 처리 부서·행태정보·아동 제22조의2); 조문 인용은 law.go.kr 직접 조회 검증 — 법령 MCP 의존은 불필요해 제거 |
 | **[v4.20.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.0)** | **2026-08-08** | **테미스 개인정보처리방침 생성 + mnemo opt-out** — 100번째 스킬 테미스: 개인정보 수집/저장/외부전송/삭제 전수 감사(함정 체크리스트: soft delete·append-only 로그·마스킹 커버리지·자동 아웃바운드·`git ls-files` 실측) + 코드로 알 수 없는 14문항 운영자 인터뷰(보호책임자·보유기간·아동·서버 리전…) + 국가별 초안(개인정보보호법 제30조/CCPA·CPRA/GDPR Art.13)을 file:line 근거만으로 생성 — 빈칸은 날조하지 않음. 이 레포 도그푸딩(초안 3종 동봉). 감사가 드러낸 "끌 수 없는 저장 훅" 갭 → `MNEMO_DISABLE`(4-CLI 훅 15개 진입점) + `OLYMPUS_UPDATE_CHECK_DISABLE`, 켬·끔 대조 실행 검증 |
 | **[v4.19.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.19.0)** | **2026-08-05** | **Native-First 대전환** — 아프로디테 간섭 실험(실질 결함 B1≪C20≈A25)으로 실증된 "엔진은 상류에, 확장은 로컬에" 원칙 전면 적용: frontend-design 포크 자동호출 양보 + impeccable 59 결정론 규칙 PostToolUse 검출 훅(exit 0 평문 stdout이 모델에 전달되지 않는 결함 발견 — `additionalContext` JSON으로 수정); 포세이돈·다이달로스를 4-CLI 네이티브 멀티에이전트(Claude Agent Teams / Codex spawn_agent / Gemini 서브에이전트 / Grok spawn_subagent)로 위임하고 orchestrator MCP는 hard lock 정책 레이어 + 구버전 폴백으로 재포지셔닝; zeus ultracode 한정 Workflow fan-out 분기; chronos Gemini AfterAgent 배선 정정 + 폐기 /loop 도움말 잔재 제거; argos Phase 1 일반 품질 층 네이티브 리뷰 위임(spec 감리는 고유 영역); humanizer 업스트림 재동기화(blader v2.9.1 + im-not-ai v2.3); Gemini 경로는 문서 근거 설계·실측 대기 |
