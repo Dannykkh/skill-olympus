@@ -27,6 +27,7 @@
 | **anthropics/skills** | docx, pdf | [GitHub](https://github.com/anthropics/skills) |
 | **cloudflare/skills** | wrangler | [GitHub](https://github.com/nickcoblentz/claude-code-cloudflare-skills) |
 | **jh941213/my-claude-code-asset** | security-reviewer, architect, stitch-developer 벤치마킹 | [GitHub](https://github.com/jh941213/my-claude-code-asset) |
+| **google-labs-code/stitch-skills** | Stitch MCP 최신 작업 계약·상태 관리·파일 전송 패턴을 로컬 stitch 어댑터에 선별 반영 | [GitHub](https://github.com/google-labs-code/stitch-skills) |
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: 아프로디테(design-plan) 파이프라인 전용 미학 참조 자산(레시피/CSV/anatomy/스캐폴드) + 공식 플러그인이 없는 CLI(Codex/Gemini)의 디자인 스킬. Claude Code의 일반 UI 요청은 공식 frontend-design 플러그인이 담당한다 (2026-08-04 A/B/C 실험 근거 — docs/research/2026-08-05-deep-research-impeccable.md).
+description: 아프로디테(design-plan) 파이프라인의 Experience Contract와 DESIGN.md를 실제 렌더로 구현하고 비평하는 미학 실행 스킬. 레시피/CSV/anatomy/스캐폴드와 공식 플러그인이 없는 CLI(Codex/Gemini)의 디자인 폴백을 제공한다. Claude Code의 일반 UI 요청은 공식 frontend-design 플러그인이 담당한다.
 license: Anthropic (https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design)
 auto_apply: true
 disable-model-invocation: true
@@ -24,8 +24,10 @@ Before making aesthetic choices, check if the project already has a design syste
 
 **있으면**: 토큰(색상, 폰트, 간격)만 뽑아 쓰지 말고 **DESIGN.md 전체를 Read** — 산문 계약(Spatial
 Model, State Contracts, Motion, Component Anatomy, Copy Rules 등)이 구도·상태·카피의 스펙입니다.
-`docs/design-refs/`가 있으면 최신 direction 카드/슈퍼프롬프트/레이아웃 청사진도 함께 Read해서
-구현 계약으로 사용합니다. **후속 수정 세션에도 동일 적용** — "버튼 하나 고치는" 세션이 산문 계약을
+`docs/design-refs/`가 있으면 최신 Experience Contract, direction·critique, benchmark 증거,
+레이아웃 청사진도 함께 Read해서 구현 계약으로 사용합니다. 우선순위는 사용자 과업·접근성 >
+Experience Contract > DESIGN.md 시각 토큰 > Layout Blueprint > benchmark 증거입니다.
+**후속 수정 세션에도 동일 적용** — "버튼 하나 고치는" 세션이 산문 계약을
 안 읽으면 수정이 누적될수록 원래 디자인 의도에서 드리프트합니다. 토큰은 그대로, 산문 계약 위반 금지.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
 
@@ -139,7 +141,10 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 사용자가 원하는 인상을 명확히 설명하지 못하거나 이전 출력이 비슷하게 반복됐으면 코딩 전에
 `references/motion-first-prompt-playbook.md`를 읽습니다.
 
-1. INTERFACE MODE, PRIMARY ACTION, INFORMATION+STATE, DENSITY+EFFECT BUDGET을 먼저 채운 뒤 GOAL, CONCEPT, COMPOSITION, TYPE, COLOR, MATERIAL, MOTION, MEDIA, RESPONSIVE, NEGATIVE, SUCCESS CHECK를 채웁니다.
+1. Experience Contract가 있으면 그 `Prompt Contract`를 정본으로 사용합니다. 없으면 INTERFACE MODE,
+   PRIMARY ACTION, INFORMATION+STATE, DENSITY+EFFECT BUDGET을 먼저 채운 뒤 GOAL, AUDIENCE, TASK,
+   FLOW, HEADER, MESSAGE, SECTION_ORDER, CTA, TRUST, COMPOSITION, TYPE, COLOR, MATERIAL, MOTION,
+   MEDIA, RESPONSIVE, STATES, PERFORMANCE, ACCESSIBILITY, PRESERVE, EXCLUDE, SUCCESS를 채웁니다.
 2. 후보 3개는 베이스 명도, 색상 계열, 레이아웃, 모션 중 최소 4개가 달라야 합니다.
 3. 초록·주황은 합쳐서 후보 3개 중 최대 1개이며, 브랜드/도메인 근거가 없으면 제외합니다.
 4. 공개 레퍼런스에서는 구조와 결정 문법만 배우고 프롬프트 문구, 카피, 에셋 URL을 복제하지 않습니다.
@@ -165,9 +170,9 @@ Before coding, understand the context and commit to a BOLD aesthetic direction:
 
 **캘리브레이션 — 현재 AI 디자인은 3개 클러스터로 수렴한다**: ① 웜 크림 지면(#F4F1EA 근방) + 고대비 세리프 디스플레이 + 테라코타/시그널레드 액센트, ② 니어블랙 + 애시드그린·버밀리언 단일 액센트, ③ 브로드시트 헤어라인 + 라운드 0 + 신문형 밀집 칼럼. 셋 다 어떤 브리프엔 정당하지만 **선택이 아니라 기본값이며 주제와 무관하게 나타난다** (2026-08-04 실험에서 세 조건 모두 ①에 착지). 브리프가 방향을 못 박으면 브리프가 이긴다 — 이 룩을 요구할 때 포함. 브리프가 축을 비워뒀으면 그 자유를 이 기본값들에 쓰지 않는다.
 
-1. **Pass 1 — 계획**: 콤팩트 토큰 계획을 만든다 — Color: 이름 붙인 hex 4~6개 / Type: 역할 2개 이상(절제해 쓰는 개성 디스플레이 + 보완 본문 + 필요시 유틸리티) / Layout: 한 문장 산문 + ASCII 와이어프레임 / **Signature: 이 페이지가 기억될 단 하나의 고유 요소**
+1. **Pass 1 — 계획**: 콤팩트 토큰 계획을 만든다 — Color: 이름 붙인 hex 4~6개 / Type: 역할 2개 이상(절제해 쓰는 개성 디스플레이 + 보완 본문 + 필요시 유틸리티) / Layout: Experience Contract와 Layout Blueprint에서 인용 / **Signature: 이 페이지가 기억될 단 하나의 고유 요소**
 2. **제네릭 자기검사**: 구현 전에 계획을 브리프와 대조한다 — "비슷한 브리프를 스스로 시뮬레이션했을 때 같은 곳에 도달하는 부분"이 있으면 그 부분은 이 브리프를 위한 선택이 아니라 기본값이다. 수정하고 무엇을 왜 바꿨는지 말한다
-3. **Pass 2 — 구현**: 수정된 계획을 정확히 따르며 모든 색·타이포 결정을 계획에서 파생. **대담함은 한 곳에 쓴다** — Signature가 유일한 기억 장치, 주변은 조용하고 규율 있게. 떠나기 전 액세서리 하나 빼기(Chanel). 품질 바닥(모바일 반응형·키보드 포커스·reduced-motion)은 선언 없이 갖춘다
+3. **Pass 2 — 구현**: 수정된 계획을 정확히 따르며 모든 색·타이포 결정을 계획에서 파생. **대담함은 한 곳에 쓴다** — Signature가 유일한 기억 장치, 주변은 조용하고 규율 있게. 품질 바닥(모바일 반응형·키보드 포커스·reduced-motion)은 선언 없이 갖춘다
 4. **CSS 특이도 주의**: `.section a` 같은 타입+요소 셀렉터가 `.btn` 같은 클래스를 이기며 서로 상쇄되기 쉽다(특히 섹션 간 패딩/마진, 내비 안 버튼) — 실험 조건 B가 실제로 이 버그를 렌더 검증에서 잡았다
 
 Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
@@ -255,15 +260,16 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 설계 단계 ──────────────────────────────────────────────
   /aphrodite                → 화면 유형·방향·토큰을 DESIGN.md로 고정
   /design-system-starter    → 세부 토큰 파생
-  /stitch design            → Stitch 프로젝트 DESIGN.md 생성
+  /stitch design-system pull → Stitch 프로젝트에서 DESIGN.md 제안 역추출
 
 구현 단계 ──────────────────────────────────────────────
   frontend-design            → Claude: 공식 플러그인 자동 적용 / Codex·Gemini: 이 스킬 본문
-  /stitch loop              → Stitch MCP로 멀티페이지 생성
-  /stitch react             → HTML → React 변환
+  /stitch generate|edit|variants → DESIGN.md·청사진을 Stitch 작업으로 실행
+  /stitch loop              → 아프로디테 사이트맵 기반 멀티페이지 생성·재개
+  /stitch react             → Stitch 화면을 기존 React 구조에 반영
 
 리뷰 단계 ──────────────────────────────────────────────
-  ui-ux-designer 에이전트   → "이 디자인 괜찮아?" 비평/조언
+  ui-ux-designer 에이전트   → 실제 렌더의 미학·메시지·신뢰·모바일 비평 (아프로디테 Phase 6 필수)
   /ui-ux-auditor            → 다크모드, 반응형, 접근성 등 9영역 감사
   /web-design-guidelines    → Web Interface Guidelines 준수 체크
 ```
@@ -275,17 +281,23 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 
 ## Usage Patterns (3단계 활용법)
 
-### 0단계: Unknown Known 끌어내기 (선택)
-사용자가 "봐야 알 것 같다", "디자인 취향을 설명하기 어렵다", "방향을 모르겠다"고 하면 구현 전에 가벼운 프로토타입을 만든다.
+### 0단계: Unknown Known 끌어내기 (조건부 필수)
+사용자가 "봐야 알 것 같다", "디자인 취향을 설명하기 어렵다", "방향을 모르겠다", "항상 비슷하다"고
+하거나 브랜드 가이드 없이 대표 화면을 만들거나 벤치마크를 크게 변환할 때 구현 전에 가벼운
+프로토타입을 만듭니다. 자세한 선택·비평·수정 규율은
+`../design-plan/references/render-critique-loop.md`를 따릅니다.
 
-- 백엔드/API 연결 없이 동일 요구사항의 HTML 또는 React 정적 화면 3-4개를 서로 다른 방향으로 만든다
+- 백엔드/API 연결 없이 동일한 실제 카피·데이터·상태의 HTML 또는 React 정적 화면 3개를 서로 다른 방향으로 만든다
 - 기능형 UI면 먼저 `references/coder-interface-pattern-playbook.md`로 화면 유형과 효과 예산을 고정한다
 - 각 방향은 색/타이포/밀도/레이아웃이 분명히 달라야 하며, 같은 카드 그리드의 변주로 만들지 않는다 — `references/motion-first-prompt-playbook.md`의 서로 다른 3안 규칙으로 방향을 벌린 뒤 `references/style-recipes/`에서 레시피를 매칭한다
+- 데스크톱 대표 화면과 모바일 핵심 화면을 함께 렌더하고, 설명을 읽기 전에 스크린샷만 보고 비평한다
 - 사용자가 고른 방향에서 "좋은 점/싫은 점"을 추출해 `DESIGN.md` 또는 구현 지시로 고정한다
 - 확정 전 프로토타입은 throwaway로 취급하고, 실제 구현에 그대로 복붙하지 않는다
 
 **방향 확정 후 반복 규율 (variants > rerolls):**
-- 첫 결과에서 **레이아웃 + 위계 + 카피를 먼저 고정**한다 — 이것이 "시스템".
+- 첫 결과에서 바로 고정하지 않고 `render-critique-loop.md`의 Baseline-worthiness gate를 통과시킨다.
+- 구조·메시지·모바일 흐름이 실패하면 레이아웃·섹션 순서·카피·CTA·신뢰 위치까지 다시 설계한다.
+- gate를 통과한 뒤에만 **레이아웃 + 위계 + 카피를 보존 영역으로 고정**한다.
 - 이후 반복은 전체 재생성(reroll)이 아니라 **한 번에 변수 1~2개만** 바꾸는 변형(variant)으로: 액센트 색 / 배경 톤 / 카드 배치 / 크롭·앵글.
 - 수정 지시에 "다른 건 바꾸지 마", "히어로는 유지"를 명시해 이미 잘 된 부분의 파괴를 방지한다.
 - 같은 취향을 반복 설명하지 말고 파일로 고정한다 — 레퍼런스는 `docs/design-refs/`(아프로디테 Phase 1 슈퍼프롬프트), 토큰은 DESIGN.md.

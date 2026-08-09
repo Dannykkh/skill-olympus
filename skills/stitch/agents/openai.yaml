@@ -1,0 +1,11 @@
+interface:
+  display_name: "Stitch"
+  short_description: "Stitch MCP 화면 생성·편집·동기화 실행"
+  default_prompt: "Use $stitch to synchronize my approved design artifacts with Stitch and verify the resulting screens."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "stitch"
+      description: "Configured Google Stitch MCP server"
+policy:
+  allow_implicit_invocation: true

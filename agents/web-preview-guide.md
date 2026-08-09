@@ -370,12 +370,13 @@ Emulation.setDeviceMetricsOverride(width: 375, height: 812, deviceScaleFactor: 3
 - 채팅 모드에서 웹 프리뷰가 활성화된 경우에만 적용
 - 순수 백엔드/CLI 프로젝트에는 적용하지 않음
 - 사용자가 "백엔드부터" 또는 다른 순서를 요청하면 그에 따름
-- 디자인 토큰 없이 빠르게 프로토타이핑하고 싶다고 하면 Phase 0 건너뛰기 가능
+- 사용자가 저충실도 프로토타입을 명시하고 벤치마크 사이트가 없을 때만 Phase 0을 축약할 수 있음. 이때도 핵심 과업, 섹션 순서, 모바일 변환, 주요 상태를 적은 경량 Experience Contract는 유지
 
 ## Stitch 연동
 
 Stitch MCP가 활성화된 환경에서는:
-1. Phase 0으로 디자인 토큰 확정
-2. `/stitch prompt`로 프롬프트 최적화
-3. `/stitch loop`로 페이지 생성
-4. `/stitch react`로 React 컴포넌트 변환 시 디자인 토큰 적용
+1. `/aphrodite --plan-only`로 벤치마크의 헤더·핵심 메시지·섹션·CTA·신뢰 요소·모바일 변환을 관찰하고 Adopt/Adapt/Avoid로 분류
+2. 루트 `DESIGN.md`, Experience Contract, 레이아웃 청사진을 확정
+3. `/stitch generate` 또는 `/stitch loop`로 화면을 생성하되 Stitch는 원격 렌더 어댑터로만 사용
+4. `/stitch edit|variants`로 부분 개선·대안을 비교하고 아프로디테 기준으로 채택 여부 판정
+5. `/stitch react`로 기존 React 구조에 반영한 뒤 데스크톱·모바일 렌더, 접근성, 성능을 독립 검증

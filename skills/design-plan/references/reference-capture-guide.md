@@ -1,8 +1,9 @@
 # Reference Capture Guide — 레퍼런스 자산화 (Phase 1)
 
-> 아프로디테 Phase 1의 실행 가이드. 레퍼런스(스크린샷/URL/영상/HTML)를 "첨부 파일"로 끝내지 않고,
-> **섹션 해부 슈퍼프롬프트**라는 재사용 가능한 파일 자산으로 변환합니다.
-> 산출물은 `docs/design-refs/YYYY-MM-DD-{slug}.md` — Phase 5가 이 파일을 구현 스펙으로 사용합니다.
+> 아프로디테 Phase 1의 증거 확보 가이드. 레퍼런스(스크린샷/URL/영상/HTML)를 "첨부 파일"로
+> 끝내지 않고 재사용 가능한 관찰 자산으로 변환합니다. 사이트 벤치마크라면 이 파일을 읽은 뒤
+> [site-benchmark-guide.md](site-benchmark-guide.md)로 구조·메시지·반응형·품질을 해부하고,
+> [experience-contract-guide.md](experience-contract-guide.md)로 프로젝트 결정을 컴파일합니다.
 >
 > Credits: [MengTo/Skills](https://github.com/MengTo/Skills)(MIT)의 `video-to-superprompt`,
 > `html-to-interaction-prompts`, `stitched-full-page-capture` 워크플로우를 이 파이프라인에 맞게 각색.
@@ -10,19 +11,25 @@
 ## 0. 원칙
 
 - **프롬프트는 자산이다**: 좋은 레퍼런스 분석은 1회용 대화가 아니라 버전 관리되는 파일로.
-- **스크린샷은 스타일 스펙이 아니라 구조·모션의 증거다**: 색·폰트의 정본은 언제나 DESIGN.md 토큰. 레퍼런스에서 가져오는 것은 **구성(레이아웃 리듬), 위계, 모션 메커니즘, 페이싱**이다. 색·폰트까지 베낄지는 사용자가 "정확 재현"을 요구했을 때만.
+- **스크린샷은 스타일 스펙이 아니라 경험의 증거다**: 색·폰트의 정본은 언제나 DESIGN.md 토큰.
+  레퍼런스에서 먼저 가져오는 것은 메시지·CTA·신뢰의 순서, 구성, 위계, 반응형 변환, 상태,
+  모션 메커니즘과 페이싱이다. 색·폰트까지 베낄지는 사용자가 "정확 재현"을 요구했을 때만.
 - **경계 먼저 선언**: 슈퍼프롬프트 첫 줄에 "정확 재현(exact recreation)"인지 "영감 각색(inspiration)"인지 명시.
 - **모호어 금지**: "make it beautiful", "세련되게" 금지 — 취향을 구체 지시(수치·메커니즘 이름)로 변환.
+- **관찰과 결정을 분리**: 이 가이드의 파일은 원본 증거층입니다. 프로젝트에 적용할 결정은
+  Experience Contract의 Adopt·Adapt·Avoid에 기록합니다.
 
 ## 1. 입력 유형별 절차
 
 ### A. 라이브 URL
 
 1. Playwright MCP(`browser_navigate`)로 실제 페이지 열기 (썸네일/커버 이미지 금지).
-2. **Warm scroll**: top→bottom 1회 스크롤해 lazy 미디어·리빌 섹션을 마운트.
-3. top 복귀 후 뷰포트 단위(뷰포트 높이 - 150px 스텝)로 하향 스크롤.
-4. 각 정지마다 **2초 대기**(lazy load·리빌·sticky 정착) 후 `browser_take_screenshot`.
-5. 필요 시 스크린샷들을 스크래치패드에 저장해 섹션 순서대로 분석.
+2. 데스크톱과 모바일 기준 뷰포트를 각각 정하고 URL·캡처일·뷰포트를 기록.
+3. **Warm scroll**: top→bottom 1회 스크롤해 lazy 미디어·리빌 섹션을 마운트.
+4. top 복귀 후 뷰포트 단위(뷰포트 높이 - 150px 스텝)로 하향 스크롤.
+5. 각 정지마다 **2초 대기**(lazy load·리빌·sticky 정착) 후 `browser_take_screenshot`.
+6. primary CTA와 주 과업을 실행해 시작·진행·완료·오류 상태를 별도 캡처.
+7. 스크린샷들을 섹션 순서와 상태별로 분석. 모바일 증거가 없으면 추측하지 말고 누락 표시.
 
 > **one-shot fullPage 캡처의 함정**: lazy-load/스크롤 애니메이션/WebGL 페이지는 한 번에 찍은
 > 풀페이지가 빈 밴드·회색 스트립으로 나옵니다. 정착된 뷰포트 샷 여러 장이 진실입니다.
@@ -104,7 +111,7 @@ IntersectionObserver, lenis, framer-motion
 [`frontend-design/references/coder-interface-pattern-playbook.md`](../../frontend-design/references/coder-interface-pattern-playbook.md)의
 Interface Mode와 효과 예산을 기준으로 합니다.
 
-## 2. 슈퍼프롬프트 템플릿
+## 2. 증거 슈퍼프롬프트 템플릿
 
 `docs/design-refs/YYYY-MM-DD-{slug}.md`로 저장. 섹션은 **레퍼런스의 실제 순서대로 전부** 기록합니다.
 
@@ -115,6 +122,7 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 - 캡처일: {YYYY-MM-DD}
 - 모드: **영감 각색** | 정확 재현   ← 하나만
 - 적용 대상: {이 프로젝트의 어떤 페이지/컴포넌트에}
+- 벤치마크 역할: {구조/메시지/반응형/모션/기능형 흐름 중 무엇을 참고하는지}
 
 ## GLOBAL — 전역 시스템
 
@@ -138,6 +146,9 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 ## SECTION 1: {섹션 이름 — 예: 히어로}
 
 - Purpose: {이 섹션의 역할}
+- Core message: {약속 → 설명 → 증거의 순서}
+- CTA: {정확한 문구, 위계, 목적지, 등장 시점}
+- Trust: {불안 지점과 그 직전에 제시되는 검증 가능한 근거}
 - Layout: {배치 — 좌 8컬럼 헤드라인 + 우 4컬럼 메타처럼 구체적으로}
 - Visual details: {보더/그림자/이미지 처리/장식 요소}
 - Animation: {등장 순서와 방식 — "배경 먼저, 헤드라인 줄 단위, CTA 마지막"}
@@ -151,7 +162,24 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 ## RESPONSIVE
 
 - Desktop: {기준 뷰포트에서의 구성}
-- Mobile: {스택 순서 변화, 숨김 요소, 텍스트 겹침 주의점}
+- Mobile evidence: {기준 뷰포트 또는 unavailable}
+
+| Desktop element | Operation | Mobile result | Observed reason |
+|---|---|---|---|
+| {요소} | retain/reorder/compress/collapse/defer/replace/sticky/remove | {실제 변화} | {과업·위계 근거} |
+
+## STATES
+
+- Loading:
+- Empty:
+- Error and recovery:
+- Success feedback:
+
+## QUALITY OBSERVATIONS
+
+- Performance: {첫 화면 자산, 지연 로드, 폰트·영상·스크립트 비용 관찰}
+- Accessibility: {랜드마크, 헤딩 순서, 키보드, 포커스, 레이블, 대비, reduced-motion 관찰}
+- Unknowns: {소스나 관찰만으로 확인할 수 없는 것}
 
 ## SUCCESS CHECK
 
@@ -165,6 +193,9 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 - **원본 없이 재현 가능할 만큼** 구체적으로 — 시퀀스·페이싱·특이한 quirk 보존.
 - **모션 메커니즘을 정확히 명명**: pinned section / scrubbed timeline / `video.currentTime` 스크러빙 / parallax layer / opacity reveal / mask reveal / marquee / magnetic hover / shader field.
 - **모바일 + reduced-motion을 매번 포함** — 빠뜨리면 미완성.
+- **`mobile: stack` 금지** — 요소별 변환 연산과 과업상 이유를 기록.
+- **메시지·CTA·신뢰 순서를 포함** — 색·폰트·레이아웃만 기록하면 미완성.
+- **속도·접근성은 독립 평가** — 벤치마크가 나쁜 관행을 쓴다고 그대로 복제하지 않음.
 - 안티패턴 명시: 제네릭 랜딩 섹션, 장식용 블롭, 미스매치 스톡 이미지, 텍스트 겹침.
 - 색·폰트를 hex/폰트명으로 베끼지 않는다(영감 각색 모드) — "지배색 1 + 액센트, 다크" 같은 **구조**로 기술하고 값은 DESIGN.md가 공급.
 
@@ -182,8 +213,12 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 
 구체 기본값(duration/stagger/ease)은 `frontend-design/references/technique-recipes.md`의 값을 사용.
 
-## 5. Phase 5 인계 규칙
+## 5. Experience Contract와 Phase 5 인계
 
-- Phase 5는 **DESIGN.md(색·폰트·간격의 정본) + 이 슈퍼프롬프트(구조·모션의 스펙)** 두 파일을 함께 참조.
-- 충돌 시 우선순위: DESIGN.md 토큰 > 슈퍼프롬프트 > 임의 판단. (정확 재현 모드에서만 슈퍼프롬프트의 색 지시가 우선하며, 이 경우 그 값을 DESIGN.md에 역반영해 정본을 갱신.)
+- 관찰 완료 후 [site-benchmark-guide.md](site-benchmark-guide.md)의 Adopt·Adapt·Avoid를 판정하고
+  [experience-contract-guide.md](experience-contract-guide.md)의 Contract를 생성합니다.
+- Phase 5는 **DESIGN.md(시각 시스템) + Experience Contract(과업·메시지·상태·반응형) +
+  이 증거 파일(근거)**을 함께 참조합니다.
+- 충돌 시 우선순위: 사용자 과업·접근성 > Experience Contract > DESIGN.md 시각 토큰 > 증거 파일 > 임의 판단.
+  정확 재현 모드에서 색을 가져오면 DESIGN.md에 역반영해 정본을 갱신합니다.
 - 슈퍼프롬프트가 여러 개면 적용 대상 페이지별로 매핑 표를 만들어 혼선 방지.

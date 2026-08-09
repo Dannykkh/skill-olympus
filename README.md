@@ -444,11 +444,12 @@ Each skill works standalone or as part of the pipeline.
 - **Next:** `/agent-team` (build) or `/argos` (inspect).
 
 **`/aphrodite` — Design system (Beauty)**
-- **When:** a UI project needs consistent tokens/visuals before the frontend build.
+- **When:** a UI project needs an intentional experience, benchmark interpretation, and consistent implementation before the frontend build.
 - **Use:** `/aphrodite` (aliases: 아프로디테)
-- **Process:** interface-mode gate (data instrument/directory/agent workbench/waiting/effect stage) → 3 divergent direction cards (motion-first + hue diversity) → 12 named style recipes / CSV matching → reference capture (screenshot/URL/video/library → section-anatomy superprompt) → build → review.
-- **Output:** `DESIGN.md` (YAML tokens + prose rationale — the canonical design context) + `docs/design-refs/` superprompts + frontend build; lint-gated and exportable to Tailwind/DTCG.
-- **Next:** `/agent-team` / `/workpm` to implement.
+- **Process:** source-mode routing → site benchmark evidence (header/message/section order/CTA/trust/mobile transformations) → Adopt/Adapt/Avoid → 3 rendered directions → Experience Contract → implementation → rendered UX/accessibility/performance gates → learning handoff.
+- **Output:** `DESIGN.md` (visual tokens), Experience Contract (hierarchy, behavior, responsive and quality decisions), layout blueprint, benchmark evidence, and the frontend build.
+- **Boundary:** Aphrodite owns experience structure, visual behavior, responsive transformations, states, and quality gates. API wiring, persistent state, and business logic remain with `/agent-team` or `/workpm`.
+- **Next:** `frontend-design` or Stitch as a rendering adapter, then `/agent-team` / `/workpm` for application logic.
 
 ### Build — write the code
 

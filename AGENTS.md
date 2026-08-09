@@ -49,8 +49,8 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |전자동 (제우스)|zeus — 한 줄 설명만으로 설계→구현→테스트 완전 자동|
 |기능 추가|zephermine → agent-team/수동 구현 → minos|
 |데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
-|UI 와이어프레임|ascii-ui-mockup-generator → ui-ux-designer → stitch-developer|
-|UI 디자인 → 구현|stitch (prompt → loop → react 모드) → frontend-react|
+|UI 와이어프레임|aphrodite --plan-only (벤치마크 분석 → Experience Contract → 렌더 방향 비교) → stitch generate (원격 화면이 필요할 때만)|
+|UI 디자인 → 구현|aphrodite → frontend-design 또는 stitch 어댑터 → frontend-react → ui-ux-auditor|
 |코드 리뷰 종합|code-reviewer → security-reviewer|
 |코드 정리|hestia (dead code 탐지 + 삭제)|
 |리팩토링|explore-agent → deprecation-and-migration → code-reviewer|
@@ -88,13 +88,13 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 ### Web Preview Mode Development Guide
 
-웹 프리뷰 모드(채팅 모드 + dev server + PreviewPanel)에서는 **디자인 DNA(토큰) → Frontend → Backend** 순서를 따릅니다.
+웹 프리뷰 모드(채팅 모드 + dev server + PreviewPanel)에서는 **경험 계약 → 디자인 시스템 → Frontend → Backend** 순서를 따릅니다.
 
 |Phase|핵심|
 |---|---|
-|Phase 0: Design DNA|디자인 방향성 → 레퍼런스 수집 → shadcn/ui 호환 토큰 생성 → 검증 (WCAG AA)|
-|Phase 1: Frontend → Backend|토큰 기반 UI 구현 → 인터랙션 → API → 에러 처리 (프리뷰 패널 실시간 확인)|
-|Phase 2: Pre-Delivery|접근성, 반응형, 아이콘, hover/focus 상태 최종 검증|
+|Phase 0: Experience + Design DNA|과업·메시지·CTA·신뢰·모바일 변환 → 벤치마크 판정 → 렌더 방향 비교 → 토큰 확정|
+|Phase 1: Frontend → Backend|Experience Contract 기반 UI·상태 구현 → API·비즈니스 로직 연결 (프리뷰 패널 실시간 확인)|
+|Phase 2: Pre-Delivery|실제 렌더 미학, 과업, 접근성, 반응형, 성능 최종 검증|
 
 > **상세 가이드**: [agents/web-preview-guide.md](agents/web-preview-guide.md)
 
@@ -114,7 +114,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, memory-distill, skill-evolve, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + raw 관찰 정제(rebuild) + 스킬 프롬프트 자동 최적화 (Hill Climbing) + gotcha/learned 기반 스킬 자기개선 루프 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely, docx, pdf, excel2md | 문서/다이어그램 + 도메인 용어사전 (DDD Ubiquitous Language) + Office 문서 읽기/생성/편집 (Word/PDF/Excel) |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
-| 🎨 Frontend | design-plan (아프로디테), frontend-design, design-system-starter, theme-factory, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor, data-visualization | 화면 유형 게이트·방향 3안·색상 다양성 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + 테마 14종(한글 4종) + SEO+AEO+GEO 10영역 감사 + UI/UX 8영역 감사 + 차트 선택 가이드 (Anthropic 공식 벤더링) |
+| 🎨 Frontend | design-plan (아프로디테), frontend-design, design-system-starter, theme-factory, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor, data-visualization | 사이트 벤치마크·Experience Contract·실제 렌더 3안·UX/접근성/성능 게이트를 지휘하는 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + 테마·SEO·UI/UX 감사 + 차트 선택 가이드 |
 | 🛠️ Development | database-schema-designer, supabase-postgres-best-practices, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, deploymonitor, wrangler, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login, health-data | 개발 도구 + Postgres 최적화 + Cloudflare Workers 배포 + 헬스 데이터(Health Connect/HealthKit) 연동 |
 | 🎯 Planning | game-changing-features, shipping-and-launch, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Aphrodite"
+  short_description: "벤치마크부터 렌더 검증까지 프론트 디자인을 지휘합니다"
+  default_prompt: "Use $design-plan to turn references and product goals into an Experience Contract, rendered directions, implementation guidance, and quality gates."
+
+policy:
+  allow_implicit_invocation: true

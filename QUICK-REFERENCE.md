@@ -305,7 +305,8 @@ claude plugin install voltagent-qa-sec
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
-| `skills/design-plan/` | 아프로디테(Aphrodite) — 디자인 오케스트레이터. 화면 유형 5종 판별→방향 3안+색상 다양성→스타일레시피/DB→레퍼런스 자산화→구현→리뷰 (/aphrodite) |
+| `skills/design-plan/` | 아프로디테(Aphrodite) — 경험 주도 디자인 오케스트레이터. 소스 라우팅→사이트 벤치마크(Adopt/Adapt/Avoid)→실제 렌더 3안→Experience Contract→구현→렌더 UX/접근성/성능 게이트→학습 핸드오프 (/aphrodite) |
+| `skills/stitch/` | Stitch 실행 어댑터 — 아프로디테 산출물(DESIGN.md, design-refs)을 Stitch MCP 작업(생성/편집/변형/동기화/React 변환)으로 컴파일 + `.stitch/` 상태 관리 |
 | `skills/theme-factory/` | 테마 팩토리 — 슬라이드/문서/HTML에 입히는 색·폰트 테마 14종 (한글 테마 4종 포함, Anthropic 공식 벤더링) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
 | `skills/deprecation-and-migration/` | 코드 부채 정리 + 마이그레이션 — 레거시 폐기 계획, API 버전 전환, Strangler Fig 패턴, 부채 감사 (/deprecate) |
