@@ -7,9 +7,24 @@ description: "Create Claude Code slash commands or reusable command workflows; u
 
 This skill guides the creation of Claude Code slash commands - reusable workflows that can be invoked with `/command-name` in Claude Code conversations.
 
-> Codex/Gemini note: slash commands are Claude-specific. If the runtime is not Claude Code, do not create `.claude/commands/` automatically. Instead propose either:
+> Codex/Gemini/Grok note: slash commands are Claude-specific. If the runtime is not Claude Code, do not create `.claude/commands/` automatically. Instead propose either:
 > - a reusable skill under `skills/<name>/SKILL.md`
 > - a prompt recipe under `docs/prompts/<name>.md`
+
+## Delegation Contract
+
+Keep Claude command syntax separate from portable workflow semantics:
+
+- **Claude Code command:** use the current `Agent` tool. Select built-in `Explore` for read-only
+  discovery, analysis, planning, or review. Select built-in `general-purpose` only when the delegated
+  task must run commands or write explicitly assigned files.
+- **Portable skill or prompt recipe:** describe a semantic read-only explorer or general writer rather
+  than a vendor tool name. If native delegation is unavailable, have the main context execute the same
+  stages sequentially.
+- Never tell `Explore` to create, edit, move, or delete files. Have it return evidence or a draft to the
+  main context, or use `general-purpose` with exact allowed write paths.
+- Do not use a source-only custom agent filename as a spawn target. Put the needed role, scope, evidence,
+  write boundary, and return format in the task sent to a built-in role.
 
 ## About Slash Commands
 
@@ -207,7 +222,8 @@ For non-trivial commands, prefer a scored loop over one-shot manual iteration:
 **Common patterns to remember:**
 
 - Use Bash tool for `pytest`, `pyright`, `ruff`, `prettier`, `make`, `gt` commands
-- Use Task tool to invoke subagents for specialized tasks
+- In Claude commands, use `Agent` with built-in `Explore` for read-only work and `general-purpose` for bounded writes
+- In portable workflows, use semantic roles and a main-context sequential fallback
 - Check for specific files first (e.g., `.PLAN.md`) before proceeding
 - Mark todos complete immediately, not in batches
 - Include explicit error handling instructions

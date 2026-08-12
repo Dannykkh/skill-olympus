@@ -4,10 +4,6 @@ description: >
   Zero-interaction full pipeline skill. 사용자가 한 줄 설명만 제공하면
   설계(zephermine) → 구현(agent-team) → 감리(argos) → Docker 구성 → 테스트(minos) 전체를 자동 완료.
   인터랙티브 질문 도구 절대 호출 금지. /zeus로 실행. 제우스.
-triggers:
-  - "zeus"
-  - "제우스"
-auto_apply: false
 ---
 
 # Zeus (제우스) — Zero-Interaction Full Pipeline
@@ -67,6 +63,38 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
    - 판정은 셋 중 하나로 결정 장부에 기록: `pass`(최소 범위로 진행) / `reduce`(축소 후 진행) / `hold`(실행 보류 — Phase 6 리포트 Decision Ledger에 Deferred로 표시, 사용자가 사후 승격)
    - **과적용 금지**: 계획된 섹션 구현·버그 수정·Phase 폴백 실행은 게이트 대상이 아니다 (폴백은 스코프 축소이지 확장이 아님). 게이트가 규칙 6(모든 Phase 강제 실행)을 약화시키지 않는다.
    - 예: `[ZEUS-AUTO:taste] 스코프 게이트 hold: 관리자 통계 차트 | 근거: 한 줄 요구·섹션에 없음, 감리 지적 아님 | 되돌리기: Deferred에서 승격 후 재실행`
+
+## Source-only internal module resolution (mandatory)
+
+`docker-deploy`와 조건부 `orchestrator`는 Zeus가 내부에서 읽는 source-only 모듈입니다.
+등록된 스킬이나 slash command로 호출하지 않습니다.
+
+각 모듈을 다음 순서로 해석하고 처음 확인된 exact `SKILL.md` 파일 하나를 읽습니다.
+
+1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
+2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
+   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
+   `~/.gemini/SKILLS-CATALOG.md`)에서 모듈명과 정확히 일치하는 행을 찾습니다. 행이 정확히
+   하나일 때만 `읽을 경로`의 절대 `SKILL.md`를 그대로 읽고, 누락·중복 행은 fail-closed입니다.
+   기본 경로가 보통 `.olympus/source-skills` 아래여도 직접 조합하거나 추측하지 않습니다.
+4. `module_root`는 그 `SKILL.md`의 부모입니다. 모듈의 `references/`, `scripts/`,
+   `commands/`는 모두 이 루트를 기준으로 해석합니다.
+5. Phase 4에 도달했을 때만 `docker_deploy_root`를 만듭니다. Phase 2에서 hard lock,
+   외부 ledger, 크로스-CLI 혼합 분기를 실제 선택했을 때만 `orchestrator_root`를 만들고
+   `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다. 선택하지 않은 모듈은 로드하지 않습니다.
+
+이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 가용성 근거로
+호출하거나 모듈 이름을 slash command로 실행하지 않습니다.
+
+Phase 4의 `docker-deploy` 계약은 필수입니다. 카탈로그 행이나 `읽을 경로`, 필요한 reference를
+읽지 못하면 `docs/zeus/zeus-log.md`에 `BLOCKED: docker-deploy source module unavailable`을
+기록하고 dev-server 폴백을 실행합니다. 이 경우 Phase 4 증거는 `weak`이며 전체 결과를
+SUCCESS로 표시하지 않습니다. MCP 분기가 선택됐지만 `orchestrator`를 읽지 못하면 동시 편집을
+직렬화할 수 있는 경우에만 메인 순차 경로로 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock
+자체가 필수이면 Phase 2를 `BLOCKED`로 남깁니다. 어느 경우도 모듈 미발견을 PASS로 기록하지 않습니다.
 
 ### CLI Auto-Continue Contract
 
@@ -212,37 +240,46 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 사용자 질문�
 
 ---
 
-## Phase 2: Implementation (포세이돈 → 다이달로스 폴백)
+## Phase 2: Implementation (포세이돈 → 메인 순차 폴백)
 
 구현 도구를 자동 선택합니다:
 
 ```
 Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
     ▼
-Native team tool 사용 가능?
-  ├── ✅ → 포세이돈(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
-  └── ❌ → 다이달로스(daedalus) — PM이 직접 리서치 없이 구현 관리
+독립 섹션 + 네이티브 위임 도구 + 병렬 이득이 있는가?
+  ├── 예 → 포세이돈(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
+  └── 아니오 → workpm의 동일 계약을 메인 컨텍스트에서 순차 실행
 ```
 
-**판별 방법**: Phase 2 시작 시 현재 CLI의 병렬 팀/서브에이전트 기능이 사용 가능한지 확인. 사용 가능하면 포세이돈 계열, 불가하면 다이달로스.
+**판별 방법**: Phase 2 시작 시 섹션별 파일 범위가 독립적인지와 현재 CLI의 네이티브 위임 기능을 함께 확인합니다. 위임 자체가 가능해도 같은 파일을 순서대로 고쳐야 하면 메인 순차 경로를 선택합니다.
+
+| 의미 역할 | Claude | Codex | Gemini | Grok |
+|-----------|--------|-------|--------|------|
+| 읽기 전용 탐색 | `Explore` | `explorer` | `codebase_investigator` | `explore` |
+| 파일 수정·명령 실행 | `general-purpose` / named teammate | `worker` | `generalist` | `general-purpose` |
+
+읽기 전용 역할에는 파일 쓰기를 지시하지 않습니다. 메인 컨텍스트가 `zeus-log.md`, Wave ledger, 공유 활동 로그와 완료 판정을 단독 소유하고, 작업자는 고유 파일 범위 또는 반환값만 담당합니다.
 
 **경로 A — 포세이돈** (병렬 팀/서브에이전트 사용 가능):
 - Claude: `skills/agent-team/SKILL.md` / Codex: `skills/agent-team-codex/SKILL.md`
 - Step 0(산출물 검토) → Step 1(index 파싱) → Step 2(Wave Plan, [ZEUS-AUTO] 즉시 "실행") → Step 3~4(Task + Wave) → Step 5(Code Review) → Step 6(체크리스트) → Step 7(Activity Log) → Step 8(Final Report)
 
-**경로 B — 다이달로스** (병렬 팀/서브에이전트 사용 불가):
-- `skills/orchestrator/commands/workpm.md` Phase 2부터 실행 (5단계 워크플로우: Phase 1 리서치 → **2 도면** → 3 영향도 → 4 구현 → 5 점검. 젭마인 산출물이 있으므로 Phase 1 건너뜀)
+**경로 B — workpm 메인 순차 실행** (위임 부재 또는 병렬 이득 없음):
+- 활성 `workpm` 하네스의 5단계 계약 중 Phase 2부터 메인 컨텍스트에서 순차 실행합니다.
+  젭마인 산출물이 있으므로 Phase 1 리서치는 다시 하지 않습니다. hard lock·외부 task ledger·혼합
+  CLI가 실제로 필요할 때만 위 source-only resolver로 `orchestrator` 모듈을 읽고 MCP 분기를 사용합니다.
 
 **공통 규칙:**
-- PM 원칙 유지: 코딩 금지, 기억 외부화, 체크리스트 완수
+- 병렬 경로에서는 Lead가 조정에 집중하고, 메인 순차 경로에서는 같은 Lead가 실행자 역할도 소유
 - zeus-log.md에 선택된 경로(A/B) + 체크리스트 통과율 + 도면 매칭률 기록
 - 구현 중 섹션에 없는 작업이 필요해 보이면 스코프 게이트(CRITICAL RULES 8) 판정 후 진행 — 무단 스코프 확장 금지
 
 **실패 시 폴백 (Phase 2는 skip 금지):**
 - `plan.md` 미생성 → Phase 0 파싱 결과 기반 최소 plan 생성 후 즉시 실행
 - `sections/` 미생성 → 최소 1개 통합 섹션 생성 후 단일 구현 실행
-- 포세이돈 teammate 전부 실패 → 다이달로스로 자동 전환
-- 다이달로스 subagent도 실패 → 단일 구현 task로 최종 폴백
+- 포세이돈 작업자가 모두 실패 → 같은 섹션을 workpm 메인 순차 경로로 자동 전환
+- 순차 경로도 실패 → 실패한 단일 섹션만 최소 구현 단위로 축소해 재검증
 
 ---
 
@@ -291,11 +328,22 @@ argos의 1차 감리는 결정론적이다 — 정적 분석·빌드·테스트 
 [상세 절차 및 포트 충돌 해결 스크립트 → references/docker-setup.md](references/docker-setup.md)
 
 **핵심 흐름:**
-1. `docker --version` 확인 → 없으면 dev server fallback
-2. `docker-compose.yml` 없으면 docker-deploy 스킬 실행 (techStack 참조)
-3. 포트 충돌 해결 (Windows: Get-NetTCPConnection, Linux: lsof)
-4. `docker compose up -d --build` + 헬스체크 대기 (최대 120초)
-5. 실패 시 dev server fallback + zeus-log.md에 기록
+1. 위 resolver로 `docker-deploy` 행의 정확한 `SKILL.md`를 읽고 `docker_deploy_root` 설정
+2. 모듈 계약의 프로젝트 분석과 필요한 `${docker_deploy_root}/references/*`를 읽음
+3. `docker --version` 확인 → 없으면 dev server fallback
+4. 로드한 모듈 계약이 선언한 Compose 산출물(현 계약: `docker-images/docker-compose.yml`)과
+   프로젝트의 기존 Compose 파일을 확인해 실제 `compose_file`을 고정. 루트 파일을 가정하지 않음
+5. `compose_file`이 없으면 Phase 0의 techStack·자동 기본값으로 모듈 계약을 직접 수행하고
+   생성된 파일의 실경로를 다시 확인
+6. `compose_file`에서 포트 추출 후 충돌 해결 (Windows: Get-NetTCPConnection, Linux: lsof)
+7. `docker compose -f "{compose_file}" up -d --build` + 헬스체크 대기 (최대 120초)
+8. 모듈 수행/Compose 실행 실패 시 dev server fallback + zeus-log.md에 `FAILED`, Phase 4 `weak` 기록
+
+Zero-interaction 규칙 때문에 모듈의 질문 단계는 Phase 0 파싱 결과와 자동 응답 테이블로 채웁니다.
+등록된 `docker-deploy` 호출을 시도하지 않습니다. 모듈 로드 실패와 Docker 런타임 부재를 구분해
+기록하고, 전자는 Phase 4 `weak`, 후자는 계약을 읽은 뒤 실행 환경 폴백으로 판정합니다.
+모듈 계약 수행 또는 생성된 Compose 실행이 실패한 경우도 Phase 4 `weak`이며 SUCCESS 근거로
+승격하지 않습니다.
 
 ---
 
@@ -379,11 +427,12 @@ argos의 1차 감리는 결정론적이다 — 정적 분석·빌드·테스트 
 - [docker-setup.md](references/docker-setup.md) — Phase 4 Docker 상세
 - [final-report-format.md](references/final-report-format.md) — Phase 6 리포트 형식
 
-**외부 스킬 (Phase별 호출)**
+**외부 하네스와 내부 모듈 (Phase별)**
 - Phase 1: `skills/zephermine/SKILL.md`
 - Phase 2 경로 A: `skills/agent-team/SKILL.md` / `skills/agent-team-codex/SKILL.md`
-- Phase 2 경로 B: `skills/orchestrator/commands/workpm.md`
-- Phase 4: `skills/docker-deploy/SKILL.md`
+- Phase 2 경로 B: 활성 `workpm` 하네스; MCP를 선택한 경우에만
+  `${orchestrator_root}/commands/workpm-mcp.md`
+- Phase 4: 전역 카탈로그 `docker-deploy` 행의 `읽을 경로` + `${docker_deploy_root}/references/*`
 - Phase 5: `skills/minos/SKILL.md`
 
 ---

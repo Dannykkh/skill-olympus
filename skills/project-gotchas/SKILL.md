@@ -1,26 +1,22 @@
 ---
 name: project-gotchas
 description: >
-  오답노트 + 성공 패턴 자동 관리. CLI(Claude/Codex/Gemini)의 실패 패턴(gotchas)과
+  오답노트 + 성공 패턴 자동 관리. CLI(Claude/Codex/Gemini/Grok)의 실패 패턴(gotchas)과
   성공 패턴(learned)을 2계층(글로벌 + 프로젝트별)으로 기록하고 참조.
   므네모(mnemo)가 생성하는 memory/ 폴더 안에서 크로스 CLI 참조 가능.
   트리거 1 (참조): 작업 시작 시 gotchas + learned를 확인.
   트리거 2 (기록): "실수였어", "이거 기록해", "gotcha 추가", "함정이었네",
   "오답노트", "이것도 주의사항", "이 패턴 좋다", "이거 기억해" 같은 표현 시.
   트리거 3 (자발적 제안): CLI가 실수를 수정당하거나 성공 패턴이 반복될 때 기록을 제안.
-when_to_use: >
-  1. 작업 시 기존 gotchas(글로벌 + 프로젝트)를 참조하여 같은 실수 방지.
-  2. 사용자가 기록을 요청하면 적절한 계층에 파일 생성 + index.md 업데이트.
-  3. CLI가 실수를 수정당한 후, 반복 가능한 패턴이면 "이거 gotchas에 기록할까요?" 제안.
-avoid_if: >
-  단순 오타, 일회성 실수, 이미 CLAUDE.md에 규칙으로 등록된 내용.
 ---
 
 # Project Gotchas (오답노트 + 성공 패턴)
 
-CLI의 실패 패턴과 성공 패턴을 자동으로 기록하고 학습합니다.
+CLI의 실패 패턴과 성공 패턴을 자동 수집하고 명시적으로 정제합니다.
 글로벌 설치 1회로 어떤 프로젝트에서든 자동 작동합니다.
-므네모(mnemo)가 생성하는 `memory/` 폴더 안에 관리하여 Claude/Codex/Gemini 모두 참조 가능합니다.
+므네모(mnemo)가 생성하는 `memory/` 폴더 안에 관리하여 Claude/Codex/Gemini/Grok 모두 참조 가능합니다.
+
+단순 오타·일회성 실수·이미 전역 지침에 등록된 규칙은 새 항목으로 만들지 않습니다.
 
 ## 2계층 저장 구조
 
@@ -141,12 +137,13 @@ skills/project-gotchas/
 ├── SKILL.md              ← 이 파일 (규칙서)
 ├── config.json           ← 관찰 설정
 └── agents/
-    └── gotcha-analyzer.md ← 분석 에이전트 (패턴 감지 → gotcha 생성, 메인 모델 상속)
+    └── gotcha-analyzer.md ← source-only 호환 프롬프트 (기본 등록 안 함)
 
 hooks/
 ├── save-tool-use.ps1|sh          ← Claude PostToolUse: 도구 단위 관찰
 ├── codex-mnemo/save-turn.ps1|sh  ← Codex notify: 턴 단위 관찰
-└── gemini-mnemo/save-turn.ps1|sh ← Gemini AfterAgent: 턴 단위 관찰
+├── gemini-mnemo/save-turn.ps1|sh ← Gemini AfterAgent: 턴 단위 관찰
+└── grok-mnemo/save-turn.ps1|sh   ← Grok Stop: 턴 단위 관찰
 ```
 
 ### 동작 흐름
@@ -164,29 +161,23 @@ hooks/save-tool-use.ps1|sh (기존 므네모 훅)
     ↓   시크릿 스크러빙
     ↓   observations.jsonl에 기록
     ↓
-Codex/Gemini: 턴 종료/응답 완료 훅
+Codex/Gemini/Grok: 턴 종료/응답 완료 훅
     ↓
 save-turn.ps1|sh
     ↓ 응답에 에러 패턴이 있으면 memory/gotchas/observations.jsonl
     ↓ 정상 응답이면 memory/learned/observations.jsonl
 
 observations.jsonl 에 관찰 축적
-    ↓ 관찰 20개 이상 축적 시
-    ↓
-agents/gotcha-analyzer.md (메인 세션 모델 상속)
-    ↓ 에러→수정 패턴, 반복 실패 감지
-    ↓ 글로벌/프로젝트 범위 자동 판단
-    ↓
-memory/gotchas/에 gotcha 파일 자동 생성 + index.md 업데이트
+    ↓ 새 관찰 delta 또는 핸드오프 경과 기준 도달 시 텍스트 알림만 생성
+    ↓ 사용자 /memory-distill 또는 핸드오프 정제
+skills/memory-distill/SKILL.md (현재 CLI가 직접 실행)
+    ↓ 클러스터링·중복/모순·범위·승격 후보 판단
+memory/gotchas/·memory/learned/ 정제 파일 + index 갱신
 ```
 
-### 분석 모델 정책
+### 정제 실행 경계
 
-`gotcha-analyzer`는 frontmatter에 `model:`을 지정하지 않아 **호출자(메인 세션) 모델을 상속**합니다.
-Anthropic Dreaming과 동등한 분석 품질을 얻기 위한 의도된 설계입니다.
-임계값 50으로 격하되어 빈도가 낮으므로 비용 부담은 제한적입니다.
-
-3개 CLI(Claude/Codex/Gemini) 모두 호출자(메인 세션) 모델을 그대로 상속합니다 — 특정 모델명을 지정하지 않습니다(inherit-caller). 모델명을 박으면 버전이 오를 때마다 stale만 되므로 의도적으로 비웁니다.
+정제는 현재 CLI가 `memory-distill` 계약을 직접 수행하므로 별도 named agent나 고정 모델이 필요하지 않습니다. 대용량 입력의 읽기 전용 클러스터 추출만 네이티브 일반 작업자에게 격리할 수 있고, archive·쓰기·인덱스 갱신은 메인 스킬 실행이 담당합니다.
 
 ### 훅 등록
 
@@ -199,7 +190,7 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 {
   "observer": {
     "enabled": true,
-    "notify_threshold_total": 500,
+    "notify_threshold_new_observations": 200,
     "notify_threshold_handoff_days": 14
   }
 }
@@ -208,7 +199,7 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 | 키 | 기본값 | 설명 |
 |----|--------|------|
 | `observer.enabled` | `true` | 관찰 활성화 여부 |
-| `observer.notify_threshold_total` | `500` | raw 누적 합계가 이 이상이면 안내 출력 |
+| `observer.notify_threshold_new_observations` | `200` | 마지막 정제 offset 이후 새 raw 합계가 이 이상이면 안내 출력 |
 | `observer.notify_threshold_handoff_days` | `14` | 마지막 핸드오프가 이 일수보다 오래되면 안내 출력 |
 
 ### 정제 트리거 (의도된 설계)
@@ -223,7 +214,7 @@ Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 �
 | `/memory-distill` | 사용자 의지 | 풀 정제 + rebuild | 1회 | **주 정제** |
 | 핸드오프 자동 추출 | 컨텍스트 위기 | 풀 정제 + 통합 | 1회 | 세션 경계 정제 |
 
-`/memory-distill`과 핸드오프 자동 추출은 동일 로직을 공유합니다 (gotcha-analyzer rebuild 모드).
+`/memory-distill`과 핸드오프 자동 추출은 동일한 `memory-distill` rebuild 계약을 공유합니다.
 Stop 훅의 안내 출력은 LLM 호출이 아니라 단순 텍스트 — `memory/.mnemo-status.md` 파일 작성 + stderr 한 줄.
 
 ### 관찰 데이터 관리

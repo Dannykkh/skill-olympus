@@ -13,7 +13,7 @@ avoid_if: |
   - 요구사항 수집 (spec-interviewer 사용)
   - 코드 내 주석 작성 (해당 도메인 에이전트)
   - UI/UX 디자인 문서 (ui-ux-designer 사용)
-  - 테스트 시나리오 (qa-writer 사용)
+  - 테스트 시나리오 (zephermine 또는 minos 사용)
 examples:
   - prompt: "이 프로젝트 PRD 작성"
     outcome: "목적, 범위, 기능 요구사항, 비기능 요구사항, 마일스톤"

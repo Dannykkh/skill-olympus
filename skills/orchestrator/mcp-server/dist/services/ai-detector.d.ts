@@ -9,9 +9,28 @@ export interface AIProviderInfo {
 export interface DetectionResult {
     providers: AIProviderInfo[];
     availableCount: number;
-    mode: 'full' | 'dual' | 'single';
+    mode: 'full' | 'dual' | 'single' | 'none';
     modeDescription: string;
 }
+export interface WorkerProviderSelection {
+    success: boolean;
+    providers: AIProvider[];
+    message: string;
+}
+export declare function isAIProvider(value: string | undefined): value is AIProvider;
+/**
+ * Resolve the provider for the current worker process. Auto-spawned workers
+ * encode it in their worker id; manually launched workers can set the explicit
+ * environment value instead.
+ */
+export declare function resolveWorkerProvider(workerId: string, explicitProvider?: string): AIProvider | undefined;
+/**
+ * Resolve one provider per worker. Missing entries use the first provider in
+ * the deterministic detection order. Explicit but unavailable providers fail
+ * closed instead of silently launching a different CLI.
+ */
+export declare function selectWorkerProviders(count: number, requestedProviders: AIProvider[] | undefined, availableProviders: AIProvider[]): WorkerProviderSelection;
+export declare function buildDetectionResult(providers: AIProviderInfo[]): DetectionResult;
 /**
  * 모든 AI Provider 감지
  */
@@ -28,11 +47,6 @@ export declare function getAvailableProviders(): AIProvider[];
  * Provider 실행 명령어 생성
  */
 export declare function getProviderCommand(provider: AIProvider, options?: {
-    autoMode?: boolean;
     workDir?: string;
 }): string;
-/**
- * AI Provider별 최적 용도 반환
- */
-export declare function getProviderStrengths(provider: AIProvider): string[];
 //# sourceMappingURL=ai-detector.d.ts.map

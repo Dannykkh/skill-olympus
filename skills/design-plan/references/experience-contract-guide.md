@@ -207,8 +207,11 @@ SUCCESS —
 
 `Prompt Contract`는 구현 도구가 달라도 동일하게 사용합니다.
 
-- 로컬 구현: `frontend-design`이 계약을 컴포넌트·CSS·상태 UI로 변환합니다.
-- Stitch: `/stitch generate|edit|variants`가 같은 계약을 Stitch 입력으로 컴파일합니다.
+- 로컬 구현: 네이티브 구현 작업자가 해석된 `MODULE_SKILL[frontend-design]`의 계약을 직접 읽어
+  컴포넌트·CSS·상태 UI로 변환합니다.
+- Stitch: 상위 Aphrodite가 해석한 `MODULE_SKILL[stitch]`의 계약을 직접 적용해 같은 계약을
+  generate·edit·variants 의도에 맞는 Stitch MCP 입력으로 컴파일합니다. 활성 `/stitch` 등록은
+  전제하지 않습니다.
 - 후속 수정: `PRESERVE`와 변경할 변수 1~2개를 명시합니다.
 
 색·폰트 값을 프롬프트마다 반복하지 않습니다. 프로젝트 `DESIGN.md`를 참조하고 프롬프트에는 역할과

@@ -17,6 +17,9 @@ const ENABLED_HOOKS = new Set(
     .map((name) => name.trim())
     .filter(Boolean),
 );
+const CODEX_HOME = process.env.CODEX_HOME
+  ? path.resolve(process.env.CODEX_HOME)
+  : path.join(os.homedir(), ".codex");
 
 function isHookEnabled(scriptBase) {
   return ENABLED_HOOKS.has("*") || ENABLED_HOOKS.has(scriptBase);
@@ -84,7 +87,7 @@ function relativePath(baseDir, targetPath) {
 }
 
 function selectSessionFile(preferredCwd) {
-  const sessionRoot = path.join(os.homedir(), ".codex", "sessions");
+  const sessionRoot = path.join(CODEX_HOME, "sessions");
   if (!fs.existsSync(sessionRoot)) return "";
 
   const files = [];
@@ -291,7 +294,7 @@ function resolveHookScript(scriptBase) {
   const ext = process.platform === "win32" ? "ps1" : "sh";
   const candidates = [
     path.join(__dirname, `${scriptBase}.${ext}`),
-    path.join(os.homedir(), ".codex", "hooks", `${scriptBase}.${ext}`),
+    path.join(CODEX_HOME, "hooks", `${scriptBase}.${ext}`),
     path.resolve(__dirname, "..", "..", "..", "hooks", `${scriptBase}.${ext}`),
   ];
 

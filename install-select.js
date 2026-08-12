@@ -4,7 +4,7 @@
 // stdout: line1 = LLMs, line2 = Bundles (always all)
 // UI is written to stderr (stdout is for results only)
 
-const ALL_LLMS = ["claude", "codex", "gemini"];
+const ALL_LLMS = ["claude", "codex", "gemini", "grok"];
 
 // All bundles are core-installed (no selection needed)
 const ALL_BUNDLES = [
@@ -16,10 +16,11 @@ const ALL_BUNDLES = [
 ];
 
 const LLM_ITEMS = [
-  { id: "all", desc: "All (Claude + Codex + Gemini)" },
+  { id: "all", desc: "All (Claude + Codex + Gemini + Grok)" },
   { id: "claude", desc: "Claude Code" },
   { id: "codex", desc: "Codex CLI" },
   { id: "gemini", desc: "Gemini CLI" },
+  { id: "grok", desc: "Grok Build (Claude compatibility assets)" },
 ];
 
 // Ignore irrelevant flags passed through from install.bat/sh via %*
@@ -54,7 +55,7 @@ function parseArgs() {
   if (isAll) return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
   if (llms?.includes("all")) llms = [...ALL_LLMS];
   if (llms) return { llms, bundles: ALL_BUNDLES };
-  // 기본값: 전체 설치 (Claude + Codex + Gemini)
+  // 기본값: 전체 설치 (Claude + Codex + Gemini + Grok)
   return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
 }
 

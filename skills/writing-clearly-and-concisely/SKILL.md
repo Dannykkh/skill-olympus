@@ -14,10 +14,12 @@ Write with clarity and force. This skill covers what to do (Strunk) and what not
 When context is tight:
 
 1. Write your draft using judgment
-2. Dispatch a subagent with your draft and the relevant section file
-3. Have the subagent copyedit and return the revision
+2. If native delegation is available, assign a **read-only review role** the draft and one relevant section file
+3. Have that role return a copyedited revision without writing files; the main context accepts or adjusts it
+4. If delegation is unavailable, load that one section and perform the copyedit sequentially in the main context
 
 Loading a single section (~1,000-4,500 tokens) instead of everything saves significant context.
+Use the current CLI's built-in explorer/reviewer; do not require a custom agent name or vendor-specific task schema.
 
 ## Elements of Style
 

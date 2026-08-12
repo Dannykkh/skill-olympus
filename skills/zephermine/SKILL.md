@@ -1,12 +1,6 @@
 ---
 name: zephermine
 description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Use when planning features that need thorough pre-implementation analysis. /zephermine로 실행. Also known as 젭마인, 제퍼마인, 제퍼미네.
-triggers:
-  - "zephermine"
-  - "젭마인"
-  - "제퍼마인"
-  - "제퍼미네"
-auto_apply: false
 ---
 
 # Zephermine
@@ -17,7 +11,7 @@ auto_apply: false
 
 Orchestrates a multi-step planning process: Research → Interview → Spec Synthesis → Team Analysis → Plan → External Review → Sections → Verify
 
-> **네이티브 plan mode와의 구분:** Claude의 plan mode(EnterPlanMode)는 "이 작업을 어떻게 구현할까"를 다루는
+> **네이티브 plan mode와의 구분:** 현재 CLI가 제공하는 plan mode는 "이 작업을 어떻게 구현할까"를 다루는
 > 단일 작업용 계획 승인 게이트이고, 젭마인은 다운스트림(포세이돈·아르고스·미노스·제우스·견적)이 소비하는
 > **디스크 아티팩트**(plan.md, sections/, flow-diagrams/, qa-scenarios)를 만드는 설계 파이프라인입니다.
 > 단일 버그픽스·소규모 리팩토링은 plan mode, 기능/제품 단위 설계는 젭마인.
@@ -126,6 +120,9 @@ Determine session state by checking existing files:
 **판정 방법**: `<planning_dir>/domain-dictionary-delta.md`의 `## v1 → v2`, `## v2 → v3` 섹션 존재 여부로 진행 단계 추정. 델타가 없으면 마스터 사전이 어떤 버전인지 모르므로 안전하게 v1부터 다시 실행.
 
 이 보정은 사용자가 Resume할 때 사전이 누락된 채로 다음 Phase가 진행되는 것을 막습니다.
+Resume에서 Step 8/10/11의 사전 부산물을 보정하기 전에도 전역 카탈로그에서
+`domain-dictionary` 모듈을 다시 해석합니다. 이전 세션이 기록한 경로나 런타임 등록 상태를
+그대로 신뢰하지 않으며, 모듈을 읽지 못하면 보정 Step을 `BLOCKED`로 둡니다.
 
 9. Create TODO list with TodoWrite based on current state
 
@@ -177,6 +174,63 @@ This applies most strongly to Step 6 critical unknowns, Step 11 unresolved domai
 
 ---
 
+## Native Delegation Contract
+
+Use semantic roles instead of hardcoded tool calls, agent files, or models:
+
+| Semantic role | Claude | Codex | Gemini | Grok | Boundary |
+|---------------|--------|-------|--------|------|----------|
+| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Read-only; return findings only; never write files |
+| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Write only the one unique output file assigned to the work item |
+
+- Every delegated work item must have either one unique output file or a return-only contract.
+- Main/Lead owns shared state and integration artifacts, including `research.md`, `team-review.md`, `plan.md`, `integration-notes.md`, domain dictionaries, manifests, and indexes.
+- Workers must not edit another worker's output or shared state. Main/Lead reads completed outputs and performs all merges.
+- If native delegation is unavailable, execute the same bounded work items sequentially in the main context. Preserve the same output ownership and budgets.
+- Use the runtime's configured default model. Do not hardcode model names in delegation instructions.
+
+---
+
+## Source-only internal module resolution (mandatory)
+
+`domain-dictionary`, `flow-verifier`, `mermaid-diagrams`, 조건부 `frontend-design`은 젭마인
+내부 단계가 읽는 source-only 모듈입니다. 사용자 호출용 스킬이나 등록된 slash command로
+실행하지 않습니다.
+
+각 모듈을 다음 우선순위로 해석하고, 처음 확인된 **정확한 `SKILL.md` 파일** 하나를 사용합니다.
+
+1. 현재 프로젝트에 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일을 읽습니다
+   (소스 저장소 개발 경로).
+2. 없으면 현재 런타임 active root의 exact 파일을 확인합니다: Claude/Grok은
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
+   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+3. 둘 다 없으면 현재 런타임의 전역 카탈로그를 엽니다: Claude/Grok은
+   `~/.claude/SKILLS-CATALOG.md`, Codex는 `~/.codex/SKILLS-CATALOG.md`, Gemini는
+   `~/.gemini/SKILLS-CATALOG.md`. 모듈명과 정확히 일치하는 행이 **하나일 때만** 그 행의
+   `읽을 경로`에 적힌 절대 `SKILL.md`를 그대로 읽습니다. 행이 없거나 중복이면 fail-closed입니다.
+   기본 경로가 보통 `.olympus/source-skills` 아래여도 경로를 조합하거나 추측하지 않습니다.
+4. `module_root`는 읽은 `SKILL.md`의 부모 디렉터리입니다. 모듈이 지시하는
+   `references/`, `scripts/`, `commands/`는 모두 이 루트에서만 해석합니다.
+5. 모듈은 소비 단계에 도달했을 때만 지연 로드합니다. Step 8/10/11은
+   `domain_dictionary_root`, Step 18은 `flow_verifier_root`와 `mermaid_diagrams_root`를
+   사용합니다. UI design-system 분기에서만 `frontend_design_root`를 사용합니다.
+
+위 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리 가용성을 근거로
+호출하거나 모듈 이름을 slash command로 실행하지 않습니다.
+
+사전과 도면의 세 소비 경로는 설계 산출물의 필수 계약입니다. exact 파일, 카탈로그의 유일한 행,
+`읽을 경로`, 필수 reference
+중 하나라도 없거나 읽을 수 없으면 해당 Step을 `BLOCKED: source module unavailable`로 기록하고
+중단합니다. placeholder 사전·도면·인덱스를 만들어 통과시키거나 다음 Step을 PASS 처리하지 않습니다.
+핵심 용어 수처럼 **모듈 계약 자체가 허용한** 비적용 조건만 `NOT APPLICABLE`로 기록할 수 있으며,
+모듈 미발견을 비적용으로 바꾸면 안 됩니다.
+
+`frontend-design`은 UI design-system 분기의 보조 모듈입니다. 해석 실패 시 이 가이드의 bounded
+anti-slop 규칙만 적용하고 `frontend-design: NOT RUN (native fallback)`을 기록합니다. fallback을
+모듈 PASS로 표시하지 않습니다.
+
+---
+
 ## Workflow
 
 26단계는 **6 Phase**로 그룹화됩니다. `5A. Blindspot Pass`는 Step 5와 6 사이의 보조 단계이며, 기존 Step 번호는 변경하지 않습니다. Phase는 단순 라벨이며 다른 스킬이 "Phase X 후 호출"로 참조할 때 사용합니다.
@@ -212,12 +266,12 @@ See [research-protocol.md](references/research-protocol.md).
 
 See [research-protocol.md](references/research-protocol.md).
 
-Based on decisions from step 4, launch bounded research subagents:
-- **Codebase:** background subagent/worker → `<planning_dir>/research/codebase.md` — **요청 기능이 이미 구현됐는지 먼저 확인**(`codemap/index.md` → 핵심어 grep → README/docs). 이미 있으면 신규 설계가 아니라 *개선*으로 분류해 spec/plan 머리에 "기존: {위치}/{경계}" 명시(재구현 방지).
-- **GitHub/Web/Academic/Competitor:** background subagent/worker with web search where available → one file per research type under `<planning_dir>/research/`
-- **Concurrency cap:** max 2 research agents at a time; if `API Error: Overloaded`/rate limit occurs, retry the failed item once with concurrency 1 and half budget
+Based on decisions from step 4, launch bounded `artifact-writer` work items:
+- **Codebase:** one writer → `<planning_dir>/research/codebase.md` — **요청 기능이 이미 구현됐는지 먼저 확인**(`codemap/index.md` → 핵심어 grep → README/docs). 이미 있으면 신규 설계가 아니라 *개선*으로 분류해 spec/plan 머리에 "기존: {위치}/{경계}" 명시(재구현 방지).
+- **GitHub/Web/Academic/Competitor:** one writer and one unique file per research type under `<planning_dir>/research/`; use web search only where available
+- **Concurrency cap:** max 2 research work items at a time; if `API Error: Overloaded`/rate limit occurs, retry the failed item once with concurrency 1 and half budget
 
-Subagents return only 1-2 line summaries. Main context combines `<planning_dir>/research/*.md` → `<planning_dir>/research.md`.
+Writers return only 1-2 line summaries. Main/Lead combines `<planning_dir>/research/*.md` → `<planning_dir>/research.md`.
 
 Skip Step 5 only when Step 4 auto-selection finds no useful research target. Record that decision in `research-decision.md`.
 
@@ -300,13 +354,24 @@ Combine into `<planning_dir>/spec.md`:
 
 **조건부 생성: Design System** — 인터뷰 Phase S-1(디자인 비전)이 수집되었거나 spec/research/unknowns에서 추론 가능한 경우:
 See [design-system-guide.md](references/design-system-guide.md)
-`<planning_dir>/design-system.md` 생성. UI/프론트엔드가 없는 프로젝트는 자동 건너뜀.
+UI 분기에 진입하면 위 resolver로 `frontend-design`을 지연 해석해 `frontend_design_root`를 만들고,
+가이드가 지정한 blacklist reference를 그 루트에서 읽습니다. `<planning_dir>/design-system.md` 생성.
+UI/프론트엔드가 없는 프로젝트는 `NOT APPLICABLE`로 기록합니다.
 
 **필수 포함: Test Scenarios 섹션** — 각 주요 기능마다 정상/에러/엣지 케이스.
 See [test-scenario-guide.md](references/test-scenario-guide.md)
 
 **Step 8 끝부산물 — 도메인사전 v1 초안 생성** (사용자 개입 없음):
-spec.md 작성 직후 `domain-dictionary` 스킬을 컨텍스트 모드로 자동 호출. 입력은 spec.md + interview.md. 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능)이 있으면 명확히 맞는 후보 용어만 자동 시드하고, 애매한 후보는 `[inferred-skip]`로 델타에 기록합니다. 글로벌이 비어있으면 사용자 개입 없이 프로젝트 사전만 만듭니다. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타(`<planning_dir>/domain-dictionary-delta.md`). 핵심 용어 5개 미만이면 자동 건너뜀. 자세한 절차는 [domain-dictionary/references/global-sync.md](../domain-dictionary/references/global-sync.md).
+spec.md 작성 직후 위 resolver로 `domain-dictionary` 행의 정확한 `SKILL.md`를 읽고,
+`${domain_dictionary_root}/references/global-sync.md`를 읽은 뒤 컨텍스트 모드 계약을 직접 수행합니다.
+등록 스킬 또는 이름 기반 slash command를 호출하지 않습니다. 입력은 spec.md + interview.md입니다.
+글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME`
+override 가능)이 있으면 명확히 맞는 후보 용어만 자동 시드하고, 애매한 후보는
+`[inferred-skip]`로 델타에 기록합니다. 글로벌이 비어있으면 사용자 개입 없이 프로젝트
+사전만 만듭니다. 산출물은 마스터(`docs/domain-dictionary.md`, 신규 또는 갱신)와 델타
+(`<planning_dir>/domain-dictionary-delta.md`)입니다. 모듈을 성공적으로 읽은 뒤 핵심 용어가
+5개 미만이면 계약에 따라 `NOT APPLICABLE: fewer than 5 core terms`를 델타에 기록하고 진행합니다.
+모듈을 읽지 못한 상태는 건너뛰기가 아니라 위의 `BLOCKED`입니다.
 
 ### 9. User Persona & Journey Map
 
@@ -323,15 +388,15 @@ UI/프론트엔드가 없는 프로젝트는 자동 건너뜀.
 
 전문가 분석으로 도메인을 깊이 이해하고, 사전을 v3까지 확정하는 단계.
 
-### 10. Multi-Agent Team Analysis
+### 10. Multi-Expert Team Analysis
 
 See [team-review-protocol.md](references/team-review-protocol.md)
 
-**⚠️ CONTEXT MANAGEMENT**: This step spawns 6 agents. Consider `/compact` before launching.
+**⚠️ CONTEXT MANAGEMENT**: This step runs 6 bounded work items. Consider `/compact` before launching.
 
 **Default execution profile:** time-boxed standard mode. Deep domain research runs only when the feature is clearly domain-heavy (regulated industry, safety-critical workflow, payment/medical/finance/logistics/manufacturing integrations) or the user explicitly asks for deep research.
 
-**Phase A — 4개 병렬:** UX Agent / Architecture Agent / Red Team Agent / Domain Researcher
+**Phase A — 4개 병렬:** UX / Architecture / Red Team / Domain Research
 
 - Domain Researcher first performs domain-complexity triage.
 - Low-complexity projects write a short `domain-research.md` stub without web search.
@@ -341,18 +406,19 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 
 - Domain experts do not perform fresh web research by default.
 - They synthesize `spec.md`, `interview.md`, `research.md`, `domain-research.md`, and `docs/domain-dictionary.md`.
-- External AI domain experts are time-boxed; timeout/failure falls back to Claude or a warning stub.
+- External AI domain experts are time-boxed; timeout/failure falls back to the runtime's `artifact-writer`, then to sequential main-context execution or a warning stub.
 
-> Phase B 실행 CLI: Codex/Gemini 가용 여부에 따라 분배. 없으면 Claude Explore로 폴백.
+> Phase B 실행: Codex/Gemini 외부 CLI가 가용하면 분배하고, 없거나 실패하면 현재 CLI의 `artifact-writer` 역할로 실행합니다.
 
-**CRITICAL — Agent return protocol:** Each agent writes full results to files, returns ONLY 2-3 line summary.
+**CRITICAL — Work-item return protocol:** Each writer owns one unique file and returns ONLY a 2-3 line summary. Main/Lead alone writes `team-review.md` and dictionary merges.
 
 **도메인사전 컨텍스트 주입:** 6명 전문가 모두에게 Step 8에서 생성된 사전 v1을 컨텍스트로 전달합니다. 전문가들은 같은 어휘로 분석하며, 분석 중 발견한 신규 용어/정의 다듬음/모호성을 결과물 끝 `## Dictionary Updates` 섹션에 기록합니다. 자세한 프롬프트는 [team-review-protocol.md](references/team-review-protocol.md) 참조.
 
 Results → `<planning_dir>/team-reviews/` (개별 6개) + `<planning_dir>/team-review.md` (통합).
 
 **Step 10 끝부산물 — 도메인사전 v2 자동 병합** (사용자 개입 없음):
-6개 전문가의 `## Dictionary Updates` 섹션을 추출하여 v1 → v2로 자동 병합. ADD(신규 추가)/REFINE(정의 다듬음)/MERGE(동의어 통합)는 자동 적용, CONFLICT(전문가 간 의견 갈림)는 자동 병합하지 않고 Step 11로 미룸. 갱신 대상: `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`.
+Step 8에서 읽은 `domain-dictionary` 계약을 유지한 상태에서 6개 전문가의
+`## Dictionary Updates` 섹션을 추출하여 v1 → v2로 자동 병합. ADD(신규 추가)/REFINE(정의 다듬음)/MERGE(동의어 통합)는 자동 적용, CONFLICT(전문가 간 의견 갈림)는 자동 병합하지 않고 Step 11로 미룸. 갱신 대상: `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`.
 
 ### 11. Domain Conflict Resolution and Dictionary Finalization
 
@@ -369,7 +435,8 @@ See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 질문이 필요하면 한 번에 하나만 묻습니다. 그 외 항목은 `accepted-by-default`, `deferred-by-default`, `inferred-skip` 중 하나로 `<planning_dir>/domain-dictionary-delta.md`와 `team-review.md`에 기록하고 계속 진행합니다.
 
 **Step 11 끝부산물 — 도메인사전 v3 최종화**:
-마스터(`docs/domain-dictionary.md`)를 v3로 확정, 델타에 최종 변경 이력 기록, 글로벌 반영 항목은 출처 메타데이터와 함께 추가합니다. 전역 쓰기가 애매하면 전역 반영을 건너뛰고 프로젝트 사전만 확정합니다.
+로드한 `domain-dictionary` 계약에 따라 마스터(`docs/domain-dictionary.md`)를 v3로 확정,
+델타에 최종 변경 이력 기록, 글로벌 반영 항목은 출처 메타데이터와 함께 추가합니다. 전역 쓰기가 애매하면 전역 반영을 건너뛰고 프로젝트 사전만 확정합니다.
 
 **Phase 4 이후로 이 사전은 변경되지 않습니다.** Plan, DB Schema, API Spec, Sections는 모두 v3을 따릅니다.
 
@@ -386,7 +453,7 @@ See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 단일 계획을 선형으로 바로 쓰지 않는다. 넓은 설계 결정은 **후보를 만들어 채점한 뒤 고른다(Tree of Thoughts).**
 plan.md 하나를 바로 쓰면 외부 리뷰(Step 13)는 "그 하나"를 다듬을 뿐, 더 나은 접근 자체를 놓친다.
 
-**12a. 전략 후보 2-3개 생성** — 서로 *다른 접근*이어야 한다(동일 계획의 변주 금지). 예: 점진적 스트랭글러 vs 빅뱅 재작성, 모놀리식 우선 vs 모듈 경계 우선, 자체 구현 vs 외부 의존. 분기의 독립성을 위해 **병렬 서브에이전트로 각 후보를 생성**하는 것을 권장(앵커링 방지). 각 후보는 6-10줄 개요: 핵심 접근, 주요 컴포넌트, 시퀀싱, 가정.
+**12a. 전략 후보 2-3개 생성** — 서로 *다른 접근*이어야 한다(동일 계획의 변주 금지). 예: 점진적 스트랭글러 vs 빅뱅 재작성, 모놀리식 우선 vs 모듈 경계 우선, 자체 구현 vs 외부 의존. 분기의 독립성을 위해 **return-only `read-only-analysis` 작업으로 각 후보를 생성**하는 것을 권장(앵커링 방지). 각 후보는 6-10줄 개요: 핵심 접근, 주요 컴포넌트, 시퀀싱, 가정. Main/Lead만 후보를 채점·통합하고 `plan.md`를 작성합니다.
 
 **12b. 루브릭 채점** — 후보를 아래 기준으로 1-5점 채점(표로 출력). 감이 아니라 **근거 한 줄씩**. 채점 없이 후보만 나열하고 끝내지 않는다.
 
@@ -407,8 +474,8 @@ plan.md 하나를 바로 쓰면 외부 리뷰(Step 13)는 "그 하나"를 다듬
 
 See [external-review.md](references/external-review.md)
 
-Launch TWO subagents in parallel: **Gemini** via Bash + **Codex** via Bash.
-Write results to `<planning_dir>/reviews/`.
+Run the **Gemini** and **Codex** external CLI review processes in parallel when available. Treat them as independent review processes, not native delegation workers.
+Each process writes only its unique file under `<planning_dir>/reviews/`; Main/Lead owns feedback integration and all edits to `plan.md`.
 
 ### 14. Integrate External Feedback
 
@@ -458,13 +525,18 @@ See [flow-diagrams-guide.md](references/flow-diagrams-guide.md)
 
 > **⚠️ 이 단계는 건너뛸 수 없습니다.** 공정 도면이 없으면 다이달로스(workpm)가 기준선 없이 시공하게 됩니다.
 
+Step 18 진입 시 위 resolver로 `flow-verifier`와 `mermaid-diagrams`의 정확한 `SKILL.md`를
+모두 읽습니다. plan 모드와 Mermaid 문법 계약을 직접 적용하며 등록 스킬이나 slash command를
+호출하지 않습니다. 어느 모듈도 읽지 못하면 Step 18은 `BLOCKED`이고 Step 19로 진행하지 않습니다.
+
 `plan.md` + `api-spec.md` + `domain-process-analysis.md`에서 핵심 프로세스 추출 → Mermaid flowchart 작성.
-서브에이전트로 각 프로세스 다이어그램 생성 → `<planning_dir>/flow-diagrams/`에 저장.
+각 프로세스를 별도 `artifact-writer` 작업으로 생성 → `<planning_dir>/flow-diagrams/{process-name}.mmd`에 저장. Main/Lead만 `flow-diagrams/index.md`를 작성합니다.
 **출력:** `{process-name}.mmd` 파일들 + `flow-diagrams/index.md`
 
 ### 19. Create Section Index
 
-**⚠️ GATE CHECK:** `flow-diagrams/index.md` 존재 여부 확인 → 없으면 Step 18로 돌아감.
+**⚠️ GATE CHECK:** `flow-verifier`와 `mermaid-diagrams` 상태가 모두 `LOADED`이고
+`flow-diagrams/index.md`가 존재하는지 확인 → 아니면 Step 18로 돌아가거나 `BLOCKED` 보고.
 
 See [section-index.md](references/section-index.md)
 
@@ -481,29 +553,31 @@ Read `plan.md`. Identify natural section boundaries → create `<planning_dir>/s
 
 섹션 파일 작성, 운영/QA 시나리오, 후속 스킬 발견, 최종 보고 단계.
 
-### 20. Write Section Files — Parallel Subagents
+### 20. Write Section Files — Parallel Artifact Writers
 
 See [section-splitting.md](references/section-splitting.md)
 
 1. Parse `sections/index.md`의 SECTION_MANIFEST
-2. 의존성 레이어별로 섹션을 묶고, 한 번에 최대 3개 Task만 병렬 실행
-3. `Overloaded`/timeout이 나면 실패한 섹션만 단일 Task로 재시도
+2. 의존성 레이어별로 섹션을 묶고, 한 번에 최대 3개 `artifact-writer` 작업만 병렬 실행. 각 writer는 할당된 섹션 파일 하나만 쓰기
+3. `Overloaded`/timeout이 나면 실패한 섹션만 단일 writer 작업으로 재시도
 4. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, Reference Libraries, Implementation, Test Scenarios, Implementation Strategy, Quality Gate, Risk & Rollback, Acceptance Criteria, Files 포함)
 
 Wait for each batch to complete before launching the next batch.
 
-### 21. Generate Operation Scenarios — Subagent
+### 21. Generate Operation Scenarios — Artifact Writer
 
 See [operation-qa-guide.md](references/operation-qa-guide.md)
 
 **출력:** `<planning_dir>/operation-scenarios.md` (역할 정의 + 메뉴별 시나리오 + E2E 시나리오 + 화면 흐름도)
+이 파일만 쓰는 `artifact-writer`로 실행하고, 위임 불가 시 메인 컨텍스트에서 순차 작성합니다.
 
-### 22. Generate QA Scenarios Document — Subagent
+### 22. Generate QA Scenarios Document — Artifact Writer
 
 See [operation-qa-guide.md](references/operation-qa-guide.md)
 
 **운영 시나리오를 기반으로** QA 테스트 케이스 생성 → `<planning_dir>/qa-scenarios.md`
 (메뉴별 테스트 + E2E + 통합 테스트 + Summary)
+이 파일만 쓰는 `artifact-writer`로 실행하고, 위임 불가 시 메인 컨텍스트에서 순차 작성합니다.
 
 ### 23. Final Status
 
@@ -518,7 +592,11 @@ Verify all files were created successfully:
 - `design-system.md` + `personas-and-journeys.md` (UI가 있는 프로젝트)
 - `operation-scenarios.md` + `qa-scenarios.md`
 - `team-reviews/domain-research.md` + `domain-process-analysis.md` + `domain-technical-analysis.md`
-- `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`
+- `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`, 또는 모듈 계약이
+  허용한 5개 미만 용어의 명시적 `NOT APPLICABLE` delta
+- 내부 모듈 상태: `domain-dictionary`, `flow-verifier`, `mermaid-diagrams`, 조건부
+  `frontend-design` 각각
+  `LOADED`/`NOT APPLICABLE`/`BLOCKED` 중 하나 (`BLOCKED`가 있으면 Planning Complete 금지)
 
 ### 24. Output Summary
 
@@ -579,12 +657,12 @@ Other options:
 
 | 파일 | 내용 |
 |------|------|
-| [research-protocol.md](references/research-protocol.md) | Step 4-5 리서치 결정 기준, 서브에이전트 프롬프트 |
+| [research-protocol.md](references/research-protocol.md) | Step 4-5 리서치 결정 기준, 위임 작업 프롬프트 |
 | [interview-protocol.md](references/interview-protocol.md) | Step 6 Critical 질문 기준, 추론형 인터뷰 전략 |
 | [test-scenario-guide.md](references/test-scenario-guide.md) | Step 8 테스트 시나리오 형식, 케이스 작성 기준 |
 | [design-system-guide.md](references/design-system-guide.md) | Step 8 디자인 시스템 문서 구조 |
 | [persona-journey-guide.md](references/persona-journey-guide.md) | Step 9 페르소나/여정맵 형식 상세 |
-| [team-review-protocol.md](references/team-review-protocol.md) | Step 10 에이전트별 분석 프롬프트, Phase A/B 상세 |
+| [team-review-protocol.md](references/team-review-protocol.md) | Step 10 전문가별 분석 프롬프트, Phase A/B 상세 |
 | [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 + 사전 변경 + 글로벌 반영 충돌 해결 |
 | [external-review.md](references/external-review.md) | Step 13 Gemini/Codex 외부 리뷰 프롬프트 |
 | [schema-design-guide.md](references/schema-design-guide.md) | Step 16 DB 스키마 설계 절차, ERD/DDL 형식 |

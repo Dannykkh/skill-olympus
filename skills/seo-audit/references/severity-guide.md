@@ -128,7 +128,7 @@ AEO/GEO 점수가 낮은 경우 SEO 기술 점수가 높더라도 AI 검색에�
    AEO/GEO (영역 8~10): P0: {n}건, P1: {n}건, P2: {n}건, P3: {n}건
 
 다음 단계 (선택):
-  security-reviewer    → 보안 점검
+  /code-reviewer 보안 감사 → 보안 점검
   /minos          → Playwright 자동 테스트
   /commit              → 변경사항 커밋
 ```

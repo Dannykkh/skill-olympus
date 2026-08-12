@@ -5,7 +5,7 @@ description: Evaluate Agent Skill design quality against official specifications
 
 # Skill Judge
 
-Evaluate Agent Skills against official specifications and patterns derived from 17+ official examples.
+Evaluate Agent Skills against official specifications and representative official examples.
 
 ---
 
@@ -33,14 +33,14 @@ This is the paradigm shift from "training AI" to "educating AI" — like a hot-s
 
 ### The Core Formula
 
-> **Good Skill = Expert-only Knowledge − What Claude Already Knows**
+> **Good Skill = Expert-only Knowledge − What the Base Model Already Knows**
 
 A Skill's value is measured by its **knowledge delta** — the gap between what it provides and what the model already knows.
 
 - **Expert-only knowledge**: Decision trees, trade-offs, edge cases, anti-patterns, domain-specific thinking frameworks — things that take years of experience to accumulate
-- **What Claude already knows**: Basic concepts, standard library usage, common programming patterns, general best practices
+- **What the base model already knows**: Basic concepts, standard library usage, common programming patterns, general best practices
 
-When a Skill explains "what is PDF" or "how to write a for-loop", it's compressing knowledge Claude already has. This is **token waste** — context window is a public resource shared with system prompts, conversation history, other Skills, and user requests.
+When a Skill explains "what is PDF" or "how to write a for-loop", it's compressing knowledge the base model already has. This is **token waste** — context window is a public resource shared with system prompts, conversation history, other Skills, and user requests.
 
 ### Tool vs Skill
 
@@ -57,7 +57,7 @@ Skills inject knowledge — without frontend-design Skill, model produces generi
 General Agent + Excellent Skill = Domain Expert Agent
 ```
 
-Same Claude model, different Skills loaded, becomes different experts.
+The same base model, with different Skills loaded, becomes different experts.
 
 ### Three Types of Knowledge in Skills
 
@@ -65,9 +65,9 @@ When evaluating, categorize each section:
 
 | Type | Definition | Treatment |
 |------|------------|-----------|
-| **Expert** | Claude genuinely doesn't know this | Must keep — this is the Skill's value |
-| **Activation** | Claude knows but may not think of | Keep if brief — serves as reminder |
-| **Redundant** | Claude definitely knows this | Should delete — wastes tokens |
+| **Expert** | The base model genuinely doesn't know this | Must keep — this is the Skill's value |
+| **Activation** | The base model knows but may not think of it | Keep if brief — serves as reminder |
+| **Redundant** | The base model definitely knows this | Should delete — wastes tokens |
 
 The art of Skill design is maximizing Expert content, using Activation sparingly, and eliminating Redundant ruthlessly.
 
@@ -81,7 +81,7 @@ The most important dimension. Does the Skill add genuine expert knowledge?
 
 | Score | Criteria |
 |-------|----------|
-| 0-5 | Explains basics Claude knows (what is X, how to write code, standard library tutorials) |
+| 0-5 | Explains basics the base model knows (what is X, how to write code, standard library tutorials) |
 | 6-10 | Mixed: some expert knowledge diluted by obvious content |
 | 11-15 | Mostly expert knowledge with minimal redundancy |
 | 16-20 | Pure knowledge delta — every paragraph earns its tokens |
@@ -101,8 +101,8 @@ The most important dimension. Does the Skill add genuine expert knowledge?
 - Domain-specific thinking frameworks
 
 **Evaluation questions**:
-1. For each section, ask: "Does Claude already know this?"
-2. If explaining something, ask: "Is this explaining TO Claude or FOR Claude?"
+1. For each section, ask: "Does the base model already know this?"
+2. If explaining something, ask: "Is this explaining to the model or guiding its work?"
 3. Count paragraphs that are Expert vs Activation vs Redundant
 
 ---
@@ -115,15 +115,15 @@ Does the Skill transfer expert **thinking patterns** along with **necessary doma
 | Type | Example | Value |
 |------|---------|-------|
 | **Thinking patterns** | "Before designing, ask: What makes this memorable?" | High — shapes decision-making |
-| **Domain-specific procedures** | "OOXML workflow: unpack → edit XML → validate → pack" | High — Claude may not know this |
-| **Generic procedures** | "Step 1: Open file, Step 2: Edit, Step 3: Save" | Low — Claude already knows |
+| **Domain-specific procedures** | "OOXML workflow: unpack → edit XML → validate → pack" | High — the base model may not know this |
+| **Generic procedures** | "Step 1: Open file, Step 2: Edit, Step 3: Save" | Low — the base model already knows |
 
 | Score | Criteria |
 |-------|----------|
-| 0-3 | Only generic procedures Claude already knows |
+| 0-3 | Only generic procedures the base model already knows |
 | 4-7 | Has domain procedures but lacks thinking frameworks |
 | 8-11 | Good balance: thinking patterns + domain-specific workflows |
-| 12-15 | Expert-level: shapes thinking AND provides procedures Claude wouldn't know |
+| 12-15 | Expert-level: shapes thinking AND provides procedures the base model would not know |
 
 ---
 
@@ -238,7 +238,7 @@ Formatting and length are the most common traps when scoring Skills.
 - **Token waste is a real cost.** Every redundant paragraph consumes context window shared with system prompts, conversation history, and the user's actual request. A paragraph explaining "what is a unit test" costs the same tokens as a paragraph explaining a non-obvious edge case — but only one earns its place.
 - **Length can signal poor editing.** A 43-line Skill with pure Expert content outperforms a 500-line Skill diluted with basics. When length impresses you, ask: "Is this long because the domain is complex, or because the author didn't cut?"
 - **Decision trees need mental execution.** Read each branch and trace it: does following the tree actually lead to a correct outcome? A tree that looks comprehensive but leads to wrong choices is worse than no tree.
-- **"Helpful context" is often Redundant.** When content could be justified as "helpful context," ask whether Claude needs that context or already has it. If Claude already knows it, the context isn't helpful — it's noise.
+- **"Helpful context" is often Redundant.** When content could be justified as "helpful context," ask whether the model needs that context or already has it. If the base model already knows it, the context isn't helpful — it's noise.
 - **Missing anti-patterns are a gap.** Expert knowledge lives in what NOT to do. A Skill with no NEVER list likely hasn't captured the hard-won lessons from experience.
 - **Generic procedures and domain-specific procedures look similar but aren't.** "Open file, edit, save" is generic. "Unpack OOXML, edit XML nodes, validate schema, repack" is domain-specific. One adds value, one doesn't.
 - **Description is load-gating.** The Agent reads description before deciding to load the Skill. If description doesn't explain WHEN to use it, the Skill may never trigger — making the body irrelevant. Poor description = invisible Skill.
@@ -251,12 +251,12 @@ Formatting and length are the most common traps when scoring Skills.
 ### Step 1: First Pass — Knowledge Delta Scan
 
 Read SKILL.md completely and for each section ask:
-> "Does Claude already know this?"
+> "Does the base model already know this?"
 
 Mark each section as:
-- **[E] Expert**: Claude genuinely doesn't know this — value-add
-- **[A] Activation**: Claude knows but brief reminder is useful — acceptable
-- **[R] Redundant**: Claude definitely knows this — should be deleted
+- **[E] Expert**: The base model genuinely doesn't know this — value-add
+- **[A] Activation**: The base model knows but a brief reminder is useful — acceptable
+- **[R] Redundant**: The base model definitely knows this — should be deleted
 
 Calculate rough ratio: E:A:R
 - Good Skill: >70% Expert, <20% Activation, <10% Redundant
@@ -297,18 +297,22 @@ Max = 120 points
 
 ### Step 4.5: Independent Adversarial Cross-Check (독립 교차검증)
 
-> ⚠️ Steps 1~4 are one model's self-introspection ("Does Claude already know this?"). Scores from unaided
+> ⚠️ Steps 1~4 are one model's self-introspection ("Does the base model already know this?"). Scores from unaided
 > self-judgment are unreliable — intrinsic self-correction without external feedback often fails to catch its
 > own errors. Before finalizing scores, cross-check with an INDEPENDENT lens.
 
-1. **Independent scoring pass** — spawn a separate subagent with the same SKILL.md but the OPPOSITE stance:
-   "Refute the Steps 1~4 verdict — are items marked [E] Expert actually [R] Redundant that Claude already
-   knows? Are the scores too generous?" Re-score all 8 dimensions independently.
+1. **Independent scoring pass** — when native delegation is available, assign a **read-only review role**
+   the same SKILL.md and the OPPOSITE stance. It may read evidence but must not edit the skill or report:
+   "Refute the Steps 1~4 verdict — are items marked [E] Expert actually [R] Redundant knowledge the base
+   model already has? Are the scores too generous?" Re-score all 8 dimensions independently. Use the
+   current CLI's built-in explorer/reviewer; do not require a custom agent name or vendor-specific spawn schema.
+   If delegation is unavailable, run this adversarial pass sequentially in the main context before reconciliation
+   and label it `cross-check: sequential-main` rather than claiming independent-agent validation.
 2. **Reconcile** — compare per-dimension scores. Any dimension differing by ≥3 points: re-examine the evidence
    and converge to an agreed score. If no agreement, take the conservative (lower) score and note it in the report.
 3. **[R] Redundant requires an external signal** — do not delete-recommend on self-judgment alone. Back each
    "Redundant" verdict with an external signal where possible: the same content in official docs/examples, or a
-   codebase grep showing it already exists. No external signal → do not recommend deletion on "Claude knows it" alone.
+   codebase grep showing it already exists. No external signal → do not recommend deletion on "the model knows it" alone.
 
 ### Step 5: Generate Report
 
@@ -360,11 +364,11 @@ When evaluating any Skill, always return to this fundamental question:
 > **'Yes, this captures knowledge that took me years to learn'?"**
 
 If the answer is yes → the Skill has genuine value.
-If the answer is no → it's compressing what Claude already knows.
+If the answer is no → it's compressing what the base model already knows.
 
 The best Skills are **compressed expert brains** — they take a designer's 10 years of aesthetic accumulation and compress it into 43 lines, or a document expert's operational experience into a 200-line decision tree.
 
-What gets compressed must be things Claude doesn't have. Otherwise, it's garbage compression.
+What gets compressed must be things the base model doesn't have. Otherwise, it's garbage compression.
 
 ---
 
@@ -372,7 +376,7 @@ What gets compressed must be things Claude doesn't have. Otherwise, it's garbage
 
 This Skill (skill-judge) should itself pass evaluation:
 
-- **Knowledge Delta**: Provides specific evaluation criteria Claude wouldn't generate on its own
+- **Knowledge Delta**: Provides specific evaluation criteria the base model would not generate on its own
 - **Mindset**: Shapes how to think about Skill quality, not just checklist items
 - **Anti-Patterns**: "NEVER Do When Evaluating" section with specific don'ts
 - **Specification**: Valid frontmatter with comprehensive description

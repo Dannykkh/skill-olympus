@@ -23,7 +23,7 @@ when_to_use: |
 avoid_if: |
   - 기술 문서 (PRD, API docs, ADR) → documentation 사용
   - 코드 내 주석 → 해당 도메인 에이전트 사용
-  - 테스트 시나리오 → qa-writer 사용
+  - 테스트 시나리오 → zephermine 또는 minos 사용
   - UI/UX 디자인 문서 → ui-ux-designer 사용
   - PPT/DOCX 파일 생성 → ppt-generator/docx 스킬 사용 (내용 작성 후)
 examples:

@@ -1,13 +1,6 @@
 ---
 name: agent-team
-description: zephermine 섹션 기반 Agent Teams 오케스트레이션. 의존성 분석, 웨이브 그룹핑, teammate 자동 구성, 병렬 실행. 4-CLI 네이티브 멀티에이전트 지원 (Claude Agent Teams / Codex spawn_agent / Gemini 서브에이전트 / Grok spawn_subagent). /agent-team 또는 /poseidon으로 실행. 포세이돈.
-triggers:
-  - "agent-team"
-  - "포세이돈"
-  - "poseidon"
-  - "팀 실행"
-  - "agent team"
-auto_apply: false
+description: zephermine 섹션 기반 네이티브 멀티에이전트 오케스트레이션. 의존성 분석, Wave 그룹핑, 파일 소유권 분리, 병렬 구현과 통합 검증을 수행한다. Claude, Codex, Gemini, Grok의 내장 탐색자·작업자를 사용하며 /agent-team 또는 /poseidon으로 실행한다.
 ---
 
 # Agent Team — Zephermine 섹션 병렬 실행
@@ -29,11 +22,11 @@ zephermine이 생성한 섹션(sections/)의 의존성 그래프를 분석하여
 
 > 다이달로스의 PM 철학을 포세이돈 Lead에도 적용합니다.
 
-### 1. 작업 외주화 — Lead는 코딩하지 않는다
+### 1. 조건부 외주화 — 병렬 이득이 있을 때 Lead는 조율한다
 
 Lead의 기억 공간이 전체 작전을 기억하는 **유일한 곳**이다.
 코드까지 짜면 기억이 순식간에 꽉 찬다.
-**Lead는 전략만. 코딩/리서치는 전부 teammate에게.**
+작업자가 가용하고 파일 범위가 독립적이면 코딩·리서치를 위임합니다. 작업자가 없거나 같은 파일을 순차 수정해야 하면 Lead가 실행자 역할도 소유합니다.
 
 ### 2. 기억 외부화 — 기억력을 믿지 마라
 
@@ -54,12 +47,12 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 - 의사결정 + activity log 기록
 - teammate 배정/교체
 - 미통과 항목 → teammate에게 재지시
+- 네이티브 위임이 없거나 순차 실행이 더 안전한 작업의 직접 수행
 
-**Lead가 절대 안 하는 것:**
-- ❌ 코드 작성, 파일 수정
-- ❌ 리서치, 코드베이스 탐색
-- ❌ 테스트 실행
-- (teammate에게 시킬 수 있으면 무조건 시킴)
+**작업자가 가용한 병렬 경로에서 Lead가 하지 않는 것:**
+- 작업자와 같은 파일을 동시에 수정
+- 독립 작업자의 조사·테스트를 중복 실행
+- 외부 검증 없이 완료 선언
 
 **자기검증 3질문** — Wave 완료 보고 시 반드시 자문:
 1. 가장 어려운 결정이 뭐였나?
@@ -82,73 +75,80 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 > **native-first 원칙** (learned/020): 실행 엔진은 각 CLI의 네이티브 멀티에이전트에 위임하고,
 > orchestrator MCP는 네이티브가 없는 구버전 CLI의 폴백 + hard file-lock 정책 레이어로만 남긴다.
 
-| CLI | 실행 방식 | 도구 |
-|-----|----------|------|
-| **Claude** | Agent Teams (네이티브) | `TeamCreate` / `SendMessage` / `TaskCreate` / `TaskUpdate` |
-| **Codex** | spawn_agent (네이티브) | `spawn_agent` / `send_message` / `wait` / `close_agent` |
-| **Gemini** | 서브에이전트 (네이티브, v0.38+) | 에이전트명 도구 호출 또는 `@에이전트명` — 동적 팀원 생성 불가, 사전 정의 에이전트(`~/.gemini/agents/`)에 위임 |
-| **Grok** | spawn_subagent (네이티브) | `spawn_subagent(subagent_type, prompt)` — 최대 8 동시, 결과는 요약으로 회수 |
-| (폴백) | orchestrator MCP | 위 도구가 전부 없는 구버전 CLI만 — `workpm-mcp` |
+| CLI | 읽기 전용 탐색·검토 | 구현·명령 실행 | 팀 조율 |
+|-----|--------------------|----------------|----------|
+| **Claude** | 내장 `Explore` | 내장 `general-purpose` 또는 이름 있는 background teammate | Agent Teams가 활성화된 경우 `Agent` + shared task list + `SendMessage` |
+| **Codex** | 내장 `explorer` | 내장 `worker` (`default`는 범용 폴백) | 현재 세션에 노출된 spawn/message/wait/interrupt 도구 |
+| **Gemini** | 내장 `codebase_investigator` | 내장 `generalist` | subagent 호출 결과를 Lead가 Wave ledger에 반영 |
+| **Grok** | 내장 `explore` | 내장 `general-purpose` | subagent 호출 결과를 Lead가 Wave ledger에 반영 |
 
-> ⚠️ Gemini 경로는 공식 문서 근거 설계(2026-08-05)이며 동기화 에이전트의 실스폰은 미실측.
-> 첫 실행 시 `/agents`로 에이전트 인식을 확인하고, 인식 실패 시 orchestrator 폴백으로 전환.
+역할명은 **의미 계약**입니다. 읽기 전용 역할에는 파일 생성을 지시하지 않고, 구현 역할에는 담당 파일·검증 명령·완료 보고 형식을 함께 전달합니다. CLI별 도구 이름이나 인자 스키마가 달라지면 현재 런타임이 노출한 도구를 사용하며, 이 문서의 예시 이름을 억지로 호출하지 않습니다.
+
+네이티브 위임이 없거나 실패하면 같은 Wave의 독립 작업을 메인 컨텍스트에서 순차 실행합니다. hard file lock, 외부 task ledger, 크로스-CLI 혼합이 실제로 필요할 때만 `workpm-mcp`를 선택합니다.
+
+## Source-only internal module resolution (mandatory)
+
+`code-reviewer`와 조건부 `orchestrator`는 포세이돈이 내부 정책으로 읽는 source-only
+모듈입니다. 등록된 스킬이나 slash command로 호출하지 않습니다.
+
+각 선택된 모듈을 다음 순서로 해석하고 처음 확인된 exact `SKILL.md` 파일 하나를 읽습니다.
+
+1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
+2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
+   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
+   `~/.gemini/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
+   `읽을 경로`의 절대 `SKILL.md`를 읽고, 누락·중복 행은 fail-closed입니다. 기본 경로가
+   `.olympus/source-skills` 아래여도 조합하거나 추측하지 않습니다.
+4. `module_root`는 읽은 `SKILL.md`의 부모입니다. `references/`, `scripts/`, `commands/`는
+   모두 이 루트에서 해석합니다.
+5. Step 5 코드 리뷰 분기에 도달했을 때만 `code_reviewer_root`를 만듭니다. hard file lock,
+   외부 task ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
+   `orchestrator_root`를 만들고 `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다.
+
+이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
+모듈 이름을 slash command로 실행하지 않습니다.
+
+code-reviewer를 읽지 못하면 현재 CLI의 네이티브 review 1회와 아래 bounded 검수 항목만
+실행하고 `policy module: NOT RUN (native fallback)` 및 게이트 `DEGRADED`를 기록합니다.
+네이티브 review도 없으면 읽기 전용 작업자가 같은 bounded 항목을 점검하되 source module PASS를
+주장하지 않습니다. orchestrator/MCP를 읽지 못하면 편집을 직렬화할 수 있는 범위만 메인 순차
+경로로 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock이 필수이면 해당 Wave는 `BLOCKED`입니다.
+누락된 모듈을 조용히 PASS 처리하지 않습니다.
 
 ### CLI 감지 방법
 
-Phase 0 시작 시 자동 판별 (위에서부터 순서대로):
-- `TeamCreate` 도구 사용 가능 → **Claude 모드**
-- `spawn_agent` 도구 사용 가능 → **Codex 모드**
-- `spawn_subagent` 도구 사용 가능 → **Grok 모드**
-- 동기화된 에이전트명이 도구로 노출됨 (예: `backend-spring` — `/agents`로 확인) → **Gemini 모드**
-- 전부 없음 → **폴백**: 사용자에게 `workpm-mcp` (orchestrator) 안내
+Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니다.
+
+1. 읽기 전용 탐색 역할과 쓰기 가능한 작업 역할을 구분할 수 있는지 확인합니다.
+2. 병렬 위임과 상태 회수가 모두 가능하면 네이티브 Wave 실행을 사용합니다.
+3. 위임만 가능하고 병렬·중간 메시지가 보장되지 않으면 bounded sub-wave 또는 순차 위임으로 축소합니다.
+4. 위임 도구가 없으면 메인 컨텍스트 순차 실행으로 계속합니다.
+5. 병렬성이 필수이고 네이티브 경로가 없을 때만 `workpm-mcp`를 제안합니다.
 
 ## Prerequisites
 
 ### Claude 모드
-- 현행 Claude Code는 Agent Teams 도구(TeamCreate/SendMessage/TaskCreate 등)를 **기본 제공** — 별도 설정 불필요
-- (구버전 호환) Teams 도구가 안 보이면: `settings.json`에 `"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}` + `"teammateMode": "in-process"` 또는 `"tmux"`
-- ⚠️ **TeamCreate 시 반드시 `mode: "bypassPermissions"` 지정** — 미지정 시 teammate가 파일 쓰기 권한 승인 대기 상태에 빠져 무한 대기
-- ⚠️ **SendMessage 시 반드시 `summary` 파라미터 포함** — string message만 보내면 `error: summary is required` 에러 발생
+- Agent Teams는 실험 기능이며 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`일 때만 사용합니다. 스킬이 전역 설정을 자동 변경하지 않습니다.
+- Claude Code 2.1.178+는 세션당 implicit team을 사용합니다. `TeamCreate`/`TeamDelete`는 호출하지 않고, 이름 있는 background teammate를 `Agent`로 직접 생성합니다. 세션 종료 시 팀 정리는 런타임이 담당합니다.
+- teammate는 Lead의 permission mode를 상속합니다. 스폰 프롬프트에서 `bypassPermissions`를 지정하거나 권한을 우회하지 않습니다. 필요한 권한은 사용자가 Lead 세션에서 먼저 선택합니다.
+- Agent Teams가 꺼져 있으면 독립 조사에는 내장 `Explore`, 구현에는 `general-purpose`를 사용하고, 병렬성이 없으면 순차 실행합니다.
 
-### 모델 선택 전략
+### 추론 강도 선택 전략
 
-**"무엇을 만들지" 판단 → Opus, "어떻게 만들지" 실행 → Sonnet.**
+런타임의 현재 모델과 사용자 설정을 상속합니다. 특정 vendor 모델을 스킬이 강제하지 않습니다.
 
-#### Wave별 모델 배분
+| Wave 단계 | 팀원 역할 | 요구 강도 |
+|-----------|----------|-----------|
+| **Wave 0: 도메인 분석** | 아키텍처 조사, 기술 스택 평가, DB 스키마 설계 | 높은 추론 강도 |
+| **Wave N: 구현** | 기능 코딩, 파일 생성, 테스트 작성 | 균형형 실행 |
+| **Wave N: 자재검사** | 네이티브 읽기 전용 리뷰 + code-reviewer 정책 | 높은 추론 강도 |
+| **Wave N: 테스트 실행** | 테스트 러너, 린트, 타입 체크 | 빠른 실행 |
+| **최종 검증** | AC 대조, 공정 점검 | 높은 추론 강도 |
 
-| Wave 단계 | 팀원 역할 | 모델 |
-|-----------|----------|------|
-| **Wave 0: 도메인 분석** | 아키텍처 조사, 기술 스택 평가, DB 스키마 설계 | **Opus** |
-| **Wave N: 구현** | 기능 코딩, 파일 생성, 테스트 작성 | **Sonnet** |
-| **Wave N: 자재검사** | code-reviewer 검수 | **Opus** |
-| **Wave N: 테스트 실행** | 테스트 러너, 린트, 타입 체크 | **Sonnet** |
-| **최종 검증** | AC 대조, 공정 점검 | **Opus** |
-
-```
-# 도메인 분석 — Opus
-TeamCreate({
-  name: "domain-expert",
-  model: "opus",
-  mode: "bypassPermissions",
-  prompt: "이 도메인의 아키텍처를 분석하고 설계 방향을 제안해줘..."
-})
-
-# 구현 — Sonnet
-TeamCreate({
-  name: "wave1-auth-impl",
-  model: "sonnet",
-  mode: "bypassPermissions",
-  prompt: "섹션 spec에 따라 인증 모듈을 구현해줘..."
-})
-
-# 자재검사 — Opus
-TeamCreate({
-  name: "reviewer",
-  model: "opus",
-  mode: "bypassPermissions",
-  prompt: "skills/code-reviewer/SKILL.md를 참조하여 구현 결과를 검수해줘..."
-})
-```
+위임 프롬프트에는 역할, 담당 범위, 입력 아티팩트, 쓰기 허용 여부, 검증 명령, 반환 형식만 넣습니다. 모델 지정은 사용자가 요청했거나 런타임 설정이 명시적으로 제공된 경우에만 사용합니다.
 
 ### Wave 완료 후 테스트 검증 (필수)
 
@@ -157,31 +157,31 @@ TeamCreate({
 1. **기존 테스트 실행**: `npm test`, `pytest`, `go test` 등 프로젝트 테스트 프레임워크 실행
 2. **린트/타입 체크**: `tsc --noEmit`, `eslint`, `ruff check` 등
 3. **실패 시**: 구현 팀원에게 수정 지시 → 재실행 (최대 3회)
-4. **3회 연속 실패**: 해당 팀원 해고 → 새 팀원(Opus)으로 교체, 실패 원인 분석부터 재시작
+4. **3회 연속 실패**: 해당 작업자를 중단하고 새 general-write 작업자로 교체한 뒤, 실패 원인 분석부터 재시작
 
 ### 에러 복구 전략
 
 | 상황 | 조치 |
 |------|------|
 | 팀원이 잘못된 파일 수정 | `git diff` 확인 → revert 지시 |
-| 테스트 3회 연속 실패 | 팀원 해고 → Opus로 교체 → 원인 분석부터 |
+| 테스트 3회 연속 실패 | 작업자 중단 → 새 general-write 작업자로 교체 → 원인 분석부터 |
 | 자재검사 2회 미통과 | 구현 팀원 교체 → 리뷰 지적사항 포함 재구현 |
 | 팀원 무응답 (1분+) | shutdown → 재스폰 (최대 2회) |
 
 ### Codex 모드
-- Codex CLI 설치 (`codex` 명령어 사용 가능)
-- full-auto 모드 권장 (`codex --approval-mode full-auto`)
+- Codex의 내장 `explorer`/`worker`/`default`를 사용합니다. 사용자 정의 `.toml` agent는 이 스킬의 필수 조건이 아닙니다.
+- subagent는 현재 세션의 sandbox와 approval policy를 상속합니다. 스킬이 `--yolo`, 승인 우회, sandbox 해제를 권장하거나 설정하지 않습니다.
 
 ### Gemini 모드
-- Gemini CLI v0.38+ (서브에이전트 기본 활성 — `settings.json`의 `enableAgents`가 false면 켜기)
-- `~/.gemini/agents/`에 동기화된 에이전트 존재 (`scripts/sync-gemini-assets.js`) — `/agents`로 인식 확인
-- **동적 페르소나 생성 불가** → 팀원 = 사전 정의 에이전트 (expert-matching으로 선택). 섹션 내용은 위임 프롬프트에 전부 임베딩
+- Gemini CLI의 `experimental.enableAgents` 기본값은 `true`이며 설치기가 강제 변경하지 않습니다. 사용자가 명시적으로 껐다면 그 선택을 존중합니다.
+- `/agents`에서 내장 `codebase_investigator`와 `generalist` 인식을 확인합니다.
+- 구현 전문성은 전역 페르소나가 아니라 섹션 내용·프로젝트 설정·인접 코드·테스트를 위임 프롬프트에 임베딩해 전달
 - 공식 문서에 병렬 실행 명시 없음 — 병렬 위임 실패 시 Wave 내 순차 위임으로 폴백
 
 ### Grok 모드
-- Grok Build — `[compat.claude]` 기본값으로 `~/.claude/agents/`를 직접 읽음 (sync 불필요, learned/018)
-- `spawn_subagent(subagent_type, prompt)` — `subagent_type`은 매칭 에이전트, 없으면 `general-purpose`
-- 최대 8 동시 스폰. 자식 결과는 요약으로 회수되므로 완료 판정은 파일 실존 확인으로 교차 검증
+- Grok Build는 네이티브 `general-purpose`, `explore`, `plan` 서브에이전트를 제공. Olympus source-only 프롬프트는 기본 설치하지 않음
+- 일반 구현은 `general-purpose`, 읽기 전용 탐색은 `explore`를 사용합니다. 명명형 어댑터는 고유 런타임 계약이 있을 때만 명시 opt-in합니다.
+- 자식 결과는 요약으로 회수되므로 완료 판정은 실제 파일·테스트 결과로 교차 검증합니다. 동시성은 런타임 제한과 독립 작업 수 중 더 작은 값으로 제한합니다.
 
 ### 공통
 - zephermine 계획 산출물 (sections/index.md + section-NN-*.md 파일들)
@@ -243,7 +243,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 2. 관련 코드베이스 탐색 (Glob, Grep, Read)
 3. 작업을 독립적인 태스크로 분해 (파일/모듈/기능 단위)
 4. 각 태스크의 의존성 판별 → Wave 그룹핑
-5. 전문가 매칭 ([expert-matching.md](references/expert-matching.md) 참조)
+5. 구현 컨텍스트 매칭 ([expert-matching.md](references/expert-matching.md) 참조)
 6. **Step 2 (Build Wave Plan)**의 사용자 확인 출력으로 합류
 
 **자유 모드 태스크 분해 원칙:**
@@ -256,13 +256,9 @@ teammate 생성 시 이 팀명을 사용하세요.
 
 ## Workflow
 
-### Pre-Step: 좀비 팀 정리
+### Pre-Step: 런타임 상태 확인
 
-> 이전 세션에서 TeamDelete 없이 종료된 경우 좀비 teammate가 남아있을 수 있음.
-
-```
-TeamDelete("poseidon-team")   # 에러 무시 — 팀이 없으면 자연스럽게 넘어감
-```
+현재 세션에 남아 있는 실행 중 작업자와 task를 조회합니다. 이전 세션의 팀 디렉터리를 수동 삭제하거나 정리 명령을 추측해 호출하지 않습니다. 재사용 가능한 작업자가 없으면 새 작업자를 만들고, 런타임 상태 조회가 불가능하면 현재 Wave ledger를 기준으로 진행합니다.
 
 ### Step 0: 산출물 검토 (PM 게이트)
 
@@ -289,7 +285,7 @@ See [section-parser.md](references/section-parser.md)
 
 **프로세스 도면 매핑**: `sections/index.md`에 **Flow Diagram Mapping** 테이블이 있으면 섹션↔도면 노드 매핑을 추출하여 Step 2, Step 4에 반영.
 
-**전문가 매칭**: See [expert-matching.md](references/expert-matching.md) — 각 섹션의 파일 패턴으로 전문가 에이전트 자동 매칭.
+**구현 컨텍스트 매칭**: See [expert-matching.md](references/expert-matching.md) — 각 섹션의 파일 패턴으로 프로젝트 근거·역할·검증 계약을 구성.
 
 ### Step 2: Build Wave Plan
 
@@ -328,15 +324,15 @@ See [teammate-context-template.md](references/teammate-context-template.md)
 모든 섹션을 TaskCreate로 등록하고 blockedBy 관계 설정. `description`에 섹션 파일 전체 내용 임베딩.
 
 #### Codex 모드 (spawn_agent)
-Wave 단위로 agent spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 전문가 역할 포함.
+Wave 단위로 agent spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 프로젝트 기반 구현 계약 포함.
 
 #### Gemini 모드 (서브에이전트 위임)
-Wave 단위로 에이전트명 도구 호출. expert-matching으로 고른 사전 정의 에이전트에
-섹션 파일 전체 내용 + 담당 파일 + 파일 소유권 규칙을 위임 프롬프트로 전달.
+Wave 단위로 기본/범용 서브에이전트를 호출하고, 섹션 파일 전체 내용 + 담당 파일 +
+프로젝트 기반 구현 계약 + 파일 소유권 규칙을 위임 프롬프트로 전달.
 
 #### Grok 모드 (spawn_subagent)
-Wave 단위로 spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 전문가 역할 포함,
-`subagent_type`은 매칭 에이전트 (없으면 `general-purpose`).
+Wave 단위로 spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 프로젝트 기반 구현 계약을 포함하고,
+일반 구현의 `subagent_type`은 `general-purpose`를 사용.
 
 **핵심 규칙**: teammate/agent는 lead의 대화 히스토리를 상속하지 않으므로, description/prompt에 섹션 파일 전체 내용을 반드시 임베딩해야 함.
 
@@ -347,23 +343,31 @@ See [wave-executor.md](references/wave-executor.md)
 각 Wave별 실행 사이클:
 1. 선행 Task의 blockedBy 해소 여부 확인
 2. teammate/agent에게 지시 (담당 파일, 도면 노드, 파일 소유권 규칙 포함)
-3. 진행 상황 모니터링 (Claude: TaskList 폴링, Codex: wait 블로킹, Gemini/Grok: 도구 호출 반환이 곧 완료 보고 — 반환 요약을 체크리스트·파일 실존과 대조)
+3. 진행 상황 모니터링 (Claude: shared task list/메시지, Codex: 현재 wait 도구, Gemini/Grok: subagent 반환 — 모든 요약을 체크리스트·파일 실존과 대조)
 4. 모든 Task completed → 다음 Wave로 진행
 
 **teammate 지시 핵심 요소:**
-- 전문가 역할, 섹션 내용, 담당 파일 목록
+- 프로젝트 기반 역할·근거, 섹션 내용, 담당 파일 목록
 - 📐 프로세스 도면 경로 + 담당 노드 ID (도면 있는 경우)
 - ⚠️ 파일 소유권 규칙 (다른 teammate 파일 수정 금지)
-- Activity logging 위치 (`conversations/{YYYY-MM-DD}-team-poseidon.md`)
+- 작업자는 변경 파일·테스트·이탈 사유를 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 activity log를 기록
 
 ### Step 5: Code Review Gate (자재검사)
 
 각 Wave 완료 후, 다음 Wave 진행 전 코드리뷰 실행.
 
-- Claude: `code-reviewer` 타입 teammate 투입
-- Codex: code review용 agent spawn
-- Gemini: `code-reviewer` 에이전트에 위임 / Grok: `spawn_subagent(subagent_type: 'code-reviewer')`
-- 미통과 시 → 수정 지시 → 재리뷰 (최대 2회)
+1. 이 Step에 도달한 뒤 전역 카탈로그의 `code-reviewer` 행을 해석하고
+   `${code_reviewer_root}/SKILL.md`를 읽습니다. 이 모듈의 포세이돈 연동·정책 레이어를 적용하되,
+   등록 스킬을 호출하지 않습니다. 보안 감사 reference가 필요한 Wave만
+   `${code_reviewer_root}/references/security-audit.md`를 추가로 읽습니다.
+2. 리뷰 엔진은 native-first로 선택합니다.
+   - Claude: 내장 `/review`; 병렬화가 필요하면 읽기 전용 Explore 작업자에 로드한 gate 전달
+   - Codex: `/review` 또는 `codex review`; 읽기 전용 explorer에 로드한 gate 전달 가능
+   - Gemini: 읽기 전용 네이티브 subagent에 로드한 경로 C gate 전달
+   - Grok: bundled `review`; 실패하면 `explore` subagent에 같은 gate 전달
+3. source module을 읽지 못하면 위 resolver의 bounded native fallback만 실행하고
+   `policy module: NOT RUN`, `review gate: DEGRADED`로 남깁니다.
+4. 미통과 시 → 수정 지시 → 재리뷰 (최대 2회)
 
 **검수 항목:** 기능/책임 단위 분리, 보안 취약점, 타입, SRP, DRY
 
@@ -395,7 +399,9 @@ while (마스터 체크리스트 미통과 항목 존재):
 모든 Wave 완료 후:
 1. `conversations/{YYYY-MM-DD}-team-poseidon.md` 읽기
 2. teammate별 활동 통계 집계 (기록 수, 에러 수, 파일 수)
-3. 폴백(orchestrator MCP) 경로 사용 시에만 `orchestrator_get_activity_log`로 JSONL 로그 확인
+3. source-only `orchestrator` 모듈과 MCP command를 성공적으로 읽고 실제 폴백을 시작한 경우에만
+   `orchestrator_get_activity_log`로 JSONL 로그 확인. 선택하지 않았거나 로드 실패면
+   `MCP: NOT SELECTED`/`NOT RUN`으로 기록
 4. 요약을 Final Report에 포함
 
 ### Step 8: Final Report
@@ -407,6 +413,7 @@ while (마스터 체크리스트 미통과 항목 존재):
 📋 마스터 체크리스트: M/N 통과 (XX%)
 📐 도면 매칭: K개 노드 중 J개 구현 (YY%)
 ⏱️ 총 Wave: W개 | 검증 루프: R회
+내부 모듈: code-reviewer {LOADED|NOT RUN} | orchestrator MCP {NOT SELECTED|LOADED|NOT RUN}
 
 섹션별 결과:
   ✅ section-01-foundation — 체크 3/3, 파일 3개
@@ -416,7 +423,7 @@ Lead 의사결정 로그: conversations/{date}-team-poseidon.md
 ═══════════════════════════════════════
 ```
 
-실패 섹션 있으면 AskUserQuestion: "실패 섹션 재시도" or "무시하고 완료"
+실패 섹션은 같은 범위를 1회 재시도합니다. 그래도 실패하고 대화형 실행이면 사용자에게 재시도 또는 실패 상태 종료를 한 문장으로 묻습니다. Zeus 같은 무중단 호출에서는 메인 순차 폴백 후 실패를 보고하며 성공으로 가장하지 않습니다.
 
 ---
 
@@ -455,43 +462,31 @@ Step {N} complete: {summary}
 |------|------|
 | SECTION_MANIFEST 파싱 실패 | 사용자에게 index.md 형식 확인 요청 |
 | 순환 의존성 발견 | 경고 출력 + 관련 섹션 목록 표시 |
-| teammate 무응답 (1분+) | 파일 생성 여부 직접 확인 → 미생성 시 해당 teammate shutdown → `mode: "bypassPermissions"`로 재스폰 |
-| teammate/agent 실패 | Claude: Task 로그 확인 → `mode: "bypassPermissions"`로 재스폰 1회, Codex: 재spawn 1회 → 실패 시 사용자 보고 |
+| teammate 상태 변화 없음 | 런타임 상태와 담당 파일·테스트 증거 확인 → 작업 범위를 줄여 1회 재위임; permission mode는 변경하지 않음 |
+| teammate/agent 실패 | 오류와 부분 변경을 확인 → 같은 범위를 새 작업자에게 1회 재위임 → 실패 시 메인 순차 폴백 또는 사용자 보고 |
 | 파일 충돌 감지 | 두 teammate/agent가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
-| 컨텍스트 한도 초과 | 현재 Wave까지 결과 저장 → **teammate shutdown → TeamDelete** → 사용자에게 새 세션에서 재개 안내 |
-| spawn_agent 실패 (Codex) | Codex CLI 설치/권한 확인 → full-auto 모드 권장 → 재시도 |
-| agent wait 타임아웃 (Codex) | close_agent 후 재spawn → 섹션 범위 축소 고려 |
-| Gemini 에이전트 미인식 | `/agents`로 확인 → 없으면 `sync-gemini-assets.js` 재실행 → 그래도 실패 시 orchestrator 폴백 전환 |
-| spawn_subagent 실패 (Grok) | `grok inspect --json`으로 compat.claude agents 확인 → 재spawn 1회 → 실패 시 사용자 보고 |
-| 2회 재시도 후에도 실패 | 해당 섹션을 Lead가 직접 구현 (subagent 위임) 또는 사용자에게 보고 |
+| 컨텍스트 한도 초과 | 현재 Wave까지 결과와 ledger를 저장 → 실행 중 작업자를 안전하게 중단 → 사용자에게 새 세션에서 재개 안내 |
+| Codex spawn 실패 | 현재 세션의 multi-agent 가용성·thread cap·sandbox를 확인 → 범위를 줄여 재시도; 승인 우회 금지 |
+| Codex wait 타임아웃 | 현재 interrupt 도구로 중단 → 부분 변경 확인 → 범위를 줄여 재spawn |
+| Gemini 에이전트 미인식 | `/agents`로 확인 → CLI 버전과 사용자 `experimental.enableAgents` 설정 확인 → 실제 `agent` 도구가 없으면 Wave 내 메인 컨텍스트 순차 실행; hard lock 등이 필수일 때만 source-only resolver를 거친 orchestrator MCP 분기 |
+| spawn_subagent 실패 (Grok) | `grok inspect --json`으로 네이티브 서브에이전트 레지스트리 확인 → 재spawn 1회 → 실패 시 사용자 보고 |
+| 재시도 후에도 실패 | 해당 섹션을 메인 컨텍스트에서 순차 실행하거나 사용자에게 보고 |
 
-## Team Cleanup (필수 — 좀비 teammate 방지)
+## 작업자 정리
 
-**모든 Wave 완료 후, 에러 중단 시, 컨텍스트 한도 도달 시 반드시 실행:**
+모든 Wave 완료, 중단, 컨텍스트 한도 도달 시 현재 런타임이 제공하는 정상 종료·중단 절차를 사용합니다.
 
-> **좀비 방지**: TeamDelete 없이 세션이 끝나면 teammate 프로세스가 남아있을 수 있습니다.
-> 새 세션에서 `/agent-team`을 실행하면 **Step 0 전에 기존 팀 정리**를 먼저 시도합니다:
-> `TeamDelete("poseidon-team")` — 에러 무시 (팀이 없으면 자연스럽게 넘어감).
+- Claude 2.1.178+: implicit team이므로 `TeamDelete`를 호출하지 않습니다. 실행 중 named teammate에 shutdown을 요청하고 세션 정리는 런타임에 맡깁니다.
+- Codex: 실행 중 thread만 현재 interrupt/stop 기능으로 중단합니다. 완료 thread의 정리는 런타임 UI나 현재 제공 기능을 따릅니다.
+- Gemini/Grok: 호출 단위 child가 반환되면 별도 팀 정리가 없습니다.
+- 어떤 CLI에서도 런타임 상태 디렉터리를 수동 삭제하지 않습니다.
 
 ```
-1. 각 teammate에게 shutdown 요청
-   └─ SendMessage(to: "<teammate-name>", message: "작업 완료. 종료해주세요.")
-   └─ 모든 teammate가 idle/종료될 때까지 대기
-
-2. 모든 teammate 종료 확인 후 TeamDelete 호출
-   └─ 팀 디렉토리 (~/.claude/teams/{team-name}/) 제거
-   └─ 태스크 디렉토리 (~/.claude/tasks/{team-name}/) 제거
-
-3. TeamDelete 실패 시 (active member 잔존)
-   └─ 남은 teammate 목록 확인 → 개별 shutdown 재전송
-   └─ 그래도 실패 시: 수동 정리 안내
-      ls ~/.claude/teams/
-      ls ~/.claude/tasks/
+1. 실행 중 작업자 목록 확인
+2. 필요한 결과가 회수됐는지 확인
+3. 실행 중 작업자에 정상 종료 또는 interrupt 요청
+4. Lead의 Wave ledger와 activity log를 최종 저장
 ```
-
-⚠️ **TeamDelete는 active member가 있으면 실패합니다.** 반드시 teammate shutdown → 종료 확인 → TeamDelete 순서를 지키세요.
-
-⚠️ **중단/실패 시에도 Cleanup 필수** — 에러로 중단되더라도 teammate shutdown + TeamDelete를 반드시 수행합니다.
 
 ---
 
@@ -520,7 +515,7 @@ Step {N} complete: {summary}
 |------|------|
 | [artifacts-review.md](references/artifacts-review.md) | Step 0 산출물 검토 상세 절차, 영향도 분석, 보조 문서 매핑 |
 | [section-parser.md](references/section-parser.md) | SECTION_MANIFEST 파싱 규칙, 도면 매핑 추출 |
-| [expert-matching.md](references/expert-matching.md) | 섹션 파일 패턴 → 전문가 에이전트 매칭 |
+| [expert-matching.md](references/expert-matching.md) | 섹션 파일 패턴 → 프로젝트 기반 구현 컨텍스트 매칭 |
 | [wave-executor.md](references/wave-executor.md) | Wave 실행 사이클, teammate 지시 형식, 모니터링 루프, Codex agent 형식 |
 | [teammate-context-template.md](references/teammate-context-template.md) | teammate/agent 프롬프트 전체 템플릿 |
 | [verification-protocol.md](references/verification-protocol.md) | 검증 5단계, 재시도 프로세스, 통과 기준 |

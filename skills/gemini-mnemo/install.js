@@ -24,8 +24,11 @@ const isWindows = process.platform === "win32";
 // Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
 
-// Gemini global directory
-const geminiDir = path.join(os.homedir(), ".gemini");
+// Gemini global directory. GEMINI_HOME keeps installer tests and isolated
+// installations from mutating the user's real profile.
+const geminiDir = process.env.GEMINI_HOME
+  ? path.resolve(process.env.GEMINI_HOME)
+  : path.join(os.homedir(), ".gemini");
 
 // ── Utility functions ──
 function normalizePath(p) {
@@ -69,6 +72,60 @@ function writeJson(filePath, data) {
 const MARKER_START = "<!-- GEMINI-MNEMO:START -->";
 const MARKER_END = "<!-- GEMINI-MNEMO:END -->";
 
+function isLegacyRepositoryAgentsGuide(content) {
+  const normalized = content.trim();
+  return (
+    normalized.startsWith("# AGENTS.md") &&
+    normalized.includes("This file provides guidance to AI coding agents") &&
+    normalized.includes("## Creating a New Skill") &&
+    normalized.includes("## Hooks (Automatic Enforcement)")
+  );
+}
+
+function stripLegacyRepositoryAgentsGuide(content) {
+  const markerIndex = content.indexOf(MARKER_START);
+  const prefix = markerIndex >= 0 ? content.slice(0, markerIndex) : content;
+  if (!isLegacyRepositoryAgentsGuide(prefix)) {
+    return { content, removed: false };
+  }
+  return {
+    content: markerIndex >= 0 ? content.slice(markerIndex) : "",
+    removed: true,
+  };
+}
+
+function isLegacyRepositoryReadme(content) {
+  const normalized = content.trim();
+  return (
+    normalized.startsWith("# Claude Code Customizations") &&
+    normalized.includes("## Why This Project?") &&
+    normalized.includes("## Project Structure") &&
+    normalized.includes("**Last Updated:**")
+  );
+}
+
+function migrateLegacyGlobalGeminiMd() {
+  const geminiMdPath = path.join(geminiDir, "GEMINI.md");
+  let content;
+  try {
+    content = fs.readFileSync(geminiMdPath, "utf8");
+  } catch {
+    return null;
+  }
+  if (!isLegacyRepositoryReadme(content)) {
+    return null;
+  }
+
+  let backupPath = `${geminiMdPath}.olympus-legacy.bak`;
+  let suffix = 1;
+  while (fs.existsSync(backupPath)) {
+    backupPath = `${geminiMdPath}.olympus-legacy.${suffix}.bak`;
+    suffix += 1;
+  }
+  fs.renameSync(geminiMdPath, backupPath);
+  return backupPath;
+}
+
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -81,6 +138,8 @@ function installAgentsMdRules(agentsMdPath, templatePath) {
     content = "";
   }
 
+  const migration = stripLegacyRepositoryAgentsGuide(content);
+  content = migration.content;
   const template = fs.readFileSync(templatePath, "utf8");
 
   // Remove existing Gemini-Mnemo rules
@@ -96,6 +155,7 @@ function installAgentsMdRules(agentsMdPath, templatePath) {
 
   ensureDir(path.dirname(agentsMdPath));
   fs.writeFileSync(agentsMdPath, content, "utf8");
+  return migration.removed;
 }
 
 function uninstallAgentsMdRules(agentsMdPath) {
@@ -381,6 +441,10 @@ function install() {
   const hooksDir = path.join(geminiDir, "hooks");
   const settingsPath = path.join(geminiDir, "settings.json");
   const agentsMdPath = path.join(geminiDir, "AGENTS.md");
+  const legacyGeminiBackup = migrateLegacyGlobalGeminiMd();
+  if (legacyGeminiBackup) {
+    console.log(`[migration] Legacy global GEMINI.md moved to ${legacyGeminiBackup}`);
+  }
 
   // [1/3] Copy hook files
   console.log("[1/3] Installing hook files...");
@@ -420,7 +484,10 @@ function install() {
   console.log("\n[3/3] Installing AGENTS.md long-term memory rules...");
   const templatePath = path.join(sourceDir, "templates", "agents-md-rules.md");
   if (fs.existsSync(templatePath)) {
-    installAgentsMdRules(agentsMdPath, templatePath);
+    const removedLegacyGuide = installAgentsMdRules(agentsMdPath, templatePath);
+    if (removedLegacyGuide) {
+      console.log("      Removed legacy repository guide from global AGENTS.md");
+    }
     console.log("      Done!");
   } else {
     console.log("      Template not found, skipping");

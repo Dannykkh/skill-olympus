@@ -22,6 +22,60 @@ description: >
 /aphrodite --stitch
 ```
 
+## 내부 소스 모듈 해석 계약 (필수)
+
+`frontend-design`, `mermaid-diagrams`, `ui-ux-auditor`, `web-design-guidelines`는 모든 관련 실행에서
+사용하는 핵심 source-only 내부 모듈입니다. `design-system-starter`, `stitch`, `skill-evolve`,
+`autoresearch`도 등록 스킬을 호출하는 것이 아니라, 해당 선택 경로가 실제로 요청됐을 때만 직접
+읽는 조건부 source-only 모듈입니다. 각 이름에 대해 해석된 `SKILL.md` 절대경로를
+`MODULE_SKILL[name]`, 그 부모 디렉터리를 `MODULE_ROOT[name]`으로 기록합니다. 조건부 모듈은
+다음 경계에서만 해석합니다.
+
+- `design-system-starter`: 사용자가 상세 디자인 시스템 scaffold를 명시적으로 요청했을 때
+- `stitch`: `--stitch` 또는 명시적인 Stitch 실행 요청이 있을 때, Phase 5 진입 직전
+- `skill-evolve`: Phase 7에서 전역 규칙 변경을 사용자가 명시적으로 승인한 뒤
+- `autoresearch`: 승인된 `skill-evolve` 절차가 대조 실험을 요구할 때
+
+각 모듈을 처음 쓰기 전에 다음 순서로 해석합니다.
+
+1. 프로젝트 루트의 `skills/<name>/SKILL.md`가 **실제 파일로 존재하고 frontmatter의 `name`이
+   정확히 `<name>`일 때만** 그 절대경로를 사용합니다. 없거나 이름이 다르면 프로젝트의 다른
+   경로를 추측하지 않고 2번으로 갑니다.
+2. 없으면 현재 런타임의 활성 루트에서 정확한 `skills/<name>/SKILL.md`를 확인합니다. Codex는
+   `$CODEX_HOME/skills`(미설정이면 `~/.codex/skills`), Claude와 Grok 호환 표면은
+   `~/.claude/skills`, Gemini는 `~/.gemini/skills`입니다. 파일 존재와 frontmatter 이름이
+   모두 일치할 때만 사용하고, 아니면 3번으로 갑니다.
+3. 없으면 현재 런타임의 전역 `SKILLS-CATALOG.md`를 읽습니다. Codex는
+   `$CODEX_HOME/SKILLS-CATALOG.md`(미설정이면 `~/.codex/SKILLS-CATALOG.md`), Claude와
+   Grok 호환 표면은 `~/.claude/SKILLS-CATALOG.md`, Gemini는
+   `~/.gemini/SKILLS-CATALOG.md`입니다. 첫 번째 셀이 정확히 `<name>`인 행
+   (`| <name> | ... | ... | <읽을 경로> |`) 하나를 찾아 `읽을 경로`의 절대 `SKILL.md`를
+   그대로 사용합니다. 정확한 이름의 행이 0개이거나 2개 이상이면 해석 실패이며 다른 행이나
+   레지스트리 경로를 추측하지 않습니다.
+4. 해석한 파일의 존재를 확인하고 `SKILL.md` 전체를 읽은 뒤에만 그 모듈의 기준을 적용합니다.
+   참조 파일은 `MODULE_ROOT[name]/references/...`, 스크립트는
+   `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
+
+이 과정은 모듈 읽기이지 스킬 호출이 아닙니다. `/frontend-design`, `/mermaid-diagrams`,
+`/ui-ux-auditor`, `/web-design-guidelines`, `/design-system-starter`, `/stitch`, `/skill-evolve`,
+`/autoresearch`를 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다. 프로젝트·활성 루트
+파일도 없고 카탈로그의 정확한 행·`읽을 경로`·필수 참조 중 하나라도 없으면 완료 증거의
+`Module Coverage`에 경로와 이유를 기록하고 다음 한정된 native fallback을 사용합니다.
+fallback도 실행할 수 없는 검사는 `NOT RUN`,
+`UNVERIFIED`, 또는 `BLOCKED`로 남기며 통과로 바꾸지 않습니다. 요청되지 않은 조건부 모듈은
+`NOT REQUESTED`이며 완료 누락으로 계산하지 않습니다.
+
+| 모듈 | 한정된 native fallback |
+|------|------------------------|
+| `frontend-design` | 루트 `DESIGN.md`, Experience Contract, 프로젝트 manifest와 기존 컴포넌트만 사용해 승인 범위를 구현. recipe·anatomy 의존 결정은 `UNVERIFIED` |
+| `mermaid-diagrams` | `flowchart TD`, 안정적인 노드 ID, 인용된 label, 명시적 edge로 사이트맵을 작성. renderer가 없으면 문법 검증은 `NOT RUN` |
+| `ui-ux-auditor` | Phase 6-4의 항목을 실제 스크린샷 우선으로 점검하고 점수 대신 관찰 근거와 미관찰 범위를 보고 |
+| `web-design-guidelines` | 키보드·포커스·레이블·상태 알림·reduced-motion만 점검하고 전체 가이드라인 준수는 `NOT RUN` |
+| `design-system-starter` | `DESIGN.md`에서 DTCG를 파생하고 scaffold 확장은 `NOT RUN`으로 기록. 정본은 계속 `DESIGN.md` |
+| `stitch` | 명시 요청이면 Stitch 단계는 `BLOCKED` 또는 `NOT RUN`으로 보고하고 원격 산출물을 꾸며내지 않음. 사용자가 로컬 대체를 허용한 범위만 네이티브 구현 작업자로 계속 |
+| `skill-evolve` | 전역 진화 단계만 `NOT RUN`으로 남기고 Phase 0~6 결과는 보존. 자체 판단으로 전역 파일을 수정하지 않음 |
+| `autoresearch` | 비교 실험만 `NOT RUN`으로 남기며 단일 결과를 개선 증거로 승격하지 않음 |
+
 ## 성공 정의
 
 다음 네 가지가 함께 통과해야 완료입니다.
@@ -136,7 +190,7 @@ tailwind.config.* / theme.* / CSS variables
 - 화면·페이지 목록과 각 페이지의 단일 임무
 - 전역 내비게이션, 2차 내비게이션, 페이지 내 앵커
 - primary action과 현재 위치 신호
-- 페이지가 3개 이상이면 `mermaid-diagrams`로 사이트맵 생성
+- 페이지가 3개 이상이면 `MODULE_SKILL[mermaid-diagrams]`를 직접 읽은 문법으로 사이트맵 생성
 
 산출물: `docs/design-refs/YYYY-MM-DD-sitemap-{slug}.md`
 
@@ -172,7 +226,7 @@ Adopt·Adapt·Avoid를 포함합니다.
 | Expressive Landing | 메시지·신뢰·전환·signature 장면 |
 
 기능형 5종은
-[coder-interface-pattern-playbook.md](../frontend-design/references/coder-interface-pattern-playbook.md)를
+`MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`를
 읽고 정보 구조와 효과 예산을 먼저 고정합니다.
 
 ### 3-2. 실제 렌더 방향 탐색
@@ -190,7 +244,7 @@ Adopt·Adapt·Avoid를 포함합니다.
 
 ### 3-3. 시각 시스템
 
-`frontend-design`을 읽고 다음 순서로 확정합니다.
+`MODULE_SKILL[frontend-design]`을 직접 읽고 다음 순서로 확정합니다.
 
 1. 선택된 방향과 제품 근거
 2. 맞는 스타일 레시피 1개 또는 제품 유도 방향
@@ -206,7 +260,7 @@ Adopt·Adapt·Avoid를 포함합니다.
 
 ### 4-1. Layout Blueprint
 
-[layout-block-anatomy.md](../frontend-design/references/layout-block-anatomy.md)를 사용해 페이지별로
+`MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md`를 사용해 페이지별로
 다음을 고정합니다.
 
 - 블록 순서와 각 블록이 답하는 사용자 질문
@@ -249,13 +303,17 @@ Experience Contract의 `Prompt Contract`를 구현 지시로 사용합니다. `�
 
 ### 5-2. 구현 어댑터
 
-- 로컬: `frontend-design`으로 기존 스택과 컴포넌트 규칙에 맞게 구현
-- Stitch: `/stitch generate|edit|variants`로 같은 계약 실행
-- Stitch loop: 사이트맵을 `.stitch/SITE.md` 실행 상태로 파생
-- Stitch react: 결과를 기존 React 구조에 반영
+- 로컬: 네이티브 구현 작업자가 `MODULE_SKILL[frontend-design]`의 계약을 직접 적용하여 기존
+  스택과 컴포넌트 규칙에 맞게 구현
+- Stitch: 명시 요청이 있을 때 `MODULE_SKILL[stitch]` 전체를 직접 읽고 그 preflight·상태·검증
+  계약을 적용합니다. 사용자 의도를 generate·edit·variants·loop·react 중 하나로 분류한 뒤 현재
+  노출된 Stitch MCP capability를 직접 사용하며 `/stitch` 등록이나 고정 도구 이름을 가정하지 않습니다.
+- Stitch loop: 해석된 `MODULE_ROOT[stitch]` 기준으로 사이트맵을 `.stitch/SITE.md` 실행 상태로 파생
+- Stitch react: Stitch 결과를 기존 React 구조에 반영하되 프로젝트 manifest와 테스트를 우선
 
 Stitch는 디자인 정책을 다시 결정하지 않습니다. 루트 `DESIGN.md`와 `docs/design-refs/`가 정본이고
-`.stitch/`는 원격 ID·다운로드·재개 상태만 소유합니다.
+`.stitch/`는 원격 ID·다운로드·재개 상태만 소유합니다. Stitch MCP나 필수 capability가 없으면 해당
+경로를 `BLOCKED` 또는 `NOT RUN`으로 보고하며 원격 결과를 생성했다고 주장하지 않습니다.
 
 ### 5-3. 구현 로그
 
@@ -281,7 +339,8 @@ HTML 정적 검사만으로 시각 충실도를 선언하지 않습니다.
 
 ### 6-2. 미학 비평
 
-`ui-ux-designer`를 필수 비평 단계로 사용합니다. 다음을 실제 렌더로 평가합니다.
+네이티브 시각 비평 작업자가 [render-critique-loop.md](references/render-critique-loop.md)의
+비평 계약을 사용해 다음을 실제 렌더로 평가합니다.
 
 - 시각 논지와 제품 고유성
 - 메시지·CTA·신뢰의 위계
@@ -299,8 +358,9 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 
 ### 6-4. 품질 검증
 
-1. `ui-ux-auditor` — 반응형, 다크모드, 접근성, 성능, 폼, 내비, 타이포, 모션, AI Slop
-2. `web-design-guidelines` — Web Interface Guidelines
+1. `MODULE_SKILL[ui-ux-auditor]`를 직접 읽어 반응형, 다크모드, 접근성, 성능, 폼, 내비,
+   타이포, 모션, AI Slop 감사
+2. `MODULE_SKILL[web-design-guidelines]`를 직접 읽어 Web Interface Guidelines 감사
 3. 데스크톱·모바일 × 지원 테마 스크린샷 관찰
 4. 키보드·포커스·레이블·상태 알림·reduced-motion 확인
 5. 실제 이미지·폰트·영상·스크립트로 성능 측정
@@ -315,9 +375,12 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 1. `critique`와 구현 로그에 성공·실패·사용자 피드백·측정 결과 기록
 2. 재사용 가능한 후보를 Adopt·Adapt·Avoid와 함께 분리
 3. 서로 다른 과제에서 반복된 원리만 승격 후보로 표시
-4. 전역 스킬 변경은 `skill-evolve`가 gotcha/learned를 체크리스트로 만들고 사용자의 승인을 받은 뒤
-   `autoresearch`로 한 번에 하나씩 비교
-5. 기준점보다 나빠지면 변경을 승격하지 않음
+4. 전역 진화 후보가 있으면 `MODULE_SKILL[skill-evolve]`를 직접 읽어 3~6개 체크리스트를 먼저
+   **대화에만** 제시합니다. 이 시점에는 체크리스트 파일·전역 스킬·실험 로그를 만들거나 수정하지 않습니다.
+5. 사용자가 그 체크리스트와 정확한 수정 대상을 명시적으로 승인한 뒤에만 체크리스트를 저장합니다.
+   승인된 진화 절차가 대조 실험을 요구하면 `MODULE_SKILL[autoresearch]`를 별도로 직접 읽어 한 번에
+   변수 하나만 비교합니다. `/skill-evolve`나 `/autoresearch` 등록을 가정하지 않습니다.
+6. 기준점보다 나빠지면 변경을 승격하지 않음
 
 아프로디테가 자기 결과를 보고 즉시 자기 규칙을 수정하게 하지 않습니다. 관찰, 비교, 사용자 승인,
 회귀 방지가 진화의 하네스입니다.
@@ -335,6 +398,9 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 - 미학 비평과 주 과업 검증
 - 접근성·성능·가이드라인 결과
 - 잔여 이슈와 다음 진화 후보
+- `Module Coverage`: 각 내부 모듈의 절대 해석 경로, module/native-fallback/NOT RUN 상태,
+  미실행 범위. 조건부 모듈은 NOT REQUESTED/requested를 구분하고, 요청된 경로의
+  `NOT RUN`/`UNVERIFIED`/`BLOCKED` 항목은 완료 증거로 계산하지 않음
 
 ## Options
 
@@ -358,7 +424,11 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 | [experience-contract-guide.md](references/experience-contract-guide.md) | 모든 신규·재설계 작업의 경험 계약 |
 | [render-critique-loop.md](references/render-critique-loop.md) | 방향 탐색과 첫 구현 비평 |
 | [design-md-guide.md](references/design-md-guide.md) | DESIGN.md 생성·마이그레이션·export |
-| [frontend-design/SKILL.md](../frontend-design/SKILL.md) | Phase 3·5 시각 방향과 구현 |
-| [layout-block-anatomy.md](../frontend-design/references/layout-block-anatomy.md) | Phase 4 구조 계약 |
-| [coder-interface-pattern-playbook.md](../frontend-design/references/coder-interface-pattern-playbook.md) | 기능형 Interface Mode |
-| [motion-first-prompt-playbook.md](../frontend-design/references/motion-first-prompt-playbook.md) | 표현형 방향과 모션 문법 |
+| `MODULE_SKILL[frontend-design]` | Phase 3·5 시각 방향과 구현 |
+| `MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md` | Phase 4 구조 계약 |
+| `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md` | 기능형 Interface Mode |
+| `MODULE_ROOT[frontend-design]/references/motion-first-prompt-playbook.md` | 표현형 방향과 모션 문법 |
+| `MODULE_SKILL[design-system-starter]` | 명시적으로 요청된 상세 디자인 시스템 scaffold |
+| `MODULE_SKILL[stitch]` | 명시적인 `--stitch` 실행의 MCP·상태·검증 계약 |
+| `MODULE_SKILL[skill-evolve]` | 사용자 승인 뒤 전역 규칙 승격 후보를 만드는 선택 단계 |
+| `MODULE_SKILL[autoresearch]` | 승인된 선택 단계의 단일 변수 대조 실험 |

@@ -39,7 +39,7 @@ Multi-AI Orchestrator는 여러 AI CLI (Claude, Codex, Gemini)를 동시에 활�
 - **파일 락킹**: 다중 Worker 간 파일 충돌 방지
 - **태스크 의존성**: 선행 작업 완료 후 자동 언블록
 - **Multi-AI**: Claude + Codex + Gemini 병렬 실행
-- **자동 Fallback**: 설치된 AI만 자동 감지
+- **Fail-closed provider routing**: 설치된 provider만 선택하며 요청한 provider가 없으면 임의 대체하지 않음
 - **2단계 워크플로우**: 리서치→제안→승인→구현 분리
 - **Activity Log**: 결정/진행/에러 통합 타임라인
 
@@ -102,7 +102,7 @@ orchestrator_log_activity({
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         PM (Claude)                          │
+│                      PM (MCP client)                         │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ workpm 입력                                          │    │
 │  │   ↓                                                  │    │
@@ -133,7 +133,7 @@ orchestrator_log_activity({
 ```
 프로젝트/
 └── .orchestrator/
-    └── state.json    # 태스크, 락, 워커 상태
+    └── orchestrator.db    # SQLite WAL 기반 태스크, 락, 워커 상태
 ```
 
 ---
@@ -197,9 +197,9 @@ npm run build
 | CLI | 명령어 | 모드 | 특징 |
 |-----|--------|------|------|
 | **Claude** | `workpm` | Agent Teams (네이티브) | 팀원과 실시간 대화, 해고/재고용 |
-| **Codex** | `workpm` | spawn_agent (네이티브) | 폴백/대규모는 `workpm-mcp` |
+| **Codex** | `workpm` | 내장 `explorer`/`worker` 역할 | 현재 런타임의 위임·대기·중단 기능 사용 |
 | **Gemini** | `workpm` | 서브에이전트 (네이티브, 미실측) | 인식 실패 시 `workpm-mcp` |
-| **Grok** | `workpm` | spawn_subagent (네이티브) | Claude 자산 직접 읽음 |
+| **Grok** | `workpm` | 내장 `explore`/`general-purpose` 역할 | 현재 런타임의 서브에이전트 기능 사용 |
 | (공통 폴백) | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
 
 - `workpm`: 각 CLI의 네이티브 멀티에이전트로 실행 (프리미티브 표는 `skills/workpm/SKILL.md`)
@@ -236,7 +236,7 @@ Phase 2: 구현 & 검증
 orchestrator_detect_providers() 실행 결과:
 {
   "mode": "full",
-  "modeDescription": "Full Mode: Claude + Codex + Gemini (3개 AI 병렬 처리)",
+  "modeDescription": "Full Mode: claude + codex + gemini (3 AI providers)",
   "providers": [
     {"name": "claude", "available": true, "version": "1.0.0"},
     {"name": "codex", "available": true, "version": "2.1.0"},
@@ -265,24 +265,33 @@ orchestrator_create_task({
   id: "auth-api",
   prompt: "JWT 인증 API 구현. POST /auth/login, POST /auth/refresh 엔드포인트. bcrypt로 비밀번호 해싱.",
   scope: ["src/auth/", "src/middleware/"],
-  priority: 3,
-  ai_provider: "codex"
+  priority: 3
 })
 
 orchestrator_create_task({
   id: "auth-test",
-  prompt: "인증 API 단위 테스트 작성. Jest 사용. 성공/실패 케이스 포함.",
+  prompt: "인증 API의 로그인 성공, 잘못된 비밀번호, 만료 토큰, 갱신 실패 경로를 검증하는 Jest 단위 테스트를 작성하고 전체 테스트를 실행한다.",
   scope: ["tests/auth/"],
   priority: 2,
-  depends_on: ["auth-api"],
-  ai_provider: "codex"
+  depends_on: ["auth-api"]
 })
 
 orchestrator_create_task({
   id: "security-review",
-  prompt: "인증 모듈 보안 취약점 분석. OWASP Top 10 기준 검토.",
+  prompt: "인증 모듈의 입력 검증, 토큰 저장, 권한 검사, 오류 노출을 OWASP 기준으로 감사하고 file:line 근거와 수정 제안을 보고한다.",
   depends_on: ["auth-api"],
-  ai_provider: "gemini"
+  scope: ["src/auth/**", "src/middleware/**"]
+})
+```
+
+위 세 태스크는 `ai_provider`를 생략했으므로 provider-agnostic이며 등록된 어떤 Worker든 claim할 수 있습니다. 특정 CLI에서만 재현해야 하는 작업처럼 명시적 근거가 있을 때만 설치가 확인된 provider를 고정합니다.
+
+```
+orchestrator_create_task({
+  id: "codex-cli-repro",
+  prompt: "Codex CLI에서만 재현되는 MCP 호출 오류를 같은 CLI 환경에서 재현하고 최소 수정 후 회귀 테스트를 실행한다.",
+  scope: ["src/mcp/**", "tests/mcp/**"],
+  ai_provider: "codex"
 })
 ```
 
@@ -314,18 +323,18 @@ orchestrator_get_progress() 실행:
 | **의존성 명시** | depends_on으로 순서 지정 | 테스트는 구현 후 |
 | **파일 영역 분리** | 두 팀원이 같은 파일 수정 금지 | 태스크 배분 시 담당 영역 명시 |
 
-### AI 배정 가이드
+### Provider 배정 계약
 
-**기본 원칙: Claude(Opus)가 모든 작업에 최상위.** 외부 CLI는 특정 강점이 있을 때만 선택적 사용.
+Provider는 vendor별 고정 강점이 아니라 현재 모델·설정, 사용자 요구, 조직 정책, provider별 재현 필요성, 실제 평가 결과로 선택합니다.
 
-| 태스크 유형 | 추천 AI | 이유 |
-|------------|---------|------|
-| **모든 코딩** | **claude** (기본) | 코딩, 추론, 아키텍처 모두 최상위 |
-| UI/프론트엔드 | claude 또는 gemini | Gemini CLI 설치 시 활용 |
-| 대량 반복 코드 | claude 또는 codex | Codex CLI 설치 시 활용 |
-| 코드 리뷰 (대용량) | claude 또는 gemini | 1M 토큰 컨텍스트 필요 시 |
+| 상황 | `ai_provider` |
+|------|---------------|
+| 별도 근거 없음 | 생략 — provider-agnostic 태스크 |
+| 사용자/조직이 특정 CLI를 요구 | 감지된 해당 provider 명시 |
+| provider별 재현·호환성 검증 | 재현 대상 provider 명시 |
+| 요청 provider가 미설치 | 태스크 생성을 실패로 보고하고 임의 대체하지 않음 |
 
-> `aiProvider` 미지정 시 claude가 기본. 외부 CLI는 설치 확인 후에만 배정.
+Worker는 `ORCHESTRATOR_AI_PROVIDER` 또는 자동 생성된 provider-prefixed Worker ID로 provider가 등록됩니다. 가용 목록과 claim 모두 이 값을 검사하며, provider-agnostic 태스크만 모든 Worker에게 열립니다.
 
 ---
 
@@ -471,40 +480,35 @@ orchestrator_fail_task({
 
 ### 자동 감지 모드
 
-```powershell
-.\launch.ps1 -ProjectPath "C:\project" -MultiAI
+```
+orchestrator_spawn_workers({count: 3})
 ```
 
-시스템이 자동으로:
-1. 설치된 AI CLI 감지 (claude, codex, gemini --version)
-2. 모드 결정 (Full/Dual/Single)
-3. Worker에 AI 라운드 로빈 배정
+시스템은 자동 생성이 지원되는 Claude/Codex/Gemini CLI를 감지합니다. `providers`를 생략하면 고정 순서 `claude → codex → gemini` 중 실제 설치된 첫 provider를 모든 빈 슬롯에 사용합니다. 하나도 감지되지 않으면 생성 요청은 실패합니다.
 
 ### 수동 배정 모드
 
-```powershell
-.\launch.ps1 -ProjectPath "C:\project" -AIProviders @('claude', 'codex', 'gemini')
+```
+orchestrator_spawn_workers({
+  count: 3,
+  providers: ["claude", "codex", "gemini"]
+})
 ```
 
 - Worker-1: Claude
 - Worker-2: Codex
 - Worker-3: Gemini
 
-### AI별 CLI 옵션
+자동 Worker는 Claude의 auto permission mode, Codex의 workspace-write sandbox 안 자동 리뷰, Gemini의 sandbox 안 자동 승인을 사용합니다. approval/sandbox 전체 우회와 workspace trust 우회는 사용하지 않습니다. 더 엄격한 정책이 필요하면 조직이 승인한 permission mode로 Worker를 수동 실행합니다.
 
-| AI | 자동 모드 명령어 |
-|----|-----------------|
-| Claude | `claude --dangerously-skip-permissions` |
-| Codex | `codex -a never exec --sandbox workspace-write --skip-git-repo-check` |
-| Gemini | `gemini --skip-trust --approval-mode yolo --output-format text -p` |
-
-### Fallback 동작
+### Fail-closed 동작
 
 | 상황 | 동작 |
 |------|------|
-| Codex 미설치 | Claude로 fallback |
-| Gemini 미설치 | Claude로 fallback |
-| 지정한 AI 미설치 | 사용 가능한 AI로 자동 전환 |
+| `providers` 생략, 하나 이상 감지 | 실제 설치된 첫 provider를 결정적으로 선택 |
+| 지원 provider가 하나도 없음 | Worker 생성 실패 |
+| 명시한 provider가 미설치 | Worker 생성 실패, 다른 provider로 바꾸지 않음 |
+| 태스크의 `ai_provider`가 미설치 | 태스크 생성 실패, 다른 provider로 바꾸지 않음 |
 
 ---
 
@@ -528,26 +532,26 @@ workpm
 AI 감지: Full Mode (Claude + Codex + Gemini)
 
 태스크 분해:
-1. user-model (Codex, priority: 3)
+1. user-model (provider-agnostic, priority: 3)
    - User 모델 및 스키마 정의
    - scope: src/models/
 
-2. auth-api (Codex, priority: 3, depends_on: user-model)
+2. auth-api (provider-agnostic, priority: 3, depends_on: user-model)
    - JWT 인증 API 구현
    - scope: src/auth/, src/middleware/
 
-3. auth-test (Codex, priority: 2, depends_on: auth-api)
+3. auth-test (provider-agnostic, priority: 2, depends_on: auth-api)
    - 인증 API 테스트
    - scope: tests/auth/
 
-4. security-review (Gemini, priority: 1, depends_on: auth-api)
+4. security-review (provider-agnostic, priority: 1, depends_on: auth-api)
    - 보안 취약점 분석
    - scope: 전체
 
 Worker들에게 전달 준비 완료!
 ```
 
-**Worker-1 (Codex) 터미널:**
+**Worker-1 터미널:**
 ```
 pmworker
 
@@ -560,7 +564,7 @@ pmworker
 → ...
 ```
 
-**Worker-2 (Gemini) 터미널:**
+**Worker-2 터미널:**
 ```
 pmworker
 
@@ -592,7 +596,7 @@ workpm
 | 도구 | 설명 | 파라미터 |
 |------|------|----------|
 | `orchestrator_detect_providers` | 설치된 AI CLI 감지 | - |
-| `orchestrator_get_provider_info` | AI 강점 조회 | `provider`: claude/codex/gemini |
+| `orchestrator_get_provider_info` | 설치 상태와 안전한 기본 실행 명령 조회 | `provider`: claude/codex/gemini |
 
 ### PM 전용
 
@@ -667,7 +671,7 @@ where claude
 
 ### 문제: Worker가 태스크를 찾지 못함
 
-**원인**: 모든 태스크가 의존성 대기 또는 다른 Worker가 이미 담당
+**원인**: 모든 태스크가 의존성 대기, 다른 Worker가 이미 담당, 또는 태스크의 `ai_provider`와 현재 Worker provider가 불일치
 
 **해결**:
 ```
@@ -676,7 +680,7 @@ orchestrator_get_available_tasks()
 → PM에게 새 태스크 요청
 ```
 
-### 문제: state.json 손상
+### 문제: orchestrator.db 상태를 초기화해야 함
 
 **해결**:
 ```

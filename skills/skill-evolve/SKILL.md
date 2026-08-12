@@ -3,43 +3,43 @@ name: skill-evolve
 description: >
   gotcha/learned 관찰에서 스킬 개선점을 추출하여 autoresearch로 연결하는 자기 개선 루프.
   축적된 오답노트와 성공 패턴을 스킬에 매핑 → 체크리스트 자동 생성 → autoresearch 실행.
-  gotcha-analyzer가 패턴 감지 후 이 스킬 실행을 제안합니다.
-  /skill-evolve로 실행.
-triggers:
-  - "skill-evolve"
-  - "스킬 진화"
-  - "gotcha로 스킬 패치"
-  - "스킬 자동 개선"
-auto_apply: false
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Bash
-  - Agent
-  - Skill
+  memory-distill이 정제한 패턴을 입력으로 사용합니다.
+  기본 설치에서는 source-only 모듈 직접 로드, 전체 활성화 설치에서는 /skill-evolve로 실행.
 ---
 
 # Skill Evolve — gotcha/learned → 스킬 자동 개선
 
-> gotcha-analyzer가 "이 스킬 개선하세요"라고 제안하면, 이 스킬이 실행됩니다.
+> memory-distill이 정제한 gotcha/learned에서 개선 후보를 찾으면 이 스킬을 실행합니다.
 > 축적된 실패/성공 관찰을 체크리스트로 변환하여 autoresearch에 넘깁니다.
+
+## Autoresearch source-only handoff
+
+`autoresearch`가 활성 스킬이나 slash command로 등록됐다고 가정하지 않습니다. 상위 하네스가
+`MODULE_SKILL[autoresearch]`와 `MODULE_ROOT[autoresearch]`를 전달했으면 그 정확한 파일을
+사용합니다. standalone 실행이면 사용자의 승인 뒤에만 프로젝트의
+`skills/autoresearch/SKILL.md` exact frontmatter → 현재 CLI 활성 루트 → 전역
+`SKILLS-CATALOG.md`에서 첫 셀이 정확히 `autoresearch`인 단 하나의 행과 그 `읽을 경로` 순으로
+해석합니다. 해석된 `SKILL.md` 전체를 직접 읽어 체크리스트 인자를 적용하며 `/autoresearch`
+호출로 넘기지 않습니다. 파일·행·경로가 없거나 중복이면 비교 실험은 `NOT RUN`으로 남기고
+전역 스킬을 수정하지 않습니다.
 
 ---
 
 ## 사용법
 
-```bash
+기본 설치에서는 전역 카탈로그의 이 `SKILL.md`를 직접 읽고 아래 인자 의도를 적용합니다.
+다음 표기는 명령 실행이 아니라 route intent입니다. `--include-source-only-skills`로 전체 활성화한
+설치에서만 앞에 `/`를 붙인 `/skill-evolve` compatibility alias를 사용할 수 있습니다.
+
+```text
 # 스캔 — 어떤 스킬에 개선 후보가 있는지 확인
-/skill-evolve
+skill-evolve
 
 # 특정 스킬 직접 개선
-/skill-evolve humanizer
+skill-evolve humanizer
 
 # 최소 gotcha 수 지정 (기본: 3)
-/skill-evolve --min 5
+skill-evolve --min 5
 ```
 
 ### 인자
@@ -101,7 +101,7 @@ allowed-tools:
   backend-spring          3       0       3    개선 가능
   commit-work             1       2       3    개선 가능
 
-  💡 /skill-evolve humanizer 로 시작하세요
+  권장: skill-evolve humanizer route로 시작하세요
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -140,13 +140,15 @@ gotcha/learned 내용을 autoresearch 체크리스트(예/아니오 질문)로 �
 ### Phase 5: autoresearch 실행
 
 ```
-1. 체크리스트를 .skill-evolve/<skill-name>/checklist.md에 저장
+1. 체크리스트를 먼저 대화에 제시 (이 단계에서는 파일을 만들거나 수정하지 않음)
 
 2. 사용자에게 확인:
    "humanizer에 대해 위 체크리스트로 autoresearch를 실행할까요?"
 
 3. 승인 시:
-   /autoresearch <skill-name> --checklist .skill-evolve/<skill-name>/checklist.md
+   - 체크리스트를 .skill-evolve/<skill-name>/checklist.md에 저장
+   - 위 source-only handoff로 `MODULE_SKILL[autoresearch]`를 해석하고 전체를 직접 읽음
+   - `<skill-name> --checklist .skill-evolve/<skill-name>/checklist.md` 의도를 해당 워크플로우에 전달
 
 4. 완료 후:
    - .skill-evolve/<skill-name>/evolve-log.md에 결과 기록
@@ -162,6 +164,7 @@ gotcha/learned 내용을 autoresearch 체크리스트(예/아니오 질문)로 �
 | # | 규칙 |
 |---|------|
 | 1 | **사용자 승인 필수.** 체크리스트 확인 없이 autoresearch 실행 금지 |
+| 1a | **승인 전 무수정.** 체크리스트는 먼저 대화에 제시하고 승인 뒤에만 파일로 저장 |
 | 2 | **3~6개 체크리스트.** autoresearch 규칙 준수 — 초과 시 상위 N개만 선택 |
 | 3 | **신뢰도 0.5 이상만.** confidence 0.3 이하 gotcha는 체크리스트에 포함하지 않음 |
 | 4 | **1스킬 1실행.** 여러 스킬을 한 번에 autoresearch하지 않음 |
@@ -171,7 +174,7 @@ gotcha/learned 내용을 autoresearch 체크리스트(예/아니오 질문)로 �
 | # | 금지 사항 | 이유 |
 |---|----------|------|
 | 1 | gotcha 내용을 직접 SKILL.md에 삽입 | autoresearch의 hill-climbing을 우회 |
-| 2 | observations.jsonl 직접 읽기 | 분석은 analyzer의 역할, 여기선 결과물만 사용 |
+| 2 | observations.jsonl 직접 읽기 | raw 정제는 memory-distill의 역할, 여기선 정제 결과물만 사용 |
 | 3 | 체크리스트 7개 이상 생성 | autoresearch 게이밍 방지 |
 | 4 | 자동 실행 (사용자 승인 없이) | 의도치 않은 스킬 퇴행 방지 |
 

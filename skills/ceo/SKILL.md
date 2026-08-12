@@ -4,16 +4,7 @@ description: >
   CEO 코칭 스킬. 프로젝트/기능의 전략적 타당성을 도전적으로 검증.
   "만들어야 하나?" — Go/No-Go 판정, 스코프 조정(Expand/Reduce/Pivot/Kill),
   불편한 질문으로 전제를 흔듦. /hermes 산출물과 시너지.
-  /athena 또는 /ceo로 실행.
-triggers:
-  - "athena"
-  - "아테나"
-  - "ceo"
-  - "go-no-go"
-  - "만들어야 하나"
-  - "전략 검토"
-  - "strategic review"
-auto_apply: false
+  /athena, /ceo, 아테나, go-no-go, 만들어야 하나, 전략 검토, strategic review 요청에 사용한다.
 ---
 
 # Athena (아테나) — CEO 코칭

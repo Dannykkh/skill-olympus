@@ -97,7 +97,7 @@ components:
 
 ## 4. 아프로디테 파이프라인에서의 생성
 
-Phase 3의 DB 매칭(`frontend-design/references/*.csv`) + 가중 루브릭 채점 결과를 그대로 DESIGN.md에 박습니다.
+Phase 3의 DB 매칭(`MODULE_ROOT[frontend-design]/references/*.csv`) + 가중 루브릭 채점 결과를 그대로 DESIGN.md에 박습니다.
 
 1. 선택된 **색상 팔레트** → `colors:` (Primary/Accent/Neutral + `on-*` 전경색)
 2. 선택된 **폰트 페어링** → `typography:` (heading/body/label)
@@ -105,12 +105,15 @@ Phase 3의 DB 매칭(`frontend-design/references/*.csv`) + 가중 루브릭 채�
 4. 핵심 컴포넌트(button/card/input) → `components:`
 5. 채점 근거·선택 이유 → 산문 `##` 섹션
 
-> 상세 토큰(50~150개 스케일)이 필요하면 `design-system-starter`의 `design-tokens.json`(W3C DTCG)을
-> 병행 생성하되, **정본은 DESIGN.md**입니다. DTCG는 `export --format dtcg`로도 파생할 수 있습니다.
+> 상세 토큰(50~150개 스케일)이 필요하면 먼저 DESIGN.md에서 `export --format dtcg`로
+> `design-tokens.json`(W3C DTCG)을 파생합니다. 사용자가 디자인 시스템 scaffold를 명시적으로
+> 요청했고 상위 하네스가 `MODULE_SKILL[design-system-starter]`를 해석한 경우에만 그 모듈 계약을
+> 추가 적용합니다. 어느 경우든 **정본은 DESIGN.md**입니다.
 
 ## 5. Lint 게이트 (기계 검증 — Phase 6)
 
-스크린샷 시각 감사(ui-ux-auditor)는 1차 신호이고, **토큰 계약/대비는 lint로 외부 검증**합니다.
+`MODULE_SKILL[ui-ux-auditor]`에서 직접 읽은 스크린샷 시각 감사는 1차 신호이고,
+**토큰 계약/대비는 lint로 외부 검증**합니다.
 
 ```bash
 npx @google/design.md lint DESIGN.md      # macOS/Linux
@@ -124,9 +127,9 @@ designmd lint DESIGN.md                    # Windows 별칭 (.md 확장자 연�
 
 **⚠️ 헤드리스 한계 (2026-06 실측)**: `@google/design.md@0.3.0`은 **TTY 대화형 렌더러**라 헤드리스(에이전트/CI/파이프 출력) 환경에선 `--help`조차 출력이 비고, lint도 **무출력 + exit 0으로 no-op** 됩니다(의도적으로 broken-ref·orphan·저대비를 심은 파일도 그대로 통과). 따라서 **헤드리스 자동 게이트로 신뢰하지 말 것** — 사람이 대화형 터미널에서 수동 검증할 때만 의미가 있습니다.
 
-**자동(헤드리스) enforcement는 lint가 아니라** ① 에이전트가 DESIGN.md 토큰을 그대로 따르는지(프론트 가드레일의 "DESIGN.md 먼저 읽기") + ② `ui-ux-auditor`의 대비/시각 검증으로 대신합니다.
+**자동(헤드리스) enforcement는 lint가 아니라** ① 에이전트가 DESIGN.md 토큰을 그대로 따르는지(프론트 가드레일의 "DESIGN.md 먼저 읽기") + ② 해석된 `MODULE_SKILL[ui-ux-auditor]`의 대비/시각 검증으로 대신합니다.
 
-**graceful degradation (필수)**: npx/네트워크/헤드리스 — 어느 쪽이든 lint 신호가 없으면 **건너뛰고** 보고에 `lint: 건너뜀`으로 표기. 도구 부재가 파이프라인을 막지 않습니다 (ui-ux-auditor 정적 폴백과 동일 원칙). `--json`/headless 출력을 지원하는 버전이 나오면 자동 게이트로 재평가.
+**graceful degradation (필수)**: npx/네트워크/헤드리스 — 어느 쪽이든 lint 신호가 없으면 **건너뛰고** 보고에 `lint: NOT RUN`으로 표기. 도구 부재가 파이프라인을 막지 않지만 무출력은 통과가 아닙니다. `--json`/headless 출력을 지원하는 버전이 나오면 자동 게이트로 재평가.
 
 ## 6. Export (파생물)
 

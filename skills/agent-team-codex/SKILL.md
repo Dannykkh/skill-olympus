@@ -1,47 +1,54 @@
 ---
 name: agent-team-codex
-description: Codex CLI로 병렬 구현할 때 사용. multi_agent 기능으로 default/explorer/worker를 조합해 실행. zephermine 섹션 모드와 자유 모드 지원. /agent-team, /poseidon, /agent-team-codex로 실행.
-triggers:
-  - "agent-team"
-  - "poseidon"
-  - "포세이돈"
-  - "agent team"
-  - "agent-team-codex"
-  - "코덱스 에이전트팀"
-  - "codex agent team"
-  - "멀티 에이전트"
-auto_apply: false
+description: Codex CLI의 내장 default, explorer, worker를 조합해 병렬 구현을 수행한다. zephermine 섹션 모드와 자유 모드를 지원하며 /agent-team, /poseidon, /agent-team-codex로 실행한다.
 ---
 
 # Agent Team Codex
 
-Codex CLI의 실험 기능 `multi_agent`를 사용해 작업을 병렬 분배하는 운영 스킬입니다.
-Claude 전용 Agent Teams(Opus) 대신 Codex의 `default/explorer/worker` 역할을 기준으로 실행합니다.
+Codex CLI의 stable multi-agent 기능을 사용해 작업을 병렬 분배하는 운영 스킬입니다.
+Codex의 `default/explorer/worker` 역할을 기준으로 실행하며 특정 모델을 강제하지 않습니다.
 
 ## Prerequisites
 
-1. Codex CLI `0.102.0+`
-2. `config.toml`에 아래 설정:
-
-```toml
-[features]
-multi_agent = true
-```
-
-3. 권장 스레드 수:
+1. 현재 Codex에서 subagent 도구가 노출되는지 확인합니다. 현행 Codex는 `[agents].enabled` 기본값이 `true`입니다.
+2. 사용자가 명시적으로 비활성화한 경우 그 선택을 존중하고 메인 컨텍스트에서 Wave를 순차 실행합니다.
+3. 동시성 상한을 사용자가 조정하려는 경우에만 현재 설정명을 사용합니다:
 
 ```toml
 [agents]
-max_threads = 6
+max_concurrent_threads_per_session = 6
 ```
 
-4. (선택) 사용자 정의 에이전트:
+사용자 정의 `.toml` agent는 필요하지 않습니다. 고유한 sandbox·MCP·모델 계약이 입증된 경우에만 별도 opt-in으로 추가합니다.
 
-```toml
-[agents.fast_worker]
-description = "빠른 범위 구현 에이전트"
-config_file = "C:/Users/Administrator/.codex/agents/fast_worker.toml"
-```
+## Source-only internal module resolution (mandatory)
+
+`code-reviewer`와 조건부 `orchestrator`는 이 하네스가 내부 정책으로 읽는 source-only
+모듈입니다. 등록된 스킬이나 slash command로 호출하지 않습니다.
+
+각 선택된 모듈을 다음 순서로 해석하고 처음 확인된 exact `SKILL.md` 파일 하나를 읽습니다.
+
+1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
+2. 없으면 Codex active root의 `~/.codex/skills/{name}/SKILL.md` exact 파일
+   (명시 opt-in 설치 지원).
+3. 둘 다 없으면 Codex 전역 `~/.codex/SKILLS-CATALOG.md`에서 정확한 모듈명 행을 찾습니다.
+   행이 하나일 때만 `읽을 경로`에 적힌 절대 `SKILL.md`를 그대로 읽고, 누락·중복 행은
+   fail-closed입니다. 기본 경로가 보통 `.olympus/source-skills` 아래여도 직접 조합하거나
+   추측하지 않습니다.
+4. `module_root`는 읽은 `SKILL.md`의 부모입니다. 모듈의 `references/`, `scripts/`,
+   `commands/`는 모두 이 루트에서 해석합니다.
+5. Step 6 코드 리뷰에 도달했을 때만 `code_reviewer_root`를 만듭니다. hard file lock,
+   외부 ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
+   `orchestrator_root`를 만들고 `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다.
+
+이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
+모듈 이름을 slash command로 실행하지 않습니다.
+
+code-reviewer를 읽지 못하면 `codex review` 1회와 explorer의 bounded 품질·보안·타입
+체크만 실행하고 `policy module: NOT RUN (native fallback)`, gate `DEGRADED`를 기록합니다.
+orchestrator/MCP를 읽지 못하면 파일 소유권을 직렬화할 수 있는 경우에만 메인 순차 경로로
+축소하고 `MCP: NOT RUN`을 기록합니다. hard lock이 필수이면 해당 Wave는 `BLOCKED`입니다.
+어느 누락도 PASS로 처리하지 않습니다.
 
 ## Modes
 
@@ -54,6 +61,13 @@ config_file = "C:/Users/Administrator/.codex/agents/fast_worker.toml"
 
 - 일반 작업 요청(예: "auth 리팩토링 + 테스트")
 - 파일/모듈 기준으로 태스크를 직접 분해 후 병렬 실행
+
+### 조건부 MCP 정책 분기
+
+기본 경로는 Codex native agent이며, agent가 없으면 메인 컨텍스트 순차 실행입니다. hard file
+lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항일 때만 MCP 분기를 선택하고,
+그때 위 resolver로 `orchestrator` 모듈과 `${orchestrator_root}/commands/workpm-mcp.md`를
+읽습니다. 선택 전에는 모듈·서버·활동 로그 도구를 로드하지 않습니다.
 
 ## Workflow
 
@@ -97,7 +111,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 - 각 worker는 파일 소유권 범위를 벗어나지 않음
 - explorer는 코드 수정 금지
 - 충돌 가능성이 있으면 즉시 `default`가 재분배
-- 각 worker는 작업 과정을 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 기록
+- 각 worker는 변경 파일·테스트·계획 이탈·남은 위험을 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`와 공유 `implementation-notes.md`를 기록
 
 ### Step 4: 모니터링
 
@@ -109,21 +123,30 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 
 통합 전 활동 로그 요약:
 
-1. `conversations/{YYYY-MM-DD}-team-poseidon.md` 읽기
-2. 에이전트별 활동 통계: 기록 수, 에러 수, 파일 수
-3. Orchestrator MCP 사용 시 `orchestrator_get_activity_log`로 JSONL 로그도 확인
+1. Lead가 기록한 `conversations/{YYYY-MM-DD}-team-poseidon.md` 읽기
+2. 에이전트별 활동 통계: 완료 보고 수, 에러 수, 파일 수
+3. `orchestrator` source module과 MCP command를 성공적으로 읽고 실제 분기를 시작한 경우에만
+   `orchestrator_get_activity_log`로 JSONL 로그도 확인. 그 외에는 `MCP: NOT SELECTED` 또는
+   `MCP: NOT RUN`으로 기록
 4. 요약을 최종 보고에 포함
 
 ### Step 6: 코드 리뷰 게이트
 
 구현 완료 후, 통합 전 품질 검증:
 
-1. **explorer 에이전트**에게 코드 리뷰 위임:
+1. Step 6 진입 후 전역 카탈로그의 `code-reviewer` 행을 해석하고
+   `${code_reviewer_root}/SKILL.md`의 Codex native 경로와 포세이돈 정책 레이어를 읽습니다.
+   등록 스킬로 호출하지 않습니다. 보안 감사 reference가 필요한 범위만
+   `${code_reviewer_root}/references/security-audit.md`를 추가로 읽습니다.
+2. native-first로 `codex review --uncommitted` 또는 적절한 base review를 실행하고, 필요한
+   보강 검토를 **explorer 에이전트**에게 위임합니다:
    - 각 worker가 생성한 파일의 품질, 보안, 타입 안전성 확인
    - Acceptance Criteria 대조 (Step 0에서 추출한 마스터 체크리스트)
    - flow-diagrams 노드 매핑 (있는 경우) — 담당 노드가 구현되었는지
-2. 미통과 항목 → 해당 worker 재spawn하여 수정 (최대 2회)
-3. 2회 후에도 미통과 → 사용자 보고
+3. source module 미가용 시 native review + 위 세 항목만 bounded fallback으로 실행하고
+   `policy module: NOT RUN`, `review gate: DEGRADED`를 보고합니다.
+4. 미통과 항목 → 해당 worker 재spawn하여 수정 (최대 2회)
+5. 2회 후에도 미통과 → 사용자 보고
 
 ### Step 7: 통합 게이트 (완료 권한 — 필수)
 
@@ -155,6 +178,7 @@ Codex Agent Team 실행 결과
 - 마스터 체크리스트: M/N 통과 (XX%)
 - 주요 변경 파일: ...
 - 테스트 결과: 통과 N / 실패 N
+- 내부 모듈: code-reviewer {LOADED|NOT RUN}, orchestrator MCP {NOT SELECTED|LOADED|NOT RUN}
 - 잔여 리스크: ...
 
 👉 다음 단계 (선택):
@@ -167,11 +191,11 @@ Codex Agent Team 실행 결과
 
 ## Troubleshooting
 
-### multi_agent가 비활성 상태
+### subagent 도구가 보이지 않음
 
-- `codex features list`에서 `multi_agent`가 false면:
-  - `codex features enable multi_agent`
-  - Codex 재시작
+- `codex features list`와 현재 `[agents].enabled` 설정을 확인합니다.
+- 현행 버전인데 도구가 없으면 Codex를 갱신하고 세션을 다시 시작합니다.
+- 사용자가 agents를 껐거나 갱신할 수 없으면 메인 컨텍스트 순차 실행으로 계속합니다.
 
 ### 에이전트 충돌(같은 파일 동시 수정)
 
@@ -180,7 +204,7 @@ Codex Agent Team 실행 결과
 
 ### 스레드 과다로 품질 저하
 
-- `max_threads`를 줄여 재실행 (예: 6 → 4)
+- `max_concurrent_threads_per_session`을 줄여 재실행 (예: 6 → 4)
 - explorer를 1개로 고정하고 worker 수만 조절
 
 ## References

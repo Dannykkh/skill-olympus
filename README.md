@@ -14,8 +14,9 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
+![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
 
-A production agent harness for **Claude Code**, **Codex CLI**, and **Gemini CLI** — a **harness-engineering** and **loop-engineering** stack,
+A production agent harness for **Claude Code**, **Codex CLI**, **Gemini CLI**, and **Grok Build** — a **harness-engineering** and **loop-engineering** stack,
 named after the Twelve Olympians, forged across 3 months of daily real-product builds.
 
 ```bash
@@ -29,7 +30,7 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 > act → observe → verify, repeated until an **objectively verifiable completion criterion** is met.
 > Olympus was built that way from the start — Chronos (verification gate that runs real tests),
 > Minos (fix-until-pass), Argos (AC cross-check), Clio (GO/NO-GO). Since v4.7.0 these loops run
-> on top of CLI-native features (`/goal` stop gate, `/code-review`, Agent Teams) —
+> on top of CLI-native features (`/goal` stop gate, review engines, built-in subagents) —
 > the harness is the foundation, the loop is the operating model.
 > And since v4.8.0 the loops know how to **stay** running: a loop survives on structure,
 > not willpower — heartbeat in the machine, state in the audit log, blocked issues parked
@@ -43,16 +44,16 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 |---|---|
 | 🏛️ **The Pantheon** | 12 Greek gods (skills), each forged for one craft. Call one, or call Zeus to summon all twelve at once |
 | ⚡ **One-command pipeline** | `/zeus "..."` ships an entire SaaS with zero human interaction (design → build → inspect → test) |
-| 🧠 **Cross-CLI memory** | Persistent 3-layer memory (`mnemo`) that survives across sessions AND across Claude/Codex/Gemini |
+| 🧠 **Cross-CLI memory** | Persistent 3-layer memory (`mnemo`) that survives across sessions and across Claude/Codex/Gemini/Grok |
 | 🔁 **Tireless loop** | `/chronos` autonomously runs FIND → FIX → VERIFY until the bug dies or the dawn breaks |
 | 👁️ **Hundred-eyed watchman** | `/argos` cross-references spec ↔ code ↔ tests. Nothing slips past 100 eyes |
 | ⚖️ **Underworld judge** | `/minos` weighs every Playwright test on golden scales. Fix-until-pass loop, no escape |
 | 📜 **The chronicler** | `/clio` — closer + muse. GO/NO-GO judgment first, then carves PRD, flow diagrams, docs, and doc site onto bronze |
-| 🏠 **Keeper of the hearth** | `/hestia` scans dead code, unused exports, orphan files — and sweeps them clean |
-| 📋 **Launch checklist** | `/launch` — pre-launch quality gates, staged rollout plan, rollback playbook |
-| 📐 **Decision records** | `/adr` — architecture decisions with alternatives, trade-offs, and superseded tracking |
+| 🏠 **Keeper of the hearth (optional)** | The source-only `hestia` workflow scans dead code, unused exports, and orphan files; request it through the catalog or enable `/hestia` with the source-only opt-in |
+| 📋 **Launch checklist (optional)** | The source-only `shipping-and-launch` workflow covers pre-launch gates, staged rollout, and rollback planning |
+| 📐 **Decision records (optional)** | The source-only `documentation-and-adrs` workflow records alternatives, trade-offs, and superseded decisions |
 
-**100 skills · 42 agents · 9 hooks · 3 CLIs · 1 mythology**
+**100 skill sources (default allowlist union: 17 = 11 entrypoint harnesses + 6 runtime adapters; 13 or 14 active per installed surface, 83 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 CLIs · 1 mythology**
 
 ---
 
@@ -74,6 +75,8 @@ Chronos is the loop layer under that harness. It prefers native `/goal`, falls b
 
 ## Quick Start
 
+### First install
+
 ```bash
 # Clone
 git clone https://github.com/Dannykkh/skill-olympus.git
@@ -86,9 +89,55 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-That's it. **100 skills, 42 agents, 9 hooks** installed across Claude Code + Codex CLI + Gemini CLI.
+Running without arguments is the default full installation for Claude, Codex, Gemini, and Grok.
+`--all` is an optional explicit spelling of the same selection. The installer prepares each selected
+CLI's files even when that CLI executable is not on `PATH`; only CLI-dependent commands such as MCP
+registration are skipped. Install the missing CLI and rerun the same installer to finish those commands.
 
-> Codex/Gemini steps auto-skip if the respective CLI is not installed.
+### Updating an existing installation
+
+A normal update does not require an uninstall first. Running the installer again reconciles only
+Olympus-managed names with the current policy and leaves unrelated third-party skill names in place.
+
+```powershell
+git pull
+.\install.bat
+```
+
+Use `./install.sh` on macOS/Linux. Uninstall and reinstall only when the installation is broken
+or when you deliberately want to rebuild Olympus hooks and MCP registrations from scratch.
+
+```powershell
+.\install.bat --uninstall
+.\install.bat
+```
+
+### What does source-only mean?
+
+Source-only does not mean that an old skill version is being retained. It means that the **current
+Olympus `SKILL.md` and supporting files remain available without being registered in the CLI's automatic
+discovery directory**.
+
+- Current sources are copied under each CLI's `.olympus/source-skills/` and recorded in `SKILLS-CATALOG.md`.
+- An active Olympus harness or the LLM can read that catalog source when a task needs it.
+- Use `--include-source-only-skills` to put every compatible source-only skill back into slash menus and automatic matching.
+- That option activates current Olympus sources; it does not restore an older modified copy from `_olympus-preserved`.
+
+```powershell
+.\install.bat --include-source-only-skills
+```
+
+That's it. The 100 sources split into a 17-skill default allowlist union (11 user-facing harnesses + 6 runtime adapters) and 83 source-only internal or optional modules. Runtime compatibility then removes adapters meant for other CLIs: Codex and Gemini each expose 96 compatible entries (13 active + 83 source-only), while Claude exposes 97 (14 + 83). Grok's standalone policy is also 96 (13 + 83), but the installed Grok surface reads the shared Claude directory and therefore sees the same 14 active entries as Claude. Active harnesses resolve required source-only modules through the catalog and read them directly; those modules do not need independent registration. **No Olympus custom agent is registered by default**; all 42 agent references remain source-only, and each CLI keeps its native subagents. New skill and agent sources are default-denied until deliberately allowlisted.
+
+> A missing CLI does not suppress asset preparation. Its skill catalog, source library, hooks, and
+> configuration files are prepared; only commands that require the executable are reported as skipped.
+
+> When upgrading an existing installation, unrelated third-party skill names are preserved. Modified
+> same-name collisions are moved to `_olympus-preserved` instead of being discarded. See the
+> [skill registry migration guide](docs/skill-registry-migration.md) for the lightweight default,
+> full opt-in, collision recovery, and uninstall/reinstall procedure.
+> Recovery is manual: copy the preserved skill back only after giving both its directory and frontmatter
+> `name` a unique name. Otherwise the next sync will preserve it again. `--uninstall` never restores backups.
 
 ---
 
@@ -114,7 +163,7 @@ Below stand the immortals. Call upon one — or call upon all.
 
 | Skill | Name | Epithet | Domain |
 |-------|------|---------|--------|
-| `/zephermine` | **Zephermine** (젭마인) | *Breath of the West Wind, Bringer of Spring* | The Architect — 26-step deep interview, spec generation, 5-expert team review |
+| `/zephermine` | **Zephermine** (젭마인) | *Breath of the West Wind, Bringer of Spring* | The Architect — 26-step deep interview, spec generation, 6-expert team review |
 | `/zeus` | **Zeus** (제우스) | *Cloud-Gatherer, Hurler of Thunderbolts, Father of Gods and Men* | The Sovereign — Zero-interaction full pipeline; at his nod the council convenes |
 | `/agent-team` / `/poseidon` | **Poseidon** (포세이돈) | *Earth-Shaker, Lord of the Wine-Dark Sea, Trident-Bearer* | The Sea Lord — Reads dependency graphs as a sailor reads tides; sends the fleet in waves |
 | `/workpm` | **Daedalus** (다이달로스) | *The Master Builder, Maker of the Labyrinth, Father of Wings* | The Hands-On Builder — Where there is no plan, he becomes the plan |
@@ -197,7 +246,7 @@ She will ask the question the mortal fears most — *should this thing be made a
 
 🌹 **Aphrodite, Foam-Born**
 She rose from the white foam of the sea, and the world has not been plain since.
-A hundred and sixty-one palettes lie at her hand, four and eighty fonts, four and eighty styles.
+Nine palettes lie at her hand, seven and forty font pairings, four and eighty styles.
 What leaves her workshop is not merely useful — it is loved, and that is the difference.
 *"Beauty is not the ornament of the work. Beauty is what makes the work survive its maker."*
 
@@ -211,6 +260,10 @@ and her remembering crosses every session, every CLI, every dawn.
 ---
 
 ## What's New
+
+### v5.0.0 — Entrypoint-Only Registry · Native Agents · Provider-Safe Runtime Routing (August 2026)
+
+Olympus now keeps only user-facing harnesses and the current CLI's runtime adapters in automatic discovery. The 100 current skill sources split into an allowlist union of 17 (11 common entrypoints plus 6 runtime adapters) and 83 source-only modules: Claude and the Grok-shared Claude surface expose 14 active skills, while Codex and Gemini expose 13; all three homes retain the same 83-module source library through exact catalog paths. Source-only means current code is available for direct, on-demand reading without consuming slash-menu or startup-description budget; `--include-source-only-skills` remains the explicit full-registry opt-in. Olympus custom agents now default to zero: orchestration uses each CLI's semantic read-only and write-capable native roles, with Main owning shared state and sequential fallback when delegation is unavailable. Runtime-specific adapters are selected by provider so Claude/Grok, Codex, and Gemini do not load one another's incompatible mnemo or agent-team entrypoints. The installer now treats no arguments as all four CLIs, prepares assets even when a CLI executable is absent, skips only executable-dependent registration, preserves unrelated third-party names, and moves modified same-name collisions to `_olympus-preserved` for manual recovery.
 
 ### v4.21.0 — Aphrodite Experience-Led Redesign · Stitch as Execution Adapter · Zeus Scope Gate (August 2026)
 
@@ -295,7 +348,7 @@ The loop state lives in the audit log, not the context window; each cycle re-ent
 
 > Groundwork for loop engineering — aligning the loop's parts (stop gate, review engine, team tools) with CLI-native features.
 
-- **code-reviewer v4 — engine delegation + policy layer** — generic review is delegated to native engines (Claude `/code-review`, Codex `codex review --base`); the skill keeps only what natives can't do: Scope Drift detection, domain checklists (LLM output trust boundary, enum completeness), Fix-First triage, unified report. Gemini falls back to the full path (2-Pass + specialists). `/code-review ultra` (billed) is never invoked nor suggested
+- **code-reviewer v4.1 — engine delegation + policy layer** — generic review is delegated to an available runtime engine (Claude built-in review, Codex `codex review --base`, Grok bundled review); runtimes without one use the full path. The skill adds Scope Drift, domain checks, read-only-by-default action triage, and a safe explicit repository-security audit. Remote/billed ultra review is never invoked or suggested
 - **Chronos legacy `/loop` alias retired** — name collision with native `/loop` (interval re-runner) hijacked the alias on Claude. Removed across all CLIs + goal (stop gate) / loop (re-runner) / chronos (loop discipline) comparison table
 - **Audit follow-ups (5 parallel Explore agents)** — zeus × /goal relationship (hook auto-resume stays default for zero-interaction; bootstrap skipped when a goal is pre-set to avoid double stop gates), agent-team experimental env var demoted to legacy, project-root memory vs native auto-memory boundary in 4 files, orchestrator native-vs-MCP selection criteria, chronos `--flow-verify` receiver definition, zephermine vs native plan-mode distinction
 - **clio v2.1.0 — humanizer Korean copyediting hookup** — translationese/AI-style constraints injected at generation + post-generation S1 pass (USER-MANUAL > PRD > TECHNICAL priority)
@@ -384,7 +437,7 @@ The loop state lives in the audit log, not the context window; each cycle re-ent
 
 ### v1.6.0 — Design + Business + Skill Best Practices (Mar 2026)
 
-- **design-plan (Aphrodite)** — Design orchestrator with 161 palettes, 73 fonts, 84 styles
+- **design-plan (Aphrodite)** — Design orchestrator with 9 palettes, 47 font pairings, 84 styles
 - **estimate** — Development cost estimation with Excel output
 - **biz-strategy (Hermes)** — Business model canvas, TAM/SAM/SOM, GTM strategy
 - **Anthropic best practices** — Applied across all skills
@@ -407,14 +460,15 @@ One command does everything:
 |-------|-------|-------------|
 | **Analyze** | `/hermes` (헤르메스) | Business model, TAM/SAM/SOM, GTM, metrics, cohort |
 | **Challenge** | `/athena` (아테나) | CEO coaching — Go/No-Go gate, scope decisions, kill test |
-| **Design** | `/zephermine` (젭마인) | 26-step interview → SPEC.md → 5-agent team review |
-| **Implement** | `/agent-team` | Wave-grouped parallel execution with Agent Teams |
+| **Design** | `/zephermine` (젭마인) | 26-step interview → SPEC.md → role-based native review |
+| **Implement** | `/agent-team` | Wave-grouped execution with the current CLI's native workers |
 | **Inspect** | `/argos` (아르고스) | Construction inspection: verify code matches design |
 | **Test** | `/minos` (미노스) | Playwright E2E tests + fix-until-pass loop |
 | **Deliver** | `/clio` (클리오) | Flow diagrams + PRD + technical docs + user manual |
-| **Full Auto** | `/zeus` (제우스) | All phases chained, zero interaction |
+| **Full Auto** | `/zeus` (제우스) | Seven phases: parse → Zephermine → agent-team/workpm → Argos → Docker → Minos → evidence report |
 
-Each skill works standalone or as part of the pipeline.
+Each skill works standalone or as part of the pipeline. Hermes, Athena, and Clio are optional standalone
+stages; Zeus does not invoke them in its Phase 0–6 contract.
 
 ---
 
@@ -443,7 +497,7 @@ Each skill works standalone or as part of the pipeline.
 **`/zephermine` — Deep design (Architect)**
 - **When:** a feature/product needs a thorough spec before implementation.
 - **Use:** `/zephermine [spec-path]` (aliases: 젭마인, 제퍼마인)
-- **Process:** research → 26-step interview → spec synthesis → 5-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios.
+- **Process:** research → 26-step interview → spec synthesis → 6-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios.
 - **Output:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
 - **Next:** `/agent-team` (build) or `/argos` (inspect).
 
@@ -453,7 +507,7 @@ Each skill works standalone or as part of the pipeline.
 - **Process:** source-mode routing → site benchmark evidence (header/message/section order/CTA/trust/mobile transformations) → Adopt/Adapt/Avoid → 3 rendered directions → Experience Contract → implementation → rendered UX/accessibility/performance gates → learning handoff.
 - **Output:** `DESIGN.md` (visual tokens), Experience Contract (hierarchy, behavior, responsive and quality decisions), layout blueprint, benchmark evidence, and the frontend build.
 - **Boundary:** Aphrodite owns experience structure, visual behavior, responsive transformations, states, and quality gates. API wiring, persistent state, and business logic remain with `/agent-team` or `/workpm`.
-- **Next:** `frontend-design` or Stitch as a rendering adapter, then `/agent-team` / `/workpm` for application logic.
+- **Next:** Aphrodite directly loads its source-only `frontend-design` and audit modules; use `--stitch` only when the Stitch adapter is requested, then `/agent-team` / `/workpm` for application logic.
 
 ### Build — write the code
 
@@ -501,8 +555,8 @@ Each skill works standalone or as part of the pipeline.
 **`/zeus` — One command, the whole council (Sovereign)**
 - **When:** you want a whole SaaS from one sentence, zero questions.
 - **Use:** `/zeus "Build X. React + Spring Boot"` (aliases: 제우스)
-- **Process:** chains hermes/athena → zephermine → agent-team → argos → docker → minos → clio; all decisions automated and logged to a reversible Decision Ledger.
-- **Output:** a running app + `docs/zeus/zeus-report.md` (SUCCESS is bound to the minos pass-rate + a green build).
+- **Process:** seven phases: description parsing → zephermine → agent-team/workpm → argos → source-only docker-deploy → minos → final evidence report. Hermes, Athena, and Clio are not implicit Zeus phases. Decisions are automated and logged to a reversible Decision Ledger.
+- **Output:** a running app + `docs/zeus/zeus-report.md` (SUCCESS requires proved evidence for planning, implementation, inspection, runtime setup, and tests).
 - **Next:** review the Decision Ledger.
 
 **`/chronos` — Tireless fix loop (Time)**
@@ -515,7 +569,7 @@ Each skill works standalone or as part of the pipeline.
 **`mnemo` — Cross-CLI memory (Keeper)**
 - **When:** always — and whenever you ask "what did we do before?"
 - **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks. Opt-out: `MNEMO_DISABLE=1` (version check: `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
-- **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Gemini; past-conversation search; auto handoff near the context limit.
+- **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Gemini/Grok; past-conversation search; auto handoff near the context limit.
 - **Output:** `MEMORY.md` (index) + `memory/*.md` (semantic) + `conversations/*.md` (episodic).
 - **Next:** —
 
@@ -523,18 +577,43 @@ Each skill works standalone or as part of the pipeline.
 
 ## Cross-CLI Support
 
-Same skills, same memory, same experience across 3 CLIs.
+One source library and the same user-facing workflows, with runtime-native defaults for each CLI.
 
-| Feature | Claude Code | Codex CLI | Gemini CLI |
-|---------|------------|-----------|------------|
-| Skills | `~/.claude/skills/` | `~/.codex/skills/` | `~/.gemini/skills/` |
-| Agents | `~/.claude/agents/` | `~/.codex/agents/` | `~/.gemini/agents/` |
-| Memory (Mnemo) | save-response hook | save-turn hook | save-turn hook |
-| Gotchas/Learned | save-tool-use hook | save-turn hook | save-turn hook |
-| Orchestrator | MCP server | MCP server | MCP server |
-| Install | `install.bat/sh` | Auto (steps 8-11) | Auto (step 12) |
+| Feature | Claude Code | Codex CLI | Gemini CLI | Grok Build |
+|---------|------------|-----------|------------|------------|
+| Skills | 14 active in `~/.claude/skills/` | 13 active in `~/.codex/skills/` | 13 active in `~/.gemini/skills/` | same 14 from Claude compatibility layer |
+| Custom agents | none by default (`~/.claude/agents/` only on opt-in) | none by default; Codex requires `.toml` | none by default (`~/.gemini/agents/` only on opt-in) | none from Olympus by default |
+| Memory (Mnemo) | save-response hook | save-turn hook | save-turn hook | grok-mnemo hook |
+| Gotchas/Learned | save-tool-use hook | save-turn hook | save-turn hook | grok-mnemo hook |
+| Orchestration | native workers; optional MCP | native workers; optional MCP | native workers; optional MCP | native workers; MCP PM host only |
+| Install | no-argument installer prepares assets; CLI commands run when `claude` exists | same installer prepares assets; MCP commands run when `codex` exists | same installer prepares assets; MCP commands run when `gemini` exists | shared Claude assets; grok-mnemo runs when Grok home exists |
 
-Cross-CLI sync is handled by `sync-codex-assets.js` and `sync-gemini-assets.js`.
+Cross-CLI sync is handled by `sync-claude-skills.js`, `sync-codex-assets.js`, and `sync-gemini-assets.js`.
+Codex skills install globally only by default, avoiding duplicate discovery from this repo's
+`.agents/skills`; use `node scripts/sync-codex-assets.js --include-project-skills` only for an
+isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
+contains 17 skills: 11 user-facing harnesses and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
+3 or 4 incompatible adapters, leaving Claude with 14 active skills and Codex/Gemini/standalone Grok
+with 13; the installed Grok surface reads Claude's shared 14. The same 83 non-allowlisted sources are
+copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
+`SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
+`.olympus/runtime-modules/orchestrator`; MCP registration points there and dependency caches survive source refreshes. Activate every compatible source-only skill with `--include-source-only-skills`,
+or only the legacy eight coding guides with `--include-broad-coding-skills`. Source-only skills can be
+requested in natural language through the catalog; use the full opt-in when a native `/skill-name`
+menu entry is required, because some CLIs reject unknown slash names before model routing.
+Directories whose names match this repository's skill sources are installer-managed and may be
+replaced or removed on sync; unrelated local skill names are preserved. Customize the repository
+source or use a distinct local name instead of editing an installed Olympus copy in place.
+All four runtime surfaces keep all 42 custom-agent source references source-only by default. `--include-source-only-agents` copies those legacy prompts for deliberate compatibility testing; it does not make Markdown an active Codex agent definition. (`--include-passive-agents` and `--include-broad-coding-agents` remain legacy aliases.) Codex also keeps `.agents/agents` absent unless both a project mirror and source-only opt-in are requested.
+
+Agent-using skills keep their orchestration logic and map semantic roles to each CLI's built-ins:
+
+| Semantic role | Claude | Codex | Gemini | Grok |
+|---------------|--------|-------|--------|------|
+| Read-only exploration | `Explore` | `explorer` | `codebase_investigator` | `explore` |
+| File changes and commands | `general-purpose` / named teammate | `worker` | `generalist` | `general-purpose` |
+
+The main context owns shared state and completion decisions. Workers get a unique file or return-only task; when delegation is unavailable or brings no parallel benefit, the same workflow runs sequentially in the main context.
 
 ---
 
@@ -543,7 +622,7 @@ Cross-CLI sync is handled by `sync-codex-assets.js` and `sync-gemini-assets.js`.
 3-layer persistent memory that survives across sessions and CLIs.
 
 ```
-Session A: work → #tags saved → /wrap-up → MEMORY.md updated
+Session A: work → #tags saved → automatic or explicit handoff → MEMORY.md updated
 Session B: MEMORY.md auto-loaded → past search → context restored
 ```
 
@@ -553,22 +632,25 @@ Session B: MEMORY.md auto-loaded → past search → context restored
 | **Semantic** | `memory/*.md` | On demand |
 | **Episodic** | `conversations/*.md` | On search |
 
-Includes auto gotcha/learned tracking:
-- **Errors** → `memory/gotchas/observations.jsonl` → Haiku analyzes patterns
-- **Successes** → `memory/learned/observations.jsonl` → Haiku detects workflows
+Includes deterministic gotcha/learned capture:
+- **Errors** → hooks append scrubbed events to `memory/gotchas/observations.jsonl`
+- **Successes** → hooks append scrubbed events to `memory/learned/observations.jsonl`
+- **Distillation** → the active mnemo adapter reads the source-only `memory-distill` module from the catalog, or a session handoff applies the same contract; there is no always-on analyzer agent
 - **Backlog diagnosis** → observation logs are append-only and never truncated; backlog is judged by delta against the `.mnemo-distill-offset` marker (hooks handle this via `.mnemo-status.md`), never by cumulative line count
 
 ---
 
 ## What's Inside
 
-### Skills (100)
+### Skill sources (100; default union 17, 13 or 14 active per installed surface)
+
+The table is the source inventory, not the startup registry. Low-frequency format tools, provider integrations, framework cookbooks, and generators remain source-only until explicitly invoked through the catalog or installed with the opt-in flag.
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
 | **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
-| **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 161 palettes, 84 fonts, 14 themes (4 Hangul), SEO+AEO+GEO audit, chart selection guide |
+| **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 9 palettes, 47 font pairings, 84 styles, 14 themes (4 Hangul), SEO+AEO+GEO audit, chart selection guide |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier, themis + 3 more | Chronos loop, Playwright QA, privacy-policy generator (Themis) |
@@ -581,21 +663,16 @@ Includes auto gotcha/learned tracking:
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
 
-### Agents (42)
+### Agent source references (42 files: 40 top-level + 2 skill-owned; 0 registered by default)
 
-Specialized subagents for every development task:
+These are retained compatibility/reference prompts, not always-on runtime personas. Normal delegation uses each CLI's native subagents; procedural behavior lives in skills.
+
+All 42 remain source-only under a default-deny policy and can be copied for explicit compatibility testing with `--include-source-only-agents`.
 
 | Area | Agents |
 |------|--------|
-| **Architecture** | architect, spec-interviewer, fullstack-coding-standards |
-| **Frontend** | frontend-react, react-best-practices, stitch-developer, ui-ux-designer |
-| **Backend** | backend-spring, backend-dotnet, desktop-wpf, python-fastapi |
-| **Database** | database-postgresql, database-mysql, database-schema-designer |
-| **Quality** | code-reviewer, security-reviewer, qa-engineer, tdd-coach |
-| **Performance** | performance-engineer, debugger |
-| **AI/ML** | ai-ml (RAG, LLM APIs, latest SDKs) |
-| **Writing** | writing-specialist, humanizer, writing-guidelines |
-| **Language** | typescript-spec, python-spec |
+| **Skill-owned compatibility prompts** | chronos-worker, gotcha-analyzer |
+| **Optional source-only agents** | architect, documentation, mermaid-diagram-specialist, typescript-spec, python-spec, ui-ux-designer, frontend-react, backend-spring, database-mysql, database-postgresql, react-best-practices, python-fastapi-guidelines, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-conventions, writing-guidelines, bilingual-dev, web-preview-guide, codebase-pattern-finder, explore-agent, debugger, feature-tracker, tdd-coach, migration-helper, spec-interviewer, api-comparator, api-tester, ascii-ui-mockup-generator, backend-dotnet, database-schema-designer, desktop-wpf, performance-engineer, stitch-developer, writing-specialist, ai-ml, qa-engineer, qa-writer, code-reviewer, security-reviewer |
 
 ### Hooks (9)
 
@@ -613,22 +690,25 @@ Specialized subagents for every development task:
 
 ---
 
-## Multi-AI Orchestration
+## Native and Multi-AI Orchestration
 
-PM distributes tasks, Workers execute in parallel across Claude + Codex + Gemini.
+By default, `workpm` distributes work to the current CLI's native workers. The MCP policy layer is only for hard file locks, an external task board, or a deliberate Claude + Codex + Gemini mix.
 
 ```
-Terminal 1 (PM):     /workpm → analyze → create 3 tasks
-Terminal 2 (Claude): /pmworker → claim task-1 → execute → complete
-Terminal 3 (Codex):  /pmworker → claim task-2 → execute → complete
-Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
+Default:             /workpm → analyze → native workers → verify
+
+Optional MCP mode:
+Terminal 1 (PM):     /daedalus --mcp → create provider-aware tasks
+Terminal 2 (Claude): /pmworker → claim Claude/agnostic task → complete
+Terminal 3 (Codex):  /pmworker → claim Codex/agnostic task → complete
+Terminal 4 (Gemini): /pmworker → claim Gemini/agnostic task → complete
 ```
 
 | Component | Description |
 |-----------|-------------|
-| **Orchestrator MCP** | SQLite WAL task queue, file locks, dependency resolution |
-| **workpm** | Unified PM entrypoint (native multi-agent per CLI; MCP fallback) |
-| **pmworker** | Unified Worker entrypoint (all CLIs) |
+| **workpm** | Default PM entrypoint using the current CLI's native workers |
+| **Orchestrator MCP** | Optional SQLite WAL task queue, provider routing, file locks, dependency resolution |
+| **pmworker** | Worker entrypoint for the explicit MCP mode (Claude/Codex/Gemini) |
 
 ---
 
@@ -664,6 +744,7 @@ Terminal 4 (Gemini): /pmworker → claim task-3 → execute → complete
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **Entrypoint-only registry + native-agent default + provider-safe routing** — 100 current skill sources become 17 allowlisted entrypoints/adapters plus 83 directly readable source-only modules; active surfaces are Claude/shared Grok 14 and Codex/Gemini 13; Olympus custom-agent registration defaults to 0 while semantic native roles and Main-owned state provide delegation with sequential fallback; incompatible runtime adapters are excluded per provider; no-argument install targets all four CLIs, prepares assets without installed executables, skips only CLI-specific commands, and preserves same-name modifications for manual collision recovery |
 | **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **Aphrodite experience-led redesign + Stitch execution adapter + Zeus scope gate** — design-plan pipeline: source routing → benchmark dissection (Adopt/Adapt/Avoid) → three rendered directions → Experience Contract (tasks, message, CTA, trust, mobile transformations; validator-enforced) → implementation → rendered UX/a11y/perf gates → learning handoff; Stitch compiles Aphrodite's decisions into Stitch MCP operations (contract/state/transfer patterns from google-labs-code/stitch-skills) instead of inventing direction; Zeus records pass/reduce/hold verdicts in the Decision Ledger before any off-plan task/feature/dependency, holds surfacing as Deferred (absorbed from hosioobo/track) |
 | **[v4.20.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.2)** | **2026-08-08** | **Themis guideline pinning + runtime freshness check** (spans v4.20.1–v4.20.2) — Korean drafts anchored to the PIPC Writing Guideline (2025.4) with a generation-time notice-board check that detects and adopts newer revisions (user notified; pinned-edition fallback without web tools); ko template aligned to 2025.4 (grievance contact, behavioral-ads clause, children Art. 22-2); statute citations verified via law.go.kr direct fetch — law-MCP dependency removed as unnecessary |
 | **[v4.20.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.0)** | **2026-08-08** | **Themis privacy-policy generator + mnemo opt-out** — skill #100 Themis audits a codebase for personal-data collection/storage/outbound/deletion (trap checklist: soft delete, append-only logs, masking coverage, silent outbound, `git ls-files`-verified ignores), interviews the operator for the 14 things code can't tell (officer, retention, children, server region…), then drafts per-country policies (PIPA Art. 30 / CCPA-CPRA / GDPR Art. 13) from file:line evidence only — blanks are never invented; dogfooded on this repo (3 drafts shipped). The audit exposed our own no-off-switch recording hooks → `MNEMO_DISABLE` (15 hook entry points, 4 CLIs) + `OLYMPUS_UPDATE_CHECK_DISABLE`, verified by on/off comparison runs |
@@ -715,4 +796,4 @@ MIT License
 
 ---
 
-**Last Updated:** 2026-06-13
+**Last Updated:** 2026-08-13

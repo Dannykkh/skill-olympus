@@ -9,10 +9,10 @@ when_to_use: |
   - AI 에이전트 및 워크플로우 구현
   - 임베딩, 벡터 검색 구현
 avoid_if: |
-  - 시스템 아키텍처 결정 (architect 먼저)
-  - 프론트엔드 UI 작업 (frontend-react 사용)
-  - DB 스키마 설계 (database-schema-designer 사용)
-  - 일반 백엔드 API (backend-spring/backend-dotnet 사용)
+  - 시스템 아키텍처 결정 (네이티브 계획·documentation-and-adrs 사용)
+  - 프론트엔드 UI 작업 (네이티브 구현·frontend-design 사용)
+  - DB 스키마 설계 (database-schema-designer 스킬 사용)
+  - 일반 백엔드 API (프로젝트 규칙을 따르는 네이티브 구현 사용)
 examples:
   - prompt: "OpenAI API로 챗봇 구현"
     outcome: "최신 모델 검증, 스트리밍 응답, 에러 처리, 비용 최적화"

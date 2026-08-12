@@ -2,17 +2,9 @@
 name: flow-verifier
 description: >
   구현 전 프로세스 다이어그램(Mermaid flowchart) 생성 → 구현 후 실제 코드 흐름이
-  다이어그램과 일치하는지 자동 검증. mermaid-diagrams 스킬과 mermaid-diagram-specialist
-  에이전트를 활용하며, Chronos 루프에 자연스럽게 통합됩니다.
+  다이어그램과 일치하는지 자동 검증. mermaid-diagrams 스킬을 문법 모듈로 사용하고
+  메인 하네스가 산출물과 판정을 소유하며, Chronos 루프에 자연스럽게 통합됩니다.
   /flow-verifier로 실행.
-triggers:
-  - "flow-verifier"
-  - "플로우 검증"
-  - "프로세스 다이어그램 검증"
-  - "다이어그램 검증"
-  - "flow verify"
-  - "verify flow"
-auto_apply: false
 ---
 
 # Flow Verifier
@@ -21,6 +13,8 @@ auto_apply: false
 
 기존 `mermaid-diagrams` 스킬로 플로우차트를 그리고,
 구현 완료 후 실제 코드 경로가 다이어그램의 노드/분기와 일치하는지 자동 검증합니다.
+
+여러 독립 흐름을 분석할 때만 읽기 전용 역할(Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`)에 초안 또는 근거 반환을 위임할 수 있습니다. 작업자는 파일을 쓰지 않으며, 메인 컨텍스트만 `.mmd`, 인덱스, 검증 보고서와 최종 매칭 판정을 갱신합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 절차를 순차 실행합니다.
 
 ---
 
@@ -247,7 +241,7 @@ Phase 5:   [공정 점검] /flow-verifier verify → 매칭 검증
 | 파일 | 역할 |
 |------|------|
 | `skills/mermaid-diagrams/SKILL.md` | Mermaid 문법 가이드 (다이어그램 생성 시 참조) |
-| `agents/mermaid-diagram-specialist.md` | 다이어그램 전문 에이전트 (복잡한 다이어그램 위임) |
+| 네이티브 읽기 전용 역할 | 독립 흐름의 다이어그램 초안·검증 근거 반환 (파일 쓰기는 메인 소유) |
 | `skills/auto-continue-loop/SKILL.md` | Chronos 루프 (--flow-verify 연동) |
 | `skills/orchestrator/commands/workpm.md` | PM Agent Teams 모드 (Phase 2/5 연동) |
 | `skills/orchestrator/commands/workpm-mcp.md` | PM MCP 모드 (Phase 2/5 연동) |

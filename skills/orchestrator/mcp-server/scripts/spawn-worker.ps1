@@ -15,9 +15,9 @@ param(
     [Parameter(Mandatory=$false)]
     [string]$AutoTerminate = "1",
 
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$true)]
     [ValidateSet("claude", "codex", "gemini")]
-    [string]$AIProvider = "claude",
+    [string]$AIProvider,
 
     [Parameter(Mandatory=$false)]
     [string]$LogFile = ""
@@ -37,6 +37,7 @@ function Write-Log {
 # 환경 변수 설정
 $env:ORCHESTRATOR_WORKER_ID = $WorkerId
 $env:ORCHESTRATOR_PROJECT_ROOT = $ProjectRoot
+$env:ORCHESTRATOR_AI_PROVIDER = $AIProvider
 
 Write-Log "" "White"
 Write-Log "========================================" "Cyan"
@@ -85,6 +86,7 @@ $promptFile = Join-Path $env:TEMP "orchestrator-prompt-$WorkerId.txt"
 [System.IO.File]::WriteAllText($promptFile, $systemPrompt, [System.Text.Encoding]::UTF8)
 
 # AI Provider별 CLI 실행
+$providerExitCode = 0
 try {
     switch ($AIProvider) {
         "claude" {
@@ -95,7 +97,11 @@ try {
             }
             Write-Log "CLI_STARTED: Claude Code at $($cliPath.Source)" "Green"
             # 임시 파일에서 읽어 stdin으로 전달 (멀티라인 안전)
-            Get-Content $promptFile -Raw | claude --dangerously-skip-permissions
+            Get-Content $promptFile -Raw | claude --permission-mode auto
+            $providerExitCode = $LASTEXITCODE
+            if ($providerExitCode -ne 0) {
+                throw "Claude exited with code $providerExitCode"
+            }
         }
         "codex" {
             $cliPath = Get-Command codex -ErrorAction SilentlyContinue
@@ -104,8 +110,12 @@ try {
                 exit 1
             }
             Write-Log "CLI_STARTED: Codex CLI at $($cliPath.Source)" "Green"
-            # Non-interactive auto mode: approval never + workspace-write replaces deprecated --full-auto.
-            Get-Content $promptFile -Raw | codex -a never exec --sandbox workspace-write --skip-git-repo-check
+            # Non-interactive mode: automatic review remains inside the workspace-write sandbox.
+            Get-Content $promptFile -Raw | codex --approve-for-me --sandbox workspace-write exec --skip-git-repo-check
+            $providerExitCode = $LASTEXITCODE
+            if ($providerExitCode -ne 0) {
+                throw "Codex exited with code $providerExitCode"
+            }
         }
         "gemini" {
             $cliPath = Get-Command gemini -ErrorAction SilentlyContinue
@@ -118,19 +128,35 @@ try {
             $geminiPrompt = Get-Content $promptFile -Raw
             $job = Start-Job -ScriptBlock {
                 param($prompt)
-                gemini --skip-trust --approval-mode yolo --output-format text -p $prompt
+                try {
+                    $output = gemini --sandbox --approval-mode yolo --output-format text -p $prompt 2>&1
+                    $exitCode = if ($null -eq $LASTEXITCODE) { 1 } else { $LASTEXITCODE }
+                    [pscustomobject]@{ Output = @($output); ExitCode = $exitCode }
+                } catch {
+                    [pscustomobject]@{ Output = @($_.Exception.Message); ExitCode = 1 }
+                }
             } -ArgumentList $geminiPrompt
             if (-not (Wait-Job $job -Timeout $geminiTimeout)) {
-                Stop-Job $job -Force
+                Stop-Job $job -ErrorAction SilentlyContinue
+                Remove-Job $job -Force -ErrorAction SilentlyContinue
                 Write-Log "ERROR: Gemini timeout after ${geminiTimeout}s" "Red"
                 exit 124
             }
-            Receive-Job $job
+            $jobResult = Receive-Job $job -ErrorAction Stop
+            $jobResult.Output | ForEach-Object { Write-Output $_ }
+            $providerExitCode = [int]$jobResult.ExitCode
+            Remove-Job $job -Force
+            if ($providerExitCode -ne 0) {
+                throw "Gemini exited with code $providerExitCode"
+            }
         }
     }
     Write-Log "Worker $WorkerId finished successfully" "Green"
 } catch {
-    Write-Log "ERROR: Failed to start $AIProvider - $($_.Exception.Message)" "Red"
+    Write-Log "ERROR: $AIProvider execution failed - $($_.Exception.Message)" "Red"
+    if ($providerExitCode -ne 0) {
+        exit $providerExitCode
+    }
     exit 1
 } finally {
     # 임시 프롬프트 파일 정리

@@ -1,19 +1,14 @@
 ---
 name: writing-guidelines
-description: 명확하고 간결한 글쓰기 + AI 패턴 제거 통합 가이드. 문서, 커밋 메시지, 에러 메시지 작성 시 자동 적용.
-auto_apply:
-  - "*.md"
-  - "README*"
-  - "CHANGELOG*"
-  - "docs/**"
+description: 명확하고 간결한 글쓰기 + AI 패턴 제거 참고 가이드. 사용자가 이 에이전트를 명시적으로 요청할 때만 적용.
 references:
   - skills/writing-clearly-and-concisely/SKILL.md
   - skills/humanizer/SKILL.md
 ---
 
-# Writing Guidelines (Passive)
+# Writing Guidelines (Optional Reference)
 
-사람이 읽을 글을 쓸 때 항상 적용되는 규칙.
+명시적으로 불러 쓰는 글쓰기 참고 규칙.
 Strunk 핵심 규칙 + AI 글쓰기 패턴 24개 제거 + 영혼 있는 글쓰기.
 
 ---

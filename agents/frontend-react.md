@@ -11,7 +11,7 @@ when_to_use: |
 avoid_if: |
   - 백엔드 API 설계 (backend-spring/backend-dotnet 사용)
   - DB 스키마 설계 (database-schema-designer 사용)
-  - UI/UX 디자인 결정 (ui-ux-designer 사용)
+  - UI/UX 디자인 결정 (design-plan/frontend-design 사용)
   - 보안 리뷰 (security-reviewer 사용)
 examples:
   - prompt: "대시보드 컴포넌트 아키텍처 설계"

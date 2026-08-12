@@ -9,25 +9,23 @@ teammate는 Lead의 대화 히스토리를 상속하지 않습니다.
 
 ## 필수 전달 항목
 
-### 0. Expert Role (전문가 역할)
+### 0. Implementation Context (구현 계약)
 
 See [expert-matching.md](expert-matching.md)
 
-섹션의 파일 패턴에서 매칭된 전문가 역할을 teammate에게 부여:
+섹션의 파일 패턴에서 필요한 프로젝트 근거와 검증 계약을 teammate에게 전달:
 
 ```
-"너는 포세이돈(Poseidon)의 **백엔드 전문가**야.
-agents/backend-spring.md의 규칙을 참조해서 작업해.
-특히 다음을 준수해:
-- Controller → Flow → Service → Repository 4계층 구조
-- @Transactional은 Flow에서만
-- DTO ↔ Entity 변환은 Service 계층에서"
+"너는 포세이돈(Poseidon)의 **백엔드 구현 작업자**야.
+빌드 manifest, 프로젝트 지침, 인접 모듈, API 계약과 테스트를 먼저 읽어.
+현재 계층·트랜잭션·DTO·오류 처리 관례를 보존하고 새 병렬 구조를 만들지 마.
+완료 후 프로젝트의 빌드·관련 테스트를 실행해."
 ```
 
 **전달 규칙:**
-- 에이전트 파일 경로 + 핵심 규칙 3~5개만 전달 (전체 임베딩 X)
-- teammate가 필요하면 Read로 에이전트 파일을 직접 읽을 수 있음
-- 매칭 안 되면 `fullstack-coding-standards.md` (범용)
+- 프로젝트 근거 파일 + 작업 경계 + 검증 명령만 전달
+- 프레임워크·라이브러리 버전은 manifest/lockfile에서 확인
+- 매칭 안 되면 별도 역할 문서 없이 네이티브 범용 teammate 사용
 
 ### 1. Mission (한 줄)
 
@@ -45,9 +43,9 @@ Task의 `description`에 해당 section-NN.md 파일 전체 내용을 임베딩�
 TaskCreate({
   subject: "Section 04: API Layer",
   description: `
-## Expert Role
-너는 포세이돈의 **백엔드 전문가**야.
-agents/backend-spring.md의 규칙을 참조해서 작업해.
+## Implementation Context
+너는 포세이돈의 **백엔드 구현 작업자**야.
+프로젝트 지침, manifest, 인접 코드와 테스트를 먼저 읽고 현재 구조를 보존해.
 
 ## Mission
 section-04-api 구현 담당
@@ -169,8 +167,9 @@ teammate가 필요하면 Read 도구로 직접 파일을 읽을 수 있습니다
 ### 7. Task Reference
 
 ```
-Task #4를 확인하세요.
-구현 완료 시 반드시: TaskUpdate({ taskId: "4", status: "completed" })
+Job ID: {job_id}
+완료 시 변경 파일, 검증 결과, 계획 이탈, 남은 위험을 반환하세요.
+전역 task 상태와 Wave ledger 갱신은 Lead가 담당합니다.
 ```
 
 ### 8. Boundaries (경계 규칙)
@@ -182,28 +181,26 @@ Task #4를 확인하세요.
 3. 새 파일이 필요하면 담당 디렉토리 내에서만 생성
 4. 외부 패키지 설치가 필요하면 Lead에게 먼저 보고
 5. 구현 중 문제 발견 시 Lead에게 메시지로 보고
-6. 계획 이탈이 필요하면 보수적 선택을 하고 implementation-notes.md의 "Deviations"에 사유/대안/영향 파일을 기록한 뒤 계속 진행
+6. 계획 이탈이 필요하면 보수적 선택을 하고 사유/대안/영향 파일을 완료 보고의 Deviations에 포함한 뒤 계속 진행. 공유 implementation-notes.md는 Lead만 갱신
 ```
 
 **⚠️ CRITICAL RETURN RULE:**
-- 작업 결과는 **파일에만** 쓸 것
-- Lead에게 보내는 return/메시지는 **1줄 요약만** (전체 분석 텍스트 X)
-- 예: `✅ section-04-api 완료. 파일 5개 생성, 에러 0건.`
+- 구현 결과는 담당 파일에 쓰고, Lead에게는 변경 파일·검증 결과·Deviations·남은 위험만 간결하게 반환
+- 전체 분석이나 긴 명령 출력을 반복하지 않음
+- 예: `section-04-api 완료. changed=5, tests=pass, deviations=0, risks=0.`
 - 이유: return text가 Lead 컨텍스트에 합산되어 컨텍스트 폭발 방지
 
-**⚠️ CRITICAL SendMessage RULE:**
-- `SendMessage`로 Lead에게 메시지를 보낼 때 **반드시 `summary` 파라미터를 포함**할 것
-- summary 없이 string message만 보내면 `error: summary is required when message is a string` 에러 발생
-- 예: `SendMessage({ to: "lead", message: "section-04 완료", summary: "section-04 구현 완료 보고" })`
+**메시지 규칙:**
+- 런타임이 별도 summary 필드를 요구하면 짧은 summary와 상세 message를 함께 전달
+- 중간 메시지는 blocker, 파일 충돌, 권한 요청에만 사용
 
-### 9. Activity Logging (활동 기록)
+### 9. Activity Logging (Lead 전용)
 
-작업 과정을 `conversations/` 디렉토리에 기록합니다.
-teammate의 의사결정/에러/진행이 세션 종료 후에도 검색 가능하도록 보존합니다.
+작업자는 공유 로그를 직접 수정하지 않습니다. Lead가 각 작업자의 구조화된 완료 보고를 받은 뒤 `conversations/`와 `implementation-notes.md`에 직렬로 반영합니다.
 
 **대상 파일:** `conversations/{YYYY-MM-DD}-team-poseidon.md`
 
-**기록 시점 5가지:**
+**Lead 기록 시점 5가지:**
 
 | 시점 | type | 예시 |
 |------|------|------|
@@ -220,7 +217,7 @@ teammate의 의사결정/에러/진행이 세션 종료 후에도 검색 가능�
 `#tags: keyword1, keyword2`
 ```
 
-**규칙:**
+**Lead 규칙:**
 - 각 기록 **3줄 이내** (간결하게)
 - 파일이 없으면 frontmatter와 함께 생성:
   ```markdown
@@ -231,8 +228,10 @@ teammate의 의사결정/에러/진행이 세션 종료 후에도 검색 가능�
   ---
   # Team Activity Log — YYYY-MM-DD
   ```
-- 기존 파일이 있으면 **Edit 도구로 끝에 추가**
-- 폴백(orchestrator MCP) 경로에서만 `orchestrator_log_activity`도 병행 호출
+- 기존 파일이 있으면 Lead가 **Edit 도구로 끝에 추가**
+- Lead가 전역 카탈로그에서 `orchestrator_root`와
+  `${orchestrator_root}/commands/workpm-mcp.md`를 성공적으로 로드하고 실제 MCP 폴백을 시작한
+  경우에만 `orchestrator_log_activity`도 병행 호출. 모듈 로드 실패 시 `MCP: NOT RUN`으로 기록
 
 ## 컨텍스트 크기 관리
 

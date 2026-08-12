@@ -1,13 +1,6 @@
 ---
 name: argos
-description: 준공검사 감리 스킬. 설계 산출물(spec, api-spec, qa-scenarios, flow-diagrams) 대비 구현 검증. 정적 분석 + 런타임 검증 + API 일치 + QA 시나리오 + 도면 대조. Phase 1의 일반 코드 품질 층은 네이티브 리뷰 엔진(Claude code-review / Codex review)에 위임(native-first), spec 대비 감리는 고유 영역. /argos로 실행.
-triggers:
-  - "argos"
-  - "아르고스"
-  - "감리"
-  - "준공검사"
-  - "verify implementation"
-auto_apply: false
+description: 준공검사 감리 스킬. 설계 산출물(spec, api-spec, qa-scenarios, flow-diagrams) 대비 구현을 정적·런타임·API·QA·도면·보안 관점으로 검증한다. 일반 diff 품질은 가용한 CLI 네이티브 리뷰에 위임하고 spec 대비 감리는 직접 소유한다. /argos로 실행한다.
 ---
 
 # Argos (아르고스) — 100개의 눈으로 검증하는 감리
@@ -24,6 +17,46 @@ auto_apply: false
 ```
 
 **공식 호출명:** `/argos` (별칭: `아르고스`, `감리`)
+
+## 내부 소스 모듈 해석 계약 (필수)
+
+`code-reviewer`, `flow-verifier`, `frontend-design`, `ui-ux-auditor`는 Argos 안에서
+호출하는 등록 스킬이 아니라, 절차와 기준을 직접 읽는 source-only 내부 모듈입니다. 각 이름에 대해
+해석된 `SKILL.md` 절대경로를 `MODULE_SKILL[name]`, 그 부모 디렉터리를
+`MODULE_ROOT[name]`으로 기록합니다.
+
+각 모듈을 처음 쓰기 전에 다음 순서로 해석합니다.
+
+1. 프로젝트 루트의 `skills/<name>/SKILL.md`가 **실제 파일로 존재하고 frontmatter의 `name`이
+   정확히 `<name>`일 때만** 그 절대경로를 사용합니다. 없거나 이름이 다르면 프로젝트의 다른
+   경로를 추측하지 않고 2번으로 갑니다.
+2. 없으면 현재 런타임의 활성 루트에서 정확한 `skills/<name>/SKILL.md`를 확인합니다. Codex는
+   `$CODEX_HOME/skills`(미설정이면 `~/.codex/skills`), Claude와 Grok 호환 표면은
+   `~/.claude/skills`, Gemini는 `~/.gemini/skills`입니다. 파일 존재와 frontmatter 이름이
+   모두 일치할 때만 사용하고, 아니면 3번으로 갑니다.
+3. 없으면 현재 런타임의 전역 `SKILLS-CATALOG.md`를 읽습니다. Codex는
+   `$CODEX_HOME/SKILLS-CATALOG.md`(미설정이면 `~/.codex/SKILLS-CATALOG.md`), Claude와
+   Grok 호환 표면은 `~/.claude/SKILLS-CATALOG.md`, Gemini는
+   `~/.gemini/SKILLS-CATALOG.md`입니다. 첫 번째 셀이 정확히 `<name>`인 행
+   (`| <name> | ... | ... | <읽을 경로> |`) 하나를 찾아 `읽을 경로`의 절대 `SKILL.md`를
+   그대로 사용합니다. 정확한 이름의 행이 0개이거나 2개 이상이면 해석 실패이며 다른 행이나
+   레지스트리 경로를 추측하지 않습니다.
+4. 해석한 파일의 존재를 확인하고 `SKILL.md` 전체를 읽은 뒤에만 그 모듈의 기준을 적용합니다.
+   참조 파일은 `MODULE_ROOT[name]/references/...`, 스크립트는
+   `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
+
+이 과정은 모듈 읽기이지 스킬 호출이 아닙니다. `/code-reviewer`, `/flow-verifier`,
+`/frontend-design`, `/ui-ux-auditor`를 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
+프로젝트·활성 루트 파일도 없고 카탈로그의 정확한 행·`읽을 경로`·필수 참조 중 하나라도 없으면 보고서의
+`Module Coverage`에 경로와 이유를 기록하고 아래의 한정된 native fallback을 사용합니다. fallback도
+실행할 수 없는 검사는 `NOT RUN` 또는 `UNVERIFIED`로 남기며 PASS로 바꾸지 않습니다.
+
+| 모듈 | 한정된 native fallback |
+|------|------------------------|
+| `flow-verifier` | Phase 5의 노드·분기·순서·오류·코드에만 있는 경로 대조를 직접 수행하고 `source: native-fallback` 표기 |
+| `frontend-design` | 이 문서와 verify-protocol에 적힌 축약 블랙리스트만 검사하고 전체 블랙리스트 커버리지는 `UNVERIFIED` |
+| `ui-ux-auditor` | Phase 6의 9영역을 실제 렌더 우선으로 점검. 렌더 불가 시 `static-only`와 미관찰 영역을 명시 |
+| `code-reviewer` | Phase 7에서 신뢰 경계, 마스킹된 시크릿 위치, 설치된 감사 도구, 입력·권한 경계, STRIDE만 점검하고 빠진 영역은 `NOT RUN` |
 
 ## 파이프라인 위치
 
@@ -123,32 +156,37 @@ Problem Statement의 '해결 섹션' 열이 가리키는 섹션 파일이 실제
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 1
 
-서브에이전트(subagent_type="Explore") **2개를 병렬 실행**:
+서로 독립적인 **읽기 전용 검증 작업** 2개를 실행합니다. 이 이름은 의미 계약입니다.
+현재 CLI가 제공하는 내장 탐색·검토 기능을 사용하되 특정 에이전트 이름이나 호출 인자 형식을
+요구하지 않습니다. 각 작업은 spec과 코드를 읽고 근거가 있는 발견만 반환하며, 소스·계획 산출물·
+`verify-report.md`를 수정하지 않습니다. 네이티브 병렬 위임이 가능하면 동시에 실행하고, 위임이
+없거나 실패하면 메인 컨텍스트에서 아래 두 작업을 순차 수행합니다.
 
-1. **기능 검증 에이전트**: spec.md의 기능적 요구사항 vs 실제 코드
+1. **기능 검증 작업**: spec.md의 기능적 요구사항 vs 실제 코드
    - 각 요구사항별 구현 여부 (✅/❌)
    - 누락된 기능 구체적 명시
    - 엣지 케이스 처리 확인
 
-2. **품질 검증 에이전트**: 비기능 요구사항 + 코드 품질
+2. **품질 검증 작업**: 비기능 요구사항 + 코드 품질
    - 성능/보안/접근성 요구사항 충족 여부
    - 테스트 커버리지
    - 타입 안전성
    - 문서화 상태
 
-**일반 코드 품질 층 — 네이티브 리뷰 엔진 위임 (native-first, code-reviewer v4와 동일 경로):**
+**일반 코드 품질 층 — 네이티브 리뷰 엔진 위임 (native-first, code-reviewer 모듈과 동일 경로):**
 
 품질 검증 중 spec과 무관한 일반 코드 품질(버그·타입 안전성·중복)은 자체 스캔을 중복하지 않고 네이티브 결과를 재사용합니다:
 
-- **같은 세션에 code-reviewer(v4) 보고서가 이미 있으면** 그 발견을 그대로 병합 — 재실행 금지
+- **같은 세션에 code-reviewer 보고서가 이미 있으면** 그 발견을 그대로 병합 — 재실행 금지
 - Claude: Skill 목록에 `code-review`가 있으면 호출 (⚠️ `ultra` 호출 금지 — 클라우드 과금, 사용자 트리거 전용)
 - Codex: `codex review --uncommitted` 또는 `--base <브랜치>`
-- 네이티브 부재, 또는 감리 대상이 diff가 아니라 전체 코드베이스인 경우 → 현행 품질 검증 에이전트 유지 (폴백)
+- 네이티브 부재, 또는 감리 대상이 diff가 아니라 전체 코드베이스인 경우 → 위 품질 검증 체크리스트를 읽기 전용 작업자나 메인 컨텍스트에서 실행
 
 병합 발견은 verify-report.md Phase 1에 `source: native`로 표기합니다.
-**spec 대비 기능 검증(1번 에이전트)은 위임 불가** — 네이티브 diff 엔진은 spec을 모릅니다.
+**spec 대비 기능 검증(1번 작업)은 네이티브 diff 리뷰로 대체 불가** — diff 엔진은 spec을 모릅니다.
 
-두 축(기능 검증 + 품질 검증/네이티브 병합)의 결과를 합쳐 정적 검증 보고서 작성.
+메인 컨텍스트만 두 축(기능 검증 + 품질 검증/네이티브 병합)의 결과를 정규화·중복 제거하고
+정적 검증 보고서에 반영합니다. 위임된 작업은 보고서나 공유 상태를 직접 쓰지 않습니다.
 
 ### Phase 2: 런타임 검증
 
@@ -193,7 +231,8 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 4
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 5
 
-`flow-verifier` 스킬의 verify 모드를 참조하여 검증:
+`MODULE_SKILL[flow-verifier]`에서 직접 읽은 verify 모드를 참조하여 검증합니다. 모듈 해석에
+실패하면 위 native fallback을 쓰고 보고서에서 모듈 적용으로 표기하지 않습니다.
 
 1. `flow-diagrams/index.md`에서 프로세스 다이어그램 목록 추출
 2. 각 `.mmd` 파일의 노드와 실제 코드를 대조:
@@ -216,13 +255,15 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 6
 - 결과: ✅ 준수 / ⚠️ 일부 우회 / ❌ 미적용
 
 #### 6-2. AI Slop 탐지
-[AI Slop 블랙리스트](../../frontend-design/references/ai-slop-blacklist.md) 기반 검사:
+`MODULE_ROOT[frontend-design]/references/ai-slop-blacklist.md`를 직접 읽어 검사합니다. 참조가
+없으면 축약 native fallback만 실행하고 전체 블랙리스트 커버리지를 `UNVERIFIED`로 남깁니다.
 - 10항목 블랙리스트 grep/시각 확인
 - Hard Rejection 7개 확인 → 발견 시 FAIL
 - 과사용 폰트(Inter, Roboto 등) 프라이머리 사용 여부
 
 #### 6-3. UI/UX 9영역 채점
-`ui-ux-auditor`의 채점 방법론 적용:
+`MODULE_SKILL[ui-ux-auditor]`에서 직접 읽은 채점 방법론을 적용합니다. 해석 실패 시 위
+native fallback을 사용하고 `source: native-fallback`을 표시합니다.
 - 9영역 각각 0-10 채점
 - 가중 총점 → A~F 등급
 - 5.0 미만 → CONDITIONAL, Hard Rejection 발견 → FAIL
@@ -235,19 +276,21 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 6
 
 ### Phase 7: 보안 검증
 
-**항상 실행.** `security-reviewer` 에이전트의 인프라 우선 방법론을 적용.
+**항상 실행.** `MODULE_ROOT[code-reviewer]/references/security-audit.md`를 직접 읽고 인프라 우선
+감사 계약을 적용합니다. 모듈 또는 참조가 없으면 위 한정된 보안 fallback을 실행하며, 실행하지
+못한 영역을 `NOT RUN`으로 남깁니다.
 
-> 네이티브 `/security-review`와의 관계: 네이티브는 현재 브랜치의 pending changes(diff) 한정.
-> 이 Phase는 전체 코드베이스 + git 히스토리 + 의존성 감사라 대체 불가 — 단 같은 세션에서
-> 네이티브 security-review가 이미 실행됐으면 그 발견을 7-3에 병합하고 diff 범위 재스캔은 생략.
+> 런타임의 보안 change review와의 관계: change review는 현재 변경 집합을 보강할 뿐입니다.
+> 이 Phase는 전체 코드베이스 + 안전하게 마스킹된 이력 검사 + 의존성 감사라 대체되지 않습니다.
+> 같은 세션의 change-review 발견이 있으면 7-3에 병합하고 동일 diff는 다시 스캔하지 않습니다.
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 
 #### 7-1. 시크릿 탐지 (Secret Archaeology)
-- 현재 코드의 하드코딩 시크릿 Grep (`api_key=`, `password=`, `sk-`, `AKIA` 등)
-- git 히스토리에서 삭제된 시크릿 탐색 (`git log --all -p -S "SECRET"`)
+- 현재 코드와 이력에서 하드코딩 시크릿 후보의 **경로·줄·마스킹된 지문만** 수집
+- 비밀값 원문을 출력하는 raw grep과 `git log -p` 금지
 - .env 파일 커밋 이력 확인
-- 결과: 🔴 Critical (노출) / ✅ 안전
+- scanner 부재나 미실행 범위는 `NOT RUN`/`UNVERIFIED`로 기록
 
 #### 7-2. 의존성 공급망 (Supply Chain)
 - `npm audit` / `pip-audit` / `trivy` 실행 (설치된 도구 사용)
@@ -325,7 +368,8 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 2. 기존 파일 → <planning_dir>/archive/verify-report-{YYYY-MM-DD-HHMM}.md 로 이동
 ```
 
-Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
+메인 컨텍스트만 기존 보고서를 archive하고 Phase 0~7 결과를 합쳐
+`<planning_dir>/verify-report.md`를 작성합니다. 읽기 전용 작업자는 이 경로를 수정하지 않습니다.
 
 ### 보고서 구조
 
@@ -341,7 +385,12 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 - QA 통과: {passed}/{total}
 - 도면 매칭: {matched}/{total} 노드
 - 디자인 준수: {등급} ({총점}/10) 또는 건너뜀
-- 보안: 🔴{N} 🟠{N} 🟡{N} 또는 "통과"
+- 보안: 🔴{N} 🟠{N} 🟡{N}; 미실행 영역이 있으면 NOT RUN/UNVERIFIED
+
+## Module Coverage
+| 모듈 | 해석 경로 | 적용 상태 | 미실행·fallback 범위 |
+|------|-----------|-----------|----------------------|
+| {name} | {absolute path 또는 없음} | module/native-fallback/NOT RUN | {coverage gap} |
 
 ## Phase 0: CPS 추적성 검증
 {Problem→Solution 추적 + 에코시스템→섹션 커버리지 + Problem→섹션 매핑 결과}
@@ -381,6 +430,8 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 | **CONDITIONAL** | 필수 기능 통과, 일부 경고 | 조건부 승인 |
 | **FAIL** | 필수 기능 미구현 또는 빌드 실패 | 재시공 필요 |
 
+필수 모듈을 해석하지 못했는데 fallback도 실행하지 않은 Phase는 PASS 근거가 될 수 없습니다.
+
 ---
 
 ## 결과 보고 및 자동 수정
@@ -411,11 +462,11 @@ Phase 0~7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
 | 스킬 | 역할 | 연결 |
 |------|------|------|
 | zephermine | 설계 산출물 생성 | 검증 대상 (spec, api-spec, qa-scenarios, flow-diagrams) |
-| flow-verifier | 프로세스 도면 검증 | Phase 5에서 활용 |
+| flow-verifier (source-only module) | 프로세스 도면 검증 | Phase 5에서 `MODULE_SKILL` 직접 읽기 |
 | agent-team (포세이돈) | 구현 수행 | 검증 전 선행 단계 (젭마인 산출물 기반) |
 | daedalus (다이달로스) | 구현 수행 | 검증 전 선행 단계 (젭마인 없이 직접 진행) |
 | minos | Playwright 실사 테스트 | 검증 후 후행 단계 |
-| code-reviewer | 코드 품질 검사 (자재검사) | 별도 역할 — diff 기반 PR 사전 리뷰(v4: 네이티브 엔진 위임), 시공 중 실행. 아르고스는 spec 대비 준공검사라 diff 엔진으로 대체 불가. 단 Phase 1의 일반 코드 품질 층은 같은 네이티브 엔진(v4 경로 A/B)을 재사용하며, 같은 세션의 v4 보고서가 있으면 재실행 없이 병합 |
+| code-reviewer (source-only module) | 코드 품질·보안 감사 계약 | Phase 7에서 `MODULE_ROOT` 참조 직접 읽기. 별도 보고서가 이미 있으면 발견만 병합 |
 
 ---
 

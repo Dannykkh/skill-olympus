@@ -9,8 +9,8 @@ when_to_use: |
   - 인수 테스트 기준 정의
   - 테스트 매트릭스 작성
 avoid_if: |
-  - 테스트 코드 구현 (qa-engineer 사용)
-  - 자동화 테스트 실행 (qa-engineer 사용)
+  - 테스트 코드 구현 (프로젝트 설정을 읽는 네이티브 작업자 또는 minos 사용)
+  - 자동화 테스트 실행 (minos 사용)
   - 보안 테스트 (security-reviewer 사용)
   - 코드 리뷰 (code-reviewer 사용)
 examples:

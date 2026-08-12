@@ -14,8 +14,9 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
+![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
 
-**Claude Code**, **Codex CLI**, **Gemini CLI**를 위한 프로덕션 에이전트 하네스 ― **하네스 엔지니어링**·**루프 엔지니어링** 스택,
+**Claude Code**, **Codex CLI**, **Gemini CLI**, **Grok Build**를 위한 프로덕션 에이전트 하네스 ― **하네스 엔지니어링**·**루프 엔지니어링** 스택,
 12명의 올림포스 신의 이름으로, 3개월간 매일 실전 프로덕트를 만들며 다듬어졌습니다.
 
 ```bash
@@ -28,8 +29,8 @@
 > **루프 엔지니어링 시대의 설계.** 에이전트는 프롬프트 한 번이 아니라 act → observe → verify를
 > **객관적으로 검증 가능한 완료 기준**까지 반복하는 루프로 움직입니다. 올림푸스는 처음부터 그렇게
 > 지어졌습니다 — 크로노스(실제 테스트 실행 검증 게이트), 미노스(fix-until-pass), 아르고스(AC 대조),
-> 클리오(GO/NO-GO). v4.7.0부터 이 루프들은 CLI 네이티브 기능(`/goal` Stop 게이트, `/code-review`,
-> Agent Teams) 위에서 돕니다 — 하네스는 기반, 루프는 운영 모델.
+> 클리오(GO/NO-GO). v4.7.0부터 이 루프들은 CLI 네이티브 기능(`/goal` Stop 게이트, 리뷰 엔진,
+> 내장 서브에이전트) 위에서 돕니다 — 하네스는 기반, 루프는 운영 모델.
 > 그리고 v4.8.0부터 루프는 **계속 도는 법**을 압니다: 루프는 의지가 아니라 구조로 유지됩니다 —
 > 심장박동은 기계에, 상태는 감사 로그에, 막힌 이슈는 결재 가능한 브리프와 함께 주차,
 > 거짓 완료 선언은 훅 레벨에서 거부.
@@ -42,16 +43,16 @@
 |---|---|
 | 🏛️ **신전** | 12명의 그리스 신(스킬), 각자 한 가지 손재주를 위해 빚어졌다. 한 명을 부르거나 ― 제우스를 부르면 열둘이 한꺼번에 강림 |
 | ⚡ **한 마디 파이프라인** | `/zeus "..."` 한 줄이 SaaS 한 채를 완성한다 (설계 → 구현 → 감리 → 테스트, 인간의 손길 없이) |
-| 🧠 **CLI 가로지르는 기억** | 3계층 영속 메모리(`mnemo`)가 세션을 가로지르고 Claude/Codex/Gemini를 가로지른다 |
+| 🧠 **CLI 가로지르는 기억** | 3계층 영속 메모리(`mnemo`)가 세션을 가로지르고 Claude/Codex/Gemini/Grok을 가로지른다 |
 | 🔁 **지치지 아니하는 루프** | `/chronos`가 자율적으로 FIND → FIX → VERIFY를 반복한다, 버그가 죽거나 새벽이 올 때까지 |
 | 👁️ **백 개의 눈을 가진 파수꾼** | `/argos`가 spec ↔ 코드 ↔ 테스트를 교차검증한다. 백 개의 눈을 비껴가는 것은 없다 |
 | ⚖️ **저승의 심판자** | `/minos`가 모든 Playwright 테스트를 황금 저울에 단다. fix-until-pass 루프, 도망갈 곳은 없다 |
 | 📜 **기록자 + 마무리투수** | `/clio` — 먼저 GO/NO-GO를 판정하고, 그 다음 PRD, 흐름도, 기술 문서, 문서 사이트를 청동에 새긴다 |
-| 🏠 **화로의 여신** | `/hestia`가 Dead Code, 미사용 export, 고아 파일을 찾아 화로를 깨끗이 유지한다 |
-| 📋 **출시 체크리스트** | `/launch` — 프리런치 품질 게이트, 단계적 롤아웃, 롤백 플레이북 |
-| 📐 **결정 기록** | `/adr` — 아키텍처 결정을 대안·트레이드오프·이력과 함께 기록 |
+| 🏠 **화로의 여신(선택)** | source-only `hestia` 워크플로우가 Dead Code, 미사용 export, 고아 파일을 찾는다. 카탈로그 경로로 요청하거나 source-only opt-in 후 `/hestia`를 사용한다 |
+| 📋 **출시 체크리스트(선택)** | source-only `shipping-and-launch` 워크플로우가 프리런치 게이트, 단계적 롤아웃, 롤백 계획을 다룬다 |
+| 📐 **결정 기록(선택)** | source-only `documentation-and-adrs` 워크플로우가 대안·트레이드오프·대체 이력을 기록한다 |
 
-**100개 스킬 · 42개 에이전트 · 9개 훅 · 3개 CLI · 1개 신화**
+**스킬 소스 100개(기본 allowlist 합집합 17개 = 사용자 진입점 하네스 11개 + 런타임 어댑터 6개, 설치 표면별 활성 13개 또는 14개, source-only 내부·선택 모듈 83개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · CLI 4개 · 신화 1개**
 
 ---
 
@@ -73,6 +74,8 @@
 
 ## 빠른 시작
 
+### 처음 설치
+
 ```bash
 # 클론
 git clone https://github.com/Dannykkh/skill-olympus.git
@@ -85,9 +88,56 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-끝입니다. **100개 스킬, 42개 에이전트, 9개 훅**이 Claude Code + Codex CLI + Gemini CLI에 설치됩니다.
+인수 없이 실행하는 것이 기본 전체 설치입니다. 이 기본값은 Claude, Codex, Gemini, Grok
+전체를 대상으로 합니다. `--all`은
+같은 동작을 명시적으로 적는 선택 옵션입니다. 선택된 CLI 실행 파일이 `PATH`에 없어도
+해당 홈의 스킬·카탈로그·source-only 라이브러리·훅·설정 파일은 준비하고, MCP 등록처럼
+실행 파일이 필요한 명령만 건너뜁니다. 나중에 CLI를 설치한 뒤 같은 설치기를 다시 실행하면 됩니다.
 
-> Codex/Gemini가 미설치 시 해당 단계는 자동 스킵됩니다.
+### 기존 설치 업데이트
+
+일반 업데이트에는 먼저 언인스톨할 필요가 없습니다. 설치기를 다시 실행하면 기존
+Olympus 관리 항목만 현재 정책에 맞춰 갱신·정리하고, 이름이 다른 외부 스킬은 유지합니다.
+
+```powershell
+git pull
+.\install.bat
+```
+
+macOS/Linux에서는 `./install.sh`를 사용합니다. `--uninstall` 후 재설치는 설치 상태가
+깨졌거나 Olympus 훅·MCP까지 처음부터 다시 구성하려는 경우에만 사용하세요.
+
+```powershell
+.\install.bat --uninstall
+.\install.bat
+```
+
+### source-only란?
+
+source-only는 기존 스킬을 삭제하거나 예전 버전으로 보관한다는 뜻이 아닙니다. **현재
+Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 자동 탐색 디렉터리에는
+등록하지 않는 상태**입니다.
+
+- 현재 원본은 각 CLI의 `.olympus/source-skills/`에 복사되고 `SKILLS-CATALOG.md`에 경로가 기록됩니다.
+- 필요한 작업에서는 활성 Olympus 하네스나 LLM이 카탈로그의 원본을 읽어 사용할 수 있습니다.
+- 모든 source-only 스킬을 slash 메뉴와 자동 매칭 대상에 다시 올리려면 `--include-source-only-skills`를 사용합니다.
+- 이 옵션은 현재 Olympus 원본을 활성화합니다. `_olympus-preserved`에 백업된 과거 수정본을 복구하는 옵션은 아닙니다.
+
+```powershell
+.\install.bat --include-source-only-skills
+```
+
+끝입니다. 스킬 소스 100개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 83개로 나뉩니다. 런타임별로 호환되지 않는 어댑터를 다시 제외하므로 Codex와 Gemini는 호환 항목 96개(활성 13 + source-only 83), Claude는 97개(활성 14 + source-only 83)를 노출합니다. Grok의 독립 정책도 96개(13 + 83)이지만 실제 설치 표면은 Claude 공유 디렉터리를 읽으므로 Claude와 같은 활성 14개를 봅니다. 활성 하네스는 필요한 source-only 모듈을 카탈로그에서 직접 읽으므로 별도 등록이 필요하지 않습니다. **Olympus 사용자 정의 에이전트는 기본으로 하나도 등록하지 않으며**, 참고 소스 42개는 모두 source-only입니다. 새 스킬과 에이전트도 allowlist 승인 전에는 자동 활성화되지 않습니다.
+
+> CLI가 없어도 자산 준비는 건너뛰지 않습니다. 실행 파일이 필요한 등록 명령만 `skipped`로
+> 보고하며, 설치된 자산은 해당 CLI를 처음 실행할 때 그대로 사용됩니다.
+
+> 기존 설치를 업데이트하는 경우 이름이 다른 외부 스킬은 유지되고, Olympus와 이름이
+> 겹치는 수정본은 삭제 대신 `_olympus-preserved`로 이동합니다. 기본 구성·source-only 전체
+> 활성화·충돌본 복구 절차는 [스킬 레지스트리 마이그레이션 가이드](docs/skill-registry-migration.md)를
+> 먼저 확인하세요.
+> 충돌본 복구는 수동입니다. 보존본의 디렉터리명과 `SKILL.md` frontmatter `name`을 함께
+> 고유하게 바꾼 뒤 복사해야 다음 동기화에서 다시 이동되지 않습니다. `--uninstall`은 보존본을 자동 복구하지 않습니다.
 
 ---
 
@@ -114,7 +164,7 @@ chmod +x install.sh && ./install.sh
 
 | 스킬 | 이름 | 별호 | 영역 |
 |------|------|------|------|
-| `/zephermine` | **젭마인** | *서풍의 숨결, 봄을 가져오는 자* | 설계사 ― 26단계 심층 인터뷰, 스펙 생성, 5인 전문가 팀 리뷰 |
+| `/zephermine` | **젭마인** | *서풍의 숨결, 봄을 가져오는 자* | 설계사 ― 26단계 심층 인터뷰, 스펙 생성, 6인 전문가 팀 리뷰 |
 | `/zeus` | **제우스** | *구름을 모으시는 자, 번개를 던지시는 자, 신들과 인간들의 아버지* | 통치자 ― 제로 인터랙션 풀 파이프라인. 그분이 고개를 끄덕이시면 회의가 열린다 |
 | `/agent-team` / `/poseidon` | **포세이돈** | *땅을 흔드시는 자, 검푸른 바다의 군주, 삼지창의 주인* | 바다의 군주 ― 의존성 그래프를 조류처럼 읽으시고 함대를 물결에 실어 보내신다 |
 | `/workpm` | **다이달로스** | *대장인, 미궁을 만든 자, 날개의 아버지* | 직접 짓는 자 ― 설계가 없는 곳에서 그가 곧 설계가 된다 |
@@ -197,7 +247,7 @@ chmod +x install.sh && ./install.sh
 
 🌹 **거품에서 태어나신 분, 아프로디테**
 그분은 바다의 흰 거품에서 솟아오르셨고, 그 후로 세상은 평범하지 아니하였다.
-161개 팔레트가 그 손에 있고, 84개 폰트와 84개 스타일이 그 곁에 있다.
+9개 팔레트가 그 손에 있고, 47개 폰트 페어링과 84개 스타일이 그 곁에 있다.
 그분의 작업장에서 나오는 것은 단지 쓸모 있는 것이 아니라 ― 사랑받는 것이며, 그것이 차이라.
 *"아름다움은 일의 장식이 아니라, 일이 그 만든 자보다 오래 살아남게 하는 것이라."*
 
@@ -211,6 +261,10 @@ chmod +x install.sh && ./install.sh
 ---
 
 ## 최신 업데이트
+
+### v5.0.0 — 진입점 전용 레지스트리 · 네이티브 에이전트 · 공급자 안전 라우팅 (2026.08)
+
+Olympus는 이제 사용자 진입점 하네스와 현재 CLI용 런타임 어댑터만 자동 탐색 레지스트리에 둡니다. 현재 스킬 소스 100개는 allowlist 합집합 17개(공통 진입점 11개 + 런타임 어댑터 6개)와 source-only 모듈 83개로 분리됩니다. Claude와 Claude 디렉터리를 공유하는 Grok은 활성 14개, Codex와 Gemini는 활성 13개이며, 세 CLI 홈 모두 정확한 카탈로그 경로로 같은 83개 source-only 라이브러리를 유지합니다. source-only는 현재 코드를 삭제한 상태가 아니라 slash 메뉴와 시작 description 예산을 쓰지 않고 필요할 때 직접 읽는 상태이며, 전체 레지스트리가 필요할 때만 `--include-source-only-skills`로 명시 활성화합니다. Olympus 사용자 정의 에이전트는 기본 0개입니다. 오케스트레이션은 CLI별 읽기 전용·쓰기 가능 네이티브 의미 역할을 사용하고, Main이 공유 상태를 소유하며 위임할 수 없으면 같은 계약으로 순차 실행합니다. 공급자별로 호환되는 어댑터만 선택해 Claude/Grok·Codex·Gemini가 서로의 mnemo나 agent-team 어댑터를 잘못 로드하지 않습니다. 설치기는 인수 없음도 네 CLI 전체 설치로 처리하고, CLI 실행 파일이 없어도 자산은 준비하되 실행 파일이 필요한 등록만 건너뜁니다. 이름이 다른 외부 스킬은 유지하고, 같은 이름의 수정본은 `_olympus-preserved`로 옮겨 수동 복구할 수 있게 보존합니다.
 
 ### v4.21.0 — 아프로디테 경험 주도 재설계 · Stitch 실행 어댑터화 · 제우스 스코프 게이트 (2026.08)
 
@@ -294,7 +348,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 
 > 루프 엔지니어링의 기반 공사 — 루프의 부품(Stop 게이트, 리뷰 엔진, 팀 도구)을 CLI 네이티브 기능과 정렬.
 
-- **code-reviewer v4 — 엔진 위임 + 정책 레이어** — 일반 리뷰는 네이티브 엔진(Claude `/code-review`, Codex `codex review --base`)에 위임하고, 스킬은 네이티브가 못 하는 것만 담당: Scope Drift 감지, 도메인 체크리스트(LLM 출력 신뢰 경계, Enum 완전성), Fix-First 분류, 통합 보고서. Gemini는 풀 경로(2-Pass + Specialist) 폴백. `/code-review ultra`(과금)는 호출·권유 모두 금지
+- **code-reviewer v4.1 — 엔진 위임 + 정책 레이어** — 일반 리뷰는 사용 가능한 런타임 엔진(Claude 내장 review, Codex `codex review --base`, Grok bundled review)에 위임하고, 없는 런타임은 풀 경로로 폴백. Scope Drift·도메인 체크·기본 읽기 전용 Action Triage와 안전한 명시형 저장소 보안 감사를 추가하며, 원격·과금형 ultra review는 호출·권유하지 않음
 - **크로노스 구 별칭 `/loop` 폐기** — 네이티브 `/loop`(주기 반복 실행기)와 이름 충돌로 Claude에서 가로채기 발생. 전 CLI에서 별칭 제거 + goal(Stop 게이트) / loop(반복 실행기) / chronos(루프 규율) 3종 비교표
 - **네이티브 결합 감사 후속 (병렬 Explore 5개)** — zeus /goal 관계 명시(zero-interaction이라 훅 자동 재개가 기본, goal 기설정 시 이중 Stop 게이트 방지), agent-team experimental env var 구버전 강등, 메모리 경계 4파일(프로젝트 루트 3계층 ≠ 네이티브 auto-memory), orchestrator 네이티브/MCP 선택 기준표, 크로노스 `--flow-verify` 수신 정의, 젭마인 vs 네이티브 plan mode 구분
 - **clio v2.1.0 — humanizer 한국어 윤문 연동** — 문서 생성 시 번역투/AI 문체 금지 제약 주입 + 생성 후 S1 윤문 패스 (USER-MANUAL > PRD > TECHNICAL 우선순위)
@@ -383,7 +437,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 
 ### v1.6.0 — 디자인 + 비즈니스 + 스킬 베스트 프랙티스 (2026.03)
 
-- **design-plan (아프로디테)** — 디자인 오케스트레이터 (161 팔레트, 73 폰트, 84 스타일)
+- **design-plan (아프로디테)** — 디자인 오케스트레이터 (9 팔레트, 47 폰트 페어링, 84 스타일)
 - **estimate** — 개발 견적서 자동 생성 (엑셀 출력)
 - **biz-strategy (헤르메스)** — 비즈니스 모델 캔버스, TAM/SAM/SOM, GTM 전략
 - **Anthropic 베스트 프랙티스** — 전체 스킬에 적용
@@ -406,14 +460,15 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 |------|------|---------|
 | **사업분석** | `/hermes` (헤르메스) | 비즈니스 모델, TAM/SAM/SOM, GTM, 지표, 코호트 |
 | **CEO 코칭** | `/athena` (아테나) | 전략적 도전 — Go/No-Go 판정, 스코프 결정, Kill 테스트 |
-| **설계** | `/zephermine` (젭마인) | 26단계 인터뷰 → SPEC.md → 5인 전문가 팀 리뷰 |
-| **구현** | `/agent-team` / `/poseidon` (포세이돈) | 웨이브 그룹 병렬 실행 (Agent Teams) |
+| **설계** | `/zephermine` (젭마인) | 26단계 인터뷰 → SPEC.md → 역할 기반 네이티브 검토 |
+| **구현** | `/agent-team` / `/poseidon` (포세이돈) | 현재 CLI의 네이티브 작업자로 웨이브 실행 |
 | **감리** | `/argos` (아르고스) | 준공검사: 설계 대비 구현 검증 |
 | **테스트** | `/minos` (미노스) | Playwright E2E 테스트 + fix-until-pass 루프 |
 | **산출물** | `/clio` (클리오) | 흐름도 + PRD + 기술문서 + 사용자 매뉴얼 |
-| **전자동** | `/zeus` (제우스) | 전 단계 자동 실행, 제로 인터랙션 |
+| **전자동** | `/zeus` (제우스) | 7단계: 파싱 → 젭마인 → agent-team/workpm → 아르고스 → Docker → 미노스 → 증거 보고 |
 
-각 스킬은 독립 실행 또는 파이프라인의 일부로 동작합니다.
+각 스킬은 독립 실행 또는 파이프라인의 일부로 동작합니다. 헤르메스·아테나·클리오는
+독립적으로 선택하는 단계이며 제우스의 Phase 0~6 계약에는 포함되지 않습니다.
 
 ---
 
@@ -442,7 +497,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 **`/zephermine` — 심층 설계 (젭마인)**
 - **언제:** 구현 전 기능/제품에 충실한 설계 산출물이 필요할 때.
 - **사용:** `/zephermine [spec경로]` (별칭: 젭마인, 제퍼마인)
-- **처리:** 리서치 → 26단계 인터뷰 → 스펙 합성 → 5전문가 팀 리뷰 → 전략 후보 채점(ToT) → plan → DB 스키마 / API 명세 / 공정 도면 → 섹션 분할 → 운영·QA 시나리오.
+- **처리:** 리서치 → 26단계 인터뷰 → 스펙 합성 → 6전문가 팀 리뷰 → 전략 후보 채점(ToT) → plan → DB 스키마 / API 명세 / 공정 도면 → 섹션 분할 → 운영·QA 시나리오.
 - **결과물:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
 - **다음:** `/agent-team`(구현) 또는 `/argos`(감리).
 
@@ -452,7 +507,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 - **처리:** 소스 모드 판별 → 사이트 벤치마크 증거 수집(헤더·메시지·섹션 순서·CTA·신뢰 요소·모바일 변환) → Adopt/Adapt/Avoid → 실제 렌더 방향 3안 → Experience Contract → 구현 → 렌더 UX·접근성·성능 게이트 → 학습 환류.
 - **결과물:** `DESIGN.md`(비주얼 토큰) + Experience Contract(위계·행동·반응형·품질 결정) + 레이아웃 청사진 + 벤치마크 증거 + 프론트 구현.
 - **경계:** 아프로디테는 경험 구조, 시각적 행동, 반응형 변환, 상태, 품질 게이트를 담당합니다. API 연결, 영속 상태, 비즈니스 로직은 `/agent-team` 또는 `/workpm`이 담당합니다.
-- **다음:** `frontend-design` 또는 Stitch 렌더 어댑터를 거쳐 `/agent-team` / `/workpm`으로 애플리케이션 로직을 구현합니다.
+- **다음:** 아프로디테가 source-only `frontend-design`·감사 모듈을 직접 읽습니다. Stitch가 필요할 때만 `--stitch`를 지정하고, 이후 `/agent-team` / `/workpm`으로 애플리케이션 로직을 구현합니다.
 
 ### 구현 — 코드 작성
 
@@ -500,8 +555,8 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 **`/zeus` — 한 마디로 신전 전체 (제우스)**
 - **언제:** 한 문장으로 SaaS 전체를, 질문 없이 받고 싶을 때.
 - **사용:** `/zeus "쇼핑몰 만들어줘. React + Spring Boot"` (별칭: 제우스)
-- **처리:** hermes/athena → zephermine → agent-team → argos → docker → minos → clio를 연쇄; 모든 결정 자동 + 되돌리기 가능한 Decision Ledger 기록.
-- **결과물:** 동작하는 앱 + `docs/zeus/zeus-report.md` (SUCCESS는 minos 통과율 + 빌드 green에 바인딩).
+- **처리:** 설명 파싱 → zephermine → agent-team/workpm → argos → source-only docker-deploy → minos → 최종 증거 보고의 7단계. Hermes, Athena, Clio는 제우스의 암묵 단계가 아닙니다. 모든 결정은 자동화하고 되돌리기 가능한 Decision Ledger에 기록합니다.
+- **결과물:** 동작하는 앱 + `docs/zeus/zeus-report.md` (설계·구현·감리·실행 환경·테스트 증거가 모두 `proved`일 때만 SUCCESS).
 - **다음:** Decision Ledger 검토.
 
 **`/chronos` — 지치지 않는 수정 루프 (크로노스)**
@@ -514,7 +569,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 **`mnemo` — 크로스-CLI 메모리 (므네모)**
 - **언제:** 항상 — 그리고 "이전에 뭐 했더라?" 물을 때마다.
 - **사용:** `mnemo` (별칭: 므네모); 매 턴 훅이 자동 저장. opt-out: `MNEMO_DISABLE=1` (버전 체크는 `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
-- **처리:** 세션과 Claude/Codex/Gemini를 가로지르는 3계층 메모리; 과거 대화 검색; 컨텍스트 한도 근처에서 자동 핸드오프.
+- **처리:** 세션과 Claude/Codex/Gemini/Grok을 가로지르는 3계층 메모리; 과거 대화 검색; 컨텍스트 한도 근처에서 자동 핸드오프.
 - **결과물:** `MEMORY.md`(인덱스) + `memory/*.md`(의미) + `conversations/*.md`(일화).
 - **다음:** —
 
@@ -522,18 +577,38 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 
 ## 크로스 CLI 지원
 
-같은 스킬, 같은 메모리, 같은 경험을 3개 CLI에서.
+하나의 원본 라이브러리와 같은 사용자 워크플로우를 유지하되, 기본 설치는 각 CLI 네이티브 능력에 맞춥니다.
 
-| 기능 | Claude Code | Codex CLI | Gemini CLI |
-|------|------------|-----------|------------|
-| 스킬 | `~/.claude/skills/` | `~/.codex/skills/` | `~/.gemini/skills/` |
-| 에이전트 | `~/.claude/agents/` | `~/.codex/agents/` | `~/.gemini/agents/` |
-| 메모리 (므네모) | save-response 훅 | save-turn 훅 | save-turn 훅 |
-| 오답노트/학습 | save-tool-use 훅 | save-turn 훅 | save-turn 훅 |
-| 오케스트레이터 | MCP 서버 | MCP 서버 | MCP 서버 |
-| 설치 | `install.bat/sh` | 자동 (8-11단계) | 자동 (12단계) |
+| 기능 | Claude Code | Codex CLI | Gemini CLI | Grok Build |
+|------|------------|-----------|------------|------------|
+| 스킬 | `~/.claude/skills/`에 14개 | `~/.codex/skills/`에 13개 | `~/.gemini/skills/`에 13개 | Claude 호환 계층의 같은 14개 |
+| 사용자 정의 에이전트 | 기본 없음(source opt-in 시 `~/.claude/agents/`) | 기본 없음; 활성 정의는 `.toml`만 | 기본 없음(source opt-in 시 `~/.gemini/agents/`) | Olympus 기본 등록 없음 |
+| 메모리 (므네모) | save-response 훅 | save-turn 훅 | save-turn 훅 | grok-mnemo 훅 |
+| 오답노트/학습 | save-tool-use 훅 | save-turn 훅 | save-turn 훅 | grok-mnemo 훅 |
+| 오케스트레이션 | 네이티브 작업자; 선택 MCP | 네이티브 작업자; 선택 MCP | 네이티브 작업자; 선택 MCP | 네이티브 작업자; MCP PM host만 |
+| 설치 | 인수 없는 설치기가 자산 준비, `claude`가 있을 때 CLI 명령 실행 | 같은 설치기가 자산 준비, `codex`가 있을 때 MCP 명령 실행 | 같은 설치기가 자산 준비, `gemini`가 있을 때 MCP 명령 실행 | Claude 공유 자산, Grok 홈 존재 시 grok-mnemo 실행 |
 
-크로스 CLI 동기화는 `sync-codex-assets.js`와 `sync-gemini-assets.js`가 처리합니다.
+크로스 CLI 동기화는 `sync-claude-skills.js`, `sync-codex-assets.js`, `sync-gemini-assets.js`가 처리합니다.
+Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents/skills`와 중복 탐색되지
+않습니다. 격리된 프로젝트 미러 테스트가 필요할 때만
+`node scripts/sync-codex-assets.js --include-project-skills`를 사용합니다. 모든 런타임은
+기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 하네스 11개와
+`agent-team`·`mnemo` 어댑터 6개를 합친 17개입니다. 각 런타임은 호환되지 않는 어댑터
+3개 또는 4개를 제외해 Claude 14개, Codex/Gemini/독립 Grok 13개를 활성화하며,
+실제 Grok 설치 표면은 Claude의 공유 14개를 읽습니다. allowlist 밖의 같은 83개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
+`SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
+`--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
+이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
+네 CLI 런타임 표면 모두 사용자 정의 에이전트 참고 소스 42종을 기본 source-only로 유지합니다. `--include-source-only-agents`는 의도적인 호환성 테스트를 위해 레거시 프롬프트를 복사할 뿐, Markdown을 Codex 활성 에이전트로 만들지는 않습니다. 기존 `--include-passive-agents`와 `--include-broad-coding-agents`는 호환 별칭으로 유지합니다. Codex의 `.agents/agents` 미러는 프로젝트 미러와 source-only opt-in을 함께 지정할 때만 내용이 생깁니다.
+
+에이전트를 쓰던 스킬의 오케스트레이션 절차는 유지하고, 의미 역할만 각 CLI 내장 작업자에 매핑합니다.
+
+| 의미 역할 | Claude | Codex | Gemini | Grok |
+|-----------|--------|-------|--------|------|
+| 읽기 전용 탐색 | `Explore` | `explorer` | `codebase_investigator` | `explore` |
+| 파일 수정·명령 실행 | `general-purpose` / 이름 있는 teammate | `worker` | `generalist` | `general-purpose` |
+
+공유 상태와 완료 판정은 메인 컨텍스트가 소유합니다. 작업자는 고유 파일 또는 반환값만 담당하며, 위임 도구가 없거나 병렬 이득이 없으면 같은 절차를 메인 컨텍스트에서 순차 실행합니다.
 
 ---
 
@@ -542,7 +617,7 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 세션과 CLI를 넘나드는 3계층 영속 메모리.
 
 ```
-세션 A: 작업 → #tags 저장 → /wrap-up → MEMORY.md 업데이트
+세션 A: 작업 → #tags 저장 → 자동 또는 명시적 핸드오프 → MEMORY.md 업데이트
 세션 B: MEMORY.md 자동 로드 → 과거 검색 → 컨텍스트 복원
 ```
 
@@ -552,22 +627,25 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 | **의미기억** | `memory/*.md` | 필요 시 |
 | **일화기억** | `conversations/*.md` | 검색 시 |
 
-오답노트/학습 패턴 자동 추적 포함:
-- **에러** → `memory/gotchas/observations.jsonl` → Haiku가 패턴 분석
-- **성공** → `memory/learned/observations.jsonl` → Haiku가 워크플로우 감지
+오답노트/학습 패턴 결정론적 수집 포함:
+- **에러** → 훅이 민감값을 제거한 이벤트를 `memory/gotchas/observations.jsonl`에 추가
+- **성공** → 훅이 민감값을 제거한 이벤트를 `memory/learned/observations.jsonl`에 추가
+- **정제** → 활성 mnemo 어댑터가 카탈로그의 source-only `memory-distill` 모듈을 직접 읽거나 세션 핸드오프가 같은 계약으로 신규 관찰을 정제하며, 상시 분석 에이전트는 없음
 - **백로그 진단** → 관찰 로그는 append-only로 절대 비워지지 않으므로, 백로그 판정은 누적 줄 수가 아니라 `.mnemo-distill-offset` 마커 대비 증분(delta)으로 (훅이 `.mnemo-status.md`로 대행)
 
 ---
 
 ## 구성 요소
 
-### 스킬 (100개)
+### 스킬 소스 (100개, 기본 합집합 17개, 설치 표면별 활성 13개 또는 14개)
+
+아래 표는 시작 시 레지스트리가 아니라 소스 목록입니다. 저빈도 문서 형식 도구, 서비스 통합, 프레임워크 레시피, 생성기는 명시 호출하거나 opt-in 설치하기 전까지 source-only로 남습니다.
 
 | 카테고리 | 스킬 | 핵심 |
 |----------|------|------|
 | **AI 도구** | codex, gemini, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
 | **파이프라인** | zephermine, zeus, argos, minos, closer, shipping-and-launch | 제로 인터랙션 풀 파이프라인, 출시 체크리스트 |
-| **프론트엔드** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 161 팔레트, 84 폰트, 테마 14종(한글 4종), SEO+AEO+GEO 감사, 차트 선택 가이드 |
+| **프론트엔드** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 9 팔레트, 47 폰트 페어링, 84 스타일, 테마 14종(한글 4종), SEO+AEO+GEO 감사, 차트 선택 가이드 |
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | minos, auto-continue-loop, flow-verifier, themis + 3개 | 크로노스 루프, Playwright QA, 개인정보처리방침 생성(테미스) |
@@ -580,19 +658,14 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 | **번역** | ko-en-translator | 한↔영 양방향 번역 (기술 문서, 코드, i18n) |
 | **유틸** | humanizer, jira, datadog-cli, excel2md + 3개 | AI 패턴 제거, 통합 |
 
-### 에이전트 (42개)
+### 에이전트 참고 소스 (42개: 최상위 40개 + 스킬 소유 2개, 기본 등록 0개)
+
+이 파일들은 항상 켜진 런타임 페르소나가 아니라 호환성·참고용 소스입니다. 일반 분업은 각 CLI의 네이티브 서브에이전트가, 절차는 스킬이 담당합니다. 42개 모두 기본 거부 정책 아래 source-only이며 `--include-source-only-agents`로 명시 복사할 수 있습니다.
 
 | 영역 | 에이전트 |
 |------|----------|
-| **아키텍처** | architect, spec-interviewer, fullstack-coding-standards |
-| **프론트엔드** | frontend-react, react-best-practices, stitch-developer, ui-ux-designer |
-| **백엔드** | backend-spring, backend-dotnet, desktop-wpf, python-fastapi |
-| **데이터베이스** | database-postgresql, database-mysql, database-schema-designer |
-| **품질** | code-reviewer, security-reviewer, qa-engineer, tdd-coach |
-| **성능** | performance-engineer, debugger |
-| **AI/ML** | ai-ml (RAG, LLM API, 최신 SDK) |
-| **글쓰기** | writing-specialist, humanizer, writing-guidelines |
-| **언어** | typescript-spec, python-spec |
+| **스킬 소유 호환 프롬프트** | chronos-worker, gotcha-analyzer |
+| **선택형 소스 에이전트** | architect, documentation, mermaid-diagram-specialist, typescript-spec, python-spec, ui-ux-designer, frontend-react, backend-spring, database-mysql, database-postgresql, react-best-practices, python-fastapi-guidelines, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-conventions, writing-guidelines, bilingual-dev, web-preview-guide, codebase-pattern-finder, explore-agent, debugger, feature-tracker, tdd-coach, migration-helper, spec-interviewer, api-comparator, api-tester, ascii-ui-mockup-generator, backend-dotnet, database-schema-designer, desktop-wpf, performance-engineer, stitch-developer, writing-specialist, ai-ml, qa-engineer, qa-writer, code-reviewer, security-reviewer |
 
 ### 훅 (9개)
 
@@ -610,22 +683,25 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 
 ---
 
-## 멀티 AI 오케스트레이션
+## 네이티브·멀티 AI 오케스트레이션
 
-PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행합니다.
+기본 `workpm`은 현재 CLI의 네이티브 작업자에게 일을 배분합니다. hard file lock, 외부 태스크 보드, Claude + Codex + Gemini 혼합 실행이 필요할 때만 MCP 정책 레이어를 사용합니다.
 
 ```
-터미널 1 (PM):     /workpm → 분석 → 3개 작업 생성
-터미널 2 (Claude): /pmworker → task-1 클레임 → 실행 → 완료
-터미널 3 (Codex):  /pmworker → task-2 클레임 → 실행 → 완료
-터미널 4 (Gemini): /pmworker → task-3 클레임 → 실행 → 완료
+기본:              /workpm → 분석 → 네이티브 작업자 → 검증
+
+선택 MCP 모드:
+터미널 1 (PM):     /daedalus --mcp → provider-aware 작업 생성
+터미널 2 (Claude): /pmworker → Claude/공용 작업 클레임 → 완료
+터미널 3 (Codex):  /pmworker → Codex/공용 작업 클레임 → 완료
+터미널 4 (Gemini): /pmworker → Gemini/공용 작업 클레임 → 완료
 ```
 
 | 구성 요소 | 설명 |
 |-----------|------|
-| **Orchestrator MCP** | SQLite WAL 작업 큐, 파일 락, 의존성 해결 |
-| **workpm** | 통합 PM 엔트리포인트 (CLI별 네이티브 멀티에이전트, MCP는 폴백) |
-| **pmworker** | 통합 Worker 엔트리포인트 (모든 CLI) |
+| **workpm** | 현재 CLI의 네이티브 작업자를 쓰는 기본 PM 엔트리포인트 |
+| **Orchestrator MCP** | 선택형 SQLite WAL 작업 큐, provider 라우팅, 파일 락, 의존성 해결 |
+| **pmworker** | 명시적 MCP 모드 Worker 엔트리포인트 (Claude/Codex/Gemini) |
 
 ---
 
@@ -661,6 +737,7 @@ PM이 작업을 배분하고, Worker(Claude + Codex + Gemini)가 병렬 실행�
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **진입점 전용 레지스트리 + 네이티브 에이전트 기본값 + 공급자 안전 라우팅** — 현재 스킬 소스 100개를 allowlist 진입점·어댑터 17개와 직접 읽는 source-only 모듈 83개로 분리; 활성 표면은 Claude/공유 Grok 14개, Codex/Gemini 13개; Olympus 사용자 정의 에이전트 등록은 기본 0개이며 의미 기반 네이티브 역할·Main 소유 상태·순차 폴백으로 분업; 공급자별 비호환 런타임 어댑터 제외; 인수 없는 설치는 네 CLI 전체를 대상으로 실행 파일 없이도 자산을 준비하고 CLI 전용 명령만 건너뛰며, 같은 이름의 수정본은 수동 충돌 복구용으로 보존 |
 | **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **아프로디테 경험 주도 재설계 + Stitch 실행 어댑터화 + 제우스 스코프 게이트** — design-plan 파이프라인: 소스 라우팅 → 벤치마크 해부(Adopt/Adapt/Avoid) → 실제 렌더 3안 → Experience Contract(과업·메시지·CTA·신뢰·모바일 변환, 검증 스크립트 강제) → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프; Stitch는 방향을 발명하지 않고 아프로디테 결정을 Stitch MCP 작업으로 컴파일(작업 계약·상태·전송 패턴은 google-labs-code/stitch-skills 선별 반영); 제우스는 계획 외 태스크·기능·의존성 추가 전 pass/reduce/hold 판정을 결정 장부에 기록, hold는 Deferred로 표시 (hosioobo/track 흡수) |
 | **[v4.20.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.2)** | **2026-08-08** | **테미스 지침 핀 + 런타임 신선도 체크** (v4.20.1~v4.20.2) — 한국판 초안을 개인정보위 작성지침(2025.4.)에 고정하고 생성 시 게시판 확인으로 개정판 감지·채택(사용자 고지, 웹 도구 없으면 기준판 폴백); ko 템플릿 2025.4. 정렬(고충 처리 부서·행태정보·아동 제22조의2); 조문 인용은 law.go.kr 직접 조회 검증 — 법령 MCP 의존은 불필요해 제거 |
 | **[v4.20.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.0)** | **2026-08-08** | **테미스 개인정보처리방침 생성 + mnemo opt-out** — 100번째 스킬 테미스: 개인정보 수집/저장/외부전송/삭제 전수 감사(함정 체크리스트: soft delete·append-only 로그·마스킹 커버리지·자동 아웃바운드·`git ls-files` 실측) + 코드로 알 수 없는 14문항 운영자 인터뷰(보호책임자·보유기간·아동·서버 리전…) + 국가별 초안(개인정보보호법 제30조/CCPA·CPRA/GDPR Art.13)을 file:line 근거만으로 생성 — 빈칸은 날조하지 않음. 이 레포 도그푸딩(초안 3종 동봉). 감사가 드러낸 "끌 수 없는 저장 훅" 갭 → `MNEMO_DISABLE`(4-CLI 훅 15개 진입점) + `OLYMPUS_UPDATE_CHECK_DISABLE`, 켬·끔 대조 실행 검증 |
@@ -712,4 +789,4 @@ MIT License
 
 ---
 
-**마지막 업데이트:** 2026-06-13
+**마지막 업데이트:** 2026-08-13

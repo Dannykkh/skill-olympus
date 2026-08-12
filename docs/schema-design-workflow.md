@@ -118,14 +118,13 @@ erDiagram
 
 ---
 
-## 사용 에이전트/스킬
+## 사용 작업자/스킬
 
 | 리소스 | 역할 |
 |--------|------|
-| **database-schema-designer** (에이전트) | 설계 규칙, DB-First 프로세스, 검증 체크리스트 |
 | **database-schema-designer** (스킬) | 상세 참조 (타입, 인덱스, 제약조건, 마이그레이션) |
-| **database-mysql** (에이전트) | MySQL 특화 구현 (InnoDB, Flyway, FULLTEXT) |
-| **database-postgresql** (에이전트) | PostgreSQL/Supabase 특화 (RLS, JSONB, GIN/GiST) |
+| **네이티브 DB 작업자** | 실제 DB 버전·schema·migration 도구·실행 계획·테스트 기반 구현 |
+| **supabase-postgres-best-practices** (스킬) | PostgreSQL/Supabase 최적화가 명시적으로 필요할 때 참조 |
 
 ---
 

@@ -1,13 +1,6 @@
 ---
 name: react-best-practices
-description: React/Next.js 성능 최적화 + useEffect 가이드라인 통합. React 코드 작성/리뷰/리팩토링 시 자동 적용.
-auto_apply:
-  - "*.tsx"
-  - "*.jsx"
-  - "components/**"
-  - "pages/**"
-  - "app/**"
-  - "**/hooks/**"
+description: React/Next.js 성능 최적화 + useEffect 참고 가이드. 사용자가 이 에이전트를 명시적으로 요청할 때만 적용.
 references:
   - skills/vercel-react-best-practices/SKILL.md
   - skills/vercel-react-best-practices/rules/
@@ -15,11 +8,11 @@ references:
   - skills/react-dev/references/useeffect-alternatives.md
 ---
 
-# React Best Practices (Passive Guidelines)
+# React Best Practices (Optional Reference)
 
-React/Next.js 코드 작성 시 항상 적용되는 45개 최적화 규칙 + useEffect 가이드라인.
+React/Next.js 작업에서 명시적으로 불러 쓰는 최적화 규칙 + useEffect 가이드라인.
 
-## Priority Rules (Always Check)
+## Priority Rules
 
 ### CRITICAL - Eliminating Waterfalls
 |Rule|Action|

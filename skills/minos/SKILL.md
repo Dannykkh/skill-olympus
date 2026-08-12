@@ -1,16 +1,6 @@
 ---
 name: minos
-description: QA 시나리오 기반 Playwright 테스트 자동 생성 + fix-until-pass 루프 (미노스). qa-writer → 코드 생성 → 실행 → 수정 반복. /minos로 실행.
-triggers:
-  - "minos"
-  - "미노스"
-  - "qpassenger"
-  - "큐패신저"
-  - "qa-until-pass"
-  - "QA 통과할 때까지"
-  - "테스트 통과까지"
-  - "playwright test until pass"
-auto_apply: false
+description: QA 시나리오 수집·현장 생성 → Playwright 코드 생성 → 실행·수정 반복을 수행한다. /minos, 미노스, /qpassenger, 큐패신저, QA 통과할 때까지, 테스트 통과까지, playwright test until pass 요청에 사용한다.
 ---
 
 # Minos (미노스)
@@ -57,8 +47,8 @@ QA 시나리오를 수집합니다. 우선순위 순으로 탐색:
 
 1. `$ARGUMENTS`로 전달된 QA 문서 경로
 2. `qa-scenarios.md` (zephermine 산출물)
-3. `docs/qa/*.md` (qa-writer 산출물)
-4. 위 모두 없으면 → qa-writer 패턴으로 현장 생성
+3. `docs/qa/*.md` (기존 QA 문서)
+4. 위 모두 없으면 → Minos Step 1 계약으로 현장 생성
 
 ### 시나리오 파싱 규칙
 
@@ -317,7 +307,7 @@ IF retry >= max_retries:
 요약·수정 이력·미통과 항목·브라우저 탐색 발견 이슈 4섹션으로 구성합니다.
 보고서 마크다운 템플릿 및 QA 문서 업데이트 형식: See [result-report.md](references/result-report.md)
 
-### 판정 기준 (qa-engineer 기준 적용)
+### 판정 기준 (Minos 실행 증거 기준)
 
 | Grade | 조건 | 판정 |
 |-------|------|------|
@@ -354,13 +344,14 @@ IF retry >= max_retries:
 
 ---
 
-## 연관 에이전트/스킬
+## 연관 실행 경로
 
-| 리소스 | 역할 | 연결 |
-|--------|------|------|
-| qa-writer (에이전트) | 테스트 시나리오 작성 | Step 1 입력 |
-| qa-engineer (에이전트) | 품질 판정 기준 | Step 7 판정 |
+| 경로 | 역할 | 연결 |
+|------|------|------|
+| Minos Step 1 (내장) | 프로젝트 근거 기반 시나리오 현장 생성 | Step 1 입력 |
+| 네이티브 테스트 작업자 | 실제 테스트 설정·인접 테스트·빌드 명령 기반 코드 작성 | Step 2 구현 |
 | zephermine (스킬) | qa-scenarios.md + operation-scenarios.md 생성 | Step 1 입력 |
+| argos (스킬) | 설계 산출물 대비 준공 검증 | 별도 감리 |
 
 ---
 
@@ -390,11 +381,11 @@ QA가 완료되면 사용자에게 다음 단계를 안내합니다:
 ✅ Minos 완료! (결과: {PASS/CONDITIONAL/FAIL})
 
 👉 다음 단계 (선택):
-  /docker-deploy       → Docker 배포 환경 생성
-  /review              → 코드 리뷰 (아직 안 했다면)
-  /write-api-docs      → API 문서 생성
-  /commit              → 변경사항 커밋
-  /wrap-up             → 세션 요약 + MEMORY.md 업데이트
+  Docker 배포 환경 생성 → 카탈로그의 source-only docker-deploy 모듈을 직접 읽어 실행
+  코드 리뷰             → 현재 CLI의 네이티브 리뷰 사용
+  API 문서 생성          → 프로젝트 계약과 코드 근거로 작성
+  변경사항 커밋          → 현재 CLI의 네이티브 Git 흐름 사용
+  세션 핸드오프          → mnemo 핸드오프 계약 사용
 
 📎 참고: docs/workflow-guide.md
 ```

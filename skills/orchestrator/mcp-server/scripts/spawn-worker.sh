@@ -1,5 +1,7 @@
 #!/bin/bash
 # spawn-worker.sh
+set -euo pipefail
+
 # Orchestrator Worker를 새 터미널에서 실행하는 스크립트
 # 멀티AI 지원: Claude, Codex, Gemini
 #
@@ -10,8 +12,13 @@
 WORKER_ID="${1:-worker-$(date +%s)}"
 PROJECT_ROOT="${2:-$(pwd)}"
 AUTO_TERMINATE="${3:-1}"
-AI_PROVIDER="${4:-claude}"
+AI_PROVIDER="${4:-}"
 LOG_FILE="${5:-}"
+
+if [ -z "$AI_PROVIDER" ]; then
+    echo "ERROR: AI provider is required (claude|codex|gemini)" >&2
+    exit 2
+fi
 
 # 로그 함수 — 콘솔 + 파일 동시 출력
 write_log() {
@@ -26,6 +33,7 @@ write_log() {
 # 환경 변수 설정
 export ORCHESTRATOR_WORKER_ID="$WORKER_ID"
 export ORCHESTRATOR_PROJECT_ROOT="$PROJECT_ROOT"
+export ORCHESTRATOR_AI_PROVIDER="$AI_PROVIDER"
 
 write_log ""
 write_log "========================================"
@@ -76,7 +84,7 @@ case "$AI_PROVIDER" in
         fi
         write_log "CLI_STARTED: Claude Code at $(command -v claude)"
         # -p 플래그로 프롬프트 직접 전달 (stdin 파이프 문제 회피)
-        claude -p "$SYSTEM_PROMPT" --dangerously-skip-permissions
+        claude -p "$SYSTEM_PROMPT" --permission-mode auto
         ;;
     codex)
         if ! command -v codex &> /dev/null; then
@@ -84,7 +92,7 @@ case "$AI_PROVIDER" in
             exit 1
         fi
         write_log "CLI_STARTED: Codex CLI at $(command -v codex)"
-        printf "%s" "$SYSTEM_PROMPT" | codex -a never exec --sandbox workspace-write --skip-git-repo-check
+        printf "%s" "$SYSTEM_PROMPT" | codex --approve-for-me --sandbox workspace-write exec --skip-git-repo-check
         ;;
     gemini)
         if ! command -v gemini &> /dev/null; then
@@ -93,7 +101,7 @@ case "$AI_PROVIDER" in
         fi
         write_log "CLI_STARTED: Gemini CLI at $(command -v gemini)"
         GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
-        timeout "$GEMINI_TIMEOUT_SECONDS" gemini --skip-trust --approval-mode yolo --output-format text -p "$SYSTEM_PROMPT"
+        timeout "$GEMINI_TIMEOUT_SECONDS" gemini --sandbox --approval-mode yolo --output-format text -p "$SYSTEM_PROMPT"
         ;;
     *)
         write_log "ERROR: Unknown AI provider: $AI_PROVIDER (claude|codex|gemini)"

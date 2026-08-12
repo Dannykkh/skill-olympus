@@ -60,33 +60,45 @@ def save_json(path: Path, data: dict) -> None:
 
 
 def bump_plugin_version(bump_type: str) -> None:
-    """Bump the version in marketplace.json."""
+    """Bump every public Olympus version source together."""
     root = get_root()
 
-    # Path
     marketplace_path = root / ".claude-plugin" / "marketplace.json"
+    plugin_path = root / ".claude-plugin" / "plugin.json"
+    version_path = root / "VERSION"
 
-    if not marketplace_path.exists():
-        print(f"✗ marketplace.json not found at {marketplace_path}")
+    required_paths = [marketplace_path, plugin_path, version_path]
+    missing_paths = [path for path in required_paths if not path.exists()]
+    if missing_paths:
+        print("Missing version source(s):")
+        for path in missing_paths:
+            print(f"  - {path}")
         sys.exit(1)
 
-    # Load file
     marketplace = load_json(marketplace_path)
+    plugin = load_json(plugin_path)
 
-    # Get current version from metadata
-    current_version = marketplace.get("metadata", {}).get("version", "1.0.0")
+    current_version = version_path.read_text(encoding="utf-8").strip()
     new_version = bump_version(current_version, bump_type)
 
-    print(f"Bumping agent-skills: {current_version} → {new_version}")
+    print(f"Bumping skill-olympus: {current_version} -> {new_version}")
 
-    # Update marketplace.json metadata version
     if "metadata" not in marketplace:
         marketplace["metadata"] = {}
     marketplace["metadata"]["version"] = new_version
-    save_json(marketplace_path, marketplace)
-    print(f"✓ Updated {marketplace_path}")
+    for entry in marketplace.get("plugins", []):
+        if entry.get("name") == "skill-olympus":
+            entry["version"] = new_version
+    plugin["version"] = new_version
 
-    print(f"\n🎉 Version bumped successfully!")
+    save_json(marketplace_path, marketplace)
+    save_json(plugin_path, plugin)
+    version_path.write_text(f"{new_version}\n", encoding="utf-8")
+    print(f"[ok] Updated {marketplace_path}")
+    print(f"[ok] Updated {plugin_path}")
+    print(f"[ok] Updated {version_path}")
+
+    print("\nVersion bumped successfully.")
     print(f"\nNext steps:")
     print(f"  1. Review changes: git diff")
     print(f"  2. Commit: git commit -am 'chore: bump version to {new_version}'")
@@ -96,14 +108,12 @@ def bump_plugin_version(bump_type: str) -> None:
 def show_version() -> None:
     """Show current version."""
     root = get_root()
-    marketplace_path = root / ".claude-plugin" / "marketplace.json"
+    version_path = root / "VERSION"
 
-    if marketplace_path.exists():
-        marketplace = load_json(marketplace_path)
-        version = marketplace.get("metadata", {}).get("version", "unknown")
-        print(f"Current version: {version}")
+    if version_path.exists():
+        print(f"Current version: {version_path.read_text(encoding='utf-8').strip()}")
     else:
-        print("✗ marketplace.json not found")
+        print("VERSION not found")
         sys.exit(1)
 
 

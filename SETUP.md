@@ -4,28 +4,25 @@
 
 ---
 
-## ⚡ Smart Setup (자동 추천 설치)
+## 기본 설치와 CLI 선택
 
-프로젝트 기술 스택을 자동 감지하여 최적의 스킬/에이전트/MCP를 추천하고 설치합니다.
+설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 Claude, Codex, Gemini, Grok용 자산을 함께 준비합니다. 선택한 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비하며, MCP 등록처럼 해당 실행 파일이 필요한 명령만 `skipped`로 보고합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 등록 단계를 완료합니다.
 
 ```bash
-# 프로젝트에서 실행
-/smart-setup
+# 모든 CLI
+.\install.bat
+./install.sh
 
-# 추천 목록만 미리 확인 (설치하지 않음)
-/smart-setup --dry-run
+# 위 기본값을 명시적으로 적는 같은 동작
+.\install.bat --all
+./install.sh --all
+
+# 특정 CLI만
+.\install.bat --llm claude,codex
+./install.sh --llm claude,codex
 ```
 
-**동작 방식:**
-1. 프로젝트 파일 스캔 (package.json, *.csproj, requirements.txt 등)
-2. 기술 태그 감지 (react, typescript, dotnet, python 등)
-3. 내부 스킬/에이전트 + 외부 스킬 + MCP 서버 매칭
-4. 필수/추천/선택 3단계로 추천
-5. 사용자 확인 후 자동 설치
-
-**레지스트리:** `docs/smart-setup-registry.json`에서 매핑 데이터 관리
-
-> 수동으로 프로젝트 유형별 설치하려면 아래 섹션을 참고하세요.
+`docs/smart-setup-registry.json`은 리소스 매핑 참고자료이며, `/smart-setup`이라는 활성 명령을 제공하지 않습니다. 프로젝트 유형별 외부 리소스는 아래 섹션에서 직접 선택합니다.
 
 ---
 
@@ -225,9 +222,12 @@ npx add-skill vercel-labs/agent-skills -y -g
 
 ---
 
-## 2. oh-my-claudecode (강력 추천)
+## 2. oh-my-claudecode (선택)
 
 [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) - 32개 에이전트, 40+ 스킬 다중 에이전트 오케스트레이션
+
+> 이 플러그인의 에이전트는 Olympus의 기본 등록 0개 정책과 별개인 외부 opt-in 자산입니다.
+> 각 CLI의 네이티브 작업자만으로 충분하면 설치하지 않는 편이 컨텍스트와 라우팅 경쟁을 줄입니다.
 
 ### 설치 방법
 
@@ -455,63 +455,72 @@ claude mcp add github -- npx -y @modelcontextprotocol/server-github
 
 ---
 
-## 7. 커스텀 스킬/에이전트 설치
+## 7. 커스텀 스킬·명령어·훅 설치
 
 이 저장소의 커스터마이징을 설치합니다.
+
+기존 설치를 업데이트할 때 이름이 다른 외부·개인 스킬은 유지됩니다. Olympus와 이름이
+겹치는 수정본은 각 CLI 홈의 `_olympus-preserved/<timestamp>/`로 이동하며, 폐기된 구
+Olympus 항목은 `_pruned-stale-olympus/<timestamp>/`로 이동합니다. 자동 원상복구 명령은
+없으므로 업데이트·source-only 전체 활성화·수동 복구 전에
+[스킬 레지스트리 마이그레이션 가이드](docs/skill-registry-migration.md)를 확인하세요.
+
+일반 업데이트는 먼저 제거하지 않습니다. `git pull` 후 옵션 없이 설치기를 다시 실행하면
+현재의 가벼운 기본 정책으로 조정됩니다. `--uninstall` 후 재설치는 설치가 깨졌거나 Olympus가
+관리하는 훅과 MCP 등록까지 처음부터 다시 만들 때만 사용합니다. 제거는 보존본을 자동 복구하지 않습니다.
+
+| 기존 항목 | 설치 결과 | 복구 방법 |
+|-----------|-----------|-----------|
+| 이름이 다른 외부·개인 스킬 | 그대로 유지 | 조치 없음 |
+| 현재 활성 Olympus 스킬 | 현재 버전으로 갱신 | 저장소 원본에서 수정 |
+| 현재 source-only가 된 Olympus 스킬 | 활성 경로에서 제외하고 `.olympus/source-skills`에 현재 버전 게시 | slash 등록이 필요할 때만 `--include-source-only-skills` |
+| Olympus와 이름이 같은 수정본·외부 스킬 | `_olympus-preserved/<timestamp>/`로 이동 | 디렉터리명과 frontmatter `name`을 함께 고유하게 바꾼 뒤 `skills/`에 수동 복사 |
+| 폐기된 구 Olympus 항목 | `_pruned-stale-olympus/<timestamp>/`로 이동 | 필요성을 확인한 뒤 고유 이름으로 수동 복사 |
 
 ### Windows
 
 ```batch
-REM 복사 모드 (기본)
+REM 일반 설치 또는 업데이트: 네 CLI 전체, 가벼운 기본 구성
 install.bat
 
-REM 심볼릭 링크 모드 (git pull로 자동 업데이트)
-install-link.bat
-REM 또는: install.bat --link
+REM source-only 스킬까지 모두 활성 등록
+install.bat --all --include-source-only-skills
 
-REM 링크 제거
-install-unlink.bat
-REM 또는: install.bat --unlink
+REM Olympus 관리 구성을 제거한 뒤 기본값으로 재설치
+install.bat --uninstall
+install.bat --all
 ```
 
 ### Linux/Mac
 
 ```bash
-# 복사 모드 (기본)
+# 일반 설치 또는 업데이트: 네 CLI 전체, 가벼운 기본 구성
 chmod +x install.sh
 ./install.sh
 
-# 심볼릭 링크 모드 (git pull로 자동 업데이트)
-./install.sh --link
+# source-only 스킬까지 모두 활성 등록
+./install.sh --all --include-source-only-skills
 
-# 링크 제거
-./install.sh --unlink
+# Olympus 관리 구성을 제거한 뒤 기본값으로 재설치
+./install.sh --uninstall
+./install.sh --all
 ```
 
-> **복사 vs 링크 모드:**
-> | 모드 | 장점 | 단점 |
-> |------|------|------|
-> | 복사 (기본) | 원본과 독립적, 안전 | 업데이트 시 재설치 필요 |
-> | 링크 (`--link`) | git pull만으로 자동 반영 | 원본 삭제 시 동작 안 함 |
->
-> **링크 모드 상세:**
-> - Windows: `mklink /J` (Junction) — 관리자 권한 불필요
-> - Linux/Mac: `ln -s` (symlink)
-> - Skills: 개별 폴더 단위로 링크
-> - Agents, Commands, Hooks: 전체 폴더를 한번에 링크
-> - settings.json 훅 설정도 자동 등록
+> 최상위 설치기의 제거 옵션은 `--uninstall`입니다. `--link`와 `--unlink`는 현재 최상위
+> 설치 모드가 아니며, 자산 동기화 스크립트의 내부 `--unlink`와 구분해야 합니다.
 
 ### 수동 설치
 
 ```bash
-# Skills (글로벌)
-cp -r skills/* ~/.claude/skills/
+# Skills (글로벌, 기본 allowlist만 활성 + 나머지는 dormant source library)
+node scripts/sync-claude-skills.js ~/.claude
 
-# Agents (글로벌)
-cp agents/* ~/.claude/agents/
+# 모든 source-only 스킬도 활성 레지스트리에 추가해야 할 때만:
+node scripts/sync-claude-skills.js ~/.claude --include-source-only-skills
 
-# Commands (글로벌)
-cp commands/*.md ~/.claude/commands/
+# Custom agents는 기본 설치하지 않음
+# 호환성 테스트용 source-only 프롬프트가 꼭 필요할 때만:
+node scripts/sync-claude-agents.js ~/.claude --include-source-only-agents
 
 # Hooks (글로벌) + settings.json 자동 설정
 cp hooks/*.sh hooks/*.ps1 ~/.claude/hooks/
@@ -621,10 +630,13 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 
 ---
 
-## 7-2. Orchestrator 설치 가이드
+## 7-2. Orchestrator MCP 정책 레이어 설치 가이드
 
-> **참고**: Orchestrator(PM-Worker 병렬 처리)는 글로벌 설치가 아닌 **프로젝트별 설치**가 필요합니다.
-> MCP 서버 경로, 훅, 명령어를 대상 프로젝트에 개별 설정합니다.
+> 일반적인 `workpm` 병렬 실행은 각 CLI의 네이티브 작업자를 사용하므로 별도 MCP 설치가 필요하지 않습니다.
+> hard file lock, 외부 태스크 보드, Claude/Codex/Gemini 혼합 Worker가 필요한 프로젝트만 Orchestrator MCP를 설치합니다.
+> 최상위 `install.bat`/`install.sh`는 source-only Orchestrator 런타임을 각 CLI 홈에 준비하고,
+> CLI 실행 파일이 있으면 글로벌 MCP 등록도 시도합니다. 아래 `skills/orchestrator/install.js <project>` 절차는
+> 프로젝트별 명령·훅·`settings.local.json`이 실제로 필요할 때만 추가로 수행합니다.
 
 ### 자동 설치 (권장)
 
@@ -658,10 +670,13 @@ node skills/orchestrator/install.js <대상-프로젝트-경로> --uninstall
 ### 사용법
 
 ```bash
-# PM 모드: 프롬프트에 입력
+# 일반 PM 모드: 네이티브 작업자 사용
 workpm
 
-# Worker 모드: 다른 터미널에서 입력
+# MCP 정책 레이어가 필요한 경우
+/daedalus --mcp
+
+# MCP Worker 모드: 다른 터미널에서 입력
 pmworker
 ```
 
@@ -686,7 +701,8 @@ npx add-skill SpillwaveSolutions/mastering-typescript-skill -a claude-code
 claude plugin marketplace add timescale/pg-aiguide
 claude plugin install pg-aiguide
 
-# 5. oh-my-claudecode 플러그인 설치
+# 5. 선택: 외부 32-agent 플러그인이 실제로 필요할 때만 설치
+# 이 항목은 Olympus 사용자 정의 에이전트 기본 0개와 별도입니다.
 /plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode
 /plugin install oh-my-claudecode
 /oh-my-claudecode:omc-setup
@@ -695,10 +711,11 @@ claude plugin install pg-aiguide
 /oh-my-claudecode:mcp-setup
 # 또는 수동으로 claude mcp add ...
 
-# 7. 커스텀 스킬/에이전트/명령어/훅 설치 (모두 글로벌)
-# Windows: install.bat (또는 install-link.bat)
-# Linux/Mac: ./install.sh (또는 ./install.sh --link)
-# → Skills, Agents, Commands, Hooks 글로벌 설치
+# 7. 커스텀 스킬/명령어/훅 설치 (글로벌, 가벼운 기본 정책)
+# Windows: install.bat
+# Linux/Mac: ./install.sh
+# → Skills, Commands, Hooks 글로벌 설치
+# → 사용자 정의 에이전트 참고 소스는 기본 미설치 (네이티브 서브에이전트 사용)
 # → settings.json 훅 설정 자동 등록
 # → CLAUDE.md 장기기억 규칙 자동 추가 (응답 태그, 대화 검색)
 ```
@@ -717,8 +734,9 @@ claude plugin install pg-aiguide
 # MCP 상태 확인
 /mcp
 
-# 사용 가능한 에이전트 확인
-# (Task 도구 사용 시 자동 표시)
+# 사용 가능한 작업자 확인
+# 각 CLI의 네이티브 agent/subagent 화면 또는 명령을 사용합니다.
+# Olympus 사용자 정의 에이전트는 기본 등록 0개가 정상입니다.
 ```
 
 ---
@@ -745,47 +763,47 @@ claude plugin install pg-aiguide
 | Stitch | UI 디자인 | `npx -p stitch-mcp-auto ...` |
 | GitHub | GitHub API | `claude mcp add github ...` |
 
-### 글로벌 스킬 (직접 제작, 주요 항목)
+### 글로벌 스킬 소스 (직접 제작, 주요 항목)
+
+스킬 소스 100개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 83개로 나뉩니다. 호환되지 않는 어댑터를 제외하면 Claude는 97개(활성 14 + source-only 83), Codex/Gemini는 각각 96개(활성 13 + source-only 83)입니다. Grok 설치 표면은 Claude의 활성 14개를 공유합니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
+
+| 이름 | 기본 상태 | 용도 |
+|------|-----------|------|
+| docker-deploy | source-only | 자연어 요청이나 활성 Zeus 하네스가 카탈로그 원본을 직접 읽어 Docker 배포 환경 구성 |
+| code-reviewer | source-only | CLI 네이티브 리뷰를 보강하는 정책·보안 감사 모듈 |
+| react-dev | source-only | React/TypeScript 개발 참고자료 |
+| python-backend-fastapi | source-only | Python FastAPI 개발 참고자료 |
+| mnemo | active adapter | 장기기억 시스템 (대화 저장 + 태깅 + 검색) |
+| orchestrator | source-only skill + runtime module | 일반 작업은 네이티브 workpm 사용; hard lock·외부 보드·혼합 CLI 분기에서만 MCP 런타임 사용 |
+| excel2md | source-only | 엑셀 → 마크다운 변환 |
+| fullstack-coding-standards | source-only | 풀스택 코딩 표준 참고자료 |
+| test-driven-development | source-only | TDD 워크플로우 참고자료 |
+| systematic-debugging | source-only | 체계적 디버깅 참고자료 |
+
+### source-only 에이전트 참고자료 (기본 미설치, 주요 항목)
 
 | 이름 | 용도 |
 |------|------|
-| docker-deploy | Docker 배포 환경 구성 |
-| code-reviewer | 코드 리뷰 |
-| react-dev | React/TypeScript 개발 (useEffect 통합) |
-| python-backend-fastapi | Python FastAPI 개발 가이드 |
-| mnemo | 장기기억 시스템 (대화 저장 + 태깅 + 검색) |
-| orchestrator | PM-Worker 병렬 작업 시스템 |
-| excel2md | 엑셀 → 마크다운 변환 |
-| fullstack-coding-standards | 풀스택 코딩 표준 |
-| test-driven-development | TDD 워크플로우 |
-| systematic-debugging | 체계적 디버깅 |
+| frontend-react | 소스 참고용; 실제 구현은 프로젝트 설정·기존 UI 구조·테스트를 따르는 네이티브 작업자 사용 |
+| backend-spring | 소스 참고용; 실제 구현은 build manifest·기존 계층·테스트를 따르는 네이티브 작업자 사용 |
+| architect | 소스 참고용; 실제 설계는 네이티브 계획·검토 + documentation-and-adrs 사용 |
+| security-reviewer | 소스 참고용; 실제 검증은 code-reviewer 보안 감사 모드 또는 argos Phase 7 사용 |
+| stitch-developer | 소스 참고용; 실제 실행은 design-plan이 조건부 source-only stitch 어댑터를 직접 읽어 수행 |
+| code-reviewer | 소스 참고용; 실제 리뷰는 CLI 네이티브 review + 동명 스킬 사용 |
+| qa-engineer | 소스 참고용; 실제 QA는 프로젝트 테스트 실행·minos·argos 사용 |
+| documentation | 소스 참고용; 실제 작성은 네이티브 작업자 + 목적별 문서 스킬 사용 |
+| spec-interviewer | 소스 참고용; 실제 인터뷰는 zephermine 사용 |
 
-### 글로벌 에이전트 (직접 제작, 주요 항목)
+### 기본 활성 진입점과 source-only 요청
 
-| 이름 | 용도 |
-|------|------|
-| frontend-react | 프론트엔드 개발/분석 |
-| backend-spring | Spring Boot 백엔드 |
-| architect | 아키텍처 설계, ADR 작성 |
-| security-reviewer | 보안 취약점 분석 (OWASP) |
-| stitch-developer | Stitch MCP UI 생성 |
-| code-reviewer | 코드 리뷰 |
-| qa-engineer | QA 검증 |
-| documentation | 문서 작성 |
-| spec-interviewer | SPEC.md 심층 인터뷰 |
-| fullstack-development-workflow | 풀스택 개발 종합 워크플로우 |
-
-### 글로벌 Commands (주요 항목)
-
-| 이름 | 용도 |
-|------|------|
-| /check-todos | TODO 검토 |
-| /write-api-docs | API 문서 생성 |
-| /write-changelog | Changelog 생성 |
-| /write-prd | PRD 작성 |
-| /smart-setup | 기술 스택 자동 감지 후 리소스 추천 |
-| /review | 코드 리뷰 수행 |
-| /sync-skills-readme | README 스킬 목록 동기화 |
+| 진입점 | 기본 상태 | 용도 |
+|--------|-----------|------|
+| `/zeus` | active | 설계부터 검증까지 전자동 파이프라인 |
+| `/zephermine` | active | 요구사항 인터뷰와 구현 계획 |
+| `/agent-team` | active adapter | CLI 네이티브 병렬 구현 |
+| `workpm` (`/daedalus`) | active | 설계 없이 시작하는 PM 흐름 |
+| `/mnemo` | active adapter | 대화 기록과 과거 검색 |
+| 카탈로그의 나머지 워크플로우 | source-only | 자연어로 명시 요청하거나 `--include-source-only-skills` opt-in 후 slash 호출 |
 
 ---
 
@@ -798,9 +816,11 @@ claude plugin install pg-aiguide
 - [ ] **백엔드 .NET**: claude-code-dotnet 설치됨 (`npx add-skill Aaronontheweb/claude-code-dotnet -a claude-code`)
 - [ ] **백엔드 Node.js**: mastering-typescript-skill 설치됨 (`npx add-skill SpillwaveSolutions/mastering-typescript-skill -a claude-code`)
 - [ ] **데이터베이스**: pg-aiguide 설치됨 (`claude plugin install pg-aiguide`)
-- [ ] **오케스트레이션**: oh-my-claudecode 플러그인 설치됨 (`/plugin install oh-my-claudecode`)
+- [ ] **선택 오케스트레이션**: 외부 32-agent 구성이 필요한 경우에만 oh-my-claudecode 설치 (`/plugin install oh-my-claudecode`)
 - [ ] MCP 서버 설정됨 (`/oh-my-claudecode:mcp-setup` 또는 수동)
-- [ ] install.bat/sh 실행하여 커스텀 스킬/에이전트/명령어/훅 글로벌 설치됨 (링크 모드 권장: `install-link.bat`)
+- [ ] `install.bat` 또는 `./install.sh`을 실행하여 네 CLI 글로벌 자산이 준비되고, **Olympus 관리** 사용자 정의 에이전트는 기본 0개로 유지됨
+- [ ] 설치되지 않은 CLI가 있다면 자산은 준비되고 CLI 전용 MCP 등록만 `skipped`로 표시됐는지 확인; CLI 설치 후 같은 설치기 재실행
+- [ ] 같은 이름의 수정본이 있었다면 `<CLI_HOME>/_olympus-preserved/` 확인; 복구 시 디렉터리명과 frontmatter `name`을 함께 변경
 - [ ] settings.json에 훅 설정 자동 등록 확인됨
 - [ ] CLAUDE.md에 장기기억 규칙 자동 추가 확인됨 (응답 태그, 대화 검색)
 
@@ -832,4 +852,4 @@ claude plugin install pg-aiguide
 
 ---
 
-**최종 업데이트:** 2026-02-08
+**최종 업데이트:** 2026-08-13

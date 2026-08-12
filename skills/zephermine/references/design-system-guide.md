@@ -27,7 +27,10 @@
 ## AI Slop 방지
 
 디자인 시스템 생성 시 아래 안티패턴을 피해야 합니다:
-- See [../../frontend-design/references/ai-slop-blacklist.md] — 공유 블랙리스트 참조
+- Zephermine resolver가 `frontend-design`을 성공적으로 읽었으면
+  `${frontend_design_root}/references/ai-slop-blacklist.md`의 공유 블랙리스트 참조
+- 모듈 해석 실패 시 아래 bounded 규칙만 적용하고
+  `frontend-design: NOT RUN (native fallback)` 기록 (모듈 PASS 금지)
 - 과사용 폰트(Inter, Roboto, Open Sans 등)를 프라이머리로 사용 금지
 - 보라/인디고 그라데이션을 기본 액센트로 사용 금지
 - 사용자가 구체적 선호를 밝히지 않았더라도 **제네릭하지 않은** 선택을 제안

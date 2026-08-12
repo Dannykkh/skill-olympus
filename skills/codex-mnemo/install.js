@@ -24,8 +24,11 @@ const isWindows = process.platform === "win32";
 // Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
 
-// Codex global directory
-const codexDir = path.join(os.homedir(), ".codex");
+// Codex global directory. Keep this aligned with Codex CLI and the repository
+// sync installers: CODEX_HOME wins, ~/.codex is only the compatibility default.
+const codexDir = process.env.CODEX_HOME
+  ? path.resolve(process.env.CODEX_HOME)
+  : path.join(os.homedir(), ".codex");
 
 // ── Utility functions ──
 function normalizePath(p) {
@@ -716,7 +719,7 @@ function uninstall() {
       console.log(`      - ${file} removed`);
     }
   }
-  // Remove reconcile scripts installed under ~/.codex/scripts/
+  // Remove reconcile scripts installed under <CODEX_HOME>/scripts/.
   const scriptsDir = path.join(codexDir, "scripts");
   const scriptFiles = ["reconcile_codex_conversations.py"];
   for (const file of scriptFiles) {

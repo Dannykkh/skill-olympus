@@ -398,19 +398,19 @@ Start by running `make all-ci` and begin the iterative fix process. Track your p
 
 ```markdown
 ---
-description: Create an implementation plan using the subagent agent
+description: Create an implementation plan with read-only delegated exploration
 ---
 
 ## ⚠️ PLANNING-ONLY MODE ACTIVE
 
-I'll help you create an implementation plan using the specialized planning agent. This workflow is designed for **planning only** - no code will be written until the plan is finalized and saved to disk.
+I'll help you create an implementation plan using Claude Code's built-in read-only `Explore` role. This workflow is designed for **planning only** - no code will be written until the plan is finalized and saved to disk by the main context.
 
 ### How This Works
 
 1. **You provide context** about what needs to be built
-2. **The agent creates a plan** (displayed in terminal for review)
+2. **Explore returns a plan draft and source evidence** (displayed for review)
 3. **We iterate together** until the plan is perfect
-4. **Plan is saved to disk** as a markdown file
+4. **The main context saves the approved plan** as a markdown file
 5. **Then (and only then)** implementation can begin
 
 ### Provide Your Planning Context
@@ -427,15 +427,19 @@ You can share:
 
 ---
 
-**IMPORTANT AGENT INSTRUCTIONS:**
+**IMPORTANT DELEGATION INSTRUCTIONS:**
 
-When invoking the subagent agent:
+Invoke the current `Agent` tool with built-in `Explore`. Do not target a custom planning-agent file.
 
 1. **DO NOT write any code during planning phase**
 2. **DO NOT use Edit, Write, or any modification tools**
-3. **ONLY output the plan to terminal for iterative review**
-4. **ONLY persist to disk after explicit user approval**
-5. The agent should remain in "Phase 1: Human-Readable Planning" mode until the user explicitly approves with signals like "looks good", "approved", or "ready to implement"
+3. **Return the plan draft, open questions, and file:line evidence to the main context**
+4. **Keep approval state and iteration in the main context**
+5. **Persist to disk from the main context only after explicit user approval**
+
+If this workflow is converted to a cross-CLI skill or prompt recipe, use a semantic read-only explorer
+instead. If native delegation is unavailable, perform the exploration and planning pass sequentially in
+the main context under the same no-write boundary.
 
 The goal is to create a comprehensive implementation plan that will be saved as a `.md` file at the repository root, which can then guide future implementation work.
 ```
@@ -446,8 +450,9 @@ The goal is to create a comprehensive implementation plan that will be saved as 
 - Clear phase boundaries (planning vs implementation)
 - Explicit anti-patterns ("DO NOT write code")
 - User approval trigger ("looks good", "approved")
-- Tells agent which specialized agent to invoke
-- Specifies where to save output (`.md` at root)
+- Uses Claude's built-in `Explore` role without write instructions
+- Keeps approval and save-to-disk ownership in the main context
+- Provides a portable semantic-role fallback
 
 ## Example 4: codex-review (Simple Execution Pattern)
 
@@ -546,7 +551,7 @@ If the script fails:
 | **Arguments**         | Optional `<description>` | None               | None                       | Optional `[base-branch]` |
 | **Context Files**     | Checks `.PLAN.md`        | Checks `AGENTS.md` | None                       | None                     |
 | **Iterations**        | Single pass              | Up to 10           | Iterative (user-driven)    | Single pass              |
-| **Tool Usage**        | Git, Graphite            | Make, Edit tools   | Task tool (agent)          | Script execution         |
+| **Tool Usage**        | Git, Graphite            | Make, Edit tools   | Agent (`Explore`, read-only) | Script execution       |
 | **Progress Tracking** | Inline reporting         | TodoWrite required | None (user reviews)        | None                     |
 | **Error Handling**    | Ask user                 | Stop if stuck      | None specified             | Show error message       |
 | **Success Criteria**  | PRs submitted            | Exit code 0        | User approves plan         | Script completes         |
@@ -569,7 +574,7 @@ If the script fails:
 
 **Use create-implementation-plan as a reference when:**
 
-- Command delegates to specialized agent
+- Claude command delegates read-only discovery through Agent with built-in `Explore`
 - User review/approval is required
 - No direct code modification should happen
 - Output is saved to specific location

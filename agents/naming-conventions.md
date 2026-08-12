@@ -1,20 +1,13 @@
 ---
 name: naming-conventions
-description: 네이밍 컨벤션 가이드 (패시브). 변수, 함수, 클래스 작성 시 자동 참조.
-auto_apply:
-  - "*.py"
-  - "*.ts"
-  - "*.tsx"
-  - "*.java"
-  - "*.js"
-  - "*.jsx"
+description: 네이밍 컨벤션 참고 가이드. 사용자가 이 에이전트를 명시적으로 요청할 때만 적용.
 references:
   - skills/naming-analyzer/SKILL.md
 ---
 
-# Naming Conventions (Passive)
+# Naming Conventions (Optional Reference)
 
-코드 작성 시 항상 참조되는 네이밍 규칙. 상세 분석은 naming-analyzer 스킬 사용.
+명시적으로 불러 쓰는 네이밍 참고 규칙. 상세 분석은 naming-analyzer 스킬 사용.
 
 ## Language Conventions
 

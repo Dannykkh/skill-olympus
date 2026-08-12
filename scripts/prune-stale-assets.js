@@ -19,6 +19,7 @@ const STALE_AGENT_FILES = [
 ];
 
 const STALE_SKILL_DIRS = [
+  "deploy-server",
   "multi-ai-orchestration",
   "pmworker",
   "qa-test-planner",

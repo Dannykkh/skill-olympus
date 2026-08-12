@@ -3,19 +3,8 @@ name: mnemo
 description: >
   과거 대화 검색, 장기기억 설정, 세션 핸드오프할 때 사용. 대화 자동 저장, 키워드 태깅,
   MEMORY.md 관리, 세션 전환. 관리 대상은 프로젝트 루트의 3계층(MEMORY.md + memory/ + conversations/)이며,
-  Claude 네이티브 auto-memory(~/.claude/projects/<프로젝트>/memory/)와는 별개 시스템 — 네이티브 쪽은 건드리지 않음.
-triggers:
-  - "mnemo"
-  - "므네모"
-  - "장기기억"
-  - "memory"
-  - "기억해"
-  - "이전에"
-  - "handoff"
-  - "핸드오프"
-  - "핸즈오프"
-  - "세션 저장"
-auto_apply: false
+  Claude 네이티브 auto-memory(~/.claude/projects/{project}/memory/)와는 별개 시스템 — 네이티브 쪽은 건드리지 않음.
+  /mnemo, 므네모, 장기기억, memory, 기억해, 이전에, handoff, 핸드오프, 핸즈오프, 세션 저장 요청에 사용한다.
 ---
 
 # Mnemo - 기억 시스템

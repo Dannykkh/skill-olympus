@@ -13,10 +13,15 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 # BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
 $Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+$CodexHome = if ($env:CODEX_HOME) {
+    [System.IO.Path]::GetFullPath($env:CODEX_HOME)
+} else {
+    Join-Path $HOME ".codex"
+}
 
 function Write-DebugLog([string]$message) {
     try {
-        $debugDir = Join-Path $HOME ".codex\hooks"
+        $debugDir = Join-Path $CodexHome "hooks"
         if (-not (Test-Path $debugDir)) {
             New-Item -ItemType Directory -Path $debugDir -Force | Out-Null
         }
@@ -93,7 +98,7 @@ function Normalize-PathSafe([string]$p) {
 }
 
 function Select-SessionFile([string]$preferredCwd) {
-    $sessionRoot = Join-Path $HOME ".codex\sessions"
+    $sessionRoot = Join-Path $CodexHome "sessions"
     if (-not (Test-Path $sessionRoot)) { return $null }
     $files = Get-ChildItem -Path $sessionRoot -Recurse -Filter "*.jsonl" -File -ErrorAction SilentlyContinue |
         Sort-Object LastWriteTime -Descending |
@@ -688,7 +693,7 @@ if ($response -and $baseDir) {
     }
 }
 
-$chronosContinue = Join-Path $HOME ".codex\skills\auto-continue-loop\scripts\continue-loop.ps1"
+$chronosContinue = Join-Path $CodexHome "skills\auto-continue-loop\scripts\continue-loop.ps1"
 if (Test-Path $chronosContinue) {
     $chronosPayloadFile = $null
     try {
@@ -776,9 +781,9 @@ function Notify-MnemoStatus {
         }
         $statusFile = Join-Path $statusDir '.mnemo-status.md'
         $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: ``/memory-distill --rebuild`` 또는 핸드오프`n- updated: $now`n"
+        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: 카탈로그의 source-only ``memory-distill`` 모듈을 직접 읽어 rebuild 또는 핸드오프`n- updated: $now`n"
         [System.IO.File]::WriteAllText($statusFile, $content, $Utf8NoBom)
-        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> /memory-distill --rebuild 권장")
+        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> source-only memory-distill 모듈을 직접 읽어 rebuild 권장")
     } catch {
         Write-DebugLog "mnemo-notify-failed: $($_.Exception.Message)"
     }

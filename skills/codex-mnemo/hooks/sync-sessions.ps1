@@ -100,13 +100,19 @@ function Normalize-PathSafe([string]$p) {
     }
 }
 
-$sessionRoot = Join-Path $HOME ".codex\sessions"
+$CodexHome = if ($env:CODEX_HOME) {
+    [System.IO.Path]::GetFullPath($env:CODEX_HOME)
+} else {
+    Join-Path $HOME ".codex"
+}
+
+$sessionRoot = Join-Path $CodexHome "sessions"
 if (-not (Test-Path $sessionRoot)) { exit 0 }
 
-$stateFile = Join-Path $HOME ".codex\hooks\sync-state.json"
+$stateFile = Join-Path $CodexHome "hooks\sync-state.json"
 $state = Load-State $stateFile
 
-$targetsFile = Join-Path $HOME ".codex\hooks\sync-targets.txt"
+$targetsFile = Join-Path $CodexHome "hooks\sync-targets.txt"
 $targets = @()
 if (Test-Path $targetsFile) {
     $targets = Get-Content -Path $targetsFile -Encoding UTF8 -ErrorAction SilentlyContinue |

@@ -1,6 +1,6 @@
 ---
 name: dotnet-coding-standards
-description: ".NET 개발 코딩 표준 통합 패키지. 패시브 에이전트(항상 로드) + 상세 코드 예시(on-demand)."
+description: "명시적 `/dotnet-coding-standards` 호출 전용 .NET 참고서. 일반 구현에는 자동 적용하지 않고 프로젝트 구조와 네이티브 코딩 능력을 우선한다."
 ---
 
 # .NET Coding Standards - 통합 패키지
@@ -10,8 +10,8 @@ description: ".NET 개발 코딩 표준 통합 패키지. 패시브 에이전트
 ```
 dotnet-coding-standards/
 ├── SKILL.md                              # 이 파일 (상세 코드 예시)
-├── agents/                               # 패시브 에이전트 (항상 로드)
-│   └── dotnet-coding-standards.md        # .NET 코딩 표준 규칙
+├── agents/                               # source-only 규칙 참고 (명시적 로드)
+│   └── dotnet-coding-standards.md        # 런타임 에이전트로 등록하지 않음
 └── templates/                            # 코드 템플릿 (on-demand)
     ├── csharp-patterns.md                # Record DTO, Result, Pattern Matching, xUnit
     ├── aspnet-core.md                    # Program.cs, Minimal API, 미들웨어, JWT, Health
@@ -20,7 +20,13 @@ dotnet-coding-standards/
 
 ---
 
-패시브 에이전트(`agents/dotnet-coding-standards.md`)의 규칙에 대한 **상세 코드 예시**를 제공합니다.
+## 참조 로딩 규칙
+
+1. 이 `SKILL.md`를 워크플로와 예시의 소유자로 사용합니다.
+2. 스킬을 명시적으로 호출했을 때 `agents/dotnet-coding-standards.md`를 읽고 현재 프로젝트에 필요한 규칙만 적용합니다.
+3. C# 일반 패턴, ASP.NET Core, EF Core 중 요청과 맞는 `templates/` 파일만 추가로 읽습니다.
+
+`agents/` 파일이 자동 로드되거나 커스텀 에이전트로 등록되어 있다고 가정하지 마세요.
 
 ---
 

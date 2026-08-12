@@ -1,29 +1,16 @@
 ---
 name: bilingual-dev
 description: |
-  한↔영 이중언어 개발 가이드 (패시브). 코드, 문서, UI, 커밋 작성 시 자동 적용.
-  프로젝트 CLAUDE.md에 "bilingual: ko-en" 설정 시 활성화.
-auto_apply:
-  - "*.ts"
-  - "*.tsx"
-  - "*.js"
-  - "*.jsx"
-  - "*.py"
-  - "*.java"
-  - "*.cs"
-  - "*.md"
-  - "*.json"
-  - "*.yaml"
-  - "*.yml"
+  한↔영 이중언어 개발 참고 가이드. 사용자가 이 에이전트를 명시적으로 요청하거나
+  프로젝트 로컬 지침이 bilingual: ko-en 규칙을 직접 참조할 때만 적용.
 references:
   - skills/ko-en-translator/SKILL.md
   - skills/ko-en-translator/references/tech-glossary.md
 ---
 
-# Bilingual Development Guide (Passive)
+# Bilingual Development Guide (Optional Reference)
 
-프로젝트가 한↔영 이중언어로 설정되면 자동 적용되는 규칙.
-별도 호출 없이 코드/문서 작성 시 양언어를 자연스럽게 유지합니다.
+프로젝트가 한↔영 이중언어로 설정되었을 때 명시적으로 불러 쓰는 참고 규칙입니다.
 
 ## 활성화 조건
 
@@ -123,7 +110,7 @@ locales/
 
 ---
 
-## 자동 적용 체크리스트
+## 이중언어 체크리스트
 
 코드/문서 작성 시 자동으로 확인하는 항목:
 

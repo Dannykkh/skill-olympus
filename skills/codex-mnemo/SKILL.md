@@ -1,21 +1,6 @@
 ---
 name: codex-mnemo
-description: Codex CLI 과거 대화를 검색하거나 장기기억을 설정할 때 사용. notify 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색.
-triggers:
-  - "mnemo"
-  - "므네모"
-  - "장기기억"
-  - "memory"
-  - "기억해"
-  - "이전에"
-  - "handoff"
-  - "핸드오프"
-  - "핸즈오프"
-  - "세션 저장"
-  - "codex 기억"
-  - "codex memory"
-  - "codex-mnemo"
-auto_apply: false
+description: Codex CLI 과거 대화 검색과 장기기억 설정에 사용한다. notify 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색을 제공한다. /mnemo, 므네모, 장기기억, 기억해, 이전에, handoff, 핸드오프, 세션 저장, codex 기억, codex memory 요청에 사용한다.
 ---
 
 # Codex-Mnemo - Codex CLI 기억 시스템
@@ -82,8 +67,10 @@ codex-mnemo/
 
 Codex의 notify 훅이 한 번이라도 실패하거나 Codex CLI가 강제 종료되면 해당 턴의
 `conversations/YYYY-MM-DD-codex.md` 미러링이 유실됩니다. 그러나 rollout JSONL
-(`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`)은 Codex가 직접 기록하는 source of truth
+(`<CODEX_HOME>/sessions/YYYY/MM/DD/rollout-*.jsonl`)은 Codex가 직접 기록하는 source of truth
 이므로, `reconcile_codex_conversations.py`가 이를 스캔해 누락된 turn을 자동 복구합니다.
+
+여기서 `<CODEX_HOME>`은 `CODEX_HOME` 환경 변수 값이며, 미설정 시 `~/.codex`입니다.
 
 **Dedup 키**: Codex rollout 라인에는 uuid가 없으므로 `sha1(timestamp + role + content[:200])`
 조합을 키로 사용하며, `conversations/.mnemo-index.json`의 `codex` 네임스페이스에 저장됩니다.
@@ -128,9 +115,9 @@ Codex CLI 대화
 |------|------|
 | 대화 로그 | `conversations/YYYY-MM-DD-codex.md` |
 | 의미기억 | `MEMORY.md` (프로젝트 루트) |
-| 훅 | `~/.codex/hooks/save-turn.ps1\|.sh` |
-| 설정 | `~/.codex/config.toml` |
-| 규칙 | `~/.codex/AGENTS.md` |
+| 훅 | `<CODEX_HOME>/hooks/save-turn.ps1\|.sh` |
+| 설정 | `<CODEX_HOME>/config.toml` |
+| 규칙 | `<CODEX_HOME>/AGENTS.md` |
 | 핸드오프 | 공통 프로젝트 경로 `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 
 > 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.

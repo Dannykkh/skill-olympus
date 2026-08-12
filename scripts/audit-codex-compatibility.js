@@ -5,6 +5,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFileSync, execSync } = require("child_process");
+const { collectAgentFiles } = require("./agent-files");
 
 const args = process.argv.slice(2);
 const writeIndex = args.indexOf("--write");
@@ -19,8 +20,7 @@ const codexHome = process.env.CODEX_HOME
   : path.join(os.homedir(), ".codex");
 
 const manifestPath = path.join(
-  repoRoot,
-  ".agents",
+  codexHome,
   ".codex-sync-manifest.json",
 );
 const codexConfigPath = path.join(codexHome, "config.toml");
@@ -30,6 +30,7 @@ const codexHooksDir = path.join(codexHome, "hooks");
 const skillsDir = path.join(repoRoot, "skills");
 const agentsDir = path.join(repoRoot, "agents");
 const hooksDir = path.join(repoRoot, "hooks");
+const repoAgentFiles = collectAgentFiles(agentsDir, skillsDir);
 
 const detectionPatterns = [
   {
@@ -58,16 +59,22 @@ const detectionPatterns = [
     severity: "high",
   },
   {
-    key: "claude_team_tools",
-    label: "Claude Agent Team tools",
-    regex: /\b(TeamCreate|SendMessage|TaskCreate|TaskUpdate)\b/,
+    key: "removed_claude_team_lifecycle",
+    label: "removed Claude team lifecycle tools",
+    regex: /\b(?:TeamCreate|TeamDelete)\s*\(/,
     severity: "high",
   },
   {
-    key: "claude_task_tool",
-    label: "Claude Task tool",
+    key: "claude_team_coordination",
+    label: "Claude-specific team coordination tools",
+    regex: /\b(SendMessage|TaskCreate|TaskUpdate)\b/,
+    severity: "medium",
+  },
+  {
+    key: "legacy_claude_task_alias",
+    label: "legacy Claude Task alias",
     regex: /\bTask\s*\(/,
-    severity: "high",
+    severity: "medium",
   },
   {
     key: "invalid_question_params",
@@ -90,8 +97,6 @@ const detectionPatterns = [
 ];
 
 const prioritySkillReasons = {
-  "command-creator":
-    "Codex에는 Claude slash command(`.claude/commands`) 확장 모델이 없어, 현재는 제한을 설명하고 skill/prompt로 우회해야 합니다.",
   "daily-meeting-update":
     "Codex/Gemini fallback을 문서화했지만, 여전히 Claude 히스토리와 구조화된 질문 UX 비중이 큽니다.",
   "manage-skills":
@@ -102,10 +107,6 @@ const prioritySkillReasons = {
     "검증 경로는 보정됐지만, 승인/재검증 흐름은 아직 AskUserQuestion 중심이라 Codex UX가 완전히 정리되진 않았습니다.",
   "game-changing-features":
     "산출물 경로를 `.claude/docs/ai/...`에 고정해 Codex 프로젝트 흐름과 분리됩니다.",
-  zephermine:
-    "계획 수립 핵심 스킬이므로 references/ 안의 Claude Task/질문 도구 표현까지 설치 런타임별 fallback이 필요합니다.",
-  workpm:
-    "Claude Agent Teams 모드와 Codex/Gemini MCP 모드를 모두 담고 있어, 공통 본문에서 런타임별 분기 표현이 명확해야 합니다.",
 };
 
 const adaptedCodexSkillNames = new Set([
@@ -113,12 +114,6 @@ const adaptedCodexSkillNames = new Set([
   "auto-continue-loop",
   "codex",
   "codex-mnemo",
-]);
-
-const codexCliSpecificReferenceFiles = new Set([
-  // Codex/Gemini route through workpm-mcp.md. This file is the Claude native
-  // Agent Teams command retained for Claude/plugin parity inside the same skill.
-  "skills/orchestrator/commands/workpm.md",
 ]);
 
 function normalizePath(p) {
@@ -209,7 +204,6 @@ function scanMarkdownFilesForMarkers(filePaths) {
 
   for (const filePath of filePaths) {
     const relPath = path.relative(repoRoot, filePath).replace(/\\/g, "/");
-    if (codexCliSpecificReferenceFiles.has(relPath)) continue;
     const text = readText(filePath);
 
     for (const pattern of detectionPatterns) {
@@ -303,23 +297,18 @@ function scanSkillFlags(managedSkillNames = null) {
 function scanAgentFlags(managedAgentNames = null) {
   const results = [];
 
-  if (!fs.existsSync(agentsDir)) return results;
-
-  for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
-    if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".md")) continue;
-
-    const agentPath = path.join(agentsDir, entry.name);
+  for (const [agentName, agentPath] of repoAgentFiles.entries()) {
     const markers = scanMarkdownFilesForMarkers([agentPath]);
     const flags = markers.map((marker) => marker.key);
 
     if (flags.length > 0) {
       const item = {
-        name: entry.name,
+        name: agentName,
         path: path.relative(repoRoot, agentPath).replace(/\\/g, "/"),
         flags,
         markers,
         installedInCodex: managedAgentNames
-          ? managedAgentNames.has(entry.name)
+          ? managedAgentNames.has(agentName)
           : null,
       };
       item.classification = classifyAgent(item);
@@ -535,7 +524,7 @@ function parseTomlAudit(manifest = {}) {
   const orchestratorPathNorm = normalizePath(orchestratorPath);
   const orchestratorRootNorm = normalizePath(orchestratorProjectRoot);
   const codexOrchestratorRootNorm = normalizePath(
-    path.join(codexHome, "skills", "orchestrator"),
+    path.join(codexHome, ".olympus", "runtime-modules", "orchestrator"),
   );
   const repoOrchestratorServer = path.join(
     repoRoot,
@@ -552,7 +541,7 @@ function parseTomlAudit(manifest = {}) {
     Boolean(orchestratorPathNorm) &&
     Boolean(codexOrchestratorRootNorm) &&
     orchestratorPathNorm.startsWith(codexOrchestratorRootNorm) &&
-    managedSkills.has("orchestrator");
+    fs.existsSync(path.join(codexHome, ".olympus", "runtime-modules", "orchestrator", "SKILL.md"));
   const orchestratorManagedInstallFresh =
     orchestratorTracksManagedInstall &&
     filesMatch(repoOrchestratorServer, path.normalize(orchestratorPath));
@@ -635,18 +624,26 @@ function buildMarkdown() {
     : 0;
 
   const repoSkills = listDirectories(skillsDir).length;
-  const repoAgents = countFiles(agentsDir, (name) =>
+  const repoTopLevelAgents = countFiles(agentsDir, (name) =>
     name.toLowerCase().endsWith(".md"),
   );
+  const repoAgentSources = repoAgentFiles.size;
   const repoHooks = countFiles(hooksDir, (name) =>
     [".ps1", ".sh", ".js"].includes(path.extname(name).toLowerCase()),
   );
   const installedCodexSkills = listDirectories(
     path.join(codexHome, "skills"),
   ).length;
-  const installedCodexAgents = countFiles(
+  const dormantCodexSkillSources = listDirectories(
+    path.join(codexHome, ".olympus", "source-skills"),
+  ).length;
+  const installedCodexAgentSources = countFiles(
     path.join(codexHome, "agents"),
     (name) => name.toLowerCase().endsWith(".md"),
+  );
+  const installedCodexCustomAgents = countFiles(
+    path.join(codexHome, "agents"),
+    (name) => name.toLowerCase().endsWith(".toml"),
   );
   const installedCodexHooks = countFiles(
     path.join(codexHome, "hooks"),
@@ -693,20 +690,25 @@ function buildMarkdown() {
   lines.push("## Inventory");
   lines.push("");
   lines.push(`- Repo skills: ${repoSkills}`);
-  lines.push(`- Repo top-level agents: ${repoAgents}`);
+  lines.push(`- Repo agent source files: ${repoAgentSources} (${repoTopLevelAgents} top-level + ${repoAgentSources - repoTopLevelAgents} skill-owned)`);
   lines.push(`- Repo root hooks (.ps1/.sh/.js): ${repoHooks}`);
   lines.push(`- Managed sync skills: ${managedSkills}`);
-  lines.push(`- Managed sync agents: ${managedAgents}`);
+  lines.push(`- Dormant Olympus skill sources: ${dormantCodexSkillSources}`);
+  lines.push(`- Managed sync agent source files: ${managedAgents}`);
   lines.push(`- Managed sync root hooks: ${managedHooks}`);
   lines.push(`- Managed Codex notify hooks: ${managedCodexNotifyHooks}`);
   lines.push(`- Installed Codex skills (total): ${installedCodexSkills}`);
-  lines.push(`- Installed Codex agents (total): ${installedCodexAgents}`);
+  lines.push(`- Installed Codex agent source files (.md): ${installedCodexAgentSources}`);
+  lines.push(`- Effective Codex custom-agent definitions (.toml): ${installedCodexCustomAgents}`);
   lines.push(`- Installed Codex hooks (total files): ${installedCodexHooks}`);
   lines.push("");
   lines.push("## Working Well");
   lines.push("");
   lines.push(
-    "- Skills/agents/hooks are syncing into `.agents/` and `~/.codex/` via `scripts/sync-codex-assets.js`.",
+    "- The fail-closed allowlist syncs only core harnesses and Codex adapters into `~/.codex/skills/`. Other compatible sources remain outside discovery in `~/.codex/.olympus/source-skills/` and are routed by exact catalog path. Duplicate project mirrors are opt-in via `--include-project-skills` and `--include-project-agents`.",
+  );
+  lines.push(
+    "- Agent Markdown files remain in the repository as source references only; the default sync does not install them or count them as effective Codex custom agents.",
   );
   lines.push(
     "- `config.toml` notify is wired directly or through a wrapper to `save-turn`, so Codex-Mnemo runs automatically each turn.",
@@ -765,7 +767,7 @@ function buildMarkdown() {
       tomlAudit.orchestratorTracksRepo
         ? "current repo"
         : tomlAudit.orchestratorTracksManagedInstall
-          ? "managed Codex install"
+          ? "managed Codex runtime mirror"
           : "external"
     }`,
   );
@@ -786,8 +788,17 @@ function buildMarkdown() {
   lines.push("");
   lines.push("## Gaps");
   lines.push("");
+  if (managedAgentNames.size === 0 && installedCodexAgentSources === 0) {
+    lines.push(
+      `1. No Olympus custom agents are installed by default. Codex built-in subagents and on-demand skills remain available; effective custom agents: ${installedCodexCustomAgents}.`,
+    );
+  } else {
+    lines.push(
+      `1. Codex custom agents require \`~/.codex/agents/*.toml\` definitions. The ${installedCodexAgentSources} installed Markdown files are inert source references; effective custom agents: ${installedCodexCustomAgents}.`,
+    );
+  }
   lines.push(
-    "1. Codex does not expose Claude's native `UserPromptSubmit / PreToolUse / PostToolUse / Stop` lifecycle directly.",
+    "2. Codex does not expose Claude's native `UserPromptSubmit / PreToolUse / PostToolUse / Stop` lifecycle directly.",
   );
   lines.push(
     "   File-oriented hooks are now bridged via `notify -> save-turn -> codex-hook-bridge`, but the timing still differs from Claude and true pre-write blocking is not identical.",
@@ -801,11 +812,11 @@ function buildMarkdown() {
     );
   } else {
     lines.push(
-      "2. `orchestrator` is wired to the current source through either the repo path or the managed Codex install; keep sync outputs aligned after orchestrator changes.",
+      "3. `orchestrator` runs from the non-discovery Codex runtime mirror synchronized from the current source; it does not re-enter the active skill registry.",
     );
   }
   lines.push(
-    `3. ${highInstalledSkillFlags.length} Codex-installed skills and ${highAgentFlags.length} top-level agents contain high-risk runtime markers (AskUserQuestion, Claude team tools, Claude Task calls, or non-portable question parameters).`,
+    `4. ${highInstalledSkillFlags.length} Codex-installed skills and ${highAgentFlags.length} source-only agent files contain high-risk markers (vendor-only question tools, removed Claude team lifecycle calls, or non-portable question parameters).`,
   );
   lines.push(
     `   Additional review markers: ${reviewInstalledSkillFlags.length} installed skills, ${excludedSkillFlags.length} Codex-excluded skills. Excluded skills are not immediate Codex runtime risk but should stay documented as CLI-specific.`,
@@ -825,7 +836,7 @@ function buildMarkdown() {
   lines.push(
     `- Codex-excluded skills with markers: ${excludedSkillFlags.length}`,
   );
-  lines.push(`- Top-level agents with high-risk markers: ${highAgentFlags.length}`);
+  lines.push(`- Source-only agents with high-risk markers: ${highAgentFlags.length}`);
   lines.push("");
 
   const criticalRows = highInstalledSkillFlags
@@ -847,20 +858,16 @@ function buildMarkdown() {
   }
   lines.push("");
 
-  const agentRows = highAgentFlags
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 20);
   lines.push("### Agents Needing Runtime Adapters");
   lines.push("");
-  if (agentRows.length === 0) {
+  if (managedAgentNames.size === 0) {
     lines.push("- None detected.");
   } else {
-    lines.push("| Agent | Classification | Markers |");
+    lines.push("| Agent source | Classification | Reason |");
     lines.push("|---|---|---|");
-    for (const item of agentRows) {
+    for (const name of Array.from(managedAgentNames).sort((a, b) => a.localeCompare(b))) {
       lines.push(
-        `| \`${item.name.replace(/\.md$/i, "")}\` | ${item.classification} | ${markerSummary(item)} |`,
+        `| \`${name.replace(/\.md$/i, "")}\` | source-only-in-codex | Markdown frontmatter must be translated to a Codex \`.toml\` custom-agent definition before runtime use |`,
       );
     }
   }
@@ -903,7 +910,7 @@ function buildMarkdown() {
     "- `auto-continue-loop` — Codex notify chain using `save-turn -> continue-loop -> codex exec resume --last`.",
   );
   lines.push(
-    "- `agent-team-codex` — Codex-specific multi-agent workflow; Claude-only `agent-team` is excluded from Codex sync.",
+    "- `agent-team-codex` — Codex-native adapter for the shared agent-team contract; the common `agent-team` package is excluded from Codex sync to avoid duplicate routing.",
   );
   lines.push("");
   lines.push("## Rule Coverage");
@@ -932,10 +939,13 @@ function buildMarkdown() {
     "2. Keep Codex runtime on `notify -> save-turn`, but document clearly which hook behaviors are native and which are bridged.",
   );
   lines.push(
-    "3. Treat remaining review markers as documentation cleanup, not immediate Codex breakage. Prioritize `command-creator`, `daily-meeting-update`, and Claude-only memory/command documentation when touching those skills next.",
+    "3. Keep the default custom-agent registry empty. Add a Codex `.toml` adapter only when a future agent proves a unique runtime tool or state contract that built-in subagents and an on-demand skill cannot provide.",
   );
   lines.push(
-    "4. Re-run this audit after major skill/agent/hook changes to keep the report current.",
+    "4. Treat remaining review markers as documentation cleanup, not immediate Codex breakage. Prioritize the current report's installed-skill rows and Claude-only memory documentation when touching those skills next.",
+  );
+  lines.push(
+    "5. Re-run this audit after major skill/agent/hook changes to keep the report current.",
   );
 
   return `${lines.join("\n")}\n`;

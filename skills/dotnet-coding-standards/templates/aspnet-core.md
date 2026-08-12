@@ -1,6 +1,6 @@
 # ASP.NET Core 설정 & 패턴 상세 가이드
 
-`agents/dotnet-coding-standards.md` 규칙의 ASP.NET Core 상세 코드 예시.
+`../SKILL.md`가 명시적으로 로드하는 `../agents/dotnet-coding-standards.md` 규칙의 ASP.NET Core 상세 코드 예시.
 
 ---
 

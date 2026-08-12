@@ -17,7 +17,8 @@ import {
   detectAIProviders,
   getAvailableProviders,
   getProviderCommand,
-  getProviderStrengths,
+  resolveWorkerProvider,
+  selectWorkerProviders,
   type AIProvider
 } from './services/ai-detector.js';
 
@@ -27,8 +28,12 @@ import {
 
 const PROJECT_ROOT = process.env.ORCHESTRATOR_PROJECT_ROOT || process.cwd();
 const WORKER_ID = process.env.ORCHESTRATOR_WORKER_ID || 'default';
+const WORKER_PROVIDER = resolveWorkerProvider(
+  WORKER_ID,
+  process.env.ORCHESTRATOR_AI_PROVIDER
+);
 
-const stateManager = new StateManager(PROJECT_ROOT, WORKER_ID);
+const stateManager = new StateManager(PROJECT_ROOT, WORKER_ID, WORKER_PROVIDER);
 
 // ============================================================================
 // 도구 스키마 정의
@@ -46,7 +51,7 @@ const CreateTaskSchema = z.object({
   depends_on: z.array(z.string()).optional().describe('선행 태스크 ID 목록'),
   scope: z.array(z.string()).optional().describe('수정 가능 파일 범위'),
   priority: z.number().optional().describe('우선순위 (높을수록 먼저, 기본: 1)'),
-  ai_provider: z.enum(['claude', 'codex', 'gemini']).optional().describe('실행할 AI Provider (auto-detect 기반 fallback)')
+  ai_provider: z.enum(['claude', 'codex', 'gemini']).optional().describe('실행할 AI Provider. 생략하면 provider-agnostic이며, 명시한 provider가 미설치면 생성 실패')
 });
 
 // Worker 도구 스키마
@@ -91,7 +96,7 @@ const ReadPlanSchema = z.object({
 const SpawnWorkersSchema = z.object({
   count: z.number().min(1).max(10).default(1).describe('생성할 Worker 수 (1-10)'),
   auto_terminate: z.boolean().default(true).describe('태스크 완료 시 자동 종료 여부'),
-  providers: z.array(z.enum(['claude', 'codex', 'gemini'])).optional().describe('각 Worker에 할당할 AI Provider 배열 (미지정 시 모두 claude)')
+  providers: z.array(z.enum(['claude', 'codex', 'gemini'])).optional().describe('각 Worker에 할당할 AI Provider 배열. 빠진 항목은 감지된 첫 provider를 사용')
 });
 
 // Activity Log 스키마
@@ -131,7 +136,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: 'orchestrator_get_provider_info',
-    description: '특정 AI Provider의 강점과 최적 용도를 반환합니다.',
+    description: '특정 AI Provider의 설치 상태와 안전한 기본 실행 명령을 반환합니다. 작업 적합성을 vendor별 고정 강점으로 추정하지 않습니다.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -179,7 +184,7 @@ const TOOLS: Tool[] = [
         ai_provider: {
           type: 'string',
           enum: ['claude', 'codex', 'gemini'],
-          description: 'AI Provider (미지정시 사용 가능한 AI 중 자동 선택)'
+          description: '이 태스크를 실행할 AI Provider. 미지정 시 provider-agnostic으로 모든 Worker가 claim 가능'
         }
       },
       required: ['id', 'prompt']
@@ -228,7 +233,7 @@ const TOOLS: Tool[] = [
       properties: {
         count: { type: 'number', description: '생성할 Worker 수 (1-10, 기본: 1)', minimum: 1, maximum: 10 },
         auto_terminate: { type: 'boolean', description: '태스크 완료 시 자동 종료 (기본: true)' },
-        providers: { type: 'array', items: { type: 'string', enum: ['claude', 'codex', 'gemini'] }, description: '각 Worker에 할당할 AI (예: ["claude", "codex", "gemini"]). 미지정 시 모두 claude' }
+        providers: { type: 'array', items: { type: 'string', enum: ['claude', 'codex', 'gemini'] }, description: '각 Worker에 할당할 AI (예: ["claude", "codex", "gemini"]). 빠진 항목은 실제 설치가 감지된 첫 provider 사용' }
       }
     }
   },
@@ -559,6 +564,17 @@ async function spawnWorkers(count: number, autoTerminate: boolean, providers?: A
   spawnedWorkers: { id: string; status: string; provider: string }[];
   errors?: string[];
 }> {
+  const providerSelection = selectWorkerProviders(count, providers, getAvailableProviders());
+  if (!providerSelection.success) {
+    return {
+      success: false,
+      message: providerSelection.message,
+      spawnedWorkers: [],
+      errors: [providerSelection.message]
+    };
+  }
+
+  const resolvedProviders = providerSelection.providers;
   const isWindows = process.platform === 'win32';
   const scriptDir = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..', 'scripts');
   const scriptName = isWindows ? 'spawn-worker.ps1' : 'spawn-worker.sh';
@@ -584,7 +600,7 @@ async function spawnWorkers(count: number, autoTerminate: boolean, providers?: A
   const errors: string[] = [];
 
   for (let i = 0; i < count; i++) {
-    const provider: AIProvider = providers && providers[i] ? providers[i] : 'claude';
+    const provider = resolvedProviders[i];
     const workerId = `${provider}-worker-${Date.now()}-${i + 1}`;
     const logFile = path.join(logDir, `${workerId}.log`);
 
@@ -595,7 +611,7 @@ async function spawnWorkers(count: number, autoTerminate: boolean, providers?: A
         const escapedScript = scriptPath.replace(/\\/g, '\\\\');
         const escapedRoot = PROJECT_ROOT.replace(/\\/g, '\\\\');
         const escapedLog = logFile.replace(/\\/g, '\\\\');
-        const psCommand = `Start-Process powershell -ArgumentList '-ExecutionPolicy', 'Bypass', '-File', '${escapedScript}', '-WorkerId', '${workerId}', '-ProjectRoot', '${escapedRoot}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}', '-AIProvider', '${provider}', '-LogFile', '${escapedLog}'`;
+        const psCommand = `Start-Process powershell -ArgumentList '-File', '${escapedScript}', '-WorkerId', '${workerId}', '-ProjectRoot', '${escapedRoot}', '-AutoTerminate', '${autoTerminate ? '1' : '0'}', '-AIProvider', '${provider}', '-LogFile', '${escapedLog}'`;
 
         const child = spawn('powershell', ['-Command', psCommand], {
           detached: true,
@@ -741,8 +757,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = {
           ...detection,
           recommendation: detection.availableCount >= 2
-            ? '병렬 처리 가능: 코드 생성은 Codex, 분석은 Claude, 대용량 컨텍스트는 Gemini 권장'
-            : 'Single Mode: Claude만 사용합니다'
+            ? `Multiple providers available: ${detection.providers.filter(provider => provider.available).map(provider => provider.name).join(', ')}`
+            : detection.modeDescription
         };
         break;
       }
@@ -754,11 +770,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = {
           provider,
           available: isAvailable,
-          strengths: getProviderStrengths(provider),
           command: isAvailable ? getProviderCommand(provider) : null,
+          selectionGuidance: '사용자 요구, 조직 정책, provider별 재현 필요성 또는 실제 평가 결과가 있을 때만 provider를 고정하세요. 그 외 태스크는 ai_provider를 생략하세요.',
           suggestion: isAvailable
             ? `${provider}는 현재 사용 가능합니다.`
-            : `${provider}는 설치되어 있지 않습니다. 대안: ${availableProviders.join(', ') || 'claude'}`
+            : availableProviders.length > 0
+              ? `${provider}는 설치되어 있지 않습니다. 대안: ${availableProviders.join(', ')}`
+              : `${provider}는 설치되어 있지 않으며 사용 가능한 provider도 없습니다.`
         };
         break;
       }
@@ -773,15 +791,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'orchestrator_create_task': {
         const parsed = CreateTaskSchema.parse(args);
 
-        // AI Provider 유효성 검증 및 fallback
-        let aiProvider = parsed.ai_provider as AIProvider | undefined;
+        const aiProvider = parsed.ai_provider as AIProvider | undefined;
         if (aiProvider) {
           const availableProviders = getAvailableProviders();
           if (!availableProviders.includes(aiProvider)) {
-            // 지정한 Provider가 없으면 사용 가능한 것으로 fallback
-            const fallbackProvider = availableProviders[0] || 'claude';
-            console.error(`[WARN] ${aiProvider} not available, falling back to ${fallbackProvider}`);
-            aiProvider = fallbackProvider as AIProvider;
+            result = {
+              success: false,
+              message: availableProviders.length > 0
+                ? `Requested provider '${aiProvider}' is unavailable. Available: ${availableProviders.join(', ')}`
+                : `Requested provider '${aiProvider}' is unavailable and no supported provider is installed.`
+            };
+            break;
           }
         }
 
@@ -1005,7 +1025,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`Claude Orchestrator MCP Server started (Worker: ${WORKER_ID})`);
+  console.error(`Orchestrator MCP Server started (Worker: ${WORKER_ID}, Provider: ${WORKER_PROVIDER || 'agnostic'})`);
 }
 
 main().catch((error) => {

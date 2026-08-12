@@ -32,10 +32,10 @@ PM이 생성한 태스크를 가져와 처리합니다.
    ```
    - 수행 가능한 태스크 목록 확인
    - 의존성이 해소된 태스크만 표시됨
-   - 응답에 `aiProvider`, `predecessorResults` 포함
+   - 응답에 현재 `workerProvider`와 태스크별 `aiProvider`, `predecessorResults` 포함
 
 2. **태스크 선택 기준**
-   - `aiProvider`가 지정되어 있으면 해당 AI에 적합한 태스크 우선
+   - 목록은 현재 `workerProvider`와 일치하거나 provider-agnostic인 태스크로 이미 필터됨
    - `priority`가 높은 태스크 우선 (3 > 2 > 1)
    - `predecessorResults`가 있으면 선행 태스크 결과를 반드시 읽고 시작
 
@@ -53,7 +53,7 @@ PM이 생성한 태스크를 가져와 처리합니다.
 
 4. **태스크 담당**
    ```
-   orchestrator_claim_task { "taskId": "task-1" }
+   orchestrator_claim_task { "task_id": "task-1" }
    ```
    - 태스크 담당 선언
    - 다른 Worker와 충돌 방지
@@ -111,7 +111,7 @@ PM이 생성한 태스크를 가져와 처리합니다.
 
 8. **완료 보고**
    ```
-   orchestrator_complete_task { "taskId": "task-1", "result": "구현 내용 요약" }
+   orchestrator_complete_task { "task_id": "task-1", "result": "구현 내용 요약" }
    ```
    - **result를 반드시 작성** — 후속 태스크가 이 결과를 참조함
    - 포함 항목: 생성 파일, export 인터페이스, 주요 결정, **테스트 결과 요약**
@@ -127,7 +127,7 @@ PM이 생성한 태스크를 가져와 처리합니다.
 
 9. **실패 보고** (검증 루프 3회 실패 또는 환경 문제 시)
    ```
-   orchestrator_fail_task { "taskId": "task-1", "error": "구체적 에러 원인" }
+   orchestrator_fail_task { "task_id": "task-1", "error": "구체적 에러 원인" }
    ```
    - 실패 원인, 시도한 수정 내역, 마지막 에러 로그 포함
    - PM이 이 정보를 보고 재배정 또는 계획 수정 판단

@@ -9,7 +9,7 @@ when_to_use: |
   - API 응답 스키마 및 상태코드 검증
   - CORS, JWT, 프록시 설정 확인
 avoid_if: |
-  - 테스트 시나리오 문서 작성 (qa-writer 사용)
+  - 테스트 시나리오 설계 (zephermine 또는 minos 사용)
   - 보안 취약점 분석 (security-reviewer 사용)
   - API 설계 (architect 또는 backend 에이전트 사용)
   - 성능 부하 테스트 (별도 도구 사용)

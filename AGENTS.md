@@ -15,29 +15,27 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |Task|Read First|
 |---|---|
-|AI/LLM API 코딩|agents/ai-ml.md|
-|React/Next.js|agents/react-best-practices.md|
+|AI/LLM API 코딩|프로젝트 SDK·lockfile·기존 추상화·평가 테스트 우선; 공급자 공식 문서 확인, OpenAI는 openai-docs 사용|
+|React/Next.js|프로젝트 manifest·lockfile·tsconfig·기존 구조·테스트 우선; 버전 API는 공식 문서 확인|
 |Code Review|skills/code-reviewer/SKILL.md|
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
 |Docker DB Backup|skills/docker-db-backup/SKILL.md|
-|API Testing|agents/api-tester.md|
-|Documentation|agents/documentation.md,agents/writing-guidelines.md|
-|FastAPI|agents/python-fastapi-guidelines.md|
-|Spring Boot|agents/backend-spring.md,agents/fullstack-coding-standards.md|
-|ASP.NET Core|agents/backend-dotnet.md,skills/dotnet-coding-standards/SKILL.md|
-|WPF Desktop|agents/desktop-wpf.md,skills/wpf-coding-standards/SKILL.md|
-|Fullstack Standards|agents/fullstack-coding-standards.md,skills/fullstack-coding-standards/SKILL.md|
-|Database Design|agents/database-schema-designer.md,skills/database-schema-designer/SKILL.md|
-|Database (MySQL)|agents/database-mysql.md|
-|Database (PostgreSQL/Supabase)|agents/database-postgresql.md,skills/supabase-postgres-best-practices/SKILL.md|
-|Migration|agents/migration-helper.md,agents/explore-agent.md|
-|Naming|agents/naming-conventions.md|
-|Full Workflow|agents/fullstack-coding-standards.md|
-|Architecture|agents/architect.md|
-|SPEC Interview|agents/spec-interviewer.md|
-|Security Review|agents/security-reviewer.md|
-|Web Preview + 디자인 토큰|agents/web-preview-guide.md,skills/design-system-starter/SKILL.md|
-|Stitch UI|agents/stitch-developer.md,skills/stitch/SKILL.md|
+|API Testing|skills/api-tester/SKILL.md|
+|Documentation|네이티브 작성 + 목적별 skills/api-handoff, documentation-and-adrs, release-notes, crafting-effective-readmes|
+|FastAPI|프로젝트·공식 문서 우선; 명시 요청 시 skills/python-backend-fastapi/SKILL.md|
+|Spring Boot|프로젝트 build manifest·BOM·기존 계층·설정·테스트 우선; 버전 API는 공식 문서 확인|
+|ASP.NET Core|프로젝트·공식 문서 우선; agents/backend-dotnet.md는 소스 참고용|
+|WPF Desktop|프로젝트·공식 문서 우선; agents/desktop-wpf.md는 소스 참고용|
+|Database Design|skills/database-schema-designer/SKILL.md|
+|Database (MySQL)|프로젝트 DB 버전·schema·migration 도구·실행 계획 우선|
+|Database (PostgreSQL/Supabase)|프로젝트 schema·RLS·연결 설정 우선; 명시 요청 시 skills/supabase-postgres-best-practices/SKILL.md|
+|Migration|네이티브 코드 탐색 후 skills/deprecation-and-migration/SKILL.md|
+|Naming|명시 요청 시 skills/naming-analyzer/SKILL.md|
+|Architecture|네이티브 계획·검토 + skills/documentation-and-adrs/SKILL.md; 필요 시 mermaid-diagrams|
+|SPEC Interview|skills/zephermine/SKILL.md|
+|Security Review|skills/code-reviewer/SKILL.md,skills/code-reviewer/references/security-audit.md|
+|Web Preview + 디자인 토큰|DESIGN.md 우선; 명시 요청 시 skills/design-system-starter/SKILL.md|
+|Stitch UI|skills/stitch/SKILL.md|
 |Agent Teams (4-CLI 네이티브 병렬 실행)|skills/agent-team/SKILL.md|
 |Codex Multi-Agent Team|skills/agent-team-codex/SKILL.md|
 
@@ -45,17 +43,17 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |시나리오|체이닝 순서|
 |---|---|
-|새 프로젝트 (풀코스)|zephermine → architect → agent-team → minos → docker-deploy|
+|새 프로젝트 (풀코스)|zephermine → 네이티브 아키텍처 검토/ADR → agent-team → minos → docker-deploy|
 |전자동 (제우스)|zeus — 한 줄 설명만으로 설계→구현→테스트 완전 자동|
 |기능 추가|zephermine → agent-team/수동 구현 → minos|
-|데이터 설계|domain expert → database-schema-designer → database-mysql/postgresql|
-|UI 와이어프레임|aphrodite --plan-only (벤치마크 분석 → Experience Contract → 렌더 방향 비교) → stitch generate (원격 화면이 필요할 때만)|
-|UI 디자인 → 구현|aphrodite → frontend-design 또는 stitch 어댑터 → frontend-react → ui-ux-auditor|
-|코드 리뷰 종합|code-reviewer → security-reviewer|
+|데이터 설계|domain expert → database-schema-designer → 네이티브 DB별 구현·migration 테스트|
+|UI 와이어프레임|aphrodite --plan-only (벤치마크 분석 → Experience Contract → 렌더 방향 비교); 원격 화면이 필요할 때만 `aphrodite --stitch`|
+|UI 디자인 → 구현|aphrodite가 source-only frontend-design·감사 모듈을 직접 읽고 네이티브 구현; 명시 시 Stitch 어댑터 사용|
+|코드 리뷰 종합|CLI 네이티브 review → code-reviewer 정책 레이어|
 |코드 정리|hestia (dead code 탐지 + 삭제)|
-|리팩토링|explore-agent → deprecation-and-migration → code-reviewer|
-|보안 감사|security-reviewer → code-reviewer|
-|UI/UX 품질 점검|ui-ux-auditor → ui-ux-designer (필요 시 디자인 조언)|
+|리팩토링|네이티브 코드 탐색 → deprecation-and-migration → code-reviewer|
+|보안 감사|code-reviewer 보안 감사 모드 → 필요 시 argos Phase 7|
+|UI/UX 품질 점검|design-plan이 렌더 비평과 source-only ui-ux-auditor 기준을 직접 적용|
 |QA 자동화|minos (시나리오 자동 생성 → Playwright → Healer)|
 |반복 수정 루프|auto-continue-loop (이슈 탐색 → 수정 → 검증 → 다음, 자동 반복)|
 |다이어그램 기반 구현 검증|flow-verifier plan → 구현 → flow-verifier verify (코드 흐름 ↔ 다이어그램 대조)|
@@ -74,14 +72,29 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Type safety|Required|Add type hints (Python) / TypeScript|
 |DRY principle|No duplication|Extract reusable components|
 
+## Native-First 구현 경계 (항상 적용)
+
+- 일반 구현은 네이티브 코딩 능력과 프로젝트 코드·테스트·규칙을 먼저 따르고, 범용 코딩 표준 스킬은 사용자가 명시적으로 호출할 때만 사용한다.
+- 기존 구조와 기존 composition point를 우선하며, 같은 역할의 새 계층이나 병렬 구조를 만들지 않는다.
+- 독립적으로 변경·테스트되는 책임만 모듈로 분리하고, 모듈은 내부를 숨긴 채 명시적 계약(interface/type/function)만 노출한다.
+- 모듈 간 순서·분기·조합은 기존 Application/Service/Composition Root 같은 하네스가 담당하고, 모듈끼리는 구현이 아니라 계약에만 의존한다.
+- 이 규칙은 두 개 이상의 독립 블록이 있거나 독립 변경 필요가 확인될 때만 적용한다. 단순 작업에는 새 인터페이스·레이어·하네스를 추가하지 않는다.
+- 네이티브 역할은 읽기 전용 탐색(Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`)과 쓰기·실행 작업(Claude `general-purpose`, Codex `worker`, Gemini `generalist`, Grok `general-purpose`)으로 분리한다. 읽기 전용 역할에 파일 쓰기를 맡기지 않는다.
+- 메인 컨텍스트가 공유 태스크 장부·활동 로그·완료 판정을 소유하고, 작업자는 고유 파일을 맡거나 결과만 반환한다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 순차 실행한다.
+- 기본 활성 스킬은 사용자 진입점 하네스다. 하네스가 source-only 하위 모듈을 필요로 하면 그 스킬을 호출하지 말고 카탈로그의 정확한 `SKILL.md`를 직접 읽는다. 참조와 실행 파일은 해석된 모듈 디렉터리를 기준으로 찾으며, 필수 모듈 누락은 실패 또는 `NOT RUN`으로 남기고 누락을 `PASS`로 처리하지 않는다.
+
 ---
 
 ## Cross-CLI Compatibility
 
 - Claude Code에서 제공하는 skills, agents, hooks, MCP 기능은 Codex에서도 동일 기능 parity를 목표로 유지합니다.
-- 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/seo-audit`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다.
+- 기본 활성 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/themis`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다. source-only 스킬의 slash 호출은 `--include-source-only-skills`로 활성화한 뒤에만 같은 보장을 적용합니다.
 - 내부 구현은 CLI별 실행 모델 차이를 반영해 달라질 수 있지만, 사용자 인터페이스와 핵심 결과는 맞춰야 합니다.
 - 단순 파일 복사만으로 parity를 판단하지 말고, 전역 설치본에서 실제로 동작하는지까지 검증합니다.
+- Codex 스킬은 기본적으로 `~/.codex/skills/`에만 설치합니다. 이 저장소의 `.agents/skills` 미러는 격리 테스트용 `--include-project-skills` 옵션에서만 생성합니다.
+- 스킬 소스 100개는 기본 allowlist 합집합 17개(공통 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 83개로 나눕니다. 호환되지 않는 어댑터를 제외하면 Claude는 97개(활성 14 + source-only 83), Codex와 Gemini는 각각 96개(활성 13 + source-only 83)입니다. Grok 논리 정책도 96개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 14개를 봅니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
+- 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
+- 사용자 정의 에이전트는 기본 거부 정책으로 0개를 등록합니다. 현재 소스 42종(패시브 9, 네이티브 중복 7, 중복 전문·스킬 래퍼 24, 워크플로 호환 프롬프트 2)은 source-only이며, 새 에이전트도 고유 런타임 계약을 입증해 allowlist에 넣기 전에는 자동 활성화되지 않습니다. 전체 소스 복사가 필요할 때만 `--include-source-only-agents`를 사용하고, Codex 프로젝트 에이전트 미러는 `--include-project-agents`에서만 생성합니다.
 - 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모)
 
 ---
@@ -96,7 +109,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Phase 1: Frontend → Backend|Experience Contract 기반 UI·상태 구현 → API·비즈니스 로직 연결 (프리뷰 패널 실시간 확인)|
 |Phase 2: Pre-Delivery|실제 렌더 미학, 과업, 접근성, 반응형, 성능 최종 검증|
 
-> **상세 가이드**: [agents/web-preview-guide.md](agents/web-preview-guide.md)
+> **본격 디자인 작업**: `/aphrodite` 또는 `design-plan` 스킬을 명시 호출합니다.
 
 ---
 
@@ -106,7 +119,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skills (100개)
+### Skill sources (100개; 기본 allowlist 합집합 17개, 런타임별 활성 13개 또는 14개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -128,49 +141,52 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
 | 🧠 Memory/Session | mnemo, codex-mnemo, gemini-mnemo, grok-mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + CLI별 어댑터 (Codex notify / Gemini AfterAgent / Grok camelCase envelope) + 메모리 크기 점검 및 압축 |
 
-### Agents (42개)
+### Agents (참고 소스 42개: 최상위 40개 + 스킬 소유 2개, 기본 등록 0개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
-| **Workflow** | spec-interviewer | SPEC.md 심층 인터뷰 |
-| | architect | 시스템 아키텍처 설계, 기술 스택 평가, ADR 작성 |
-| **Guidelines (Passive)** | react-best-practices | React/Next.js 최적화 규칙 + useEffect 가이드 (항상 적용) |
-| | python-fastapi-guidelines | FastAPI 모범 사례 (항상 적용) |
-| | writing-guidelines | 명확한 글쓰기 + AI 패턴 제거 통합 (항상 적용) |
-| | naming-conventions | 네이밍 컨벤션 (항상 적용) |
-| | web-preview-guide | 웹 프리뷰 모드 개발 가이드 (디자인 DNA → Frontend → Backend) |
-| | bilingual-dev | 한↔영 이중언어 개발 가이드 (코드 주석, 문서, i18n, 커밋 자동 양언어) |
-| | fullstack-coding-standards | 풀스택 코딩 표준 (백엔드 계층, 프론트 API, DB 연동) |
-| **Full Stack** | frontend-react | React/TypeScript 프론트엔드 전문가 |
-| | backend-spring | Spring Boot 백엔드 전문가 |
-| | backend-dotnet | ASP.NET Core 백엔드 전문가 (Clean Architecture, EF Core) |
-| | desktop-wpf | WPF 데스크톱 전문가 (MVVM, 스레딩, 메모리 관리, GPU 렌더링) |
-| | database-schema-designer | DB 스키마 설계 전문가 (DB-First, ERD, DDL) |
-| | database-mysql | MySQL 데이터베이스 전문가 |
-| | database-postgresql | PostgreSQL/Supabase 데이터베이스 전문가 |
-| **AI/ML** | ai-ml | AI/ML 통합 + LLM API 최신 모델/SDK 가이드 (OpenAI, Anthropic, Gemini, Ollama) |
-| **API** | api-tester | API 엔드포인트 테스트 |
-| | api-comparator | API 호환성 비교 검증 |
-| **QA** | qa-engineer | 테스트 전략 및 품질 검증 |
-| | qa-writer | 테스트 시나리오/케이스 작성 |
-| | code-reviewer | 코드 품질/보안/성능 리뷰 |
-| **Documentation** | documentation | PRD, API 문서, 변경로그 작성 |
-| | mermaid-diagram-specialist | 플로우차트, 시퀀스 다이어그램, ERD 생성 |
-| **Design** | ascii-ui-mockup-generator | UI 개념을 ASCII 목업으로 시각화 |
-| | ui-ux-designer | 연구 기반 UI/UX 디자인 피드백 |
-| | stitch-developer | Stitch MCP UI/웹사이트 생성 전문가 |
-| **Security** | security-reviewer | 보안 취약점 전문 분석 (8대 카테고리: 인증, 입력검증, 데이터보안, 의존성, Rate Limit, 파일업로드, Prompt Injection, 정보노출) |
-| **Debugging** | debugger | 체계적 근본원인 분석 (증상수집→가설→검증→수정) |
-| **Performance** | performance-engineer | 풀스택 성능 최적화 (N+1, 메모리릭, Core Web Vitals, 부하테스트) |
-| **TDD** | tdd-coach | Red-Green-Refactor 사이클 강제, 테스트 우선 개발 |
-| **Language** | typescript-spec | TypeScript 고급 타입 시스템 (제네릭, 조건부, 매핑 타입) |
-| | python-spec | Python 3.12+ 모던 생태계 (async, uv, ruff, pydantic) |
-| **Writing** | writing-specialist | 글쓰기 통합 전문가 (사업문서, 학술, 이메일, AI패턴제거) |
-| **Migration** | migration-helper | 레거시→모던 마이그레이션 가이드 |
-| | explore-agent | 레거시 코드 분석 |
-| **Planning** | feature-tracker | 기능 목록 및 진행 상황 관리 |
-| **General** | codebase-pattern-finder | 유사 구현 및 패턴 탐색 |
-| | chronos-worker | auto-continue-loop용 Gemini 로컬 루프 에이전트 |
+| **Optional References** | architect | 네이티브 계획·검토와 documentation-and-adrs로 대체된 아키텍처 참고자료 (소스 보존, 기본 미설치) |
+| | documentation | 네이티브 작성과 목적별 문서 스킬로 대체된 템플릿 참고자료 (소스 보존, 기본 미설치) |
+| | mermaid-diagram-specialist | mermaid-diagrams 스킬로 대체된 다이어그램 참고자료 (소스 보존, 기본 미설치) |
+| | typescript-spec | 프로젝트 설정·컴파일러를 따르는 네이티브 TypeScript 작업으로 대체 (소스 보존, 기본 미설치) |
+| | python-spec | 프로젝트 설정·테스트를 따르는 네이티브 Python 작업으로 대체 (소스 보존, 기본 미설치) |
+| | ui-ux-designer | design-plan 렌더 비평과 ui-ux-auditor로 대체 (소스 보존, 기본 미설치) |
+| | frontend-react | 프로젝트 manifest·기존 UI 구조·테스트를 따르는 네이티브 구현으로 대체 (소스 보존, 기본 미설치) |
+| | backend-spring | 프로젝트 build manifest·기존 계층·테스트를 따르는 네이티브 구현으로 대체 (소스 보존, 기본 미설치) |
+| | database-mysql | 프로젝트 DB 버전·schema·migration·실행 계획 기반 구현으로 대체 (소스 보존, 기본 미설치) |
+| | database-postgresql | 프로젝트 schema·RLS·연결 설정과 명시형 Postgres 스킬로 대체 (소스 보존, 기본 미설치) |
+| | react-best-practices | React/Next.js 최적화 참고 문서 (소스 보존, 기본 미설치) |
+| | python-fastapi-guidelines | FastAPI 참고 문서 (소스 보존, 기본 미설치) |
+| | fullstack-coding-standards | 풀스택 참고 표준 (소스 보존, 기본 미설치) |
+| | dotnet-coding-standards | .NET 참고 표준 (소스 보존, 기본 미설치) |
+| | wpf-coding-standards | WPF 참고 표준 (소스 보존, 기본 미설치) |
+| | naming-conventions | 네이밍 참고 문서 (소스 보존, 기본 미설치) |
+| | writing-guidelines | 글쓰기 + AI 패턴 제거 참고 문서 (소스 보존, 기본 미설치) |
+| | bilingual-dev | 한↔영 개발 참고 문서 (소스 보존, 기본 미설치) |
+| | web-preview-guide | 레거시 웹 프리뷰 상세 문서 (소스 보존, 기본 미설치) |
+| | codebase-pattern-finder | 네이티브 탐색과 중복되는 패턴 검색 참고자료 (소스 보존, 기본 미설치) |
+| | explore-agent | 네이티브 탐색과 중복되는 레거시 분석 참고자료 (소스 보존, 기본 미설치) |
+| | debugger | 네이티브 진단과 중복되는 디버깅 참고자료 (소스 보존, 기본 미설치) |
+| | feature-tracker | 네이티브 계획 상태·핸드오프로 대체된 추적 참고자료 (소스 보존, 기본 미설치) |
+| | tdd-coach | 네이티브 테스트 루프와 명시형 TDD 스킬로 대체 (소스 보존, 기본 미설치) |
+| | migration-helper | deprecation-and-migration으로 대체된 참고자료 (소스 보존, 기본 미설치) |
+| | spec-interviewer | zephermine 인터뷰 흐름으로 대체된 참고자료 (소스 보존, 기본 미설치) |
+| | api-comparator | 네이티브 diff + deprecation-and-migration + api-tester로 대체 (소스 보존, 기본 미설치) |
+| | api-tester | 동명 api-tester 스킬로 대체 (소스 보존, 기본 미설치) |
+| | ascii-ui-mockup-generator | 네이티브 ASCII 출력과 Aphrodite 와이어프레임 흐름으로 대체 (소스 보존, 기본 미설치) |
+| | backend-dotnet | 프로젝트·공식 문서 우선의 ASP.NET Core 참고자료 (소스 보존, 기본 미설치) |
+| | database-schema-designer | 동명 database-schema-designer 스킬로 대체 (소스 보존, 기본 미설치) |
+| | desktop-wpf | 프로젝트·공식 문서 우선의 WPF 참고자료 (소스 보존, 기본 미설치) |
+| | performance-engineer | 네이티브 측정·프로파일링을 우선하는 성능 참고자료 (소스 보존, 기본 미설치) |
+| | stitch-developer | stitch 스킬로 대체된 얇은 호스트 (소스 보존, 기본 미설치) |
+| | writing-specialist | 네이티브 글쓰기와 명시형 글쓰기 스킬로 대체 (소스 보존, 기본 미설치) |
+| | ai-ml | 정적 공급자 API·RAG 참고자료; 실제 구현은 프로젝트 SDK·공식 문서·평가 테스트 우선 (소스 보존, 기본 미설치) |
+| | qa-engineer | Minos·Argos·실제 테스트 실행으로 대체된 QA 참고자료 (소스 보존, 기본 미설치) |
+| | qa-writer | Zephermine·Minos의 시나리오 생성 계약으로 대체된 참고자료 (소스 보존, 기본 미설치) |
+| | code-reviewer | 동명 스킬과 CLI 네이티브 리뷰로 대체된 얇은 래퍼 (소스 보존, 기본 미설치) |
+| | security-reviewer | 안전한 보안 감사 참조와 Argos Phase 7로 흡수된 정적 감사 프롬프트 (소스 보존, 기본 미설치) |
+| **Skill-owned source-only** | chronos-worker | auto-continue-loop 정본을 가리키는 선택 호환 프롬프트 (기본 미설치) |
+| | gotcha-analyzer | memory-distill 정본을 가리키는 선택 호환 프롬프트 (기본 미설치) |
 
 ## Creating a New Skill
 
@@ -285,7 +301,7 @@ Based on [Vercel's agent evaluation research](https://vercel.com/blog/agents-md-
 |---|---|---|
 |Framework knowledge|AGENTS.md|Passive context = 100% pass rate|
 |Code generation rules|AGENTS.md|Always available, no decision point|
-|User-triggered workflows|Skills|Explicit invocation (e.g., `/docker-deploy`)|
+|User-triggered workflows|Skills|기본 활성 진입점은 명시 호출; source-only는 자연어 요청으로 카탈로그 직접 로드|
 |Version migrations|Skills|One-time, explicit action|
 |Architecture changes|Skills|Requires user confirmation|
 
@@ -328,8 +344,8 @@ Layer 2: Hooks (Automatic Enforcement)
   → 즉시 피드백
 
 Layer 3: Skills (On-demand Analysis)
-  → 사용자 요청 시 상세 분석
-  → /review, /naming-analyzer 등
+  → 기본 활성 하네스는 slash/별칭으로 진입
+  → source-only 분석 모듈은 자연어 요청 시 카탈로그 원본 직접 로드
 ```
 
 ### Hook Configuration (settings.json)

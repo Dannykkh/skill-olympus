@@ -1,19 +1,6 @@
 ---
 name: grok-mnemo
-description: Grok Build(xAI CLI) 과거 대화를 검색하거나 장기기억을 설정할 때 사용. UserPromptSubmit+Stop 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색. Grok 세션에서 /mnemo 요청 시 이 스킬 기준으로 안내.
-triggers:
-  - "mnemo"
-  - "므네모"
-  - "장기기억"
-  - "memory"
-  - "기억해"
-  - "이전에"
-  - "handoff"
-  - "핸드오프"
-  - "grok 기억"
-  - "grok memory"
-  - "grok-mnemo"
-auto_apply: false
+description: Grok Build(xAI CLI) 과거 대화 검색과 장기기억 설정에 사용한다. UserPromptSubmit+Stop 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색을 제공한다. /mnemo, 므네모, 장기기억, 기억해, 이전에, handoff, 핸드오프, grok 기억, grok memory 요청에 사용한다.
 ---
 
 # Grok-Mnemo - Grok Build 기억 시스템

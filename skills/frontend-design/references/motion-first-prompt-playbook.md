@@ -146,7 +146,9 @@ SUCCESS CHECK
 `oklch()` 우선 + HEX fallback으로 선언합니다. 대비는 배경/전경과 액센트/on-accent 모두
 WCAG AA 본문 기준을 통과하도록 계산했습니다. 레인은 `primary/background`, `on-primary/foreground`,
 `accent/on-accent`의 의미 코어만 제공합니다. surface/card/muted/border 스케일은 선택 뒤
-`design-system-starter`로 파생하고 다시 대비를 확인합니다.
+DESIGN.md의 기존 토큰과 대비 규칙에서 파생합니다. 사용자가 디자인 시스템 scaffold를 명시적으로
+요청했고 `MODULE_SKILL[design-system-starter]`가 해석된 경우에만 그 모듈을 직접 읽어 확장한 뒤
+다시 대비를 확인합니다.
 
 | 레인 | 배경 / 전경 | 액센트 / on-accent | 인상 | 대비 |
 |---|---|---|---|---|

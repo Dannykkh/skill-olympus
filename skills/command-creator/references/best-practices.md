@@ -15,13 +15,13 @@ Commands are executed by AI agents, so optimize for autonomous execution.
 
 - "Run git status to check current branch"
 - "Check if .PLAN.md exists before proceeding"
-- "Use the Task tool with Bash tool"
+- "Use Agent with built-in Explore to return file:line evidence without writing files"
 
 ❌ WRONG:
 
 - "You should run git status"
 - "You need to check if .PLAN.md exists"
-- "You'll want to use the Task tool"
+- "You may want to ask some agent to look around"
 ```
 
 ### Specificity
@@ -185,6 +185,12 @@ fi
 ### 2. Tool Usage Guidance
 
 Be explicit about which tools to use.
+
+For Claude Code commands, use the current `Agent` tool with built-in `Explore` for read-only work and
+built-in `general-purpose` for tasks that require bounded command execution or writes. Never give
+`Explore` file-write instructions. For a command pattern intended to become a cross-CLI skill or prompt,
+describe semantic read-only/general-writer roles and require sequential main-context execution when
+delegation is unavailable. Never target a source-only custom agent filename.
 
 ```markdown
 **Use the Bash tool for pytest/pyright/ruff/prettier/make/gt commands:**
@@ -356,9 +362,10 @@ Analyze the changes first:
 
 If changes span 3+ files OR involve new abstractions:
 
-- Use Task tool with subagent_type="subagent"
-- Create detailed plan
-- Execute with subagent agent
+- Use Agent with built-in `Explore` to return a read-only plan and file:line evidence
+- Keep approval and shared task state in the main context
+- If implementation is delegated, use built-in `general-purpose` with exact allowed write paths and verification commands
+- For a portable workflow, use the equivalent semantic roles and a sequential main-context fallback
 
 Otherwise (changes are contained):
 
@@ -709,7 +716,7 @@ Effective slash commands:
 2. **Be specific** (not vague)
 3. **Include outcomes** (what should happen)
 4. **Provide examples** (realistic, not foo/bar)
-5. **Specify tools** (Task tool with subagent_type)
+5. **Specify tools and role boundaries** (Claude Agent `Explore`/`general-purpose`, or portable semantic roles)
 6. **Call out anti-patterns** (NEVER/DO NOT)
 7. **Define error handling** (explicit actions)
 8. **State success criteria** (when to stop)

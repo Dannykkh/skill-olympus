@@ -1,14 +1,12 @@
 ---
 name: code-reviewer
 description: |
-  Pre-landing PR 리뷰 정책 레이어. 일반 버그/품질 리뷰는 CLI 네이티브 엔진(Claude /code-review,
-  Codex /review)에 위임하고, 네이티브가 못 하는 것 — Scope Drift 감지, 도메인 체크리스트(LLM 신뢰
-  경계, Enum 완전성), Fix-First 분류, Suppressions, 통합 보고서 — 를 더합니다. 네이티브 엔진이
-  없는 환경(Gemini 등)은 풀 경로(2-Pass + Specialist 병렬 dispatch)로 폴백.
+  Pre-landing PR 리뷰 정책 레이어. 일반 버그/품질 리뷰는 사용 가능한 CLI 리뷰 엔진(Claude
+  review, Codex /review, Grok bundled review)에 위임하고, 네이티브가 못 하는 것 — Scope Drift 감지, 도메인 체크리스트(LLM 신뢰
+  경계, Enum 완전성), Action Triage, Suppressions, 통합 보고서 — 를 더합니다. 네이티브 엔진이
+  없는 환경은 풀 경로(2-Pass + Specialist 병렬 dispatch)로 폴백합니다. "보안 감사", "security
+  review", "취약점 분석" 요청은 안전한 repository security audit 모드로 분기합니다.
   "코드 리뷰 해줘", "review", "리뷰", "PR 체크" 요청에 실행. 코드 작성 완료 시 자동 제안.
-license: MIT
-metadata:
-  version: "4.0.0"
 ---
 
 # Code Reviewer v4 — Policy Layer + Native Engine
@@ -18,14 +16,15 @@ PR 단위 코드 리뷰 오케스트레이터. v4부터 **리뷰 엔진과 정�
 ```
 리뷰 요청
   │
+  ├─ Security audit 요청 → references/security-audit.md
   ├─ Step 0~1: 베이스 브랜치 + 리뷰 대상 확인
   ├─ Step 2: 엔진 선택 (CLI 감지)
-  │    ├─ 경로 A: Claude  → 네이티브 code-review 스킬
+  │    ├─ 경로 A: Claude/Grok → 사용 가능한 review 엔진
   │    ├─ 경로 B: Codex   → 네이티브 codex review
   │    └─ 경로 C: 풀 경로 (네이티브 없음 — Gemini 등)
   └─ Step 3: 정책 레이어 P1~P5 (공통)
        P1 Scope Drift → P2 도메인 보강 패스 → P3 Suppressions
-       → P4 Fix-First → P5 통합 보고서
+       → P4 Action Triage → P5 통합 보고서
 ```
 
 **설계 원칙**: 네이티브 엔진이 잘하는 일반 리뷰(버그, 보안 기본기, 성능)는 중복 구현하지 않는다.
@@ -34,8 +33,12 @@ PR 단위 코드 리뷰 오케스트레이터. v4부터 **리뷰 엔진과 정�
 ## 적용 시점
 
 - 명시적 리뷰 요청 시 ("코드 리뷰 해줘", "review")
+- 명시적 보안 감사 요청 시 ("보안 감사", "security review", "취약점 분석")
 - PR 생성 전 (`/ship` 전)
 - 코드 작성 완료 시 자동 제안
+
+보안 감사 요청이면 Step 0~3 대신 [Repository Security Audit Contract](references/security-audit.md)를
+읽어 범위를 정합니다. 일반 코드 리뷰와 달리 전체 저장소 감사를 자동 제안하거나 암묵적으로 실행하지 않습니다.
 
 ---
 
@@ -57,10 +60,11 @@ echo "BRANCH: $(git branch --show-current 2>/dev/null)"
 
 ## Step 1: 리뷰 대상 확인
 
-1. `git branch --show-current`로 현재 브랜치 확인.
-2. 베이스 브랜치 위에 있으면: **"베이스 브랜치에서는 리뷰할 대상이 없습니다."** → 중단.
-3. `git fetch origin $_BASE --quiet && git diff origin/$_BASE --stat` 실행.
-4. diff가 없으면 동일 메시지 → 중단.
+1. `git status --short`로 staged, unstaged, untracked 변경을 먼저 확인합니다.
+2. 작업 트리에 변경이 있으면 현재 브랜치가 base여도 `--uncommitted` 범위로 검토합니다.
+3. 작업 트리가 깨끗하면 기존 `origin/$_BASE` ref와 `git diff origin/$_BASE...HEAD --stat`을 사용합니다.
+4. ref가 없거나 사용자가 최신 원격 기준을 요청한 경우에만 `git fetch origin $_BASE --quiet`를 실행합니다.
+5. 두 범위 모두 diff가 없을 때만 **"리뷰할 변경이 없습니다."**로 중단합니다.
 
 ---
 
@@ -68,18 +72,19 @@ echo "BRANCH: $(git branch --show-current 2>/dev/null)"
 
 | 환경 | 감지 방법 | 경로 |
 |------|----------|------|
-| Claude Code | Skill 도구 목록에 `code-review` 존재 | **A — 네이티브 위임** |
+| Claude Code | 활성 review skill/command가 실제로 존재 | **A — 런타임 위임** |
 | Codex CLI | Codex 세션에서 실행 중 (`codex` CLI 환경) | **B — codex review** |
-| Gemini 등 | 위 둘 다 아님 | **C — 풀 경로** |
+| Grok Build | bundled `review` skill 존재 | **A — 런타임 위임** |
+| Gemini 또는 review 기능이 없는 런타임 | 위 조건 불충족 | **C — 풀 경로** |
 
 네이티브 엔진 호출이 실패하면 경로 C로 폴백하고, P5 보고서에 폴백 사유를 기록합니다.
 사용자가 명시적으로 요청하면("풀 경로로 리뷰", "specialist 리뷰") Claude/Codex에서도 경로 C를 사용합니다.
 
-### 경로 A — Claude 네이티브 엔진
+### 경로 A — Claude/Grok 런타임 리뷰 엔진
 
-1. Skill 도구로 `code-review` 호출 (effort `high` 권장. 빠른 점검만 원하면 `medium`)
-2. **`--fix`는 사용하지 않음** — 수정 적용은 정책 레이어 P4(Fix-First)가 AUTO-FIX/ASK 분류로 담당
-3. **ultra는 호출 금지** — `/code-review ultra`(클라우드 멀티에이전트)는 사용자 트리거 전용(과금).
+1. Claude는 활성 review 기능이 확인된 경우에만 호출하고, Grok은 bundled `review`를 사용합니다.
+2. 기본 리뷰는 읽기 전용입니다. 수정 옵션을 암묵적으로 전달하지 않습니다.
+3. **ultra는 호출 금지** — 원격/과금형 멀티에이전트 리뷰는 사용자 트리거 전용입니다.
    스킬은 호출하지 않으며 권유 안내도 하지 않는다
 4. 네이티브 발견을 정규화하여 수집:
    `{"severity":..., "confidence":N, "path":..., "line":N, "category":..., "summary":..., "source":"native"}`
@@ -159,16 +164,19 @@ Delivered: <1줄 요약>
 
 ### P3 — Suppressions
 
-`checklists/suppressions.md`를 읽고, 해당 패턴과 일치하는 발견은 보고하지 않습니다.
+`checklists/suppressions.md`를 읽고 실제 문맥과 경계를 확인한 경우에만 억제합니다. 문자열 일치만으로
+자동 억제하지 않으며, 보안 발견에는 비밀이 아님 또는 도달 불가능함을 입증하는 근거가 필요합니다.
+P5 보고서에는 억제 건수와 이유를 남깁니다.
 
-### P4 — Fix-First Review
+### P4 — Action Triage
 
-**모든 발견에 조치를 취합니다 — 보고만 하지 않습니다.**
+기본 리뷰는 읽기 전용입니다. 각 발견을 `FIXABLE` 또는 `ASK`로 분류하되 파일을 수정하지 않습니다.
+사용자가 처음부터 `--fix`를 명시했거나 리뷰 뒤 수정을 별도로 승인한 경우에만 수정 단계로 넘어갑니다.
 
 #### 분류 기준
 
 ```
-AUTO-FIX (물어보지 않고 수정):         ASK (사람 판단 필요):
+FIXABLE (명시적 --fix에서만 수정):      ASK (사람 판단 필요):
 ├─ 죽은 코드 / 미사용 변수              ├─ 보안 (인증, XSS, 인젝션)
 ├─ N+1 쿼리 (eager loading 추가)        ├─ 경쟁 조건
 ├─ 코드와 불일치하는 주석               ├─ 설계 결정
@@ -179,22 +187,27 @@ AUTO-FIX (물어보지 않고 수정):         ASK (사람 판단 필요):
 └─ 인라인 스타일, O(n*m) 뷰 룩업
 ```
 
-**원칙:** 시니어 엔지니어가 토론 없이 적용할 수정이면 AUTO-FIX.
+**원칙:** 시니어 엔지니어가 토론 없이 적용할 수정이면 FIXABLE.
 합리적 의견이 갈리면 ASK.
 
 #### P4a: 분류
-각 발견을 AUTO-FIX 또는 ASK로 분류.
+각 발견을 FIXABLE 또는 ASK로 분류.
 
-#### P4b: AUTO-FIX 적용
+#### P4b: 명시적 수정 모드
+
+`--fix`가 없으면 이 단계는 건너뜁니다. `--gate`에서는 질문도 수정도 하지 않고 findings와
+PASS/CONDITIONAL/FAIL만 반환합니다.
+
+`--fix`가 있을 때만 다음 형식으로 안전한 FIXABLE 항목을 적용합니다.
 ```
-[AUTO-FIXED] [file:line] 문제 → 수정 내용
+[FIXED] [file:line] 문제 → 수정 내용
 ```
 
 #### P4c: ASK 일괄 질문
 
 ASK 항목이 있으면 **하나의 질문으로 일괄**:
 ```
-자동 수정 5건 완료. 2건은 판단이 필요합니다:
+수정 가능 5건을 찾았습니다. 2건은 판단이 필요합니다:
 
 1. [CRITICAL] (confidence: 9/10) app/models/user.py:42 — 상태 전이 경쟁 조건
    수정: WHERE status = 'draft' 추가
@@ -215,7 +228,7 @@ RECOMMENDATION: 모두 수정 권장 — #1은 실제 경쟁 조건, #2는 침�
 ```
 ═══════════════════════════════════════
 Pre-Landing Review: N issues (X critical, Y informational)
-Engine: [native:claude code-review / native:codex review / full-pass]
+Engine: [native:claude review / native:codex review / bundled:grok review / full-pass]
 Specialist: Z개 디스패치 (names)        ← 경로 C만
 ═══════════════════════════════════════
 
@@ -223,8 +236,10 @@ SCOPE CHECK: [CLEAN / DRIFT / MISSING]
 Intent: ...
 Delivered: ...
 
-AUTO-FIXED: (K건)
-- [file:line] 문제 → 수정
+FIXABLE: (K건)
+- [file:line] 문제 → 제안 수정
+FIXED: (L건, --fix 또는 별도 승인 시만)
+- [file:line] 적용한 수정
 ...
 
 NEEDS INPUT: (M건)
@@ -268,14 +283,14 @@ PR Quality Score: X/10
 
 ```bash
 # 변경된 파일 분석
-_DIFF_STAT=$(git diff origin/$_BASE --stat)
-_DIFF_LINES=$(echo "$_DIFF_STAT" | tail -1 | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
+_DIFF_STAT=$(git diff origin/$_BASE...HEAD --stat)
+_DIFF_LINES=$(git diff origin/$_BASE...HEAD --numstat | awk '{add+=$1; del+=$2} END {print add+del+0}')
 echo "DIFF_LINES: $_DIFF_LINES"
 
 # 스코프 시그널
 _HAS_BACKEND=false; _HAS_FRONTEND=false; _HAS_API=false
 _HAS_MIGRATIONS=false; _HAS_AUTH=false
-_CHANGED_FILES=$(git diff origin/$_BASE --name-only)
+_CHANGED_FILES=$(git diff origin/$_BASE...HEAD --name-only)
 echo "$_CHANGED_FILES" | grep -qiE '\.(py|rb|java|go|cs|rs|kt)$' && _HAS_BACKEND=true
 echo "$_CHANGED_FILES" | grep -qiE '\.(tsx?|jsx?|vue|svelte|css|scss)$' && _HAS_FRONTEND=true
 echo "$_CHANGED_FILES" | grep -qiE '(controller|route|endpoint|api|handler)' && _HAS_API=true
@@ -346,9 +361,13 @@ echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrati
 
 #### Dispatch
 
-선택된 specialist별로 Agent 도구를 사용하여 **단일 메시지에 모든 subagent를 동시 호출**합니다.
+선택된 specialist마다 **읽기 전용 탐색·검토 역할**을 배정합니다. 역할명은 의미 계약이며,
+현재 CLI가 제공하는 내장 explorer/reviewer를 사용합니다. 각 역할은 diff와 체크리스트만 읽고
+파일 수정, 커밋, 상태를 바꾸는 명령을 수행하지 않습니다. 네이티브 병렬 위임이 가능하면 함께
+실행하고, 위임 기능이 없거나 실패하면 메인 컨텍스트에서 specialist 체크리스트를 하나씩 순차 적용합니다.
+수정 가능한 일반 작업 역할은 이 단계에서 사용하지 않으며, 실제 수정은 P4의 명시적 `--fix` 경로가 담당합니다.
 
-각 subagent 프롬프트:
+각 검토 역할 프롬프트:
 ```
 [specialist name] specialist 코드 리뷰어로서 활동하세요.
 아래 체크리스트를 읽고, `git diff origin/[base]`로 diff를 가져와 체크리스트를 적용하세요.
@@ -371,7 +390,9 @@ echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrati
 
 ### C-4: Adversarial Review (적대적 리뷰)
 
-별도 subagent를 디스패치합니다. 체크리스트 편향 없는 신선한 시각.
+가능하면 C-3과 분리된 읽기 전용 검토 역할에 위임하여 체크리스트 편향 없는 시각을 얻습니다.
+위임할 수 없으면 메인 컨텍스트에서 C-3 결과를 확정하기 전에 아래 프롬프트로 별도 순차 패스를
+수행하고, 보고서에 `adversarial: sequential-main`으로 표시합니다.
 
 프롬프트:
 ```
@@ -408,7 +429,7 @@ agent-team Step 5(자재검사)의 reviewer teammate는 Skill 도구 접근이 �
 
 다음 단계 (선택):
   /minos          → Playwright 자동 테스트
-  security-reviewer    → 보안 전문 심층 리뷰
+  /code-reviewer 보안 감사 → 저장소 보안 심층 감사
   /commit              → 변경사항 커밋
   /ship                → PR 생성
 ```
@@ -446,11 +467,11 @@ agent-team Step 5(자재검사)의 reviewer teammate는 Skill 도구 접근이 �
 
 | Level | 표시 | 조치 |
 |-------|------|------|
-| Critical | FAIL | Merge 차단, Fix-First ASK |
-| Major | WARN | Fix-First AUTO-FIX 또는 ASK |
-| Minor | INFO | Fix-First AUTO-FIX |
+| Critical | FAIL | Merge 차단, ASK |
+| Major | WARN | FIXABLE 또는 ASK |
+| Minor | INFO | FIXABLE |
 | Nitpick | NOTE | Suppression 확인 후 무시 가능 |
 
 ---
 
-**버전:** 4.0.0 (Policy Layer Edition)
+**버전:** 4.1.0 (Policy Layer + Safe Security Audit)

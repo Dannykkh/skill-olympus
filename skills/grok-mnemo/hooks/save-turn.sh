@@ -413,10 +413,10 @@ notify_mnemo_status() {
         echo ""
         echo "- 새 관찰(정제 이후): **${delta}** / 누적 **${total}** (gotchas ${g_count} + learned ${l_count})"
         echo "- last handoff: **${days}일 전**"
-        echo "- 권장: \`/memory-distill --rebuild\` 또는 핸드오프"
+        echo "- 권장: 카탈로그의 source-only \`memory-distill\` 모듈을 직접 읽어 rebuild 또는 핸드오프"
         echo "- updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     } > "$status_file" 2>/dev/null || true
-    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
+    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → source-only memory-distill 모듈을 직접 읽어 rebuild 권장" >&2
 }
 if [ -n "$RESPONSE" ]; then
     notify_mnemo_status "$PROJECT_ROOT"

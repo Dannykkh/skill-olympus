@@ -66,7 +66,7 @@ section-02-api:
 **실행 조건:**
 - `src/`, `app/`, `lib/` 등 기존 소스가 있는지 확인
 - **없으면** (신규 프로젝트) → 건너뜀
-- **있으면** → 서브에이전트(`subagent_type="Explore"`)로 영향도 분석 실행
+- **있으면** → 현재 CLI의 읽기 전용 탐색 역할(Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`)로 영향도 분석. 위임이 없으면 Lead가 같은 검사를 순차 실행
 
 **분석 내용:**
 - 각 섹션이 수정할 파일 목록 추출 (섹션 스펙에서 파일 경로 파싱)
@@ -98,7 +98,12 @@ section-02-api:
 ## Activity Log 기록
 
 ```
-orchestrator_log_activity 또는 conversations/ 기록:
+기본 네이티브/순차 경로는 conversations/ 기록:
 type: "milestone"
 message: "산출물 검토 완료. 섹션 N개, 체크리스트 M개, 도면 K개 확인"
 ```
+
+`orchestrator_log_activity`는 Lead가 MCP 분기를 선택한 뒤 전역 `SKILLS-CATALOG.md`의
+`orchestrator` 행에서 정확한 `읽을 경로`를 읽고, `orchestrator_root` 기준
+`${orchestrator_root}/commands/workpm-mcp.md` 계약을 성공적으로 로드한 경우에만 병행합니다.
+그 전에는 MCP 도구를 호출하거나 등록된 스킬로 추정하지 않습니다.

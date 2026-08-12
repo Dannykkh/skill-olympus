@@ -15,7 +15,7 @@ param(
     [switch]$CleanStart,
 
     [Parameter(Mandatory=$false)]
-    [switch]$ManualMode,  # 권한 확인 모드 (--dangerously-skip-permissions 사용 안함)
+    [switch]$ManualMode,  # 각 CLI의 기본 대화형 권한 모드 사용
 
     [Parameter(Mandatory=$false)]
     [switch]$MultiAI,  # Multi-AI 모드 활성화 (Claude + Codex + Gemini)
@@ -93,16 +93,16 @@ function Get-AICommand {
 
     $cmd = switch ($Provider) {
         "claude" {
-            if ($AutoMode) { "claude --dangerously-skip-permissions" } else { "claude" }
+            if ($AutoMode) { "claude --permission-mode auto" } else { "claude" }
         }
         "codex" {
-            if ($AutoMode) { "codex -a never exec --sandbox workspace-write --skip-git-repo-check" } else { "codex" }
+            if ($AutoMode) { "codex --approve-for-me --sandbox workspace-write" } else { "codex" }
         }
         "gemini" {
-            if ($AutoMode) { "gemini --skip-trust --approval-mode yolo --output-format text -p" } else { "gemini" }
+            if ($AutoMode) { "gemini --sandbox --approval-mode yolo" } else { "gemini" }
         }
         default {
-            if ($AutoMode) { "claude --dangerously-skip-permissions" } else { "claude" }
+            throw "지원하지 않는 AI provider: $Provider"
         }
     }
     return $cmd
@@ -182,48 +182,44 @@ Write-ColorOutput "워커 수: $WorkerCount" "Green"
 Write-ColorOutput "`nAI Provider 감지 중..." "Yellow"
 $availableProviders = Get-AvailableAIProviders
 
+if ($availableProviders.Count -eq 0) {
+    Write-ColorOutput "오류: 지원되는 AI provider가 없습니다 (claude, codex, gemini)." "Red"
+    exit 1
+}
+
 $aiMode = "single"
 $workerAIs = @()
-
-if ($MultiAI -or $AIProviders) {
-    if ($availableProviders.Count -ge 3) {
-        $aiMode = "full"
-        Write-ColorOutput "`n모드: Full Mode (Claude + Codex + Gemini)" "Magenta"
-    } elseif ($availableProviders.Count -eq 2) {
-        $aiMode = "dual"
-        Write-ColorOutput "`n모드: Dual Mode ($($availableProviders -join ' + '))" "Magenta"
-    } else {
-        $aiMode = "single"
-        Write-ColorOutput "`n모드: Single Mode (Claude만 사용)" "Yellow"
-    }
-
-    # AIProviders가 지정되면 해당 설정 사용, 아니면 자동 배분
-    if ($AIProviders -and $AIProviders.Count -gt 0) {
-        $workerAIs = $AIProviders
-    } else {
-        # 자동 배분: 라운드 로빈 방식
-        for ($i = 0; $i -lt $WorkerCount; $i++) {
-            $providerIndex = $i % $availableProviders.Count
-            $workerAIs += $availableProviders[$providerIndex]
-        }
-    }
-
-    Write-ColorOutput "Worker AI 배정:" "Green"
-    for ($i = 0; $i -lt $workerAIs.Count; $i++) {
-        Write-ColorOutput "  Worker-$($i+1): $($workerAIs[$i])" "Cyan"
-    }
+if ($availableProviders.Count -ge 3) {
+    $aiMode = "full"
+    Write-ColorOutput "`n모드: Full Mode ($($availableProviders -join ' + '))" "Magenta"
+} elseif ($availableProviders.Count -eq 2) {
+    $aiMode = "dual"
+    Write-ColorOutput "`n모드: Dual Mode ($($availableProviders -join ' + '))" "Magenta"
 } else {
-    Write-ColorOutput "`n모드: Single Mode (Claude 전용)" "Yellow"
-    for ($i = 0; $i -lt $WorkerCount; $i++) {
-        $workerAIs += "claude"
+    Write-ColorOutput "`n모드: Single Mode ($($availableProviders[0]) only)" "Yellow"
+}
+
+$defaultProvider = $availableProviders[0]
+for ($i = 0; $i -lt $WorkerCount; $i++) {
+    $requestedProvider = if ($AIProviders -and $i -lt $AIProviders.Count) { $AIProviders[$i] } else { $defaultProvider }
+    if ($availableProviders -notcontains $requestedProvider) {
+        Write-ColorOutput "오류: 요청 provider '$requestedProvider'가 설치되어 있지 않습니다. 사용 가능: $($availableProviders -join ', ')" "Red"
+        exit 1
     }
+    $workerAIs += $requestedProvider
+}
+
+Write-ColorOutput "Worker AI 배정:" "Green"
+for ($i = 0; $i -lt $workerAIs.Count; $i++) {
+    Write-ColorOutput "  Worker-$($i+1): $($workerAIs[$i])" "Cyan"
 }
 
 # MCP 설정 생성 함수
 function Create-McpConfig {
     param(
         [string]$TargetDir,
-        [string]$WorkerId
+        [string]$WorkerId,
+        [string]$AIProvider = ""
     )
 
     $claudeDir = Join-Path $TargetDir ".claude"
@@ -231,15 +227,20 @@ function Create-McpConfig {
         New-Item -ItemType Directory -Path $claudeDir | Out-Null
     }
 
+    $mcpEnv = @{
+        ORCHESTRATOR_PROJECT_ROOT = $ProjectPath
+        ORCHESTRATOR_WORKER_ID = $WorkerId
+    }
+    if ($AIProvider) {
+        $mcpEnv.ORCHESTRATOR_AI_PROVIDER = $AIProvider
+    }
+
     $mcpConfig = @{
         mcpServers = @{
             orchestrator = @{
                 command = "node"
                 args = @($McpServerDist)
-                env = @{
-                    ORCHESTRATOR_PROJECT_ROOT = $ProjectPath
-                    ORCHESTRATOR_WORKER_ID = $WorkerId
-                }
+                env = $mcpEnv
             }
         }
     }
@@ -282,7 +283,7 @@ if (-not $SkipWorktrees) {
             git worktree add $workerWorktree $workerBranch 2>$null
             Pop-Location
         }
-        Create-McpConfig -TargetDir $workerWorktree -WorkerId $workerName
+        Create-McpConfig -TargetDir $workerWorktree -WorkerId $workerName -AIProvider $workerAIs[$i - 1]
     }
 }
 
@@ -300,13 +301,14 @@ $autoMode = -not $ManualMode
 if ($ManualMode) {
     Write-ColorOutput "실행 모드: 수동 (권한 확인 필요)" "Yellow"
 } else {
-    Write-ColorOutput "실행 모드: 자동 (권한 확인 스킵)" "Yellow"
+    Write-ColorOutput "실행 모드: 자동 (sandbox/auto-review 경계 유지)" "Yellow"
 }
 
-# PM 탭 (항상 Claude 사용)
+# PM 탭 (감지된 첫 provider 사용)
 $pmPath = if ($SkipWorktrees) { $ProjectPath } else { Join-Path $WorktreesDir "pm" }
-$pmCmd = Get-AICommand -Provider "claude" -AutoMode $autoMode
-$wtCommands += "new-tab --title `"PM (Claude)`" -d `"$pmPath`" cmd /k `"echo PM Ready && $pmCmd`""
+$pmProvider = $availableProviders[0]
+$pmCmd = Get-AICommand -Provider $pmProvider -AutoMode $autoMode
+$wtCommands += "new-tab --title `"PM ($pmProvider)`" -d `"$pmPath`" cmd /k `"echo PM Ready && $pmCmd`""
 
 # Worker 탭들 (Multi-AI 지원)
 for ($i = 1; $i -le $WorkerCount; $i++) {
@@ -314,7 +316,7 @@ for ($i = 1; $i -le $WorkerCount; $i++) {
     $workerPath = if ($SkipWorktrees) { $ProjectPath } else { Join-Path $WorktreesDir $workerName }
 
     # 워커별 AI 선택
-    $workerAI = if ($workerAIs.Count -ge $i) { $workerAIs[$i - 1] } else { "claude" }
+    $workerAI = $workerAIs[$i - 1]
     $workerCmd = Get-AICommand -Provider $workerAI -AutoMode $autoMode
 
     # 탭 타이틀에 AI 표시
@@ -325,7 +327,7 @@ for ($i = 1; $i -le $WorkerCount; $i++) {
 # Multi-AI 정보 문자열 생성
 $workerAIInfo = ""
 for ($i = 1; $i -le $WorkerCount; $i++) {
-    $ai = if ($workerAIs.Count -ge $i) { $workerAIs[$i - 1] } else { "claude" }
+    $ai = $workerAIs[$i - 1]
     $workerAIInfo += "- Worker-$i`: $ai`n"
 }
 
@@ -355,7 +357,7 @@ $(for ($i = 1; $i -le $WorkerCount; $i++) { "- Worker-$i`: $(Join-Path $Worktree
 ## 사용 방법
 
 ### PM (Project Manager)
-1. PM 탭에서 'claude' 실행
+1. PM 탭에서 감지된 provider CLI 실행
 2. AI Provider 감지:
    orchestrator_detect_providers 도구로 사용 가능한 AI 확인
 3. 프로젝트 분석:
@@ -377,10 +379,10 @@ $(for ($i = 1; $i -le $WorkerCount; $i++) { "- Worker-$i`: $(Join-Path $Worktree
 5. 작업 완료:
    orchestrator_complete_task
 
-## AI 별 최적 용도
-- **Claude**: 복잡한 추론, 코드 리팩토링, 문서 작성, 아키텍처 설계
-- **Codex**: 코드 생성, 테스트 작성, 반복 코드 수정, 빠른 프로토타이핑
-- **Gemini**: 대용량 컨텍스트 분석 (1M 토큰), 전체 코드베이스 리뷰, 보안 분석
+## Provider 선택 원칙
+- 별도 근거가 없으면 ai_provider를 생략해 provider-agnostic 태스크로 생성
+- 사용자 요구, 조직 정책, provider별 재현 필요성, 실제 평가 결과가 있을 때만 provider 고정
+- 요청 provider가 미설치면 다른 provider로 바꾸지 않고 실패 보고
 "@
 
 $infoPath = Join-Path $OrchestratorDir "README.md"
@@ -401,7 +403,7 @@ $wtFullCommand = "wt " + ($wtCommands -join " ; ")
 Write-ColorOutput $wtFullCommand "Cyan"
 
 Write-ColorOutput ""
-Write-ColorOutput "또는 수동으로 각 디렉토리에서 'claude'를 실행하세요:" "Yellow"
+Write-ColorOutput "또는 수동으로 각 디렉토리에서 배정된 provider CLI를 실행하세요:" "Yellow"
 Write-ColorOutput "  PM: $pmPath" "Gray"
 for ($i = 1; $i -le $WorkerCount; $i++) {
     $workerPath = if ($SkipWorktrees) { $ProjectPath } else { Join-Path $WorktreesDir "worker-$i" }

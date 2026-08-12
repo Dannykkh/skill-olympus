@@ -10,32 +10,36 @@
 설계 (What)        구현 (Build)            검증 (Verify)         배포 (Ship)
 ─────────────     ─────────────────      ─────────────        ──────────────
                   ┌ /agent-team ──┐
-/zephermine ──→   │  (Claude 병렬) │ ──→  /minos ──→  /docker-deploy
-                  ├ /workpm ──────┤
-                  │  (멀티AI 병렬) │
-                  └───────────────┘
+/zephermine ──→   │ (CLI 네이티브) │ ──→  /minos ──→  Docker 배포 요청
+                  ├ /workpm ──────┤                       (source-only 직접 로드)
+                  │ (CLI 네이티브) │
+                  └──────┬────────┘
+                         └ 필요 시 Orchestrator MCP
+                           (hard lock·외부 보드·cross-CLI)
 ```
+
+기본 활성 slash 진입점은 파이프라인 하네스와 런타임 어댑터에만 제공됩니다. `docker-deploy`, `mermaid-diagrams`, `documentation-and-adrs`, `code-reviewer` 같은 source-only 기능은 자연어로 요청하면 카탈로그의 정확한 `SKILL.md`를 직접 읽어 적용합니다. 해당 이름의 slash 호출이 필요할 때만 `--include-source-only-skills`로 활성화합니다.
 
 ### 각 Phase의 역할
 
-| Phase | 명령어 | 산출물 | 핵심 질문 |
+| Phase | 진입점/요청 | 산출물 | 핵심 질문 |
 |-------|--------|--------|----------|
 | **설계** | `/zephermine` | 스펙, 섹션, QA 시나리오, API 명세, DB 스키마 | **무엇**을 만드는가? |
-| **아키텍처** | `architect` 에이전트 | ADR, 기술 스택 결정 | **어떤 구조**로 만드는가? |
+| **아키텍처** | `아키텍처를 검토하고 ADR로 기록해줘` | ADR, 기술 스택 결정 | **어떤 구조**로 만드는가? |
 | **구현** | `/agent-team` 또는 `workpm` | 소스 코드 | **코드**를 작성 |
 | **검증** | `/minos` | 테스트 코드, QA 보고서 | **동작**하는가? |
-| **배포** | `/docker-deploy` | Dockerfile, docker-compose, install.bat | **어떻게 배포**하는가? |
+| **배포** | `Docker 배포 환경 만들어줘` | Dockerfile, docker-compose, install.bat | **어떻게 배포**하는가? |
 
 ### 각 Phase에서 사용되는 리소스
 
-| Phase | 스킬 | 에이전트 (패시브) | MCP |
+| Phase | 스킬 | 필요 시 명시적으로 쓰는 에이전트 | MCP |
 |-------|------|-----------------|-----|
-| **설계** | zephermine | spec-interviewer | Tavily (웹 리서치), Exa (코드 검색), Codex/Gemini CLI (도메인 전문가) |
-| **아키텍처** | — | architect | — |
-| **구현** | agent-team, orchestrator | frontend-react, backend-spring, database-mysql, database-postgresql, fullstack-coding-standards, naming-conventions | Playwright (E2E), Context7 (라이브러리 문서) |
-| **검증** | minos | qa-engineer, qa-writer, code-reviewer | Playwright (테스트 실행) |
-| **배포** | docker-deploy | — | — |
-| **공통** | commit-work, mnemo, hestia, deprecation-and-migration | security-reviewer | GitHub (PR/이슈) |
+| **설계** | zephermine | 현재 CLI의 네이티브 계획·탐색 및 artifact-writer | Tavily/Exa (선택 리서치), 설치된 Codex/Gemini 외부 리뷰 프로세스 (선택) |
+| **아키텍처** | documentation-and-adrs, mermaid-diagrams (source-only 직접 로드) | 네이티브 계획·검토 | 공식 기술 문서 (필요 시) |
+| **구현** | agent-team/workpm (활성), orchestrator (MCP 분기에서만 source-only 직접 로드) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (라이브러리 문서) |
+| **검증** | minos (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
+| **배포** | docker-deploy (source-only 직접 로드) | — | — |
+| **공통** | mnemo (활성), commit-work·hestia·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
 
 ---
 
@@ -44,14 +48,14 @@
 ### 대형: 신규 프로젝트, 복잡한 다기능 시스템
 
 ```
-/zephermine → architect → /agent-team → /minos → /docker-deploy
+/zephermine → 아키텍처 검토·ADR 작성 요청 → /agent-team → /minos → Docker 배포 요청
 ```
 
 1. **`/zephermine`**: 심층 인터뷰 → 리서치 → 스펙 → 섹션 분리
-2. **`architect`**: 기술 스택 평가 → ADR 작성 → 확장성 설계
+2. **아키텍처 검토·ADR 작성 요청**: 네이티브 대안 비교 → 프로젝트 제약 검증 → source-only `documentation-and-adrs` 직접 로드
 3. **`/agent-team`**: 섹션별 teammate 배정 → Wave 병렬 구현 → verify
 4. **`/minos`**: QA 시나리오 → Playwright 테스트 → Healer 루프
-5. **`/docker-deploy`**: Dockerfile + docker-compose + 설치 스크립트
+5. **Docker 배포 요청**: source-only `docker-deploy`를 카탈로그에서 직접 읽어 Dockerfile + docker-compose + 설치 스크립트 생성
 
 **예시**: SaaS 플랫폼, 관리자 대시보드, 멀티테넌트 시스템
 
@@ -102,7 +106,9 @@
 /zeus "할일 관리 앱 만들어줘"
 ```
 
-1. **`/zeus`**: 설계(zephermine) → 구현(workpm) → 테스트(minos)를 **zero-interaction**으로 전체 자동 실행
+1. **`/zeus`**: 설명 파싱 → 설계(zephermine) → 구현(agent-team/workpm) → 감리(argos) → Docker → 테스트(minos) → 증거 보고의 **Phase 0~6**을 zero-interaction으로 실행
+
+Hermes, Athena, Clio는 필요할 때 독립 호출하는 진입점이며 Zeus가 암묵적으로 실행하지 않습니다.
 
 AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리합니다.
 
@@ -122,25 +128,28 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | zephermine | 23단계 워크플로우 (인터뷰→리서치→도메인분석→스펙→DB스키마→섹션→스킬탐색) |
-| **에이전트** | spec-interviewer | 심층 인터뷰 진행 (A~G 카테고리) |
-| **에이전트** | explore-agent | 기존 코드베이스 분석 |
-| **에이전트** | Domain Process Expert | 업무 흐름표 작성 (기능별 역할/CRUD 권한/입출력/예외) |
-| **에이전트** | Domain Technical Expert | 기술 스택 매핑 (연동/규제/SLA/기존 솔루션) |
+| **스킬** | zephermine | 26단계 워크플로우 (리서치→인터뷰→스펙→6전문가 검토→계획→DB/API/도면→섹션→검증) |
+| **네이티브 역할** | `read-only-analysis` | 기존 코드·문서 분석만 수행하고 파일은 쓰지 않음 |
+| **네이티브 역할** | `artifact-writer` | UX/Architecture/Red Team/Domain Research/Domain Process/Domain Technical의 고유 산출물 1개만 작성 |
+| **Main/Lead** | 통합 소유자 | `team-review.md`, 도메인사전 병합, 공유 상태와 완료 판정을 단독 소유 |
 | **MCP** | Tavily | 웹 리서치 (기술 트렌드, 경쟁사 분석) |
 | **MCP** | Exa | 코드 스니펫 검색 (구현 패턴, API 사용법) |
-| **외부 AI** | Codex / Gemini CLI | 도메인 전문가 분석 (설치 시 자동 활용, 없으면 Claude) |
+| **외부 리뷰 프로세스** | Codex / Gemini CLI | 설치되고 해당 provider 실행이 가능할 때만 독립 도메인 분석에 사용; 실패·부재 시 현재 런타임의 `artifact-writer`, 이어서 Main 순차 실행으로 폴백 |
+
+의미 역할은 Claude `Explore`/`general-purpose`, Codex `explorer`/`worker`, Gemini
+`codebase_investigator`/`generalist`, Grok `explore`/`general-purpose`로 매핑합니다. provider 이름을
+역할처럼 하드코딩하지 않으며, 외부 CLI 프로세스와 현재 런타임의 네이티브 위임을 구분합니다.
 
 ### 산출물
 
 | 파일 | 내용 | 다음 Phase에서 소비 |
 |------|------|-------------------|
-| `spec.md` | 설계 스펙 (기능, 비기능, 제약사항) | architect, 개발자 |
+| `spec.md` | 설계 스펙 (기능, 비기능, 제약사항) | 아키텍처 검토, 개발자 |
 | `plan.md` | 구현 계획 (섹션 분할 근거) | agent-team, workpm |
 | `domain-process-analysis.md` | 업무 흐름표 (역할/CRUD/입출력/예외) | 개발자 (API 설계 근거) |
-| `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | architect, 개발자 |
+| `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | 아키텍처 검토, 개발자 |
 | `qa-scenarios.md` | QA 테스트 시나리오 | minos |
-| `db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | architect, 개발자, api-spec |
+| `db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | 아키텍처 검토, 개발자, api-spec |
 | `api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, minos |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
 
@@ -152,7 +161,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 ---
 
-## Phase 1.5: 아키텍처 — `architect` 에이전트
+## Phase 1.5: 아키텍처 — 네이티브 검토 + source-only 직접 로드
 
 **언제 쓰나**: 기술 스택 선정, 확장성 설계, 큰 구조 결정이 필요할 때
 
@@ -165,10 +174,10 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **에이전트** | architect | 아키텍처 패턴, 기술 스택 평가, SOLID, ADR |
-| **에이전트** | database-schema-designer | DB-First 스키마 설계, ERD, DDL |
-| **스킬** | mermaid-diagrams | 아키텍처 다이어그램 시각화 |
-| **스킬** | database-schema-designer | DB 스키마 설계 상세 참조 |
+| **네이티브 기능** | 계획·검토 | 프로젝트 제약을 근거로 대안·트레이드오프·경계 검증 |
+| **source-only 모듈** | documentation-and-adrs | 카탈로그에서 직접 읽어 선택된 결정을 ADR로 기록하고 변경 이력 관리 |
+| **source-only 모듈** | mermaid-diagrams | 카탈로그에서 직접 읽어 아키텍처 다이어그램 시각화 |
+| **source-only 모듈** | database-schema-designer | 카탈로그에서 직접 읽어 DB-First 스키마 설계, ERD, DDL 작성 |
 
 ### 산출물
 
@@ -184,52 +193,52 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 ---
 
-## Phase 2: 구현 — `/agent-team` vs `workpm` vs `workpm-mcp`
+## Phase 2: 구현 — `/agent-team` vs `workpm` vs orchestrator MCP
 
 ### 선택 기준
 
-| 기준 | `/agent-team` | `workpm` | `workpm-mcp` |
+| 기준 | `/agent-team` | `workpm` | orchestrator MCP |
 |------|--------------|-----------|-------------|
-| **AI 엔진** | Claude만 | Claude (+ Codex/Gemini Worker) | 모든 CLI |
-| **PM↔Worker** | 실시간 대화 | 실시간 대화 | 태스크 기반 (대화 없음) |
-| **장점** | 네이티브 통합, 빠름 | 팀원 통신 + 멀티AI | Codex/Gemini PM 가능 |
-| **단점** | Claude 토큰만 소비 | Claude PM 필수 | PM↔Worker 통신 불가 |
-| **적합** | 젭마인 섹션 기반 | 복잡한 조율 필요 | 명확한 태스크 분할 |
+| **AI 엔진** | 현재 CLI의 네이티브 팀/서브에이전트 | 현재 CLI의 네이티브 팀/서브에이전트 | 여러 CLI를 연결하는 MCP |
+| **PM↔Worker** | 런타임 네이티브 통신 | 런타임 네이티브 통신 | 외부 태스크 보드 |
+| **장점** | 젭마인 섹션을 Wave로 빠르게 구현 | 사전 설계 없이 PM이 탐색부터 검증까지 진행 | hard lock, 혼합 CLI, 외부 상태 공유 |
+| **단점** | sections 산출물이 필요 | PM 오버헤드가 있음 | 별도 서버 설정과 태스크 기반 통신 필요 |
+| **적합** | 젭마인 섹션 기반 | 바로 구현할 요청 | 네이티브로 처리하기 어려운 대규모 혼합 작업 |
 | **입력** | sections/index.md | 사용자 지시 | 사용자 지시 |
-| **병렬** | Wave 기반 | PM이 분배 | PM이 분배 |
+| **병렬** | Wave 기반 | PM이 독립 작업만 분배 | 외부 보드에서 분배 |
+
+읽기 전용 탐색은 Claude `Explore` / Codex `explorer` / Gemini `codebase_investigator` / Grok `explore`, 파일 변경과 명령 실행은 Claude `general-purpose` / Codex `worker` / Gemini `generalist` / Grok `general-purpose`로 매핑합니다. 메인 컨텍스트가 공유 장부와 완료 판정을 소유하고, 위임이 없거나 병렬 이득이 없으면 같은 절차를 순차 실행합니다.
 
 ### `/agent-team` 사용 시 리소스
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
 | **스킬** | agent-team | Wave 계획, 태스크 분배, 검증 |
-| **에이전트** | frontend-react | React/TypeScript/Zustand/TanStack 전문가 |
-| **에이전트** | backend-spring | Java 21/Spring Boot 3.x 전문가 |
-| **에이전트** | database-mysql | MySQL 8.0/Flyway 전문가 |
-| **에이전트** | database-postgresql | PostgreSQL/Supabase/RLS 전문가 |
-| **에이전트** | fullstack-coding-standards | 4계층 아키텍처 규칙 (패시브) |
-| **에이전트** | naming-conventions | 네이밍 규칙 (패시브) |
+| **네이티브 작업자** | 프론트엔드 구현 | package/lockfile·tsconfig·기존 UI 구조·DESIGN.md·테스트 계약 |
+| **네이티브 작업자** | Java/Spring 구현 | build manifest·BOM·기존 계층·설정·테스트 계약 |
+| **네이티브 작업자** | DB 구현 | 실제 DB 버전·schema·migration 도구·실행 계획·테스트 계약 |
+| **스킬** | naming-analyzer | 이름 검토가 필요할 때 명시 호출 |
 | **MCP** | Context7 | 라이브러리 문서 실시간 검색 |
 | **MCP** | Playwright | E2E 테스트 실행 |
 
-파일 패턴에 따라 전문가 에이전트가 자동 매칭됩니다:
-- `*.tsx`, `components/**` → frontend-react
-- `api/**`, `controllers/**` → backend-spring
-- `migrations/**`, `*.sql` → database-postgresql
-- `*.py` → python-fastapi-guidelines
-- 매칭 안 됨 → fullstack-coding-standards
+파일 패턴에 따라 네이티브 작업자에게 프로젝트 계약이 자동 매칭됩니다:
+- `*.tsx`, `components/**` → package/lockfile·tsconfig·기존 컴포넌트·DESIGN.md·테스트
+- `api/**`, `controllers/**` → build manifest·기존 서비스 경계·API 계약·통합 테스트
+- `migrations/**`, `*.sql` → 실제 DB 종류·schema·migration 설정·실행 계획
+- `*.py` → 네이티브 범용 teammate + 프로젝트 `pyproject.toml`·테스트
+- 매칭 안 됨 → 별도 가이드 없는 네이티브 범용 teammate
 
-### `workpm` / `workpm-mcp` 사용 시 리소스
+### `workpm` / 명시적 MCP 모드 사용 시 리소스
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | orchestrator | PM-Worker 패턴, 태스크 분배, 파일 락 |
-| **커맨드** | workpm | PM 모드 (Claude Agent Teams, 실시간 대화) |
-| **커맨드** | workpm-mcp | PM 모드 (MCP 전용, 모든 CLI에서 동작) |
-| **커맨드** | pmworker | Worker 모드 (모든 CLI에서 동작) |
+| **스킬** | workpm | 네이티브 PM 흐름, 역할 분배, 검증 |
+| **source-only 모듈** | orchestrator | MCP 분기를 선택했을 때만 카탈로그에서 직접 읽는 정책 레이어, 태스크 보드, 파일 락 |
+| **커맨드** | workpm | PM 모드 (현재 CLI의 네이티브 작업자, 없으면 메인 순차 실행) |
+| **커맨드** | workpm-mcp | hard lock·외부 태스크 보드·혼합 CLI가 필요할 때의 MCP 정책 모드 |
+| **커맨드** | pmworker | 명시적 MCP 모드 Worker (Claude/Codex/Gemini) |
 | **MCP** | orchestrator | PM/Worker 간 통신, 태스크 상태 관리 |
-| **외부 AI** | Codex CLI | 추론 집약 작업 (알고리즘, 리팩토링) |
-| **외부 AI** | Gemini CLI | 대용량 컨텍스트 (200K+ 토큰) |
+| **외부 AI** | Codex/Gemini CLI | 사용자가 혼합 CLI 실행을 선택했을 때만 명시 provider로 배정 |
 
 ---
 
@@ -248,23 +257,23 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | minos | 5단계 워크플로우 (수집→생성→실행→Healer→보고) |
-| **에이전트** | qa-engineer | 품질 판정 기준 (PASS/CONDITIONAL/FAIL) |
-| **에이전트** | qa-writer | 시나리오 없을 때 현장 생성 |
-| **에이전트** | code-reviewer | 코드 품질 기준 (패시브) |
+| **스킬** | minos | 7단계 워크플로우 (수집→생성→서버 준비→실행→탐색 QA→Healer→보고) |
+| **내장 계약** | Minos Step 1 | 시나리오가 없을 때 프로젝트 근거로 현장 생성 |
+| **네이티브 작업자** | 프로젝트 테스트 계약 | 실제 test runner 설정·인접 테스트·빌드 명령 기반 구현·검증 |
+| **source-only 모듈** | code-reviewer | 자연어 리뷰 요청 시 카탈로그에서 직접 읽는 코드 품질 정책 |
 | **MCP** | Playwright | 브라우저 자동화, E2E 테스트 실행 |
 
 ### 입력 소스 (우선순위)
 
 1. `$ARGUMENTS`로 전달된 파일
 2. `qa-scenarios.md` (젭마인 산출물)
-3. `docs/qa/*.md` (qa-writer 산출물)
+3. `docs/qa/*.md` (기존 QA 문서)
 4. 없으면 프로젝트 분석해서 현장 생성
 
-### 5단계
+### 7단계
 
 ```
-시나리오 수집 → Playwright 코드 생성 → 실행 → Healer 루프 (max 5회) → 보고
+시나리오 수집 → Playwright 코드 생성 → 서버 준비 → 실행 → 브라우저 탐색 QA → Healer 루프 (max 5회) → 보고
 ```
 
 ### 판정
@@ -277,19 +286,21 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 ---
 
-## Phase 4: 배포 — `/docker-deploy`
+## Phase 4: 배포 — 자연어 요청
 
 **언제 쓰나**: QA 통과 후 Docker 기반 배포 환경을 만들 때
 
 ```
-/docker-deploy
+Docker 배포 환경 만들어줘
 ```
+
+`docker-deploy`는 기본 활성 slash 진입점이 아닙니다. 위 자연어 요청으로 카탈로그 원본을 직접 읽거나, `--include-source-only-skills`로 활성화한 환경에서만 해당 slash 호출을 사용합니다.
 
 ### 사용되는 리소스
 
 | 종류 | 이름 | 역할 |
 |------|------|------|
-| **스킬** | docker-deploy | Dockerfile, docker-compose, install 스크립트 생성 |
+| **source-only 모듈** | docker-deploy | 카탈로그에서 직접 읽어 Dockerfile, docker-compose, install 스크립트 생성 |
 
 ### 산출물
 
@@ -321,64 +332,64 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 메인 파이프라인 외에 끼워 쓸 수 있는 도구들입니다. 세 종류로 나뉩니다.
 
-### 항상 적용 (패시브)
+### 필요할 때 명시적 적용
 
-호출할 필요 없이 자동으로 적용되는 규칙:
+기본 구현 컨텍스트에는 넣지 않고, 특정 검증이나 참고가 필요할 때 자연어로 요청합니다. 아래 모듈은 모두 source-only이며 카탈로그에서 직접 읽습니다:
 
-| 에이전트 | 역할 | 적용 범위 |
-|---------|------|----------|
-| `fullstack-coding-standards` | 4계층 아키텍처, 코딩 규칙 12개 | 코드 작성 시 항상 |
-| `code-reviewer` | 기능/책임 단위 분리, DRY, 보안 체크 | 코드 작성 시 항상 |
-| `react-best-practices` | Vercel 45개 React 규칙 | React 코드 작성 시 |
-| `naming-conventions` | 네이밍 규칙 | 변수/함수/클래스 작성 시 |
+| 스킬 | 역할 | 적용 범위 |
+|------|------|----------|
+| `fullstack-coding-standards` | 4계층 아키텍처, 코딩 규칙 12개 | 사용자가 명시 요청할 때 |
+| `code-reviewer` | 기능/책임 단위 분리, DRY, 보안 체크 | 코드 리뷰나 보안 감사를 요청할 때 |
+| `react-best-practices` | Vercel React 규칙 | React 규칙 검토를 요청할 때 |
+| `naming-analyzer` | 네이밍 분석·대안 제안 | 네이밍 검토를 요청할 때 |
 
 ### 문서화 도구
 
 설계~구현 사이에 끼워 넣어 산출물을 만드는 도구:
 
-| 도구 | 종류 | 용도 | 끼워 넣는 시점 |
+| 자연어 요청 | 처리 방식 | 용도 | 끼워 넣는 시점 |
 |------|------|------|--------------|
-| `/write-prd` | 스킬 | PRD (요구사항 정의서) 작성 | 설계 전 또는 설계 중 |
-| `/write-api-docs` | 스킬 | API 엔드포인트 문서 생성 | 구현 후 |
-| `mermaid-diagrams` | 스킬 | ERD, 시퀀스, 아키텍처 다이어그램 | 설계 중 또는 구현 후 |
-| `database-schema-designer` | 에이전트+스킬 | DB 스키마 설계 + ERD (DB-First) | 설계 중 (architect 이후) |
-| `documentation` | 에이전트 | 기술 문서, 변경 이력 | 구현 후 |
-| `/update-docs` | 스킬 | 기존 문서 파일 업데이트 | 구현 후 |
+| `PRD 작성해줘` | 네이티브 작성 또는 목적별 source-only 모듈 직접 로드 | PRD (요구사항 정의서) 작성 | 설계 전 또는 설계 중 |
+| `API 문서 작성해줘` | 네이티브 작성 또는 source-only `api-handoff` 직접 로드 | API 엔드포인트 문서 생성 | 구현 후 |
+| `ERD/시퀀스 다이어그램 만들어줘` | source-only `mermaid-diagrams` 직접 로드 | ERD, 시퀀스, 아키텍처 다이어그램 | 설계 중 또는 구현 후 |
+| `DB 스키마 설계해줘` | source-only `database-schema-designer` 직접 로드 | DB 스키마 설계 + ERD (DB-First) | 설계 중 (아키텍처 검토 후) |
+| `ADR 작성해줘` | source-only `documentation-and-adrs` 직접 로드 | 결정과 변경 이력 기록 | 설계 결정 후 |
+| `기존 문서 업데이트해줘` | 네이티브 문서 작업 | 기존 문서 파일 업데이트 | 구현 후 |
 
 ### 리뷰 & 유틸리티
 
-| 도구 | 종류 | 용도 | 끼워 넣는 시점 |
+| 자연어 요청 | 처리 방식 | 용도 | 끼워 넣는 시점 |
 |------|------|------|--------------|
-| `/review` | 스킬 | 코드 리뷰 (품질/보안/성능) | 구현 후, QA 전 |
-| `security-reviewer` | 에이전트 | 보안 전문 감사 (OWASP) | 구현 후, 배포 전 |
-| `/hestia` | 스킬 | 코드 정리, dead code 탐지 | 구현 후, 리뷰 전 |
-| `/deprecate` | 스킬 | 레거시 폐기/마이그레이션 계획 | 구현 후, 리뷰 전 |
-| `/explain` | 스킬 | 코드 설명 (비유 + Mermaid) | 아무 때나 |
-| `/commit` | 스킬 | Git 커밋 | 각 Phase 완료 시 |
-| `/wrap-up` | 스킬 | 세션 요약 + MEMORY.md 업데이트 | 세션 종료 시 |
+| `코드 리뷰해줘` | CLI 네이티브 리뷰 + 필요 시 source-only `code-reviewer` 직접 로드 | 코드 리뷰 (품질/보안/성능) | 구현 후, QA 전 |
+| `보안 감사해줘` | source-only `code-reviewer` 보안 감사 계약 직접 로드 | 시크릿·공급망·CI/CD·코드·STRIDE 감사 | 구현 후, 배포 전 |
+| `dead code 정리해줘` | source-only `hestia` 직접 로드 | 코드 정리, dead code 탐지 | 구현 후, 리뷰 전 |
+| `레거시 폐기 계획 세워줘` | source-only `deprecation-and-migration` 직접 로드 | 레거시 폐기/마이그레이션 계획 | 구현 후, 리뷰 전 |
+| `이 코드 설명해줘` | 네이티브 설명 + 필요 시 source-only `explain` 직접 로드 | 코드 설명 | 아무 때나 |
+| `커밋해줘` | 네이티브 Git 흐름 + 필요 시 source-only `commit-work` 직접 로드 | Git 커밋 | 각 Phase 완료 시 |
+| `핸드오프 준비해줘` | Mnemo 세션 규칙 | 세션 요약 + MEMORY.md 업데이트 | 세션 종료 시 |
 
 ### 보조 도구를 끼워 넣은 풀 파이프라인
 
 ```
 /zephermine
-  ├─ /write-prd (요구사항 정리가 필요하면)
-  ├─ mermaid-diagrams (ERD 시각화)
-  └─ database-schema-designer (DB 설계)
+  ├─ "PRD 작성해줘" (요구사항 정리가 필요하면)
+  ├─ "ERD 만들어줘" (source-only 직접 로드)
+  └─ "DB 스키마 설계해줘" (source-only 직접 로드)
      ↓
- architect
+ "아키텍처를 검토하고 ADR로 기록해줘"
      ↓
  /agent-team
-  └─ (패시브 에이전트 자동 적용)
+  └─ (파일 패턴별 프로젝트 계약을 현재 CLI의 네이티브 작업자에 배정)
      ↓
- /review + security-reviewer
+ "코드 리뷰와 보안 감사해줘"
      ↓
  /minos
      ↓
- /docker-deploy
+ "Docker 배포 환경 만들어줘"
      ↓
- /write-api-docs + /update-docs
+ "API 문서 작성하고 기존 문서 업데이트해줘"
      ↓
- /commit → /wrap-up
+ "커밋해줘" → "핸드오프 준비해줘"
 ```
 
 ---
@@ -391,26 +402,26 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 # 1. 설계
 /zephermine "온라인 서점 만들어줘"
 # → 인터뷰 20분 → 스펙 + QA + API 명세 + 12개 섹션
-# 사용: spec-interviewer, Tavily, Exa
+# 사용: zephermine 내장 인터뷰, 네이티브 탐색, Tavily, Exa
 
 # 2. 아키텍처
-# architect 에이전트에게 @spec.md 전달
-# → Next.js + Spring Boot + PostgreSQL 결정
-# 사용: architect, mermaid-diagrams, database-schema-designer
+# "아키텍처를 검토하고 ADR로 기록해줘"라고 요청해 @spec.md의 제약과 후보 비교
+# → Next.js + Spring Boot + PostgreSQL 결정 근거 보존
+# 사용: 네이티브 검토 + source-only documentation-and-adrs, mermaid-diagrams, database-schema-designer 직접 로드
 
 # 3. 구현
 /agent-team
 # → sections/ 자동 파싱 → Wave 3개 → teammate 10명 병렬
-# 사용: frontend-react, backend-spring, database-postgresql, Context7
+# 사용: 네이티브 구현 작업자, 프로젝트 설정·인접 코드·테스트, 필요 시 Context7
 
 # 4. 검증
 /minos
 # → qa-scenarios.md 45개 시나리오 → Playwright 실행
 # → Healer 2회 수정 → PASS (43/45 즉시 통과, 2개 수정 후 통과)
-# 사용: qa-engineer, Playwright MCP
+# 사용: Minos 내장 판정 계약, 프로젝트 테스트 설정, Playwright MCP
 
 # 5. 배포
-/docker-deploy
+Docker 배포 환경 만들어줘
 # → Dockerfile (Next.js + Spring Boot) + docker-compose (+ PostgreSQL)
 # → install.bat/sh 원클릭 설치 스크립트
 ```
@@ -424,7 +435,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 # 2. 구현 (섹션 적으니 수동)
 # 직접 코딩 또는 /agent-team
-# 사용: backend-spring, fullstack-coding-standards (패시브)
+# 프로젝트 build manifest와 기존 경계를 읽는 네이티브 구현
 
 # 3. 검증
 /minos --api-only
@@ -440,7 +451,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 /minos
 # → 인증 관련 시나리오 자동 생성 → 실행 → PASS
 
-/commit
+커밋해줘
 # → 변경사항 분석 → 커밋
 ```
 
@@ -454,9 +465,9 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | [schema-design-workflow.md](schema-design-workflow.md) | 스키마 설계 워크플로우 상세 |
 | [AGENTS.md](../AGENTS.md) | 에이전트/스킬 전체 목록 + Recommended Workflows |
 | [QUICK-REFERENCE.md](../QUICK-REFERENCE.md) | 외부 리소스 포함 전체 참조 |
-| [skills/zeus/](../skills/zeus/) | 제우스 전자동 파이프라인 (설계→구현→테스트) |
+| [skills/zeus/](../skills/zeus/) | 제우스 Phase 0~6 전자동 파이프라인 (파싱→설계→구현→감리→Docker→테스트→증거 보고) |
 | [skills/zephermine/](../skills/zephermine/) | 젭마인 설계 스킬 |
-| [skills/agent-team/](../skills/agent-team/) | Agent Teams 병렬 실행 |
-| [skills/orchestrator/](../skills/orchestrator/) | PM-Worker 멀티AI 오케스트레이션 |
+| [skills/agent-team/](../skills/agent-team/) | 4-CLI 네이티브 역할 기반 병렬 실행 |
+| [skills/orchestrator/](../skills/orchestrator/) | hard lock·외부 보드·cross-CLI용 MCP 정책 레이어 |
 | [skills/minos/](../skills/minos/) | QA 자동 테스트 + Healer |
 | [skills/docker-deploy/](../skills/docker-deploy/) | Docker 배포 환경 생성 |

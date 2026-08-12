@@ -6,7 +6,7 @@
 # - 실패는 .claude/mnemo-errors.log에 기록
 # - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1
 #
-# Note: Gemini는 JSONL transcript가 없어 reconcile이 불가능하다.
+# Note: Gemini는 네이티브 세션 저장소가 있지만 Mnemo reconciler가 아직 import하지 않는다.
 #       훅이 실패하면 해당 턴은 영구 유실되므로 fail-open 로깅이 특히 중요하다.
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
@@ -314,8 +314,8 @@ if ($userText -and $userText.Length -ge 1) {
 }
 
 # Assistant 응답 처리
-# P2 parity: 4000자 truncation 제거. JSONL 원본이 없는 Gemini에서는 유실된 부분을
-# 복구할 경로가 없으므로 온전한 원문을 저장해야 한다.
+# P2 parity: 4000자 truncation 제거. Gemini 네이티브 세션 저장소를 Mnemo가
+# 아직 import하지 않으므로 온전한 원문을 저장해야 한다.
 if ($response -and $response.Length -ge 5) {
     $entry += "`n## [$ts] Assistant`n`n$response`n"
 }
@@ -434,9 +434,9 @@ function Notify-MnemoStatus {
         }
         $statusFile = Join-Path $statusDir '.mnemo-status.md'
         $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: ``/memory-distill --rebuild`` 또는 핸드오프`n- updated: $now`n"
+        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: 카탈로그의 source-only ``memory-distill`` 모듈을 직접 읽어 rebuild 또는 핸드오프`n- updated: $now`n"
         [System.IO.File]::WriteAllText($statusFile, $content, $Utf8NoBom)
-        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> /memory-distill --rebuild 권장")
+        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> source-only memory-distill 모듈을 직접 읽어 rebuild 권장")
     } catch {}
 }
 Notify-MnemoStatus -Root $ProjectRoot

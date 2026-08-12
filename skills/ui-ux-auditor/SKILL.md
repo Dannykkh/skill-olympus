@@ -10,7 +10,7 @@ description: "웹 프로젝트 UI/UX 9영역 자동 감사 + 스크린샷 시각
 > **세부 규칙 DB**: [references/ux-guidelines.csv](references/ux-guidelines.csv) — nextlevelbuilder/ui-ux-pro-max-skill(MIT)에서 흡수한 UX 이슈 99종(No/Category/Issue/Platform/Description/Do/Don't/Code Example Good/Code Example Bad/Severity). 아래 9영역 각각에 Category 컬럼으로 매핑돼 있으니, 채점 시 해당 영역 Category로 grep해 Do/Don't·코드 예시를 인용하세요. Web/Mobile/All/VisionOS로 플랫폼 태그가 붙어 있어 관련 없는 플랫폼 행은 건너뜁니다.
 
 **상호보완 관계:**
-- `ui-ux-designer` (에이전트): 디자인 **조언** — "이렇게 만들어라" (개발 중)
+- `design-plan`의 네이티브 렌더 비평: 디자인 **방향·계약** — "어떤 경험을 만들 것인가" (개발 전·중)
 - `ui-ux-auditor` (이 스킬): UI/UX **점검 + 수정** — "이게 문제니까 고쳐라" (개발 후)
 
 ## 적용 시점
@@ -304,7 +304,7 @@ See [ai-slop-blacklist.md](../frontend-design/references/ai-slop-blacklist.md) �
 | 타이포/간격 | 시각 계층이 실제로 느껴지는지, 간격 리듬의 일관성 |
 | 네비게이션 | 활성 상태가 눈에 보이는지, 위치 일관성 |
 | AI Slop | 보라 그라데이션, 3열 대칭, 천편일률적 인상 — 화면에서 한눈에 판별 |
-| 전체 인상 | "돈 주고 쓰고 싶은 화면인가" — 한 줄 총평 (ui-ux-designer 에이전트 관점) |
+| 전체 인상 | "돈 주고 쓰고 싶은 화면인가" — 실제 렌더 근거의 한 줄 총평 |
 
 **충돌 규칙: Grep 결과와 관찰이 다르면 관찰이 이깁니다.**
 예: 코드에 `dark:` 클래스가 있어도 화면에서 텍스트가 안 보이면 실패. 코드에 고정폭이 있어도 화면에서 안 깨지면 P3로 강등.
@@ -445,7 +445,7 @@ UI/UX 개선 완료
 
 - 수정 전 반드시 사용자 확인을 받습니다
 - UI 라이브러리(DaisyUI, shadcn, MUI 등)에 맞는 수정 방법을 선택합니다
-- 디자인 방향성 결정이 필요하면 `ui-ux-designer` 에이전트와 연계합니다
+- 디자인 방향성 결정이 필요하면 `design-plan`의 렌더 비평 계약으로 돌아갑니다
 - 한 번에 너무 많이 바꾸지 않고 단계적으로 수정합니다
 
 ---
@@ -454,7 +454,7 @@ UI/UX 개선 완료
 
 | 리소스 | 역할 | 관계 |
 |--------|------|------|
-| `ui-ux-designer` (에이전트) | 디자인 조언, 피드백 | 설계 방향 → auditor가 점검 |
+| `design-plan` + `skills/design-plan/references/render-critique-loop.md` | 디자인 방향·렌더 비평 | 설계 계약 → auditor가 점검 |
 | `seo-audit` (스킬) | SEO 점검 | 릴리즈 전 SEO + UX 함께 점검 |
 | `web-design-guidelines` (스킬) | 웹 디자인 원칙 | 감사 기준의 근거 |
 | `references/ux-guidelines.csv` | UX 이슈 99종 Do/Don't + 코드 예시 | 9영역 채점의 세부 근거 (Credits: [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT) |

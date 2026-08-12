@@ -1,7 +1,8 @@
 ---
 name: react-dev
 version: 1.0.0
-description: "Build type-safe React/TypeScript components, hooks, events, useEffect, React 18-19/Server Components, generic components, and TanStack/React Router integration."
+description: "Explicit `/react-dev` reference for advanced React/TypeScript typing and integration patterns. Do not auto-use for routine React implementation."
+disable-model-invocation: true
 ---
 
 # React TypeScript

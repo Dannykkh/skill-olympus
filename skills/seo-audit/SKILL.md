@@ -180,7 +180,7 @@ Lighthouse 점수:
    AEO/GEO (영역 8~10): P0: {n}건, P1: {n}건, P2: {n}건, P3: {n}건
 
 다음 단계 (선택):
-  security-reviewer    → 보안 점검
+  /code-reviewer 보안 감사 → 보안 점검
   /minos          → Playwright 자동 테스트
   /commit              → 변경사항 커밋
 ```

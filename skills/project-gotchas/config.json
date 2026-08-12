@@ -5,9 +5,5 @@
     "notify_threshold_new_observations": 200,
     "notify_threshold_handoff_days": 14,
     "_note": "자동 분석 트리거는 의도적으로 두지 않음 (LLM 호출 비용). '마지막 정제 이후 새로 쌓인 raw(delta)'가 notify_threshold_new_observations를 넘거나 마지막 핸드오프가 notify_threshold_handoff_days를 넘으면 mnemo Stop/save-turn 훅이 memory/.mnemo-status.md를 작성 + stderr 안내. observations.jsonl은 절대 비워지지 않으므로 누적 total이 아닌 delta로 판정한다. delta 기준선은 memory/.mnemo-distill-offset 마커이며, gotchas/learned 정제 .md가 갱신되면(=정제 발생) baseline이 자동 리셋되어 정제 후 경고가 실제로 사라진다. 실제 정제는 사용자 의지(/memory-distill) 또는 핸드오프 시점에만 실행. (이 값들은 문서용 — 훅 코드에 하드코딩됨)"
-  },
-  "analyzer": {
-    "model_policy": "inherit-caller",
-    "_note": "frontmatter model 미지정 → 호출자(메인 세션) 모델 상속. /memory-distill 또는 핸드오프 자동 추출 시에만 호출되며, 호출 시 Dreaming과 동등 품질로 분석. 특정 모델명은 박지 않음 — inherit-caller 정책상 모델명을 적으면 버전이 오를 때마다 stale만 됨."
   }
 }

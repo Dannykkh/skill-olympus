@@ -1,6 +1,6 @@
 # Section File Writing
 
-Write individual section files from the plan using **parallel subagents** for efficiency.
+Write individual section files from the plan using bounded **general-write jobs** when parallelism is useful.
 
 This step assumes `sections/index.md` already exists.
 
@@ -26,7 +26,7 @@ Write sections in dependency-aware batches. Do not launch every missing section 
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  BATCHED SUBAGENT APPROACH                          │
+│  BATCHED GENERAL-WRITE APPROACH                     │
 │                                                     │
 │  1. Parse index.md to get SECTION_MANIFEST list     │
 │  2. Check which sections already exist              │
@@ -56,7 +56,7 @@ END_MANIFEST -->
 
 ### Launch Batched Section Jobs
 
-For each dependency layer, include at most 3 section jobs in one batch. Use the current CLI's background subagent/worker mechanism if available; otherwise write the sections sequentially.
+For each dependency layer, include at most 3 section jobs in one batch. Map general-write to Claude `general-purpose`, Codex `worker`, Gemini `generalist`, or Grok `general-purpose`. Assign exactly one section file to each job. Main/Lead alone owns `sections/index.md`, the batch ledger, and completion judgment. If native delegation is unavailable or parallelism has no benefit, Main writes the sections sequentially.
 
 ```text
 Job prompt:
@@ -87,7 +87,7 @@ If a batch hits `Overloaded`, timeout, or context-limit symptoms:
 ### Resume Handling
 
 If some sections already exist:
-1. Only launch Tasks for MISSING sections
+1. Only run jobs for MISSING sections
 2. Skip sections that have corresponding `section-*.md` files
 
 ## Section File Requirements

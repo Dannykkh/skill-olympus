@@ -5,12 +5,14 @@ setlocal enabledelayedexpansion
 REM ============================================
 REM   Claude Code Customizations Installer
 REM   Auto-install Skills, Agents, Hooks + MCP
-REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...]
+REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills] [--include-source-only-agents]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
-set "CODEX_DIR=%USERPROFILE%\.codex"
+set "CODEX_DIR=%CODEX_HOME%"
+if not defined CODEX_DIR set "CODEX_DIR=%USERPROFILE%\.codex"
+for %%I in ("%CODEX_DIR%") do set "CODEX_DIR=%%~fI"
 set "GEMINI_DIR=%USERPROFILE%\.gemini"
 set "CREATED_CLAUDE_DIR=0"
 set "HAS_CLAUDE_CLI=0"
@@ -30,6 +32,11 @@ set "GEMINI_HOOKS_RESULT=not-run"
 set "GROK_MNEMO_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 playwright chrome-devtools"
 set "LEGACY_MCP_SERVERS=sequential-thinking"
+set "INCLUDE_SOURCE_ONLY_AGENTS=0"
+set "SOURCE_ONLY_AGENT_FLAG="
+set "INCLUDE_SOURCE_ONLY_SKILLS=0"
+set "INCLUDE_BROAD_CODING_SKILLS=0"
+set "SOURCE_ONLY_SKILL_FLAG="
 
 REM ============================================
 REM   Prerequisites check
@@ -106,7 +113,15 @@ REM Determine mode (scan all arguments)
 set "MODE=copy"
 for %%A in (%*) do (
     if /i "%%A"=="--uninstall" set "MODE=uninstall"
+    if /i "%%A"=="--include-source-only-agents" set "INCLUDE_SOURCE_ONLY_AGENTS=1"
+    if /i "%%A"=="--include-passive-agents" set "INCLUDE_SOURCE_ONLY_AGENTS=1"
+    if /i "%%A"=="--include-broad-coding-agents" set "INCLUDE_SOURCE_ONLY_AGENTS=1"
+    if /i "%%A"=="--include-source-only-skills" set "INCLUDE_SOURCE_ONLY_SKILLS=1"
+    if /i "%%A"=="--include-broad-coding-skills" set "INCLUDE_BROAD_CODING_SKILLS=1"
 )
+if "!INCLUDE_SOURCE_ONLY_AGENTS!"=="1" set "SOURCE_ONLY_AGENT_FLAG=--include-source-only-agents"
+if "!INCLUDE_SOURCE_ONLY_SKILLS!"=="1" set "SOURCE_ONLY_SKILL_FLAG=--include-source-only-skills"
+if "!INCLUDE_BROAD_CODING_SKILLS!"=="1" set "SOURCE_ONLY_SKILL_FLAG=!SOURCE_ONLY_SKILL_FLAG! --include-broad-coding-skills"
 
 echo.
 echo ============================================
@@ -117,6 +132,16 @@ if "%MODE%"=="uninstall" (
 )
 echo ============================================
 echo.
+
+if "%MODE%" NEQ "uninstall" (
+    echo   Skill registry migration notice:
+    echo   - Unrelated third-party skill names are preserved.
+    echo   - Modified same-name conflicts move to ^<CLI_HOME^>\_olympus-preserved\...
+    echo   - The default keeps optional skills source-only.
+    echo   - Activate source-only skills: install.bat --all --include-source-only-skills
+    echo   - Recovery guide: docs\skill-registry-migration.md
+    echo.
+)
 
 REM ============================================
 REM   Update check (non-blocking)
@@ -155,6 +180,27 @@ if "%MODE%"=="uninstall" (
     )
     del /f /q "%CLAUDE_DIR%\SKILLS-CATALOG.md" >nul 2>nul
     del /f /q "%CLAUDE_DIR%\AGENTS-CATALOG.md" >nul 2>nul
+    if exist "%SCRIPT_DIR%scripts\sync-claude-skills.js" (
+        node "%SCRIPT_DIR%scripts\sync-claude-skills.js" "%CLAUDE_DIR%" --unlink
+        if !errorlevel! neq 0 (
+            echo       [ERROR] Claude skill unlink failed: !errorlevel!
+            exit /b 1
+        )
+    ) else (
+        echo       [ERROR] sync-claude-skills.js not found
+        exit /b 1
+    )
+    if exist "%SCRIPT_DIR%scripts\sync-claude-agents.js" (
+        node "%SCRIPT_DIR%scripts\sync-claude-agents.js" "%CLAUDE_DIR%" --unlink
+        if !errorlevel! neq 0 (
+            echo       [ERROR] Claude agent cleanup failed: !errorlevel!
+            exit /b 1
+        )
+        del /f /q "%CLAUDE_DIR%\AGENTS-CATALOG.md" >nul 2>nul
+    ) else (
+        echo       [ERROR] sync-claude-agents.js not found
+        exit /b 1
+    )
 
     echo.
     echo [3/12] MCP server settings are managed separately.
@@ -200,11 +246,13 @@ if "%MODE%"=="uninstall" (
             echo       Done!
         ) else (
             set "CODEX_SYNC_RESULT=Unlink failed"
-            echo       [WARN] Unlink failed exit: !errorlevel!
+            echo       [ERROR] Unlink failed exit: !errorlevel!
+            exit /b 1
         )
     ) else (
-        set "CODEX_SYNC_RESULT=Skip: no sync script"
-        echo       [WARN] sync-codex-assets.js not found, skipping
+        set "CODEX_SYNC_RESULT=Failed: no sync script"
+        echo       [ERROR] sync-codex-assets.js not found
+        exit /b 1
     )
 
     echo.
@@ -284,10 +332,12 @@ if "%MODE%"=="uninstall" (
         if !errorlevel! equ 0 (
             echo       Done!
         ) else (
-            echo       [WARN] Unlink failed
+            echo       [ERROR] Unlink failed
+            exit /b 1
         )
     ) else (
-        echo       [WARN] sync-gemini-assets.js not found, skipping
+        echo       [ERROR] sync-gemini-assets.js not found
+        exit /b 1
     )
 
     echo.
@@ -307,7 +357,7 @@ if "%MODE%"=="uninstall" (
         if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
             node "%SCRIPT_DIR%install-mcp-gemini.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
         )
-        call gemini mcp remove orchestrator >nul 2>nul
+        call gemini mcp remove --scope user orchestrator >nul 2>nul
         echo       Done!
     ) else (
         echo       [WARN] gemini CLI not found, skipping
@@ -401,69 +451,41 @@ node "%SCRIPT_DIR%scripts\safe-copy.js" cleanup "%CLAUDE_DIR%"
 REM Move deprecated Olympus agents/skills out of active Claude paths, with backup.
 if exist "%SCRIPT_DIR%scripts\prune-stale-assets.js" (
     node "%SCRIPT_DIR%scripts\prune-stale-assets.js" "%CLAUDE_DIR%" --label claude
+    if !errorlevel! neq 0 (
+        echo       [ERROR] Stale asset quarantine failed: !errorlevel!
+        exit /b 1
+    )
 )
 
-REM Install Skills (global, bundle filtering)
+REM Install Skills (global, default-deny runtime policy)
 echo [1/7] Installing Skills... (global) [core]
-if exist "%SCRIPT_DIR%skills" (
-    for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-        set "skill_name=%%~nxD"
-        set "INSTALL_SKILL=1"
-        REM Skip Codex-only / internal-only skills
-        if /i "!skill_name!"=="agent-team-codex" set "INSTALL_SKILL=0"
-        if /i "!skill_name!"=="deploymonitor" set "INSTALL_SKILL=0"
-        if "!INSTALL_SKILL!"=="1" (
-            echo       - !skill_name!
-            node "%SCRIPT_DIR%scripts\safe-copy.js" dir "%%D" "%CLAUDE_DIR%\skills\!skill_name!"
-        ) else (
-            echo       - !skill_name! [skipped]
-        )
+if exist "%SCRIPT_DIR%scripts\sync-claude-skills.js" (
+    node "%SCRIPT_DIR%scripts\sync-claude-skills.js" "%CLAUDE_DIR%" !SOURCE_ONLY_SKILL_FLAG!
+    if !errorlevel! equ 0 (
+        echo       Done!
+    ) else (
+        echo       [ERROR] Skill sync failed: !errorlevel!
+        exit /b 1
     )
-    echo       Done!
 ) else (
-    echo       No skills found
+    echo       [ERROR] sync-claude-skills.js not found
+    exit /b 1
 )
 
 REM Install Agents (global, core)
 echo.
 echo [2/7] Installing Agents... (global) [core]
-node "%SCRIPT_DIR%scripts\safe-copy.js" mkdir "%CLAUDE_DIR%\agents"
-if exist "%SCRIPT_DIR%agents" (
-    for %%F in ("%SCRIPT_DIR%agents\*.md") do (
-        if /I "%%~nxF"=="MEMORY.md" (
-            echo       - %%~nxF [skipped: not an agent]
-        ) else (
-            echo       - %%~nxF
-            node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
-        )
-    )
-)
-for /d %%D in ("%SCRIPT_DIR%skills\*") do (
-    if exist "%%D\agents" (
-        for %%F in ("%%D\agents\*.md") do (
-            if exist "%SCRIPT_DIR%agents\%%~nxF" (
-                echo       - %%~nxF [%%~nxD skipped: root agent wins]
-            ) else (
-                echo       - %%~nxF [%%~nxD]
-                node "%SCRIPT_DIR%scripts\safe-copy.js" file "%%F" "%CLAUDE_DIR%\agents\%%~nxF"
-            )
-        )
-    )
-)
-echo       Done!
-
-REM Generate Claude catalogs (global, core)
-echo.
-echo [2.5/7] Generating Catalogs... (global) [core]
-if exist "%SCRIPT_DIR%scripts\generate-catalogs.js" (
-    node "%SCRIPT_DIR%scripts\generate-catalogs.js" "%CLAUDE_DIR%" --source claude --exclude agent-team-codex --exclude deploymonitor
+if exist "%SCRIPT_DIR%scripts\sync-claude-agents.js" (
+    node "%SCRIPT_DIR%scripts\sync-claude-agents.js" "%CLAUDE_DIR%" !SOURCE_ONLY_AGENT_FLAG!
     if !errorlevel! equ 0 (
         echo       Done!
     ) else (
-        echo       [WARN] Catalog generation failed: !errorlevel!
+        echo       [ERROR] Agent sync failed: !errorlevel!
+        exit /b 1
     )
 ) else (
-    echo       [WARN] generate-catalogs.js not found, skipping
+    echo       [ERROR] sync-claude-agents.js not found
+    exit /b 1
 )
 
 REM Install Hooks (global, always installed for mnemo)
@@ -555,8 +577,8 @@ REM Register Orchestrator MCP server (required)
 echo.
 echo [7/7] Registering Orchestrator MCP... - Claude [required]
 if 1==1 (
-    REM 글로벌 설치 경로 사용 (레포 경로가 아닌 CLAUDE_DIR — 다른 PC에서도 동작)
-    set "ORCH_DIR=%CLAUDE_DIR%\skills\orchestrator\mcp-server"
+    REM source-only 모듈 라이브러리는 discovery 밖에 있지만 MCP 런타임은 여기서 직접 사용한다.
+    set "ORCH_DIR=%CLAUDE_DIR%\.olympus\runtime-modules\orchestrator\mcp-server"
     set "ORCH_DIST=!ORCH_DIR!\dist\index.js"
     set "ORCH_SDK=!ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
     set "ORCH_SQLITE=!ORCH_DIR!\node_modules\better-sqlite3\package.json"
@@ -643,14 +665,18 @@ REM Sync Codex Skills/Agents/Hooks (always runs, required for zephermine)
 echo.
 echo   Syncing Codex Skills/Agents/Hooks...
 if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
-    node "%SCRIPT_DIR%scripts\sync-codex-assets.js"
+    node "%SCRIPT_DIR%scripts\sync-codex-assets.js" !SOURCE_ONLY_SKILL_FLAG! !SOURCE_ONLY_AGENT_FLAG!
     if !errorlevel! equ 0 (
         set "CODEX_SYNC_RESULT=Sync complete"
     ) else (
         set "CODEX_SYNC_RESULT=Sync failed"
+        echo       [ERROR] Required policy sync failed: !errorlevel!
+        exit /b 1
     )
 ) else (
-    set "CODEX_SYNC_RESULT=Skip: no sync script"
+    set "CODEX_SYNC_RESULT=Failed: no sync script"
+    echo       [ERROR] sync-codex-assets.js not found
+    exit /b 1
 )
 echo       !CODEX_SYNC_RESULT!
 
@@ -670,12 +696,9 @@ if 1==1 (
         ) else (
             set "CODEX_MCP_RESULT=Skip: no install-mcp-codex.js"
         )
-        call codex features enable multi_agent >nul 2>nul
-        if !errorlevel! equ 0 (
-            set "CODEX_MULTI_AGENT_RESULT=Enabled"
-        ) else (
-            set "CODEX_MULTI_AGENT_RESULT=Enable failed"
-        )
+        REM Current Codex releases ship stable multi-agent enabled by default.
+        REM Preserve the user's feature configuration instead of mutating it.
+        set "CODEX_MULTI_AGENT_RESULT=Native default (settings unchanged)"
     ) else (
         set "CODEX_MCP_RESULT=Skip: codex CLI not found"
         set "CODEX_MULTI_AGENT_RESULT=Skip: codex CLI not found"
@@ -687,7 +710,7 @@ REM Codex Orchestrator MCP (required)
 echo.
 echo   Registering Codex Orchestrator MCP... [required]
 if 1==1 (
-    set "CODEX_ORCH_DIR=!CODEX_DIR!\skills\orchestrator\mcp-server"
+    set "CODEX_ORCH_DIR=!CODEX_DIR!\.olympus\runtime-modules\orchestrator\mcp-server"
     set "CODEX_ORCH_DIST=!CODEX_ORCH_DIR!\dist\index.js"
     set "CODEX_ORCH_SDK=!CODEX_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
     set "CODEX_ORCH_SQLITE=!CODEX_ORCH_DIR!\node_modules\better-sqlite3\package.json"
@@ -729,7 +752,7 @@ REM ============================================
 REM   Phase 3: Gemini
 REM ============================================
 :phase_gemini
-if "!HAS_GEMINI!"=="0" goto :install_done
+if "!HAS_GEMINI!"=="0" goto :phase_grok
 echo.
 echo   --- Gemini CLI ---
 
@@ -758,14 +781,18 @@ REM Sync Gemini Skills/Agents/Hooks (always runs, required for zephermine)
 echo.
 echo   Syncing Gemini Skills/Agents/Hooks...
 if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
-    node "%SCRIPT_DIR%scripts\sync-gemini-assets.js"
+    node "%SCRIPT_DIR%scripts\sync-gemini-assets.js" !SOURCE_ONLY_SKILL_FLAG! !SOURCE_ONLY_AGENT_FLAG!
     if !errorlevel! equ 0 (
         set "GEMINI_SYNC_RESULT=Sync complete"
     ) else (
         set "GEMINI_SYNC_RESULT=Sync failed"
+        echo       [ERROR] Required policy sync failed: !errorlevel!
+        exit /b 1
     )
 ) else (
-    set "GEMINI_SYNC_RESULT=Skip: no sync script"
+    set "GEMINI_SYNC_RESULT=Failed: no sync script"
+    echo       [ERROR] sync-gemini-assets.js not found
+    exit /b 1
 )
 echo       !GEMINI_SYNC_RESULT!
 
@@ -798,7 +825,7 @@ REM Gemini Orchestrator MCP (required)
 echo.
 echo   Registering Gemini Orchestrator MCP... [required]
 if 1==1 (
-    set "GEMINI_ORCH_DIR=!GEMINI_DIR!\skills\orchestrator\mcp-server"
+    set "GEMINI_ORCH_DIR=!GEMINI_DIR!\.olympus\runtime-modules\orchestrator\mcp-server"
     set "GEMINI_ORCH_DIST=!GEMINI_ORCH_DIR!\dist\index.js"
     set "GEMINI_ORCH_SDK=!GEMINI_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
     set "GEMINI_ORCH_SQLITE=!GEMINI_ORCH_DIR!\node_modules\better-sqlite3\package.json"
@@ -819,8 +846,8 @@ if 1==1 (
     if !errorlevel! equ 0 (
         if "!GEMINI_ORCH_READY!"=="1" (
             set "GEMINI_ORCH_DIST_NORM=!GEMINI_ORCH_DIST:\=/!"
-            call gemini mcp remove orchestrator >nul 2>nul
-            call gemini mcp add orchestrator node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
+            call gemini mcp remove --scope user orchestrator >nul 2>nul
+            call gemini mcp add --scope user orchestrator node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
             if !errorlevel! equ 0 (
                 set "GEMINI_ORCH_RESULT=Registered"
             ) else (
@@ -839,15 +866,46 @@ if 1==1 (
 REM ============================================
 REM   Grok Build
 REM ============================================
-REM Grok reads skills/agents/MCP/rules directly from ~/.claude/ via [compat.claude]
-REM defaults, so no sync is needed (see memory/learned/018). Only the mnemo hook
-REM needs an adapter (grok-mnemo).
+:phase_grok
+REM Grok reads skills/agents/MCP/rules from ~/.claude/ via [compat.claude].
+REM When Claude was not selected, prepare the minimal shared compatibility home
+REM here; Grok's conversation hook still uses its own grok-mnemo adapter.
 echo.
 echo   --- Grok Build ---
 echo.
 echo   Installing Grok-Mnemo... [optional: auto-skip if Grok not installed]
 if exist "%SCRIPT_DIR%skills\grok-mnemo\install.js" (
     if exist "%USERPROFILE%\.grok" (
+        if "!HAS_CLAUDE!"=="0" (
+            if exist "%SCRIPT_DIR%scripts\prune-stale-assets.js" (
+                node "%SCRIPT_DIR%scripts\prune-stale-assets.js" "%CLAUDE_DIR%" --label grok-compat
+                if !errorlevel! neq 0 (
+                    echo       [ERROR] Grok compatibility stale asset quarantine failed: !errorlevel!
+                    exit /b 1
+                )
+            )
+            if exist "%SCRIPT_DIR%scripts\sync-claude-skills.js" (
+                node "%SCRIPT_DIR%scripts\sync-claude-skills.js" "%CLAUDE_DIR%" !SOURCE_ONLY_SKILL_FLAG!
+                if !errorlevel! neq 0 (
+                    echo       [ERROR] Grok compatibility skill sync failed: !errorlevel!
+                    exit /b 1
+                )
+            ) else (
+                echo       [ERROR] sync-claude-skills.js not found
+                exit /b 1
+            )
+            if exist "%SCRIPT_DIR%scripts\sync-claude-agents.js" (
+                node "%SCRIPT_DIR%scripts\sync-claude-agents.js" "%CLAUDE_DIR%" !SOURCE_ONLY_AGENT_FLAG!
+                if !errorlevel! neq 0 (
+                    echo       [ERROR] Grok compatibility agent sync failed: !errorlevel!
+                    exit /b 1
+                )
+            ) else (
+                echo       [ERROR] sync-claude-agents.js not found
+                exit /b 1
+            )
+            if exist "%SCRIPT_DIR%install-claude-md.js" node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
+        )
         node "%SCRIPT_DIR%skills\grok-mnemo\install.js"
         if !errorlevel! equ 0 (
             set "GROK_MNEMO_RESULT=Installed"
@@ -920,6 +978,9 @@ if "!JQ_MISSING!"=="1" (
     echo             PowerShell hooks work without it; the .sh hooks
     echo             ^(Git Bash / WSL^) will not. Install: winget install jqlang.jq
 )
+echo.
+echo   If a same-name asset was preserved, use the "source -^> backup" path printed above.
+echo   --uninstall does not restore preserved backups automatically; see docs\skill-registry-migration.md.
 echo.
 echo   Restart CLI to apply changes.
 echo.

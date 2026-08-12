@@ -109,8 +109,8 @@ This document describes the common patterns for slash commands, helping you choo
 **Example workflow:**
 
 1. Present planning context to user
-2. Invoke specialized agent (via Task tool)
-3. Agent creates plan/output iteratively
+2. Delegate the bounded analysis to an appropriate built-in role
+3. The delegated role returns a plan or output to the main context
 4. Plan is reviewed and refined by user
 5. Save results to disk after approval
 
@@ -130,21 +130,27 @@ This document describes the common patterns for slash commands, helping you choo
    - Set expectations for iterative process
    - Mention that user can refine the output
 
-2. Invoke subagent agent
-   - Use Task tool with subagent_type="subagent"
-   - Pass task description and context
-   - Do NOT attempt to write plan yourself
+2. Delegate planning
+   - Claude Code command: invoke the current Agent tool with built-in `Explore`
+   - Portable workflow: request a semantic read-only explorer
+   - Pass the task, source scope, evidence requirements, and return format
+   - Require a returned draft only; `Explore` must not write the plan file
+   - If native delegation is unavailable, perform the same planning pass sequentially in the main context
 
-3. Agent works autonomously
-   - Creates initial plan
-   - Iterates with user feedback
-   - Refines based on questions/concerns
+3. Main context owns iteration
+   - Present the returned plan
+   - Refine it from user feedback
+   - Keep shared approval state in the main context
 
 4. After user approves plan
-   - Save to .PLAN.md
+   - Have the main context save `.PLAN.md`
    - Confirm location with user
    - Explain next steps (execution)
 ```
+
+For a delegated implementation rather than planning, use Claude's built-in `general-purpose` role or a
+portable general-writer contract. Give it exact allowed write paths and verification commands. Never use
+a source-only custom agent name as the target.
 
 ### 4. Simple Execution Pattern
 
@@ -196,19 +202,24 @@ This document describes the common patterns for slash commands, helping you choo
 **Pattern:**
 
 ```markdown
-1. Use Task tool with subagent_type="Explore" to find relevant files
+1. Run read-only discovery
+   - Claude command: use Agent with built-in `Explore`
+   - Portable workflow: use a semantic read-only explorer
    - Search for specific patterns
    - Identify key components
+   - Return file:line evidence; do not write files
 
-2. Use Task tool with subagent_type="subagent" to create plan
+2. Create the plan in the main context from discovery results
    - Pass context from exploration
    - Generate detailed implementation plan
    - Review with user
 
-3. Execute the plan directly in the main conversation
+3. Execute the approved plan
+   - Claude command: use built-in `general-purpose` only for explicitly assigned write paths, or execute in main
+   - Portable workflow: use a semantic general writer with the same boundaries
+   - If delegation is unavailable, execute stages sequentially in the main context
    - Load plan from .PLAN.md
    - Use TodoWrite to track phases
-   - Execute steps systematically
    - Report completion
 ```
 
@@ -240,9 +251,10 @@ Analyze scope of changes:
 
 If changes span 3+ files OR involve new abstractions:
 
-- Use subagent agent
-- Create detailed plan
-- Execute with subagent
+- Use a read-only planning role to return a detailed plan
+- Keep plan approval in the main context
+- For Claude writes, use Agent with built-in `general-purpose` and exact allowed paths
+- For portable workflows, use a semantic general writer; fall back to sequential main-context execution
 
 Otherwise:
 
@@ -350,8 +362,10 @@ When implementing a pattern, include these elements:
 
 **Agent Delegation:**
 
-- Exact Task tool invocation syntax
-- Context to pass to agent
+- Runtime contract: Claude Agent role or portable semantic role
+- Read-only versus write boundary
+- Context, evidence, allowed paths, and return format
+- Main-context sequential fallback for portable workflows
 - User review checkpoints
 - Save-to-disk instructions
 

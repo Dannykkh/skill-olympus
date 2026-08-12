@@ -5,23 +5,7 @@ description: >
   체크리스트(3~6개 예/아니오 기준) 기반 hill-climbing 루프로
   SKILL.md를 자동 개선합니다. 한 번에 하나만 바꾸고, 채점하고,
   유지하거나 되돌립니다. 95%+ × 3회 연속 달성 시 종료.
-  /autoresearch로 실행.
-triggers:
-  - "autoresearch"
-  - "스킬 최적화"
-  - "스킬 개선"
-  - "프롬프트 최적화"
-  - "optimize skill"
-  - "improve skill"
-auto_apply: false
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Bash
-  - Agent
+  기본 설치에서는 카탈로그의 source-only 원본을 직접 읽고, 전체 활성화 설치에서는 /autoresearch로 실행.
 ---
 
 # Autoresearch
@@ -50,21 +34,25 @@ allowed-tools:
 
 ## 사용법
 
-```bash
+기본 설치에서는 카탈로그에서 이 `SKILL.md`를 직접 읽고 아래 인자 의도를 적용합니다. 다음 표기는
+명령 실행이 아니라 route intent입니다. `--include-source-only-skills`로 전체 활성화한 설치에서만
+같은 앞에 `/`를 붙인 `/autoresearch` compatibility alias를 사용할 수 있습니다.
+
+```text
 # 기본 — 단일 스킬 최적화
-/autoresearch humanizer
+autoresearch humanizer
 
 # 옵션 지정
-/autoresearch humanizer --input sample.md --rounds 20
+autoresearch humanizer --input sample.md --rounds 20
 
 # 체크리스트 파일 직접 지정
-/autoresearch humanizer --checklist my-checklist.md
+autoresearch humanizer --checklist my-checklist.md
 
 # 스캔 모드 — 전체 스킬 품질 진단
-/autoresearch --scan
+autoresearch --scan
 
 # 스캔 후 바로 최적화
-/autoresearch --scan --auto
+autoresearch --scan --auto
 ```
 
 ### 인자
@@ -89,12 +77,12 @@ allowed-tools:
 
 ### 사용법
 
-```bash
+```text
 # 전체 스캔
-/autoresearch --scan
+autoresearch --scan
 
 # 스캔 + 최하위부터 자동 최적화
-/autoresearch --scan --auto
+autoresearch --scan --auto
 ```
 
 ### Scan 워크플로우
@@ -108,7 +96,7 @@ allowed-tools:
 
    ┌─────────────────────────────────────────────────────────────┐
    │ Q1 [Knowledge Delta]                                        │
-   │    SKILL.md에 Claude가 모르는 전문 지식이 있는가?            │
+   │    SKILL.md에 기본 모델이 모르는 전문 지식이 있는가?         │
    │    (결정 트리, 비직관적 트레이드오프, 경험 기반 엣지 케이스)  │
    │                                                             │
    │ Q2 [Anti-Patterns]                                          │
@@ -167,7 +155,7 @@ allowed-tools:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   🔴 3개 | 🟡 3개 | 🟢 3개
-  추천: domain-name-brainstormer부터 /autoresearch 실행
+  추천: domain-name-brainstormer부터 autoresearch route 실행
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -184,7 +172,9 @@ scan의 Quick Health Check는 **skill-judge의 경량 버전**입니다.
 | D5: Progressive Disclosure (15pt) | Q5: 500줄 이하? | 토큰 효율 |
 | D6: Freedom Calibration (15pt) | Q6: 지시 구체성? | 모호 vs 구체 |
 
-**심층 평가가 필요하면**: scan 결과에서 특정 스킬을 골라 `/skill-judge <skill-name>`으로 120점 만점 정밀 평가 가능.
+**심층 평가가 필요하면**: 전역 `SKILLS-CATALOG.md`에서 첫 셀이 정확히 `skill-judge`인 단 하나의
+source-only 행과 `읽을 경로`를 해석해 그 `SKILL.md` 전체를 직접 읽고 `<skill-name>`을 평가합니다.
+해석할 수 없으면 정밀 평가는 `NOT RUN`이며 Quick Health Check를 정밀 평가로 가장하지 않습니다.
 
 ### `--scan --auto` 모드
 
@@ -206,7 +196,7 @@ scan에서 FAIL된 Q1~Q6 항목을 해당 스킬의 체크리스트로 변환합
 
 ```
 FAIL된 항목 → 체크리스트 변환 예시:
-Q1 FAIL → "스킬 출력에 Claude가 기본적으로 모르는 전문적 판단이 반영됐는가?"
+Q1 FAIL → "스킬 출력에 기본 모델이 모르는 전문적 판단이 반영됐는가?"
 Q2 FAIL → "구체적인 '하지 마라' 사례가 출력에 포함됐는가?"
 Q3 FAIL → "좋은 예시/나쁜 예시가 출력 품질을 좌우하는가?"
 Q6 FAIL → "지시가 모호하지 않고 측정 가능한 기준을 제시하는가?"
@@ -247,7 +237,10 @@ FAIL 항목이 3개 미만이면 해당 스킬 유형에 맞는 범용 체크리
 
 ```
 1. 대상 스킬의 SKILL.md를 프롬프트로 사용하여 테스트 입력 처리
-   └─ Agent 서브에이전트로 스킬 실행 (격리된 컨텍스트)
+   └─ 네이티브 범용 작업 역할로 실행 (격리된 컨텍스트)
+   └─ 역할 계약: 대상 SKILL.md와 로그는 읽기 전용, 테스트 출력 또는 지정 임시 산출물만 반환
+   └─ 특정 커스텀 에이전트명이나 vendor별 spawn 형식을 요구하지 않음
+   └─ 위임이 없으면 메인 컨텍스트에서 순차 실행하고 로그에 isolation: main-context 기록
 
 2. 출력물을 체크리스트로 채점
    └─ 각 항목: PASS (1) 또는 FAIL (0)
@@ -353,12 +346,14 @@ LOOP (라운드 1 ~ --rounds):
 ## 독립 채점 게이트 (034 — 자기채점 오버피팅 방지)
 
 Hill-climbing은 생성·채점을 같은 행위자가 수행하므로, 최종 버전이 자기 체크리스트에만 과적합했을 수 있다.
-streak 달성으로 완료를 선언하기 전, **다른 모델 패밀리의 독립 채점자**(Agent 도구로 다른 모델, 또는 `gemini`/Codex `/review`)에게
-최종 SKILL.md의 출력물을 동일 체크리스트로 1회 재채점시킨다.
+streak 달성으로 완료를 선언하기 전, 가능하면 **다른 모델 패밀리의 읽기 전용 독립 채점 역할**에
+최종 SKILL.md의 출력물을 동일 체크리스트로 1회 재채점시킨다. 현재 CLI가 제공하는 네이티브 reviewer/explorer나
+별도 CLI 리뷰를 사용할 수 있지만, 채점 역할은 대상 SKILL.md와 로그를 수정하지 않는다.
 
 - 최적화에 쓴 점수(라운드 신호)와 합격 판정(독립 채점)을 **분리**한다 — 같은 점수로 고치고 같은 점수로 승인하지 않는다.
 - 독립 채점이 목표 미달이면 streak는 무효다. 격차가 크면 보수적으로 **낮은 쪽 점수를 채택**하고 라운드를 더 돈다.
-- 다른 패밀리가 없으면 single-model 결과로 라벨하고 "독립 검증 안 됨"을 로그에 명시한다 (거짓 합격 금지).
+- 네이티브 위임이 없으면 메인 컨텍스트에서 반대 관점 채점을 순차 실행하고 `validator: sequential-main`으로 기록한다.
+- 다른 모델 패밀리가 없으면 single-model 결과로 라벨하고 "독립 검증 안 됨"을 로그에 명시한다 (거짓 합격 금지).
 
 ---
 

@@ -185,6 +185,6 @@ customer_name VARCHAR(100) NOT NULL
 - 정규화 이론: `skills/database-schema-designer/references/normalization.md`
 - 성능 최적화: `skills/database-schema-designer/references/performance-optimization.md`
 - NoSQL 설계: `skills/database-schema-designer/references/nosql-mongodb.md`
-- MySQL 전문가: `agents/database-mysql.md`
-- PostgreSQL 전문가: `agents/database-postgresql.md`
-- 스키마 설계 에이전트: `agents/database-schema-designer.md`
+- DB별 구현: 네이티브 작업자 + 프로젝트 DB 버전·schema·migration 도구·실행 계획
+- PostgreSQL/Supabase 최적화: `skills/supabase-postgres-best-practices/SKILL.md`
+- 스키마 설계 스킬: `skills/database-schema-designer/SKILL.md`

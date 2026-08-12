@@ -2,11 +2,12 @@
 # ============================================
 #   Claude Code Customizations Installer
 #   Skills, Agents, Hooks + MCP 자동 설치
-#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...]
+#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills] [--include-source-only-agents]
 # ============================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
+CODEX_DIR="${CODEX_HOME:-$HOME/.codex}"
 CODEX_MNEMO_RESULT="미실행"
 CODEX_SYNC_RESULT="미실행"
 CODEX_MCP_RESULT="미실행"
@@ -23,6 +24,11 @@ HAS_CLAUDE_CLI=0
 JQ_MISSING=0
 CLAUDE_MCP_RESULT="미실행"
 CLAUDE_ORCH_RESULT="미실행"
+INCLUDE_SOURCE_ONLY_AGENTS=0
+SOURCE_ONLY_AGENT_FLAG=""
+INCLUDE_SOURCE_ONLY_SKILLS=0
+INCLUDE_BROAD_CODING_SKILLS=0
+SOURCE_ONLY_SKILL_FLAG=""
 
 # ============================================
 #   사전 조건 확인
@@ -72,8 +78,20 @@ MODE="copy"
 for arg in "$@"; do
     case "$arg" in
         --uninstall) MODE="uninstall" ;;
+        --include-source-only-agents|--include-passive-agents|--include-broad-coding-agents) INCLUDE_SOURCE_ONLY_AGENTS=1 ;;
+        --include-source-only-skills) INCLUDE_SOURCE_ONLY_SKILLS=1 ;;
+        --include-broad-coding-skills) INCLUDE_BROAD_CODING_SKILLS=1 ;;
     esac
 done
+if [ "$INCLUDE_SOURCE_ONLY_AGENTS" = "1" ]; then
+    SOURCE_ONLY_AGENT_FLAG="--include-source-only-agents"
+fi
+if [ "$INCLUDE_SOURCE_ONLY_SKILLS" = "1" ]; then
+    SOURCE_ONLY_SKILL_FLAG="--include-source-only-skills"
+fi
+if [ "$INCLUDE_BROAD_CODING_SKILLS" = "1" ]; then
+    SOURCE_ONLY_SKILL_FLAG="$SOURCE_ONLY_SKILL_FLAG --include-broad-coding-skills"
+fi
 
 echo ""
 echo "============================================"
@@ -84,6 +102,16 @@ else
 fi
 echo "============================================"
 echo ""
+
+if [ "$MODE" != "uninstall" ]; then
+    echo "  Skill registry migration notice:"
+    echo "  - Unrelated third-party skill names are preserved."
+    echo "  - Modified same-name conflicts move to <CLI_HOME>/_olympus-preserved/..."
+    echo "  - The default keeps optional skills source-only."
+    echo "  - Activate source-only skills: ./install.sh --all --include-source-only-skills"
+    echo "  - Recovery guide: docs/skill-registry-migration.md"
+    echo ""
+fi
 
 # ============================================
 #   업데이트 체크 (non-blocking)
@@ -122,6 +150,25 @@ if [ "$MODE" = "uninstall" ]; then
         echo "      [경고] Claude CLAUDE.md 없음, 건너뜀"
     fi
     rm -f "$CLAUDE_DIR/SKILLS-CATALOG.md" "$CLAUDE_DIR/AGENTS-CATALOG.md"
+    if [ -f "$SCRIPT_DIR/scripts/sync-claude-skills.js" ]; then
+        if ! node "$SCRIPT_DIR/scripts/sync-claude-skills.js" "$CLAUDE_DIR" --unlink; then
+            echo "      [오류] Claude Skill 동기화 해제 실패"
+            exit 1
+        fi
+    else
+        echo "      [오류] sync-claude-skills.js 없음"
+        exit 1
+    fi
+    if [ -f "$SCRIPT_DIR/scripts/sync-claude-agents.js" ]; then
+        if ! node "$SCRIPT_DIR/scripts/sync-claude-agents.js" "$CLAUDE_DIR" --unlink; then
+            echo "      [오류] Claude Agent 정리 실패"
+            exit 1
+        fi
+        rm -f "$CLAUDE_DIR/AGENTS-CATALOG.md"
+    else
+        echo "      [오류] sync-claude-agents.js 없음"
+        exit 1
+    fi
 
     echo ""
     echo "[3/12] MCP 서버 설정은 별도 관리됩니다."
@@ -165,11 +212,13 @@ if [ "$MODE" = "uninstall" ]; then
             echo "      완료!"
         else
             CODEX_SYNC_RESULT="해제 실패"
-            echo "      [경고] 해제 실패"
+            echo "      [오류] 해제 실패"
+            exit 1
         fi
     else
-        CODEX_SYNC_RESULT="스킵(sync 스크립트 없음)"
-        echo "      [경고] sync-codex-assets.js 없음, 건너뜀"
+        CODEX_SYNC_RESULT="실패(sync 스크립트 없음)"
+        echo "      [오류] sync-codex-assets.js 없음"
+        exit 1
     fi
 
     echo ""
@@ -242,10 +291,12 @@ if [ "$MODE" = "uninstall" ]; then
         if node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" --unlink; then
             echo "      완료!"
         else
-            echo "      [경고] 해제 실패"
+            echo "      [오류] 해제 실패"
+            exit 1
         fi
     else
-        echo "      [경고] sync-gemini-assets.js 없음, 건너뜀"
+        echo "      [오류] sync-gemini-assets.js 없음"
+        exit 1
     fi
 
     echo ""
@@ -264,7 +315,7 @@ if [ "$MODE" = "uninstall" ]; then
         if [ -f "$SCRIPT_DIR/install-mcp-gemini.js" ]; then
             node "$SCRIPT_DIR/install-mcp-gemini.js" --uninstall context7 playwright chrome-devtools sequential-thinking
         fi
-        gemini mcp remove orchestrator >/dev/null 2>&1 || true
+        gemini mcp remove --scope user orchestrator >/dev/null 2>&1 || true
         echo "      완료!"
     else
         echo "      [경고] gemini CLI 없음, 건너뜀"
@@ -345,80 +396,39 @@ fi
 if [ "$HAS_CLAUDE" = "1" ]; then
     # Move deprecated Olympus agents/skills out of active Claude paths, with backup.
     if [ -f "$SCRIPT_DIR/scripts/prune-stale-assets.js" ]; then
-        node "$SCRIPT_DIR/scripts/prune-stale-assets.js" "$CLAUDE_DIR" --label claude
+        if ! node "$SCRIPT_DIR/scripts/prune-stale-assets.js" "$CLAUDE_DIR" --label claude; then
+            echo "      [오류] Claude stale asset 정리 실패"
+            exit 1
+        fi
     fi
 
-    # Skills 설치 (코어 설치)
+    # Skills 설치 (기본 거부 런타임 정책)
     echo "[1/7] Skills 설치 중... (글로벌) [코어]"
-    if [ -d "$SCRIPT_DIR/skills" ]; then
-        for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-            if [ -d "$skill_dir" ]; then
-                skill_name=$(basename "$skill_dir")
-                INSTALL_SKILL=1
-                # Codex 전용 / 내부 전용 스킬은 설치하지 않음
-                [ "$skill_name" = "agent-team-codex" ] && INSTALL_SKILL=0
-                [ "$skill_name" = "deploymonitor" ] && INSTALL_SKILL=0
-                if [ "$INSTALL_SKILL" = "1" ]; then
-                    echo "      - $skill_name"
-                    mkdir -p "$CLAUDE_DIR/skills/$skill_name"
-                    cp -r "$skill_dir"* "$CLAUDE_DIR/skills/$skill_name/"
-                else
-                    echo "      - $skill_name [건너뜀]"
-                fi
-            fi
-        done
-        echo "      완료!"
+    if [ -f "$SCRIPT_DIR/scripts/sync-claude-skills.js" ]; then
+        if node "$SCRIPT_DIR/scripts/sync-claude-skills.js" "$CLAUDE_DIR" $SOURCE_ONLY_SKILL_FLAG; then
+            echo "      완료!"
+        else
+            echo "      [오류] Skill 동기화 실패"
+            exit 1
+        fi
     else
-        echo "      스킬 없음"
+        echo "      [오류] sync-claude-skills.js 없음"
+        exit 1
     fi
 
     # Agents 설치 (코어)
     echo ""
     echo "[2/7] Agents 설치 중... (글로벌) [코어]"
-    mkdir -p "$CLAUDE_DIR/agents"
-    if [ -d "$SCRIPT_DIR/agents" ]; then
-        for agent_file in "$SCRIPT_DIR/agents"/*.md; do
-            if [ -f "$agent_file" ]; then
-                agent_name=$(basename "$agent_file")
-                agent_name_lc=$(printf '%s' "$agent_name" | tr '[:upper:]' '[:lower:]')
-                if [ "$agent_name_lc" = "memory.md" ]; then
-                    echo "      - $agent_name [skipped: not an agent]"
-                else
-                    echo "      - $agent_name"
-                    cp "$agent_file" "$CLAUDE_DIR/agents/"
-                fi
-            fi
-        done
-    fi
-    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
-        if [ -d "${skill_dir}agents" ]; then
-            skill_name=$(basename "$skill_dir")
-            for agent_file in "${skill_dir}agents"/*.md; do
-                if [ -f "$agent_file" ]; then
-                    agent_name=$(basename "$agent_file")
-                    if [ -f "$SCRIPT_DIR/agents/$agent_name" ]; then
-                        echo "      - $agent_name [$skill_name skipped: root agent wins]"
-                    else
-                        echo "      - $agent_name [$skill_name]"
-                        cp "$agent_file" "$CLAUDE_DIR/agents/"
-                    fi
-                fi
-            done
-        fi
-    done
-    echo "      완료!"
-
-    # Catalogs 생성 (글로벌)
-    echo ""
-    echo "[2.5/7] Catalogs 생성 중... (글로벌) [코어]"
-    if [ -f "$SCRIPT_DIR/scripts/generate-catalogs.js" ]; then
-        if node "$SCRIPT_DIR/scripts/generate-catalogs.js" "$CLAUDE_DIR" --source claude --exclude agent-team-codex --exclude deploymonitor; then
+    if [ -f "$SCRIPT_DIR/scripts/sync-claude-agents.js" ]; then
+        if node "$SCRIPT_DIR/scripts/sync-claude-agents.js" "$CLAUDE_DIR" $SOURCE_ONLY_AGENT_FLAG; then
             echo "      완료!"
         else
-            echo "      [경고] Catalog 생성 실패"
+            echo "      [오류] Agent 동기화 실패"
+            exit 1
         fi
     else
-        echo "      [경고] generate-catalogs.js 없음, 건너뜀"
+        echo "      [오류] sync-claude-agents.js 없음"
+        exit 1
     fi
 
     # Hooks 설치 (mnemo 필수이므로 항상 설치)
@@ -507,16 +517,18 @@ fi
 echo ""
 echo "[7/7] Orchestrator MCP 서버 등록 중... (Claude) [필수]"
 if true; then
-    # 글로벌 설치 경로 사용 (레포 경로가 아닌 ~/.claude/skills/ — 다른 PC에서도 동작)
-    ORCH_DIST="$CLAUDE_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    ORCH_SDK="$CLAUDE_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
-    if [ ! -f "$ORCH_DIST" ] || [ ! -f "$ORCH_SDK" ]; then
+    # source-only 모듈 라이브러리는 스킬 discovery 밖에 있지만 MCP 런타임은 여기서 직접 사용한다.
+    ORCH_MODULE_DIR="$CLAUDE_DIR/.olympus/runtime-modules/orchestrator"
+    ORCH_DIST="$ORCH_MODULE_DIR/mcp-server/dist/index.js"
+    ORCH_SDK="$ORCH_MODULE_DIR/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    ORCH_SQLITE="$ORCH_MODULE_DIR/mcp-server/node_modules/better-sqlite3/package.json"
+    if [ ! -f "$ORCH_DIST" ] || [ ! -f "$ORCH_SDK" ] || [ ! -f "$ORCH_SQLITE" ]; then
         echo "      MCP 서버 빌드 중..."
-        (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+        (cd "$ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     # 빌드는 CLI 유무와 무관하게 해둔다 - Claude Code를 나중에 깔고 재실행하면
     # 등록만 하면 되도록. 등록 자체는 claude CLI가 있어야 한다.
-    if [ -f "$ORCH_DIST" ]; then
+    if [ -f "$ORCH_DIST" ] && [ -f "$ORCH_SDK" ] && [ -f "$ORCH_SQLITE" ]; then
         if [ "$HAS_CLAUDE_CLI" = "1" ]; then
             claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
             claude mcp add orchestrator --scope user -- node "$ORCH_DIST" >/dev/null 2>&1
@@ -579,9 +591,17 @@ if true; then
     echo ""
     echo "  Codex Skills/Agents/Hooks 동기화 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
-        node "$SCRIPT_DIR/scripts/sync-codex-assets.js" && CODEX_SYNC_RESULT="동기화 완료" || CODEX_SYNC_RESULT="동기화 실패"
+        if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" $SOURCE_ONLY_SKILL_FLAG $SOURCE_ONLY_AGENT_FLAG; then
+            CODEX_SYNC_RESULT="동기화 완료"
+        else
+            CODEX_SYNC_RESULT="동기화 실패"
+            echo "      [오류] 필수 정책 동기화 실패"
+            exit 1
+        fi
     else
-        CODEX_SYNC_RESULT="스킵(sync 스크립트 없음)"
+        CODEX_SYNC_RESULT="실패(sync 스크립트 없음)"
+        echo "      [오류] sync-codex-assets.js 없음"
+        exit 1
     fi
     echo "      $CODEX_SYNC_RESULT"
 fi
@@ -596,7 +616,9 @@ if true; then
         else
             CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
         fi
-        codex features enable multi_agent >/dev/null 2>&1 && CODEX_MULTI_AGENT_RESULT="활성화 완료" || CODEX_MULTI_AGENT_RESULT="활성화 실패"
+        # Current Codex releases ship stable multi-agent enabled by default.
+        # Preserve the user's feature configuration instead of mutating it.
+        CODEX_MULTI_AGENT_RESULT="네이티브 기본값(설정 변경 없음)"
     else
         CODEX_MCP_RESULT="스킵(codex CLI 없음)"
         CODEX_MULTI_AGENT_RESULT="스킵(codex CLI 없음)"
@@ -608,15 +630,16 @@ fi
 echo ""
 echo "  Codex Orchestrator MCP 등록 중... [필수]"
 if true; then
-    CODEX_ORCH_DIST="$CODEX_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    CODEX_ORCH_SDK="$CODEX_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
-    CODEX_ORCH_SQLITE="$CODEX_DIR/skills/orchestrator/mcp-server/node_modules/better-sqlite3/package.json"
+    CODEX_ORCH_MODULE_DIR="$CODEX_DIR/.olympus/runtime-modules/orchestrator"
+    CODEX_ORCH_DIST="$CODEX_ORCH_MODULE_DIR/mcp-server/dist/index.js"
+    CODEX_ORCH_SDK="$CODEX_ORCH_MODULE_DIR/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    CODEX_ORCH_SQLITE="$CODEX_ORCH_MODULE_DIR/mcp-server/node_modules/better-sqlite3/package.json"
     if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ] || [ ! -f "$CODEX_ORCH_SQLITE" ]; then
         echo "      MCP 서버 빌드 중..."
-        (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+        (cd "$CODEX_ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     if command -v codex >/dev/null 2>&1; then
-        if [ -f "$CODEX_ORCH_DIST" ]; then
+        if [ -f "$CODEX_ORCH_DIST" ] && [ -f "$CODEX_ORCH_SDK" ] && [ -f "$CODEX_ORCH_SQLITE" ]; then
             codex mcp remove orchestrator >/dev/null 2>&1 || true
             if codex mcp add --env "ORCHESTRATOR_WORKER_ID=pm" orchestrator -- node "$CODEX_ORCH_DIST" >/dev/null 2>&1; then
                 CODEX_ORCH_RESULT="등록 완료"
@@ -667,9 +690,17 @@ if true; then
     echo ""
     echo "  Gemini Skills/Agents/Hooks 동기화 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-gemini-assets.js" ]; then
-        node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" && GEMINI_SYNC_RESULT="동기화 완료" || GEMINI_SYNC_RESULT="동기화 실패"
+        if node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" $SOURCE_ONLY_SKILL_FLAG $SOURCE_ONLY_AGENT_FLAG; then
+            GEMINI_SYNC_RESULT="동기화 완료"
+        else
+            GEMINI_SYNC_RESULT="동기화 실패"
+            echo "      [오류] 필수 정책 동기화 실패"
+            exit 1
+        fi
     else
-        GEMINI_SYNC_RESULT="스킵(sync 스크립트 없음)"
+        GEMINI_SYNC_RESULT="실패(sync 스크립트 없음)"
+        echo "      [오류] sync-gemini-assets.js 없음"
+        exit 1
     fi
     echo "      $GEMINI_SYNC_RESULT"
 fi
@@ -703,16 +734,18 @@ GEMINI_MCP_RESULT="건너뜀(비활성화)"
 echo ""
 echo "  Gemini Orchestrator MCP 등록 중... [필수]"
 if true; then
-    GEMINI_ORCH_DIST="$GEMINI_DIR/skills/orchestrator/mcp-server/dist/index.js"
-    GEMINI_ORCH_SDK="$GEMINI_DIR/skills/orchestrator/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
-    if [ ! -f "$GEMINI_ORCH_DIST" ] || [ ! -f "$GEMINI_ORCH_SDK" ]; then
+    GEMINI_ORCH_MODULE_DIR="$GEMINI_DIR/.olympus/runtime-modules/orchestrator"
+    GEMINI_ORCH_DIST="$GEMINI_ORCH_MODULE_DIR/mcp-server/dist/index.js"
+    GEMINI_ORCH_SDK="$GEMINI_ORCH_MODULE_DIR/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+    GEMINI_ORCH_SQLITE="$GEMINI_ORCH_MODULE_DIR/mcp-server/node_modules/better-sqlite3/package.json"
+    if [ ! -f "$GEMINI_ORCH_DIST" ] || [ ! -f "$GEMINI_ORCH_SDK" ] || [ ! -f "$GEMINI_ORCH_SQLITE" ]; then
         echo "      MCP 서버 빌드 중..."
-        (cd "$SCRIPT_DIR/skills/orchestrator/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+        (cd "$GEMINI_ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     if command -v gemini >/dev/null 2>&1; then
-        if [ -f "$GEMINI_ORCH_DIST" ]; then
-            gemini mcp remove orchestrator >/dev/null 2>&1 || true
-            if gemini mcp add orchestrator node "$GEMINI_ORCH_DIST" >/dev/null 2>&1; then
+        if [ -f "$GEMINI_ORCH_DIST" ] && [ -f "$GEMINI_ORCH_SDK" ] && [ -f "$GEMINI_ORCH_SQLITE" ]; then
+            gemini mcp remove --scope user orchestrator >/dev/null 2>&1 || true
+            if gemini mcp add --scope user orchestrator node "$GEMINI_ORCH_DIST" >/dev/null 2>&1; then
                 GEMINI_ORCH_RESULT="등록 완료"
             else
                 GEMINI_ORCH_RESULT="등록 실패"
@@ -731,14 +764,43 @@ fi # HAS_GEMINI
 # ============================================
 #   Grok Build
 # ============================================
-# Grok은 스킬/에이전트/MCP/규칙을 [compat.claude] 기본값으로 ~/.claude/에서 직접 읽으므로
-# sync가 필요 없다 (memory/learned/018 실측). mnemo 훅만 어댑터를 설치한다.
+# Grok은 [compat.claude]로 ~/.claude/ 자산을 읽는다. Claude를 선택하지 않은
+# 설치에서는 여기서 최소 공유 홈을 준비하고, 대화 훅만 grok-mnemo를 사용한다.
 echo ""
 echo "  --- Grok Build ---"
 echo ""
 echo "  Grok-Mnemo 설치 중... [선택: Grok 미설치 시 자동 skip]"
 if [ -f "$SCRIPT_DIR/skills/grok-mnemo/install.js" ]; then
     if [ -d "$HOME/.grok" ]; then
+        if [ "$HAS_CLAUDE" = "0" ]; then
+            if [ -f "$SCRIPT_DIR/scripts/prune-stale-assets.js" ]; then
+                if ! node "$SCRIPT_DIR/scripts/prune-stale-assets.js" "$CLAUDE_DIR" --label grok-compat; then
+                    echo "      [오류] Grok 호환 stale asset 정리 실패"
+                    exit 1
+                fi
+            fi
+            if [ -f "$SCRIPT_DIR/scripts/sync-claude-skills.js" ]; then
+                if ! node "$SCRIPT_DIR/scripts/sync-claude-skills.js" "$CLAUDE_DIR" $SOURCE_ONLY_SKILL_FLAG; then
+                    echo "      [오류] Grok 호환 Skill 동기화 실패"
+                    exit 1
+                fi
+            else
+                echo "      [오류] sync-claude-skills.js 없음"
+                exit 1
+            fi
+            if [ -f "$SCRIPT_DIR/scripts/sync-claude-agents.js" ]; then
+                if ! node "$SCRIPT_DIR/scripts/sync-claude-agents.js" "$CLAUDE_DIR" $SOURCE_ONLY_AGENT_FLAG; then
+                    echo "      [오류] Grok 호환 Agent 동기화 실패"
+                    exit 1
+                fi
+            else
+                echo "      [오류] sync-claude-agents.js 없음"
+                exit 1
+            fi
+            if [ -f "$SCRIPT_DIR/install-claude-md.js" ]; then
+                node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md"
+            fi
+        fi
         if node "$SCRIPT_DIR/skills/grok-mnemo/install.js"; then
             GROK_MNEMO_RESULT="설치 완료"
         else
@@ -811,6 +873,9 @@ if [ "$JQ_MISSING" = "1" ]; then
     echo "         자산은 설치됐지만 .sh 훅(대화 저장 등)은 동작하지 않습니다."
     echo "         설치: brew install jq / sudo apt install -y jq"
 fi
+echo ""
+echo "  If a same-name asset was preserved, use the 'source -> backup' path printed above."
+echo "  --uninstall does not restore preserved backups automatically; see docs/skill-registry-migration.md."
 echo ""
 echo "  CLI를 재시작하면 적용됩니다."
 echo ""

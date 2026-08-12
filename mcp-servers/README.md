@@ -306,17 +306,14 @@ npx -p stitch-mcp-auto stitch-mcp-auto-setup
 **사용법:**
 
 ```
-User: /stitch:design 홈 화면 디자인해줘
-User: /stitch:design-system 현재 프로젝트의 디자인 시스템 추출해줘
-User: /stitch:design-flow 로그인 → 대시보드 플로우 생성해줘
+User: /aphrodite --stitch 홈 화면 디자인해줘
+User: 아프로디테로 현재 프로젝트의 디자인 시스템을 추출하고 Stitch에 반영해줘
+User: 아프로디테 --stitch 로그인 → 대시보드 플로우를 생성해줘
 ```
 
-**제공 명령:**
-- `/stitch:design` - UI 화면 디자인 생성
-- `/stitch:design-system` - 디자인 시스템 추출
-- `/stitch:design-flow` - 화면 플로우 생성
-- `/stitch:design-qa` - 디자인 QA
-- `/stitch:design-export` - 코드 내보내기
+**제공 경로:** `design-plan`이 source-only `stitch` 어댑터를 직접 읽고 요청을 화면 생성,
+디자인 시스템 추출, 플로우 생성, 디자인 QA, 코드 내보내기 중 하나로 분류합니다. 특정
+`/stitch:*` 명령 등록은 전제하지 않습니다.
 
 **참고:** [stitch-mcp GitHub](https://github.com/Kargatharaakash/stitch-mcp) | [davideast/stitch-mcp](https://github.com/davideast/stitch-mcp) | [Google Stitch Docs](https://stitch.withgoogle.com/docs/mcp/setup)
 

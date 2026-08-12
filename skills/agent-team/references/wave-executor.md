@@ -50,10 +50,14 @@ description에 구현해야 할 전체 내용이 있어.
 2. 다른 teammate의 파일은 절대 수정 금지
 3. 구현 완료 후 반드시 TaskUpdate({ taskId: '#{taskId}', status: 'completed' }) 실행
 4. 문제가 있으면 Lead에게 메시지로 보고 (SendMessage 사용 시 반드시 summary 파라미터 포함)
-5. 작업 활동을 conversations/{YYYY-MM-DD}-team-poseidon.md 에 기록할 것
-   - 시작/결정/에러/파일변경/완료 시점에 기록
-   - 형식: ## [HH:mm:ss] {name} ({section}) → **{TYPE}**: {message} → #tags:
-   - 각 기록 3줄 이내로 간결하게
+5. 완료 시 Lead에게 다음만 반환할 것
+   - 변경 파일
+   - 실행한 테스트와 결과
+   - 계획 이탈과 이유
+   - 남은 위험
+
+Lead만 conversations/{YYYY-MM-DD}-team-poseidon.md에 activity log를 기록한다.
+여러 작업자가 같은 로그 파일을 동시에 수정하지 않는다.
 
 선행 섹션 결과:
 {선행 섹션에서 생성된 파일 목록 + 주요 인터페이스/타입 요약}
@@ -72,15 +76,15 @@ description에 구현해야 할 전체 내용이 있어.
 
 ```
 while (wave의 모든 Task가 completed가 아님):
-  1. TaskList 호출
+  1. 현재 런타임의 task/agent 상태 확인
   2. 각 Task 상태 확인:
-     - in_progress: 정상, 대기
-     - completed: 완료, 카운트 증가
-     - 변화 없음 1분 이상:
-       a. 담당 파일 생성 여부 직접 확인 (Glob/Read)
-       b. 파일 미생성 → teammate가 권한 대기 또는 멈춤
-       c. 해당 teammate shutdown → mode: "bypassPermissions"로 재스폰
-  3. 30초 대기 후 재확인
+     - in_progress: 새 출력이나 상태 전이가 있으면 계속 대기
+     - completed: 반환 보고와 실제 파일·테스트 결과를 대조
+     - 장시간 상태 변화 없음:
+       a. 담당 파일과 실행 로그에서 부분 진행 여부 확인
+       b. 작업자에게 상태 요청 또는 현재 interrupt 기능으로 중단
+       c. 범위를 줄여 새 작업자에게 1회 재위임
+  3. permission mode나 sandbox를 자동 완화하지 않음
 ```
 
 ### 5. Wave 완료 처리
@@ -101,7 +105,7 @@ while (wave의 모든 Task가 completed가 아님):
    - 남은 Wave 수 대비 현재 대화 길이를 판단
    - 대화가 매우 길어졌다면 (응답이 느려지거나, compact가 이미 실행되었거나):
      - 현재까지 결과를 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 저장
-     - teammate shutdown → TeamDelete
+     - 실행 중 작업자를 현재 런타임의 정상 종료/interrupt 절차로 중단
      - `zeus-state.json` 또는 핸드오프 파일에 "Wave {N+1}부터 재개" 기록
      - 사용자에게 "새 세션에서 `/agent-team`을 다시 실행하면 Wave {N+1}부터 재개됩니다" 안내
    - 여유가 있으면 다음 Wave로 즉시 진행
@@ -130,32 +134,32 @@ Wave 2+ 실행 시, 선행 섹션의 결과를 teammate에게 전달:
 
 | 상황 | 대응 |
 |------|------|
-| teammate가 Task를 completed로 안 바꿈 (1분+) | 담당 파일 생성 여부 확인 → 미생성 시 shutdown → `mode: "bypassPermissions"`로 재스폰 |
-| teammate 에러 발생 | 에러 로그 확인 → `mode: "bypassPermissions"`로 새 teammate 생성하여 재시도 (최대 2회) |
-| 재시도 2회 후에도 실패 | 해당 섹션을 Lead가 subagent로 직접 구현, 또는 사용자에게 보고 |
+| teammate가 Task를 completed로 안 바꿈 | 담당 파일·테스트·상태 전이 확인 → interrupt → 범위를 줄여 1회 재위임 |
+| teammate 에러 발생 | 에러와 부분 변경 확인 → 새 작업자에게 같은 소유 범위로 1회 재위임 |
+| 재시도 후에도 실패 | 해당 섹션을 메인 컨텍스트에서 순차 실행하거나 사용자에게 보고 |
 | 파일 충돌 감지 | Lead가 git diff로 확인 → merge 또는 사용자 판단 요청 |
-| Wave 전체 실패 | 이후 Wave도 중단, **teammate shutdown → TeamDelete 실행 후** 사용자에게 보고 |
-| 작업 완료 또는 중단 | **반드시 teammate shutdown → TeamDelete 순서로 호출** — shutdown 없이 TeamDelete하면 active member 잔존으로 실패 → 좀비 발생 |
+| Wave 전체 실패 | 이후 Wave도 중단, 실행 중 작업자를 정상 종료한 뒤 사용자에게 보고 |
+| 작업 완료 또는 중단 | 실행 중 작업자만 정상 종료/interrupt하고 런타임 상태 디렉터리는 수동 삭제하지 않음 |
 
 ## CLI별 실행 형식
 
 위 사이클은 Claude(Agent Teams) 기준. 다른 CLI는 같은 사이클을 아래 도구로 수행한다:
 
-| CLI | 팀원 생성 | 지시 전달 | 모니터링 | 정리 |
-|-----|----------|----------|----------|------|
-| **Claude** | `TeamCreate` | `SendMessage` (summary 필수) | `TaskList` 폴링 | shutdown → `TeamDelete` |
-| **Codex** | `spawn_agent` | `send_message` | `wait` 블로킹 | `close_agent` |
-| **Gemini** | 없음 (사전 정의 에이전트) | 에이전트명 도구 호출의 위임 프롬프트에 전부 포함 | 도구 반환 = 완료 보고 | 불필요 (도구 호출 단위) |
-| **Grok** | `spawn_subagent(subagent_type, prompt)` | prompt에 전부 포함 | 반환 요약 수신 | 불필요 (자식 세션 자동 종료) |
+| CLI | 읽기 전용 역할 | 구현 역할 | 모니터링·정리 |
+|-----|----------------|-----------|----------------|
+| **Claude** | `Explore` | `general-purpose`; Agent Teams 활성 시 named background `Agent` | shared task list/`SendMessage`; 실행 중 teammate만 shutdown, implicit team은 자동 정리 |
+| **Codex** | `explorer` | `worker` (`default` 폴백) | 현재 `wait_agent`·`send_message`·`interrupt_agent` 계열 도구 |
+| **Gemini** | `codebase_investigator` | `generalist` | 호출 반환을 검증; 별도 팀 정리 없음 |
+| **Grok** | `explore` | `general-purpose` | 호출 반환을 검증; 별도 팀 정리 없음 |
 
 **Gemini/Grok 공통 주의:**
 - 중간 개입 채널이 없다 (fire-and-return). 지시 프롬프트에 완료 기준·담당 파일·소유권 규칙을 빠짐없이 담을 것.
 - 반환 요약을 그대로 믿지 말 것 — 담당 파일 실존(Glob/Read)과 Acceptance Criteria 대조로 교차 검증.
 - 실패 시 재위임 1회 → 그래도 실패면 Lead가 직접 서브태스크 분해 또는 사용자 보고.
 
-## Delegate 모드 운용
+## Lead 전용 조율
 
-Lead(나)가 Delegate 모드(Shift+Tab)에서 운용할 때:
+Lead는 다음 경계를 지킵니다.
 
 ```
 Lead 역할:

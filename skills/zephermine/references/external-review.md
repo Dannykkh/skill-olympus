@@ -2,6 +2,18 @@
 
 `plan.md`를 외부 LLM에게 독립적 리뷰를 받는 단계.
 
+## Native Role Contract
+
+| Semantic role | Claude | Codex | Gemini | Grok | Boundary |
+|---------------|--------|-------|--------|------|----------|
+| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Return-only review; no file writes |
+| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Write one uniquely assigned review file only |
+
+- External CLI processes and native writers each own one unique review file. An external process may also write its provider-specific run log; it never writes a shared log. No reviewer edits `plan.md` or another review.
+- Main/Lead owns `integration-notes.md`, all changes to `plan.md`, and every merge or shared-state decision.
+- If external review and native delegation are unavailable, Main/Lead performs the same review sequentially in the main context.
+- Use each runtime's configured default model; do not hardcode a model name.
+
 ## 실행 순서
 
 ### Step 0: CLI 존재 확인
@@ -32,14 +44,15 @@ Identify:
 - Unclear or ambiguous requirements
 
 Be specific and actionable. Reference specific sections.
+Return the review only. Do not create or modify files; the caller captures your response in its uniquely assigned review file.
 EOF
 ```
 
 ### Step 2: 병렬 리뷰 실행
 
-TWO Bash tool calls in a single message. Default timeout is 10 minutes per provider. Use longer timeouts only when the user explicitly asks for deep external review.
+Run up to two independent external CLI processes in parallel. Default timeout is 10 minutes per provider. Use longer timeouts only when the user explicitly asks for deep external review.
 
-**Gemini** — `@file` 경로 참조 지원. 기본 10분 안에 응답이 없으면 실패로 기록하고 Codex/Claude 리뷰만으로 진행:
+**Gemini** — `@file` 경로 참조 지원. 기본 10분 안에 응답이 없으면 실패로 기록하고 확보된 리뷰와 native fallback으로 진행:
 ```bash
 GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
 timeout "$GEMINI_TIMEOUT_SECONDS" gemini --approval-mode yolo \
@@ -47,12 +60,12 @@ timeout "$GEMINI_TIMEOUT_SECONDS" gemini --approval-mode yolo \
   -p "$(cat '<planning_dir>/reviews/review-prompt.txt')
 
 @<planning_dir>/plan.md" \
-  > "<planning_dir>/reviews/gemini-review.md" 2>> "<planning_dir>/reviews/external-ai.log"
+  > "<planning_dir>/reviews/gemini-review.md" 2>> "<planning_dir>/reviews/gemini-review.log"
 GEMINI_EXIT=$?
 if [ $GEMINI_EXIT -eq 124 ]; then
-  echo "[WARN] Gemini review timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/reviews/external-ai.log"
+  echo "[WARN] Gemini review timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/reviews/gemini-review.log"
 elif [ $GEMINI_EXIT -ne 0 ]; then
-  echo "[WARN] Gemini review 종료코드: $GEMINI_EXIT" >> "<planning_dir>/reviews/external-ai.log"
+  echo "[WARN] Gemini review 종료코드: $GEMINI_EXIT" >> "<planning_dir>/reviews/gemini-review.log"
 fi
 ```
 
@@ -65,13 +78,13 @@ echo "$(cat "<planning_dir>/reviews/review-prompt.txt")" \
     --sandbox workspace-write \
     --skip-git-repo-check \
     --output-last-message "<planning_dir>/reviews/codex-review.md" \
-    >> "<planning_dir>/reviews/external-ai.log" 2>&1
+    >> "<planning_dir>/reviews/codex-review.log" 2>&1
 '
 CODEX_EXIT=$?
 if [ $CODEX_EXIT -eq 124 ]; then
-  echo "[WARN] Codex review timeout (${CODEX_REVIEW_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/reviews/external-ai.log"
+  echo "[WARN] Codex review timeout (${CODEX_REVIEW_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/reviews/codex-review.log"
 elif [ $CODEX_EXIT -ne 0 ]; then
-  echo "[WARN] Codex review 종료코드: $CODEX_EXIT" >> "<planning_dir>/reviews/external-ai.log"
+  echo "[WARN] Codex review 종료코드: $CODEX_EXIT" >> "<planning_dir>/reviews/codex-review.log"
 fi
 ```
 
@@ -79,14 +92,14 @@ fi
 > - 프롬프트는 반드시 **stdin(echo | codex -a never exec)** 으로 전달 (인자 X)
 > - `-a never`는 비대화형 실행에서 승인 대기로 멈추지 않게 하는 top-level 옵션입니다.
 > - `--sandbox workspace-write`는 현재 Codex CLI에서 deprecated `--full-auto`의 실질 대체입니다. Codex가 파일을 만들거나 명령을 실행해도 중간 승인으로 멈추지 않습니다.
-> - `--output-last-message`로 최종 응답만 리뷰 파일에 저장하고, 실행 로그는 `external-ai.log`에 남깁니다.
+> - `--output-last-message`로 최종 응답만 리뷰 파일에 저장하고, 실행 로그는 provider별 고유 `*-review.log`에 남깁니다.
 > - `--json`은 최종 응답 포맷이 아니라 이벤트 스트림(JSONL) 출력용이므로 리뷰 파일 저장에는 사용하지 않습니다.
 > - `@file` 문법 미지원 (Gemini만 지원)
 
 > **Gemini 주의사항:**
 > - 백그라운드/자동화에서는 반드시 `--approval-mode yolo`를 사용합니다.
 > - Gemini CLI는 positional prompt가 interactive 기본이므로, headless 실행에는 `-p/--prompt`를 사용합니다.
-> - Gemini는 느리거나 응답이 없을 수 있으므로 timeout을 짧게 두고, 실패해도 계획 수립은 Codex/Claude 폴백으로 계속 진행합니다.
+> - Gemini는 느리거나 응답이 없을 수 있으므로 timeout을 짧게 두고, 실패해도 확보된 리뷰와 native/main-context 폴백으로 계획 수립을 계속합니다.
 
 ### Step 3: 결과 저장
 
@@ -96,7 +109,6 @@ fi
 
 ```markdown
 # {Provider} Review
-**Model:** {model_name}
 **Generated:** {timestamp}
 ---
 {review_content}
@@ -108,21 +120,21 @@ fi
 |------|------|
 | Gemini만 성공 | codex-review.md 없이 진행 |
 | Codex만 성공 | gemini-review.md 없이 진행 |
-| **둘 다 실패 / 둘 다 미설치** | **Claude가 devil's advocate 관점으로 자체 리뷰** → `claude-self-review.md` 작성 |
+| **둘 다 실패 / 둘 다 미설치** | 현재 CLI의 `artifact-writer`가 devil's advocate 리뷰 → `runtime-self-review.md`; 위임 불가 시 Main/Lead가 순차 작성 |
 | Timeout | configured timeout이 자동 kill, 확보된 결과만 사용 |
 
-### 폴백: Claude 자체 리뷰
+### 폴백: Native Runtime Review
 
-외부 리뷰를 모두 받지 못한 경우, Claude가 직접 비판적 리뷰를 수행:
+외부 리뷰를 모두 받지 못한 경우, 현재 CLI의 `artifact-writer`가 비판적 리뷰를 수행합니다. writer는 `runtime-self-review.md`만 작성하고, 위임할 수 없으면 Main/Lead가 같은 검토를 메인 컨텍스트에서 순차 수행합니다.
 
 ```
 관점: devil's advocate (악마의 변호인)
 - 모든 가정에 의문 제기
 - "쉬워 보이는 것"의 숨겨진 복잡성 지적
 - 빠진 엣지 케이스, 보안 취약점, 성능 병목
-- Red Team 에이전트와 유사하지만 전체 계획 수준에서 공격
+- Red Team 전문가와 유사하지만 전체 계획 수준에서 공격
 ```
 
-결과를 `<planning_dir>/reviews/claude-self-review.md`에 저장.
+결과를 `<planning_dir>/reviews/runtime-self-review.md`에 저장. Main/Lead만 이 결과를 `plan.md`와 `integration-notes.md`에 통합합니다.
 
 **원칙: 외부 리뷰 실패로 계획 수립을 중단하지 않음.**

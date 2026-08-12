@@ -1,18 +1,13 @@
 ---
 name: python-fastapi-guidelines
-description: FastAPI 백엔드 개발 모범 사례. Python 파일 작성/수정 시 자동 적용.
-auto_apply:
-  - "*.py"
-  - "app/**"
-  - "backend/**"
-  - "api/**"
+description: FastAPI 백엔드 개발 참고 가이드. 사용자가 이 에이전트를 명시적으로 요청할 때만 적용.
 references:
   - skills/python-backend-fastapi/SKILL.md
 ---
 
-# Python FastAPI Guidelines (Passive)
+# Python FastAPI Guidelines (Optional Reference)
 
-Python/FastAPI 코드 작성 시 항상 적용되는 규칙.
+Python/FastAPI 작업에서 명시적으로 불러 쓰는 참고 규칙.
 
 ## Critical Quality Rules
 

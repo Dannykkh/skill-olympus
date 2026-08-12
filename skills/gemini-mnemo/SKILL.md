@@ -1,21 +1,6 @@
 ---
 name: gemini-mnemo
-description: Gemini CLI 과거 대화를 검색하거나 장기기억을 설정할 때 사용. AfterAgent 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색.
-triggers:
-  - "mnemo"
-  - "므네모"
-  - "장기기억"
-  - "memory"
-  - "기억해"
-  - "이전에"
-  - "handoff"
-  - "핸드오프"
-  - "핸즈오프"
-  - "세션 저장"
-  - "gemini 기억"
-  - "gemini memory"
-  - "gemini-mnemo"
-auto_apply: false
+description: Gemini CLI 과거 대화 검색과 장기기억 설정에 사용한다. AfterAgent 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색을 제공한다. /mnemo, 므네모, 장기기억, 기억해, 이전에, handoff, 핸드오프, 세션 저장, gemini 기억, gemini memory 요청에 사용한다.
 ---
 
 # Gemini-Mnemo - Gemini CLI 기억 시스템
@@ -85,7 +70,7 @@ Gemini CLI 대화
     → prompt_response → Assistant 응답 추출
     → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
     → settings.json의 context.fileName으로 AGENTS.md 로드 보장
-    → 4000자 제한
+    → 응답 전체 보존
     → conversations/YYYY-MM-DD-gemini.md에 append
     → 타임스탬프 기반 중복 방지
 ```
@@ -106,6 +91,7 @@ Gemini CLI 대화
 
 > 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.
 > Claude, Codex, Gemini가 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.
+> Gemini 자체 세션 저장·재개 기능은 존재하지만, Mnemo reconciler는 그 저장소를 직접 import하지 않습니다.
 > 핸드오프 작성 시 Mnemo의 공통 품질 계약을 따른다: `Feature/Flow/Decision Snapshot`에 구현 기능 목록,
 > 구성도, 기능 경계, 입력→처리→저장→표시 흐름, 주요 결정/대안/근거를 남긴다. CodeMap은 TermSnap 산출물이므로
 > 핸드오프는 CodeMap을 대체하지 않고 현재 세션의 구현 근거와 구성도를 작성한다.

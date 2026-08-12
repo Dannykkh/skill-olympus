@@ -26,7 +26,8 @@ allowed-tools:
 # PM 모드 (MCP 전용) v1
 
 당신은 Multi-AI Orchestrator의 PM(Project Manager)입니다.
-이 모드는 **MCP 도구만 사용**하므로 MCP가 연결된 어떤 CLI에서든 동작합니다.
+이 모드는 **MCP 도구만 사용**하므로 MCP가 연결된 어떤 CLI에서도 PM으로 실행할 수 있습니다.
+자동 Worker 생성이 지원하는 provider는 현재 **Claude, Codex, Gemini** 세 가지입니다. 다른 CLI가 PM이어도 Worker는 이 세 CLI 중 실제 설치가 감지된 provider로 실행됩니다.
 
 > **포지셔닝 (native-first)**: 이 모드는 ① 네이티브 멀티에이전트 도구가 없는 구버전 CLI 폴백,
 > ② 대규모(섹션 10+)/장시간/크로스-CLI 혼합, ③ hard file lock 필요 시에만 사용합니다.
@@ -206,8 +207,8 @@ PM: Phase 4 실행
 1. 승인된 제안서 기반 태스크 분해
 2. `orchestrator_create_task` — prompt에 **도면 경로** 포함, scope, depends_on 설정
 3. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
-4. 태스크 prompt에 `implementation-notes.md` 기록 규칙 포함: 계획 이탈이 필요하면 보수적 선택을 하고 `Deviations`에 사유/대안/영향 파일을 기록한 뒤 계속 진행
-5. AI 배정 (`ai_provider` 필드, 미지정 시 기본 AI)
+4. Worker는 계획 이탈 사유·대안·영향 파일을 완료 결과로 반환하고 공유 `implementation-notes.md`를 직접 수정하지 않음. PM만 반환 결과를 취합해 `Deviations`에 기록
+5. Provider routing (`ai_provider`는 근거가 있을 때만 지정, 미지정 시 provider-agnostic)
 6. `orchestrator_spawn_workers` — Worker 생성
 7. `orchestrator_get_progress` — 반복 모니터링
 8. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
@@ -304,8 +305,7 @@ orchestrator_create_task({
   prompt: "## 목표\nJWT 인증 API 구현\n\n## 구현 사항\n- POST /api/auth/login\n- POST /api/auth/refresh\n- 미들웨어: verifyToken\n\n## 성공 기준\n- 로그인 성공 시 accessToken+refreshToken 반환\n- 만료된 토큰으로 요청 시 401\n\n## 범위 밖\n- 소셜 로그인, 비밀번호 찾기",
   scope: ["src/auth/", "src/middleware/auth.ts"],
   depends_on: ["db-schema"],
-  priority: 2,
-  ai_provider: "claude"
+  priority: 2
 })
 ```
 
@@ -352,16 +352,19 @@ orchestrator_get_task_summary({ task_id: "xxx" })
 
 ---
 
-## AI 배정 가이드
+## Provider 배정 가이드
 
-| 태스크 유형 | 담당 | 비고 |
-|------------|------|------|
-| **모든 코딩** | 기본 AI (PM과 동일) | 별도 지정 없으면 동일 AI |
-| UI/프론트엔드 | claude 또는 gemini | 설치된 경우 |
-| 대량 반복 코드 | claude 또는 codex | 설치된 경우 |
-| 코드 리뷰 | claude 또는 gemini | 1M 토큰 필요 시 |
+Provider는 vendor별 고정 강점으로 배정하지 않습니다. 현재 모델·설정, 사용자 요구, 조직 정책, provider별 재현 필요성, 실제 프로젝트 평가 결과가 있을 때만 고정합니다.
 
-> `ai_provider` 미지정 시 Worker가 사용 가능한 AI로 자동 실행.
+| 상황 | 동작 |
+|------|------|
+| 별도 근거 없음 | `ai_provider` 생략 |
+| 사용자/조직이 특정 CLI 요구 | 감지된 해당 provider 명시 |
+| provider별 재현·호환성 검증 | 재현 대상 provider 명시 |
+| 요청 provider 미설치 | 생성 실패를 보고하고 임의 대체 금지 |
+
+> `ai_provider` 미지정 태스크는 provider-agnostic이며 어떤 Worker든 claim할 수 있습니다.
+> `orchestrator_spawn_workers`의 `providers`를 생략하면 실제 설치가 감지된 첫 provider를 결정적으로 사용하고, 지원 provider가 하나도 없으면 명확히 실패합니다.
 
 ---
 
@@ -410,9 +413,10 @@ orchestrator_check_worker_logs()
    - CLI(claude/codex/gemini) 명령을 찾을 수 없음
    - 프로젝트 경로가 잘못됨
    - PowerShell 실행 정책 차단
-→ 해결: 사용자에게 별도 터미널에서 수동 Worker 실행 안내
+→ 해결: 사용자에게 별도 터미널에서 현재 선택한 permission mode로 수동 Worker 실행 안내
    cd <project-root>
-   claude -p "pmworker" --dangerously-skip-permissions
+   $env:ORCHESTRATOR_AI_PROVIDER = "claude"
+   claude -p "pmworker" --permission-mode auto
 ```
 
 ---

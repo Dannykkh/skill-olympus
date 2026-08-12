@@ -1,17 +1,18 @@
 ---
 name: web-preview-guide
 description: |
-  웹 프리뷰 모드 개발 가이드. 디자인 DNA(토큰) 먼저 → Frontend → Backend 순서 자동 적용.
-  채팅 모드 + dev server + PreviewPanel 환경에서 활성화.
-auto_apply: true
+  웹 프리뷰 모드의 레거시 상세 참고 가이드. 현재 작업은 루트 AGENTS.md와 DESIGN.md를
+  우선하고, 사용자가 이 에이전트를 명시적으로 요청할 때만 참고.
 references:
   - agents/ui-ux-designer.md
   - agents/stitch-developer.md
   - skills/design-system-starter/SKILL.md
 ---
 
-# Web Preview Mode Development Guide
+# Web Preview Mode Development Guide (Legacy Reference)
 
+현재 정본은 루트 `AGENTS.md`의 프론트엔드 가드레일과 프로젝트 `DESIGN.md`입니다.
+이 문서는 과거 PreviewPanel 상세 흐름이 필요한 경우에만 참고합니다.
 웹 프리뷰 모드(채팅 모드 + dev server + PreviewPanel)에서 개발할 때 아래 순서를 따릅니다.
 사용자가 다른 순서를 명시적으로 요청하면 그에 따릅니다.
 
@@ -377,6 +378,6 @@ Emulation.setDeviceMetricsOverride(width: 375, height: 812, deviceScaleFactor: 3
 Stitch MCP가 활성화된 환경에서는:
 1. `/aphrodite --plan-only`로 벤치마크의 헤더·핵심 메시지·섹션·CTA·신뢰 요소·모바일 변환을 관찰하고 Adopt/Adapt/Avoid로 분류
 2. 루트 `DESIGN.md`, Experience Contract, 레이아웃 청사진을 확정
-3. `/stitch generate` 또는 `/stitch loop`로 화면을 생성하되 Stitch는 원격 렌더 어댑터로만 사용
-4. `/stitch edit|variants`로 부분 개선·대안을 비교하고 아프로디테 기준으로 채택 여부 판정
-5. `/stitch react`로 기존 React 구조에 반영한 뒤 데스크톱·모바일 렌더, 접근성, 성능을 독립 검증
+3. `/aphrodite --stitch`가 source-only `stitch` 모듈을 직접 읽고 generate 또는 loop route로 화면을 생성. Stitch는 원격 렌더 어댑터로만 사용
+4. 같은 어댑터의 edit 또는 variants route로 부분 개선·대안을 비교하고 아프로디테 기준으로 채택 여부 판정
+5. react route로 기존 React 구조에 반영한 뒤 데스크톱·모바일 렌더, 접근성, 성능을 독립 검증. 별도 `/stitch` 등록은 전제하지 않음

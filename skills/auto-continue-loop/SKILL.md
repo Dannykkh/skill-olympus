@@ -3,7 +3,7 @@ name: auto-continue-loop
 description: >
   네이티브 /goal(Stop 게이트)을 녹여 쓰는 자율 작업 규율 스킬. 주 진입점은 /chronos.
   goal은 "끝까지 안 멈추기"(지속성)를 담당하고, 크로노스는 goal이 못 하는 것 — 자가 판단이 아닌
-  실제 테스트 실행 검증, 우선순위 사이클(Critical>High>Medium>Low), 한 사이클 한 이슈,
+  실제 테스트 실행 검증, 우선순위 사이클(Critical, High, Medium, Low 순), 한 사이클 한 이슈,
   막힌 이슈 주차(PARK) + Owner Decision Brief, 감사 로그 기반 재진입 — 을 더합니다.
   크로노스는 goal을 자동 호출하지 않고, 규율을 녹인 goal 목표문을 생성·제시합니다(설정은 /goal 입력 한 번).
   Claude에서 /goal 설정 없이 돌릴 때는 네이티브 /loop 인터벌 재진입(심장박동, --heartbeat)을 1.5순위 엔진으로 씁니다.
@@ -11,23 +11,6 @@ description: >
   --max-iterations와 --completion-promise로 제어. 품질 점수(90점 이상 등)를 완료 조건으로 쓰려면
   반드시 --completion-promise에 명시해야 합니다(자동 감지 안 됨). /chronos로 실행. Also known as 크로노스.
   주의: 네이티브 /loop(주기 반복 실행기)와는 별개 — 구 별칭 /loop는 충돌로 폐기됨.
-triggers:
-  - "auto-continue-loop"
-  - "chronos"
-  - "크로노스"
-  - "goal"
-  - "다음 진행"
-  - "계속 진행"
-  - "진행하자"
-  - "계속해"
-  - "next"
-  - "continue fixing"
-  - "keep going"
-  - "끝까지 진행"
-  - "끝까지 알아서"
-  - "우선순위대로 진행"
-  - "추천 나오면 계속"
-auto_apply: false
 ---
 
 # Chronos (크로노스)
@@ -183,7 +166,9 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 
 ### 3순위 — 직접 루프 폴백
 
-지속성 엔진이 없으면 메인 컨텍스트에서 직접 사이클을 반복합니다. `--max-iterations`까지 또는 검증 게이트 통과까지 진행하되, 컨텍스트 한도에 유의합니다.
+지속성 엔진이 없으면 메인 컨텍스트에서 사이클을 순차 반복합니다. `--max-iterations`까지 또는 검증 게이트 통과까지 진행하되, 컨텍스트 한도에 유의합니다.
+
+`chronos-worker`라는 커스텀 에이전트 이름은 지속성 엔진이 아니며 기본 등록하지 않습니다. 한 사이클을 격리할 이점이 있을 때만 general-write 역할(Claude `general-purpose`, Codex `worker`, Gemini `generalist`, Grok `general-purpose`)에 고유 파일 범위·검증 게이트·현재 로그·주차 목록을 함께 넘깁니다. 큐, 공유 로그, 재시도, 완료 판정과 다음 사이클은 메인 Chronos 하네스가 계속 소유합니다.
 
 ---
 
@@ -242,7 +227,38 @@ pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 | `--max-iterations <N>` | 최대 반복 횟수 | **50** | 훅/직접: 강제 종료 / goal: budget 힌트 / heartbeat: 재진입 횟수 상한 |
 | `--completion-promise '<조건>'` | 검증 게이트 (`<promise>` 태그로 매칭) | 없음 (작업 소진 시 자동 종료) | 모든 엔진 공통 (goal 목표문·heartbeat 재진입 프롬프트에도 주입) |
 | `--heartbeat [interval]` | 네이티브 `/loop` 인터벌 재진입을 엔진으로 (Claude 전용, `/goal` 설정 불필요) | off (지정 시 기본 10m) | 1.5순위 엔진 강제 |
-| `--flow-verify` | flow-verifier 연동 — 루프 시작 전 프로세스 도면 생성(Phase 0.5), 완료 선언 전 도면 대 실제 코드 흐름 대조. 불일치는 다음 사이클 수정 대상으로 승격 | off | 모든 엔진 공통 (상세: `skills/flow-verifier/SKILL.md`의 "Chronos 통합") |
+| `--flow-verify` | flow-verifier 연동 — 루프 시작 전 프로세스 도면 생성(Phase 0.5), 완료 선언 전 도면 대 실제 코드 흐름 대조. 불일치는 다음 사이클 수정 대상으로 승격 | off | 모든 엔진 공통 (선택 시 전역 카탈로그에서 `flow_verifier_root` 해석) |
+
+## Source-only internal module resolution (mandatory)
+
+`flow-verifier`, `code-reviewer`, `ui-ux-auditor`는 특정 옵션·스코프·완료 조건이 선택했을
+때만 Chronos가 읽는 source-only 내부 모듈입니다. 등록된 스킬이나 slash command로 호출하지 않습니다.
+
+각 선택된 모듈을 다음 순서로 해석하고 처음 확인된 exact `SKILL.md` 파일 하나를 읽습니다.
+
+1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
+2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
+   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
+   `~/.gemini/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
+   `읽을 경로`의 절대 `SKILL.md`를 읽고, 누락·중복 행은 fail-closed입니다. 기본 경로가
+   `.olympus/source-skills` 아래여도 조합하거나 추측하지 않습니다.
+4. `module_root`는 읽은 `SKILL.md`의 부모입니다. 해당 모듈의 `references/`, `scripts/`,
+   `commands/`는 그 루트에서만 해석합니다.
+5. `--flow-verify`일 때만 `flow_verifier_root`, 리뷰/보안 gate를 실제 선택했을 때만
+   `code_reviewer_root`, completion promise가 UI 감사 점수를 요구할 때만
+   `ui_ux_auditor_root`를 만듭니다. 기본 루프 시작 시 세 모듈을 선로딩하지 않습니다.
+
+이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
+모듈 이름을 slash command로 실행하지 않습니다.
+
+선택된 모듈의 행·경로·필수 reference를 읽지 못하면 로그와 완료 계약에
+`NOT RUN: source module unavailable`을 기록합니다. flow/UI처럼 사용자가 명시한 gate는
+`missing` 상태를 유지하고 `<promise>`를 출력하지 않습니다. code-reviewer만 현재 CLI의
+네이티브 review가 있으면 1회 bounded fallback을 허용하며 `native fallback; policy module NOT RUN`
+으로 표기합니다. 어느 fallback도 source module PASS로 둔갑시키지 않습니다.
 
 ### 점수형 완료 조건 (예: "90점 이상") — 반드시 promise로
 
@@ -253,7 +269,7 @@ promise에 넣지 않으면 종료 조건 1("할 게 없으면 종료")이 도�
 점수 게이트는 3요소를 갖춰야 유효합니다 (goal 목표문·heartbeat 재진입 프롬프트에 그대로 주입):
 
 1. **측정 가능한 임계값** — "ui-ux-auditor 총점 90 이상"
-2. **측정 방법** — 어떤 스킬/명령이 점수를 내는지: "매 사이클 종료 시 ui-ux-auditor 실행"
+2. **측정 방법** — 어떤 내부 모듈/명령이 점수를 내는지: "매 사이클 종료 시 ui-ux-auditor 계약 수행"
 3. **결과를 대화에 출력** — Claude `/goal` 평가자는 명령을 실행하지 않고 **대화 출력만** 봅니다. 점수를 출력하지 않으면 판정 불가
 
 등록된 점수 게이트는 [완료 계약](#완료-계약-completion-contract--거짓-완료-방지)의 요구사항이 되어,
@@ -323,6 +339,25 @@ tsconfig.json → npx tsc --noEmit
 {폴백이면} → 중단: bash skills/auto-continue-loop/scripts/cancel-loop.sh
 ```
 
+### 0-4. 조건부 source module gate
+
+- `--flow-verify`이면 `flow-verifier` 모듈을 위 resolver로 읽고
+  `${flow_verifier_root}/SKILL.md`의 `Chronos 통합` 계약을 적용합니다.
+- completion promise에 `ui-ux-auditor` 점수/임계값이 있으면 해당 모듈을 읽고, 모듈이 요구하는
+  reference와 script를 `ui_ux_auditor_root`에서 해석해 매 사이클 종료 시 측정합니다.
+- 사용자가 코드 리뷰·보안 감사를 스코프나 gate로 명시했을 때만 `code-reviewer`를 읽습니다.
+  보안 reference가 필요하면 `${code_reviewer_root}/references/security-audit.md`를 사용합니다.
+- 모듈 상태(`LOADED`, `NOT RUN`, `native fallback`)를 `docs/chronos/chronos-log.md` 머리에
+  기록하고, 재진입 때도 같은 정확한 경로를 복원합니다.
+
+### Phase 0.5: flow-verifier plan (옵션)
+
+`--flow-verify`가 있고 모듈을 성공적으로 읽었을 때만 로드한 plan 계약으로
+`docs/flow-diagrams/{feature}.mmd`를 생성합니다. 완료 선언 직전에는 같은 모듈의 verify 계약으로
+현재 코드 흐름을 대조하고, 불일치는 다음 FIND 이슈로 승격합니다. 모듈이 없으면 다이어그램이나
+PASS stub을 만들지 않고 `NOT RUN`과 Owner Decision Brief를 남깁니다. flow gate가 완료 조건에
+포함된 경우 그 상태에서는 promise를 출력할 수 없습니다.
+
 ---
 
 ## Phase 1: 루프 실행
@@ -336,7 +371,10 @@ tsconfig.json → npx tsc --noEmit
    새 세션에서 이어받을 때는 검증 게이트를 1회 실행해 현재 상태를 확인한 뒤 FIND로 들어간다
    — 루프의 상태는 모델의 기억이 아니라 로그에 있다. 이 덕분에 세션이 죽어도 `/chronos` 재실행만으로 루프가 이어진다.
 1. **FIND**: **도구 신호에서 시작한다(외부 근거 우선)** — 모델 직관으로 이슈를 떠올리기 전에 가용한 정적 신호를 먼저 모은다: 검증 게이트(테스트, VERIFY에서 이미 실행) + `tsc --noEmit`/타입체크 + lint + 빌드 에러(값싼 것은 매 사이클, 보안 스캔 등 무거운 것은 보안 스코프이거나 첫 사이클 1회). 수집된 구체적 실패 중 우선순위 최상위 1개를 고른다. **도구 신호가 0건일 때만** 모델 판단으로 찾는다(도구가 못 잡는 설계 결함·누락 기능). 직전 사이클에서 승격된 next-action이 있으면 그것을 우선. 주차된 이슈는 다시 선택하지 않는다.
-   - `memory/gotchas/`·`memory/learned/`가 있으면 FIND에서 참조 — 같은 실수 반복 방지 + 성공 패턴 재사용 (chronos-worker와 동일)
+   - 리뷰/보안 스코프이면 위에서 로드한 `code-reviewer` 계약을 적용합니다. 모듈이 없으면 네이티브
+     review 1회로만 축소하고 `policy module NOT RUN`을 로그에 남기며, 네이티브 도구도 없으면
+     해당 감사 gate를 `NOT RUN`으로 유지합니다.
+   - `memory/gotchas/`·`memory/learned/`가 있으면 FIND에서 참조 — 같은 실수 반복 방지 + 성공 패턴 재사용 (Chronos 사이클 공통 계약)
    - **드라이("할 게 없음") 판정도 도구로**: lint/typecheck/테스트가 빨간 상태면 "할 게 없음"을 선언하지 않는다 — 정적 신호가 모두 초록일 때만 in-scope 작업 0건이 성립한다(모델 기억이 아니라 도구 출력 기준).
 2. **FIX**: 최소 변경 원칙 — 이슈 해결에 필요한 최소한의 코드만 수정
 3. **VERIFY**: 검증 게이트 명령 실행. **수정이 통합 경계를 건드렸으면 게이트 전에 경계면 교차비교를 1회**(웹: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) — "빌드/테스트 통과 ≠ 정상"(TS 제네릭이 런타임 mismatch를 숨김), 양쪽 파일을 동시에 읽어 계약을 대조한다. 실패 시 같은 사이클 내 최대 3회 재시도. 3회 실패 → [에스컬레이션 사다리](#에스컬레이션-사다리--사람에게-주차하기-전-능력을-한-칸-올린다)(능력 1회 상향) → 그래도 실패 → 주차(PARK)
@@ -445,7 +483,7 @@ echo 'Parked: {이슈} — 사유: {검증 실패|권한 경계|외부 접근 �
 - **`loop-state.md` 절대 접근 금지** (훅 폴백 사용 시) — `.claude/`, `.codex/`, `.chronos/` 아래 상태 파일은 읽기/수정/삭제 모두 금지. 훅/notify 체인만 관리한다.
 - **루프 종료를 직접 시도 금지** — 종료는 검증 게이트 통과 시 엔진이 처리하거나, 사용자가 중단(`/goal` 해제 또는 cancel-loop)으로 수행한다. 예외 하나: heartbeat 엔진에서 **검증 게이트 PASS(또는 전부 주차) 확인 후의 `/loop` 중지**는 엔진 수순의 일부다 — 검증 없는 중지는 여전히 금지.
 - **검증 없는 완료 선언 금지** — 검증 게이트가 정의돼 있으면 PASS를 실제로 확인하기 전에 `<promise>`/`Chronos Complete`를 출력하지 않는다.
-- AskUserQuestion 호출 금지 — 결정이 필요한 이슈는 질문 대신 주차하고, 최종 보고의 Brief로 넘긴다
+- 대화형 질문 도구 호출 금지 — 결정이 필요한 이슈는 질문 대신 주차하고, 최종 보고의 Brief로 넘긴다
 - 사유(주차 표의 4가지) 명시 없는 "막힘" 선언 금지 — 회피로 간주
 - 전체 이슈 목록 나열 금지
 - 한 번에 여러 이슈 동시 수정 금지
@@ -655,8 +693,9 @@ Gemini 세션(`GEMINI_SESSION_ID`)에서 setup-loop가 `.chronos/loop-state.md`�
 | `skills/auto-continue-loop/scripts/continue-loop.ps1` | Codex notify → background resume (Windows) |
 | `skills/codex-mnemo/hooks/save-turn.sh` | Codex notify 오케스트레이터 + Chronos 체인 |
 | `skills/codex-mnemo/hooks/save-turn.ps1` | Codex notify 오케스트레이터 + Chronos 체인 |
-| `skills/auto-continue-loop/agents/chronos-worker.md` | Gemini용 서브에이전트 정의 (3순위 직접 루프) |
-| `skills/flow-verifier/SKILL.md` | 구현 흐름 검증 통합 (선택 레이어) |
-| `skills/code-reviewer/SKILL.md` | 코드 리뷰 기준 참조 |
+| `skills/auto-continue-loop/agents/chronos-worker.md` | 명시 opt-in용 source-only 호환 프롬프트 (기본 등록·지속성 의존 없음) |
+| 전역 카탈로그 `flow-verifier` 행의 `읽을 경로` | 선택 시 `${flow_verifier_root}/SKILL.md`의 Chronos 통합 계약 |
+| 전역 카탈로그 `code-reviewer` 행의 `읽을 경로` | 리뷰/보안 gate 선택 시 `${code_reviewer_root}/SKILL.md` |
 | `skills/systematic-debugging/SKILL.md` | 디버깅 방법론 참조 |
-| `agents/security-reviewer.md` | 보안 이슈 기준 참조 |
+| `${code_reviewer_root}/references/security-audit.md` | code-reviewer 모듈을 로드한 보안 분기에서만 참조 |
+| 전역 카탈로그 `ui-ux-auditor` 행의 `읽을 경로` | 점수형 완료 조건 선택 시 `${ui_ux_auditor_root}/SKILL.md` |

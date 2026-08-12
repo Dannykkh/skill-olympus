@@ -9,7 +9,7 @@ when_to_use: |
   - 회귀 테스트 실행 및 분석
   - 테스트 커버리지 분석 및 개선
 avoid_if: |
-  - 테스트 시나리오 문서 작성 (qa-writer 사용)
+  - 테스트 시나리오 문서 작성 (zephermine 또는 minos 사용)
   - 보안 취약점 테스트 (security-reviewer 사용)
   - 성능 부하 테스트 (별도 도구 사용)
   - 코드 품질 리뷰 (code-reviewer 사용)
@@ -172,7 +172,7 @@ REST API contract and behavior testing.
 
 ## Test Case & Patterns
 
-테스트 시나리오/케이스 작성은 **qa-writer** 에이전트 사용.
+테스트 시나리오/케이스 작성은 **zephermine** 산출물 또는 **minos**의 현장 생성 계약 사용.
 코드 패턴 (Unit/E2E) 예시는 `skills/minos/SKILL.md` 참조.
 
 ---

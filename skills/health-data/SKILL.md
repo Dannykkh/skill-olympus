@@ -78,5 +78,5 @@ Health Connect/HealthKit은 OS가 관리하는 **공유 저장소**입니다.
 |------|------|
 | `skills/social-login/SKILL.md` | 소셜 로그인 (앱 인증과 함께 사용) |
 | `skills/database-schema-designer/SKILL.md` | DB 스키마 설계 (파티셔닝 포함) |
-| `agents/backend-spring.md` | Spring Boot 백엔드 (JPA + 파티셔닝 gotcha) |
+| 네이티브 백엔드 작업자 | 프로젝트 Spring/JPA 버전·기존 persistence 경계·파티셔닝 테스트를 기준으로 구현 |
 | `skills/python-backend-fastapi/SKILL.md` | FastAPI 백엔드 |

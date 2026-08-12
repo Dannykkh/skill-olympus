@@ -213,6 +213,5 @@ After designing a schema:
 
 ## Related Resources
 
-- **MySQL 전문가:** `agents/database-mysql.md`
-- **PostgreSQL/Supabase 전문가:** `agents/database-postgresql.md`
+- **DB별 구현:** 네이티브 작업자 + 프로젝트 DB 버전·schema·migration 도구·테스트
 - **Supabase Best Practices:** `skills/supabase-postgres-best-practices/SKILL.md`

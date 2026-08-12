@@ -17,8 +17,122 @@ export interface AIProviderInfo {
 export interface DetectionResult {
   providers: AIProviderInfo[];
   availableCount: number;
-  mode: 'full' | 'dual' | 'single';
+  mode: 'full' | 'dual' | 'single' | 'none';
   modeDescription: string;
+}
+
+export interface WorkerProviderSelection {
+  success: boolean;
+  providers: AIProvider[];
+  message: string;
+}
+
+const PROVIDER_ORDER: readonly AIProvider[] = ['claude', 'codex', 'gemini'];
+
+export function isAIProvider(value: string | undefined): value is AIProvider {
+  return value !== undefined && PROVIDER_ORDER.includes(value as AIProvider);
+}
+
+/**
+ * Resolve the provider for the current worker process. Auto-spawned workers
+ * encode it in their worker id; manually launched workers can set the explicit
+ * environment value instead.
+ */
+export function resolveWorkerProvider(
+  workerId: string,
+  explicitProvider?: string
+): AIProvider | undefined {
+  if (explicitProvider) {
+    if (!isAIProvider(explicitProvider)) {
+      throw new Error(`Unsupported worker provider '${explicitProvider}'. Expected claude, codex, or gemini.`);
+    }
+    return explicitProvider;
+  }
+
+  const prefix = workerId.match(/^(claude|codex|gemini)-worker(?:-|$)/)?.[1];
+  return isAIProvider(prefix) ? prefix : undefined;
+}
+
+/**
+ * Resolve one provider per worker. Missing entries use the first provider in
+ * the deterministic detection order. Explicit but unavailable providers fail
+ * closed instead of silently launching a different CLI.
+ */
+export function selectWorkerProviders(
+  count: number,
+  requestedProviders: AIProvider[] | undefined,
+  availableProviders: AIProvider[]
+): WorkerProviderSelection {
+  const detectedProviders = PROVIDER_ORDER.filter(provider => availableProviders.includes(provider));
+  if (detectedProviders.length === 0) {
+    return {
+      success: false,
+      providers: [],
+      message: 'No supported worker provider is installed (claude, codex, gemini).'
+    };
+  }
+
+  const requestedSlots = (requestedProviders || []).slice(0, count);
+  const unavailable = requestedSlots.filter(
+    provider => !detectedProviders.includes(provider)
+  );
+  if (unavailable.length > 0) {
+    return {
+      success: false,
+      providers: [],
+      message: `Requested worker provider(s) unavailable: ${[...new Set(unavailable)].join(', ')}. Available: ${detectedProviders.join(', ')}`
+    };
+  }
+
+  const defaultProvider = detectedProviders[0];
+  const resolvedProviders = Array.from(
+    { length: count },
+    (_, index) => requestedProviders?.[index] ?? defaultProvider
+  );
+  return {
+    success: true,
+    providers: resolvedProviders,
+    message: `Resolved ${count} worker provider(s): ${resolvedProviders.join(', ')}`
+  };
+}
+
+export function buildDetectionResult(providers: AIProviderInfo[]): DetectionResult {
+  const available = providers.filter(provider => provider.available).map(provider => provider.name);
+  const availableCount = available.length;
+
+  if (availableCount >= 3) {
+    return {
+      providers,
+      availableCount,
+      mode: 'full',
+      modeDescription: `Full Mode: ${available.join(' + ')} (${availableCount} AI providers)`
+    };
+  }
+
+  if (availableCount === 2) {
+    return {
+      providers,
+      availableCount,
+      mode: 'dual',
+      modeDescription: `Dual Mode: ${available.join(' + ')} (2 AI providers)`
+    };
+  }
+
+  if (availableCount === 1) {
+    return {
+      providers,
+      availableCount,
+      mode: 'single',
+      modeDescription: `Single Mode: ${available[0]} only`
+    };
+  }
+
+  return {
+    providers,
+    availableCount,
+    mode: 'none',
+    modeDescription: 'No supported AI provider is installed (claude, codex, gemini).'
+  };
 }
 
 // ============================================================================
@@ -72,29 +186,7 @@ export function detectAIProviders(): DetectionResult {
     }
   ];
 
-  const availableCount = providers.filter(p => p.available).length;
-
-  let mode: 'full' | 'dual' | 'single';
-  let modeDescription: string;
-
-  if (availableCount >= 3) {
-    mode = 'full';
-    modeDescription = 'Full Mode: Claude + Codex + Gemini (3개 AI 병렬 처리)';
-  } else if (availableCount === 2) {
-    mode = 'dual';
-    const available = providers.filter(p => p.available).map(p => p.name);
-    modeDescription = `Dual Mode: ${available.join(' + ')} (2개 AI 병렬 처리)`;
-  } else {
-    mode = 'single';
-    modeDescription = 'Single Mode: Claude만 사용 (기본 모드)';
-  }
-
-  return {
-    providers,
-    availableCount,
-    mode,
-    modeDescription
-  };
+  return buildDetectionResult(providers);
 }
 
 /**
@@ -122,37 +214,28 @@ export function getAvailableProviders(): AIProvider[] {
 export function getProviderCommand(
   provider: AIProvider,
   options: {
-    autoMode?: boolean;  // 권한 자동 승인
     workDir?: string;    // 작업 디렉토리
   } = {}
 ): string {
-  const { autoMode = true, workDir } = options;
+  const { workDir } = options;
 
   let command: string;
 
   switch (provider) {
     case 'claude':
-      command = autoMode
-        ? 'claude --dangerously-skip-permissions'
-        : 'claude';
+      command = 'claude';
       break;
 
     case 'codex':
-      // Codex CLI auto mode: non-interactive, no approval prompts.
-      command = autoMode
-        ? 'codex -a never exec --sandbox workspace-write --skip-git-repo-check'
-        : 'codex';
+      command = 'codex';
       break;
 
     case 'gemini':
-      // Gemini CLI auto mode: headless prompt + yolo approval.
-      command = autoMode
-        ? 'gemini --skip-trust --approval-mode yolo --output-format text -p'
-        : 'gemini';
+      command = 'gemini';
       break;
 
     default:
-      command = 'claude';
+      throw new Error(`Unsupported AI provider: ${String(provider)}`);
   }
 
   if (workDir) {
@@ -160,38 +243,4 @@ export function getProviderCommand(
   }
 
   return command;
-}
-
-/**
- * AI Provider별 최적 용도 반환
- */
-export function getProviderStrengths(provider: AIProvider): string[] {
-  switch (provider) {
-    case 'claude':
-      return [
-        '복잡한 추론 및 분석',
-        '코드 리팩토링',
-        '문서 작성',
-        '아키텍처 설계'
-      ];
-
-    case 'codex':
-      return [
-        '코드 생성 및 자동화',
-        '테스트 케이스 작성',
-        '반복적인 코드 수정',
-        '빠른 프로토타이핑'
-      ];
-
-    case 'gemini':
-      return [
-        '대용량 컨텍스트 분석 (1M 토큰)',
-        '전체 코드베이스 리뷰',
-        '보안 취약점 분석',
-        '멀티파일 이해'
-      ];
-
-    default:
-      return [];
-  }
 }

@@ -300,10 +300,10 @@ function main() {
 
   if (isGemini) {
     // Gemini-specific settings
-    // enableAgents: enable agent usage
-    if (hasComponent("agent-team") || hasComponent("orchestrator")) {
-      settings.enableAgents = true;
-    }
+    // Older Olympus versions wrote a top-level enableAgents key. Current
+    // Gemini owns subagent activation under experimental.enableAgents and
+    // defaults it to true, so do not override the user's runtime setting.
+    delete settings.enableAgents;
     // context.fileName: ensure AGENTS.md is loaded
     if (!settings.context) settings.context = {};
     const currentFileNames = Array.isArray(settings.context.fileName)
@@ -321,6 +321,10 @@ function main() {
     }
   } else {
     // Claude-specific settings
+    // Skill discovery is controlled by sync-claude-skills.js. Preserve any
+    // skillOverrides the user already owns, but do not create settings entries
+    // for source-only skills that are absent from the runtime registry.
+
     // Merge env keys (preserve existing values, apply bundle filtering)
     if (!settings.env) settings.env = {};
     let envAdded = 0;
@@ -362,7 +366,6 @@ function main() {
   );
   const targetLabel = isGemini ? "Gemini" : "Claude";
   const parts = [`${targetLabel}`, `${platform}`, `${hookCount} hooks`];
-  if (isGemini && settings.enableAgents) parts.push("enableAgents");
   if (!isGemini && settings.teammateMode) parts.push(`teammateMode: ${settings.teammateMode}`);
   console.log(`      settings.json configured (${parts.join(", ")})`);
 }

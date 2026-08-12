@@ -6,14 +6,6 @@ description: >
   rebuild 모드 지원 (기존 정제 .md + 새 관찰 통합 + 중복/모순 제거).
   /memory-distill로 실행. 또한 핸드오프 자동 정제와 동일 로직을 공유.
   대상은 프로젝트 루트 memory/ 전용 — Claude 네이티브 auto-memory(~/.claude/projects/)와 무관.
-triggers:
-  - "memory-distill"
-  - "메모리 정제"
-  - "교훈 정리"
-  - "오답노트 정리"
-  - "learned 정제"
-  - "raw observations 정리"
-auto_apply: false
 allowed-tools:
   - Read
   - Write
@@ -66,8 +58,8 @@ allowed-tools:
 
 ```
 1. raw 관찰 로드
-   ├─ memory/gotchas/observations.jsonl  (event: tool_error)
-   └─ memory/learned/observations.jsonl  (event: tool_success)
+   ├─ memory/gotchas/observations.jsonl  (event: tool_error | turn_error)
+   └─ memory/learned/observations.jsonl  (event: tool_success | turn_success)
 
 2. 기존 정제 로드 (있을 때만)
    ├─ memory/gotchas.md  (단일 카테고리 파일, 22개 정제 항목)
@@ -88,6 +80,8 @@ allowed-tools:
 | 같은 키워드(에러 코드, 함수명) 반복 | 키워드 클러스터 |
 
 `--min-cluster` 미만인 단발 관찰은 무시 (노이즈).
+
+입력이 커서 격리 분석이 유리할 때만 **읽기 전용 클러스터 후보 추출**을 네이티브 역할에 위임합니다: Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`. 작업자는 스크럽된 관찰만 읽고 후보를 반환하며 파일을 쓰지 않습니다. 별도 `gotcha-analyzer` 이름은 필요하지 않습니다. 모드 판정, archive, 재번호, 파일 쓰기, index/MEMORY 동기화는 이 스킬을 실행한 메인 하네스가 소유합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 클러스터링을 순차 실행합니다.
 
 ### Phase 3: 출력 형식
 
@@ -157,6 +151,15 @@ memory/learned/
 - {timestamp1} {tool} — 1줄 요약
 - {timestamp2} {tool} — 1줄 요약
 ```
+
+`confidence`는 통계적 확률이 아니라 관찰량 기반 정제 우선순위입니다.
+
+| 관찰 수 | confidence |
+|---------|------------|
+| 2 | 0.3 |
+| 3-5 | 0.5 |
+| 6-10 | 0.7 |
+| 11+ | 0.85 |
 
 ### Phase 5: 승격 판단 (정제 후)
 

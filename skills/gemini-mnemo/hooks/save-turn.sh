@@ -6,7 +6,7 @@
 # 에러 처리 (P1 parity):
 # - 실패는 .claude/mnemo-errors.log에 기록
 # - $MNEMO_STRICT='1' 이면 실패 시 exit 1
-# Note: Gemini는 JSONL transcript가 없어 reconcile이 불가능. 훅이 실패하면 영구 유실.
+# Note: Gemini는 네이티브 세션 저장소가 있지만 Mnemo reconciler가 아직 import하지 않음.
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
 case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
@@ -283,8 +283,8 @@ if [ -n "$USER_TEXT" ]; then
 fi
 
 # Assistant 응답 처리
-# P2 parity: 4000자 truncation 제거. Gemini는 JSONL 원본이 없어 유실된 부분을
-# 복구할 경로가 없으므로 온전한 원문을 저장해야 한다.
+# P2 parity: 4000자 truncation 제거. Gemini 네이티브 세션 저장소를 Mnemo가
+# 아직 import하지 않으므로 온전한 원문을 저장해야 한다.
 if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
     printf '\n## [%s] Assistant\n\n%s\n' "$TIMESTAMP" "$RESPONSE" >> "$CONV_FILE"
 fi
@@ -394,9 +394,9 @@ notify_mnemo_status() {
         echo ""
         echo "- 새 관찰(정제 이후): **${delta}** / 누적 **${total}** (gotchas ${g_count} + learned ${l_count})"
         echo "- last handoff: **${days}일 전**"
-        echo "- 권장: \`/memory-distill --rebuild\` 또는 핸드오프"
+        echo "- 권장: 카탈로그의 source-only \`memory-distill\` 모듈을 직접 읽어 rebuild 또는 핸드오프"
         echo "- updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     } > "$status_file" 2>/dev/null || true
-    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
+    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → source-only memory-distill 모듈을 직접 읽어 rebuild 권장" >&2
 }
 notify_mnemo_status "$PROJECT_ROOT"

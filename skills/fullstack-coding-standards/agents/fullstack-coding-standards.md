@@ -1,24 +1,16 @@
 ---
 name: fullstack-coding-standards
-description: 풀스택 개발 코딩 표준. 백엔드 오케스트레이션, 프론트엔드 API 추상화, 모듈화 규칙. 코드 작성 시 자동 참조.
-auto_apply:
-  - "*.ts"
-  - "*.tsx"
-  - "*.js"
-  - "*.jsx"
-  - "*.py"
-  - "*.java"
-  - "*.cs"
+description: 풀스택 개발 참고 표준. 백엔드 오케스트레이션, 프론트엔드 API 추상화, 모듈화 규칙. 명시적으로 요청할 때만 적용.
 ---
 
-# Fullstack Coding Standards (Passive)
+# Fullstack Coding Standards (Optional Reference)
 
-코드 작성 시 항상 적용되는 아키텍처 및 구조화 규칙.
+풀스택 작업에서 명시적으로 불러 쓰는 아키텍처 및 구조화 참고 규칙.
 상세 코드 예시 → `/fullstack-coding-standards` 스킬 참조.
 
 ---
 
-## 코드 구조 원칙 (항상 적용)
+## 코드 구조 원칙
 
 |규칙|기준|위반 시|
 |---|---|---|

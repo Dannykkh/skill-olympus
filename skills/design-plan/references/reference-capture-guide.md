@@ -104,11 +104,11 @@ IntersectionObserver, lenis, framer-motion
      cleanup·폴백 없는 무거운 효과
 9. 결과는 `docs/design-refs/YYYY-MM-DD-{library}-synthesis.md`로 저장하고 표본 수·캡처일·공개 범위·라이선스 경계를 적습니다.
 
-프롬프트 구조 합성은
-[`frontend-design/references/motion-first-prompt-playbook.md`](../../frontend-design/references/motion-first-prompt-playbook.md)의
+프롬프트 구조 합성은 해석된
+`MODULE_ROOT[frontend-design]/references/motion-first-prompt-playbook.md`의
 컴파일러와 색상 다양성 게이트를 기준으로 합니다.
 기능형 코더 UI와 컴포넌트 채택은
-[`frontend-design/references/coder-interface-pattern-playbook.md`](../../frontend-design/references/coder-interface-pattern-playbook.md)의
+`MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`의
 Interface Mode와 효과 예산을 기준으로 합니다.
 
 ## 2. 증거 슈퍼프롬프트 템플릿
@@ -211,7 +211,8 @@ Interface Mode와 효과 예산을 기준으로 합니다.
 | 캐러셀 | CSS scroll-snap → Embla/Keen |
 | 3D/셰이더/파티클 | Three.js/WebGL (DPR cap + 정적 폴백) |
 
-구체 기본값(duration/stagger/ease)은 `frontend-design/references/technique-recipes.md`의 값을 사용.
+구체 기본값(duration/stagger/ease)은
+`MODULE_ROOT[frontend-design]/references/technique-recipes.md`의 값을 사용합니다.
 
 ## 5. Experience Contract와 Phase 5 인계
 

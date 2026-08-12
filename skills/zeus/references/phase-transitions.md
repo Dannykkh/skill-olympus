@@ -112,12 +112,19 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 - argos 완료 (PASS/CONDITIONAL/FAIL 무관)
 
 **전환 액션:**
-1. Docker 설치 여부 확인 (`docker --version`)
-2. 설치됨 → docker-deploy 스킬 실행 + 컨테이너 실행
-3. 미설치 → dev server fallback
+1. Zeus resolver 우선순위(프로젝트 exact → current runtime active root exact → 전역
+   `SKILLS-CATALOG.md`의 유일한 행/정확한 `읽을 경로`)로 `docker-deploy`를 읽고
+   `docker_deploy_root` 설정
+2. 모듈과 `docker_deploy_root` 기준 필수 reference 로드 성공 후 Docker 설치 여부 확인
+3. 설치됨 → 로드한 모듈 계약 수행 + 선언된 Compose 산출물 exact 경로를 `compose_file`로 고정해
+   `docker compose -f "{compose_file}"`로 컨테이너 실행
+4. 미설치 → dev server fallback
+5. 모듈 로드 실패 → `BLOCKED`, Phase 4 `weak` 기록 + dev server fallback
+6. 모듈 수행/Compose 실행 실패 → `FAILED`, Phase 4 `weak` 기록 + dev server fallback
 
 **실패 시:**
 - argos 리포트 미생성 → docs/zeus/zeus-log.md에 "argos 실행 시도, 리포트 미생성" 기록 후 진행
+- docker-deploy 모듈 미발견을 Docker 미설치나 PASS로 바꾸지 않음
 
 ---
 

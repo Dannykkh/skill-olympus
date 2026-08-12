@@ -9,7 +9,7 @@ conversations/YYYY-MM-DD-codex.md. If the hook fails once (permission error,
 JSON parse error, bridge crash, Codex CLI kill before notify fires) the turn
 is silently lost — Codex has no retry mechanism.
 
-However, the rollout JSONL at ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl
+However, the rollout JSONL at <CODEX_HOME>/sessions/YYYY/MM/DD/rollout-*.jsonl
 is the source of truth: Codex writes every user/assistant message there
 directly, independent of notify hooks. This script scans rollout files,
 matches them to a project by cwd (session_meta), and back-fills any turn
@@ -144,7 +144,13 @@ def normalize_path(p: str) -> str:
 # ---------- rollout discovery ----------
 
 def codex_sessions_root() -> Path:
-    return Path(os.path.expanduser("~")) / ".codex" / "sessions"
+    configured_home = os.environ.get("CODEX_HOME")
+    codex_home = (
+        Path(configured_home).resolve()
+        if configured_home
+        else Path.home() / ".codex"
+    )
+    return codex_home / "sessions"
 
 
 def list_rollout_files(sessions_root: Path, days: int | None = None) -> list[Path]:

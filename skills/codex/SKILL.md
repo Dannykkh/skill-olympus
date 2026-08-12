@@ -6,7 +6,7 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 # Codex Skill Guide
 
 ## Running a Task
-1. Default to `gpt-5.5` model. Ask the user (via `AskUserQuestion`) which reasoning effort to use (`xhigh`,`high`, `medium`, or `low`). User can override model if needed (see Model Options below). If `gpt-5.5` is unavailable in your environment, fall back to `gpt-5.4`.
+1. Default to `gpt-5.5` model. Ask the user in the normal conversation which reasoning effort to use (`xhigh`, `high`, `medium`, or `low`). User can override model if needed (see Model Options below). If `gpt-5.5` is unavailable in your environment, fall back to `gpt-5.4`.
 2. Select the sandbox mode required for the task; default to `--sandbox read-only` unless edits or network access are necessary.
 3. Assemble the command with the appropriate options:
    - `-m, --model <MODEL>`
@@ -55,14 +55,14 @@ description: Use when the user asks to run Codex CLI (codex exec, codex resume) 
 **Cached Input Discount**: Repeated context is heavily discounted with cache lasting up to 24 hours. Verify current rates on the official OpenAI pricing page.
 
 ## Following Up
-- After every `codex` command, immediately use `AskUserQuestion` to confirm next steps, collect clarifications, or decide whether to resume with `codex exec resume --last`.
+- After every `codex` command, ask in the normal conversation when confirmation, clarification, or a resume decision is actually needed.
 - When resuming, pipe the new prompt via stdin: `echo "new prompt" | codex exec resume --last 2>/dev/null`. The resumed session automatically uses the same model, reasoning effort, and sandbox mode from the original session.
 - Restate the chosen model, reasoning effort, and sandbox mode when proposing follow-up actions.
 
 ## Error Handling
 - Stop and report failures whenever `codex --version` or a `codex exec` command exits non-zero; request direction before retrying.
-- Before you use high-impact flags (`--sandbox danger-full-access`, `--skip-git-repo-check`) ask the user for permission using AskUserQuestion unless it was already given.
-- When output includes warnings or partial results, summarize them and ask how to adjust using `AskUserQuestion`.
+- Before you use high-impact flags (`--sandbox danger-full-access`, `--skip-git-repo-check`), ask the user in the normal conversation unless permission was already given.
+- When output includes warnings or partial results, summarize them and ask in the normal conversation how to adjust.
 
 ## CLI Version
 

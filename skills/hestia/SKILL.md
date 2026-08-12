@@ -6,22 +6,6 @@ description: >
   부채 장부, 코드 건강도 보고.
   "정리해줘", "dead code", "코드 위생", "쓸모없는 코드", "단순화 부채" 요청에 실행.
   /hestia로 실행.
-triggers:
-  - "hestia"
-  - "헤스티아"
-  - "코드 정리"
-  - "코드 줄여"
-  - "dead code"
-  - "쓸모없는 코드"
-  - "코드 위생"
-  - "code hygiene"
-  - "unused"
-  - "entropy"
-  - "정리해줘"
-auto_apply: false
-license: MIT
-metadata:
-  version: "1.0.0"
 ---
 
 # Hestia (헤스티아) — 화로의 여신, 코드 위생 관리자
@@ -164,7 +148,8 @@ grep -rE "^(export\s+)?(class|interface|type|enum)\s+[A-Z]\w+" --include="*.ts" 
 
 ### 2-7. 의도적 단순화 마커 (minimal 부채 장부)
 
-코딩 표준(fullstack-coding-standards 최소 구현 원칙)의 `// minimal: <상한> — <업그레이드 시점>`
+Hestia가 소유하는 `// minimal: <상한> — <업그레이드 시점>` 규약을 사용합니다.
+`상한`은 현재 구현이 의도적으로 감수하는 제약이고, `업그레이드 시점`은 교체를 검토할 수치·상태 조건입니다.
 마커를 수확해 부채 장부로 보고합니다. **삭제 대상 ❌** — 의도된 지름길의 추적 장부일 뿐,
 "later means never"로 썩는 것을 막는 게 목적입니다.
 
@@ -308,7 +293,6 @@ find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.ja
 
 | 파일 | 역할 |
 |------|------|
-| `agents/fullstack-coding-standards.md` | `// minimal:` 마커 규약 출처 (최소 구현 원칙) |
 | `skills/deprecation-and-migration/SKILL.md` | 라이브러리 교체/마이그레이션 (별도 스킬) |
 | `skills/argos/SKILL.md` | 감리 — 누락 탐지 + Healer (채우기) |
 | `skills/clio/SKILL.md` | 최종 기록 (정리 후 기록) |

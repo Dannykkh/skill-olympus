@@ -1,10 +1,9 @@
 ---
 name: systematic-debugging
 description: |
-  Systematic root-cause debugging methodology. Use when encountering bugs that
-  aren't immediately obvious: intermittent failures, multi-component issues, or
-  bugs that have resisted quick fixes. NOT needed for simple typos or obvious
-  one-line fixes. Triggers on "왜 안 되지", "can't figure out", "keeps failing".
+  Explicit `/systematic-debugging` reference for a structured root-cause audit.
+  Use only when the user requests this workflow; routine diagnosis stays native.
+disable-model-invocation: true
 ---
 
 # Systematic Debugging

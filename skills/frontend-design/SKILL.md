@@ -1,9 +1,6 @@
 ---
 name: frontend-design
 description: 아프로디테(design-plan) 파이프라인의 Experience Contract와 DESIGN.md를 실제 렌더로 구현하고 비평하는 미학 실행 스킬. 레시피/CSV/anatomy/스캐폴드와 공식 플러그인이 없는 CLI(Codex/Gemini)의 디자인 폴백을 제공한다. Claude Code의 일반 UI 요청은 공식 frontend-design 플러그인이 담당한다.
-license: Anthropic (https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design)
-auto_apply: true
-disable-model-invocation: true
 ---
 
 This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
@@ -13,6 +10,29 @@ This skill guides creation of distinctive, production-grade frontend interfaces 
 **주제에 뿌리내리기 (Ground it in the subject)**: 브리프가 제품/주제를 못 박지 않았다면 디자인 전에 스스로 못 박는다 — 구체적 주제 1개, 오디언스, 페이지의 단일 임무를 선언. **고유한 선택은 주제의 세계(그 세계의 실물, 도구, 유물, 어휘)에서 나온다** — 색·폰트·구조·카피 전부에 해당하는 일반 원칙이다 (색상 유도는 Design Database 사용법 4번이 상세 절차). 사용자의 취향 기록·이전 디자인 정보가 있으면 힌트로 쓴다.
 
 > 이식 출처: Claude 공식 frontend-design 플러그인 최신본 (2026-08-05, A/B/C 실험에서 승리한 조건 B의 코어 — docs/research/2026-08-05-deep-research-impeccable.md)
+
+## Source-only internal module resolution (mandatory)
+
+이 스킬은 `design-plan` 하네스의 하위 모듈 또는 standalone 원본으로 실행될 수 있습니다. 관련
+스킬 이름을 활성 slash command로 가정하지 말고 다음 계약을 따릅니다.
+
+1. 상위 하네스가 `MODULE_SKILL[name]`과 `MODULE_ROOT[name]`을 전달했으면 그 정확한 경로를
+   사용하고 다시 탐색하거나 호출하지 않습니다.
+2. standalone이면 실제로 필요한 모듈만 프로젝트의 `skills/<name>/SKILL.md` exact
+   frontmatter → 현재 CLI 활성 루트(active skills root) → 전역 `SKILLS-CATALOG.md` exact row의 `읽을 경로`
+   순서로 해석합니다.
+3. 해석한 `SKILL.md` 전체를 읽고, 그 모듈의 참조·스크립트는 `MODULE_ROOT[name]` 기준으로
+   찾습니다. 이름만 언급하거나 레지스트리에 등록됐다고 가정하는 것은 실행으로 치지 않습니다.
+
+- `design-system-starter`는 사용자가 디자인 시스템 scaffold를 명시적으로 요청했을 때만
+  조건부로 읽습니다. 찾지 못하면 기존 `DESIGN.md`와 프로젝트 토큰만 사용하는 bounded
+  fallback으로 진행하고 `design-system-starter: NOT RUN`을 남깁니다.
+- `ui-ux-auditor`와 `web-design-guidelines` 검증을 상위 하네스가 소유하면 구현물과 증거를
+  반환합니다. standalone이면 위 순서로 직접 읽어 실행합니다. 찾지 못하면 네이티브
+  접근성·반응형·테마 점검만 수행하고 해당 모듈을 `NOT RUN`으로 기록하며 `PASS`로 간주하지
+  않습니다.
+- Stitch 작업은 상위 `design-plan`이 해석한 `stitch` 어댑터가 소유합니다. 이 모듈은 Stitch
+  명령을 자체 라우팅하지 않습니다.
 
 ## Design System First
 
@@ -254,30 +274,28 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back.
 - **실패와 빈 화면은 방향 제시의 순간**: 에러는 사과하지 않고 무엇이 잘못됐고 어떻게 고치는지 명확히. 빈 화면은 행동으로의 초대
 - **요소당 임무 하나**: 라벨은 라벨하고, 예시는 시연한다 — 몰래 두 역할을 겸하는 요소 금지. 어조는 브랜드·오디언스에 맞춘 평문, sentence case, 필러 없음
 
-## Design Skills Workflow (디자인 스킬 조합)
+## Design Module Workflow (디자인 모듈 조합)
 
 ```
 설계 단계 ──────────────────────────────────────────────
-  /aphrodite                → 화면 유형·방향·토큰을 DESIGN.md로 고정
-  /design-system-starter    → 세부 토큰 파생
-  /stitch design-system pull → Stitch 프로젝트에서 DESIGN.md 제안 역추출
+  design-plan 하네스         → 화면 유형·방향·토큰을 DESIGN.md로 고정
+  design-system-starter 원본 → 명시적 scaffold 요청일 때만 세부 토큰 파생
+  stitch 어댑터              → 상위 하네스가 원격 디자인 작업과 역추출을 소유
 
 구현 단계 ──────────────────────────────────────────────
-  frontend-design            → Claude: 공식 플러그인 자동 적용 / Codex·Gemini: 이 스킬 본문
-  /stitch generate|edit|variants → DESIGN.md·청사진을 Stitch 작업으로 실행
-  /stitch loop              → 아프로디테 사이트맵 기반 멀티페이지 생성·재개
-  /stitch react             → Stitch 화면을 기존 React 구조에 반영
+  frontend-design            → 공식 플러그인이 없는 CLI는 이 원본을 직접 읽어 구현
+  stitch 어댑터              → DESIGN.md·청사진 기반 생성·수정·변형·멀티페이지·React 반영
 
 리뷰 단계 ──────────────────────────────────────────────
-  ui-ux-designer 에이전트   → 실제 렌더의 미학·메시지·신뢰·모바일 비평 (아프로디테 Phase 6 필수)
-  /ui-ux-auditor            → 다크모드, 반응형, 접근성 등 9영역 감사
-  /web-design-guidelines    → Web Interface Guidelines 준수 체크
+  네이티브 시각 비평       → render-critique-loop 계약으로 실제 렌더의 미학·메시지·신뢰·모바일 평가
+  ui-ux-auditor 원본        → 다크모드, 반응형, 접근성 등 9영역 감사
+  web-design-guidelines 원본 → Web Interface Guidelines 준수 체크
 ```
 
 **조합 예시:**
-1. `/aphrodite` → Interface Mode + DESIGN.md 생성
+1. `design-plan` 하네스가 Interface Mode + DESIGN.md 생성
 2. 이 스킬이 DESIGN.md와 관련 playbook을 읽어 구조·토큰·미학 적용
-3. 구현 완료 후 `/ui-ux-auditor` → 9영역 감사로 품질 검증
+3. 구현 완료 후 상위 하네스 또는 직접 해석한 `ui-ux-auditor` 원본이 9영역 감사 수행
 
 ## Usage Patterns (3단계 활용법)
 

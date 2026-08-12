@@ -1,6 +1,10 @@
 # Claude Code Resources Quick Reference
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
+>
+> Olympus 스킬 소스 100개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 83개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 14개, Codex/Gemini는 활성 13개이며 Grok 설치 표면은 Claude의 14개를 공유합니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
+>
+> **호출 규칙:** 아래 `고정 호출명` 표만 기본 slash 진입점입니다. source-only 항목은 자연어로 기능을 요청하면 LLM이나 활성 하네스가 카탈로그의 현재 `SKILL.md`를 직접 읽어 적용합니다. source-only 이름을 `/name`으로 입력하는 방식은 `--include-source-only-skills`로 활성 등록한 환경에서만 보장됩니다. 표의 “opt-in 시 `/name`” 표기도 모두 이 조건을 뜻합니다.
 
 ## 고정 호출명
 
@@ -15,12 +19,11 @@
 | 대니즈팀 | `/agent-team` |
 | 클리오 | `/clio` |
 | 테미스 | `/themis` |
-| 릴리즈 | `/release` |
-| 견적 | `/estimate` |
 | 헤르메스 | `/hermes` |
 | 아테나 | `/athena` |
-| OKR | `/okr` |
 | 아프로디테 | `/aphrodite` |
+
+`release-notes`, `estimate`, `okr`는 기본 source-only입니다. 각각 “릴리즈 진행해줘”, “견적서 만들어줘”, “OKR 정리해줘”처럼 자연어로 요청하면 카탈로그 원본을 직접 읽습니다. `/release`, `/estimate`, `/okr` 메뉴가 필요할 때만 `--include-source-only-skills`로 활성화합니다.
 
 ---
 
@@ -44,9 +47,9 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **backend-dotnet (에이전트)** | ASP.NET Core 전문가 (Clean Architecture, EF Core, Minimal API) | 이 저장소의 `agents/backend-dotnet.md` |
+| **backend-dotnet (소스 참고)** | ASP.NET Core 참고 패턴 (기본 미설치) | 이 저장소의 `agents/backend-dotnet.md` |
 | **dotnet-coding-standards (스킬)** | .NET 코딩 표준 통합 패키지 (패시브 에이전트 + C#/ASP.NET/EF Core 템플릿) | 이 저장소의 `skills/dotnet-coding-standards/` |
-| **desktop-wpf (에이전트)** | WPF 데스크톱 전문가 (MVVM, 스레딩, 메모리 관리, GPU 렌더링) | 이 저장소의 `agents/desktop-wpf.md` |
+| **desktop-wpf (소스 참고)** | WPF 참고 패턴 (기본 미설치) | 이 저장소의 `agents/desktop-wpf.md` |
 | **wpf-coding-standards (스킬)** | WPF 코딩 표준 통합 패키지 (패시브 에이전트 + MVVM/스레딩/메모리 템플릿) | 이 저장소의 `skills/wpf-coding-standards/` |
 | **claude-code-dotnet** | 25개 스킬, 5개 에이전트 | `npx add-skill Aaronontheweb/claude-code-dotnet -a claude-code` |
 
@@ -60,10 +63,10 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **database-schema-designer (에이전트)** | DB-First 스키마 설계, ERD, DDL, 검증 체크리스트 | 이 저장소의 `agents/database-schema-designer.md` |
-| **database-schema-designer (스킬)** | 상세 참조: 타입, 인덱스, 제약조건, 마이그레이션 | 이 저장소의 `skills/database-schema-designer/` |
-| **database-mysql (에이전트)** | MySQL 8.0 전문가 | 이 저장소의 `agents/database-mysql.md` |
-| **database-postgresql (에이전트)** | PostgreSQL 16 + Supabase + RLS | 이 저장소의 `agents/database-postgresql.md` |
+| **database-schema-designer (소스 참고)** | 이전 에이전트 구현 (기본 미설치) | 이 저장소의 `agents/database-schema-designer.md` |
+| **database-schema-designer (source-only 스킬)** | DB-First 설계 + 타입, 인덱스, 제약조건, 마이그레이션 | 카탈로그의 원본 경로 |
+| **database-mysql (소스 참고)** | 고정 MySQL 패턴 참고자료 (기본 미설치) | 이 저장소의 `agents/database-mysql.md` |
+| **database-postgresql (소스 참고)** | 고정 PostgreSQL/Supabase 패턴 참고자료 (기본 미설치) | 이 저장소의 `agents/database-postgresql.md` |
 
 ### Java / Spring Boot
 
@@ -86,36 +89,36 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **TDD Guide 에이전트** (외부) | Red-Green-Refactor 강제, 80%+ 커버리지 | `curl -o ~/.claude/agents/tdd-guide.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/tdd-guide.md` |
-| **/tdd 명령어** | TDD 워크플로우 실행 | `curl -o .claude/commands/tdd.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/commands/tdd.md` |
+| **네이티브 작업자** | 프로젝트 테스트를 기준으로 Red-Green-Refactor 수행 | 별도 설치 없음 |
+| **test-driven-development (source-only 스킬)** | TDD 절차를 명시적으로 강화할 때 사용 | 카탈로그의 원본 경로 |
 | **minos (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) | 이 저장소의 `skills/minos/` |
 
 ### 코드 리뷰
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **Code Reviewer 에이전트** | 품질/보안/성능 자동 리뷰 | `curl -o ~/.claude/agents/code-reviewer.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/code-reviewer.md` |
-| **code-reviewer (로컬)** | 기능/책임 단위 모듈화, 보안 검증 | 이 저장소의 `skills/code-reviewer/` |
+| **Code Reviewer 에이전트 (외부)** | 네이티브 review와 중복되는 선택 참고자료 | 기본 설치 안 함 |
+| **code-reviewer (source-only 로컬)** | 자연어 요청 시 카탈로그에서 직접 읽어 네이티브 review 정책 보강, 명시형 보안 감사 | 카탈로그의 원본 경로 |
 
 ### 보안 검토
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **Security Reviewer 에이전트** | OWASP Top 10, 취약점 분석 | `curl -o ~/.claude/agents/security-reviewer.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/security-reviewer.md` |
+| **Security Reviewer 에이전트 (외부)** | 정적 보안 프롬프트 선택 참고자료 | 기본 설치 안 함 |
+| **code-reviewer 보안 감사 (로컬)** | 시크릿·공급망·CI/CD·STRIDE를 안전하게 명시 실행 | 이 저장소의 `skills/code-reviewer/references/security-audit.md` |
 
 ### 기능 계획
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **zephermine (로컬)** | 인터뷰 → 리서치 → 도메인 분석 → 스펙 → 섹션 분리 (Multi-AI 도메인 전문가 포함) | 이 저장소의 `skills/zephermine/` |
-| **Planner 에이전트** (외부) | 구현 전 상세 계획 수립 | `curl -o ~/.claude/agents/planner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/planner.md` |
-| **Architect 에이전트** | 시스템 설계, 아키텍처 결정 | `curl -o ~/.claude/agents/architect.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/architect.md` |
+| **네이티브 탐색자·작업자** | 구현 전 코드 탐색과 계획 검토 | 별도 설치 없음 |
 
 ### 리팩토링
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **Refactor Cleaner 에이전트** (외부) | 데드 코드 제거, 정리 | `curl -o ~/.claude/agents/refactor-cleaner.md https://raw.githubusercontent.com/affaan-m/everything-claude-code/main/agents/refactor-cleaner.md` |
+| **hestia (source-only 스킬)** | 측정 기반 데드 코드 탐지와 정리 | 카탈로그의 원본 경로 |
 
 ---
 
@@ -216,7 +219,9 @@ TS 편집 후 자동 타입 체크:
 
 ---
 
-## 종합 패키지
+## 대규모 외부 패키지 (기본 설치 비권장)
+
+아래 번들은 수십~수백 개 설명과 사용자 정의 에이전트를 다시 상시 등록할 수 있어 Olympus의 기본 거부 정책을 무효화합니다. 격리 환경에서 필요한 단일 기능을 확인한 뒤 선택 설치할 때만 참고하세요.
 
 ### everything-claude-code (해커톤 우승자)
 
@@ -260,11 +265,11 @@ claude plugin install voltagent-qa-sec
 
 | 경로 | 설명 |
 |------|------|
-| `skills/zeus/` | 전자동 파이프라인 — 한 줄 설명으로 설계→구현→테스트 완전 자동화 (/zeus) |
+| `skills/zeus/` | 전자동 7단계 — 설명 파싱→젭마인→agent-team/workpm→아르고스→Docker→미노스→증거 보고 (`/zeus`; Hermes/Athena/Clio는 암묵 호출하지 않음) |
 | `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
 | `skills/domain-dictionary/` | 도메인 용어사전(DDD Ubiquitous Language) — 영-한 매핑, 동의어/이의어/과부하 탐지, zephermine 자동 호출 |
 | `skills/minos/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) |
-| `skills/argos/` | 감리/검증 — 정적·런타임·API·도면 대조 5단계 검증 (아르고스) |
+| `skills/argos/` | 감리/검증 — Phase 0~7에서 정적·런타임·API·QA·도면·디자인·보안 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — 엔진: /goal 1순위, /loop 심장박동 1.5순위 `--heartbeat`) |
@@ -278,40 +283,40 @@ claude plugin install voltagent-qa-sec
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
 | `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |
-| `skills/agent-team/` | 4-CLI 네이티브 멀티에이전트 병렬 실행 (Claude Agent Teams / Codex spawn_agent / Gemini 서브에이전트 / Grok spawn_subagent, zephermine 섹션 기반) + Activity Log |
-| `skills/agent-team-codex/` | Codex CLI multi_agent 기반 병렬 실행 + Activity Log |
+| `skills/agent-team/` | 공통 네이티브 역할 계약 (읽기: Explore/explorer/codebase_investigator/explore, 쓰기: general-purpose/worker/generalist/general-purpose). Main이 공유 상태를 소유하고 위임 불가 시 순차 실행 |
+| `skills/agent-team-codex/` | Codex의 `/agent-team` 호출이 라우팅되는 전용 adapter. stable multi-agent + Main 소유 Activity Log |
 | `skills/mermaid-diagrams/` | Mermaid 다이어그램 (ERD 포함) |
 | `skills/data-visualization/` | 차트 선택 가이드 + Python 시각화 패턴 (Anthropic 공식 벤더링) |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |
-| `agents/frontend-react.md` | React + Zustand + TanStack |
-| `agents/backend-spring.md` | Java 21 + Spring Boot 3.x |
-| `agents/backend-dotnet.md` | ASP.NET Core + Clean Architecture + EF Core |
-| `agents/desktop-wpf.md` | WPF 데스크톱 (MVVM, 스레딩, 메모리, GPU) |
-| `agents/database-schema-designer.md` | DB-First 스키마 설계 + ERD + DDL |
-| `agents/database-mysql.md` | MySQL 8.0 + Flyway |
-| `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS |
-| `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 (패시브 에이전트) |
-| `agents/ai-ml.md` | LLM API 최신 모델/SDK + RAG + Vector DB |
-| `skills/memory-compact/` | MEMORY.md 크기 점검 및 압축 — 비대해진 메모리 정리 (/memory-compact) |
+| `agents/frontend-react.md` | React + Zustand + TanStack 참고자료 (기본 미설치) |
+| `agents/backend-spring.md` | Java 21 + Spring Boot 3.x 참고자료 (기본 미설치) |
+| `agents/backend-dotnet.md` | ASP.NET Core + Clean Architecture + EF Core 참고자료 (기본 미설치) |
+| `agents/desktop-wpf.md` | WPF 데스크톱 참고자료 (기본 미설치) |
+| `agents/database-schema-designer.md` | DB-First 스키마 설계 참고자료 (기본 미설치) |
+| `agents/database-mysql.md` | MySQL 8.0 + Flyway 참고자료 (기본 미설치) |
+| `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS 참고자료 (기본 미설치) |
+| `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 참고자료 (기본 미설치) |
+| `agents/ai-ml.md` | 정적 LLM API·RAG 참고자료 (기본 미설치); 실제 구현은 프로젝트 SDK와 공급자 공식 문서 우선 |
+| `skills/memory-compact/` | source-only 내부 모듈 — 활성 mnemo 규칙이 카탈로그에서 직접 읽어 MEMORY.md 크기 점검·압축 |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
-| `skills/project-gotchas/` | 오답노트 자동 관리 — 2계층(글로벌+프로젝트) + 메인 모델 자동 분석 (Opus/Sonnet급) |
-| `skills/memory-distill/` | raw observations.jsonl → 정제 .md 변환 (사용자 트리거, rebuild 모드 지원) (/memory-distill) |
+| `skills/project-gotchas/` | 오답노트 자동 수집 — 2계층(글로벌+프로젝트) 관찰 저장 + delta 알림; 정제는 memory-distill/핸드오프가 명시 실행 |
+| `skills/memory-distill/` | source-only 내부 모듈 — mnemo 훅의 안내 또는 명시 요청 시 카탈로그에서 직접 읽어 raw observations.jsonl 정제·rebuild |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
 | `skills/clio/` | 역사의 뮤즈(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/clio) |
 | `skills/themis/` | 테미스(Themis) — 개인정보 수집/저장/전송/삭제 전수 감사(file:line 근거) + 국가별(한국/미국/EU) 개인정보처리방침 초안 생성 (/themis) |
-| `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (/release) |
-| `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (/estimate) |
+| `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (source-only, opt-in 시 `/release`) |
+| `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (source-only, opt-in 시 `/estimate`) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
-| `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (/okr) |
+| `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (source-only, opt-in 시 `/okr`) |
 | `skills/design-plan/` | 아프로디테(Aphrodite) — 경험 주도 디자인 오케스트레이터. 소스 라우팅→사이트 벤치마크(Adopt/Adapt/Avoid)→실제 렌더 3안→Experience Contract→구현→렌더 UX/접근성/성능 게이트→학습 핸드오프 (/aphrodite) |
 | `skills/stitch/` | Stitch 실행 어댑터 — 아프로디테 산출물(DESIGN.md, design-refs)을 Stitch MCP 작업(생성/편집/변형/동기화/React 변환)으로 컴파일 + `.stitch/` 상태 관리 |
 | `skills/theme-factory/` | 테마 팩토리 — 슬라이드/문서/HTML에 입히는 색·폰트 테마 14종 (한글 테마 4종 포함, Anthropic 공식 벤더링) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
 | `skills/deprecation-and-migration/` | 코드 부채 정리 + 마이그레이션 — 레거시 폐기 계획, API 버전 전환, Strangler Fig 패턴, 부채 감사 (/deprecate) |
-| `skills/documentation-and-adrs/` | ADR(Architecture Decision Records) — 아키텍처 결정 기록 + 인덱스 관리 + MEMORY.md 연동 (/adr) |
-| `skills/shipping-and-launch/` | 출시 체크리스트 — 프리런치 품질 게이트, 단계적 롤아웃, 롤백 플레이북, Post-Launch 점검 (/launch) |
+| `skills/documentation-and-adrs/` | ADR(Architecture Decision Records) — 아키텍처 결정 기록 + 인덱스 관리 + MEMORY.md 연동 (source-only, opt-in 시 `/adr`) |
+| `skills/shipping-and-launch/` | 출시 체크리스트 — 프리런치 품질 게이트, 단계적 롤아웃, 롤백 플레이북, Post-Launch 점검 (source-only, opt-in 시 `/launch`) |
 | `skills/social-login/` | 소셜 로그인 — Google/Apple/Kakao/Naver × React Native/Swift/Kotlin/Web 구현 가이드 + Gotcha 체크리스트 |
 
 ---
@@ -334,4 +339,4 @@ https://raw.githubusercontent.com/Dannykkh/skill-olympus/master/QUICK-REFERENCE.
 ---
 
 **저장소:** https://github.com/Dannykkh/skill-olympus
-**마지막 업데이트:** 2026-04-27
+**마지막 업데이트:** 2026-08-13

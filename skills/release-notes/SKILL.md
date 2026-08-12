@@ -371,4 +371,4 @@ EOF
 | 파일 | 역할 |
 |------|------|
 | `skills/commit-work/SKILL.md` | Conventional Commits 작성 워크플로우 |
-| `agents/documentation.md` | CHANGELOG 템플릿 참조 |
+| 이 스킬의 `CHANGELOG.md` 형식 | CHANGELOG 생성 계약 |

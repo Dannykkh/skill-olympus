@@ -11,6 +11,14 @@
 | 기술 스택 | {tech-stack} |
 | **최종 판정** | **{GO / CONDITIONAL GO / NO-GO}** |
 
+## Module Coverage
+| 모듈 | 해석 경로 | 적용 상태 | 미실행·fallback 범위 |
+|------|-----------|-----------|----------------------|
+| flow-verifier | {absolute path 또는 없음} | {module/native-fallback/NOT RUN} | {coverage gap} |
+| mermaid-diagrams | {absolute path 또는 없음} | {module/native-fallback/NOT RUN} | {coverage gap} |
+| humanizer | {absolute path 또는 없음} | {module/native-fallback/NOT RUN} | {coverage gap} |
+| pdf | {absolute path 또는 없음} | {module/NOT RUN} | {coverage gap} |
+
 ## Phase 1: 마무리투수 점검
 
 ### 파이프라인 결과
@@ -47,14 +55,17 @@
 - [PRD.md](PRD.md)
 - [TECHNICAL.md](TECHNICAL.md)
 - [USER-MANUAL.md](USER-MANUAL.md)
+- PDF: {생성·열기 검증 완료 / NOT RUN + 이유}
 
 ## 산출물 체크리스트
 - [x] 최종 점검 (CHECKLIST.md)
-- [x] 프로세스 흐름도 (Mermaid)
+- [{x 또는 공백}] 프로세스 흐름도 (Mermaid) — {문법 검증 상태}
 - [x] PRD (제품 요구사항 문서)
 - [x] 기술 문서
 - [x] 사용자 매뉴얼
 - [x] 최종 보고서 (본 문서)
+
+`NOT RUN` 또는 `UNVERIFIED`인 모듈 의존 작업은 체크된 완료 항목으로 표시하지 않습니다.
 
 ## 후속 조치
 | 조치 | 명령 |

@@ -1,12 +1,6 @@
 ---
 name: workpm
-description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치 → 제안 → 도면 → 구현 → 검증을 자체적으로 진행합니다. /workpm 또는 /daedalus로 실행. 4-CLI 모두 네이티브 멀티에이전트 경로 우선 (Claude Agent Teams / Codex spawn_agent / Gemini 서브에이전트 / Grok spawn_subagent), 네이티브 부재 구버전 CLI만 orchestrator MCP 폴백.
-triggers:
-  - "workpm"
-  - "daedalus"
-  - "다이달로스"
-  - "pmworker"
-auto_apply: false
+description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치, 제안, 도면, 구현, 검증을 자체 진행하며 Claude, Codex, Gemini, Grok의 내장 탐색자·작업자를 우선 사용한다. /workpm 또는 /daedalus로 실행한다.
 ---
 
 # Daedalus (다이달로스) — 현장감독 PM
@@ -32,40 +26,64 @@ auto_apply: false
 
 | CLI | 실행 경로 | 기준 파일 |
 |-----|----------|----------|
-| Claude Code | Native Agent Teams | `skills/orchestrator/commands/workpm.md` |
-| Codex | Native spawn_agent (같은 5단계, 프리미티브 교체) | `workpm.md` + 아래 프리미티브 표 |
-| Gemini | Native 서브에이전트 (같은 5단계, 사전 정의 에이전트 위임) | `workpm.md` + 아래 프리미티브 표 |
-| Grok | Native spawn_subagent (같은 5단계) | `workpm.md` + 아래 프리미티브 표 |
-| (폴백) | Orchestrator MCP PM/Worker — 네이티브 멀티에이전트 도구가 전부 없을 때만 | `skills/orchestrator/commands/workpm-mcp.md` |
+| Claude Code | 내장 subagent; 실험 Agent Teams가 활성화되면 named teammate | `${orchestrator_root}/commands/workpm.md` |
+| Codex | 내장 `explorer`/`worker`/`default` | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
+| Gemini | 내장 `codebase_investigator`/`generalist` | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
+| Grok | 내장 `explore`/`general-purpose`/`plan` | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
+| (폴백) | Orchestrator MCP PM/Worker — 네이티브 도구로 요구 계약을 충족할 수 없을 때만 | `${orchestrator_root}/commands/workpm-mcp.md` |
 
-**CLI별 실행 프리미티브** (agent-team [wave-executor.md](../agent-team/references/wave-executor.md) "CLI별 실행 형식"과 동일 — CLI별 설치본에 agent-team이 없을 수 있어 여기 내장, 수정 시 양쪽 함께):
+## Source-only internal module resolution (mandatory)
 
-| CLI | 팀원 생성 | 지시 전달 | 모니터링 | 정리 |
-|-----|----------|----------|----------|------|
-| **Claude** | `TeamCreate` | `SendMessage` (summary 필수) | `TaskList` 폴링 | shutdown → `TeamDelete` |
-| **Codex** | `spawn_agent` | `send_message` | `wait` 블로킹 | `close_agent` |
-| **Gemini** | 없음 (사전 정의 에이전트에 위임) | 에이전트명 도구 호출의 위임 프롬프트에 전부 포함 | 도구 반환 = 완료 보고 | 불필요 |
-| **Grok** | `spawn_subagent(subagent_type, prompt)` | prompt에 전부 포함 | 반환 요약 수신 | 불필요 |
+`orchestrator`와 조건부 `domain-dictionary`는 다이달로스가 내부 계약으로 읽는 source-only
+모듈입니다. 등록된 스킬이나 slash command로 호출하지 않습니다.
 
-> ⚠️ Gemini 네이티브 경로는 공식 문서 근거 설계(2026-08-05)이며 실스폰 미실측 — `/agents` 인식 실패 시 폴백 경로 사용.
+각 모듈을 다음 순서로 해석하고 처음 확인된 exact `SKILL.md` 파일 하나를 읽습니다.
+
+1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
+2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
+   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
+   `~/.gemini/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
+   `읽을 경로`의 절대 `SKILL.md`를 읽고, 누락·중복 행은 fail-closed입니다. 기본 설치에서
+   보통 `.olympus/source-skills`를 가리켜도 경로를 추측하거나 조합하지 않습니다.
+4. `module_root`는 읽은 `SKILL.md`의 부모입니다. `references/`, `scripts/`, `commands/`는
+   모두 그 루트에서 해석합니다.
+
+이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
+모듈 이름을 slash command로 실행하지 않습니다.
+
+5단계 네이티브/순차 경로를 선택한 뒤 `orchestrator`를 해석하여 `orchestrator_root`를 만들고
+`${orchestrator_root}/commands/workpm.md`를 읽습니다. 이 계약은 필수이므로 행·경로·파일을
+읽지 못하면 `BLOCKED: workpm source contract unavailable`을 보고하고 워크플로우 완료를
+주장하지 않습니다. MCP 경로는 hard lock, 외부 ledger, 장시간 크로스-CLI 혼합이 실제로
+필요하다고 판정한 뒤에만 `${orchestrator_root}/commands/workpm-mcp.md`를 추가로 읽습니다.
+MCP 파일을 읽지 못하면 안전하게 직렬화 가능한 작업만 메인 순차 경로로 축소하고
+`MCP: NOT RUN`을 기록합니다. hard lock 자체가 필수이면 `BLOCKED`입니다.
+
+`domain-dictionary`는 Phase 1에서 사전이 없고 작업이 trivial하지 않을 때만 지연 로드합니다.
+성공하면 `domain_dictionary_root`를 만들고 모듈 및 필요한
+`${domain_dictionary_root}/references/*` 계약을 따릅니다. 모듈이 없으면 아래 5~10개 용어
+추출만 bounded native fallback으로 수행하고 `dictionary-module: NOT RUN (native fallback)`을
+기록합니다. fallback이나 미실행을 모듈 PASS로 표시하지 않습니다.
+
+**CLI별 네이티브 역할** (agent-team [wave-executor.md](../agent-team/references/wave-executor.md)와 동일 — CLI별 설치본에 agent-team이 없을 수 있어 여기 내장, 수정 시 양쪽 함께):
+
+| CLI | 읽기 전용 탐색·검토 | 구현·명령 실행 | 상태·정리 |
+|-----|--------------------|----------------|-----------|
+| **Claude** | `Explore` | `general-purpose`; Agent Teams 활성 시 named background `Agent` | shared task list/메시지; implicit team 자동 정리 |
+| **Codex** | `explorer` | `worker` (`default` 폴백) | 현재 spawn/message/wait/interrupt 기능 |
+| **Gemini** | `codebase_investigator` | `generalist` | 호출 반환을 Lead가 검증 |
+| **Grok** | `explore` | `general-purpose` | 호출 반환을 Lead가 검증 |
+
+읽기 전용 역할에는 파일 생성을 지시하지 않습니다. 구현 역할은 고유 파일 범위와 검증 계약을 받습니다. 위임이 없거나 실패하면 메인 컨텍스트에서 순차 실행하고, hard lock·외부 ledger·크로스-CLI 혼합이 필요할 때만 MCP로 전환합니다.
 
 `pmworker`는 레거시 호출명입니다. 별도 스킬로 보지 말고 이 다이달로스/오케스트레이터 경로로 라우팅합니다.
 
-## 모델 선택 전략
+## 추론 강도 선택 전략
 
-**"무엇을 만들지" 판단 → Opus, "어떻게 만들지" 실행 → Sonnet.**
-네이티브 경로에서는 각 CLI의 모델 지정 수단(Claude: TeamCreate model, Gemini: 에이전트 frontmatter model 등)으로,
-폴백(MCP) 경로에서는 `orchestrator_detect_providers`로 확인된 provider에 맞춰 같은 의도를 매핑합니다.
-
-| Phase | 팀원 역할 | 모델 |
-|-------|----------|------|
-| **1. 리서치 & 제안** | 도메인 조사, 아키텍처 비교 | **Opus** |
-| **2. 프로세스 도면** | Mermaid 다이어그램 설계 | **Opus** |
-| **3. 영향도 분석** | 의존성 탐색 (Grep/Read) | **Sonnet** |
-| **4. 구현** | 기능 코딩, 테스트 작성 | **Sonnet** |
-| **4. 자재검사** | code-reviewer 검수 | **Opus** |
-| **4. 테스트 실행** | 테스트 러너, 린트 | **Sonnet** |
-| **5. 공정 점검** | 도면 vs 코드 대조 | **Opus** |
+각 CLI의 현재 모델·effort·sandbox 설정을 상속합니다. 판단·비교·최종 검증에는 높은 추론 강도를, 구현에는 균형형 실행을, 반복 테스트에는 빠른 실행을 요청하되 특정 vendor 모델을 강제하지 않습니다.
 
 ## 도메인사전 통합
 
@@ -77,12 +95,15 @@ auto_apply: false
 
 1. **사전 존재 확인**: `docs/domain-dictionary.md` 탐색
 2. **있으면**: 컨텍스트로 로드, 모든 후속 Phase에 전달
-3. **없으면 즉석 생성** (간이 모드):
+3. **없고 trivial하지 않으면 source module 로드**: 위 resolver로 `domain-dictionary`의 정확한
+   `SKILL.md`와 필요한 module-root reference를 읽어 코드베이스/컨텍스트 계약 수행
+4. **모듈 미가용 시 즉석 생성** (bounded native fallback):
    - 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능) 후보 용어를 번호 목록으로 시드 (있으면)
    - 사용자 지시문에서 핵심 용어 5~10개 추출
    - 사용자 1회 확인 후 마스터 사전 v1 생성
    - 이후 시공 중 새 용어 발견 시 사전 자동 갱신 (델타 없이 마스터 직접)
-4. **건너뛰기 조건**: 사용자 지시가 5줄 미만의 trivial 작업이면 자동 건너뜀
+   - 상태를 `dictionary-module: NOT RUN (native fallback)`으로 기록
+5. **비적용 조건**: 사용자 지시가 5줄 미만의 trivial 작업이면 `NOT APPLICABLE: trivial task`로 기록
 
 ### Phase 4 (구현): teammate에게 사전 전달
 
@@ -107,7 +128,10 @@ auto_apply: false
 
 ## Start
 
-1. **네이티브 경로** (기본): `skills/orchestrator/commands/workpm.md`를 읽고 5단계 워크플로우를 따릅니다.
-   Claude가 아닌 CLI는 workpm.md의 Agent Teams 프리미티브(TeamCreate/SendMessage/TaskList)를
-   위 "CLI별 실행 프리미티브" 표의 자기 CLI 행으로 치환해 수행합니다.
-2. **폴백 경로**: 네이티브 멀티에이전트 도구가 전부 없으면 `skills/orchestrator/commands/workpm-mcp.md`를 읽고 MCP 기반 PM/Worker 워크플로우를 따릅니다.
+1. **네이티브 경로** (기본): 경로 선택 후 source-only resolver로
+   `${orchestrator_root}/commands/workpm.md`를 읽고 5단계 워크플로우를 따릅니다.
+   각 CLI는 위 역할 표와 현재 런타임 도구를 사용합니다.
+2. **순차 폴백**: 네이티브 위임이 없거나 독립 작업이 하나뿐이면 로드한 같은 5단계를 메인 컨텍스트에서 순차 실행합니다.
+3. **MCP 폴백**: hard file lock, 외부 task ledger, 장시간 크로스-CLI 혼합이 필요하다고
+   판정한 뒤에만 `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다. 선택 전에는 MCP
+   계약이나 서버를 로드하지 않습니다.

@@ -528,9 +528,9 @@ function Notify-MnemoStatus {
         }
         $statusFile = Join-Path $statusDir '.mnemo-status.md'
         $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: ``/memory-distill --rebuild`` 또는 핸드오프`n- updated: $now`n"
+        $content = "# mnemo status`n`n- 새 관찰(정제 이후): **$delta** / 누적 **$total** (gotchas $gCount + learned $lCount)`n- last handoff: **${days}일 전**`n- 권장: 카탈로그의 source-only ``memory-distill`` 모듈을 직접 읽어 rebuild 또는 핸드오프`n- updated: $now`n"
         [System.IO.File]::WriteAllText($statusFile, $content, $Utf8NoBom)
-        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> /memory-distill --rebuild 권장")
+        [Console]::Error.WriteLine("[mnemo] 새 관찰 $delta 건(누적 $total) / 마지막 핸드오프 $days 일 전 -> source-only memory-distill 모듈을 직접 읽어 rebuild 권장")
     } catch {}
 }
 Notify-MnemoStatus -Root $ProjectRoot

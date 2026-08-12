@@ -2,18 +2,8 @@
 name: biz-strategy
 description: >
   사업성 검토 통합 스킬. 수요 검증 + 비즈니스 모델 캔버스, 수익/가격 전략, 시장 분석(TAM/SAM/SOM),
-  GTM 전략, 북극성 지표, 코호트 분석을 한 번에 수행. /hermes로 실행.
-triggers:
-  - "hermes"
-  - "헤르메스"
-  - "biz-strategy"
-  - "사업성"
-  - "사업화"
-  - "비즈니스 모델"
-  - "시장 분석"
-  - "business model"
-  - "market analysis"
-auto_apply: false
+  GTM 전략, 북극성 지표, 코호트 분석을 한 번에 수행한다. /hermes, 헤르메스, 사업성, 사업화,
+  비즈니스 모델, 시장 분석, business model, market analysis 요청에 사용한다.
 ---
 
 # Hermes (헤르메스) — 사업성 검토

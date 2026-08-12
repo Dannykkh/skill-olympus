@@ -24,6 +24,7 @@ export interface FileLock {
 }
 export interface WorkerInfo {
     id: string;
+    aiProvider?: AIProvider;
     status: WorkerStatus;
     currentTask?: string;
     lastHeartbeat: string;
@@ -79,9 +80,10 @@ export declare class StateManager {
     private db;
     private dbPath;
     private workerId;
+    private workerProvider?;
     private projectRoot;
     private startedAt;
-    constructor(projectRoot: string, workerId: string);
+    constructor(projectRoot: string, workerId: string, workerProvider?: AIProvider);
     private initTables;
     private initMetadata;
     private migrateFromJson;
@@ -104,6 +106,7 @@ export declare class StateManager {
     getProgress(): ProgressInfo;
     getAvailableTasks(): {
         workerId: string;
+        workerProvider?: AIProvider;
         availableTasks: {
             id: string;
             prompt: string;
@@ -166,5 +169,6 @@ export declare class StateManager {
     };
     isAllTasksCompleted(): boolean;
     hasRemainingWork(): boolean;
+    close(): void;
 }
 //# sourceMappingURL=state-manager.d.ts.map

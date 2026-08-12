@@ -147,13 +147,14 @@ done
 
 # Codex reconcile 스크립트 (여러 설치 경로 탐색)
 # - repo 체크아웃 (dev)
-# - codex-mnemo/install.js가 배치하는 ~/.codex/scripts/
-# - sync-codex-assets.js가 전체 스킬을 복사하는 ~/.codex/skills/codex-mnemo/scripts/
+# - codex-mnemo/install.js가 배치하는 <CODEX_HOME>/scripts/
+# - sync-codex-assets.js가 전체 스킬을 복사하는 <CODEX_HOME>/skills/codex-mnemo/scripts/
 # - Claude smart-setup이 동기화한 ~/.claude/skills/codex-mnemo/scripts/
+CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"
 CODEX_CANDIDATES=(
     "$REPO_ROOT/skills/codex-mnemo/scripts/reconcile_codex_conversations.py"
-    "$HOME/.codex/scripts/reconcile_codex_conversations.py"
-    "$HOME/.codex/skills/codex-mnemo/scripts/reconcile_codex_conversations.py"
+    "$CODEX_ROOT/scripts/reconcile_codex_conversations.py"
+    "$CODEX_ROOT/skills/codex-mnemo/scripts/reconcile_codex_conversations.py"
     "$HOME/.claude/skills/codex-mnemo/scripts/reconcile_codex_conversations.py"
 )
 CODEX_SCRIPT=""

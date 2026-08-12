@@ -1,6 +1,7 @@
 ---
 name: vercel-react-best-practices
-description: "Apply Vercel React/Next.js performance patterns for writing, reviewing, or refactoring components, pages, data fetching, bundles, and performance work."
+description: "Explicit `/vercel-react-best-practices` reference for React/Next.js performance audits or optimization. Do not auto-use for routine implementation."
+disable-model-invocation: true
 license: MIT
 metadata:
   author: vercel

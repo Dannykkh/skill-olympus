@@ -1,6 +1,7 @@
 ---
 name: python-backend-fastapi
-description: FastAPI/Python 백엔드 코드 작성·리뷰 시 자동 참조. 비동기 프로그래밍, Pydantic 스키마, 기능/책임 단위 모듈화 원칙.
+description: 명시적 `/python-backend-fastapi` 호출 전용 FastAPI 참고서. 일반 Python 백엔드 작성·리뷰에는 자동 적용하지 않는다.
+disable-model-invocation: true
 license: MIT
 metadata:
   version: "1.0.0"

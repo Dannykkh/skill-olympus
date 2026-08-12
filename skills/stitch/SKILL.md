@@ -38,24 +38,29 @@ Resolve `<STITCH_SKILL_DIR>` to the directory containing this `SKILL.md`; do not
 
 ## Route the Request
 
-| Invocation | Route | Required reference |
-|---|---|---|
-| `/stitch generate` | Generate a screen from text or an uploaded image | [generate-and-design-system.md](references/generate-and-design-system.md) |
-| `/stitch edit` | Modify selected existing screens | [generate-and-design-system.md](references/generate-and-design-system.md) |
-| `/stitch variants` | Produce controlled alternatives from a selected screen | [generate-and-design-system.md](references/generate-and-design-system.md) |
-| `/stitch design-system pull` | Reverse-extract remote visual language into a proposed `DESIGN.md` update | [generate-and-design-system.md](references/generate-and-design-system.md) |
-| `/stitch design-system push` | Synchronize the root `DESIGN.md` into Stitch | [generate-and-design-system.md](references/generate-and-design-system.md) |
-| `/stitch design-system apply` | Apply a Stitch design-system asset to selected screens | [generate-and-design-system.md](references/generate-and-design-system.md) |
-| `/stitch loop` | Generate a resumable multi-page set | [loop-state.md](references/loop-state.md) |
-| `/stitch react` | Convert or synchronize Stitch screens with a React app | [react-handoff.md](references/react-handoff.md) |
-| `/stitch import` | Capture local UI and upload it into Stitch | [import-export.md](references/import-export.md) |
-| `/stitch sync` | Refresh remote metadata and local staged artifacts | [loop-state.md](references/loop-state.md) |
-| `/stitch status` | Compare local runtime state with the remote project | [loop-state.md](references/loop-state.md) |
+The first column is a semantic route key. In the default source-only install, a parent harness or the current
+LLM selects the route after reading this file; it does not issue a slash command. The `/stitch ...` text in
+parentheses is only a compatibility alias when source-only skills were explicitly activated with
+`--include-source-only-skills`.
 
-Preserve these compatibility aliases:
+| Route key (full-install compatibility alias) | Route | Required reference |
+|---|---|---|
+| `generate` (`/stitch generate`) | Generate a screen from text or an uploaded image | [generate-and-design-system.md](references/generate-and-design-system.md) |
+| `edit` (`/stitch edit`) | Modify selected existing screens | [generate-and-design-system.md](references/generate-and-design-system.md) |
+| `variants` (`/stitch variants`) | Produce controlled alternatives from a selected screen | [generate-and-design-system.md](references/generate-and-design-system.md) |
+| `design-system pull` (`/stitch design-system pull`) | Reverse-extract remote visual language into a proposed `DESIGN.md` update | [generate-and-design-system.md](references/generate-and-design-system.md) |
+| `design-system push` (`/stitch design-system push`) | Synchronize the root `DESIGN.md` into Stitch | [generate-and-design-system.md](references/generate-and-design-system.md) |
+| `design-system apply` (`/stitch design-system apply`) | Apply a Stitch design-system asset to selected screens | [generate-and-design-system.md](references/generate-and-design-system.md) |
+| `loop` (`/stitch loop`) | Generate a resumable multi-page set | [loop-state.md](references/loop-state.md) |
+| `react` (`/stitch react`) | Convert or synchronize Stitch screens with a React app | [react-handoff.md](references/react-handoff.md) |
+| `import` (`/stitch import`) | Capture local UI and upload it into Stitch | [import-export.md](references/import-export.md) |
+| `sync` (`/stitch sync`) | Refresh remote metadata and local staged artifacts | [loop-state.md](references/loop-state.md) |
+| `status` (`/stitch status`) | Compare local runtime state with the remote project | [loop-state.md](references/loop-state.md) |
+
+When the full-install compatibility aliases are active, preserve these mappings:
 
 - `/stitch design` means `/stitch design-system pull`.
-- `/stitch prompt` means compile an Aphrodite brief into a `/stitch generate` request without calling Stitch unless generation was requested.
+- `/stitch prompt` means compile an Aphrodite brief into the `generate` route without calling Stitch unless generation was requested.
 
 If the request is ambiguous, infer the least-mutating route from the available artifacts. Ask only when two routes would materially change different remote state.
 

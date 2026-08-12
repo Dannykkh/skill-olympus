@@ -16,12 +16,27 @@ This document defines the research decision and execution flow.
 │    - Competitor analysis? (features, menus, UX patterns)    │
 │                                                             │
 │  Step 5: Execute research (bounded batches)                  │
-│    - Subagents write one file each                           │
-│    - Subagents return only short summaries                   │
-│    - Main Claude combines files into research.md             │
+│    - Writers own one unique file each                        │
+│    - Writers return only short summaries                     │
+│    - Main/Lead combines files into research.md               │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Native Role Contract
+
+| Semantic role | Claude | Codex | Gemini | Grok | Use here |
+|---------------|--------|-------|--------|------|----------|
+| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Return-only investigation; no file writes |
+| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Research work item that writes one assigned output file |
+
+- Give every delegated work item one unique output file or make it explicitly return-only.
+- Main/Lead alone owns `research-decision.md`, the combined `research.md`, warning-stub integration, and all other shared state.
+- Writers must not edit another writer's file or the combined document.
+- If native delegation is unavailable, Main/Lead runs the selected work items sequentially with the same budgets and output paths.
+- Use the runtime's configured default model; never embed a model name in a work item.
 
 ---
 
@@ -141,9 +156,9 @@ If no research type is selected, skip Step 5 and proceed to Step 5A using the sp
 
 ### Critical Pattern: File-First, Bounded Research
 
-**DO NOT** have research subagents return full findings to the parent context.
+**DO NOT** have delegated research work items return full findings to the parent context.
 
-Each research subagent writes to a unique file under `<planning_dir>/research/` and returns only a 1-2 line summary. This prevents the Step 5 failure mode where two large research agents return 100k+ tokens at once and the API responds with `Overloaded`.
+Each research work item uses the `artifact-writer` role, writes to a unique file under `<planning_dir>/research/`, and returns only a 1-2 line summary. This prevents the Step 5 failure mode where two large results return at once and the API responds with `Overloaded`.
 
 Race conditions are avoided by assigning one output file per research type:
 - `research/codebase.md`
@@ -152,22 +167,22 @@ Race conditions are avoided by assigning one output file per research type:
 - `research/academic.md`
 - `research/competitors.md`
 
-The parent remains responsible for reading those files and writing the combined `<planning_dir>/research.md`.
+Main/Lead remains responsible for reading those files and writing the combined `<planning_dir>/research.md`.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  BOUNDED RESEARCH EXECUTION                                 │
 │                                                             │
-│  Batch 1 (max 2 tasks):                                     │
-│    Task: codebase → research/codebase.md                    │
-│    Task: web      → research/web.md                         │
+│  Batch 1 (max 2 work items):                                │
+│    Work item: codebase → research/codebase.md               │
+│    Work item: web      → research/web.md                    │
 │                                                             │
-│  Batch 2 (max 2 tasks):                                     │
-│    Task: GitHub   → research/github.md                      │
-│    Task: academic → research/academic.md                    │
+│  Batch 2 (max 2 work items):                                │
+│    Work item: GitHub   → research/github.md                 │
+│    Work item: academic → research/academic.md               │
 │                                                             │
 │  Batch 3 (if needed):                                       │
-│    Task: competitors → research/competitors.md              │
+│    Work item: competitors → research/competitors.md         │
 │                                                             │
 │  Parent combines research/*.md → research.md                │
 │                                                             │
@@ -176,7 +191,7 @@ The parent remains responsible for reading those files and writing the combined 
 
 ### Resource Budgets
 
-Apply these limits to every Step 5 research agent:
+Apply these limits to every Step 5 research work item:
 
 | Research type | Hard budget |
 |---------------|-------------|
@@ -186,17 +201,18 @@ Apply these limits to every Step 5 research agent:
 | Academic | Max 5 sources; prioritize surveys/benchmarks over broad search |
 | Competitors | Max 5 competitors; pricing/features/navigation only |
 
-If the agent needs more time, it must write "Follow-up needed" in its output file instead of expanding scope.
+If a work item needs more time, it must write "Follow-up needed" in its output file instead of expanding scope.
 
 ### 5.1 Codebase Research (if selected)
 
-Launch Task tool with `subagent_type=Explore`:
+Run one native `artifact-writer` work item with a unique output file:
 
 ```
-Task tool:
-  subagent_type: Explore
+Work item contract:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/research/codebase.md
   description: "Research codebase patterns"
-  prompt: |
+  instructions: |
     Research this codebase to understand:
     - Project structure and architecture
     - Existing patterns and conventions
@@ -217,13 +233,14 @@ Task tool:
 
 ### 5.2 Web Research (if topics selected)
 
-Launch Task tool with `subagent_type=Explore`:
+Run one native `artifact-writer` work item with a unique output file:
 
 ```
-Task tool:
-  subagent_type: Explore
+Work item contract:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/research/web.md
   description: "Research best practices"
-  prompt: |
+  instructions: |
     Research current best practices for the following topics:
     {selected_topics_list}
 
@@ -245,13 +262,14 @@ Task tool:
 
 ### 5.3 GitHub Similar Projects (if selected)
 
-Launch Task tool with `subagent_type=Explore`:
+Run one native `artifact-writer` work item with a unique output file:
 
 ```
-Task tool:
-  subagent_type: Explore
+Work item contract:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/research/github.md
   description: "Search GitHub similar projects"
-  prompt: |
+  instructions: |
     Search GitHub for similar open-source projects related to:
     {project_description_from_spec}
 
@@ -298,13 +316,14 @@ Task tool:
 
 ### 5.4 Academic Paper Research (if selected)
 
-Launch Task tool with `subagent_type=Explore`:
+Run one native `artifact-writer` work item with a unique output file:
 
 ```
-Task tool:
-  subagent_type: Explore
+Work item contract:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/research/academic.md
   description: "Research academic papers and algorithms"
-  prompt: |
+  instructions: |
     Research academic papers, algorithms, and implementation approaches for:
     {project_description_from_spec}
 
@@ -341,13 +360,14 @@ Task tool:
 
 ### 5.5 Competitor Analysis (if selected)
 
-Launch Task tool with `subagent_type=Explore`:
+Run one native `artifact-writer` work item with a unique output file:
 
 ```
-Task tool:
-  subagent_type: Explore
+Work item contract:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/research/competitors.md
   description: "Analyze competitor products"
-  prompt: |
+  instructions: |
     Analyze competitor products/services for:
     {project_description_from_spec}
 
@@ -395,33 +415,33 @@ Task tool:
 
 ### 5.6 Bounded Execution
 
-Create `<planning_dir>/research/` before launching tasks.
+Main/Lead creates `<planning_dir>/research/` before launching work items.
 
-If multiple research types are needed, launch tasks in bounded batches:
-- Default max: **2 concurrent research tasks**
-- If the previous batch hits `Overloaded`, rate limit, or timeout: retry the failed item once as a **single task** with half the budget
-- If it fails again: write a short warning stub to that research file and continue with successful research
+If multiple research types are needed, launch work items in bounded batches:
+- Default max: **2 concurrent research work items**
+- If the previous batch hits `Overloaded`, rate limit, or timeout: retry the failed item once as a **single work item** with half the budget
+- If it fails again: Main/Lead writes a short warning stub to that research file and continues with successful research
 
-Do not launch all five research tasks in one message.
+Do not launch all five research work items in one message.
 
 ```
 # Batch 1:
-[Task tool call 1: Explore subagent for codebase]
-[Task tool call 2: Explore subagent for web research]
+[artifact-writer: codebase → research/codebase.md]
+[artifact-writer: web → research/web.md]
 
 # Batch 2:
-[Task tool call 3: Explore subagent for GitHub projects]
-[Task tool call 4: Explore subagent for academic papers]
+[artifact-writer: GitHub → research/github.md]
+[artifact-writer: academic → research/academic.md]
 
 # Batch 3:
-[Task tool call 5: Explore subagent for competitor analysis]
+[artifact-writer: competitors → research/competitors.md]
 ```
 
 Wait for a batch to complete before launching the next batch.
 
 ### 5.7 Combine Results and Write File
 
-After collecting subagent summaries, read the files under `<planning_dir>/research/` and combine them into `<planning_dir>/research.md`.
+After collecting writer summaries, Main/Lead reads the files under `<planning_dir>/research/` and combines them into `<planning_dir>/research.md`.
 
 Recommended structure:
 
@@ -447,7 +467,7 @@ Recommended structure:
 {content from research/competitors.md or "Skipped"}
 
 ## Open Questions
-- {follow-up items from subagent files}
+- {follow-up items from writer files}
 ```
 
 ---
@@ -458,8 +478,8 @@ Recommended structure:
 |------|----------|
 | Spec file is vague | Select codebase research if available; otherwise use generic topics based on detected language/framework and record `[inferred]` assumptions |
 | No research selected | Skip Step 5, proceed to Step 5A using spec/local docs |
-| One subagent fails | Retry once as a single task with half budget; if still failing, write warning stub and continue |
+| One work item fails | Retry once as a single work item with half budget; if still failing, Main/Lead writes the warning stub and continues |
 | `API Error: Overloaded` | Wait briefly, reduce concurrency to 1, retry the failed research item once |
-| All subagents fail | Write warning stubs, proceed to Step 5A with local context; ask only if the task is high-risk and no conservative plan can be formed |
-| Only one research type | Run single subagent, write file with just that content |
+| All delegated work items fail | Main/Lead writes warning stubs, proceeds to Step 5A with local context, and asks only if the task is high-risk and no conservative plan can be formed |
+| Only one research type | Run one writer or the sequential main-context fallback; write only that research file |
 | GitHub search returns no relevant results | Note in research file, not a blocker |

@@ -36,9 +36,20 @@ const homeDir = os.homedir();
 const globalClaudeDir = path.join(homeDir, ".claude");
 const targetDir = isGlobal ? globalClaudeDir : path.resolve(pathArg);
 
-// Source repo path (directory where this script is located)
+// Source module path (repository checkout or dormant source library).
 const sourceDir = path.resolve(__dirname);
-const mcpServerDir = path.join(sourceDir, "mcp-server");
+const globalRuntimeModuleDir = path.join(
+  globalClaudeDir,
+  ".olympus",
+  "runtime-modules",
+  "orchestrator",
+);
+const runtimeModuleDir = fs.existsSync(
+  path.join(globalRuntimeModuleDir, "mcp-server", "package.json"),
+)
+  ? globalRuntimeModuleDir
+  : sourceDir;
+const mcpServerDir = path.join(runtimeModuleDir, "mcp-server");
 const isWindows = process.platform === "win32";
 
 // Normalize paths to use forward slashes
@@ -82,8 +93,28 @@ function removeFile(filePath) {
   }
 }
 
-// Hook script source path (hooks folder in this repo)
-const hooksSourceDir = path.join(sourceDir, "..", "..", "hooks");
+// The top-level installer owns shared hooks. A repository checkout can provide
+// the source directly; a dormant source-only module reuses the installed copy.
+const hookSourceCandidates = [
+  path.join(sourceDir, "..", "..", "hooks", "orchestrator-detector.js"),
+  path.join(globalClaudeDir, "hooks", "orchestrator-detector.js"),
+];
+const orchestratorHookSource = hookSourceCandidates.find((candidate) =>
+  fs.existsSync(candidate),
+);
+
+function copyOrchestratorHook(destination) {
+  if (!orchestratorHookSource) {
+    console.warn(
+      "      orchestrator-detector.js not found; explicit workpm invocation remains available",
+    );
+    return false;
+  }
+  if (path.resolve(orchestratorHookSource) !== path.resolve(destination)) {
+    copyFile(orchestratorHookSource, destination);
+  }
+  return true;
+}
 
 // ── Global install ──
 function installGlobal() {
@@ -118,11 +149,14 @@ function installGlobal() {
   // [2/5] Copy hook scripts
   console.log("[2/5] Copying hook scripts...");
   const hooksDir = path.join(globalClaudeDir, "hooks");
-  copyFile(
-    path.join(hooksSourceDir, "orchestrator-detector.js"),
-    path.join(hooksDir, "orchestrator-detector.js")
+  const hookInstalled = copyOrchestratorHook(
+    path.join(hooksDir, "orchestrator-detector.js"),
   );
-  console.log("      orchestrator-detector.js copied");
+  console.log(
+    hookInstalled
+      ? "      orchestrator-detector.js ready"
+      : "      detector hook skipped",
+  );
 
   // [3/5] Copy command files
   console.log("[3/5] Copying command files...");
@@ -170,20 +204,19 @@ function installGlobal() {
     },
   };
 
-  // Add orchestrator-detector to hooks (script-based, no matcher)
-  settings.hooks = settings.hooks || {};
-  settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
-
-  const hookCommand = `node "${normalizePath(path.join(hooksDir, "orchestrator-detector.js"))}"`;
-
-  // Check for duplicates before adding
-  const hasOrchestratorHook = settings.hooks.UserPromptSubmit.some(
-    (h) => h.hooks && h.hooks.some((hook) => hook.command && hook.command.includes("orchestrator-detector"))
-  );
-  if (!hasOrchestratorHook) {
-    settings.hooks.UserPromptSubmit.push({
-      hooks: [{ type: "command", command: hookCommand }],
-    });
+  // Add orchestrator-detector only when a real hook source was available.
+  if (hookInstalled) {
+    settings.hooks = settings.hooks || {};
+    settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
+    const hookCommand = `node "${normalizePath(path.join(hooksDir, "orchestrator-detector.js"))}"`;
+    const hasOrchestratorHook = settings.hooks.UserPromptSubmit.some(
+      (h) => h.hooks && h.hooks.some((hook) => hook.command && hook.command.includes("orchestrator-detector"))
+    );
+    if (!hasOrchestratorHook) {
+      settings.hooks.UserPromptSubmit.push({
+        hooks: [{ type: "command", command: hookCommand }],
+      });
+    }
   }
 
   writeJson(settingsPath, settings);
@@ -292,11 +325,14 @@ function installLocal() {
   // [2/5] Copy hook scripts (script-based)
   console.log("[2/5] Copying hook scripts...");
   const hooksDir = path.join(targetDir, "hooks");
-  copyFile(
-    path.join(hooksSourceDir, "orchestrator-detector.js"),
-    path.join(hooksDir, "orchestrator-detector.js")
+  const hookInstalled = copyOrchestratorHook(
+    path.join(hooksDir, "orchestrator-detector.js"),
   );
-  console.log("      orchestrator-detector.js copied");
+  console.log(
+    hookInstalled
+      ? "      orchestrator-detector.js ready"
+      : "      detector hook skipped",
+  );
 
   // [3/5] Copy worker spawn scripts
   console.log("[3/5] Copying worker spawn scripts...");
@@ -345,36 +381,36 @@ function installLocal() {
     },
   };
 
-  // Add orchestrator-detector to hooks.UserPromptSubmit (script-based)
-  settings.hooks = settings.hooks || {};
-  settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
+  // Add orchestrator-detector only when a real hook source was available.
+  if (hookInstalled) {
+    settings.hooks = settings.hooks || {};
+    settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit || [];
+    const hooksDirNorm = normalizePath(hooksDir);
+    const hookCommand = `node "${hooksDirNorm}/orchestrator-detector.js"`;
 
-  const hooksDirNorm = normalizePath(hooksDir);
-  const hookCommand = `node "${hooksDirNorm}/orchestrator-detector.js"`;
+    // Remove old matcher-based hooks (backward compatibility)
+    settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
+      (h) => {
+        if (typeof h.matcher === "string") {
+          return !/workpm|pmworker/i.test(h.matcher);
+        }
+        if (h.hooks && Array.isArray(h.hooks)) {
+          return !h.hooks.some(
+            (hook) => hook.command && /workpm|pmworker/i.test(hook.command)
+          );
+        }
+        return true;
+      }
+    );
 
-  // Remove old matcher-based hooks (backward compatibility)
-  settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
-    (h) => {
-      if (typeof h.matcher === "string") {
-        return !/workpm|pmworker/i.test(h.matcher);
-      }
-      if (h.hooks && Array.isArray(h.hooks)) {
-        return !h.hooks.some(
-          (hook) => hook.command && /workpm|pmworker/i.test(hook.command)
-        );
-      }
-      return true;
+    const hasOrchestratorHook = settings.hooks.UserPromptSubmit.some(
+      (h) => h.hooks && h.hooks.some((hook) => hook.command && hook.command.includes("orchestrator-detector"))
+    );
+    if (!hasOrchestratorHook) {
+      settings.hooks.UserPromptSubmit.push({
+        hooks: [{ type: "command", command: hookCommand }],
+      });
     }
-  );
-
-  // Check for duplicates before adding
-  const hasOrchestratorHook = settings.hooks.UserPromptSubmit.some(
-    (h) => h.hooks && h.hooks.some((hook) => hook.command && hook.command.includes("orchestrator-detector"))
-  );
-  if (!hasOrchestratorHook) {
-    settings.hooks.UserPromptSubmit.push({
-      hooks: [{ type: "command", command: hookCommand }],
-    });
   }
 
   writeJson(settingsPath, settings);

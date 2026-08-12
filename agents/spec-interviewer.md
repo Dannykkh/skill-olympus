@@ -14,7 +14,7 @@ when_to_use: |
 avoid_if: |
   - 아키텍처 설계 (architect — 요구사항 확정 후)
   - 코드 구현 (해당 도메인 에이전트 사용)
-  - 테스트 시나리오 작성 (qa-writer 사용)
+  - 테스트 시나리오 작성 (zephermine 또는 minos 사용)
   - 기존 코드 분석 (explore-agent 사용)
 examples:
   - prompt: "이 SPEC.md 기반으로 인터뷰 시작"

@@ -79,16 +79,18 @@ Healer는 "manual fix required"로 분류합니다.
 
 ---
 
-### 서브에이전트 검증 실행
+### 읽기 전용 검증 작업 실행
 
-**Phase 1: 정적 검증** — 현재 CLI의 background subagent/worker 2개 병렬 실행:
+**Phase 1: 정적 검증** — 다음 두 작업은 모두 읽기 전용 의미 계약입니다. 현재 CLI가 제공하는
+내장 탐색·검토 기능으로 병렬 실행할 수 있지만, 특정 에이전트 이름이나 호출 구문에 의존하지 않습니다.
+위임 기능이 없거나 실패하면 메인 컨텍스트에서 1번과 2번을 순차 실행합니다.
 
-1. **기능 검증 에이전트**: spec.md의 기능적 요구사항 vs 실제 코드
+1. **기능 검증 작업**: spec.md의 기능적 요구사항 vs 실제 코드
    - 각 요구사항별 구현 여부 (✅/❌)
    - 누락된 기능 구체적 명시
    - 엣지 케이스 처리 확인
 
-2. **품질 검증 에이전트**: 비기능 요구사항 + 코드 품질
+2. **품질 검증 작업**: 비기능 요구사항 + 코드 품질
    - 성능/보안/접근성 요구사항 충족 여부
    - 테스트 커버리지
    - 타입 안전성
@@ -99,47 +101,33 @@ Healer는 "manual fix required"로 분류합니다.
 > — 분기 조건과 폴백은 SKILL.md Phase 1 "네이티브 리뷰 엔진 위임" 참조. 아래 프롬프트 템플릿은
 > 폴백(네이티브 부재/전체 코드베이스 감리) 경로에서 사용.
 
-```
-# 두 에이전트를 하나의 배치에서 병렬 실행:
+**기능 검증 작업 계약:**
 
-Background verification job:
-subagent_type="Explore"
-prompt="""
-  기능 검증: spec.md 대비 구현 상태 확인
+```text
+Role: read-only verification
+Scope: <planning_dir>/spec.md and implementation source
+Writes: none
 
-  1. <planning_dir>/spec.md를 읽고 기능적 요구사항 목록 추출
-  2. 코드베이스에서 각 요구사항의 구현 여부 확인
-  3. 결과를 다음 형식으로 반환:
-
-  ## 기능 검증 결과
-  | 요구사항 | 상태 | 근거 |
-  |----------|------|------|
-  | ... | ✅/❌ | 파일:라인 또는 미구현 사유 |
-
-  - 엣지 케이스 처리 여부도 확인
-  - 누락된 기능은 구체적으로 명시
-"""
-
-Background verification job:
-subagent_type="Explore"
-prompt="""
-  품질 검증: 비기능 요구사항 + 코드 품질 확인
-
-  1. <planning_dir>/spec.md에서 비기능 요구사항 추출
-  2. 코드베이스에서 다음 항목 확인:
-     - 성능/보안/접근성 요구사항 충족 여부
-     - 테스트 커버리지 (테스트 파일 존재 여부)
-     - 타입 안전성 (any 사용, 타입 누락)
-     - 문서화 상태 (README, JSDoc 등)
-
-  ## 품질 검증 결과
-  | 항목 | 상태 | 상세 |
-  |------|------|------|
-  | ... | ✅/❌ | ... |
-"""
+1. Extract functional requirements from spec.md.
+2. Find implementation evidence for each requirement.
+3. Return a table: requirement | status | file:line evidence or missing reason.
+4. Include edge-case handling and concrete omissions.
 ```
 
-두 에이전트의 결과를 합쳐 정적 검증 보고서 작성.
+**품질 검증 작업 계약:**
+
+```text
+Role: read-only verification
+Scope: non-functional requirements, implementation source, and tests
+Writes: none
+
+1. Extract non-functional requirements from spec.md.
+2. Check performance, security, accessibility, test presence, type safety, and documentation.
+3. Return a table: item | status | file:line evidence or unverified reason.
+```
+
+메인 컨텍스트만 두 작업의 결과를 합치고 중복을 제거하여 `verify-report.md`를 작성합니다.
+위임된 작업은 보고서, planning 산출물, 소스 파일을 직접 수정하지 않습니다.
 
 ---
 
@@ -330,7 +318,8 @@ Bash: {detected_e2e_command}
 **Phase 5: 프로세스 도면 검증** — flow-diagrams 기반 (도면이 있는 프로젝트만)
 
 `<planning_dir>/flow-diagrams/`가 존재하면 실행.
-`skills/flow-verifier/SKILL.md`의 verify 모드를 참조하여 검증합니다.
+Argos가 해석한 `MODULE_SKILL[flow-verifier]`를 직접 읽고 verify 모드를 적용합니다. 모듈이 없으면
+SKILL.md의 Phase 5 native fallback을 실행하고 `source: native-fallback`을 기록합니다.
 
 #### 5-1. 도면 인덱스 로드
 
@@ -401,7 +390,8 @@ design-system.md에서 정의된 토큰을 추출하고, 실제 코드에서 사
 
 #### 6-2. AI Slop 탐지
 
-`frontend-design/references/ai-slop-blacklist.md` 공유 블랙리스트 기반:
+`MODULE_ROOT[frontend-design]/references/ai-slop-blacklist.md`를 직접 읽은 공유 블랙리스트 기반입니다.
+파일이 없으면 아래 축약 검사만 실행하고 전체 블랙리스트 커버리지는 `UNVERIFIED`로 기록합니다.
 
 **10항목 블랙리스트 검사** (Grep + 시각 판단):
 
@@ -428,7 +418,8 @@ design-system.md에서 정의된 토큰을 추출하고, 실제 코드에서 사
 
 #### 6-3. UI/UX 9영역 채점
 
-`ui-ux-auditor`의 채점 방법론을 적용하여 9영역 각각 0-10 채점:
+`MODULE_SKILL[ui-ux-auditor]`에서 직접 읽은 채점 방법론을 적용하여 9영역 각각 0-10 채점합니다.
+모듈이 없으면 아래 9영역을 native fallback으로 실행하고 실제 렌더 미관찰 영역을 명시합니다.
 
 | 영역 | 가중치 | 채점 기준 요약 |
 |------|--------|---------------|
@@ -469,75 +460,22 @@ design-system.md에서 정의된 토큰을 추출하고, 실제 코드에서 사
 
 ---
 
-**Phase 7: 보안 검증** — 항상 실행. `security-reviewer` 에이전트의 인프라 우선 방법론 적용.
+**Phase 7: 보안 검증** — 항상 실행. Argos가 해석한
+`MODULE_ROOT[code-reviewer]/references/security-audit.md`를 직접 읽어 `comprehensive` 계약을
+적용합니다. 모듈 또는 참조가 없으면 SKILL.md의 한정된 native fallback만 실행하고 빠진 영역을
+`NOT RUN`으로 남깁니다.
 
-#### 7-1. 시크릿 탐지 (Secret Archaeology)
-
-현재 코드 + git 히스토리에서 시크릿 노출 탐색:
-
-```bash
-# 현재 코드
-grep -rn "api[_-]?key\s*=\s*[\"'][^\"']\+" --include="*.{ts,js,py,java,go}" .
-grep -rn "password\s*=\s*[\"'][^\"']\+" --include="*.{ts,js,py,java,go,env}" .
-# 알려진 시크릿 접두사
-grep -rn "sk-[a-zA-Z0-9]\{20,\}\|AKIA[A-Z0-9]\{16\}\|ghp_[a-zA-Z0-9]\{36\}\|glpat-" .
-# git 히스토리 (삭제되었어도 위험)
-git log --all -p --diff-filter=D -- "*.env" "*.key" "*.pem" 2>/dev/null | head -50
-```
-
-| 심각도 | 탐지 대상 |
-|--------|----------|
-| 🔴 Critical | 하드코딩 API 키, .env 커밋 이력, PEM/인증서 노출 |
-| 🟠 High | 비밀번호 평문, 내부 URL 하드코딩 (프로덕션) |
-
-**False-Positive 제외**: 테스트 파일, .env.example, 주석, node_modules, 타입 정의, 빌드 출력
-
-#### 7-2. 의존성 공급망 (Supply Chain)
-
-```bash
-npm audit --json 2>/dev/null || yarn audit --json 2>/dev/null   # Node.js
-pip-audit --format json 2>/dev/null                              # Python
-```
-
-| 검사 | 기준 |
-|------|------|
-| Critical/High CVE | 🔴 즉시 업데이트 |
-| Lock 파일 미커밋 | 🟠 의존성 변조 가능 |
-| 메이저 버전 2+ 뒤처짐 | 🟡 보안 패치 미수신 |
-
-#### 7-3. OWASP Top 10 코드 스캔
-
-validate-code 훅(3개 패턴)보다 넓은 범위:
-
-| 취약점 | Grep 패턴 |
-|--------|----------|
-| SQL Injection | `f"SELECT`, `f"INSERT`, `+ "WHERE"`, 문자열 연결 쿼리 |
-| XSS | `dangerouslySetInnerHTML`, `innerHTML =`, `document.write` |
-| Command Injection | `os.system(`, `subprocess.*shell=True`, `exec(` |
-| Path Traversal | `../` + 사용자 입력 결합, `req.params` + 파일 경로 |
-| SSRF | `fetch(userInput)`, `axios.get(userUrl)` 패턴 |
-| CSRF | 상태 변경 POST에 토큰 없음 |
-| 인증 누락 | 라우트 핸들러에 인증 미들웨어 없음 |
-| Rate Limit 없음 | 인증/비용 발생 엔드포인트에 throttle 미적용 |
-
-#### 7-4. STRIDE 위협 요약
-
-시스템 전체에 대해 6가지 위협 평가:
-
-```markdown
-| 위협 | 대응 상태 | 근거 | 권고 |
-|------|----------|------|------|
-| Spoofing | ✅/⚠️/❌ | {인증 메커니즘 확인} | {미비 시 권고} |
-| Tampering | ✅/⚠️/❌ | {HTTPS, 서명, 무결성} | |
-| Repudiation | ✅/⚠️/❌ | {감사 로그 존재 여부} | |
-| Info Disclosure | ✅/⚠️/❌ | {에러 핸들링, 로깅} | |
-| DoS | ✅/⚠️/❌ | {Rate Limit, 리소스 제한} | |
-| Elevation | ✅/⚠️/❌ | {RBAC, 권한 검사} | |
-```
+- 순서: 신뢰 경계 → 시크릿 → 공급망 → CI/CD → 코드·데이터 경계 → STRIDE·LLM
+- 비밀값 원문을 출력하는 raw grep·`git log -p`는 금지합니다. scanner가 없으면 값이 아닌
+  경로·줄·마스킹된 지문만 수집하고 해당 영역을 `NOT RUN` 또는 `UNVERIFIED`로 남깁니다.
+- 테스트·예제·주석을 일괄 false positive로 제외하지 않고 문맥, reachability, exploitability,
+  impact와 외부 검증을 근거로 판정합니다.
+- 출력은 보안 감사 계약의 Findings와 Coverage Gaps 형식을 따릅니다.
 
 ---
 
-Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 + Phase 7 결과를 합쳐 `<planning_dir>/verify-report.md`로 작성.
+메인 컨텍스트만 Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 + Phase 7
+결과를 합쳐 `<planning_dir>/verify-report.md`를 작성합니다. 위임된 읽기 전용 작업은 결과만 반환합니다.
 
 ### 검증 결과 보고
 

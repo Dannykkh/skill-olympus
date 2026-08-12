@@ -8,10 +8,12 @@ export class StateManager {
     db;
     dbPath;
     workerId;
+    workerProvider;
     projectRoot;
     startedAt;
-    constructor(projectRoot, workerId) {
+    constructor(projectRoot, workerId, workerProvider) {
         this.workerId = workerId;
+        this.workerProvider = workerProvider;
         this.projectRoot = projectRoot;
         this.startedAt = new Date().toISOString();
         // DB 디렉토리 생성
@@ -65,6 +67,7 @@ export class StateManager {
 
       CREATE TABLE IF NOT EXISTS workers (
         id TEXT PRIMARY KEY,
+        ai_provider TEXT,
         status TEXT NOT NULL DEFAULT 'idle',
         current_task TEXT,
         last_heartbeat TEXT NOT NULL,
@@ -94,6 +97,12 @@ export class StateManager {
       CREATE INDEX IF NOT EXISTS idx_activity_log_type ON activity_log(type);
       CREATE INDEX IF NOT EXISTS idx_activity_log_timestamp ON activity_log(timestamp);
     `);
+        // Existing databases created before worker provider routing need a
+        // forward-compatible column migration.
+        const workerColumns = this.db.prepare('PRAGMA table_info(workers)').all();
+        if (!workerColumns.some(column => column.name === 'ai_provider')) {
+            this.db.exec('ALTER TABLE workers ADD COLUMN ai_provider TEXT');
+        }
     }
     initMetadata() {
         const upsert = this.db.prepare('INSERT OR IGNORE INTO metadata (key, value) VALUES (?, ?)');
@@ -120,7 +129,7 @@ export class StateManager {
         INSERT OR IGNORE INTO file_locks (path, owner, locked_at, reason) VALUES (?, ?, ?, ?)
       `);
             const insertWorker = this.db.prepare(`
-        INSERT OR IGNORE INTO workers (id, status, current_task, last_heartbeat, completed_tasks) VALUES (?, ?, ?, ?, ?)
+        INSERT OR IGNORE INTO workers (id, ai_provider, status, current_task, last_heartbeat, completed_tasks) VALUES (?, ?, ?, ?, ?, ?)
       `);
             const migrate = this.db.transaction(() => {
                 for (const t of state.tasks || []) {
@@ -130,7 +139,7 @@ export class StateManager {
                     insertLock.run(l.path, l.owner, l.lockedAt, l.reason || null);
                 }
                 for (const w of state.workers || []) {
-                    insertWorker.run(w.id, w.status, w.currentTask || null, w.lastHeartbeat, w.completedTasks);
+                    insertWorker.run(w.id, w.aiProvider || null, w.status, w.currentTask || null, w.lastHeartbeat, w.completedTasks);
                 }
             });
             migrate();
@@ -193,10 +202,13 @@ export class StateManager {
     // --------------------------------------------------------------------------
     registerWorker() {
         this.db.prepare(`
-      INSERT INTO workers (id, status, last_heartbeat, completed_tasks)
-      VALUES (?, 'idle', ?, 0)
-      ON CONFLICT(id) DO UPDATE SET status = 'idle', last_heartbeat = ?
-    `).run(this.workerId, new Date().toISOString(), new Date().toISOString());
+      INSERT INTO workers (id, ai_provider, status, last_heartbeat, completed_tasks)
+      VALUES (?, ?, 'idle', ?, 0)
+      ON CONFLICT(id) DO UPDATE SET
+        ai_provider = excluded.ai_provider,
+        status = 'idle',
+        last_heartbeat = excluded.last_heartbeat
+    `).run(this.workerId, this.workerProvider || null, new Date().toISOString());
     }
     updateHeartbeat() {
         this.db.prepare('UPDATE workers SET last_heartbeat = ? WHERE id = ?')
@@ -206,6 +218,7 @@ export class StateManager {
         const rows = this.db.prepare('SELECT * FROM workers').all();
         return rows.map(r => ({
             id: r.id,
+            aiProvider: r.ai_provider || undefined,
             status: r.status,
             currentTask: r.current_task || undefined,
             lastHeartbeat: r.last_heartbeat,
@@ -283,6 +296,7 @@ export class StateManager {
         const completedIds = new Set(tasks.filter(t => t.status === 'completed').map(t => t.id));
         const availableTasks = tasks
             .filter(t => t.status === 'pending')
+            .filter(t => !t.aiProvider || t.aiProvider === this.workerProvider)
             .filter(t => t.dependsOn.every(depId => completedIds.has(depId)))
             .filter(t => {
             if (!t.scope || t.scope.length === 0)
@@ -304,7 +318,7 @@ export class StateManager {
         const allTasksCompleted = this.isAllTasksCompleted();
         const hasRemainingWork = this.hasRemainingWork();
         return {
-            workerId: this.workerId, availableTasks,
+            workerId: this.workerId, workerProvider: this.workerProvider, availableTasks,
             message: allTasksCompleted
                 ? 'All tasks completed. Worker can terminate.'
                 : availableTasks.length > 0
@@ -314,30 +328,51 @@ export class StateManager {
         };
     }
     claimTask(taskId) {
-        const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
-        if (!row)
-            return { success: false, message: `Task '${taskId}' not found` };
-        const task = this.rowToTask(row);
-        if (task.status !== 'pending') {
-            return { success: false, message: `Task '${taskId}' is not pending (status: ${task.status})` };
-        }
-        const completedIds = new Set(this.db.prepare("SELECT id FROM tasks WHERE status = 'completed'").all().map(r => r.id));
-        const unmetDeps = task.dependsOn.filter(depId => !completedIds.has(depId));
-        if (unmetDeps.length > 0) {
-            return { success: false, message: `Task '${taskId}' has unmet dependencies: ${unmetDeps.join(', ')}` };
-        }
         const now = new Date().toISOString();
         const claim = this.db.transaction(() => {
-            this.db.prepare('UPDATE tasks SET status = ?, owner = ?, started_at = ? WHERE id = ?')
-                .run('in_progress', this.workerId, now, taskId);
+            const result = this.db.prepare(`
+        UPDATE tasks
+        SET status = 'in_progress', owner = ?, started_at = ?
+        WHERE id = ?
+          AND status = 'pending'
+          AND (ai_provider IS NULL OR ai_provider = ?)
+          AND NOT EXISTS (
+            SELECT 1
+            FROM json_each(tasks.depends_on) AS dependency_ref
+            LEFT JOIN tasks AS dependency ON dependency.id = dependency_ref.value
+            WHERE dependency.status IS NULL OR dependency.status != 'completed'
+          )
+      `).run(this.workerId, now, taskId, this.workerProvider || null);
+            if (result.changes !== 1)
+                return undefined;
             this.db.prepare('UPDATE workers SET status = ?, current_task = ? WHERE id = ?')
                 .run('working', taskId, this.workerId);
+            return this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
         });
-        claim();
+        const claimedRow = claim();
+        if (!claimedRow) {
+            const row = this.db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+            if (!row)
+                return { success: false, message: `Task '${taskId}' not found` };
+            const task = this.rowToTask(row);
+            if (task.status !== 'pending') {
+                return { success: false, message: `Task '${taskId}' is not pending (status: ${task.status})` };
+            }
+            if (task.aiProvider && task.aiProvider !== this.workerProvider) {
+                return {
+                    success: false,
+                    message: `Task '${taskId}' requires provider '${task.aiProvider}', but worker '${this.workerId}' is '${this.workerProvider || 'unknown'}'`
+                };
+            }
+            const completedIds = new Set(this.db.prepare("SELECT id FROM tasks WHERE status = 'completed'").all().map(r => r.id));
+            const unmetDeps = task.dependsOn.filter(depId => !completedIds.has(depId));
+            if (unmetDeps.length > 0) {
+                return { success: false, message: `Task '${taskId}' has unmet dependencies: ${unmetDeps.join(', ')}` };
+            }
+            return { success: false, message: `Task '${taskId}' was claimed by another worker` };
+        }
+        const task = this.rowToTask(claimedRow);
         this.logActivity('milestone', `태스크 시작: ${task.prompt.slice(0, 80)}`, { taskId });
-        task.status = 'in_progress';
-        task.owner = this.workerId;
-        task.startedAt = now;
         return { success: true, message: `Task '${taskId}' claimed by ${this.workerId}`, task };
     }
     completeTask(taskId, result) {
@@ -580,6 +615,9 @@ export class StateManager {
     hasRemainingWork() {
         const row = this.db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status IN ('pending', 'in_progress')").get();
         return row.cnt > 0;
+    }
+    close() {
+        this.db.close();
     }
 }
 //# sourceMappingURL=state-manager.js.map

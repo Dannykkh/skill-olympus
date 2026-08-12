@@ -1,6 +1,8 @@
 ---
 description: zephermine 섹션 기반 Agent Teams 병렬 실행
 allowed-tools:
+  - Agent
+  - SendMessage
   - TaskCreate
   - TaskUpdate
   - TaskList
@@ -11,7 +13,6 @@ allowed-tools:
   - Glob
   - Grep
   - Bash
-  - AskUserQuestion
 ---
 
 # /agent-team 커맨드

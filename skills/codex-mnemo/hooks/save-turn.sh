@@ -7,7 +7,8 @@
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
 case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
 
-DEBUG_FILE="$HOME/.codex/hooks/save-turn-debug.log"
+CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"
+DEBUG_FILE="$CODEX_ROOT/hooks/save-turn-debug.log"
 
 debug_log() {
     mkdir -p "$(dirname "$DEBUG_FILE")" 2>/dev/null || true
@@ -491,7 +492,7 @@ if [ -n "$RESPONSE" ] && [ -n "$BASE_DIR" ]; then
     fi
 fi
 
-CHRONOS_CONTINUE="$HOME/.codex/skills/auto-continue-loop/scripts/continue-loop.sh"
+CHRONOS_CONTINUE="$CODEX_ROOT/skills/auto-continue-loop/scripts/continue-loop.sh"
 if [ -x "$CHRONOS_CONTINUE" ]; then
     if ! printf '%s' "$PAYLOAD" | "$CHRONOS_CONTINUE"; then
         debug_log "chronos-chain-failed: $CHRONOS_CONTINUE"
@@ -557,10 +558,10 @@ notify_mnemo_status() {
         echo ""
         echo "- 새 관찰(정제 이후): **${delta}** / 누적 **${total}** (gotchas ${g_count} + learned ${l_count})"
         echo "- last handoff: **${days}일 전**"
-        echo "- 권장: \`/memory-distill --rebuild\` 또는 핸드오프"
+        echo "- 권장: 카탈로그의 source-only \`memory-distill\` 모듈을 직접 읽어 rebuild 또는 핸드오프"
         echo "- updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     } > "$status_file" 2>/dev/null || true
-    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → /memory-distill --rebuild 권장" >&2
+    echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → source-only memory-distill 모듈을 직접 읽어 rebuild 권장" >&2
 }
 MNEMO_ROOT="$PWD"
 GIT_ROOT_TMP=$(git rev-parse --show-toplevel 2>/dev/null)

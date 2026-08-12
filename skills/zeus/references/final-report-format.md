@@ -54,7 +54,7 @@
 - [ ] Decision Ledger 검토 — 다르게 판단되는 항목은 "되돌리는 법"을 따라 변경
 - [ ] 자동 생성 코드 리뷰
 - [ ] git commit && push
-- [ ] /docker-deploy (배포 시)
+- [ ] Phase 4 docker-deploy 내부 모듈 상태와 배포 산출물 검토
 ```
 
 ---
@@ -68,6 +68,7 @@
 |------|------|
 | Phase 1~4 성공 + minos 통과율 100%(또는 합의된 임계치) + 빌드 green | SUCCESS |
 | 일부 미달 (테스트 일부 실패, argos 미통과 항목 존재 등) | PARTIAL — 미달 수치 명기 |
+| docker-deploy 카탈로그 행/경로/필수 reference 로드 실패 | PARTIAL 이하 — Phase 4 `weak`, dev-server 폴백과 `BLOCKED` 사유 명기 |
 | FATAL 에러로 중단 | FAILED |
 
 **금지:** 테스트가 실패 상태인데 SUCCESS로 판정. 자동 승인은 통과율·미통과 항목 수치를 리포트에 남길 때만 유효하다(수치 없는 "실행됨" 승인 금지).

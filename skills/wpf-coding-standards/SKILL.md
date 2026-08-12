@@ -1,6 +1,6 @@
 ---
 name: wpf-coding-standards
-description: "WPF 데스크톱 개발 코딩 표준. MVVM, 스레딩, 메모리 관리, GPU 렌더링 최적화. C#/XAML 파일 작성 시 참조."
+description: "명시적 `/wpf-coding-standards` 호출 전용 WPF 참고서. 일반 C#/XAML 작성에는 자동 적용하지 않는다."
 ---
 
 # WPF Coding Standards - 통합 패키지
@@ -10,8 +10,8 @@ description: "WPF 데스크톱 개발 코딩 표준. MVVM, 스레딩, 메모리 
 ```
 wpf-coding-standards/
 ├── SKILL.md                              # 이 파일 (핵심 예시)
-├── agents/                               # 패시브 에이전트 (항상 로드)
-│   └── wpf-coding-standards.md           # WPF 코딩 표준 규칙
+├── agents/                               # source-only 규칙 참고 (명시적 로드)
+│   └── wpf-coding-standards.md           # 런타임 에이전트로 등록하지 않음
 └── templates/                            # 코드 템플릿 (on-demand)
     ├── wpf-patterns.md                   # MVVM, DI, Navigation, Converter, Behavior
     └── threading-memory.md              # 스레딩 상세, 메모리 프로파일링, GPU 최적화
@@ -19,7 +19,13 @@ wpf-coding-standards/
 
 ---
 
-패시브 에이전트(`agents/wpf-coding-standards.md`)의 규칙에 대한 **핵심 코드 예시**를 제공합니다.
+## 참조 로딩 규칙
+
+1. 이 `SKILL.md`를 워크플로와 예시의 소유자로 사용합니다.
+2. 스킬을 명시적으로 호출했을 때 `agents/wpf-coding-standards.md`를 읽고 현재 프로젝트에 필요한 규칙만 적용합니다.
+3. MVVM/Navigation 또는 스레딩/메모리 상세가 필요할 때만 해당 `templates/` 파일을 추가로 읽습니다.
+
+`agents/` 파일이 자동 로드되거나 커스텀 에이전트로 등록되어 있다고 가정하지 마세요.
 
 ---
 

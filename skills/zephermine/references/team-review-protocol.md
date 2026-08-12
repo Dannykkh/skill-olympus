@@ -49,44 +49,55 @@ Step 8 끝에서 생성된 `docs/domain-dictionary.md` v1 사전을 **모든 6�
 
 ## Overview
 
+### Native Role Contract
+
+| Semantic role | Claude | Codex | Gemini | Grok | Boundary |
+|---------------|--------|-------|--------|------|----------|
+| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Read-only and return-only; never write files |
+| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Write only the one assigned `team-reviews/*.md` file |
+
+- The six expert work items use `artifact-writer` because each produces one unique file.
+- Main/Lead alone owns `team-review.md`, domain-dictionary merges, shared run summaries, prompts shared across workers, and every other shared file. Each external process may write only its provider/task-specific run log.
+- Writers must not edit each other's output or shared state. They return only the bounded summary specified below.
+- If native delegation is unavailable, Main/Lead executes the work items sequentially using the same prompts, budgets, and output paths.
+- Use the current runtime's configured default model. Do not embed model names or model tiers in these contracts.
+
 ```
 Phase A (병렬):
-spec.md ──┬──→ UX Agent (Claude) ─────────→ ux-analysis.md
-                 ├──→ Architecture Agent (Claude) → architecture-analysis.md
-                 ├──→ Red Team Agent (Claude) ────→ redteam-analysis.md
-                 └──→ Domain Researcher (Claude)  → domain-research.md
+spec.md ──┬──→ UX work item ──────────────→ ux-analysis.md
+                 ├──→ Architecture work item ─────→ architecture-analysis.md
+                 ├──→ Red Team work item ─────────→ redteam-analysis.md
+                 └──→ Domain Research work item ──→ domain-research.md
                       (domain-complexity triage + bounded research)
 
 Phase B (domain-research.md 활용):
-                 ┌──→ Domain Process Expert ──────→ domain-process-analysis.md
-                 │    (Codex / Gemini / Claude)
-                 └──→ Domain Technical Expert ────→ domain-technical-analysis.md
-                      (Gemini / Codex / Claude)
+                 ┌──→ Domain Process work item ───→ domain-process-analysis.md
+                 └──→ Domain Technical work item ─→ domain-technical-analysis.md
                                     │
                                     ▼
                             team-review.md (통합)
 ```
 
-## 에이전트 구성
+## 전문가 작업 구성
 
-### 고정 에이전트 (모든 프로젝트)
+### 고정 전문가 작업 (모든 프로젝트)
 
-| # | 에이전트 | 관점 |
+| # | 전문가 역할 | 관점 |
 |---|----------|------|
-| 1 | **UX Agent** | 사용자 경험, 사용성, 접근성, 사용자 여정 |
-| 2 | **Architecture Agent** | 확장성, 성능, 보안, 기술 부채 |
-| 3 | **Red Team Agent** (악마의 변호인) | 가정 검증, 실패 모드, 엣지 케이스, 누락 항목 |
+| 1 | **UX Expert** | 사용자 경험, 사용성, 접근성, 사용자 여정 |
+| 2 | **Architecture Expert** | 확장성, 성능, 보안, 기술 부채 |
+| 3 | **Red Team Expert** (악마의 변호인) | 가정 검증, 실패 모드, 엣지 케이스, 누락 항목 |
 
 ### 동적 도메인 전문가 (산업군 기반)
 
-| # | 에이전트 | 관점 |
+| # | 전문가 역할 | 관점 |
 |---|----------|------|
 | 4 | **Domain Process Expert** | 해당 산업의 전체 업무 프로세스 |
 | 5 | **Domain Technical Expert** | 해당 산업의 필수 기술/표준/규정 |
 
 인터뷰에서 파악한 산업군(`[Industry: {산업군}]` 태그)을 기반으로 페르소나를 동적 결정.
 
-> **Multi-AI 지원**: 도메인 전문가는 Codex/Gemini CLI가 설치되어 있으면 외부 AI로 실행하여 Claude 편향을 보완합니다. 고정 에이전트(UX, Architecture, Red Team)는 현재 CLI에서 가능한 background subagent/worker 방식으로 실행하고, 없으면 메인 컨텍스트에서 순차 실행합니다.
+> **Multi-AI 지원**: 도메인 전문가는 Codex/Gemini CLI가 설치되어 있으면 외부 AI로 실행해 단일 런타임 편향을 보완합니다. 고정 전문가(UX, Architecture, Red Team)는 현재 CLI의 `artifact-writer`로 실행하고, 위임할 수 없으면 메인 컨텍스트에서 순차 실행합니다.
 
 ## 산업군 → 도메인 전문가 매핑
 
@@ -139,7 +150,7 @@ Never repeat Step 5 research. If `research.md` already covers a topic, cite it a
 
 ### 3단계: External AI CLI 감지
 
-도메인 전문가에 외부 AI(Codex/Gemini CLI)를 활용하여 Claude 편향을 보완합니다.
+도메인 전문가에 외부 AI(Codex/Gemini CLI)를 활용하여 현재 런타임의 단일 관점 편향을 보완합니다.
 
 ```bash
 which codex 2>/dev/null && echo "codex: OK" || echo "codex: NOT FOUND"
@@ -150,53 +161,41 @@ which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
 
 | Codex | Gemini | 모드 | Process Expert | Technical Expert |
 |-------|--------|------|----------------|------------------|
-| ✅ | ✅ | **Dual-AI** | Codex (GPT) | Gemini |
+| ✅ | ✅ | **Dual-AI** | Codex | Gemini |
 | ✅ | ❌ | **Single-AI** | Codex | Codex |
 | ❌ | ✅ | **Single-AI** | Gemini | Gemini |
-| ❌ | ❌ | **Claude-only** | Explore subagent | Explore subagent |
+| ❌ | ❌ | **Native runtime** | `artifact-writer` | `artifact-writer` |
 
-**외부 AI 장점:** 같은 산업 분석을 서로 다른 LLM이 수행하면 다양한 관점 확보 + Claude 편향 보완.
+**외부 AI 장점:** 같은 산업 분석을 서로 다른 LLM이 수행하면 다양한 관점을 확보하고 단일 런타임 편향을 줄일 수 있습니다.
 
-> **⚠️ 모델 default 설정 안내**
->
-> External AI 호출 시 `-m` 모델 플래그를 명시하지 않으므로, **사용자의 CLI default 모델**이 사용됩니다.
-> - Codex: `~/.codex/config.toml`의 `model` 키 (없으면 `gpt-5.5`)
-> - Gemini: `~/.gemini/settings.json`의 default (없으면 CLI default)
->
-> **도메인 전문가는 깊은 추론이 필요합니다.** Codex/Gemini default가 reasoning 모델이어야 분석 품질이 보장됩니다.
->
-> | CLI | 권장 default | 비추천 default |
-> |-----|--------------|----------------|
-> | Codex | `gpt-5.5`, `gpt-5.4`, `gpt-5.3-codex` | `gpt-5.4-mini` (sub-agent용) |
-> | Gemini | `gemini-3.1-pro-preview` | `gemini-3.1-flash-lite-preview` |
->
-> default가 mini/lite로 설정된 환경에서는 도메인 전문가 분석이 얕아질 수 있습니다.
+> **모델 선택:** 외부 CLI와 네이티브 역할 모두 사용자가 설정한 runtime default를 사용합니다. `-m` 또는 특정 모델명을 이 프로토콜에 하드코딩하지 않습니다. 품질이 부족하면 산출물의 근거·누락·검증 결과로 판정하고 해당 작업만 재실행합니다.
 
-### 4단계: 도메인 리서치 + 고정 에이전트 병렬 실행 (Phase A)
+### 4단계: 도메인 리서치 + 고정 전문가 병렬 실행 (Phase A)
 
-고정 3 에이전트와 도메인 리서치를 **동시에** 병렬 실행합니다.
+고정 3개 전문가 작업과 도메인 리서치를 **동시에** 병렬 실행합니다.
 도메인 전문가는 리서치 완료 후 5단계(Phase B)에서 실행합니다.
 
 **⚠️ 컨텍스트 폭발 방지 — 필수 규칙:**
-각 에이전트 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
+각 delegated work item 프롬프트 끝에 반드시 아래 규칙을 포함해야 합니다:
 ```
-NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
 CRITICAL RETURN RULE: Write your FULL analysis to the file specified above.
 Your return message to the caller must be ONLY a 1-2 line summary like:
 "✅ {filename}.md written. Critical: N, Important: N, Nice-to-Have: N"
 DO NOT repeat the analysis content in your return message.
-This prevents context overflow when multiple agents return simultaneously.
+This prevents context overflow when multiple work items return simultaneously.
 ```
 
-이 규칙이 없으면 여러 에이전트의 전체 분석 내용이 메인 대화에 합산되어 컨텍스트 한도 초과.
+이 규칙이 없으면 여러 작업의 전체 분석 내용이 메인 대화에 합산되어 컨텍스트 한도를 초과합니다.
 
 ```
-# Phase A: 고정 3 에이전트 + 도메인 리서치를 하나의 메시지에서 병렬 실행:
+# Phase A: 고정 3개 전문가 작업 + 도메인 리서치를 병렬 실행:
 
-BackgroundJob(
-  subagent_type="Explore",
-  prompt="""
+Native work item:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/team-reviews/ux-analysis.md
+  prompt: """
   You are a **UX Expert** — 사용자 경험 전문가 (15년 경력).
 
   Read these files:
@@ -216,17 +215,17 @@ BackgroundJob(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/ux-analysis.md
 
-  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ ux-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
   """
-)
 
-BackgroundJob(
-  subagent_type="Explore",
-  prompt="""
+Native work item:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/team-reviews/architecture-analysis.md
+  prompt: """
   You are a **Technical Architecture Expert** — 시스템 아키텍처 전문가 (15년 경력).
 
   Read these files:
@@ -246,18 +245,18 @@ BackgroundJob(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/architecture-analysis.md
 
-  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ architecture-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
   """
-)
 
-BackgroundJob(
-  subagent_type="Explore",
-  prompt="""
-  You are a **Red Team Agent** (악마의 변호인) — 모든 가정에 의문을 제기하는 전문가.
+Native work item:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/team-reviews/redteam-analysis.md
+  prompt: """
+  You are a **Red Team Expert** (악마의 변호인) — 모든 가정에 의문을 제기하는 전문가.
 
   Read these files:
   - <planning_dir>/spec.md
@@ -278,17 +277,17 @@ BackgroundJob(
   Format: 각 항목별 findings + severity (Critical/Important/Nice-to-Have).
   Write results to: <planning_dir>/team-reviews/redteam-analysis.md
 
-  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ redteam-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
   """
-)
 
-BackgroundJob(
-  subagent_type="Explore",
-  prompt="""
+Native work item:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/team-reviews/domain-research.md
+  prompt: """
   You are a **Domain Industry Researcher** for {산업군}.
 
   Your job is not to perform a broad literature review. Your job is to produce only the missing domain context needed by the Process Expert and Technical Expert.
@@ -340,13 +339,12 @@ BackgroundJob(
 
   Write results to: <planning_dir>/team-reviews/domain-research.md
 
-  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL research to the file above.
   Your return message must be ONLY: "✅ domain-research.md written. Technologies: N, Solutions: N, Regulations: N"
   DO NOT repeat the research in your return message.
   """
-)
 ```
 
 ### 5단계: 도메인 전문가 실행 (Phase B)
@@ -354,14 +352,15 @@ BackgroundJob(
 4단계의 `domain-research.md`를 활용하여 도메인 전문가를 실행합니다.
 **반드시 4단계 완료를 기다린 후 실행합니다** (domain-research.md 필요).
 
-#### Claude-only 모드
+#### Native delegation mode
 
 ```
-# Phase B: 도메인 전문가 2명을 하나의 메시지에서 병렬 실행:
+# Phase B: 도메인 전문가 2개 writer 작업을 병렬 실행:
 
-BackgroundJob(
-  subagent_type="Explore",
-  prompt="""
+Native work item:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/team-reviews/domain-process-analysis.md
+  prompt: """
   You are a **{산업군} Process Expert** — 20년 경력의 {산업군} 업무 전문가.
   {산업군}의 전체 비즈니스 프로세스와 업무 흐름을 깊이 이해하고 있습니다.
 
@@ -414,17 +413,17 @@ BackgroundJob(
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
-  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ domain-process-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
   """
-)
 
-BackgroundJob(
-  subagent_type="Explore",
-  prompt="""
+Native work item:
+  semantic role: artifact-writer
+  unique output: <planning_dir>/team-reviews/domain-technical-analysis.md
+  prompt: """
   You are a **{산업군} Technical Domain Expert** — {산업군} IT 시스템 구축 전문가.
   {산업군}에서 핵심적으로 필요한 기술, 표준, 규격을 깊이 이해하고 있습니다.
 
@@ -488,21 +487,20 @@ BackgroundJob(
 
   NOTE: {산업군}을 인터뷰의 [Industry] 태그에서 추출한 실제 산업군으로 치환하여 실행.
 
-  NEVER call interactive question tools. You are a background subagent — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
+  NEVER call interactive question tools. You are a delegated work item — make your best judgment on any ambiguous points. Do NOT block the workflow by asking the user questions.
 
   CRITICAL RETURN RULE: Write your FULL analysis to the file above.
   Your return message must be ONLY: "✅ domain-technical-analysis.md written. Critical: N, Important: N, Nice-to-Have: N"
   DO NOT repeat the analysis in your return message.
   """
-)
 ```
 
 #### External AI 모드: 도메인 전문가 CLI 실행
 
-3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 Claude-only/background subagent 모드를 **아래 Bash 실행으로 대체**합니다.
+3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 native writer 모드를 **아래 외부 CLI 실행으로 대체**할 수 있습니다.
 `domain-research.md`는 동일하게 입력으로 전달합니다.
 
-> 고정 에이전트 (UX, Architecture, Red Team)는 현재 CLI에서 사용 가능한 background subagent/worker 방식으로 실행합니다. Codex/Gemini에서 별도 worker가 없으면 메인 컨텍스트에서 순차 실행하되, 각 결과는 파일로 저장하고 1-2줄 요약만 남깁니다.
+> 고정 전문가(UX, Architecture, Red Team)는 현재 CLI의 `artifact-writer`로 실행합니다. 네이티브 위임이 없으면 메인 컨텍스트에서 순차 실행하되, 각 결과는 고유 파일로 저장하고 1-2줄 요약만 남깁니다.
 
 **1. 프롬프트 파일 생성:**
 
@@ -548,6 +546,7 @@ Also add (제안 — Step 11 policy auto-integrates; ask only on blocking confli
 | 규제/컴플라이언스 | ... | 🔴/🟡/🟢 | ... |
 
 Output in markdown format.
+Return the markdown only. Do not create or modify files; the caller captures your response in the assigned unique output file.
 PROMPT_EOF
 
 # 기술 전문가 프롬프트
@@ -600,6 +599,7 @@ Output format:
 | 누락 규제 | ... | 🔴/🟡/🟢 | ... |
 
 Output in markdown format.
+Return the markdown only. Do not create or modify files; the caller captures your response in the assigned unique output file.
 PROMPT_EOF
 ```
 
@@ -632,18 +632,18 @@ $( [ -f "docs/domain-dictionary.md" ] && cat "docs/domain-dictionary.md" || echo
     --sandbox workspace-write \
     --skip-git-repo-check \
     --output-last-message "<planning_dir>/team-reviews/domain-process-analysis.md" \
-  >> "<planning_dir>/team-reviews/external-ai.log" 2>&1
+  >> "<planning_dir>/team-reviews/domain-process-run.log" 2>&1
 '
 CODEX_EXIT=$?
 
 # 실패 체크: timeout(124) 또는 빈 파일
 if [ $CODEX_EXIT -eq 124 ]; then
-  echo "[WARN] Codex timeout (${CODEX_DOMAIN_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Codex timeout (${CODEX_DOMAIN_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/domain-process-run.log"
 elif [ $CODEX_EXIT -ne 0 ]; then
-  echo "[WARN] Codex 종료코드: $CODEX_EXIT" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Codex 종료코드: $CODEX_EXIT" >> "<planning_dir>/team-reviews/domain-process-run.log"
 fi
 if [ ! -s "<planning_dir>/team-reviews/domain-process-analysis.md" ]; then
-  echo "[WARN] Codex 출력 비어있음 → Claude 폴백 필요" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Codex 출력 비어있음 → native writer 또는 main-context 폴백 필요" >> "<planning_dir>/team-reviews/domain-process-run.log"
 fi
 ```
 
@@ -670,18 +670,18 @@ gemini --approval-mode yolo \
 @<planning_dir>/interview.md
 @<planning_dir>/team-reviews/domain-research.md
 $EXTRA_FILES" \
-  > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>> "<planning_dir>/team-reviews/external-ai.log"
+  > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>> "<planning_dir>/team-reviews/domain-technical-run.log"
 '
 GEMINI_EXIT=$?
 
 # 실패 체크: timeout(124) 또는 빈 파일
 if [ $GEMINI_EXIT -eq 124 ]; then
-  echo "[WARN] Gemini timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Gemini timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/domain-technical-run.log"
 elif [ $GEMINI_EXIT -ne 0 ]; then
-  echo "[WARN] Gemini 종료코드: $GEMINI_EXIT" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Gemini 종료코드: $GEMINI_EXIT" >> "<planning_dir>/team-reviews/domain-technical-run.log"
 fi
 if [ ! -s "<planning_dir>/team-reviews/domain-technical-analysis.md" ]; then
-  echo "[WARN] Gemini 출력 비어있음 → Claude 폴백 필요" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Gemini 출력 비어있음 → native writer 또는 main-context 폴백 필요" >> "<planning_dir>/team-reviews/domain-technical-run.log"
 fi
 ```
 
@@ -692,20 +692,20 @@ fi
 > | **Dual-AI** | Codex (위 2번) | Gemini (위 3번) |
 > | **Single-AI (Codex)** | Codex (process 프롬프트) | Codex (technical 프롬프트) |
 > | **Single-AI (Gemini)** | Gemini (process 프롬프트) | Gemini (technical 프롬프트) |
-> | **Claude-only** | Claude Explore subagent | Claude Explore subagent |
+> | **Native runtime** | `artifact-writer` | `artifact-writer` |
 >
-> **실패 폴백**: 실행 후 `external-ai.log`를 확인하고, 출력 파일이 비어있거나 오류면 해당 전문가만 폴백 재실행. Codex가 사용 가능하면 Codex로 먼저 폴백하고, Codex도 없거나 실패하면 Claude Explore로 폴백.
+> **실패 폴백**: 실행 후 해당 작업의 `domain-*-run.log`를 확인하고, 출력 파일이 비어있거나 오류면 그 전문가만 현재 CLI의 `artifact-writer`로 재실행합니다. 네이티브 위임도 불가능하면 Main/Lead가 같은 프롬프트를 메인 컨텍스트에서 순차 실행합니다.
 > **폴백 판정**: `[ ! -s "output.md" ]` — 파일이 없거나 0바이트면 폴백 트리거.
 
 ### 6단계: 개별 결과 저장
 
-각 서브에이전트가 `<planning_dir>/team-reviews/` 디렉토리에 직접 작성:
+각 writer가 `<planning_dir>/team-reviews/` 아래 자신의 고유 파일 하나에만 작성:
 
-| 에이전트 | 산출물 | Phase |
+| 전문가 역할 | 산출물 | Phase |
 |----------|--------|-------|
-| UX Agent | `team-reviews/ux-analysis.md` | A |
-| Architecture Agent | `team-reviews/architecture-analysis.md` | A |
-| Red Team Agent | `team-reviews/redteam-analysis.md` | A |
+| UX Expert | `team-reviews/ux-analysis.md` | A |
+| Architecture Expert | `team-reviews/architecture-analysis.md` | A |
+| Red Team Expert | `team-reviews/redteam-analysis.md` | A |
 | Domain Researcher | `team-reviews/domain-research.md` | A |
 | Domain Process Expert | `team-reviews/domain-process-analysis.md` | B |
 | Domain Technical Expert | `team-reviews/domain-technical-analysis.md` | B |
@@ -716,7 +716,7 @@ fi
 
 ```bash
 if [ ! -s "<planning_dir>/team-reviews/redteam-analysis.md" ]; then
-  echo "[WARN] Red Team output missing -> rerun Red Team or mark explicit N/A" >> "<planning_dir>/team-reviews/external-ai.log"
+  echo "[WARN] Red Team output missing -> rerun Red Team or mark explicit N/A" >> "<planning_dir>/team-reviews/redteam-gate.log"
 fi
 ```
 
@@ -742,8 +742,8 @@ fi
 
 ## Industry Context
 - 산업군: {산업군}
-- 도메인 프로세스 전문가: {페르소나명} (via {Codex/Gemini/Claude})
-- 도메인 기술 전문가: {페르소나명} (via {Gemini/Codex/Claude})
+- 도메인 프로세스 전문가: {페르소나명} (via {external CLI/native runtime/main context})
+- 도메인 기술 전문가: {페르소나명} (via {external CLI/native runtime/main context})
 
 ## Critical Findings (반드시 plan에 반영)
 - [출처: UX/Arch/RedTeam/DomainProcess/DomainTech] finding 내용
@@ -765,11 +765,11 @@ fi
 
 | 상황 | 대응 |
 |------|------|
-| 서브에이전트 1개 실패 | 나머지 결과로 통합 진행, 실패 에이전트 결과는 "N/A" 표기 |
-| 서브에이전트 3개 이상 실패 | 팀 리뷰 스킵, 로그에 경고 남기고 Step 10으로 진행 |
+| 전문가 작업 1개 실패 | 나머지 결과로 통합 진행, 실패 결과는 "N/A" 표기 |
+| 전문가 작업 3개 이상 실패 | 팀 리뷰 스킵, 로그에 경고 남기고 Step 10으로 진행 |
 | 산업군 식별 불가 | 범용 fallback 사용 (비즈니스 프로세스 분석가 + 시스템 통합 전문가) |
 | team-reviews/ 디렉토리 생성 실패 | planning_dir 루트에 직접 작성 |
-| **External AI 실행 실패** | `external-ai.log` 확인, 출력 파일이 비어있거나 오류 → 해당 전문가만 Claude Explore로 폴백 재실행 |
-| **External AI timeout** | configured timeout이 자동 kill (exit 124), 해당 전문가만 Claude Explore로 폴백 |
-| **API Error: Overloaded** | 완료된 파일은 보존. 실패한 에이전트만 단일 실행으로 1회 재시도하고, 재실패 시 warning stub 파일을 남긴 뒤 통합 단계에서 누락으로 표시 |
-| **Context limit reached** | 에이전트가 파일에 쓴 결과는 보존됨. `/compact` 후 재개하면 team-reviews/ 파일을 읽어 통합 진행. Resume 테이블에서 `+ spec → Step 9` 자동 매핑 |
+| **External AI 실행 실패** | 해당 `domain-*-run.log` 확인, 출력 파일이 비어있거나 오류 → 해당 전문가만 native `artifact-writer`로 재실행 |
+| **External AI timeout** | configured timeout이 자동 kill (exit 124), 해당 전문가만 native writer 또는 순차 main-context 실행으로 폴백 |
+| **API Error: Overloaded** | 완료된 파일은 보존. 실패한 작업만 단일 실행으로 1회 재시도하고, 재실패 시 Main/Lead가 warning stub을 남긴 뒤 통합 단계에서 누락으로 표시 |
+| **Context limit reached** | writer가 고유 파일에 쓴 결과는 보존됨. `/compact` 후 재개하면 team-reviews/ 파일을 읽어 통합 진행. Resume 테이블에서 `+ spec → Step 9` 자동 매핑 |
