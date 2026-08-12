@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [5.0.0] - 2026-08-13
+
+### Breaking Changes
+
+- **registry**: 스킬 소스 100개를 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 83개로 분리했다. 런타임별 비호환 어댑터를 제외하면 Claude와 공유 Grok 표면은 활성 14개, Codex/Gemini는 활성 13개다. Olympus 사용자 정의 에이전트는 네 CLI 모두 기본 0개이며, 전체 이전 discovery 표면은 `--include-source-only-skills`와 `--include-source-only-agents`로 명시 복원한다. (afc9950)
+
+### Features
+
+- **native routing**: 에이전트 활용 스킬을 읽기 전용 탐색자와 쓰기 가능한 일반 작업자라는 의미 역할로 통일하고 Claude, Codex, Gemini, Grok의 네이티브 역할에 매핑했다. 공유 상태와 완료 판정은 Main이 소유하며, 위임 기능이나 병렬 이득이 없으면 같은 계약을 메인 컨텍스트에서 순차 실행한다. 폐기된 Claude Team 도구, source-only 에이전트 직접 spawn, 읽기 전용 작업자의 파일 쓰기와 vendor 모델 하드코딩을 제거했다. (afc9950)
+- **source-only modules**: 현재 모듈 원본을 스캔되지 않는 `.olympus/source-skills`에 게시하고 `SKILLS-CATALOG.md`에 정확한 경로를 기록한다. 활성 하네스는 필요한 `SKILL.md`를 직접 읽고 참조와 실행 파일을 해석된 모듈 루트 기준으로 사용한다. `orchestrator` MCP는 discovery 밖의 `.olympus/runtime-modules/orchestrator` 실행 미러에서 의존성 캐시와 등록 경로를 유지한다. (afc9950)
+- **orchestrator**: MCP 작업의 `ai_provider`를 Worker 조회와 claim 양쪽에서 강제하고, provider 미지정 작업만 공용으로 유지했다. claim은 원자적 compare-and-set으로 한 Worker만 성공하며, 실행기는 선택 provider가 없으면 실패하고 승인·trust·sandbox 우회 플래그를 사용하지 않는다. (afc9950)
+- **aphrodite**: `design-plan`이 `frontend-design`, `ui-ux-auditor`, `web-design-guidelines`, `mermaid-diagrams`와 조건부 Stitch·진화 모듈을 exact-path source-only 계약으로 직접 읽는다. 누락된 도구와 검증은 `BLOCKED` 또는 `NOT RUN`으로 남기며 네이티브 구현·시각 비평 작업자를 사용한다. (afc9950)
+
+### Bug Fixes
+
+- **install**: 인수 없는 설치를 Claude/Codex/Gemini/Grok 전체 대상으로 통일하고 Unix `CODEX_HOME` 경로, Windows 레거시 wrapper, stale-asset 정리 실패 전파, Codex 설정 비변경, Gemini user-scope MCP 등록을 바로잡았다. 관리 자산 SHA-256 소유권을 manifest에 기록해 정상 버전 업데이트는 조용히 교체하고 사용자 수정본만 `_olympus-preserved`에 보존한다. custom `CODEX_HOME`은 Mnemo 설치, hooks, rollout backfill, Chronos까지 일관되게 따른다. (afc9950)
+
+### Documentation
+
+- **release**: README 영문·한국어, SETUP, 빠른 참조, quickstart, workflow guide와 마이그레이션 복구 문서를 v5 레지스트리·설치·source-only·네이티브 에이전트 계약으로 전면 갱신했다. (afc9950)
+
 ## [4.21.0] - 2026-08-10
 
 ### Features

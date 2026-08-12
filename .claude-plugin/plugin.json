@@ -1,7 +1,7 @@
 {
   "name": "skill-olympus",
-  "description": "Twelve Greek gods. One command. A working SaaS. 98 skills + 49 agents + 13 hooks for Claude Code + Codex CLI + Gemini CLI. Cross-CLI persistent memory, zero-interaction full pipeline (zephermine → poseidon → argos → minos → clio → zeus).",
-  "version": "2.0.0",
+  "description": "Twelve Greek gods. One command. A working SaaS. 100 skill sources with a lightweight entrypoint-only registry, 42 optional agent references, and native-agent orchestration for Claude Code, Codex CLI, Gemini CLI, and Grok Build.",
+  "version": "5.0.0",
   "author": {
     "name": "Dannykkh"
   },
@@ -12,6 +12,7 @@
     "claude-code",
     "codex-cli",
     "gemini-cli",
+    "grok-build",
     "agent-skills",
     "greek-mythology",
     "zephermine",
