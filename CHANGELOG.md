@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [5.1.0] - 2026-08-17
+
+### Features
+
+- **aphrodite**: Codex Product Design을 exact marketplace selector가 검증된 경우에만 한 번 추천하는 상태 게이트로 제한하고, 확인 불가는 `UNKNOWN`으로 로컬 구현을 계속한다. 동일한 brief·Experience Contract·`DESIGN.md`로 로컬과 준비된 adapter를 대조하며, Product Facts·Content Integrity·Asset Provenance와 브라우저 전용 CSS/GSAP 모션 계약을 추가했다. (6005ef8)
+- **video**: `video-maker`를 Remotion(React/TSX)과 HyperFrames(HTML/CSS/GSAP) 중 프로젝트당 엔진 하나를 선택하는 독립 라우터로 재구성했다. 전역 설치·CLI 간 동기화를 금지하고 엔진별 런타임·라이선스 확인과 공통 렌더 QA를 분리했다. (3df1268)
+
+### Tests
+
+- **routing**: Product Design 상태·동의·동일 계약 대조, 웹/영상 모션 경계, 단일 영상 엔진 라우팅을 회귀 테스트로 고정했다. (2dc9b08)
+
+### Documentation
+
+- **creative**: 아프로디테와 비디오메이커의 역할, Product Design 확인 경계, HyperFrames의 영상 전용 위치를 영문·한국어 안내서와 빠른 참조에 반영했다. (5f98eac)
+
 ## [5.0.0] - 2026-08-13
 
 ### Breaking Changes

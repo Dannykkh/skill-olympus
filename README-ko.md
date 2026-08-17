@@ -262,6 +262,10 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최신 업데이트
 
+### v5.1.0 — 아프로디테 근거 게이트 · 브라우저 모션 · 영상 엔진 분리 (2026.08)
+
+아프로디테는 이제 Codex Product Design을 exact marketplace selector가 확인된 경우에만 한 번 추천하는 선택 실행 어댑터로 취급합니다. marketplace가 비어 있거나 selector가 검증되지 않으면 `UNKNOWN`으로 남기고, 플러그인 결과를 꾸며내거나 설치를 압박하지 않은 채 로컬 디자인을 계속합니다. 로컬과 준비된 adapter는 같은 brief, Experience Contract, `DESIGN.md`, 콘텐츠, 데이터, 상태, viewport, theme로 대조합니다. 계약에는 Product Facts, Content Integrity, Asset Provenance를 추가했고, 실시간 웹 UI 모션은 CSS·View Transitions·Scroll-driven Animations를 우선한 뒤 필요가 입증될 때만 GSAP Timeline·ScrollTrigger·Flip·SplitText·SVG 플러그인으로 올라갑니다. 별도 기능인 `video-maker`는 영상 프로젝트마다 Remotion(React/TSX) 또는 HyperFrames(HTML/CSS/GSAP) 중 엔진 하나만 선택하며, 엔진별 런타임·라이선스 게이트와 공통 렌더 QA를 적용합니다. HyperFrames는 아프로디테 런타임이 아니며 영상 엔진을 전역 설치하거나 다른 CLI로 동기화하지 않습니다.
+
 ### v5.0.0 — 진입점 전용 레지스트리 · 네이티브 에이전트 · 공급자 안전 라우팅 (2026.08)
 
 Olympus는 이제 사용자 진입점 하네스와 현재 CLI용 런타임 어댑터만 자동 탐색 레지스트리에 둡니다. 현재 스킬 소스 100개는 allowlist 합집합 17개(공통 진입점 11개 + 런타임 어댑터 6개)와 source-only 모듈 83개로 분리됩니다. Claude와 Claude 디렉터리를 공유하는 Grok은 활성 14개, Codex와 Gemini는 활성 13개이며, 세 CLI 홈 모두 정확한 카탈로그 경로로 같은 83개 source-only 라이브러리를 유지합니다. source-only는 현재 코드를 삭제한 상태가 아니라 slash 메뉴와 시작 description 예산을 쓰지 않고 필요할 때 직접 읽는 상태이며, 전체 레지스트리가 필요할 때만 `--include-source-only-skills`로 명시 활성화합니다. Olympus 사용자 정의 에이전트는 기본 0개입니다. 오케스트레이션은 CLI별 읽기 전용·쓰기 가능 네이티브 의미 역할을 사용하고, Main이 공유 상태를 소유하며 위임할 수 없으면 같은 계약으로 순차 실행합니다. 공급자별로 호환되는 어댑터만 선택해 Claude/Grok·Codex·Gemini가 서로의 mnemo나 agent-team 어댑터를 잘못 로드하지 않습니다. 설치기는 인수 없음도 네 CLI 전체 설치로 처리하고, CLI 실행 파일이 없어도 자산은 준비하되 실행 파일이 필요한 등록만 건너뜁니다. 이름이 다른 외부 스킬은 유지하고, 같은 이름의 수정본은 `_olympus-preserved`로 옮겨 수동 복구할 수 있게 보존합니다.
@@ -737,6 +741,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v5.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.1.0)** | **2026-08-17** | **아프로디테 근거 게이트 + 브라우저 모션 계약 + 영상 엔진 분리** — exact selector 기반 Product Design 1회 추천과 `UNKNOWN` 로컬 폴백; 동일 계약 adapter 대조; 사실·콘텐츠·자산 출처 기록; 실시간 웹 UI의 CSS 우선 GSAP 승격; 별도 `video-maker`에서 Remotion 또는 HyperFrames 엔진 하나 선택 + 런타임·라이선스·렌더 QA 게이트 |
 | **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **진입점 전용 레지스트리 + 네이티브 에이전트 기본값 + 공급자 안전 라우팅** — 현재 스킬 소스 100개를 allowlist 진입점·어댑터 17개와 직접 읽는 source-only 모듈 83개로 분리; 활성 표면은 Claude/공유 Grok 14개, Codex/Gemini 13개; Olympus 사용자 정의 에이전트 등록은 기본 0개이며 의미 기반 네이티브 역할·Main 소유 상태·순차 폴백으로 분업; 공급자별 비호환 런타임 어댑터 제외; 인수 없는 설치는 네 CLI 전체를 대상으로 실행 파일 없이도 자산을 준비하고 CLI 전용 명령만 건너뛰며, 같은 이름의 수정본은 수동 충돌 복구용으로 보존 |
 | **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **아프로디테 경험 주도 재설계 + Stitch 실행 어댑터화 + 제우스 스코프 게이트** — design-plan 파이프라인: 소스 라우팅 → 벤치마크 해부(Adopt/Adapt/Avoid) → 실제 렌더 3안 → Experience Contract(과업·메시지·CTA·신뢰·모바일 변환, 검증 스크립트 강제) → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프; Stitch는 방향을 발명하지 않고 아프로디테 결정을 Stitch MCP 작업으로 컴파일(작업 계약·상태·전송 패턴은 google-labs-code/stitch-skills 선별 반영); 제우스는 계획 외 태스크·기능·의존성 추가 전 pass/reduce/hold 판정을 결정 장부에 기록, hold는 Deferred로 표시 (hosioobo/track 흡수) |
 | **[v4.20.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.2)** | **2026-08-08** | **테미스 지침 핀 + 런타임 신선도 체크** (v4.20.1~v4.20.2) — 한국판 초안을 개인정보위 작성지침(2025.4.)에 고정하고 생성 시 게시판 확인으로 개정판 감지·채택(사용자 고지, 웹 도구 없으면 기준판 폴백); ko 템플릿 2025.4. 정렬(고충 처리 부서·행태정보·아동 제22조의2); 조문 인용은 law.go.kr 직접 조회 검증 — 법령 MCP 의존은 불필요해 제거 |
