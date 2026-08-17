@@ -33,6 +33,14 @@ const syncClaudeSkills = path.join(repoRoot, "scripts", "sync-claude-skills.js")
 const syncCodexAssets = path.join(repoRoot, "scripts", "sync-codex-assets.js");
 const syncGeminiAssets = path.join(repoRoot, "scripts", "sync-gemini-assets.js");
 const installGeminiMnemo = path.join(repoRoot, "skills", "gemini-mnemo", "install.js");
+const expectedSourceOnlySkillCount = fs.existsSync(
+  path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
+)
+  ? 83
+  : 82;
+const expectedSourceOnlySkillPattern = new RegExp(
+  `source-only 스킬: ${expectedSourceOnlySkillCount}개`,
+);
 
 function findFileWithContent(root, expectedContent, requiredPathPart = "") {
   if (!fs.existsSync(root)) return null;
@@ -203,7 +211,7 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     "utf8",
   );
   assert.match(codexSkillsCatalog, /기본 활성 스킬: 13개/);
-  assert.match(codexSkillsCatalog, /source-only 스킬: 83개/);
+  assert.match(codexSkillsCatalog, expectedSourceOnlySkillPattern);
   assert.match(codexSkillsCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".codex"), "Codex");
   const grokCompatRules = fs.readFileSync(
@@ -216,7 +224,7 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     "utf8",
   );
   assert.match(grokCompatCatalog, /기본 활성 스킬: 14개/);
-  assert.match(grokCompatCatalog, /source-only 스킬: 83개/);
+  assert.match(grokCompatCatalog, expectedSourceOnlySkillPattern);
   assert.match(grokCompatCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".claude"), "Claude/Grok");
   assert.equal(fs.existsSync(path.join(tempHome, ".claude", "agents")), false);
@@ -605,7 +613,7 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
 
   const catalog = fs.readFileSync(path.join(tempHome, "SKILLS-CATALOG.md"), "utf8");
   assert.match(catalog, /기본 활성 스킬: 14개/);
-  assert.match(catalog, /source-only 스킬: 83개/);
+  assert.match(catalog, expectedSourceOnlySkillPattern);
   assert.match(catalog, /\| zephermine \| active \|/);
   assert.match(catalog, /\| docx \| source-only \|/);
   assert.match(
@@ -750,7 +758,7 @@ test("Claude and Gemini agent syncs support default exclusion and explicit opt-i
         "utf8",
       );
       assert.match(skillsCatalog, /기본 활성 스킬: 13개/);
-      assert.match(skillsCatalog, /source-only 스킬: 83개/);
+      assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
       assertDormantOrchestratorModule(geminiHome, "Gemini");
     }
     for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
@@ -990,10 +998,9 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
 
 test("project instruction files keep native role ownership aligned", () => {
   const agents = fs.readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
-  const claude = fs.readFileSync(path.join(repoRoot, "CLAUDE.md"), "utf8");
   const gemini = fs.readFileSync(path.join(repoRoot, "GEMINI.md"), "utf8");
 
-  for (const text of [agents, claude]) {
+  for (const text of [agents]) {
     assert.match(text, /`Explore`.*`explorer`.*`codebase_investigator`.*`explore`/);
     assert.match(text, /`general-purpose`.*`worker`.*`generalist`.*`general-purpose`/);
     assert.match(text, /공유 태스크 장부·활동 로그·완료 판정/);

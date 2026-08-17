@@ -178,6 +178,7 @@ function allRepoSkillNames() {
     .filter(
       (entry) =>
         entry.isDirectory() &&
+        entry.name !== "deploymonitor" &&
         fs.existsSync(path.join(repoRoot, "skills", entry.name, "SKILL.md")),
     )
     .map((entry) => entry.name)
@@ -207,7 +208,7 @@ function stripNonOperationalContracts(source) {
     .replace(/^## (?:Related Files|관련 파일)[\s\S]*?(?=^## |\s*$)/gm, "");
 }
 
-test("second-wave default deny keeps 11 common harnesses, six adapters, and 83 source-only modules", () => {
+test("second-wave default deny keeps 11 common harnesses, six adapters, and 82 public source-only modules", () => {
   assert.deepEqual(DEFAULT_COMMON_RUNTIME_SKILLS, EXPECTED_COMMON_RUNTIME_SKILLS);
   assert.deepEqual(
     DEFAULT_RUNTIME_SKILL_ALLOWLIST.filter(
@@ -218,7 +219,7 @@ test("second-wave default deny keeps 11 common harnesses, six adapters, and 83 s
   assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 17);
 
   const allSkills = allRepoSkillNames();
-  assert.equal(allSkills.length, 100, "repository skill inventory changed; revisit policy counts");
+  assert.equal(allSkills.length, 99, "public repository skill inventory changed; revisit policy counts");
 
   for (const runtime of ["claude", "codex", "gemini", "grok"]) {
     const selection = selectRuntimeSkills(
@@ -226,10 +227,10 @@ test("second-wave default deny keeps 11 common harnesses, six adapters, and 83 s
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
     const expectedActiveCount = runtime === "claude" ? 14 : 13;
-    const expectedCompatibleCount = runtime === "claude" ? 97 : 96;
+    const expectedCompatibleCount = runtime === "claude" ? 96 : 95;
 
     assert.equal(selection.skillNames.length, expectedActiveCount, `${runtime} active count`);
-    assert.equal(selection.defaultDisabledNames.length, 83, `${runtime} source-only count`);
+    assert.equal(selection.defaultDisabledNames.length, 82, `${runtime} source-only count`);
     assert.equal(
       selection.skillNames.length + selection.defaultDisabledNames.length,
       expectedCompatibleCount,

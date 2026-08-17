@@ -500,9 +500,12 @@ test("catalog generation publishes a portable dormant library and sync manifests
     const source = fs.readFileSync(path.join(repoRoot, "scripts", scriptName), "utf8");
     const libraryIndex = source.lastIndexOf("syncSkillSourceLibrary(");
     const catalogIndex = source.lastIndexOf("writeSkillsCatalog(");
+    const manifestWriteMatches = [
+      ...source.matchAll(/fs\.writeFileSync\(\r?\n\s+manifestPath/g),
+    ];
     const manifestIndex = Math.max(
       source.lastIndexOf("writeManifest("),
-      source.lastIndexOf("fs.writeFileSync(\n    manifestPath"),
+      manifestWriteMatches.at(-1)?.index ?? -1,
     );
     assert.ok(libraryIndex >= 0, `${scriptName} does not publish a dormant library`);
     assert.ok(catalogIndex > libraryIndex, `${scriptName} writes its catalog before the library`);

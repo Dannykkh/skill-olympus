@@ -52,7 +52,7 @@
 | 📋 **출시 체크리스트(선택)** | source-only `shipping-and-launch` 워크플로우가 프리런치 게이트, 단계적 롤아웃, 롤백 계획을 다룬다 |
 | 📐 **결정 기록(선택)** | source-only `documentation-and-adrs` 워크플로우가 대안·트레이드오프·대체 이력을 기록한다 |
 
-**스킬 소스 100개(기본 allowlist 합집합 17개 = 사용자 진입점 하네스 11개 + 런타임 어댑터 6개, 설치 표면별 활성 13개 또는 14개, source-only 내부·선택 모듈 83개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · CLI 4개 · 신화 1개**
+**공개 추적 스킬 소스 99개(기본 allowlist 합집합 17개 = 사용자 진입점 하네스 11개 + 런타임 어댑터 6개, 설치 표면별 활성 13개 또는 14개, source-only 내부·선택 모듈 82개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · CLI 4개 · 신화 1개**
 
 ---
 
@@ -127,7 +127,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 .\install.bat --include-source-only-skills
 ```
 
-끝입니다. 스킬 소스 100개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 83개로 나뉩니다. 런타임별로 호환되지 않는 어댑터를 다시 제외하므로 Codex와 Gemini는 호환 항목 96개(활성 13 + source-only 83), Claude는 97개(활성 14 + source-only 83)를 노출합니다. Grok의 독립 정책도 96개(13 + 83)이지만 실제 설치 표면은 Claude 공유 디렉터리를 읽으므로 Claude와 같은 활성 14개를 봅니다. 활성 하네스는 필요한 source-only 모듈을 카탈로그에서 직접 읽으므로 별도 등록이 필요하지 않습니다. **Olympus 사용자 정의 에이전트는 기본으로 하나도 등록하지 않으며**, 참고 소스 42개는 모두 source-only입니다. 새 스킬과 에이전트도 allowlist 승인 전에는 자동 활성화되지 않습니다.
+끝입니다. 공개 추적 스킬 소스 99개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 82개로 나뉩니다. 런타임별로 호환되지 않는 어댑터를 다시 제외하므로 Codex와 Gemini는 호환 항목 95개(활성 13 + source-only 82), Claude는 96개(활성 14 + source-only 82)를 노출합니다. Grok의 독립 정책도 95개(13 + 82)이지만 실제 설치 표면은 Claude 공유 디렉터리를 읽으므로 Claude와 같은 활성 14개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 활성 하네스는 필요한 source-only 모듈을 카탈로그에서 직접 읽으므로 별도 등록이 필요하지 않습니다. **Olympus 사용자 정의 에이전트는 기본으로 하나도 등록하지 않으며**, 참고 소스 42개는 모두 source-only입니다. 새 스킬과 에이전트도 allowlist 승인 전에는 자동 활성화되지 않습니다.
 
 > CLI가 없어도 자산 준비는 건너뛰지 않습니다. 실행 파일이 필요한 등록 명령만 `skipped`로
 > 보고하며, 설치된 자산은 해당 CLI를 처음 실행할 때 그대로 사용됩니다.
@@ -268,7 +268,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ### v5.0.0 — 진입점 전용 레지스트리 · 네이티브 에이전트 · 공급자 안전 라우팅 (2026.08)
 
-Olympus는 이제 사용자 진입점 하네스와 현재 CLI용 런타임 어댑터만 자동 탐색 레지스트리에 둡니다. 현재 스킬 소스 100개는 allowlist 합집합 17개(공통 진입점 11개 + 런타임 어댑터 6개)와 source-only 모듈 83개로 분리됩니다. Claude와 Claude 디렉터리를 공유하는 Grok은 활성 14개, Codex와 Gemini는 활성 13개이며, 세 CLI 홈 모두 정확한 카탈로그 경로로 같은 83개 source-only 라이브러리를 유지합니다. source-only는 현재 코드를 삭제한 상태가 아니라 slash 메뉴와 시작 description 예산을 쓰지 않고 필요할 때 직접 읽는 상태이며, 전체 레지스트리가 필요할 때만 `--include-source-only-skills`로 명시 활성화합니다. Olympus 사용자 정의 에이전트는 기본 0개입니다. 오케스트레이션은 CLI별 읽기 전용·쓰기 가능 네이티브 의미 역할을 사용하고, Main이 공유 상태를 소유하며 위임할 수 없으면 같은 계약으로 순차 실행합니다. 공급자별로 호환되는 어댑터만 선택해 Claude/Grok·Codex·Gemini가 서로의 mnemo나 agent-team 어댑터를 잘못 로드하지 않습니다. 설치기는 인수 없음도 네 CLI 전체 설치로 처리하고, CLI 실행 파일이 없어도 자산은 준비하되 실행 파일이 필요한 등록만 건너뜁니다. 이름이 다른 외부 스킬은 유지하고, 같은 이름의 수정본은 `_olympus-preserved`로 옮겨 수동 복구할 수 있게 보존합니다.
+Olympus는 이제 사용자 진입점 하네스와 현재 CLI용 런타임 어댑터만 자동 탐색 레지스트리에 둡니다. 공개 추적 스킬 소스 99개는 allowlist 합집합 17개(공통 진입점 11개 + 런타임 어댑터 6개)와 source-only 모듈 82개로 분리됩니다. Claude와 Claude 디렉터리를 공유하는 Grok은 활성 14개, Codex와 Gemini는 활성 13개이며, 세 CLI 홈 모두 정확한 카탈로그 경로로 같은 82개 source-only 라이브러리를 유지합니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 릴리스 수에서 제외됩니다. source-only는 현재 코드를 삭제한 상태가 아니라 slash 메뉴와 시작 description 예산을 쓰지 않고 필요할 때 직접 읽는 상태이며, 전체 레지스트리가 필요할 때만 `--include-source-only-skills`로 명시 활성화합니다. Olympus 사용자 정의 에이전트는 기본 0개입니다. 오케스트레이션은 CLI별 읽기 전용·쓰기 가능 네이티브 의미 역할을 사용하고, Main이 공유 상태를 소유하며 위임할 수 없으면 같은 계약으로 순차 실행합니다. 공급자별로 호환되는 어댑터만 선택해 Claude/Grok·Codex·Gemini가 서로의 mnemo나 agent-team 어댑터를 잘못 로드하지 않습니다. 설치기는 인수 없음도 네 CLI 전체 설치로 처리하고, CLI 실행 파일이 없어도 자산은 준비하되 실행 파일이 필요한 등록만 건너뜁니다. 이름이 다른 외부 스킬은 유지하고, 같은 이름의 수정본은 `_olympus-preserved`로 옮겨 수동 복구할 수 있게 보존합니다.
 
 ### v4.21.0 — 아프로디테 경험 주도 재설계 · Stitch 실행 어댑터화 · 제우스 스코프 게이트 (2026.08)
 
@@ -599,7 +599,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 하네스 11개와
 `agent-team`·`mnemo` 어댑터 6개를 합친 17개입니다. 각 런타임은 호환되지 않는 어댑터
 3개 또는 4개를 제외해 Claude 14개, Codex/Gemini/독립 Grok 13개를 활성화하며,
-실제 Grok 설치 표면은 Claude의 공유 14개를 읽습니다. allowlist 밖의 같은 83개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
+실제 Grok 설치 표면은 Claude의 공유 14개를 읽습니다. allowlist 밖의 같은 82개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
 `SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
 `--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
 이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
@@ -742,7 +742,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
 | **[v5.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.1.0)** | **2026-08-17** | **아프로디테 근거 게이트 + 브라우저 모션 계약 + 영상 엔진 분리** — exact selector 기반 Product Design 1회 추천과 `UNKNOWN` 로컬 폴백; 동일 계약 adapter 대조; 사실·콘텐츠·자산 출처 기록; 실시간 웹 UI의 CSS 우선 GSAP 승격; 별도 `video-maker`에서 Remotion 또는 HyperFrames 엔진 하나 선택 + 런타임·라이선스·렌더 QA 게이트 |
-| **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **진입점 전용 레지스트리 + 네이티브 에이전트 기본값 + 공급자 안전 라우팅** — 현재 스킬 소스 100개를 allowlist 진입점·어댑터 17개와 직접 읽는 source-only 모듈 83개로 분리; 활성 표면은 Claude/공유 Grok 14개, Codex/Gemini 13개; Olympus 사용자 정의 에이전트 등록은 기본 0개이며 의미 기반 네이티브 역할·Main 소유 상태·순차 폴백으로 분업; 공급자별 비호환 런타임 어댑터 제외; 인수 없는 설치는 네 CLI 전체를 대상으로 실행 파일 없이도 자산을 준비하고 CLI 전용 명령만 건너뛰며, 같은 이름의 수정본은 수동 충돌 복구용으로 보존 |
+| **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **진입점 전용 레지스트리 + 네이티브 에이전트 기본값 + 공급자 안전 라우팅** — 공개 추적 스킬 소스 99개를 allowlist 진입점·어댑터 17개와 직접 읽는 source-only 모듈 82개로 분리(`deploymonitor`는 내부 전용); 활성 표면은 Claude/공유 Grok 14개, Codex/Gemini 13개; Olympus 사용자 정의 에이전트 등록은 기본 0개이며 의미 기반 네이티브 역할·Main 소유 상태·순차 폴백으로 분업; 공급자별 비호환 런타임 어댑터 제외; 인수 없는 설치는 네 CLI 전체를 대상으로 실행 파일 없이도 자산을 준비하고 CLI 전용 명령만 건너뛰며, 같은 이름의 수정본은 수동 충돌 복구용으로 보존 |
 | **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **아프로디테 경험 주도 재설계 + Stitch 실행 어댑터화 + 제우스 스코프 게이트** — design-plan 파이프라인: 소스 라우팅 → 벤치마크 해부(Adopt/Adapt/Avoid) → 실제 렌더 3안 → Experience Contract(과업·메시지·CTA·신뢰·모바일 변환, 검증 스크립트 강제) → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프; Stitch는 방향을 발명하지 않고 아프로디테 결정을 Stitch MCP 작업으로 컴파일(작업 계약·상태·전송 패턴은 google-labs-code/stitch-skills 선별 반영); 제우스는 계획 외 태스크·기능·의존성 추가 전 pass/reduce/hold 판정을 결정 장부에 기록, hold는 Deferred로 표시 (hosioobo/track 흡수) |
 | **[v4.20.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.2)** | **2026-08-08** | **테미스 지침 핀 + 런타임 신선도 체크** (v4.20.1~v4.20.2) — 한국판 초안을 개인정보위 작성지침(2025.4.)에 고정하고 생성 시 게시판 확인으로 개정판 감지·채택(사용자 고지, 웹 도구 없으면 기준판 폴백); ko 템플릿 2025.4. 정렬(고충 처리 부서·행태정보·아동 제22조의2); 조문 인용은 law.go.kr 직접 조회 검증 — 법령 MCP 의존은 불필요해 제거 |
 | **[v4.20.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.0)** | **2026-08-08** | **테미스 개인정보처리방침 생성 + mnemo opt-out** — 100번째 스킬 테미스: 개인정보 수집/저장/외부전송/삭제 전수 감사(함정 체크리스트: soft delete·append-only 로그·마스킹 커버리지·자동 아웃바운드·`git ls-files` 실측) + 코드로 알 수 없는 14문항 운영자 인터뷰(보호책임자·보유기간·아동·서버 리전…) + 국가별 초안(개인정보보호법 제30조/CCPA·CPRA/GDPR Art.13)을 file:line 근거만으로 생성 — 빈칸은 날조하지 않음. 이 레포 도그푸딩(초안 3종 동봉). 감사가 드러낸 "끌 수 없는 저장 훅" 갭 → `MNEMO_DISABLE`(4-CLI 훅 15개 진입점) + `OLYMPUS_UPDATE_CHECK_DISABLE`, 켬·끔 대조 실행 검증 |

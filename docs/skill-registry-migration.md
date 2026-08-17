@@ -36,7 +36,7 @@ git pull
 ```
 
 이 명령은 현재의 가벼운 기본값을 적용합니다. Claude/Grok 공유 표면에는 14개,
-Codex와 Gemini에는 각각 13개의 Olympus 스킬이 활성화되고, 나머지 83개는 필요할 때
+Codex와 Gemini에는 각각 13개의 Olympus 스킬이 활성화되고, 나머지 공개 source-only 82개는 필요할 때
 읽을 수 있는 source-only 라이브러리로 남습니다.
 
 ## 원하는 상태로 재설정
@@ -44,7 +44,7 @@ Codex와 Gemini에는 각각 13개의 Olympus 스킬이 활성화되고, 나머�
 | 목적 | 추가 옵션 |
 |---|---|
 | 가벼운 기본 구성 | 옵션 없음 |
-| source-only 83개까지 모두 활성 등록 | `--include-source-only-skills` |
+| source-only 82개까지 모두 활성 등록 | `--include-source-only-skills` |
 | 기존 범용 코딩 가이드 8개만 추가 활성 | `--include-broad-coding-skills` |
 | 레거시 에이전트 참고 파일 복사 | `--include-source-only-agents` |
 
