@@ -11,6 +11,10 @@ All notable changes to this project will be documented in this file.
 - **aphrodite**: Codex Product Design을 exact marketplace selector가 검증된 경우에만 한 번 추천하는 상태 게이트로 제한하고, 확인 불가는 `UNKNOWN`으로 로컬 구현을 계속한다. 동일한 brief·Experience Contract·`DESIGN.md`로 로컬과 준비된 adapter를 대조하며, Product Facts·Content Integrity·Asset Provenance와 브라우저 전용 CSS/GSAP 모션 계약을 추가했다. (6005ef8)
 - **video**: `video-maker`를 Remotion(React/TSX)과 HyperFrames(HTML/CSS/GSAP) 중 프로젝트당 엔진 하나를 선택하는 독립 라우터로 재구성했다. 전역 설치·CLI 간 동기화를 금지하고 엔진별 런타임·라이선스 확인과 공통 렌더 QA를 분리했다. (3df1268)
 
+### Bug Fixes
+
+- **release**: 내부 전용 `deploymonitor`를 공개 배포 수에서 제외해 공개 레지스트리를 99개 소스·82개 source-only로 정정하고, gitignored 루트 `CLAUDE.md`에 의존하던 clean-clone 검사와 Windows CRLF에 민감한 manifest 순서 검사를 고쳤다. `VERSION`과 Claude plugin·marketplace 버전도 `5.1.0`으로 일치시켰다. (18569bf)
+
 ### Tests
 
 - **routing**: Product Design 상태·동의·동일 계약 대조, 웹/영상 모션 경계, 단일 영상 엔진 라우팅을 회귀 테스트로 고정했다. (2dc9b08)
