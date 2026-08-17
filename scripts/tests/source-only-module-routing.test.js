@@ -353,6 +353,83 @@ test("skill-evolve hands approved comparison work to autoresearch by exact sourc
   );
 });
 
+test("Aphrodite verifies Product Design before a one-time install recommendation", () => {
+  const source = readRepoFile("skills/design-plan/SKILL.md");
+  const heading = "### 0-0. Codex Product Design 추천 게이트";
+  const start = source.indexOf(heading);
+  assert.notEqual(start, -1, "design-plan is missing the Product Design gate");
+
+  const rest = source.slice(start + heading.length);
+  const nextHeading = rest.search(/^### /m);
+  const gate = rest.slice(0, nextHeading < 0 ? rest.length : nextHeading);
+
+  for (const status of [
+    "READY",
+    "ABSENT",
+    "RESTART_REQUIRED",
+    "UNKNOWN",
+    "UNSUPPORTED",
+  ]) {
+    assert.match(gate, new RegExp(`\\b${status}\\b`), `gate is missing ${status}`);
+  }
+  assert.match(gate, /codex plugin marketplace list --json/);
+  assert.match(gate, /codex plugin list --json/);
+  assert.match(gate, /codex plugin list --available --json/);
+  assert.match(gate, /marketplace가 0개이거나[\s\S]*`UNKNOWN`/);
+  assert.match(gate, /exact `PLUGIN@MARKETPLACE`/);
+  assert.match(gate, /정확히 한 번만/);
+  assert.match(gate, /exact selector를 보여주기 전의[\s\S]*설치 권한이 아닙니다/);
+  assert.match(gate, /동의 전에는 plugin 설치[\s\S]*복사·동기화를 실행하지 않습니다/);
+  assert.match(gate, /거절하거나 로컬\s*계속 진행을 선택하면[\s\S]*다시 묻지 않고 로컬 어댑터/);
+  assert.match(gate, /실제\s*설치 성공과 새 세션의[\s\S]*확인하기 전에는 `READY`/);
+  assert.match(gate, /`--product-design`[\s\S]*설치 동의로 간주하지 않습니다/);
+});
+
+test("Aphrodite compares Product Design against the same local contract", () => {
+  const source = readRepoFile("skills/design-plan/SKILL.md");
+  const critique = readRepoFile(
+    "skills/design-plan/references/render-critique-loop.md",
+  );
+  const motion = readRepoFile(
+    "skills/design-plan/references/web-motion-contract.md",
+  );
+
+  assert.match(source, /### 5-5\. Product Design 유무 대조/);
+  assert.match(source, /동일한 brief[\s\S]*viewport·theme/);
+  assert.match(source, /adapter가 `READY`가 아니면[\s\S]*`NOT RUN`/);
+  assert.match(critique, /## 7\. Adapter Comparison Contract/);
+  assert.match(critique, /같은 계약[\s\S]*두 실행 엔진/);
+  assert.match(critique, /숫자 미학 점수 하나로 승자를 정하지 않습니다/);
+  assert.match(motion, /Remotion과 HyperFrames/);
+  assert.match(motion, /영상 파일 제작은 다루지 않습니다/);
+  for (const plugin of ["ScrollTrigger", "Flip", "SplitText", "DrawSVG", "MorphSVG", "MotionPath"]) {
+    assert.match(motion, new RegExp(`\\b${plugin}\\b`));
+  }
+});
+
+test("video-maker routes one project to Remotion or HyperFrames without global skill install", () => {
+  const source = readRepoFile("skills/video-maker/SKILL.md");
+  const remotion = readRepoFile(
+    "skills/video-maker/references/remotion-engine.md",
+  );
+  const hyperframes = readRepoFile(
+    "skills/video-maker/references/hyperframes-engine.md",
+  );
+  const qa = readRepoFile("skills/video-maker/references/video-qa.md");
+
+  assert.match(source, /Remotion은 React\/TSX/);
+  assert.match(source, /HyperFrames는 HTML\/CSS\/GSAP/);
+  assert.match(source, /두 엔진을 같은 프로젝트에[\s\S]*함께 설치하지 않습니다/);
+  assert.match(source, /선택하지 않은\s*엔진 reference는 읽거나 적용하지 않습니다/);
+  assert.match(source, /`npx skills add heygen-com\/hyperframes`를 실행하지 않습니다/);
+  assert.match(source, /복사·동기화하지 않습니다/);
+  assert.match(remotion, /useCurrentFrame\(\)/);
+  assert.match(hyperframes, /window\.__timelines/);
+  assert.match(hyperframes, /Aphrodite 또는 일반 웹페이지의 모션 런타임으로 추가하지 않습니다/);
+  assert.match(qa, /ffprobe/);
+  assert.match(qa, /License\/permission/);
+});
+
 test("mnemo templates and hooks route memory maintenance without active slash assumptions", () => {
   for (const relativePath of MEMORY_TEMPLATES) {
     const source = readRepoFile(relativePath);
