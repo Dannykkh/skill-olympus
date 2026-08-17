@@ -504,10 +504,10 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 **`/aphrodite` — 디자인 시스템 (아프로디테)**
 - **언제:** UI 프로젝트에서 프론트 구현 전 의도된 경험, 벤치마크 해석, 일관된 구현 기준이 필요할 때.
 - **사용:** `/aphrodite` (별칭: 아프로디테)
-- **처리:** 소스 모드 판별 → 사이트 벤치마크 증거 수집(헤더·메시지·섹션 순서·CTA·신뢰 요소·모바일 변환) → Adopt/Adapt/Avoid → 실제 렌더 방향 3안 → Experience Contract → 구현 → 렌더 UX·접근성·성능 게이트 → 학습 환류.
+- **처리:** 소스 모드 판별 → exact Codex Product Design marketplace selector 확인(설치 가능이 검증된 경우만 1회 추천, 확인 불가는 UNKNOWN+로컬 진행) → 사이트 벤치마크 증거 수집 → Product Facts·Content Integrity·Asset Provenance → Adopt/Adapt/Avoid → 실제 렌더 방향 3안 → Experience Contract → 구현 또는 동일 계약 adapter 대조 → 렌더 UX·접근성·성능 게이트 → 학습 환류.
 - **결과물:** `DESIGN.md`(비주얼 토큰) + Experience Contract(위계·행동·반응형·품질 결정) + 레이아웃 청사진 + 벤치마크 증거 + 프론트 구현.
 - **경계:** 아프로디테는 경험 구조, 시각적 행동, 반응형 변환, 상태, 품질 게이트를 담당합니다. API 연결, 영속 상태, 비즈니스 로직은 `/agent-team` 또는 `/workpm`이 담당합니다.
-- **다음:** 아프로디테가 source-only `frontend-design`·감사 모듈을 직접 읽습니다. Stitch가 필요할 때만 `--stitch`를 지정하고, 이후 `/agent-team` / `/workpm`으로 애플리케이션 로직을 구현합니다.
+- **다음:** 아프로디테가 source-only `frontend-design`·감사 모듈을 직접 읽습니다. 설치된 Codex 프로토타입 어댑터를 우선하려면 `--product-design`, Stitch가 필요하면 `--stitch`를 지정하고, 이후 `/agent-team` / `/workpm`으로 애플리케이션 로직을 구현합니다.
 
 ### 구현 — 코드 작성
 
@@ -653,7 +653,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | **문서** | mermaid-diagrams, marp-slide, docx, pdf, draw-io, domain-dictionary + 3개 | 다이어그램, 프레젠테이션, 문서, 도메인 용어사전 |
 | **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing), 관리, 릴리즈 |
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |
-| **미디어** | video-maker | Remotion 기반 React 영상 |
+| **미디어** | video-maker | Remotion(React/TSX) 또는 HyperFrames(HTML/CSS/GSAP), 프로젝트당 엔진 하나 |
 | **리서치** | reddit-researcher | 시장 조사 + 리드 스코어링 |
 | **번역** | ko-en-translator | 한↔영 양방향 번역 (기술 문서, 코드, i18n) |
 | **유틸** | humanizer, jira, datadog-cli, excel2md + 3개 | AI 패턴 제거, 통합 |

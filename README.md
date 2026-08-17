@@ -504,10 +504,10 @@ stages; Zeus does not invoke them in its Phase 0–6 contract.
 **`/aphrodite` — Design system (Beauty)**
 - **When:** a UI project needs an intentional experience, benchmark interpretation, and consistent implementation before the frontend build.
 - **Use:** `/aphrodite` (aliases: 아프로디테)
-- **Process:** source-mode routing → site benchmark evidence (header/message/section order/CTA/trust/mobile transformations) → Adopt/Adapt/Avoid → 3 rendered directions → Experience Contract → implementation → rendered UX/accessibility/performance gates → learning handoff.
+- **Process:** source-mode routing → verify an exact Codex Product Design marketplace selector (recommend once only when confirmed available; UNKNOWN stays local) → site benchmark evidence → Product Facts/Content Integrity/Asset Provenance → Adopt/Adapt/Avoid → 3 rendered directions → Experience Contract → implementation or same-contract adapter comparison → rendered UX/accessibility/performance gates → learning handoff.
 - **Output:** `DESIGN.md` (visual tokens), Experience Contract (hierarchy, behavior, responsive and quality decisions), layout blueprint, benchmark evidence, and the frontend build.
 - **Boundary:** Aphrodite owns experience structure, visual behavior, responsive transformations, states, and quality gates. API wiring, persistent state, and business logic remain with `/agent-team` or `/workpm`.
-- **Next:** Aphrodite directly loads its source-only `frontend-design` and audit modules; use `--stitch` only when the Stitch adapter is requested, then `/agent-team` / `/workpm` for application logic.
+- **Next:** Aphrodite directly loads its source-only `frontend-design` and audit modules; use `--product-design` to prefer the installed Codex prototype adapter or `--stitch` for Stitch, then `/agent-team` / `/workpm` for application logic.
 
 ### Build — write the code
 
@@ -658,7 +658,7 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Docs** | mermaid-diagrams, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, presentations, documents, domain dictionary (DDD UL) |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |
-| **Media** | video-maker | Remotion-based React video |
+| **Media** | video-maker | Remotion (React/TSX) or HyperFrames (HTML/CSS/GSAP), one engine per project |
 | **Research** | reddit-researcher | Market research + lead scoring |
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |

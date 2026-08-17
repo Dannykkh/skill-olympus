@@ -277,7 +277,7 @@ claude plugin install voltagent-qa-sec
 | `skills/autoresearch/` | 스킬 프롬프트 자동 최적화 — Hill Climbing 루프로 SKILL.md 개선 (Karpathy autoresearch 패턴) |
 | `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
 | `skills/ui-ux-auditor/` | UI/UX 8영역 감사 + 자동 수정 — 다크모드, 반응형, 접근성, 로딩, 폼, 네비, 타이포, 애니메이션 |
-| `skills/video-maker/` | Remotion 기반 React 코드 영상 제작 — 제품 소개, 데모, SNS 숏폼, 데이터 시각화 |
+| `skills/video-maker/` | Remotion(React/TSX)·HyperFrames(HTML/CSS/GSAP) 선택형 코드 영상 제작 — 프로젝트당 엔진 하나, 공통 asset·render QA |
 | `skills/flow-verifier/` | 프로세스 다이어그램 생성 → 구현 후 코드 흐름 검증 (mermaid-diagrams 연동, Chronos 통합) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
@@ -310,7 +310,7 @@ claude plugin install voltagent-qa-sec
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (source-only, opt-in 시 `/okr`) |
-| `skills/design-plan/` | 아프로디테(Aphrodite) — 경험 주도 디자인 오케스트레이터. 소스 라우팅→사이트 벤치마크(Adopt/Adapt/Avoid)→실제 렌더 3안→Experience Contract→구현→렌더 UX/접근성/성능 게이트→학습 핸드오프 (/aphrodite) |
+| `skills/design-plan/` | 아프로디테(Aphrodite) — 경험 주도 디자인 오케스트레이터. exact Codex Product Design selector가 marketplace에 확인된 경우만 요청당 1회 추천하고, 확인 불가면 UNKNOWN+로컬 구현. 동일 계약의 plugin 유무 대조, 사실·자산 provenance, 웹 전용 GSAP motion contract 포함 (/aphrodite) |
 | `skills/stitch/` | Stitch 실행 어댑터 — 아프로디테 산출물(DESIGN.md, design-refs)을 Stitch MCP 작업(생성/편집/변형/동기화/React 변환)으로 컴파일 + `.stitch/` 상태 관리 |
 | `skills/theme-factory/` | 테마 팩토리 — 슬라이드/문서/HTML에 입히는 색·폰트 테마 14종 (한글 테마 4종 포함, Anthropic 공식 벤더링) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |

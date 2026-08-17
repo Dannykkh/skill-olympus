@@ -135,7 +135,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📦 Git | commit-work, release-notes | Git 워크플로우 & 릴리즈 노트 자동화 (버전+CHANGELOG+태그) |
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |
-| 🎬 Media | video-maker | Remotion 기반 React 코드 영상 제작 (제품 소개, 데모, SNS 숏폼) |
+| 🎬 Media | video-maker | Remotion(React/TSX)·HyperFrames(HTML/CSS/GSAP) 선택형 코드 영상 제작. 전역 설치·동기화 없이 프로젝트 엔진 하나만 사용 |
 | 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown, youtube-transcript | 유틸리티 + YouTube 자막 추출/요약 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
