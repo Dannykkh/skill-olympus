@@ -19,7 +19,7 @@
 | 정본 | 소유하는 결정 |
 |---|---|
 | `DESIGN.md` | 색, 타이포, 간격, 라운드, 표면, 컴포넌트 외관, 모션 원칙 |
-| Experience Contract | 페이지 목표, 사용자 과업, 메시지 순서, CTA, 신뢰, 상태, 모바일 변환 |
+| Experience Contract | 페이지 목표, 사용자 과업, 검증된 사실·콘텐츠 상태·자산 출처, 메시지 순서, CTA, 신뢰, 상태, 모바일 변환 |
 | Layout Blueprint | 페이지별 블록 순서, 그리드, 요소 anatomy, 첫 뷰포트 구성 |
 | 구현 코드 | 실제 기능과 렌더 결과. 위 계약을 임의로 재해석하지 않음 |
 
@@ -57,6 +57,12 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 - Mode: benchmark | product-derived
 - Evidence: {benchmark 파일, brief, 사용자 요구, 데이터}
 
+## Product Facts
+
+| Claim | Source | Captured at | Freshness/status | Allowed presentation |
+|---|---|---|---|---|
+| {사용자에게 보여줄 검증 가능한 사실} | {공식 문서·제품 데이터·사용자 제공 자료} | {YYYY-MM-DD} | current/stale/unverified | {허용 카피 또는 생략 규칙} |
+
 ## Benchmark Sources
 
 - {benchmark 모드일 때 URL/스크린샷/캡처일과 적용 범위}
@@ -87,6 +93,12 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 - 증거:
 - 사용자가 다음에 이해해야 할 것:
 
+## Content Integrity
+
+| Content item | Classification | Evidence | Presentation rule |
+|---|---|---|---|
+| {수치·후기·사례·카피} | verified/prototype/placeholder/hypothesis | {출처 또는 없음} | {표시·라벨·생략 규칙} |
+
 ## Section Order
 
 1. {섹션}: {사용자 질문에 답하는 역할}
@@ -105,6 +117,12 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 - 그 직전에 제시할 근거:
 - 출처·날짜·검증 가능성:
 - 근거가 없을 때 생략할 요소:
+
+## Asset Provenance
+
+| Asset | Source | Local path | License/trademark/attribution | Modification allowed | Status/fallback |
+|---|---|---|---|---|---|
+| {로고·이미지·아이콘·폰트·영상} | {공식 URL·사용자 제공·생성 도구} | {경로} | {근거} | yes/no/limited | verified/replace/remove |
 
 ## Desktop Structure
 
@@ -163,9 +181,12 @@ TASK —
 FLOW —
 HEADER —
 MESSAGE —
+FACTS —
+CONTENT_INTEGRITY —
 SECTION_ORDER —
 CTA —
 TRUST —
+ASSETS —
 LAYOUT —
 RESPONSIVE —
 STATES —
@@ -178,6 +199,7 @@ SUCCESS —
 ## Success Checks
 
 - 첫 5초 안에 핵심 약속과 주 행동을 설명할 수 있는가?
+- 화면의 사실·수치·후기·브랜드 자산이 출처와 상태를 가지며, unverified 항목을 사실처럼 보이지 않는가?
 - 주요 과업을 막는 상태·정보·행동 누락이 없는가?
 - 모바일이 데스크톱 축소판이 아니라 우선순위에 맞게 재구성됐는가?
 - 아름다움, 접근성, 성능 중 하나를 다른 하나의 희생으로 얻지 않았는가?
@@ -185,6 +207,20 @@ SUCCESS —
 
 벤치마크가 없는 경우에도 `Benchmark Sources`, `Adopt`, `Adapt`, `Avoid` 제목은 남길 수 있지만
 `해당 없음 — product-derived`라고 명시합니다. 빈 제목으로 두지 않습니다.
+
+`Product Facts`에 표시할 사실이 없으면 행을 지우고 `해당 없음 — 사용자에게 제시할 사실 주장 없음`을
+기록합니다. `Asset Provenance`도 외부·생성 자산을 쓰지 않으면 `해당 없음 — 프로젝트 내부 자산만
+사용`이라고 기록합니다. 제목을 비워 두거나 출처 없는 값을 채우는 것보다 명시적 해당 없음이
+낫습니다.
+
+`Content Integrity`의 분류 의미는 다음과 같습니다.
+
+| Classification | 의미 | 사용자 노출 규칙 |
+|---|---|---|
+| `verified` | 출처와 최신성을 확인한 실제 내용 | 사실로 표시 가능 |
+| `prototype` | 인터랙션 검증을 위한 샘플 | 프로토타입임을 표시하고 운영 화면에 승격 금지 |
+| `placeholder` | 교체 전 임시 내용 | 최종 완료 전에 교체하거나 명시적으로 제거 |
+| `hypothesis` | 아직 검증하지 않은 제품·사용자 가정 | 사실처럼 카피하지 않고 검증 과제로 남김 |
 
 ## 4. 모바일 변환 문법
 
@@ -226,11 +262,12 @@ SUCCESS —
 완료 전에 다음을 확인합니다.
 
 1. Experience Contract 정적 검증 통과
-2. 데스크톱·모바일 렌더에서 섹션 순서와 변환 대조
-3. primary task를 처음부터 완료·실패·복구까지 실행
-4. 키보드·포커스·reduced-motion·스크린리더 순서 확인
-5. 실제 자산으로 성능 측정
-6. `DESIGN.md`와 구현 토큰 드리프트 확인
+2. Product Facts·Content Integrity·Asset Provenance와 실제 렌더의 주장·자산 대조
+3. 데스크톱·모바일 렌더에서 섹션 순서와 변환 대조
+4. primary task를 처음부터 완료·실패·복구까지 실행
+5. 키보드·포커스·reduced-motion·스크린리더 순서 확인
+6. 실제 자산으로 성능 측정
+7. `DESIGN.md`와 구현 토큰 드리프트 확인
 
 ## 7. 예시
 

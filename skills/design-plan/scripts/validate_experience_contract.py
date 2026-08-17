@@ -18,13 +18,16 @@ from typing import Iterable
 
 COMMON_SECTIONS = (
     "source mode",
+    "product facts",
     "page goal",
     "audience and tasks",
     "header and navigation",
     "core message",
+    "content integrity",
     "section order",
     "cta strategy",
     "trust strategy",
+    "asset provenance",
     "desktop structure",
     "mobile transformations",
     "states",
@@ -55,6 +58,9 @@ MOBILE_OPERATIONS = (
 PROMPT_FIELDS = (
     "goal",
     "task",
+    "facts",
+    "content_integrity",
+    "assets",
     "responsive",
     "states",
     "success",
@@ -62,7 +68,14 @@ PROMPT_FIELDS = (
 
 PLACEHOLDER_PATTERNS = (
     re.compile(r"\{[^}\n]+\}"),
-    re.compile(r"\b(?:todo|tbd|fill me|placeholder)\b", re.IGNORECASE),
+    re.compile(r"\b(?:todo|tbd|fill me)\b", re.IGNORECASE),
+)
+
+CONTENT_CLASSIFICATIONS = (
+    "verified",
+    "prototype",
+    "placeholder",
+    "hypothesis",
 )
 
 
@@ -171,6 +184,19 @@ def validate_contract(path: Path) -> dict[str, object]:
     if states and missing_states:
         result["warnings"].append(
             "States does not mention: " + ", ".join(missing_states)
+        )
+
+    integrity = normalize(sections.get("content integrity", ""))
+    integrity_not_applicable = "해당 없음" in integrity or "not applicable" in integrity
+    if integrity and not integrity_not_applicable and not contains_any(
+        integrity, CONTENT_CLASSIFICATIONS
+    ):
+        result["errors"].append(
+            "Content Integrity must classify content as verified, prototype, placeholder, or hypothesis."
+        )
+    if re.search(r"\|\s*placeholder\s*\|", integrity):
+        result["warnings"].append(
+            "Content Integrity still contains placeholder content; replace or remove it before final delivery."
         )
 
     result["missingSections"] = sorted(set(missing))

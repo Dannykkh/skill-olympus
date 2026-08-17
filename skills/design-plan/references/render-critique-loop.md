@@ -84,8 +84,64 @@ docs/design-refs/YYYY-MM-DD-direction-{slug}.md
 docs/design-refs/YYYY-MM-DD-critique-{slug}.md
 ```
 
-Direction 파일에는 선택된 후보의 MODE, COMPOSITION, MESSAGE, CTA, TRUST, RESPONSIVE, STATE,
-VISUAL SYSTEM, MOTION, NEGATIVE, SUCCESS를 남깁니다. Critique 파일에는 후보별 관찰, 탈락 이유,
-구조 수정 내역, 보존 영역을 남깁니다.
+Direction 파일에는 다음을 남깁니다.
+
+- 선택된 후보 ID와 MODE, COMPOSITION, MESSAGE, CTA, TRUST, RESPONSIVE, STATE, VISUAL SYSTEM,
+  MOTION, NEGATIVE, SUCCESS
+- 후보 source artifact, 데스크톱·모바일 screenshot의 실제 경로
+- 각 screenshot의 viewport, theme, capture 시각
+- 사용자가 선택했으면 선택 문구를 그대로 기록한 `Selection Quote`
+- 자동 실행이면 quote를 꾸며내지 않고 `AUTO_SELECTION`과 관찰 근거
+- 서로 다른 후보의 요소를 혼합했다면 가져온 부분과 계약 충돌 해소 방식
+- 실제 후보 렌더를 생략했으면 exemption 조건과 영향 범위
+
+Critique 파일에는 후보별 screenshot 관찰, 탈락 이유, 구조 수정 내역, 보존 영역, 남은 검증 범위를
+남깁니다. 파일이 존재한다는 사실만으로 후보를 봤다고 간주하지 않습니다.
 
 선택 결과를 `DESIGN.md`와 Experience Contract에 반영한 뒤 구현으로 넘어갑니다.
+
+## 7. Adapter Comparison Contract
+
+사용자가 Product Design 유무 비교를 요청했거나 새 adapter의 첫 도입으로 기준선이 없으면, 디자인
+취향 비교가 아니라 같은 계약을 두 실행 엔진이 얼마나 충실하게 구현하는지 대조합니다.
+
+### 입력 고정
+
+두 경로에 다음을 동일하게 제공합니다.
+
+- brief, Experience Contract, `DESIGN.md`, Layout Blueprint
+- 실제 카피·데이터·loading/empty/error/success 상태
+- source asset과 font, viewport, theme, locale
+- 허용 dependency와 시간·성능 예산
+- 비교에서 바꾸지 않을 `PRESERVE` 항목
+
+한 경로에만 추가 레퍼런스나 더 자세한 프롬프트를 주지 않습니다. 재현 가능한 seed가 있으면 같은
+seed를 사용하고, 없으면 비결정성을 기록합니다.
+
+### 관찰 축
+
+| 축 | 증거 |
+|---|---|
+| 과업 완수 | 시작→완료, 실패→복구 실행 결과 |
+| 계약 충실도 | 섹션 순서, CTA, trust, 상태, 모바일 변환 대조 |
+| 방향 차별성 | direction fingerprint와 실제 screenshot |
+| 접근성 | keyboard, focus, label, reduced-motion |
+| 성능 | 동일 환경의 측정값과 자산·bundle 차이 |
+| 코드 적합성 | 기존 component/token 재사용, 수정 범위, cleanup |
+| 수정 가능성 | 변수 1~2개 variant가 보존 영역을 깨지 않는지 |
+| 사용자 선택 | 두 결과를 출처 라벨 없이 본 뒤의 실제 선택 문구 |
+
+숫자 미학 점수 하나로 승자를 정하지 않습니다. Product Design 결과도 Phase 5-4와 Phase 6의 동일한
+게이트를 통과해야 합니다.
+
+### 불완전 비교
+
+- Product Design이 `READY`가 아니면 가상 결과를 만들지 않고 `NOT RUN`으로 기록합니다.
+- 한 경로만 렌더됐으면 비교가 아니라 baseline 단독 결과입니다.
+- dependency·viewport·copy가 달랐으면 confound를 기록하고 우열 결론을 내리지 않습니다.
+
+산출물:
+
+```text
+docs/design-refs/YYYY-MM-DD-adapter-comparison-{slug}.md
+```

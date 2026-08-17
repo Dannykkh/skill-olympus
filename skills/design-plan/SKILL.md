@@ -19,6 +19,7 @@ description: >
 /aphrodite --plan-only
 /aphrodite --review-only
 /aphrodite --benchmark <URL-or-file>
+/aphrodite --product-design
 /aphrodite --stitch
 ```
 
@@ -97,6 +98,7 @@ fallback도 실행할 수 없는 검사는 `NOT RUN`,
 | Layout Blueprint | 페이지별 블록 순서, 그리드, anatomy, 첫 뷰포트 |
 | Aphrodite | UX 행동 명세, 상태 표현, 시각 구현, 렌더 비평 |
 | 앱 구현 파이프라인 | 라우팅, 상태 관리, 데이터, API, 비즈니스 로직 |
+| Product Design | 승인된 계약을 인터랙티브 프로토타입으로 실행하는 선택적 Codex 어댑터 |
 | Stitch | 승인된 계약을 실행하는 선택적 생성 백엔드와 원격 상태 |
 
 아프로디테는 비즈니스 로직을 직접 소유하지 않지만, 사용자가 보는 loading·empty·error·success,
@@ -116,6 +118,52 @@ Phase 7  Evolve       성공·실패 근거 적립과 검증된 원리 승격
 ```
 
 ## Phase 0: Route
+
+### 0-0. Codex Product Design 추천 게이트
+
+현재 요청이 실제 렌더 방향 탐색이나 프론트 구현을 포함하고 런타임이 Codex이면, 디자인 결정을
+시작하기 전에 현재 세션이 노출한 플러그인·스킬·도구 메타데이터와 지원되는 Codex CLI의 다음
+읽기 전용 조회를 교차 확인합니다.
+
+```bash
+codex plugin marketplace list --json
+codex plugin list --json
+codex plugin list --available --json
+```
+
+첫 명령은 구성된 marketplace, 두 번째는 설치된 plugin, 세 번째는 설치 가능한 marketplace 후보를
+확인합니다. CLI가 해당 옵션을 지원하는지는 먼저 `--help`로 확인합니다. marketplace가 0개이거나
+정확한 `PLUGIN@MARKETPLACE` selector가 확인되지 않으면 `ABSENT`가 아니라 `UNKNOWN`입니다.
+`Product Design`이라는 표현은 exact selector가 검증되기 전까지 사용자가 원하는 capability label일
+뿐, 공식·내장 plugin 이름이라고 단정하지 않습니다. 캐시 디렉터리나 검색 결과만으로 설치·활성을
+판정하지 않습니다. 공식 OpenAI 문서상 IDE extension은 plugin을 지원하지 않으므로 그 표면은
+`UNSUPPORTED`입니다. 지원되는 ChatGPT desktop 또는 Codex CLI에서는 Plugins tab이나 `/plugins`
+browser를 사용할 수 있습니다. `--plan-only`, `--review-only`, 명시적인 `--stitch` 경로에서는 이
+추천을 생략합니다.
+
+상태는 다음 다섯 가지 중 하나로 기록합니다.
+
+| 상태 | 동작 |
+|---|---|
+| `READY` | exact selector가 설치 목록에 있고 현재 세션에 capability가 노출됨. Phase 3·5의 선택 어댑터로 사용 |
+| `ABSENT` | exact selector가 available 목록에 있지만 installed 목록에 없음. 같은 요청에서 정확히 한 번만 설치를 추천 |
+| `RESTART_REQUIRED` | 설치는 됐지만 현재 세션에 노출되지 않았음을 한 번 알리고 새 세션 또는 로컬 계속 진행을 제안 |
+| `UNKNOWN` | marketplace·selector·조회 결과 중 하나가 확인되지 않음. 미설치라고 단정하거나 설치를 묻지 않고 로컬 경로를 제안 |
+| `UNSUPPORTED` | 현재 표면이 plugin을 지원하지 않음. 설치 추천 없이 로컬 경로를 사용 |
+
+`ABSENT`이면 exact `PLUGIN@MARKETPLACE`, marketplace source, 확인된 snapshot/version, 설치로
+생기는 skill·MCP·hook·설정 변경을 먼저 보여주고 “이 plugin을 설치할까요? 설치하지 않아도 로컬
+경로로 계속할 수 있습니다.”처럼 이점과 폴백을 함께 제시합니다. 그 정확한 제안에 대한 직접 답변인
+`설치해`, `좋아`, `알겠음`만 설치 동의로 인정합니다. exact selector를 보여주기 전의 일반적인
+동의나 단순 확인 응답은 설치 권한이 아닙니다. 동의 전에는 plugin 설치, marketplace 추가·upgrade,
+설정 변경, 다른 CLI나 전역 스킬 디렉터리로의 복사·동기화를 실행하지 않습니다. marketplace 추가가
+필요하면 plugin 설치와 분리해 대상 source와 변경을 제시하고 별도 승인을 받습니다. 거절하거나 로컬
+계속 진행을 선택하면 해당 요청에서는 다시 묻지 않고 로컬 어댑터로 진행합니다. 설치를 승인해도 실제
+설치 성공과 새 세션의 노출을 각각 확인하기 전에는 `READY`나 사용 완료로 보고하지 않습니다.
+
+`--product-design`은 가용성 확인과 어댑터 선호를 명시할 뿐 설치 동의로 간주하지 않습니다.
+Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비하는 실행 엔진이며
+시각 방향이나 UX 정책을 다시 결정하지 않습니다.
 
 ### 0-1. 기존 자산 확인
 
@@ -145,6 +193,7 @@ tailwind.config.* / theme.* / CSS variables
 | URL·스크린샷·영상·HTML 벤치마크 있음 | reference-driven |
 | 벤치마크 없음, 신규 디자인 | product-derived |
 | 승인된 디자인의 국소 변경 | delta |
+| Codex + Product Design `READY` | 위 경로로 설계 확정 후 Product Design adapter |
 | Stitch 프로젝트 | 위 경로로 설계 확정 후 Stitch adapter |
 
 벤치마크가 있으면 [site-benchmark-guide.md](references/site-benchmark-guide.md)의 Gate A~F를
@@ -276,7 +325,19 @@ Adopt·Adapt·Avoid를 포함합니다.
 데스크톱 요소마다 `retain/reorder/compress/collapse/defer/replace/sticky/remove` 중 하나와 이유를
 Experience Contract에 기록합니다. `모바일은 1열 stack`만 있으면 실패입니다.
 
-### 4-3. 계약 검증
+### 4-3. Web Motion Contract
+
+브라우저에서 실행되는 signature motion, 스크롤 연동, 레이아웃 전환, 텍스트·SVG 모션이 있으면
+[web-motion-contract.md](references/web-motion-contract.md)를 읽고 각 장면의 목적, trigger, engine,
+fallback, cleanup, 검증 방법을 기록합니다. CSS transition·View Transitions·Scroll-driven
+Animations를 우선하고, pin·snap·복잡한 timeline·DOM 재배치·텍스트 분할·SVG path가 실제로 필요할
+때만 GSAP core, ScrollTrigger, Flip, SplitText, SVG plugin을 선택합니다. 프로젝트 manifest에 없는
+dependency를 자동으로 추가하지 않습니다.
+
+이 계약은 실시간 웹 UI만 다룹니다. Remotion, HyperFrames, BGM·SFX, MP4 렌더링, 영상용 storyboard는
+Aphrodite의 범위 밖이며 `video-maker`로 인계합니다.
+
+### 4-4. 계약 검증
 
 Experience Contract를 완성하고 다음을 실행합니다.
 
@@ -303,8 +364,11 @@ Experience Contract의 `Prompt Contract`를 구현 지시로 사용합니다. `�
 
 ### 5-2. 구현 어댑터
 
+- Product Design: Phase 0에서 `READY`로 확인됐거나 승인된 설치 뒤 새 세션에서 노출이 확인됐을 때만
+  사용합니다. Experience Contract의 Prompt Contract와 `DESIGN.md`를 입력으로 실제 방향 렌더와
+  인터랙티브 프로토타입을 만들고, 결과는 Phase 5-4와 Phase 6의 동일한 비평·품질 게이트를 통과시킵니다.
 - 로컬: 네이티브 구현 작업자가 `MODULE_SKILL[frontend-design]`의 계약을 직접 적용하여 기존
-  스택과 컴포넌트 규칙에 맞게 구현
+  스택과 컴포넌트 규칙에 맞게 구현. Product Design이 없거나 거절·확인 불가·재시작 대기이면 이 경로로 진행
 - Stitch: 명시 요청이 있을 때 `MODULE_SKILL[stitch]` 전체를 직접 읽고 그 preflight·상태·검증
   계약을 적용합니다. 사용자 의도를 generate·edit·variants·loop·react 중 하나로 분류한 뒤 현재
   노출된 Stitch MCP capability를 직접 사용하며 `/stitch` 등록이나 고정 도구 이름을 가정하지 않습니다.
@@ -329,6 +393,18 @@ Stitch는 디자인 정책을 다시 결정하지 않습니다. 루트 `DESIGN.m
 
 [render-critique-loop.md](references/render-critique-loop.md)를 따르고 실제 스크린샷을 봅니다.
 HTML 정적 검사만으로 시각 충실도를 선언하지 않습니다.
+
+### 5-5. Product Design 유무 대조
+
+사용자가 유무 비교를 요청했거나 exact Product Design adapter를 처음 도입해 기준선이 없으면
+[render-critique-loop.md](references/render-critique-loop.md)의 Adapter Comparison Contract를
+실행합니다. 로컬과 Product Design 후보에 동일한 brief, Experience Contract, `DESIGN.md`, 실제
+카피·데이터·상태, viewport·theme를 제공합니다. 과업 완수, 위계, 방향 차별성, 반응형 변환,
+접근성, 성능, 기존 코드 적합성을 실제 렌더와 실행 증거로 비교합니다. plugin 결과라는 이유만으로
+승자로 정하지 않습니다.
+
+adapter가 `READY`가 아니면 가상 결과를 만들지 않고 비교를 `NOT RUN`으로 남기며 로컬 구현을
+계속합니다. 결과는 `docs/design-refs/YYYY-MM-DD-adapter-comparison-{slug}.md`에 기록합니다.
 
 ## Phase 6: Validate the Experience
 
@@ -398,6 +474,11 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 - 미학 비평과 주 과업 검증
 - 접근성·성능·가이드라인 결과
 - 잔여 이슈와 다음 진화 후보
+- `Product Design Gate`: `READY`/`ABSENT`/`RESTART_REQUIRED`/`UNKNOWN`/`UNSUPPORTED`, exact selector,
+  marketplace·설치·세션 노출 근거, 추천·동의 결과,
+  실제 선택한 Product Design/local/Stitch 어댑터. 적용 대상이 아니면 `NOT APPLICABLE`
+- Product Design 유무 대조가 요청됐거나 첫 도입이면 adapter comparison 결과 또는 `NOT RUN` 이유
+- Web Motion Contract 적용 여부와 선택한 CSS/GSAP 경로. 영상 요청이면 `video-maker` 인계 근거
 - `Module Coverage`: 각 내부 모듈의 절대 해석 경로, module/native-fallback/NOT RUN 상태,
   미실행 범위. 조건부 모듈은 NOT REQUESTED/requested를 구분하고, 요청된 경로의
   `NOT RUN`/`UNVERIFIED`/`BLOCKED` 항목은 완료 증거로 계산하지 않음
@@ -409,6 +490,7 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 | `--plan-only` | Phase 0~4 실행 |
 | `--review-only` | Phase 6 실행 |
 | `--benchmark <source>` | reference-driven 경로 강제 |
+| `--product-design` | Codex Product Design 가용성을 확인하고 준비됐으면 프로토타입 어댑터로 우선 사용. 설치 동의는 별도 |
 | `--stitch` | 승인된 계약을 Stitch adapter로 실행 |
 | `--no-review` | Phase 6 생략. 결과에 검증 미완료 표시 |
 | `--no-lint` | DESIGN.md 보조 lint만 생략 |
@@ -423,6 +505,7 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 | [site-benchmark-guide.md](references/site-benchmark-guide.md) | 벤치마크 사이트가 있을 때 필수 |
 | [experience-contract-guide.md](references/experience-contract-guide.md) | 모든 신규·재설계 작업의 경험 계약 |
 | [render-critique-loop.md](references/render-critique-loop.md) | 방향 탐색과 첫 구현 비평 |
+| [web-motion-contract.md](references/web-motion-contract.md) | 브라우저 실시간 모션이 있을 때만 |
 | [design-md-guide.md](references/design-md-guide.md) | DESIGN.md 생성·마이그레이션·export |
 | `MODULE_SKILL[frontend-design]` | Phase 3·5 시각 방향과 구현 |
 | `MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md` | Phase 4 구조 계약 |
