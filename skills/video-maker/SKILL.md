@@ -1,248 +1,133 @@
 ---
 name: video-maker
-description: "Remotion 기반 React 코드로 영상 제작. 프로젝트 셋업, 영상 컴포넌트 생성, 애니메이션, 렌더링. /video-maker로 실행."
+description: "Remotion 또는 HyperFrames로 코드 기반 영상을 설계·구현·검증한다. 제품 소개 영상, 데모 비디오, SNS 숏폼, 데이터 시각화 영상, MP4 렌더링, Remotion, HyperFrames 요청에 /video-maker로 사용한다."
 ---
 
-# Video Maker — Remotion 코드 기반 영상 제작
+# Video Maker — 선택형 코드 영상 제작
 
-React 컴포넌트를 작성하면 영상으로 렌더링해주는 Remotion 프레임워크 기반 스킬입니다.
-제품 소개 영상, 데모 비디오, SNS 콘텐츠, 데이터 시각화 영상 등을 코드로 생성합니다.
+하나의 영상 제작 계약 아래에서 프로젝트에 맞는 엔진 하나만 선택합니다. Remotion은 React/TSX
+컴포지션에, HyperFrames는 HTML/CSS/GSAP 컴포지션에 사용합니다. 두 엔진을 같은 프로젝트에
+관성적으로 함께 설치하지 않습니다.
+
+## 경계
+
+- 이 스킬은 시간축이 있는 영상과 이미지 시퀀스를 소유합니다.
+- `design-plan`과 `frontend-design`은 웹 UI와 브라우저 인터랙션을 소유합니다.
+- HyperFrames를 Aphrodite의 프론트 모션 엔진으로 호출하지 않습니다.
+- `DESIGN.md`가 있으면 브랜드 토큰과 모션 원칙을 소비하되 영상의 shot·timing·audio 결정은 이
+  스킬의 산출물에 기록합니다.
+- API, 영속 데이터, 제품 비즈니스 로직은 기존 애플리케이션 하네스가 소유합니다.
 
 ## 적용 시점
 
-- `/video-maker` 명시적 실행
-- "영상 만들어줘", "소개 비디오", "데모 영상", "Remotion" 요청 시
+- `/video-maker` 명시 실행
+- "영상 만들어줘", "소개 비디오", "데모 영상", "숏폼", "MP4로 렌더링" 요청
+- 기존 Remotion 또는 HyperFrames 컴포지션의 생성·수정·렌더·검증 요청
 
----
+## Phase 0: 기존 구현과 엔진 확인
 
-## Step 1: 모드 파악
+다음 순서로 조회합니다.
 
-사용자 메시지에서 모드를 판별합니다:
+1. 프로젝트 manifest·lockfile과 기존 영상 디렉터리
+2. `remotion.config.*`, `<Composition>`, `useCurrentFrame()`
+3. HyperFrames `index.html`, `data-composition-id`, `window.__timelines`
+4. `DESIGN.md`, 영상 brief·storyboard·script·asset manifest
 
-| 모드 | 트리거 키워드 | 동작 |
-|------|-------------|------|
-| **init** | "셋업", "설치", "초기화", "프로젝트 생성" | Remotion 프로젝트 구조 생성 |
-| **create** | "만들어", "생성", "영상", "비디오" | 영상 컴포넌트 작성 |
-| **edit** | "수정", "변경", "바꿔", "고쳐" | 기존 영상 컴포넌트 수정 |
-| **render** | "렌더링", "출력", "내보내기", "MP4" | 영상 렌더링 실행 |
+기존 엔진이 있으면 그대로 사용합니다. 둘 다 있거나 기존 구조와 다른 엔진을 명시적으로 요구하면
+변경 범위와 마이그레이션 비용을 먼저 설명합니다.
 
----
+## Phase 1: Engine Router
 
-## Step 2: 모드별 워크플로우
+사용자 선택이 있으면 우선합니다. 선택이 없으면 다음 순서로 하나를 고릅니다.
 
-### 2-A. init — 프로젝트 셋업
+| 조건 | 엔진 |
+|---|---|
+| 기존 프로젝트가 한 엔진을 사용 | 기존 엔진 |
+| React/TSX 컴포넌트·타입·패키지 재사용이 핵심 | Remotion |
+| HTML/CSS/GSAP 장면을 빌드 단계 없이 직접 영상화 | HyperFrames |
+| 검증된 Remotion Lambda 파이프라인을 유지 | Remotion |
+| Apache-2.0 프레임워크가 배포 요건 | HyperFrames |
+| 판단 근거가 부족 | 설치하지 말고 사용자에게 엔진 차이를 한 번 설명 |
 
-**설치:**
-```bash
-npm i remotion @remotion/cli @remotion/player
-```
+Remotion을 선택하면 [references/remotion-engine.md](references/remotion-engine.md), HyperFrames를
+선택하면 [references/hyperframes-engine.md](references/hyperframes-engine.md)만 읽습니다. 선택하지 않은
+엔진 reference는 읽거나 적용하지 않습니다.
 
-**디렉토리 구조:**
-```
-src/remotion/
-├── index.ts              # registerRoot(Root)
-├── Root.tsx              # <Composition> 등록
-├── compositions/
-│   ├── IntroVideo.tsx    # 영상 컴포넌트
-│   └── DemoVideo.tsx
-└── assets/               # 이미지, 폰트 등
-```
+## Phase 2: 설치·라이선스 게이트
 
-**Root.tsx 기본 구조:**
-```tsx
-import { Composition } from 'remotion';
-import { IntroVideo } from './compositions/IntroVideo';
+설치 전 다음을 기록합니다.
 
-export const Root = () => {
-  return (
-    <>
-      <Composition
-        id="IntroVideo"
-        component={IntroVideo}
-        durationInFrames={150}  // 5초 (30fps)
-        fps={30}
-        width={1920}
-        height={1080}
-      />
-    </>
-  );
-};
-```
+- 선택 엔진과 선택 근거
+- 기존 package manager·lockfile·Node 버전
+- FFmpeg와 브라우저 런타임 가용성
+- 사용할 정확한 패키지 버전과 공식 배포처
+- 프로젝트·조직에 적용되는 라이선스 확인 결과
 
-### 2-B. create — 영상 컴포넌트 생성
+규칙:
 
-#### 핵심 API
+- `@latest`, 전역 설치, 원격 install script를 기본값으로 쓰지 않습니다.
+- `npx skills add heygen-com/hyperframes`를 실행하지 않습니다.
+- 사용자 전역 스킬 디렉터리나 다른 CLI 설치본으로 복사·동기화하지 않습니다.
+- 프로젝트 의존성 변경은 정확한 패키지와 버전, 변경 파일을 제시한 뒤 현재 작업 범위의 승인을
+  확인합니다.
+- 설치하지 않아도 가능한 설계·검토 작업은 설치 없이 계속합니다.
+- Remotion은 현재 법인 유형과 조직 규모에 따라 회사 라이선스가 필요할 수 있으므로 공식
+  `LICENSE.md`를 확인하고, 판단 불가이면 `LICENSE REVIEW REQUIRED`로 남깁니다.
 
-| API | 용도 | 예시 |
-|-----|------|------|
-| `useCurrentFrame()` | 현재 프레임 번호 | 애니메이션 기준값 |
-| `useVideoConfig()` | fps, 크기, 길이 정보 | 반응형 레이아웃 |
-| `interpolate()` | 프레임 → 값 매핑 | 위치, 투명도, 크기 변화 |
-| `spring()` | 물리 기반 애니메이션 | 자연스러운 바운스 효과 |
-| `<AbsoluteFill>` | 전체 화면 레이어 | 배경, 오버레이 |
-| `<Sequence>` | 시간축 배치 | from={30} → 1초 후 시작 |
-| `<Series>` | 순차 배치 | 씬 자동 연결 |
+## Phase 3: 공통 제작 계약
 
-#### 애니메이션 기본 패턴
+구현 전에 다음을 확정합니다.
 
-```tsx
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from 'remotion';
-import { AbsoluteFill } from 'remotion';
+| 항목 | 필수 내용 |
+|---|---|
+| Goal | 영상이 바꿔야 할 한 가지 이해 또는 행동 |
+| Audience | 시청자와 시청 맥락, 무음 재생 가능성 |
+| Format | 해상도, 비율, fps, 목표 길이, 출력 형식 |
+| Story | hook → evidence/demo → resolution/CTA |
+| Scenes | 각 scene의 시작·종료·핵심 프레임·전환 |
+| Assets | 로컬 경로, 출처, 라이선스, attribution, 변경 허용 |
+| Audio | 음성·BGM·SFX의 필요성, 출처, 음량, 무음 대체 |
+| Accessibility | 자막, flashing 제한, 읽기 시간, 색 외 신호 |
+| Acceptance | 대표 프레임과 완성 판정 방법 |
 
-export const IntroVideo = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+실제 제품 수치·후기·로고를 추측하지 않습니다. `verified`, `prototype`, `placeholder`, `hypothesis`를
+구분하고 최종 영상에 placeholder가 남으면 완료로 보고하지 않습니다.
 
-  // 페이드 인 (0~30프레임 = 0~1초)
-  const opacity = interpolate(frame, [0, 30], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
+## Phase 4: 구현
 
-  // 스프링 애니메이션 (바운스 효과)
-  const scale = spring({ frame, fps, config: { damping: 10 } });
+- 장면은 독립적으로 수정·검증할 필요가 있을 때만 컴포넌트로 나눕니다.
+- 시간은 wall clock이 아니라 엔진의 frame/timeline 값을 사용합니다.
+- `Math.random()`, `Date.now()`, 네트워크 응답 순서처럼 재현 불가능한 입력을 렌더 경로에 두지
+  않습니다. 변이가 필요하면 고정 seed를 사용합니다.
+- 오디오·워터마크·자동재생 효과는 기본 포함하지 않습니다.
+- 폰트와 미디어가 준비되기 전에 capture하지 않습니다.
+- 사용하지 않는 엔진의 package·설정·템플릿을 추가하지 않습니다.
 
-  // 슬라이드 인 (왼쪽에서 등장)
-  const translateX = interpolate(frame, [0, 20], [-100, 0], {
-    extrapolateRight: 'clamp',
-  });
+## Phase 5: 검증과 렌더
 
-  return (
-    <AbsoluteFill style={{ backgroundColor: '#0f172a' }}>
-      <h1
-        style={{
-          color: 'white',
-          fontSize: 72,
-          opacity,
-          transform: `scale(${scale}) translateX(${translateX}%)`,
-        }}
-      >
-        제품 소개
-      </h1>
-    </AbsoluteFill>
-  );
-};
-```
+[references/video-qa.md](references/video-qa.md)를 읽고 최소 다음을 실행합니다.
 
-#### 씬 구성 (Sequence)
+1. 엔진별 lint/typecheck와 컴포지션 목록 확인
+2. 대표 still을 렌더하고 이미지로 직접 관찰
+3. 짧은 draft 구간을 렌더해 timing·media sync·전환 확인
+4. 최종 렌더의 duration·resolution·fps·stream·audio 검사
+5. 자막·가독 시간·flashing·asset provenance 확인
 
-```tsx
-import { Sequence, Series } from 'remotion';
+실행하지 못한 검사는 `NOT RUN`, 결과를 관찰하지 못한 항목은 `UNVERIFIED`로 남깁니다.
 
-export const DemoVideo = () => {
-  return (
-    <AbsoluteFill>
-      {/* 0~2초: 타이틀 */}
-      <Sequence from={0} durationInFrames={60}>
-        <TitleScene />
-      </Sequence>
+## 완료 증거
 
-      {/* 2~5초: 기능 소개 */}
-      <Sequence from={60} durationInFrames={90}>
-        <FeatureScene />
-      </Sequence>
+- 선택 엔진과 라우팅 근거
+- 설치·라이선스 상태
+- 사용한 brief·storyboard·script·asset manifest
+- 생성·수정한 컴포지션과 출력 경로
+- still/draft/final 검증 결과
+- 남은 `NOT RUN`, `UNVERIFIED`, 권리·품질 이슈
 
-      {/* 5~7초: CTA */}
-      <Sequence from={150} durationInFrames={60}>
-        <CtaScene />
-      </Sequence>
-    </AbsoluteFill>
-  );
-};
-```
+## Direct References
 
-#### 미디어 사용
-
-```tsx
-import { Video, Audio, Img, staticFile } from 'remotion';
-
-// 이미지
-<Img src={staticFile('logo.png')} style={{ width: 200 }} />
-
-// 비디오 삽입
-<Video src={staticFile('demo.mp4')} startFrom={0} />
-
-// 배경 음악
-<Audio src={staticFile('bgm.mp3')} volume={0.3} />
-```
-
-### 2-C. render — 렌더링
-
-```bash
-# 실시간 프리뷰 (브라우저에서 확인)
-npx remotion studio
-
-# MP4 렌더링
-npx remotion render <CompositionId> out/video.mp4
-
-# 특정 프레임을 이미지로 (썸네일)
-npx remotion still <CompositionId> out/thumbnail.png --frame=45
-
-# GIF 렌더링
-npx remotion render <CompositionId> out/video.gif --image-format=png
-```
-
----
-
-## Step 3: 영상 유형별 템플릿
-
-### 제품 소개 영상 (30초)
-
-| 씬 | 시간 | 내용 |
-|----|------|------|
-| 1. Hook | 0~3초 | 문제 제기 (큰 텍스트 + 페이드 인) |
-| 2. Solution | 3~8초 | 제품 이름 + 핵심 가치 (스프링 애니메이션) |
-| 3. Features | 8~20초 | 기능 3개 순차 등장 (슬라이드 인) |
-| 4. Demo | 20~25초 | 스크린샷/GIF (확대 효과) |
-| 5. CTA | 25~30초 | "지금 시작하세요" + URL |
-
-### 데이터 시각화 영상
-
-| 씬 | 시간 | 내용 |
-|----|------|------|
-| 1. Title | 0~2초 | 차트 제목 |
-| 2. Chart | 2~8초 | 막대/선 그래프 애니메이션 (interpolate로 높이 변화) |
-| 3. Highlight | 8~10초 | 핵심 수치 강조 |
-
-### SNS 숏폼 (15초)
-
-| 씬 | 시간 | 내용 |
-|----|------|------|
-| 1. Attention | 0~2초 | 강렬한 텍스트 (스케일 업) |
-| 2. Content | 2~12초 | 핵심 내용 3컷 |
-| 3. CTA | 12~15초 | 팔로우/링크 안내 |
-
----
-
-## 작성 규칙
-
-| 규칙 | 설명 |
-|------|------|
-| TypeScript 필수 | 모든 컴포넌트 `.tsx`로 작성 |
-| 결정론적 코드 | `Math.random()` 금지 → `random('seed-string')` 사용 |
-| clamp 필수 | `interpolate()`에 `extrapolateLeft/Right: 'clamp'` 항상 설정 |
-| 시간 = 프레임 | 30fps 기준: 1초 = 30프레임, 5초 = 150프레임 |
-| Composition 등록 | 새 영상은 반드시 `Root.tsx`에 `<Composition>` 추가 |
-| 씬 분할 | 10초 이상 영상은 씬 단위로 컴포넌트 분리 |
-| 해상도 | 기본 1920×1080 (16:9), 세로형은 1080×1920 (9:16) |
-
----
-
-## Context7 연계
-
-Remotion API가 업데이트될 수 있으므로, 구현 전 Context7 MCP로 최신 문서를 확인합니다:
-
-```
-Context7: remotion 최신 API 확인
-- useCurrentFrame, interpolate, spring 사용법
-- Composition 등록 방식
-- 렌더링 CLI 옵션
-```
-
----
-
-## 연관 리소스
-
-| 리소스 | 역할 |
-|--------|------|
-| `design-system-starter` (스킬) | 디자인 토큰 → 영상 컬러/타이포 일관성 |
-| `stitch-*` (스킬) | UI 디자인 → 영상 속 화면 목업 소스 |
+| 파일 | 읽는 시점 |
+|---|---|
+| [references/remotion-engine.md](references/remotion-engine.md) | Remotion을 선택했을 때만 |
+| [references/hyperframes-engine.md](references/hyperframes-engine.md) | HyperFrames를 선택했을 때만 |
+| [references/video-qa.md](references/video-qa.md) | 모든 렌더와 납품 전 |
