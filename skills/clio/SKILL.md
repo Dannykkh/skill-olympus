@@ -28,7 +28,7 @@ description: >
 
 ## 내부 소스 모듈 해석 계약 (필수)
 
-`flow-verifier`, `humanizer`, `mermaid-diagrams`, `pdf`는 Clio가 호출하는 등록 스킬이 아니라
+`flow-verifier`, `humanizer`, `mermaid-diagrams`, `pdf`와 선택 모듈 `diagram-design`은 Clio가 호출하는 등록 스킬이 아니라
 절차·문법·스크립트를 직접 소비하는 source-only 내부 모듈입니다. 각 이름에 대해 해석된
 `SKILL.md` 절대경로를 `MODULE_SKILL[name]`, 그 부모 디렉터리를 `MODULE_ROOT[name]`으로
 기록합니다.
@@ -54,7 +54,7 @@ description: >
    `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
 
 이 과정은 모듈 읽기이지 스킬 호출이 아닙니다. `/flow-verifier`, `/humanizer`,
-`/mermaid-diagrams`, `/pdf`를 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
+`/mermaid-diagrams`, `/pdf`, `/diagram-design`을 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
 프로젝트·활성 루트 파일도 없고 카탈로그의 정확한 행·`읽을 경로`·필수 참조나 스크립트 중 하나라도 없으면
 `CHECKLIST.md`와 `FINAL-REPORT.md`의 `Module Coverage`에 경로와 이유를 기록하고 다음 한정된
 native fallback을 사용합니다. fallback도 실행할 수 없는 작업은 `NOT RUN` 또는 `UNVERIFIED`로
@@ -66,6 +66,7 @@ native fallback을 사용합니다. fallback도 실행할 수 없는 작업은 `
 | `mermaid-diagrams` | `flowchart TD`, 안정적인 노드 ID, 인용된 label, 명시적 edge만 사용. renderer가 없으면 문법 검증은 `NOT RUN` |
 | `humanizer` | 아래 S1 금지 패턴과 변경률 가드만 적용하고 전체 한국어 패턴 커버리지는 `UNVERIFIED` |
 | `pdf` | 대체 변환기를 임의로 설치하거나 호출하지 않고 PDF 산출을 `NOT RUN`으로 기록한 뒤 Markdown 문서는 유지 |
+| `diagram-design` (선택) | 에디토리얼 렌더링을 생략하고 문서의 Mermaid 코드 블록을 유지. `Rendered Diagrams`는 `NOT RUN`으로 기록 |
 
 ## 파이프라인 위치
 
@@ -381,6 +382,16 @@ Clio의 `references/document-templates.md`를 계약으로 삼습니다.
   CHANGE-QUIZ.md  — {N}개 변경 이해 문항
 ```
 
+### 3-3c. 에디토리얼 다이어그램 렌더링 (선택, `--render-diagrams`)
+
+`--render-diagrams` 지정 시 또는 사용자가 발표용·에디토리얼 다이어그램을 요청한 경우에만 진행합니다.
+`MODULE_SKILL[diagram-design]`을 직접 읽어 표현 계층 계약을 적용합니다.
+
+- **입력**: Phase 2의 `flow-diagrams/*.mmd` 중 PRD/TECHNICAL에 실제 인용된 핵심 다이어그램만 (전량 렌더링 금지)
+- **절차**: `MODULE_ROOT[diagram-design]/scripts/mermaid_extract.py`로 IR 추출 → 브랜드 토큰 기반 HTML+inline SVG 렌더링. 대상 프로젝트에 `DESIGN.md`가 있으면 토큰을 매핑하고, 없으면 기본 스킨을 쓰며 질문하지 않습니다
+- **출력**: `docs/clio/latest/diagrams/{이름}.html`. 정본 `.mmd`는 수정하지 않고, 문서 본문의 Mermaid 블록 아래에 렌더 파일 링크만 병기합니다
+- **분할**: 노드 9개 초과 도면은 diagram-design 규칙대로 개요+상세로 나눠 렌더링합니다 (정본은 분할하지 않음)
+
 ### 3-4. PDF 출력 (한국 기본값: A4 + Pretendard)
 
 **`--no-pdf`가 아니면 진행.** 사용자에게 페이지 구성을 묻고 적합한 옵션으로 PDF를 자동 생성합니다.
@@ -655,6 +666,7 @@ npm start
 📁 산출물 위치: docs/clio/latest/
   CHECKLIST.md      — 최종 점검 결과 (Phase 1)
   flow-diagrams/    — 프로세스 흐름도 (Phase 2)
+  diagrams/         — 에디토리얼 렌더 (3-3c, --render-diagrams 지정 시)
   PRD.md (+ .pdf)            — 제품 요구사항 문서 (Phase 3)
   TECHNICAL.md (+ .pdf)      — 기술 문서 (Phase 3)
   USER-MANUAL.md (+ .pdf)    — 사용자 매뉴얼 (Phase 3, 외부 공유용)
@@ -684,6 +696,7 @@ npm start
 | `--flow-only` | Phase 2만 실행 (흐름도만) | false |
 | `--no-site` | 문서 사이트 생성 건너뜀 (Phase 3.5 스킵) | false |
 | `--no-pdf` | PDF 출력 건너뜀 (Phase 3-4 스킵) | false |
+| `--render-diagrams` | Phase 3-3c 실행 — 핵심 흐름도를 에디토리얼 HTML+SVG로 렌더링 (diagram-design 모듈) | false |
 | `--pdf=user-manual` | USER-MANUAL만 PDF (PRD/TECHNICAL은 마크다운만) | false |
 | `--output-dir` | 산출물 디렉토리 변경 | `docs/clio/latest/` |
 | `--force` | NO-GO여도 문서 생성 강제 진행 | false |

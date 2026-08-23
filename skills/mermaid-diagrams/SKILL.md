@@ -154,6 +154,42 @@ For in-depth guidance on specific diagram types, see:
 6. **Add Context** - Include titles and notes to explain diagram purpose
 7. **Iterate** - Refine diagrams as understanding evolves
 
+## Editorial Style Rules
+
+Mermaid 자동 레이아웃을 쓰더라도 아래 규칙을 지키면 "AI 기본 출력" 느낌을 크게 줄일 수 있습니다
+(diagram-design 모듈에서 이식한 압축본. 완전한 에디토리얼 렌더링이 필요하면
+`skills/diagram-design/SKILL.md` 표현 계층을 사용하세요).
+
+- **액센트는 1~2개 노드만**: `classDef accent`를 핵심 노드(happy path의 결정점, 최종 산출물)에만
+  적용. 모든 분기·에러에 색을 칠하면 신호가 사라집니다. 나머지는 기본 스타일 유지.
+- **밀도 예산**: 사람에게 보여줄 다이어그램은 노드 9개 이하 목표. 초과하면 개요 1장 + 상세 N장으로
+  분할합니다. (파이프라인 검증용 `.mmd`는 기존 20개 제한 유지 — 용도가 다름)
+- **도형이 타입을 말하게**: 시작/끝 `([ ])`, 처리 `[ ]`, 분기 `{ }`, 서브루틴 `[[ ]]`.
+  색으로 노드 타입을 구분하지 않습니다.
+- **분기 레이블 필수**: decision에서 나가는 모든 화살표에 `|Yes|`/`|No|` 등 레이블. 출구 4개 이상인
+  분기는 중첩 분기로 리팩터링.
+- **색 토큰**: 순수 `#000`/`#fff` 대신 near-black(`#2d3142`)·off-white(`#f5f5f5`). 액센트는
+  프로젝트 `DESIGN.md` 토큰이 있으면 그것을, 없으면 한 가지 hue만.
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: "#f5f5f5"
+    primaryTextColor: "#2d3142"
+    primaryBorderColor: "#4f5d75"
+    lineColor: "#4f5d75"
+---
+flowchart TD
+    A([시작]) --> B{유효?}
+    B -->|Yes| C[처리]
+    B -->|No| D[거부]
+    C --> E([완료])
+    classDef accent stroke:#eb6c36,stroke-width:2px
+    class E accent
+```
+
 ## Configuration and Theming
 
 Configure diagrams using frontmatter:

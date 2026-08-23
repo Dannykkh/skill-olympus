@@ -286,6 +286,7 @@ claude plugin install voltagent-qa-sec
 | `skills/agent-team/` | 공통 네이티브 역할 계약 (읽기: Explore/explorer/codebase_investigator/explore, 쓰기: general-purpose/worker/generalist/general-purpose). Main이 공유 상태를 소유하고 위임 불가 시 순차 실행 |
 | `skills/agent-team-codex/` | Codex의 `/agent-team` 호출이 라우팅되는 전용 adapter. stable multi-agent + Main 소유 Activity Log |
 | `skills/mermaid-diagrams/` | Mermaid 다이어그램 (ERD 포함) |
+| `skills/diagram-design/` | 에디토리얼 다이어그램 렌더링 — .mmd/설명 → 브랜드 토큰 HTML+inline SVG 표현 계층 (cathrynlavery/diagram-design MIT 부분 벤더링) |
 | `skills/data-visualization/` | 차트 선택 가이드 + Python 시각화 패턴 (Anthropic 공식 벤더링) |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |

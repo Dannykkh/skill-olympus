@@ -119,13 +119,13 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skill sources (공개 추적 99개; 기본 allowlist 합집합 17개, 런타임별 활성 13개 또는 14개)
+### Skill sources (공개 추적 100개; 기본 allowlist 합집합 17개, 런타임별 활성 13개 또는 14개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
 | 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 4-CLI 네이티브 멀티에이전트 (orchestrator MCP는 폴백) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, memory-distill, skill-evolve, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + raw 관찰 정제(rebuild) + 스킬 프롬프트 자동 최적화 (Hill Climbing) + gotcha/learned 기반 스킬 자기개선 루프 |
-| 📝 Documentation | api-handoff, crafting-effective-readmes, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely, docx, pdf, excel2md | 문서/다이어그램 + 도메인 용어사전 (DDD Ubiquitous Language) + Office 문서 읽기/생성/편집 (Word/PDF/Excel) |
+| 📝 Documentation | api-handoff, crafting-effective-readmes, diagram-design, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely, docx, pdf, excel2md | 문서/다이어그램 + 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG 표현 계층) + 도메인 용어사전 (DDD Ubiquitous Language) + Office 문서 읽기/생성/편집 (Word/PDF/Excel) |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
 | 🎨 Frontend | design-plan (아프로디테), frontend-design, design-system-starter, theme-factory, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor, data-visualization | 사이트 벤치마크·Experience Contract·실제 렌더 3안·UX/접근성/성능 게이트를 지휘하는 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + 테마·SEO·UI/UX 감사 + 차트 선택 가이드 |
 | 🛠️ Development | database-schema-designer, supabase-postgres-best-practices, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, deploymonitor, wrangler, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login, health-data | 개발 도구 + Postgres 최적화 + Cloudflare Workers 배포 + 헬스 데이터(Health Connect/HealthKit) 연동 |

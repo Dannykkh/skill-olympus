@@ -36,8 +36,8 @@ const installGeminiMnemo = path.join(repoRoot, "skills", "gemini-mnemo", "instal
 const expectedSourceOnlySkillCount = fs.existsSync(
   path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
 )
-  ? 83
-  : 82;
+  ? 84
+  : 83;
 const expectedSourceOnlySkillPattern = new RegExp(
   `source-only 스킬: ${expectedSourceOnlySkillCount}개`,
 );

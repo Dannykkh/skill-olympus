@@ -218,6 +218,7 @@
     { "id": "daily-meeting-update", "tags": ["*"], "priority": "optional" },
     { "id": "data-visualization", "tags": ["*"], "priority": "optional" },
     { "id": "datadog-cli", "tags": ["*"], "priority": "optional" },
+    { "id": "diagram-design", "tags": ["*"], "priority": "optional" },
     { "id": "docx", "tags": ["*"], "priority": "optional" },
     { "id": "domain-dictionary", "tags": ["*"], "priority": "recommended" },
     { "id": "domain-name-brainstormer", "tags": ["*"], "priority": "optional" },
