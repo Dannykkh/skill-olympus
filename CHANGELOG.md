@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [5.3.0] - 2026-08-23
+
+### Features
+
+- **codex-mnemo**: `reconcile_codex_conversations.py`를 현행 Codex rollout 포맷의 turn 라이프사이클(event_msg `task_started`/`task_complete`) 기반으로 재작성했다. developer 주입 지시·commentary·도구 페이로드·서브에이전트/포크 턴을 대화 기록에서 제외하고 canonicalization과 chronological 검증을 추가했으며, 자체 파이썬 테스트 12건과 install-check 테스트를 신설했다. `save-turn.ps1/.sh`에 `.mnemo-root` 마커 기반 프로젝트 루트 탐지, `install.js` check 모드에 소스↔설치본 hook parity 검증을 추가했다. (cd4783a)
+
+### Bug Fixes
+
+- **codex-mnemo**: 신규 프로젝트의 첫 reconcile에서 `conversations/` 디렉터리가 없으면 `FileNotFoundError`로 중단되던 문제를 `output_dir` 선행 생성으로 수정했다. `codex-home.test.js` rollout 픽스처를 현행 포맷(session_meta `source: cli` + turn 이벤트 + `final_answer`)으로 갱신하되 hook bridge 테스트가 파싱하는 `apply_patch` 항목은 유지했다. (cd4783a)
+
 ## [5.2.0] - 2026-08-23
 
 ### Features

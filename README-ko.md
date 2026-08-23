@@ -262,6 +262,10 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최신 업데이트
 
+### v5.3.0 — Codex rollout 포맷 reconcile (2026.08)
+
+`reconcile_codex_conversations.py`를 현행 Codex rollout 포맷의 turn 라이프사이클(`task_started`/`task_complete` event_msg) 기반으로 재작성했습니다. 대화 backfill에서 developer 주입 지시·commentary 단계 출력·도구 페이로드·서브에이전트/포크 소유 턴을 제외하고, 기록된 마크다운에 canonicalization과 시간순 검증을 적용합니다 — 자체 파이썬 테스트 12건과 install-check 테스트가 이를 고정합니다. save-turn 훅에는 `.mnemo-root` 마커 기반 프로젝트 루트 탐지가, `install.js --check`에는 소스↔설치본 hook parity 검증이 추가됐습니다. `conversations/` 디렉터리가 없는 프로젝트의 첫 reconcile 크래시를 수정했고, codex-home 테스트 픽스처를 현행 rollout 포맷으로 현대화했습니다(hook bridge가 파싱하는 `apply_patch` 항목은 유지).
+
 ### v5.2.0 — 에디토리얼 다이어그램 표현 계층 (2026.08)
 
 신규 source-only `diagram-design` 모듈이 [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) v2.6(MIT, upstream `648c2a5` 고정)을 표현 계층으로 부분 벤더링합니다. 파이프라인 `.mmd`는 flow-verifier·zephermine의 정본으로 그대로 두고, 사람에게 전달되는 산출물만 브랜드 토큰 기반 self-contained HTML + inline SVG로 렌더링합니다. `mermaid_extract.py`가 기존 flowchart/sequence/state/ER 소스를 의존성 없이 JSON IR로 변환하고, upstream의 인터랙티브 브랜드 게이트는 `DESIGN.md` 토큰 자동 매핑으로 대체해 zero-interaction 파이프라인과 호환됩니다. clio에는 PRD/TECHNICAL에 실제 인용된 도면만 렌더링하는 `--render-diagrams`(Phase 3-3c)가 추가됐고, `mermaid-diagrams`에는 Editorial Style Rules 압축본(액센트 1~2개, 밀도 예산 9노드, 도형=타입, near-black 토큰)이 이식되어 일반 Mermaid 출력도 개선됩니다.
@@ -745,6 +749,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v5.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.3.0)** | **2026-08-23** | **Codex rollout 포맷 reconcile** — turn 라이프사이클 기반 재작성으로 주입 지시·commentary·도구 페이로드·서브에이전트/포크 턴 제외; 파이썬 테스트 12건; save-turn 훅 `.mnemo-root` 마커 루트 탐지; `install.js --check` 소스 parity; 첫 reconcile `conversations/` 크래시 수정; codex-home 픽스처 현행화 |
 | **[v5.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.2.0)** | **2026-08-23** | **에디토리얼 다이어그램 표현 계층** — source-only `diagram-design` 모듈(cathrynlavery/diagram-design v2.6, MIT 벤더링); `.mmd` 정본 유지 + 사람용 산출물만 브랜드 토큰 HTML+inline SVG 렌더링; 의존성 없는 `mermaid_extract.py` IR 다리; 인터랙티브 브랜드 게이트를 `DESIGN.md` 토큰 매핑으로 대체; clio `--render-diagrams`(Phase 3-3c); `mermaid-diagrams`에 Editorial Style Rules 이식; 공개 레지스트리 100개 소스·83개 source-only |
 | **[v5.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.1.0)** | **2026-08-17** | **아프로디테 근거 게이트 + 브라우저 모션 계약 + 영상 엔진 분리** — exact selector 기반 Product Design 1회 추천과 `UNKNOWN` 로컬 폴백; 동일 계약 adapter 대조; 사실·콘텐츠·자산 출처 기록; 실시간 웹 UI의 CSS 우선 GSAP 승격; 별도 `video-maker`에서 Remotion 또는 HyperFrames 엔진 하나 선택 + 런타임·라이선스·렌더 QA 게이트 |
 | **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **진입점 전용 레지스트리 + 네이티브 에이전트 기본값 + 공급자 안전 라우팅** — 공개 추적 스킬 소스 99개를 allowlist 진입점·어댑터 17개와 직접 읽는 source-only 모듈 82개로 분리(`deploymonitor`는 내부 전용); 활성 표면은 Claude/공유 Grok 14개, Codex/Gemini 13개; Olympus 사용자 정의 에이전트 등록은 기본 0개이며 의미 기반 네이티브 역할·Main 소유 상태·순차 폴백으로 분업; 공급자별 비호환 런타임 어댑터 제외; 인수 없는 설치는 네 CLI 전체를 대상으로 실행 파일 없이도 자산을 준비하고 CLI 전용 명령만 건너뛰며, 같은 이름의 수정본은 수동 충돌 복구용으로 보존 |
