@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [5.2.0] - 2026-08-23
+
+### Features
+
+- **diagram-design**: cathrynlavery/diagram-design v2.6(MIT, upstream `648c2a5` 고정)을 source-only 표현 계층 모듈로 부분 벤더링했다. 파이프라인 `.mmd` 정본은 그대로 두고 사람용 산출물만 브랜드 토큰 기반 self-contained HTML+inline SVG로 렌더링하며, `mermaid_extract.py`(.mmd → JSON IR, 의존성 없음)로 기존 도면을 재사용한다. upstream의 인터랙티브 브랜드 게이트는 zero-interaction 파이프라인과 호환되도록 `DESIGN.md` 토큰 자동 매핑으로 대체했다. clio에 `--render-diagrams` 옵션과 Phase 3-3c를 신설해 문서에 인용된 핵심 도면만 렌더링하고, mermaid-diagrams에는 Editorial Style Rules 압축본(액센트 1~2개, 밀도 예산 9노드, 도형=타입, near-black 토큰)을 이식해 일반 Mermaid 출력 품질도 끌어올렸다. 공개 레지스트리는 100개 소스·83개 source-only가 된다. (5ce8132)
+
 ## [5.1.0] - 2026-08-17
 
 ### Features
