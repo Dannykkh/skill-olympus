@@ -262,6 +262,10 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최신 업데이트
 
+### v5.2.0 — 에디토리얼 다이어그램 표현 계층 (2026.08)
+
+신규 source-only `diagram-design` 모듈이 [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) v2.6(MIT, upstream `648c2a5` 고정)을 표현 계층으로 부분 벤더링합니다. 파이프라인 `.mmd`는 flow-verifier·zephermine의 정본으로 그대로 두고, 사람에게 전달되는 산출물만 브랜드 토큰 기반 self-contained HTML + inline SVG로 렌더링합니다. `mermaid_extract.py`가 기존 flowchart/sequence/state/ER 소스를 의존성 없이 JSON IR로 변환하고, upstream의 인터랙티브 브랜드 게이트는 `DESIGN.md` 토큰 자동 매핑으로 대체해 zero-interaction 파이프라인과 호환됩니다. clio에는 PRD/TECHNICAL에 실제 인용된 도면만 렌더링하는 `--render-diagrams`(Phase 3-3c)가 추가됐고, `mermaid-diagrams`에는 Editorial Style Rules 압축본(액센트 1~2개, 밀도 예산 9노드, 도형=타입, near-black 토큰)이 이식되어 일반 Mermaid 출력도 개선됩니다.
+
 ### v5.1.0 — 아프로디테 근거 게이트 · 브라우저 모션 · 영상 엔진 분리 (2026.08)
 
 아프로디테는 이제 Codex Product Design을 exact marketplace selector가 확인된 경우에만 한 번 추천하는 선택 실행 어댑터로 취급합니다. marketplace가 비어 있거나 selector가 검증되지 않으면 `UNKNOWN`으로 남기고, 플러그인 결과를 꾸며내거나 설치를 압박하지 않은 채 로컬 디자인을 계속합니다. 로컬과 준비된 adapter는 같은 brief, Experience Contract, `DESIGN.md`, 콘텐츠, 데이터, 상태, viewport, theme로 대조합니다. 계약에는 Product Facts, Content Integrity, Asset Provenance를 추가했고, 실시간 웹 UI 모션은 CSS·View Transitions·Scroll-driven Animations를 우선한 뒤 필요가 입증될 때만 GSAP Timeline·ScrollTrigger·Flip·SplitText·SVG 플러그인으로 올라갑니다. 별도 기능인 `video-maker`는 영상 프로젝트마다 Remotion(React/TSX) 또는 HyperFrames(HTML/CSS/GSAP) 중 엔진 하나만 선택하며, 엔진별 런타임·라이선스 게이트와 공통 렌더 QA를 적용합니다. HyperFrames는 아프로디테 런타임이 아니며 영상 엔진을 전역 설치하거나 다른 CLI로 동기화하지 않습니다.
@@ -741,6 +745,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 | 버전 | 날짜 | 핵심 |
 |------|------|------|
+| **[v5.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.2.0)** | **2026-08-23** | **에디토리얼 다이어그램 표현 계층** — source-only `diagram-design` 모듈(cathrynlavery/diagram-design v2.6, MIT 벤더링); `.mmd` 정본 유지 + 사람용 산출물만 브랜드 토큰 HTML+inline SVG 렌더링; 의존성 없는 `mermaid_extract.py` IR 다리; 인터랙티브 브랜드 게이트를 `DESIGN.md` 토큰 매핑으로 대체; clio `--render-diagrams`(Phase 3-3c); `mermaid-diagrams`에 Editorial Style Rules 이식; 공개 레지스트리 100개 소스·83개 source-only |
 | **[v5.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.1.0)** | **2026-08-17** | **아프로디테 근거 게이트 + 브라우저 모션 계약 + 영상 엔진 분리** — exact selector 기반 Product Design 1회 추천과 `UNKNOWN` 로컬 폴백; 동일 계약 adapter 대조; 사실·콘텐츠·자산 출처 기록; 실시간 웹 UI의 CSS 우선 GSAP 승격; 별도 `video-maker`에서 Remotion 또는 HyperFrames 엔진 하나 선택 + 런타임·라이선스·렌더 QA 게이트 |
 | **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **진입점 전용 레지스트리 + 네이티브 에이전트 기본값 + 공급자 안전 라우팅** — 공개 추적 스킬 소스 99개를 allowlist 진입점·어댑터 17개와 직접 읽는 source-only 모듈 82개로 분리(`deploymonitor`는 내부 전용); 활성 표면은 Claude/공유 Grok 14개, Codex/Gemini 13개; Olympus 사용자 정의 에이전트 등록은 기본 0개이며 의미 기반 네이티브 역할·Main 소유 상태·순차 폴백으로 분업; 공급자별 비호환 런타임 어댑터 제외; 인수 없는 설치는 네 CLI 전체를 대상으로 실행 파일 없이도 자산을 준비하고 CLI 전용 명령만 건너뛰며, 같은 이름의 수정본은 수동 충돌 복구용으로 보존 |
 | **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **아프로디테 경험 주도 재설계 + Stitch 실행 어댑터화 + 제우스 스코프 게이트** — design-plan 파이프라인: 소스 라우팅 → 벤치마크 해부(Adopt/Adapt/Avoid) → 실제 렌더 3안 → Experience Contract(과업·메시지·CTA·신뢰·모바일 변환, 검증 스크립트 강제) → 구현 → 렌더 UX/접근성/성능 게이트 → 학습 핸드오프; Stitch는 방향을 발명하지 않고 아프로디테 결정을 Stitch MCP 작업으로 컴파일(작업 계약·상태·전송 패턴은 google-labs-code/stitch-skills 선별 반영); 제우스는 계획 외 태스크·기능·의존성 추가 전 pass/reduce/hold 판정을 결정 장부에 기록, hold는 Deferred로 표시 (hosioobo/track 흡수) |
