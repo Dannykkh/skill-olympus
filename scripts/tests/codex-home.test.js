@@ -24,23 +24,33 @@ function isolatedEnv(fakeHome, codexHome) {
 function writeRollout(root, projectRoot, fileName, touchedFile, message) {
   const sessionsDir = path.join(root, "sessions", "2026", "08", "13");
   fs.mkdirSync(sessionsDir, { recursive: true });
+  // 현행 Codex rollout 포맷: session_meta(source: cli) + turn 라이프사이클(event_msg) +
+  // final_answer response_item. apply_patch 항목은 hook bridge 테스트가 파싱하므로 유지.
+  const threadId = "019f0000-0000-7000-8000-000000000001";
   const entries = [
     {
       timestamp: "2026-08-13T00:00:00Z",
       type: "session_meta",
-      payload: { cwd: projectRoot },
-    },
-    {
-      timestamp: "2026-08-13T00:00:01Z",
-      type: "response_item",
       payload: {
-        type: "message",
-        role: "user",
-        content: [{ type: "input_text", text: message }],
+        id: threadId,
+        session_id: threadId,
+        cwd: projectRoot,
+        timestamp: "2026-08-13T00:00:00Z",
+        source: "cli",
       },
     },
     {
+      timestamp: "2026-08-13T00:00:01Z",
+      type: "event_msg",
+      payload: { type: "task_started", turn_id: "turn-root-1" },
+    },
+    {
       timestamp: "2026-08-13T00:00:02Z",
+      type: "event_msg",
+      payload: { type: "user_message", message },
+    },
+    {
+      timestamp: "2026-08-13T00:00:03Z",
       type: "response_item",
       payload: {
         type: "custom_tool_call",
@@ -49,12 +59,23 @@ function writeRollout(root, projectRoot, fileName, touchedFile, message) {
       },
     },
     {
-      timestamp: "2026-08-13T00:00:03Z",
+      timestamp: "2026-08-13T00:00:04Z",
       type: "response_item",
       payload: {
         type: "message",
         role: "assistant",
+        phase: "final_answer",
+        id: "answer-1",
         content: [{ type: "output_text", text: `${message} response` }],
+      },
+    },
+    {
+      timestamp: "2026-08-13T00:00:05Z",
+      type: "event_msg",
+      payload: {
+        type: "task_complete",
+        turn_id: "turn-root-1",
+        last_agent_message: `${message} response`,
       },
     },
   ];

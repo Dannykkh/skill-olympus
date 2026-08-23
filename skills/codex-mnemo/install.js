@@ -63,6 +63,16 @@ function readText(filePath) {
   }
 }
 
+function filesAreIdentical(sourcePath, installedPath) {
+  try {
+    const source = fs.readFileSync(sourcePath);
+    const installed = fs.readFileSync(installedPath);
+    return source.equals(installed);
+  } catch {
+    return false;
+  }
+}
+
 function quoteSh(value) {
   return `'${String(value).replace(/'/g, "'\\''")}'`;
 }
@@ -610,7 +620,7 @@ function check() {
   const agentsMdPath = path.join(codexDir, "AGENTS.md");
   let issues = 0;
 
-  console.log("[1/3] Checking hook files...");
+  console.log("[1/4] Checking hook files and source parity...");
   const hookFiles = isWindows
     ? [
         "save-turn.ps1",
@@ -625,17 +635,44 @@ function check() {
         "codex-hook-bridge.js",
       ];
   for (const hookFile of hookFiles) {
+    const sourcePath = path.join(sourceDir, "hooks", hookFile);
     const filePath = path.join(hooksDir, hookFile);
-    if (fs.existsSync(filePath)) {
+    if (!fs.existsSync(sourcePath)) {
+      console.log(`      MISSING SOURCE ${hookFile}`);
+      issues += 1;
+    } else if (fs.existsSync(filePath)) {
       const stat = fs.statSync(filePath);
-      console.log(`      OK ${hookFile} (${stat.size} bytes)`);
+      if (filesAreIdentical(sourcePath, filePath)) {
+        console.log(`      OK ${hookFile} (${stat.size} bytes, source parity)`);
+      } else {
+        console.log(`      DRIFT ${hookFile} (installed file differs from source)`);
+        issues += 1;
+      }
     } else {
       console.log(`      MISSING ${hookFile}`);
       issues += 1;
     }
   }
 
-  console.log("\n[2/3] Checking config.toml notify...");
+  console.log("\n[2/4] Checking reconcile parser and source parity...");
+  const reconcileFile = "reconcile_codex_conversations.py";
+  const reconcileSource = path.join(sourceDir, "scripts", reconcileFile);
+  const reconcileInstalled = path.join(codexDir, "scripts", reconcileFile);
+  if (!fs.existsSync(reconcileSource)) {
+    console.log(`      MISSING SOURCE scripts/${reconcileFile}`);
+    issues += 1;
+  } else if (!fs.existsSync(reconcileInstalled)) {
+    console.log(`      MISSING ${reconcileInstalled}`);
+    issues += 1;
+  } else if (!filesAreIdentical(reconcileSource, reconcileInstalled)) {
+    console.log(`      DRIFT scripts/${reconcileFile} (installed file differs from source)`);
+    issues += 1;
+  } else {
+    const stat = fs.statSync(reconcileInstalled);
+    console.log(`      OK scripts/${reconcileFile} (${stat.size} bytes, source parity)`);
+  }
+
+  console.log("\n[3/4] Checking config.toml notify...");
   const config = readText(configPath);
   if (!config) {
     console.log(`      MISSING ${configPath}`);
@@ -666,7 +703,7 @@ function check() {
     }
   }
 
-  console.log("\n[3/3] Checking AGENTS.md rules...");
+  console.log("\n[4/4] Checking AGENTS.md rules...");
   const agentsMd = readText(agentsMdPath);
   const hasRules = agentsMd.includes(MARKER_START) && agentsMd.includes(MARKER_END);
   const hasTags = /응답 키워드 규칙/.test(agentsMd);

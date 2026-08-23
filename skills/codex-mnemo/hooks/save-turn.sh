@@ -15,6 +15,21 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_FILE" 2>/dev/null || true
 }
 
+find_mnemo_marker_root() {
+    local cur="$1"
+    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
+        if [ -f "$cur/.mnemo-root" ]; then
+            printf '%s\n' "$cur"
+            return 0
+        fi
+        local parent
+        parent=$(dirname "$cur")
+        [ "$parent" = "$cur" ] && break
+        cur="$parent"
+    done
+    return 1
+}
+
 # P1 parity: Claude/Gemini와 공유하는 .claude/mnemo-errors.log에 에러급 실패를 기록한다.
 # debug_log는 Codex 전용 trace이고, 사용자에게 가시화할 에러는 프로젝트 공용 로그로 통합된다.
 log_mnemo_error() {
@@ -379,12 +394,20 @@ get_nongit_project_root() {
     fi
 }
 
-# Sub-directory(예: bin/Debug)를 부모 git root로 정규화한다.
+# Mnemo marker is the canonical workspace boundary and wins over a nested Git
+# root. Sub-directory(예: bin/Debug)는 그 다음에 정규화한다.
 # Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
 # conversations/는 진짜 프로젝트 루트에 생기도록 한다.
 # git이 없는 디렉토리면 비-git 루트 보정(gotcha 047)으로 프로젝트 루트를 지킨다.
 GIT_ROOT_ADOPTED=""
 if [ -n "$BASE_DIR" ]; then
+    MNEMO_MARKER_ROOT="$(find_mnemo_marker_root "$BASE_DIR" || true)"
+    if [ -n "$MNEMO_MARKER_ROOT" ]; then
+        BASE_DIR="$MNEMO_MARKER_ROOT"
+        GIT_ROOT_ADOPTED=1
+    fi
+fi
+if [ -n "$BASE_DIR" ] && [ -z "$GIT_ROOT_ADOPTED" ]; then
     GIT_ROOT_NORMALIZED=$(git -C "$BASE_DIR" rev-parse --show-toplevel 2>/dev/null)
     if [ -n "$GIT_ROOT_NORMALIZED" ]; then
         # HOME 자체가 git repo(dotfiles)면 채택 금지 — HOME 오배치 방지 (gotcha 033)

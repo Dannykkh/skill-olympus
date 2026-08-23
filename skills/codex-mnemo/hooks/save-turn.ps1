@@ -38,10 +38,15 @@ function Write-MnemoError {
     param([string]$Context, [string]$Message)
     try {
         $root = $PWD.Path
-        try {
-            $gitRoot = git rev-parse --show-toplevel 2>$null
-            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
-        } catch {}
+        $markerRoot = Get-MnemoMarkerRoot $root
+        if ($markerRoot) {
+            $root = $markerRoot
+        } else {
+            try {
+                $gitRoot = git rev-parse --show-toplevel 2>$null
+                if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
+            } catch {}
+        }
         $errDir = Join-Path $root '.claude'
         if (-not (Test-Path $errDir)) {
             New-Item -ItemType Directory -Path $errDir -Force | Out-Null
@@ -95,6 +100,21 @@ function Normalize-PathSafe([string]$p) {
     } catch {
         return $p.TrimEnd('\').ToLowerInvariant()
     }
+}
+
+function Get-MnemoMarkerRoot([string]$StartPath) {
+    if (-not $StartPath) { return $null }
+    try {
+        $cur = New-Object System.IO.DirectoryInfo($StartPath)
+        if (-not $cur.Exists) { $cur = $cur.Parent }
+        while ($cur) {
+            if (Test-Path -LiteralPath (Join-Path $cur.FullName '.mnemo-root') -PathType Leaf) {
+                return $cur.FullName
+            }
+            $cur = $cur.Parent
+        }
+    } catch {}
+    return $null
 }
 
 function Select-SessionFile([string]$preferredCwd) {
@@ -510,7 +530,8 @@ if (-not $baseDir) {
     $baseDir = $PWD.Path
 }
 
-# Sub-directory(예: bin/Debug)를 부모 git root로 정규화한다.
+# Mnemo marker is the canonical workspace boundary and must win over a nested
+# product Git root. Sub-directory(예: bin/Debug)는 그 다음에 정규화한다.
 # Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
 # conversations/는 진짜 프로젝트 루트에 생기도록 한다.
 # git이 없는 디렉토리면 baseDir 그대로 유지 (fail-open).
@@ -564,6 +585,13 @@ function Get-NonGitProjectRoot {
 
 $gitRootAdopted = $false
 if ($baseDir) {
+    $markerRoot = Get-MnemoMarkerRoot $baseDir
+    if ($markerRoot) {
+        $baseDir = $markerRoot
+        $gitRootAdopted = $true
+    }
+}
+if ($baseDir -and -not $gitRootAdopted) {
     try {
         $gitRoot = & git -C $baseDir rev-parse --show-toplevel 2>$null
         if ($LASTEXITCODE -eq 0 -and $gitRoot) {
