@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [5.4.0] - 2026-08-25
+
+### Features
+
+- **seo-audit**: 검색 SEO 점수와 AI 가시성 점수를 분리 산출하는 2축 점수 모델을 도입했다(v3.0.0). `na`/`unknown`은 분자·분모 양쪽에서 제외 후 재정규화해 블로그가 Product 스키마 부재로 감점되지 않으며, 축별 P0 `fail` 발생 시 해당 축을 40점으로 상한 처리한다. 팩트 밀도 계측기를 한국어 대응으로 신설해 수치 단위(%/배/만/억/원/년)·자체 데이터 신호·과장 표현·출처 표기·물음표 없는 질문형 어미를 계측하며, 계측과 판단을 분리해 스크립트는 세기만 하고 해석은 리포트가 담당한다. 배점 근거도 정정해 `llms.txt`는 배점 0(보고 전용), `FAQPage`는 P1→P2, `HowTo`는 P2→P3으로 조정했다. 테스트 29건 신설. (ff7a757)
+
+### Refactoring
+
+- **skill-policy**: 활성 스킬 판정 기준을 사실상의 "Olympus 신화 이름 여부"에서 네 조건(고유 slash 직접 호출 / 완결 산출물 / CLI 네이티브 비중복 / 시작 설명 예산 대비 호출 빈도)으로 재정의했다. 다른 스킬이 참조한다는 사실만으로는 강등 근거가 아님을 정책 주석에 명문화했다(zephermine은 zeus·ceo·estimate가 읽지만 진입점). allowlist를 17→24개로 넓혀 `api-tester`, `explain`, `hestia`, `ko-en-translator`, `release-notes`, `seo-audit`, `video-maker` 7종을 승격했고, 하네스 내부 모듈 계약이 걸린 `ui-ux-auditor`·`docker-deploy`·`domain-dictionary`는 source-only로 유지했다. 런타임별 활성은 Claude/Grok 21개, Codex/Gemini 20개다. 문서마다 99/100/101로 갈리던 스킬 개수 표기를 공개 추적 100개 기준으로 통일하고 테스트 가드 7곳을 갱신했다. (b907764)
+
 ## [5.3.0] - 2026-08-23
 
 ### Features
