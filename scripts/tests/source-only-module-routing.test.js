@@ -14,14 +14,21 @@ const {
 const repoRoot = path.resolve(__dirname, "..", "..");
 
 const EXPECTED_COMMON_RUNTIME_SKILLS = Object.freeze([
+  "api-tester",
   "argos",
   "auto-continue-loop",
   "biz-strategy",
   "ceo",
   "clio",
   "design-plan",
+  "explain",
+  "hestia",
+  "ko-en-translator",
   "minos",
+  "release-notes",
+  "seo-audit",
   "themis",
+  "video-maker",
   "workpm",
   "zephermine",
   "zeus",
@@ -208,7 +215,7 @@ function stripNonOperationalContracts(source) {
     .replace(/^## (?:Related Files|관련 파일)[\s\S]*?(?=^## |\s*$)/gm, "");
 }
 
-test("second-wave default deny keeps 11 common harnesses, six adapters, and 83 public source-only modules", () => {
+test("entry-point default deny keeps 18 common entry points, six adapters, and 76 public source-only modules", () => {
   assert.deepEqual(DEFAULT_COMMON_RUNTIME_SKILLS, EXPECTED_COMMON_RUNTIME_SKILLS);
   assert.deepEqual(
     DEFAULT_RUNTIME_SKILL_ALLOWLIST.filter(
@@ -216,7 +223,7 @@ test("second-wave default deny keeps 11 common harnesses, six adapters, and 83 p
     ),
     EXPECTED_RUNTIME_ADAPTERS,
   );
-  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 17);
+  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 24);
 
   const allSkills = allRepoSkillNames();
   assert.equal(allSkills.length, 100, "public repository skill inventory changed; revisit policy counts");
@@ -226,11 +233,11 @@ test("second-wave default deny keeps 11 common harnesses, six adapters, and 83 p
       allSkills,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
-    const expectedActiveCount = runtime === "claude" ? 14 : 13;
+    const expectedActiveCount = runtime === "claude" ? 21 : 20;
     const expectedCompatibleCount = runtime === "claude" ? 97 : 96;
 
     assert.equal(selection.skillNames.length, expectedActiveCount, `${runtime} active count`);
-    assert.equal(selection.defaultDisabledNames.length, 83, `${runtime} source-only count`);
+    assert.equal(selection.defaultDisabledNames.length, 76, `${runtime} source-only count`);
     assert.equal(
       selection.skillNames.length + selection.defaultDisabledNames.length,
       expectedCompatibleCount,

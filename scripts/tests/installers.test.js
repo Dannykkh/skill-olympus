@@ -36,8 +36,8 @@ const installGeminiMnemo = path.join(repoRoot, "skills", "gemini-mnemo", "instal
 const expectedSourceOnlySkillCount = fs.existsSync(
   path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
 )
-  ? 84
-  : 83;
+  ? 77
+  : 76;
 const expectedSourceOnlySkillPattern = new RegExp(
   `source-only 스킬: ${expectedSourceOnlySkillCount}개`,
 );
@@ -205,12 +205,12 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     RUNTIME_SKILL_EXCLUSIONS.codex,
   ).skillNames;
   assert.deepEqual(codexManifest.managedSkills, expectedCodexSkills);
-  assert.equal(codexManifest.managedSkills.length, 13);
+  assert.equal(codexManifest.managedSkills.length, 20);
   const codexSkillsCatalog = fs.readFileSync(
     path.join(tempHome, ".codex", "SKILLS-CATALOG.md"),
     "utf8",
   );
-  assert.match(codexSkillsCatalog, /기본 활성 스킬: 13개/);
+  assert.match(codexSkillsCatalog, /기본 활성 스킬: 20개/);
   assert.match(codexSkillsCatalog, expectedSourceOnlySkillPattern);
   assert.match(codexSkillsCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".codex"), "Codex");
@@ -223,7 +223,7 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     path.join(tempHome, ".claude", "SKILLS-CATALOG.md"),
     "utf8",
   );
-  assert.match(grokCompatCatalog, /기본 활성 스킬: 14개/);
+  assert.match(grokCompatCatalog, /기본 활성 스킬: 21개/);
   assert.match(grokCompatCatalog, expectedSourceOnlySkillPattern);
   assert.match(grokCompatCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".claude"), "Claude/Grok");
@@ -506,19 +506,26 @@ test("Claude source-only policy preserves user-owned skill overrides without add
 test("shared runtime skill policy is fail-closed with narrow and full opt-ins", () => {
   assert.equal(DEFAULT_DISABLED_BROAD_CODING_SKILLS.length, 8);
   assert.deepEqual(DEFAULT_COMMON_RUNTIME_SKILLS, [
+    "api-tester",
     "argos",
     "auto-continue-loop",
     "biz-strategy",
     "ceo",
     "clio",
     "design-plan",
+    "explain",
+    "hestia",
+    "ko-en-translator",
     "minos",
+    "release-notes",
+    "seo-audit",
     "themis",
+    "video-maker",
     "workpm",
     "zephermine",
     "zeus",
   ]);
-  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 17);
+  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 24);
   assert.deepEqual(RUNTIME_SKILL_ADDITIONS.codex, [
     "agent-team-codex",
     "codex-mnemo",
@@ -562,7 +569,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
       DEFAULT_RUNTIME_SKILL_ALLOWLIST,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
-    assert.equal(selection.skillNames.length, runtime === "claude" ? 14 : 13);
+    assert.equal(selection.skillNames.length, runtime === "claude" ? 21 : 20);
     for (const required of [
       ...DEFAULT_COMMON_RUNTIME_SKILLS,
       ...RUNTIME_SKILL_ADDITIONS[runtime],
@@ -599,7 +606,7 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   const managed = JSON.parse(
     fs.readFileSync(path.join(tempHome, ".claude-skills-sync-manifest.json"), "utf8"),
   ).managedSkills;
-  assert.equal(managed.length, 14);
+  assert.equal(managed.length, 21);
   assert.equal(fs.existsSync(path.join(tempHome, "skills", "zephermine", "SKILL.md")), true);
   assert.equal(fs.existsSync(path.join(tempHome, "skills", "docx", "SKILL.md")), false);
   assert.equal(fs.existsSync(localSkill), true);
@@ -612,7 +619,7 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   );
 
   const catalog = fs.readFileSync(path.join(tempHome, "SKILLS-CATALOG.md"), "utf8");
-  assert.match(catalog, /기본 활성 스킬: 14개/);
+  assert.match(catalog, /기본 활성 스킬: 21개/);
   assert.match(catalog, expectedSourceOnlySkillPattern);
   assert.match(catalog, /\| zephermine \| active \|/);
   assert.match(catalog, /\| docx \| source-only \|/);
@@ -752,12 +759,12 @@ test("Claude and Gemini agent syncs support default exclusion and explicit opt-i
       const manifest = JSON.parse(
         fs.readFileSync(path.join(geminiHome, ".gemini-sync-manifest.json"), "utf8"),
       );
-      assert.equal(manifest.managedSkills.length, 13);
+      assert.equal(manifest.managedSkills.length, 20);
       const skillsCatalog = fs.readFileSync(
         path.join(geminiHome, "SKILLS-CATALOG.md"),
         "utf8",
       );
-      assert.match(skillsCatalog, /기본 활성 스킬: 13개/);
+      assert.match(skillsCatalog, /기본 활성 스킬: 20개/);
       assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
       assertDormantOrchestratorModule(geminiHome, "Gemini");
     }

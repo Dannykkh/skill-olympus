@@ -2,7 +2,7 @@
 
 ## Native-First 구현 경계
 
-- 공개 추적 스킬 소스 99개 중 사용자 진입점 하네스 11개와 Gemini 어댑터 2개만 기본 활성화합니다. 나머지 82개는 `~/.gemini/SKILLS-CATALOG.md`의 source-only 내부·선택 모듈로 보존합니다.
+- 공개 추적 스킬 소스 100개 중 사용자 진입점 18개와 Gemini 어댑터 2개만 기본 활성화합니다. 나머지 76개는 `~/.gemini/SKILLS-CATALOG.md`의 source-only 내부·선택 모듈로 보존합니다.
 - `skills/{name}/...` 참조는 프로젝트 파일이 없으면 `~/.gemini/skills/{name}/...`, 이어서 카탈로그의 source-only `읽을 경로`로 절대경로를 해석합니다. 활성 하네스는 하위 모듈을 별도 스킬로 호출하지 않고 정확한 `SKILL.md`를 직접 읽으며 참조·스크립트는 그 모듈 루트를 기준으로 실행합니다.
 - 필수 source-only 모듈 누락은 실패 또는 `NOT RUN`으로 남기고, 선택 모듈만 명시된 네이티브 폴백을 사용합니다. 누락을 `PASS`로 처리하지 않습니다.
 - Olympus 사용자 정의 에이전트는 기본 등록 0개이며 source-only `agents/*.md`를 런타임 능력으로 취급하지 않습니다. 절차는 명시형 스킬이 소유합니다.

@@ -2,7 +2,7 @@
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
 >
-> Olympus 공개 추적 스킬 소스 99개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 82개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 14개, Codex/Gemini는 활성 13개이며 Grok 설치 표면은 Claude의 14개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
+> Olympus 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 21개, Codex/Gemini는 활성 20개이며 Grok 설치 표면은 Claude의 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
 >
 > **호출 규칙:** 아래 `고정 호출명` 표만 기본 slash 진입점입니다. source-only 항목은 자연어로 기능을 요청하면 LLM이나 활성 하네스가 카탈로그의 현재 `SKILL.md`를 직접 읽어 적용합니다. source-only 이름을 `/name`으로 입력하는 방식은 `--include-source-only-skills`로 활성 등록한 환경에서만 보장됩니다. 표의 “opt-in 시 `/name`” 표기도 모두 이 조건을 뜻합니다.
 
@@ -22,8 +22,15 @@
 | 헤르메스 | `/hermes` |
 | 아테나 | `/athena` |
 | 아프로디테 | `/aphrodite` |
+| 헤스티아 | `/hestia` |
+| SEO+AEO+GEO 감사 | `/seo-audit` |
+| 코드 설명 | `/explain` |
+| 한↔영 번역 | `/translate` (ko-en-translator) |
+| 릴리즈 노트 | `/release` (release-notes) |
+| 코드 기반 영상 | `/video-maker` |
+| API 통합 테스트 | “API 테스트해줘” (api-tester) |
 
-`release-notes`, `estimate`, `okr`는 기본 source-only입니다. 각각 “릴리즈 진행해줘”, “견적서 만들어줘”, “OKR 정리해줘”처럼 자연어로 요청하면 카탈로그 원본을 직접 읽습니다. `/release`, `/estimate`, `/okr` 메뉴가 필요할 때만 `--include-source-only-skills`로 활성화합니다.
+`estimate`, `okr`는 기본 source-only입니다. 각각 “견적서 만들어줘”, “OKR 정리해줘”처럼 자연어로 요청하면 카탈로그 원본을 직접 읽습니다. `/estimate`, `/okr` 메뉴가 필요할 때만 `--include-source-only-skills`로 활성화합니다.
 
 ---
 
@@ -118,7 +125,7 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **hestia (source-only 스킬)** | 측정 기반 데드 코드 탐지와 정리 | 카탈로그의 원본 경로 |
+| **hestia (활성 스킬)** | 측정 기반 데드 코드 탐지와 정리 | `/hestia` |
 
 ---
 
@@ -273,7 +280,7 @@ claude plugin install voltagent-qa-sec
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
 | `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — 엔진: /goal 1순위, /loop 심장박동 1.5순위 `--heartbeat`) |
-| `skills/seo-audit/` | SEO+AEO+GEO 감사 — robots.txt, 사이트맵, 메타태그, JSON-LD, 이미지, 링크, 성능, AI크롤러, 답변엔진, 생성형AI (10영역) |
+| `skills/seo-audit/` | SEO+AEO+GEO 감사 — 10영역 정적 분석 + **검색 SEO / AI 가시성 2축 점수** (평균내지 않음). 팩트 밀도 계측기(한국어 대응) + P0 상한 + na 재정규화 |
 | `skills/autoresearch/` | 스킬 프롬프트 자동 최적화 — Hill Climbing 루프로 SKILL.md 개선 (Karpathy autoresearch 패턴) |
 | `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
 | `skills/ui-ux-auditor/` | UI/UX 8영역 감사 + 자동 수정 — 다크모드, 반응형, 접근성, 로딩, 폼, 네비, 타이포, 애니메이션 |
@@ -306,7 +313,7 @@ claude plugin install voltagent-qa-sec
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
 | `skills/clio/` | 역사의 뮤즈(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/clio) |
 | `skills/themis/` | 테미스(Themis) — 개인정보 수집/저장/전송/삭제 전수 감사(file:line 근거) + 국가별(한국/미국/EU) 개인정보처리방침 초안 생성 (/themis) |
-| `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (source-only, opt-in 시 `/release`) |
+| `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (`/release`) |
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (source-only, opt-in 시 `/estimate`) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |

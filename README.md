@@ -49,11 +49,11 @@ One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
 | 👁️ **Hundred-eyed watchman** | `/argos` cross-references spec ↔ code ↔ tests. Nothing slips past 100 eyes |
 | ⚖️ **Underworld judge** | `/minos` weighs every Playwright test on golden scales. Fix-until-pass loop, no escape |
 | 📜 **The chronicler** | `/clio` — closer + muse. GO/NO-GO judgment first, then carves PRD, flow diagrams, docs, and doc site onto bronze |
-| 🏠 **Keeper of the hearth (optional)** | The source-only `hestia` workflow scans dead code, unused exports, and orphan files; request it through the catalog or enable `/hestia` with the source-only opt-in |
+| 🏠 **Keeper of the hearth** | The `hestia` workflow scans dead code, unused exports, and orphan files; run it with `/hestia` |
 | 📋 **Launch checklist (optional)** | The source-only `shipping-and-launch` workflow covers pre-launch gates, staged rollout, and rollback planning |
 | 📐 **Decision records (optional)** | The source-only `documentation-and-adrs` workflow records alternatives, trade-offs, and superseded decisions |
 
-**99 public skill sources (default allowlist union: 17 = 11 entrypoint harnesses + 6 runtime adapters; 13 or 14 active per installed surface, 82 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 CLIs · 1 mythology**
+**100 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per installed surface, 76 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 CLIs · 1 mythology**
 
 ---
 
@@ -604,9 +604,9 @@ Cross-CLI sync is handled by `sync-claude-skills.js`, `sync-codex-assets.js`, an
 Codex skills install globally only by default, avoiding duplicate discovery from this repo's
 `.agents/skills`; use `node scripts/sync-codex-assets.js --include-project-skills` only for an
 isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
-contains 17 skills: 11 user-facing harnesses and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
-3 or 4 incompatible adapters, leaving Claude with 14 active skills and Codex/Gemini/standalone Grok
-with 13; the installed Grok surface reads Claude's shared 14. The same 82 public non-allowlisted sources are
+contains 24 skills: 18 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
+3 or 4 incompatible adapters, leaving Claude with 21 active skills and Codex/Gemini/standalone Grok
+with 20; the installed Grok surface reads Claude's shared 21. The same 76 public non-allowlisted sources are
 copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
 `SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
 `.olympus/runtime-modules/orchestrator`; MCP registration points there and dependency caches survive source refreshes. Activate every compatible source-only skill with `--include-source-only-skills`,
@@ -662,7 +662,7 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 |----------|--------|------------|
 | **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
 | **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
-| **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 9 palettes, 47 font pairings, 84 styles, 14 themes (4 Hangul), SEO+AEO+GEO audit, chart selection guide |
+| **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 9 palettes, 47 font pairings, 84 styles, 14 themes (4 Hangul), SEO+AEO+GEO dual-score audit (search / AI visibility), chart selection guide |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier, themis + 3 more | Chronos loop, Playwright QA, privacy-policy generator (Themis) |

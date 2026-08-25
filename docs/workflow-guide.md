@@ -39,7 +39,7 @@
 | **구현** | agent-team/workpm (활성), orchestrator (MCP 분기에서만 source-only 직접 로드) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (라이브러리 문서) |
 | **검증** | minos (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
 | **배포** | docker-deploy (source-only 직접 로드) | — | — |
-| **공통** | mnemo (활성), commit-work·hestia·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
+| **공통** | mnemo·hestia (활성), commit-work·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
 
 ---
 
@@ -362,9 +362,9 @@ Docker 배포 환경 만들어줘
 |------|------|------|--------------|
 | `코드 리뷰해줘` | CLI 네이티브 리뷰 + 필요 시 source-only `code-reviewer` 직접 로드 | 코드 리뷰 (품질/보안/성능) | 구현 후, QA 전 |
 | `보안 감사해줘` | source-only `code-reviewer` 보안 감사 계약 직접 로드 | 시크릿·공급망·CI/CD·코드·STRIDE 감사 | 구현 후, 배포 전 |
-| `dead code 정리해줘` | source-only `hestia` 직접 로드 | 코드 정리, dead code 탐지 | 구현 후, 리뷰 전 |
+| `dead code 정리해줘` | `/hestia` | 코드 정리, dead code 탐지 | 구현 후, 리뷰 전 |
 | `레거시 폐기 계획 세워줘` | source-only `deprecation-and-migration` 직접 로드 | 레거시 폐기/마이그레이션 계획 | 구현 후, 리뷰 전 |
-| `이 코드 설명해줘` | 네이티브 설명 + 필요 시 source-only `explain` 직접 로드 | 코드 설명 | 아무 때나 |
+| `이 코드 설명해줘` | 네이티브 설명 + 필요 시 `/explain` | 코드 설명 | 아무 때나 |
 | `커밋해줘` | 네이티브 Git 흐름 + 필요 시 source-only `commit-work` 직접 로드 | Git 커밋 | 각 Phase 완료 시 |
 | `핸드오프 준비해줘` | Mnemo 세션 규칙 | 세션 요약 + MEMORY.md 업데이트 | 세션 종료 시 |
 

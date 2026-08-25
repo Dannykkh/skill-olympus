@@ -48,11 +48,11 @@
 | 👁️ **백 개의 눈을 가진 파수꾼** | `/argos`가 spec ↔ 코드 ↔ 테스트를 교차검증한다. 백 개의 눈을 비껴가는 것은 없다 |
 | ⚖️ **저승의 심판자** | `/minos`가 모든 Playwright 테스트를 황금 저울에 단다. fix-until-pass 루프, 도망갈 곳은 없다 |
 | 📜 **기록자 + 마무리투수** | `/clio` — 먼저 GO/NO-GO를 판정하고, 그 다음 PRD, 흐름도, 기술 문서, 문서 사이트를 청동에 새긴다 |
-| 🏠 **화로의 여신(선택)** | source-only `hestia` 워크플로우가 Dead Code, 미사용 export, 고아 파일을 찾는다. 카탈로그 경로로 요청하거나 source-only opt-in 후 `/hestia`를 사용한다 |
+| 🏠 **화로의 여신** | `hestia`가 Dead Code, 미사용 export, 고아 파일을 찾는다. `/hestia`로 실행한다 |
 | 📋 **출시 체크리스트(선택)** | source-only `shipping-and-launch` 워크플로우가 프리런치 게이트, 단계적 롤아웃, 롤백 계획을 다룬다 |
 | 📐 **결정 기록(선택)** | source-only `documentation-and-adrs` 워크플로우가 대안·트레이드오프·대체 이력을 기록한다 |
 
-**공개 추적 스킬 소스 99개(기본 allowlist 합집합 17개 = 사용자 진입점 하네스 11개 + 런타임 어댑터 6개, 설치 표면별 활성 13개 또는 14개, source-only 내부·선택 모듈 82개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · CLI 4개 · 신화 1개**
+**공개 추적 스킬 소스 100개(기본 allowlist 합집합 24개 = 사용자 진입점 18개 + 런타임 어댑터 6개, 설치 표면별 활성 20개 또는 21개, source-only 내부·선택 모듈 76개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · CLI 4개 · 신화 1개**
 
 ---
 
@@ -127,7 +127,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 .\install.bat --include-source-only-skills
 ```
 
-끝입니다. 공개 추적 스킬 소스 99개는 기본 allowlist 합집합 17개(사용자 진입점 하네스 11개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 82개로 나뉩니다. 런타임별로 호환되지 않는 어댑터를 다시 제외하므로 Codex와 Gemini는 호환 항목 95개(활성 13 + source-only 82), Claude는 96개(활성 14 + source-only 82)를 노출합니다. Grok의 독립 정책도 95개(13 + 82)이지만 실제 설치 표면은 Claude 공유 디렉터리를 읽으므로 Claude와 같은 활성 14개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 활성 하네스는 필요한 source-only 모듈을 카탈로그에서 직접 읽으므로 별도 등록이 필요하지 않습니다. **Olympus 사용자 정의 에이전트는 기본으로 하나도 등록하지 않으며**, 참고 소스 42개는 모두 source-only입니다. 새 스킬과 에이전트도 allowlist 승인 전에는 자동 활성화되지 않습니다.
+끝입니다. 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 런타임별로 호환되지 않는 어댑터를 다시 제외하므로 Codex와 Gemini는 호환 항목 96개(활성 20 + source-only 76), Claude는 97개(활성 21 + source-only 76)를 노출합니다. Grok의 독립 정책도 96개(20 + 76)이지만 실제 설치 표면은 Claude 공유 디렉터리를 읽으므로 Claude와 같은 활성 21개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 활성 하네스는 필요한 source-only 모듈을 카탈로그에서 직접 읽으므로 별도 등록이 필요하지 않습니다. **Olympus 사용자 정의 에이전트는 기본으로 하나도 등록하지 않으며**, 참고 소스 42개는 모두 source-only입니다. 새 스킬과 에이전트도 allowlist 승인 전에는 자동 활성화되지 않습니다.
 
 > CLI가 없어도 자산 준비는 건너뛰지 않습니다. 실행 파일이 필요한 등록 명령만 `skipped`로
 > 보고하며, 설치된 자산은 해당 CLI를 처음 실행할 때 그대로 사용됩니다.
@@ -276,7 +276,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ### v5.0.0 — 진입점 전용 레지스트리 · 네이티브 에이전트 · 공급자 안전 라우팅 (2026.08)
 
-Olympus는 이제 사용자 진입점 하네스와 현재 CLI용 런타임 어댑터만 자동 탐색 레지스트리에 둡니다. 공개 추적 스킬 소스 99개는 allowlist 합집합 17개(공통 진입점 11개 + 런타임 어댑터 6개)와 source-only 모듈 82개로 분리됩니다. Claude와 Claude 디렉터리를 공유하는 Grok은 활성 14개, Codex와 Gemini는 활성 13개이며, 세 CLI 홈 모두 정확한 카탈로그 경로로 같은 82개 source-only 라이브러리를 유지합니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 릴리스 수에서 제외됩니다. source-only는 현재 코드를 삭제한 상태가 아니라 slash 메뉴와 시작 description 예산을 쓰지 않고 필요할 때 직접 읽는 상태이며, 전체 레지스트리가 필요할 때만 `--include-source-only-skills`로 명시 활성화합니다. Olympus 사용자 정의 에이전트는 기본 0개입니다. 오케스트레이션은 CLI별 읽기 전용·쓰기 가능 네이티브 의미 역할을 사용하고, Main이 공유 상태를 소유하며 위임할 수 없으면 같은 계약으로 순차 실행합니다. 공급자별로 호환되는 어댑터만 선택해 Claude/Grok·Codex·Gemini가 서로의 mnemo나 agent-team 어댑터를 잘못 로드하지 않습니다. 설치기는 인수 없음도 네 CLI 전체 설치로 처리하고, CLI 실행 파일이 없어도 자산은 준비하되 실행 파일이 필요한 등록만 건너뜁니다. 이름이 다른 외부 스킬은 유지하고, 같은 이름의 수정본은 `_olympus-preserved`로 옮겨 수동 복구할 수 있게 보존합니다.
+Olympus는 이제 사용자 진입점 하네스와 현재 CLI용 런타임 어댑터만 자동 탐색 레지스트리에 둡니다. 공개 추적 스킬 소스 100개는 allowlist 합집합 24개(공통 진입점 18개 + 런타임 어댑터 6개)와 source-only 모듈 76개로 분리됩니다. Claude와 Claude 디렉터리를 공유하는 Grok은 활성 21개, Codex와 Gemini는 활성 20개이며, 세 CLI 홈 모두 정확한 카탈로그 경로로 같은 76개 source-only 라이브러리를 유지합니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 릴리스 수에서 제외됩니다. source-only는 현재 코드를 삭제한 상태가 아니라 slash 메뉴와 시작 description 예산을 쓰지 않고 필요할 때 직접 읽는 상태이며, 전체 레지스트리가 필요할 때만 `--include-source-only-skills`로 명시 활성화합니다. Olympus 사용자 정의 에이전트는 기본 0개입니다. 오케스트레이션은 CLI별 읽기 전용·쓰기 가능 네이티브 의미 역할을 사용하고, Main이 공유 상태를 소유하며 위임할 수 없으면 같은 계약으로 순차 실행합니다. 공급자별로 호환되는 어댑터만 선택해 Claude/Grok·Codex·Gemini가 서로의 mnemo나 agent-team 어댑터를 잘못 로드하지 않습니다. 설치기는 인수 없음도 네 CLI 전체 설치로 처리하고, CLI 실행 파일이 없어도 자산은 준비하되 실행 파일이 필요한 등록만 건너뜁니다. 이름이 다른 외부 스킬은 유지하고, 같은 이름의 수정본은 `_olympus-preserved`로 옮겨 수동 복구할 수 있게 보존합니다.
 
 ### v4.21.0 — 아프로디테 경험 주도 재설계 · Stitch 실행 어댑터화 · 제우스 스코프 게이트 (2026.08)
 
@@ -604,10 +604,10 @@ Loop Library 028/034 패턴을 루프 전반에 적용했습니다. **완료 계
 Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents/skills`와 중복 탐색되지
 않습니다. 격리된 프로젝트 미러 테스트가 필요할 때만
 `node scripts/sync-codex-assets.js --include-project-skills`를 사용합니다. 모든 런타임은
-기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 하네스 11개와
-`agent-team`·`mnemo` 어댑터 6개를 합친 17개입니다. 각 런타임은 호환되지 않는 어댑터
-3개 또는 4개를 제외해 Claude 14개, Codex/Gemini/독립 Grok 13개를 활성화하며,
-실제 Grok 설치 표면은 Claude의 공유 14개를 읽습니다. allowlist 밖의 같은 82개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
+기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 18개와
+`agent-team`·`mnemo` 어댑터 6개를 합친 24개입니다. 각 런타임은 호환되지 않는 어댑터
+3개 또는 4개를 제외해 Claude 21개, Codex/Gemini/독립 Grok 20개를 활성화하며,
+실제 Grok 설치 표면은 Claude의 공유 21개를 읽습니다. allowlist 밖의 같은 76개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
 `SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
 `--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
 이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
@@ -649,7 +649,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 ## 구성 요소
 
-### 스킬 소스 (101개, 기본 합집합 17개, 설치 표면별 활성 13개 또는 14개)
+### 스킬 소스 (101개, 기본 합집합 24개, 설치 표면별 활성 20개 또는 21개)
 
 아래 표는 시작 시 레지스트리가 아니라 소스 목록입니다. 저빈도 문서 형식 도구, 서비스 통합, 프레임워크 레시피, 생성기는 명시 호출하거나 opt-in 설치하기 전까지 source-only로 남습니다.
 
@@ -657,7 +657,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 |----------|------|------|
 | **AI 도구** | codex, gemini, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
 | **파이프라인** | zephermine, zeus, argos, minos, closer, shipping-and-launch | 제로 인터랙션 풀 파이프라인, 출시 체크리스트 |
-| **프론트엔드** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 9 팔레트, 47 폰트 페어링, 84 스타일, 테마 14종(한글 4종), SEO+AEO+GEO 감사, 차트 선택 가이드 |
+| **프론트엔드** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 9 팔레트, 47 폰트 페어링, 84 스타일, 테마 14종(한글 4종), SEO+AEO+GEO 2축 점수 감사(검색/AI 가시성), 차트 선택 가이드 |
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | minos, auto-continue-loop, flow-verifier, themis + 3개 | 크로노스 루프, Playwright QA, 개인정보처리방침 생성(테미스) |
