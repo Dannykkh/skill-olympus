@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Twelve Greek gods. One command. A working SaaS. 그리스 신들의 신전 — 설계부터 출항까지 한 마디로 끝내는 멀티 CLI 파이프라인.",
-    "version": "5.4.0"
+    "version": "6.0.0"
   },
   "plugins": [
     {
@@ -15,12 +15,12 @@
         "repo": "Dannykkh/skill-olympus"
       },
       "description": "100 public skill sources with a lightweight entrypoint-only registry, 42 optional agent references, and native-agent orchestration for Claude Code, Codex CLI, Google Antigravity CLI, and Grok Build. Twelve Greek gods form a full pipeline with cross-CLI memory and zero-interaction delivery.",
-      "version": "5.4.0",
+      "version": "6.0.0",
       "category": "productivity",
       "tags": [
         "claude-code",
         "codex-cli",
-        "gemini-cli",
+        "antigravity-cli",
         "grok-build",
         "agent-skills",
         "greek-mythology",
