@@ -11,6 +11,7 @@
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![Latest release](https://img.shields.io/github/v/release/Dannykkh/skill-olympus?display_name=tag)](https://github.com/Dannykkh/skill-olympus/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Website](https://img.shields.io/badge/website-live-E4B700)](https://dannykkh.github.io/skill-olympus/zh-cn/)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-supported-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-supported-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
@@ -140,7 +141,7 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
 负责实现。只有 Argos、Docker 和 Minos 的验证证据齐备后，流程才允许返回 SUCCESS。
 
 <p align="center">
-  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Zeus 从 Chronos、Zephermine、Poseidon、Argos、Docker、Minos 走向证据报告的流程" width="1100">
+  <img src="docs/assets/skill-olympus-system-overview.svg" alt="Skill Olympus v6 全景图：4 个集成 CLI、2 个 skills-only 主机、Zeus 六阶段交付流程，以及 Chronos 持续性轨道和 Mnemo 记忆轨道" width="1100">
 </p>
 
 ```text

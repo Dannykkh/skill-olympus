@@ -11,6 +11,7 @@
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![Latest release](https://img.shields.io/github/v/release/Dannykkh/skill-olympus?display_name=tag)](https://github.com/Dannykkh/skill-olympus/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Website](https://img.shields.io/badge/website-live-E4B700)](https://dannykkh.github.io/skill-olympus/)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
@@ -172,21 +173,12 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 미노스의 근거가 모두 있어야 SUCCESS를 허용합니다.
 
 <p align="center">
-  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Chronos 가드에서 Zephermine, Poseidon, Argos, Docker, Minos, 증거 리포트로 이어지는 Zeus 하네스 엔지니어링 파이프라인" width="1100">
+  <img src="docs/assets/skill-olympus-system-overview.svg" alt="통합 CLI 4개, skills-only 호스트 2개, Zeus 6단계 전달 하네스, Chronos 지속성 레일, Mnemo 기억 레일을 보여주는 Skill Olympus v6 전체 구조" width="1100">
 </p>
 
 크로노스는 그 아래의 루프 계층입니다. 네이티브 `/goal`을 우선하고, 필요할 때 런타임별
 재진입 방식을 사용하며 READ → FIND → FIX → VERIFY → LOG로 돌아갑니다. 소진은 미완료이며,
 막힌 작업은 성공으로 포장하지 않고 Owner Decision Brief와 함께 주차합니다.
-
-<details>
-<summary><strong>Chronos 재진입 구조 보기</strong></summary>
-
-<p align="center">
-  <img src="docs/assets/chronos-loop-engineering-codex-imagegen.png" alt="네이티브 goal, Codex notify 폴백, resume 체인, 검증 사이클, 완료 계약, PARK, EXHAUSTED를 포함한 Chronos 루프 엔지니어링" width="1100">
-</p>
-
-</details>
 
 ---
 

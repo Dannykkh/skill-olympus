@@ -11,6 +11,7 @@ workers already built into your CLI.
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![Latest release](https://img.shields.io/github/v/release/Dannykkh/skill-olympus?display_name=tag)](https://github.com/Dannykkh/skill-olympus/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Website](https://img.shields.io/badge/website-live-E4B700)](https://dannykkh.github.io/skill-olympus/en/)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
@@ -171,21 +172,12 @@ Chronos persistence, drives Zephermine planning, routes implementation through t
 workers, and requires Argos, Docker, Minos, and a final evidence report before SUCCESS is allowed.
 
 <p align="center">
-  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Zeus harness engineering pipeline from Chronos guard through Zephermine, Poseidon, Argos, Docker, Minos, and evidence report" width="1100">
+  <img src="docs/assets/skill-olympus-system-overview.svg" alt="Skill Olympus v6 system overview: four integrated CLIs, two skills-only hosts, the six-stage Zeus delivery harness, and the Chronos persistence and Mnemo memory rails" width="1100">
 </p>
 
 Chronos is the loop layer under that harness. It prefers native `/goal`, uses runtime-specific continuation
 when needed, and returns to READ → FIND → FIX → VERIFY → LOG. Exhaustion is incomplete, and blocked work
 is parked with an Owner Decision Brief instead of being reported as success.
-
-<details>
-<summary><strong>See the Chronos continuation architecture</strong></summary>
-
-<p align="center">
-  <img src="docs/assets/chronos-loop-engineering-codex-imagegen.png" alt="Chronos loop engineering with native goal, Codex notify fallback, resume chain, verification cycle, completion contract, park, and exhausted outcomes" width="1100">
-</p>
-
-</details>
 
 ---
 

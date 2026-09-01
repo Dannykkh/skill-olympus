@@ -11,6 +11,7 @@ CLIが備えるネイティブエージェントは、そのまま活用しま�
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
 [![Latest release](https://img.shields.io/github/v/release/Dannykkh/skill-olympus?display_name=tag)](https://github.com/Dannykkh/skill-olympus/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Website](https://img.shields.io/badge/website-live-E4B700)](https://dannykkh.github.io/skill-olympus/ja/)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-supported-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-supported-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
@@ -145,7 +146,7 @@ Zeusは、依頼を設計へ分解し、実装、監査、実行環境の準備�
 SUCCESSを返しません。
 
 <p align="center">
-  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="ChronosからZephermine、Poseidon、Argos、Docker、Minos、根拠レポートへ進むZeusのパイプライン" width="1100">
+  <img src="docs/assets/skill-olympus-system-overview.svg" alt="4つの統合CLI、2つのskills-onlyホスト、Zeusの6段階デリバリーハーネス、Chronosの継続性レール、Mnemoの記憶レールを示すSkill Olympus v6の全体図" width="1100">
 </p>
 
 ```text
