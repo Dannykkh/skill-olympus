@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Skill Olympus v6</title>
+  <desc id="desc">One workflow system for Claude Code, Codex, Antigravity, Grok, OpenClaw, and Hermes Agent.</desc>
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#f4f2ec" stroke-opacity=".045"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#0d0e12"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect x="42" y="42" width="1116" height="546" rx="8" fill="none" stroke="#30323a" stroke-width="2"/>
+  <text x="82" y="106" fill="#e6bd32" font-family="IBM Plex Mono,Consolas,monospace" font-size="18" font-weight="700" letter-spacing="4">SKILL OLYMPUS / V6.0.0</text>
+  <text x="82" y="216" fill="#f4f2ec" font-family="Fraunces,Georgia,serif" font-size="68" font-weight="600">One workflow system.</text>
+  <text x="82" y="294" fill="#f4f2ec" font-family="Fraunces,Georgia,serif" font-size="68" font-weight="600">Six runtime surfaces.</text>
+  <text x="82" y="350" fill="#a7a8b0" font-family="DM Sans,Arial,sans-serif" font-size="23">Integrated on four coding CLIs. Portable skills for two more hosts.</text>
+  <line x1="82" y1="416" x2="1118" y2="416" stroke="#e6bd32" stroke-width="4"/>
+  <g fill="#f4f2ec" font-family="DM Sans,Arial,sans-serif" font-size="22" font-weight="700">
+    <text x="82" y="472">Claude Code</text>
+    <text x="292" y="472">Codex</text>
+    <text x="430" y="472">Antigravity</text>
+    <text x="645" y="472">Grok</text>
+  </g>
+  <g fill="#a7a8b0" font-family="DM Sans,Arial,sans-serif" font-size="22" font-weight="700">
+    <text x="775" y="472">OpenClaw</text>
+    <text x="958" y="472">Hermes</text>
+  </g>
+  <text x="82" y="538" fill="#a7a8b0" font-family="IBM Plex Mono,Consolas,monospace" font-size="17" letter-spacing="2">ZEUS / CHRONOS / MNEMO</text>
+  <text x="1118" y="538" fill="#e6bd32" font-family="IBM Plex Mono,Consolas,monospace" font-size="17" font-weight="700" text-anchor="end">100 SOURCES · 18 ENTRY POINTS · 0 DEFAULT AGENTS</text>
+</svg>

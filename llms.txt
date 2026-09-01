@@ -1,18 +1,38 @@
 # Skill Olympus
 
-> A skill library that lets Claude Code, Codex, Gemini, and Grok share the same workflow — a harness-engineering and loop-engineering stack, named after the Twelve Olympians. 100 skills, 42 agents, shared across 4 CLIs.
+> Skill Olympus v6.0.0 is an open-source workflow system for AI coding runtimes. It integrates Claude Code, Codex CLI, Google Antigravity CLI, and Grok Build, and provides skills-only installation for OpenClaw and Hermes Agent.
 
-Zeus is the harness layer: one non-interactive request is kept alive, decomposed, implemented, inspected, deployed, tested, and reported without handing "next steps" back to the user. Chronos is the loop layer on top of that harness — a verification gate that runs real tests, paired with Minos (fix-until-pass), Argos (AC cross-check), and Clio (GO/NO-GO). Since v4.7.0 these loops run on CLI-native features, including the `/goal` stop gate.
+## Product model
 
-Grok Build (xAI's CLI) is supported with zero sync since v4.15.0: its Claude-compat layer reads the installed `~/.claude/` skills, agents, MCP servers, and rules directly, and the grok-mnemo adapter adds cross-session conversation memory (auto-saving turns to the shared per-project `conversations/` log that all four CLIs search).
+- 100 public skill sources
+- Default allowlist union: 24 entries
+- User-facing entry points: 18
+- Runtime adapters: 6
+- Source-only internal or optional modules: 76
+- Custom agents registered by default: 0
 
-Since v4.20.0, Themis (Titaness of law) audits a codebase for every personal-data collection, storage, outbound-transfer, and deletion point with file:line evidence, interviews the operator for what code cannot tell (retention, privacy officer, children, server region), and generates per-country privacy-policy drafts (Korean PIPA Art. 30 / US CCPA-CPRA / EU GDPR Art. 13) — unverified items stay explicit blanks, never invented. The same release added recording opt-out: MNEMO_DISABLE stops all conversation/tool-log auto-saving across the 4 CLIs, and OLYMPUS_UPDATE_CHECK_DISABLE turns off the session-start version check.
+Claude exposes 21 active skills. Codex and Antigravity expose 20 each. Grok reads the shared Claude surface and sees the same 21 active entries. OpenClaw and Hermes Agent each receive 18 portable entry points plus the 76 source-only modules; Olympus does not claim plugin, hook, Mnemo, MCP, custom-agent, or runtime-adapter parity on those two hosts.
+
+## Core workflow
+
+Zeus is the delivery harness: parse the request, plan with Zephermine, implement with the current CLI's native workers, inspect with Argos, prepare a reproducible runtime with Docker, test with Minos, and produce an evidence-backed report. Chronos is the persistence rail across that flow. Mnemo is the memory rail across sessions.
+
+## Installation
+
+- Windows integrated runtimes: .\install.bat
+- macOS/Linux integrated runtimes: chmod +x install.sh && ./install.sh
+- OpenClaw: install-openclaw.bat or bash ./install-openclaw.sh
+- Hermes Agent: install-hermes.bat or bash ./install-hermes.sh
 
 ## Pages
 
-- [Korean (default)](https://dannykkh.github.io/skill-olympus/): 하네스와 루프 엔지니어링, 판테온 명부, 파이프라인
-- [English](https://dannykkh.github.io/skill-olympus/en/): Harness and Loop Engineering, Pantheon Roster, Pipeline
+- Korean: https://dannykkh.github.io/skill-olympus/
+- English: https://dannykkh.github.io/skill-olympus/en/
+- Japanese: https://dannykkh.github.io/skill-olympus/ja/
+- Simplified Chinese: https://dannykkh.github.io/skill-olympus/zh-cn/
 
 ## Source
 
-- [GitHub Repository](https://github.com/Dannykkh/skill-olympus) — README, full skill/agent catalog, install scripts, MIT license
+- Repository: https://github.com/Dannykkh/skill-olympus
+- Release v6.0.0: https://github.com/Dannykkh/skill-olympus/releases/tag/v6.0.0
+- License: https://github.com/Dannykkh/skill-olympus/blob/master/LICENSE

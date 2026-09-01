@@ -1,651 +1,269 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Skill Olympus — A Skill Pantheon Shared by Four CLIs</title>
-<meta name="description" content="A skill library that lets Claude Code, Codex, Gemini, and Grok share the same workflow. 100 skills, 42 agents. Grok Build picks it up with zero install.">
-<link rel="canonical" href="https://dannykkh.github.io/skill-olympus/en/">
-<link rel="alternate" hreflang="ko" href="https://dannykkh.github.io/skill-olympus/">
-<link rel="alternate" hreflang="en" href="https://dannykkh.github.io/skill-olympus/en/">
-<link rel="alternate" hreflang="x-default" href="https://dannykkh.github.io/skill-olympus/">
-<meta property="og:locale" content="en_US">
-<meta property="og:locale:alternate" content="ko_KR">
-<meta property="og:title" content="Skill Olympus — A Skill Pantheon Shared by Four CLIs">
-<meta property="og:description" content="A skill library that lets Claude Code, Codex, Gemini, and Grok share the same workflow. 100 skills, 42 agents. Grok Build picks it up with zero install.">
-<meta property="og:url" content="https://dannykkh.github.io/skill-olympus/en/">
-<meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23101014'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='22' fill='%23E4B700' text-anchor='middle'%3E%CE%A9%3C/text%3E%3C/svg%3E">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Skill Olympus","description":"A skill library that lets Claude Code, Codex, Gemini, and Grok share the same workflow — a harness-engineering and loop-engineering stack. 100 skills, 42 agents. Grok Build reads the installed assets directly through its Claude-compat layer, no sync required.","codeRepository":"https://github.com/Dannykkh/skill-olympus","programmingLanguage":["TypeScript","Shell"],"license":"https://opensource.org/licenses/MIT","url":"https://dannykkh.github.io/skill-olympus/en/","inLanguage":["ko","en"]}
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Hahmlet:wght@400;600;700&amp;family=DM+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<link rel="preload" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" onload="this.onload=null;this.rel='stylesheet'">
-<noscript>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&amp;family=Hahmlet:wght@400;600;700&amp;family=DM+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
-</noscript>
-<style>
-  /* ── DESIGN.md 토큰 (정본 그대로) ─────────────────────────── */
-  :root {
-    --bg: #101014;
-    --surface: #17171C;
-    --text: #F4F4F5;
-    --copy: #A1A1AA;
-    --line: rgba(244, 244, 245, 0.14);
-    --line-strong: rgba(244, 244, 245, 0.28);
-    --accent: #E4B700;
-    --on-accent: #191919;
-    --serif: "Fraunces", "Hahmlet", serif;
-    --sans: "DM Sans", "Pretendard", sans-serif;
-    --mono: "JetBrains Mono", "IBM Plex Sans KR", monospace;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+<html lang="en" class="locale-en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill Olympus v6 — One workflow system for four coding CLIs</title>
+  <meta name="description" content="An open-source workflow system integrating Claude Code, Codex, Antigravity, and Grok, with portable skill installation for OpenClaw and Hermes Agent.">
+  <meta name="theme-color" content="#0d0e12">
+  <link rel="canonical" href="https://dannykkh.github.io/skill-olympus/en/">
+  <link rel="alternate" hreflang="ko" href="https://dannykkh.github.io/skill-olympus/">
+  <link rel="alternate" hreflang="en" href="https://dannykkh.github.io/skill-olympus/en/">
+  <link rel="alternate" hreflang="ja" href="https://dannykkh.github.io/skill-olympus/ja/">
+  <link rel="alternate" hreflang="zh-Hans" href="https://dannykkh.github.io/skill-olympus/zh-cn/">
+  <link rel="alternate" hreflang="x-default" href="https://dannykkh.github.io/skill-olympus/en/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Skill Olympus">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ko_KR">
+  <meta property="og:locale:alternate" content="ja_JP">
+  <meta property="og:locale:alternate" content="zh_CN">
+  <meta property="og:title" content="Skill Olympus v6 — One workflow system for four coding CLIs">
+  <meta property="og:description" content="Four integrated CLIs, two skills-only hosts, and 18 active entry points from planning to verified delivery.">
+  <meta property="og:url" content="https://dannykkh.github.io/skill-olympus/en/">
+  <meta property="og:image" content="https://dannykkh.github.io/skill-olympus/assets/og-skill-olympus-v6.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Skill Olympus v6: one workflow system, six runtime surfaces">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Skill Olympus v6">
+  <meta name="twitter:description" content="One verifiable development system across four coding CLIs.">
+  <meta name="twitter:image" content="https://dannykkh.github.io/skill-olympus/assets/og-skill-olympus-v6.png">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600;700&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600;700&amp;display=swap"></noscript>
+  <link rel="stylesheet" href="../assets/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "Skill Olympus",
+    "version": "6.0.0",
+    "description": "An open-source workflow system integrating Claude Code, Codex CLI, Antigravity CLI, and Grok Build, with portable skills for OpenClaw and Hermes Agent.",
+    "codeRepository": "https://github.com/Dannykkh/skill-olympus",
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://dannykkh.github.io/skill-olympus/en/",
+    "inLanguage": ["ko", "en", "ja", "zh-Hans"],
+    "programmingLanguage": ["JavaScript", "PowerShell", "Shell"]
   }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 1.0625rem;
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-    word-break: keep-all; /* 한글 단어 중간 줄바꿈 방지 */
-  }
-
-  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px); }
-
-  .mono {
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--copy);
-  }
-
-  a { color: inherit; text-decoration: none; }
-
-  .sr-only {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-  }
-
-  /* ── 언어 전환 (별도 정적 페이지로 이동하는 실링크 — hreflang은 head에서) ── */
-  .lang-switch {
-    font-size: 0.72rem; letter-spacing: 0.08em; color: var(--copy);
-    border: 1px solid var(--line-strong); border-radius: 2px;
-    padding: 4px 8px; transition: color 150ms, border-color 150ms;
-  }
-  .lang-switch:hover { color: var(--text); border-color: var(--text); }
-
-  /* ── 1. Navbar: 희소 톱바, 링크 우측, 솔리드 CTA 1 ─────────── */
-  header {
-    border-bottom: 1px solid var(--line);
-  }
-  .nav {
-    display: flex; align-items: center; justify-content: space-between;
-    height: 68px;
-  }
-  .wordmark { display: flex; align-items: baseline; gap: 10px; }
-  .wordmark .serif-mark {
-    font-family: var(--serif); font-size: 1.35rem; font-weight: 600;
-    letter-spacing: -0.01em; color: var(--text);
-  }
-  .nav-right { display: flex; align-items: center; gap: clamp(12px, 2.2vw, 26px); }
-  .nav-link {
-    font-size: 0.9rem; color: var(--copy);
-    border-bottom: 1px solid transparent; padding-bottom: 2px;
-    transition: color 150ms, border-color 150ms;
-  }
-  .nav-link:hover { color: var(--text); border-color: var(--line-strong); }
-  .btn-primary {
-    display: inline-block;
-    background: var(--accent); color: var(--on-accent);
-    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 9px 18px; border-radius: 2px; border: 1px solid var(--accent);
-    transition: transform 120ms var(--ease);
-  }
-  .btn-primary:active { transform: translateY(1px); }
-  .btn-outline {
-    display: inline-block;
-    color: var(--text); background: transparent;
-    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 9px 18px; border-radius: 2px; border: 1px solid var(--line-strong);
-    transition: border-color 150ms, transform 120ms var(--ease);
-  }
-  .btn-outline:hover { border-color: var(--text); }
-  .btn-outline:active { transform: translateY(1px); }
-
-  /* ── 2. Hero: 좌7 우4 비대칭, 3줄 오프셋 헤드라인 ──────────── */
-  /* 질감(technique-recipes §11-A/B) — 히어로 1곳에만, 액센트 hue 확장이라 새 색 발명 아님 */
-  .hero {
-    position: relative; isolation: isolate;
-    padding: clamp(64px, 9vw, 110px) 0 0;
-    background:
-      radial-gradient(ellipse 55% 45% at 12% 0%, color-mix(in oklch, var(--accent) 13%, transparent), transparent 70%),
-      radial-gradient(ellipse 45% 40% at 100% 15%, color-mix(in oklch, var(--accent) 6%, transparent), transparent 70%);
-  }
-  .hero::after {
-    content: ""; position: absolute; inset: 0; z-index: -1;
-    pointer-events: none; opacity: 0.045; mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 120px 120px;
-  }
-  .hero-grid {
-    display: grid; grid-template-columns: 7fr 1fr 4fr; align-items: end;
-  }
-  .eyebrow { margin-bottom: 28px; }
-  .eyebrow .tick { color: var(--accent); margin-right: 10px; }
-  h1 {
-    font-family: var(--serif);
-    font-size: clamp(2.6rem, 6vw, 4.4rem);
-    font-weight: 600; line-height: 1.08; letter-spacing: -0.02em;
-  }
-  h1 .l2 { display: block; padding-left: clamp(28px, 4vw, 72px); }
-  h1 .l3 { display: block; padding-left: clamp(56px, 8vw, 144px); }
-  .hero-copy { color: var(--copy); font-size: 0.98rem; padding-bottom: 8px; }
-  .hero-copy strong { color: var(--text); font-weight: 500; }
-  .hero-ctas { display: flex; gap: 14px; margin-top: 44px; flex-wrap: wrap; }
-
-  /* masked reveal — 장식 효과 예산 1 (히어로 한정) */
-  .reveal { display: inline-block; overflow: hidden; vertical-align: bottom; }
-  .reveal > span {
-    display: inline-block; transform: translateY(110%);
-    animation: rise 600ms var(--ease) forwards;
-  }
-  @keyframes rise { to { transform: translateY(0); } }
-  .fade-in { opacity: 0; animation: appear 600ms var(--ease) forwards; }
-  @keyframes appear { to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) {
-    .reveal > span { transform: none; animation: none; }
-    .fade-in { opacity: 1; animation: none; }
-  }
-
-  /* 신명 스트립 — 미디어 폴백, 기둥 라인 (정적, 언어 무관) */
-  .pantheon-strip {
-    margin-top: clamp(56px, 8vw, 88px);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    display: flex; overflow-x: auto; scrollbar-width: none;
-  }
-  .pantheon-strip::-webkit-scrollbar { display: none; }
-  .pantheon-strip span {
-    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em;
-    color: var(--copy); white-space: nowrap;
-    padding: 14px 22px; border-right: 1px solid var(--line);
-  }
-  .pantheon-strip span:first-child { border-left: 1px solid var(--line); }
-
-  /* ── 3. Stats: 카드 금지, 스트립 + 세로 구분선 ─────────────── */
-  .stats { border-bottom: 1px solid var(--line); }
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .stat {
-    padding: clamp(28px, 4vw, 44px) clamp(16px, 2.5vw, 32px);
-    border-right: 1px solid var(--line);
-  }
-  .stat:first-child { padding-left: 0; }
-  .stat:last-child { border-right: none; }
-  .stat-value {
-    font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.2rem);
-    font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
-  }
-  .stat-value::after {
-    content: ""; display: block; width: 28px; height: 2px;
-    background: var(--accent); margin-top: 12px;
-  }
-  .stat-label { margin-top: 10px; }
-
-  /* ── 3.5 하네스·루프 엔지니어링: 2항 정의 블록 ─────────────── */
-  .hl-lead { color: var(--copy); max-width: 720px; margin-bottom: clamp(32px, 4.5vw, 48px); font-size: 1.02rem; }
-  .hl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 56px); }
-  .hl-item { border-left: 1px solid var(--line); padding-left: clamp(20px, 3vw, 32px); }
-  .hl-item:first-child { border-left: none; padding-left: 0; }
-  .hl-label { margin-bottom: 10px; }
-  .hl-item h3 { font-family: var(--serif); font-size: clamp(1.6rem, 2.6vw, 2rem); font-weight: 600; margin-bottom: 14px; }
-  .hl-item h3 .hl-en {
-    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--copy); margin-left: 12px; vertical-align: middle;
-  }
-  .hl-item p { color: var(--copy); font-size: 0.95rem; }
-  .hl-item code {
-    font-family: var(--mono); font-size: 0.85em; color: var(--text);
-    background: var(--surface); padding: 2px 6px; border-radius: 2px; border: 1px solid var(--line);
-  }
-
-  /* ── 섹션 공통 ─────────────────────────────────────────────── */
-  section { padding: clamp(64px, 9vw, 96px) 0; }
-  .section-head {
-    display: flex; align-items: baseline; justify-content: space-between;
-    margin-bottom: clamp(36px, 5vw, 56px);
-  }
-  h2 {
-    font-family: var(--serif);
-    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
-    font-weight: 600; line-height: 1.15; letter-spacing: -0.01em;
-  }
-
-  /* ── 4. 판테온 명부: 에디토리얼 목차 리스트 6행 ────────────── */
-  .roster { border-top: 1px solid var(--line); }
-  .roster-row {
-    display: grid;
-    grid-template-columns: 64px 1fr 1.4fr auto;
-    align-items: baseline; gap: clamp(14px, 2.5vw, 32px);
-    padding: 22px 0;
-    border-bottom: 1px solid var(--line);
-    transition: border-color 150ms;
-  }
-  .roster-row:hover { border-color: var(--line-strong); }
-  .roster-row:hover .roster-num { color: var(--accent); }
-  .roster-num { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--copy); transition: color 150ms; }
-  .roster-name {
-    font-family: var(--serif); font-size: clamp(1.25rem, 2.2vw, 1.6rem); font-weight: 600;
-  }
-  .roster-name em {
-    font-style: normal; font-family: var(--mono); font-size: 0.72rem;
-    letter-spacing: 0.14em; color: var(--copy); margin-left: 12px; text-transform: uppercase;
-  }
-  .roster-role { color: var(--copy); font-size: 0.95rem; }
-  .roster-cmd {
-    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.04em;
-    color: var(--text); border: 1px solid var(--line-strong);
-    padding: 5px 12px; border-radius: 2px; white-space: nowrap;
-  }
-  .roster-more { padding-top: 20px; }
-
-  /* 강조 이탈(technique-recipes §11-C) — 06행 중 정확히 1행(제우스=all-in-one, 실제 제품 사실 근거) */
-  .roster-row.flagship {
-    grid-template-columns: 64px 1fr 1.4fr auto;
-    background: var(--surface);
-    margin: 0 calc(-1 * clamp(16px, 2.5vw, 28px));
-    padding: 26px clamp(16px, 2.5vw, 28px);
-    border-radius: 6px;
-    border-bottom-color: transparent;
-  }
-  .roster-row.flagship .roster-num { color: var(--accent); }
-  .roster-row.flagship .roster-name { font-size: clamp(1.5rem, 2.8vw, 2rem); }
-  .roster-row.flagship .roster-cmd { border-color: var(--accent); color: var(--accent); }
-  .flagship-tag {
-    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em;
-    color: var(--on-accent); background: var(--accent); white-space: nowrap;
-    padding: 2px 7px; border-radius: 2px; margin-left: 10px; vertical-align: middle;
-    display: inline-block; margin-top: 6px;
-  }
-
-  /* ── 5. 파이프라인: 세로 타임라인 5스텝 ────────────────────── */
-  /* 지속 비대칭(technique-recipes §11-D) — 히어로의 7:1:4 비율을 이 섹션에서 재사용 */
-  .pipeline-section { border-top: 1px solid var(--line); }
-  .pipeline-grid { display: grid; grid-template-columns: 7fr 1fr 4fr; }
-  .pipeline-note {
-    position: sticky; top: 88px; align-self: start;
-    border-left: 1px solid var(--line); padding-left: clamp(20px, 3vw, 32px);
-  }
-  .pipeline-note p { color: var(--copy); font-size: 0.95rem; margin-bottom: 20px; }
-  .pipeline-note .roster-cmd { display: inline-block; }
-  .pipe { position: relative; margin-left: 6px; padding-left: clamp(28px, 4vw, 44px); border-left: 1px solid var(--line-strong); }
-  .pipe-step { position: relative; padding: 0 0 clamp(32px, 4.5vw, 44px); max-width: 640px; }
-  .pipe-step:last-child { padding-bottom: 0; }
-  .pipe-step::before {
-    content: ""; position: absolute; top: 8px;
-    left: calc(-1 * clamp(28px, 4vw, 44px) - 4.5px);
-    width: 8px; height: 8px; border-radius: 0;
-    background: var(--bg); border: 1px solid var(--line-strong);
-  }
-  .pipe-num { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; color: var(--copy); }
-  .pipe-name { font-family: var(--serif); font-size: 1.3rem; font-weight: 600; margin: 4px 0 6px; }
-  .pipe-desc { color: var(--copy); font-size: 0.95rem; }
-
-  /* ── 6. CTA 밴드: 좌 텍스트 / 우 버튼 1 ────────────────────── */
-  .cta-band {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 28px;
-    padding: clamp(28px, 4.5vw, 44px) clamp(24px, 4vw, 48px);
-  }
-  .cta-band h2 { margin-bottom: 8px; }
-  .cta-band p { color: var(--copy); font-size: 0.95rem; }
-  .cta-band code {
-    font-family: var(--mono); font-size: 0.85em; color: var(--text);
-    background: var(--bg); padding: 2px 8px; border-radius: 2px; border: 1px solid var(--line);
-  }
-
-  /* ── 7. Footer: 브랜드 넓게 + 링크 3칼럼 ───────────────────── */
-  footer { border-top: 1px solid var(--line); padding: clamp(48px, 7vw, 72px) 0 36px; }
-  .footer-grid {
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: clamp(28px, 4vw, 48px);
-  }
-  .footer-brand .serif-mark { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; }
-  .footer-brand p { color: var(--copy); font-size: 0.9rem; margin-top: 12px; max-width: 300px; }
-  .footer-col h3 { margin-bottom: 16px; }
-  .footer-col a {
-    display: block; color: var(--copy); font-size: 0.9rem; padding: 5px 0;
-    transition: color 150ms;
-  }
-  .footer-col a:hover { color: var(--text); }
-  .footer-bottom {
-    margin-top: clamp(40px, 6vw, 56px); padding-top: 20px;
-    border-top: 1px solid var(--line);
-    display: flex; justify-content: space-between; align-items: center;
-  }
-
-  /* ── 반응형: 스택 순서와 축소 규칙 (direction 카드 RESPONSIVE) ── */
-  @media (max-width: 880px) {
-    .hero-grid { grid-template-columns: 1fr; }
-    .hero-copy { margin-top: 32px; max-width: 480px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .stat { padding-left: 0; }
-    .stat:nth-child(2n) { border-right: none; }
-    .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--line); }
-    .roster-row { grid-template-columns: 44px 1fr auto; }
-    .roster-role { grid-column: 2 / 4; padding-left: 0; }
-    .roster-row.flagship { margin: 0 -20px; padding: 22px 20px; }
-    .pipeline-grid { grid-template-columns: 1fr; }
-    .pipeline-gutter { display: none; }
-    .pipeline-note {
-      position: static; border-left: none; padding-left: 0;
-      margin-top: clamp(32px, 5vw, 44px);
-      border-top: 1px solid var(--line); padding-top: 28px;
-    }
-    .cta-band { flex-direction: column; align-items: flex-start; }
-    .footer-grid { grid-template-columns: 1fr 1fr; }
-    .nav-link { display: none; }
-  }
-</style>
+  </script>
 </head>
 <body>
-
-<header>
-  <div class="wrap nav">
-    <a href="#" class="wordmark">
-      <span class="serif-mark">Olympus</span>
-      <span class="mono">Skill</span>
-    </a>
-    <nav class="nav-right" aria-label="Menu">
-      <a class="nav-link" href="#harness-loop">Harness · Loop</a>
-      <a class="nav-link" href="#pantheon">Pantheon</a>
-      <a class="nav-link" href="#pipeline">Pipeline</a>
-      <a class="nav-link" href="#install">Install</a>
-      <a class="lang-switch mono" href="../" hreflang="ko" rel="alternate">KO</a>
-      <a class="btn-primary" href="https://github.com/Dannykkh/skill-olympus">GitHub</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-  <!-- 2. Hero -->
-  <div class="hero">
-    <div class="wrap">
-      
-      <p class="eyebrow mono fade-in" style="animation-delay: 80ms">
-        <span class="tick">—</span>Claude Code · Codex · Gemini · Grok — a shared skill library across 4 CLIs
-      </p>
-      <div class="hero-grid">
-        <h1>
-          
-          <span class="sr-only">Design by Zephermine, build by Poseidon, audit by Argos.</span>
-          
-          <span class="" aria-hidden="true">
-            <span class="reveal"><span style="animation-delay: 120ms">Design by Zephermine,</span></span>
-            <span class="l2"><span class="reveal"><span style="animation-delay: 240ms">build by Poseidon,</span></span></span>
-            <span class="l3"><span class="reveal"><span style="animation-delay: 360ms">audit by Argos.</span></span></span>
-          </span>
-        </h1>
-        <div></div>
-        
-        <p class="hero-copy fade-in" style="animation-delay: 480ms">
-          Four CLIs share <strong>one workflow</strong>.
-          From requirement interviews to parallel builds, closeout audits, and final docs —
-          100 skills turn one developer's process into a team's.
-        </p>
-      </div>
-      <div class="hero-ctas fade-in" style="animation-delay: 560ms">
-        
-        <a class="btn-primary" href="#install">Installation Guide</a>
-        
-        <a class="btn-outline" href="https://github.com/Dannykkh/skill-olympus">View Repository</a>
-      </div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap nav-shell">
+      <a class="brand" href="../" aria-label="Skill Olympus home" translate="no">
+        <span class="brand-mark" aria-hidden="true">Ω</span>
+        <span class="brand-name">Skill Olympus <small>V6</small></span>
+      </a>
+      <nav class="section-nav" aria-label="Page sections">
+        <a href="#overview">Overview</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#support">Support</a>
+        <a href="#install">Install</a>
+      </nav>
+      <nav class="locale-nav" aria-label="Language">
+        <a class="locale-link" href="../" lang="ko" hreflang="ko" aria-label="한국어">KO</a>
+        <a class="locale-link" href="../en/" lang="en" hreflang="en" aria-current="page" aria-label="English">EN</a>
+        <a class="locale-link" href="../ja/" lang="ja" hreflang="ja" aria-label="日本語">JA</a>
+        <a class="locale-link" href="../zh-cn/" lang="zh-Hans" hreflang="zh-Hans" aria-label="简体中文">ZH</a>
+      </nav>
+      <a class="github-link" href="https://github.com/Dannykkh/skill-olympus">GitHub</a>
     </div>
-    <div class="wrap">
-      <div class="pantheon-strip" aria-hidden="true">
-        <span>Zeus</span><span>Poseidon</span><span>Aphrodite</span><span>Athena</span>
-        <span>Hermes</span><span>Argos</span><span>Minos</span><span>Clio</span>
-        <span>Chronos</span><span>Daedalus</span><span>Hestia</span><span>Mnemo</span><span>Themis</span>
-      </div>
-    </div>
-  </div>
+  </header>
 
-  <!-- 3. Stats -->
-  <div class="stats">
-    <div class="wrap stats-grid">
-      <div class="stat">
-        <div class="stat-value">100</div>
-
-        <div class="stat-label mono">Skills</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">42</div>
-
-        <div class="stat-label mono">Agents</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">4</div>
-
-        <div class="stat-label mono">Supported CLIs</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">12</div>
-        
-        <div class="stat-label mono">Style Recipes</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3.5 하네스·루프 엔지니어링 -->
-  <section id="harness-loop">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Harness and Loop Engineering</h2>
-        <span class="mono">Act → Observe → Verify</span>
-      </div>
-      <p class="hl-lead">Agents don't run on a single prompt — they run on loops: act, observe, verify. Skill Olympus was built that way from the start.</p>
-      <div class="hl-grid">
-        <div class="hl-item">
-          <div class="hl-label mono">Foundation</div>
-          <h3>Harness</h3>
-          <p>Zeus is the foundation. One non-interactive request is kept alive, decomposed, implemented, inspected, deployed, tested, and reported — without handing "next steps" back to you.</p>
-        </div>
-        <div class="hl-item">
-          <div class="hl-label mono">Operating Model</div>
-          <h3>Loop</h3>
-          <p>Chronos is the operating model on top of it. A verification gate that runs real tests (Chronos), fix-until-pass (Minos), AC cross-check (Argos), GO/NO-GO (Clio) — since v4.7.0 these loops run on the native <code>/goal</code> stop gate.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4. 판테온 명부 -->
-  <section id="pantheon">
-    <div class="wrap">
-      <div class="section-head">
-        
-        <h2 class="">Pantheon Roster</h2>
-        <span class="mono">Pantheon Index — 06 / 12</span>
-      </div>
-      <div class="roster">
-        
-        <a class="roster-row flagship" href="#">
-          <span class="roster-num">01</span>
-          <span class="roster-name">Zeus<em>Pipeline</em><span class="flagship-tag">ALL-IN-ONE</span></span>
-          <span class="roster-role">Runs 02–06 for you, in order — no questions asked, from a single one-line brief.</span>
-          <span class="roster-cmd">/zeus</span>
-        </a>
-
-        
-        <a class="roster-row" href="#">
-          <span class="roster-num">02</span>
-          <span class="roster-name">Poseidon<em>Build</em></span>
-          <span class="roster-role">Splits the spec into dependency waves so an agent team can build them in parallel.</span>
-          <span class="roster-cmd">/poseidon</span>
-        </a>
-
-        
-        <a class="roster-row" href="#">
-          <span class="roster-num">03</span>
-          <span class="roster-name">Minos<em>Test Loop</em></span>
-          <span class="roster-role">Generates Playwright tests from the QA scenarios and loops until they pass.</span>
-          <span class="roster-cmd">/minos</span>
-        </a>
-
-        
-        <a class="roster-row" href="#">
-          <span class="roster-num">04</span>
-          <span class="roster-name">Argos<em>Audit</em></span>
-          <span class="roster-role">Cross-checks the implementation against every design artifact at closeout.</span>
-          <span class="roster-cmd">/argos</span>
-        </a>
-
-        
-        <a class="roster-row" href="#">
-          <span class="roster-num">05</span>
-          <span class="roster-name">Chronos<em>Autofix</em></span>
-          <span class="roster-role">Works through issues one priority cycle at a time in an autonomous fix loop.</span>
-          <span class="roster-cmd">/chronos</span>
-        </a>
-
-        
-        <a class="roster-row" href="#">
-          <span class="roster-num">06</span>
-          <span class="roster-name">Clio<em>Close</em></span>
-          <span class="roster-role">A final GO/NO-GO review, plus a PRD, technical docs, and a manual — generated in one pass.</span>
-          <span class="roster-cmd">/clio</span>
-        </a>
-      </div>
-      
-      <p class="roster-more mono">Also in the pantheon — Aphrodite (design) · Mnemo (memory) · Athena (strategy) · Hermes (business case) · Daedalus (PM) · Hestia (hygiene) · Themis (privacy)</p>
-    </div>
-  </section>
-
-  <!-- 5. 파이프라인 -->
-  <section id="pipeline" class="pipeline-section">
-    <div class="wrap">
-      <div class="section-head">
-        
-        <h2 class="">One Pipeline</h2>
-        <span class="mono">Interview → Build → Audit → Ship</span>
-      </div>
-      <div class="pipeline-grid">
-        
-        <div class="pipe">
-          <div class="pipe-step">
-            <div class="pipe-num">01 — Design</div>
-            <div class="pipe-name">Zephermine asks first</div>
-            <p class="pipe-desc">Stakeholder interviews and domain analysis become a section-by-section build plan. Questions come before code.</p>
-          </div>
-          <div class="pipe-step">
-            <div class="pipe-num">02 — Build</div>
-            <div class="pipe-name">Poseidon puts a team to work</div>
-            <p class="pipe-desc">Section dependencies are grouped into waves; an agent team implements them in parallel.</p>
-          </div>
-          <div class="pipe-step">
-            <div class="pipe-num">03 — Audit</div>
-            <div class="pipe-name">Argos cross-checks</div>
-            <p class="pipe-desc">Spec, API contracts, QA scenarios, flow diagrams — the implementation is checked against every design artifact.</p>
-          </div>
-          <div class="pipe-step">
-            <div class="pipe-num">04 — QA</div>
-            <div class="pipe-name">Minos sits in judgment</div>
-            <p class="pipe-desc">Generates Playwright tests from the QA scenarios and loops until they pass.</p>
-          </div>
-          <div class="pipe-step">
-            <div class="pipe-num">05 — Close</div>
-            <div class="pipe-name">Clio writes it down</div>
-            <p class="pipe-desc">A final GO/NO-GO review, plus a PRD, technical docs, and a manual — generated in one pass.</p>
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">v6.0.0 · 4 integrated · 2 skills-only</p>
+          <h1 id="hero-title">Four CLIs. <span class="accent">One development system.</span></h1>
+          <p class="hero-lede">Use the same working language in Claude Code, Codex, Antigravity, and Grok. Zeus carries work from plan to evidence, Chronos keeps it moving, and Mnemo carries decisions into the next session.</p>
+          <div class="actions">
+            <a class="button button-primary" href="https://github.com/Dannykkh/skill-olympus">View source</a>
+            <a class="button button-secondary" href="#install">Install</a>
           </div>
         </div>
-        <div class="pipeline-gutter"></div>
-        
-        <aside class="pipeline-note">
-          <p class="mono" style="color: var(--text); margin-bottom: 12px;">Or, all at once</p>
-          <p>Run the five steps yourself, or hand <strong style="color: var(--text)">Zeus</strong> a one-line brief and it finishes them in order — no questions asked.</p>
-          <a class="roster-cmd" href="#pantheon" style="border-color: var(--accent); color: var(--accent);">See /zeus ↑</a>
-        </aside>
-      </div>
-    </div>
-  </section>
-
-  <!-- 6. CTA 밴드 -->
-  <section id="install">
-    <div class="wrap">
-      <div class="cta-band">
-        <div>
-          
-          <h2 class="">Four CLIs. One Team.</h2>
-
-          <p class="">One run of <code>install.bat</code> installs the same skills on Claude Code, Codex, and Gemini. Grok Build needs no install at all — its Claude-compat layer reads <code>~/.claude</code> directly.</p>
+        <div class="signal-board" role="group" aria-label="Project facts">
+          <div class="metric"><strong>100</strong><span>public skill sources</span></div>
+          <div class="metric"><strong>18</strong><span>user entry points</span></div>
+          <div class="metric"><strong>76</strong><span>modules loaded on demand</span></div>
+          <div class="metric"><strong>0</strong><span>custom agents registered by default</span></div>
         </div>
-        
-        <a class="btn-primary" href="https://github.com/Dannykkh/skill-olympus">Get Started</a>
       </div>
+    </section>
+
+    <section class="section" id="overview" aria-labelledby="overview-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">01 / SYSTEM MAP</span>
+            <h2 id="overview-title">See exactly what connects, and how far.</h2>
+          </div>
+          <p class="section-summary">Olympus does not call every host fully integrated. Four runtimes have verified integration contracts; two additional hosts receive the portable skill surface only.</p>
+        </div>
+        <figure>
+          <div class="system-frame">
+            <img src="../assets/system-overview.svg" width="1200" height="720" loading="lazy" decoding="async" alt="Claude Code, Codex, Antigravity, and Grok are integrated runtimes. OpenClaw and Hermes Agent are skills-only hosts. A request moves through the Zeus plan, build, inspect, run, test, and report stages while Chronos and Mnemo provide persistence and memory.">
+            <div class="system-mobile" role="group" aria-label="Skill Olympus mobile system map">
+              <section class="system-mobile-group">
+                <h3>Integrated runtimes</h3>
+                <ul>
+                  <li><span>Claude Code</span><small>21 active</small></li>
+                  <li><span>Codex CLI</span><small>20 active</small></li>
+                  <li><span>Antigravity</span><small>20 active</small></li>
+                  <li><span>Grok Build</span><small>shared 21</small></li>
+                </ul>
+              </section>
+              <section class="system-mobile-group">
+                <h3>Skills-only hosts</h3>
+                <ul>
+                  <li><span>OpenClaw</span><small>18 portable</small></li>
+                  <li><span>Hermes Agent</span><small>18 portable</small></li>
+                </ul>
+              </section>
+              <section class="system-mobile-group">
+                <h3>Zeus delivery harness</h3>
+                <ol>
+                  <li><span>01 Plan</span><small>Zephermine</small></li>
+                  <li><span>02 Build</span><small>native workers</small></li>
+                  <li><span>03 Inspect</span><small>Argos</small></li>
+                  <li><span>04 Run</span><small>Docker</small></li>
+                  <li><span>05 Test</span><small>Minos</small></li>
+                  <li><span>06 Report</span><small>evidence</small></li>
+                </ol>
+              </section>
+              <div class="system-mobile-rail"><strong>Chronos</strong><span>Persistence until the completion contract is met</span></div>
+              <div class="system-mobile-rail"><strong>Mnemo</strong><span>Memory for decisions, conversations, evidence, and handoffs</span></div>
+            </div>
+          </div>
+          <figcaption class="system-caption">Skill Olympus v6 system map <span>18 active entry points · 76 source-only modules</span></figcaption>
+        </figure>
+        <div class="runtime-summary">
+          <div class="runtime-band">
+            <h3>Integrated</h3>
+            <p>Claude Code, Codex CLI, Antigravity CLI, and Grok Build follow runtime-specific installation, memory, and orchestration contracts.</p>
+          </div>
+          <div class="runtime-band">
+            <h3>Skills-only</h3>
+            <p>OpenClaw and Hermes Agent receive 18 active skills and 76 source-only modules.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workflow" aria-labelledby="workflow-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">02 / ENTRY POINTS</span>
+            <h2 id="workflow-title">Invoke only the depth you need.</h2>
+          </div>
+          <p class="section-summary">Only 18 entry points stay visible. Seventy-six specialist modules are read from the catalog when the request actually needs them.</p>
+        </div>
+        <div class="workflow-index">
+          <article class="workflow-row"><span class="workflow-number">01</span><span class="workflow-name">Zeus</span><code class="workflow-call">/zeus</code><p class="workflow-description">Take one sentence through planning, implementation, inspection, runtime setup, testing, and an evidence report.</p></article>
+          <article class="workflow-row"><span class="workflow-number">02</span><span class="workflow-name">Zephermine</span><code class="workflow-call">/zephermine</code><p class="workflow-description">Freeze requirements, APIs, QA scenarios, and flow diagrams before implementation.</p></article>
+          <article class="workflow-row"><span class="workflow-number">03</span><span class="workflow-name">Poseidon</span><code class="workflow-call">/agent-team</code><p class="workflow-description">Split file ownership across the current CLI's native workers for parallel implementation.</p></article>
+          <article class="workflow-row"><span class="workflow-number">04</span><span class="workflow-name">Aphrodite</span><code class="workflow-call">/aphrodite</code><p class="workflow-description">Move from user tasks to an experience contract, implementation, and real render review.</p></article>
+          <article class="workflow-row"><span class="workflow-number">05</span><span class="workflow-name">Argos</span><code class="workflow-call">/argos</code><p class="workflow-description">Compare implementation against design artifacts and issue an evidence-backed acceptance decision.</p></article>
+          <article class="workflow-row"><span class="workflow-number">06</span><span class="workflow-name">Minos</span><code class="workflow-call">/minos</code><p class="workflow-description">Run Playwright scenarios and repair reproducible failures until the checks pass.</p></article>
+          <article class="workflow-row"><span class="workflow-number">07</span><span class="workflow-name">Chronos</span><code class="workflow-call">/chronos</code><p class="workflow-description">Continue one issue at a time until external evidence satisfies the completion contract.</p></article>
+          <article class="workflow-row"><span class="workflow-number">08</span><span class="workflow-name">Mnemo</span><code class="workflow-call">/mnemo</code><p class="workflow-description">Find past conversations and decisions, then leave resumable state for the next session.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="support" aria-labelledby="support-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">03 / SUPPORT</span>
+            <h2 id="support-title">Support levels stay explicit.</h2>
+          </div>
+          <p class="section-summary">Reading a skill file is not the same as integrating hooks, memory, MCP, and native workers. The site keeps that boundary visible.</p>
+        </div>
+        <div class="support-layout">
+          <section class="support-group" aria-labelledby="integrated-title">
+            <h3 id="integrated-title">Integrated runtimes</h3>
+            <p class="support-intro">Install and verify both skills and runtime-specific adapters.</p>
+            <dl class="support-list">
+              <div class="support-row"><dt>Claude Code</dt><dd>21 active and 76 source-only, hooks, Mnemo, MCP, native subagents</dd></div>
+              <div class="support-row"><dt>Codex CLI</dt><dd>20 active and 76 source-only, notify-based Mnemo, MCP, native workers</dd></div>
+              <div class="support-row"><dt>Antigravity CLI</dt><dd>20 active and 76 source-only, native Stop hooks, Mnemo, MCP, native workflows</dd></div>
+              <div class="support-row"><dt>Grok Build</dt><dd>Claude-shared 21 active and 76 source-only, plus the Grok Mnemo adapter</dd></div>
+            </dl>
+          </section>
+          <section class="support-group" aria-labelledby="portable-title">
+            <h3 id="portable-title">Skills-only</h3>
+            <p class="support-intro">Install portable content into the host's Agent Skills surface.</p>
+            <dl class="support-list">
+              <div class="support-row"><dt>OpenClaw</dt><dd>18 active and 76 source-only</dd></div>
+              <div class="support-row"><dt>Hermes Agent</dt><dd>18 active and 76 source-only</dd></div>
+            </dl>
+            <p class="support-limit">No parity claim is made for plugins, hooks, Mnemo, MCP, custom agents, or the four CLI-specific adapters.</p>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">04 / INSTALL</span>
+            <h2 id="install-title">One TermSnap setup. Explicit portable hosts.</h2>
+          </div>
+          <p class="section-summary">The default installer prepares Claude, Codex, Antigravity, and Grok. OpenClaw and Hermes Agent use dedicated skills-only installers.</p>
+        </div>
+        <div class="install-layout">
+          <div class="install-stack">
+            <div class="command-block"><span class="command-label">Clone</span><pre><code>git clone https://github.com/Dannykkh/skill-olympus.git
+cd skill-olympus</code></pre></div>
+            <div class="command-block"><span class="command-label">Windows · integrated runtimes</span><pre><code>.\install.bat</code></pre></div>
+            <div class="command-block"><span class="command-label">macOS / Linux · integrated runtimes</span><pre><code>chmod +x install.sh &amp;&amp; ./install.sh</code></pre></div>
+            <div class="command-block"><span class="command-label">OpenClaw / Hermes Agent · skills-only</span><pre><code>.\install-openclaw.bat
+.\install-hermes.bat
+
+bash ./install-openclaw.sh
+bash ./install-hermes.sh</code></pre></div>
+          </div>
+          <aside class="install-note">
+            <h3>Prepare assets before the CLI arrives.</h3>
+            <p>If an executable is missing from PATH, Olympus skips only CLI-dependent commands such as MCP registration. Install the CLI later and rerun the same installer.</p>
+            <ul class="fact-list">
+              <li><strong>Update:</strong> git pull, then rerun the installer</li>
+              <li><strong>Expose all:</strong> use --include-source-only-skills</li>
+              <li><strong>Protect collisions:</strong> modified same-name skills move to _olympus-preserved</li>
+              <li><strong>Requires:</strong> Git and Node.js LTS</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Project evidence">
+      <div class="wrap">
+        <div class="evidence-strip">
+          <a href="https://github.com/Dannykkh/skill-olympus/releases/tag/v6.0.0">Release v6.0.0</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/blob/master/CHANGELOG.md">Changelog</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/tree/master/tests">Regression tests</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/blob/master/LICENSE">MIT License</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="../" translate="no"><span class="brand-mark" aria-hidden="true">Ω</span><span class="brand-name">Skill Olympus</span></a>
+        <p class="footer-copy">An open-source workflow system that lets one developer carry the same verification habits and memory across multiple AI coding runtimes.</p>
+      </div>
+      <div class="footer-meta">v6.0.0 · 2026 · source of truth: GitHub</div>
     </div>
-  </section>
-</main>
-
-<!-- 7. Footer -->
-<footer>
-  <div class="wrap">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <div class="serif-mark">Olympus <span class="mono">Skill</span></div>
-        
-        <p class="">An open-source skill library that lets Claude Code, Codex, Gemini, and Grok share one workflow.</p>
-      </div>
-      <div class="footer-col">
-        
-        <h3 class="mono">Skills</h3>
-        
-        <a class="" href="#pantheon">Zephermine — Design</a>
-        
-        <a class="" href="#pantheon">Zeus — Pipeline</a>
-        
-        <a class="" href="#pantheon">Aphrodite — Design System</a>
-        
-        <a class="" href="#pantheon">Chronos — Autofix Loop</a>
-      </div>
-      <div class="footer-col">
-        
-        <h3 class="mono">Docs</h3>
-        <a href="https://github.com/Dannykkh/skill-olympus#readme">README</a>
-        
-        <a class="" href="https://github.com/Dannykkh/skill-olympus">Quick Reference</a>
-        
-        <a class="" href="https://github.com/Dannykkh/skill-olympus">Agent Catalog</a>
-        
-        <a class="" href="https://github.com/Dannykkh/skill-olympus">Install Guide</a>
-      </div>
-      <div class="footer-col">
-        
-        <h3 class="mono">Supported CLIs</h3>
-        <a href="https://github.com/Dannykkh/skill-olympus">Claude Code</a>
-        <a href="https://github.com/Dannykkh/skill-olympus">Codex</a>
-        <a href="https://github.com/Dannykkh/skill-olympus">Gemini</a>
-        <a href="https://github.com/Dannykkh/skill-olympus">Grok Build</a>
-
-        <a class="" href="https://github.com/Dannykkh/skill-olympus">Cross-CLI Sync</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span class="mono">MIT License</span>
-      <span class="mono">Skill Olympus — 2026</span>
-    </div>
-  </div>
-</footer>
-
-
-
-
-</body></html>
+  </footer>
+</body>
+</html>

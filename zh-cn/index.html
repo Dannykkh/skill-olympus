@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" class="locale-zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill Olympus v6 — 四个 CLI，一套开发系统</title>
+  <meta name="description" content="把 Claude Code、Codex、Antigravity 和 Grok 接入同一套可验证工作流，并为 OpenClaw 与 Hermes Agent 安装可移植技能的开源系统。">
+  <meta name="theme-color" content="#0d0e12">
+  <link rel="canonical" href="https://dannykkh.github.io/skill-olympus/zh-cn/">
+  <link rel="alternate" hreflang="ko" href="https://dannykkh.github.io/skill-olympus/">
+  <link rel="alternate" hreflang="en" href="https://dannykkh.github.io/skill-olympus/en/">
+  <link rel="alternate" hreflang="ja" href="https://dannykkh.github.io/skill-olympus/ja/">
+  <link rel="alternate" hreflang="zh-Hans" href="https://dannykkh.github.io/skill-olympus/zh-cn/">
+  <link rel="alternate" hreflang="x-default" href="https://dannykkh.github.io/skill-olympus/en/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Skill Olympus">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:locale:alternate" content="ko_KR">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="ja_JP">
+  <meta property="og:title" content="Skill Olympus v6 — 四个 CLI，一套开发系统">
+  <meta property="og:description" content="4 个集成 CLI、2 个 skills-only 主机、18 个活跃入口，把设计、实现、验证和记忆连成一条流程。">
+  <meta property="og:url" content="https://dannykkh.github.io/skill-olympus/zh-cn/">
+  <meta property="og:image" content="https://dannykkh.github.io/skill-olympus/assets/og-skill-olympus-v6.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Skill Olympus v6: one workflow system, six runtime surfaces">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Skill Olympus v6">
+  <meta name="twitter:description" content="把四个 CLI 连接成一套可验证的开发系统。">
+  <meta name="twitter:image" content="https://dannykkh.github.io/skill-olympus/assets/og-skill-olympus-v6.png">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@600&amp;display=swap"></noscript>
+  <link rel="stylesheet" href="../assets/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "Skill Olympus",
+    "version": "6.0.0",
+    "description": "集成 Claude Code、Codex CLI、Antigravity CLI 和 Grok Build，并为 OpenClaw 与 Hermes Agent 提供可移植技能的开源工作流系统。",
+    "codeRepository": "https://github.com/Dannykkh/skill-olympus",
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://dannykkh.github.io/skill-olympus/zh-cn/",
+    "inLanguage": ["ko", "en", "ja", "zh-Hans"],
+    "programmingLanguage": ["JavaScript", "PowerShell", "Shell"]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+  <header class="site-header">
+    <div class="wrap nav-shell">
+      <a class="brand" href="../" aria-label="Skill Olympus 首页" translate="no">
+        <span class="brand-mark" aria-hidden="true">Ω</span>
+        <span class="brand-name">Skill Olympus <small>V6</small></span>
+      </a>
+      <nav class="section-nav" aria-label="页面导航">
+        <a href="#overview">全景</a>
+        <a href="#workflow">工作流</a>
+        <a href="#support">支持范围</a>
+        <a href="#install">安装</a>
+      </nav>
+      <nav class="locale-nav" aria-label="语言">
+        <a class="locale-link" href="../" lang="ko" hreflang="ko" aria-label="한국어">KO</a>
+        <a class="locale-link" href="../en/" lang="en" hreflang="en" aria-label="English">EN</a>
+        <a class="locale-link" href="../ja/" lang="ja" hreflang="ja" aria-label="日本語">JA</a>
+        <a class="locale-link" href="../zh-cn/" lang="zh-Hans" hreflang="zh-Hans" aria-current="page" aria-label="简体中文">ZH</a>
+      </nav>
+      <a class="github-link" href="https://github.com/Dannykkh/skill-olympus">GitHub</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">v6.0.0 · 4 integrated · 2 skills-only</p>
+          <h1 id="hero-title">四个 CLI，<span class="accent accent-block">一套开发系统。</span></h1>
+          <p class="hero-lede">在 Claude Code、Codex、Antigravity 和 Grok 中使用同一种工作语言。Zeus 把设计推进到验证报告，Chronos 保持任务连续，Mnemo 把决策带到下一次会话。</p>
+          <div class="actions">
+            <a class="button button-primary" href="https://github.com/Dannykkh/skill-olympus">查看源码</a>
+            <a class="button button-secondary" href="#install">开始安装</a>
+          </div>
+        </div>
+        <div class="signal-board" role="group" aria-label="项目关键数字">
+          <div class="metric"><strong>100</strong><span>个公开技能源</span></div>
+          <div class="metric"><strong>18</strong><span>个用户入口</span></div>
+          <div class="metric"><strong>76</strong><span>个按需读取模块</span></div>
+          <div class="metric"><strong>0</strong><span>个默认注册的自定义智能体</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="overview" aria-labelledby="overview-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">01 / SYSTEM MAP</span>
+            <h2 id="overview-title">先说明连接了什么，也说明边界在哪里。</h2>
+          </div>
+          <p class="section-summary">Olympus 不会把所有主机都称为完整集成。4 个 CLI 具备经过验证的运行时集成，另外 2 个主机只安装可移植技能。</p>
+        </div>
+        <figure>
+          <div class="system-frame">
+            <img src="../assets/system-overview.svg" width="1200" height="720" loading="lazy" decoding="async" alt="Claude Code、Codex、Antigravity 和 Grok 是集成运行时；OpenClaw 与 Hermes Agent 是 skills-only 主机。请求经过 Zeus 的设计、实现、验收、运行准备、测试和证据报告阶段，Chronos 与 Mnemo 提供持续性和记忆。">
+            <div class="system-mobile" role="group" aria-label="Skill Olympus 移动版系统全景">
+              <section class="system-mobile-group">
+                <h3>集成运行时</h3>
+                <ul>
+                  <li><span>Claude Code</span><small>21 active</small></li>
+                  <li><span>Codex CLI</span><small>20 active</small></li>
+                  <li><span>Antigravity</span><small>20 active</small></li>
+                  <li><span>Grok Build</span><small>shared 21</small></li>
+                </ul>
+              </section>
+              <section class="system-mobile-group">
+                <h3>skills-only 主机</h3>
+                <ul>
+                  <li><span>OpenClaw</span><small>18 portable</small></li>
+                  <li><span>Hermes Agent</span><small>18 portable</small></li>
+                </ul>
+              </section>
+              <section class="system-mobile-group">
+                <h3>Zeus 交付编排</h3>
+                <ol>
+                  <li><span>01 设计</span><small>Zephermine</small></li>
+                  <li><span>02 实现</span><small>native workers</small></li>
+                  <li><span>03 验收</span><small>Argos</small></li>
+                  <li><span>04 运行</span><small>Docker</small></li>
+                  <li><span>05 测试</span><small>Minos</small></li>
+                  <li><span>06 报告</span><small>evidence</small></li>
+                </ol>
+              </section>
+              <div class="system-mobile-rail"><strong>Chronos</strong><span>直到满足完成条件才停止的持续性轨道</span></div>
+              <div class="system-mobile-rail"><strong>Mnemo</strong><span>保存决策、会话、证据和交接状态的记忆轨道</span></div>
+            </div>
+          </div>
+          <figcaption class="system-caption">Skill Olympus v6 系统全景 <span>18 active entry points · 76 source-only modules</span></figcaption>
+        </figure>
+        <div class="runtime-summary">
+          <div class="runtime-band">
+            <h3>Integrated</h3>
+            <p>Claude Code、Codex CLI、Antigravity CLI 和 Grok Build 分别遵循对应运行时的安装、记忆与编排契约。</p>
+          </div>
+          <div class="runtime-band">
+            <h3>Skills-only</h3>
+            <p>OpenClaw 与 Hermes Agent 安装 18 个活跃技能和 76 个 source-only 模块。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workflow" aria-labelledby="workflow-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">02 / ENTRY POINTS</span>
+            <h2 id="workflow-title">只调用任务需要的深度。</h2>
+          </div>
+          <p class="section-summary">平时只显示 18 个入口。76 个专业模块仅在任务确实需要时，才从目录中读取。</p>
+        </div>
+        <div class="workflow-index">
+          <article class="workflow-row"><span class="workflow-number">01</span><span class="workflow-name">Zeus</span><code class="workflow-call">/zeus</code><p class="workflow-description">从一句需求推进到设计、实现、验收、运行环境、测试和证据报告。</p></article>
+          <article class="workflow-row"><span class="workflow-number">02</span><span class="workflow-name">Zephermine</span><code class="workflow-call">/zephermine</code><p class="workflow-description">在实现前固定需求、API、QA 场景和流程图。</p></article>
+          <article class="workflow-row"><span class="workflow-number">03</span><span class="workflow-name">Poseidon</span><code class="workflow-call">/agent-team</code><p class="workflow-description">把文件归属分配给当前 CLI 的原生工作者，并行实现。</p></article>
+          <article class="workflow-row"><span class="workflow-number">04</span><span class="workflow-name">Aphrodite</span><code class="workflow-call">/aphrodite</code><p class="workflow-description">从用户任务出发，完成体验契约、实现和实际渲染检查。</p></article>
+          <article class="workflow-row"><span class="workflow-number">05</span><span class="workflow-name">Argos</span><code class="workflow-call">/argos</code><p class="workflow-description">对照设计产物验收实现，并给出有证据的通过或不通过结论。</p></article>
+          <article class="workflow-row"><span class="workflow-number">06</span><span class="workflow-name">Minos</span><code class="workflow-call">/minos</code><p class="workflow-description">运行 Playwright 场景，修复可复现失败，直到检查通过。</p></article>
+          <article class="workflow-row"><span class="workflow-number">07</span><span class="workflow-name">Chronos</span><code class="workflow-call">/chronos</code><p class="workflow-description">逐项推进，直到外部验证证据满足完成契约。</p></article>
+          <article class="workflow-row"><span class="workflow-number">08</span><span class="workflow-name">Mnemo</span><code class="workflow-call">/mnemo</code><p class="workflow-description">查找过去的会话与决策，为下一次会话留下可恢复状态。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="support" aria-labelledby="support-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">03 / SUPPORT</span>
+            <h2 id="support-title">明确区分支持等级。</h2>
+          </div>
+          <p class="section-summary">能够读取技能文件，并不等于已经接入 hooks、记忆、MCP 和原生工作者。页面会一直保留这条边界。</p>
+        </div>
+        <div class="support-layout">
+          <section class="support-group" aria-labelledby="integrated-title">
+            <h3 id="integrated-title">集成运行时</h3>
+            <p class="support-intro">同时安装并验证技能和运行时专用适配器。</p>
+            <dl class="support-list">
+              <div class="support-row"><dt>Claude Code</dt><dd>21 active、76 source-only、hooks、Mnemo、MCP、原生 subagents</dd></div>
+              <div class="support-row"><dt>Codex CLI</dt><dd>20 active、76 source-only、基于 notify 的 Mnemo、MCP、原生 workers</dd></div>
+              <div class="support-row"><dt>Antigravity CLI</dt><dd>20 active、76 source-only、native Stop hooks、Mnemo、MCP、原生 workflow</dd></div>
+              <div class="support-row"><dt>Grok Build</dt><dd>通过 Claude 兼容层共享 21 active 和 76 source-only，并安装 Grok Mnemo</dd></div>
+            </dl>
+          </section>
+          <section class="support-group" aria-labelledby="portable-title">
+            <h3 id="portable-title">skills-only</h3>
+            <p class="support-intro">向主机的 Agent Skills 表面安装可移植内容。</p>
+            <dl class="support-list">
+              <div class="support-row"><dt>OpenClaw</dt><dd>18 active、76 source-only</dd></div>
+              <div class="support-row"><dt>Hermes Agent</dt><dd>18 active、76 source-only</dd></div>
+            </dl>
+            <p class="support-limit">不宣称 plugins、hooks、Mnemo、MCP、自定义智能体或四个 CLI 专用适配器具有同等支持。</p>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">04 / INSTALL</span>
+            <h2 id="install-title">TermSnap 一次安装，其他主机明确选择。</h2>
+          </div>
+          <p class="section-summary">默认安装器会准备 Claude、Codex、Antigravity 和 Grok。OpenClaw 与 Hermes Agent 使用各自的 skills-only 安装器。</p>
+        </div>
+        <div class="install-layout">
+          <div class="install-stack">
+            <div class="command-block"><span class="command-label">Clone</span><pre><code>git clone https://github.com/Dannykkh/skill-olympus.git
+cd skill-olympus</code></pre></div>
+            <div class="command-block"><span class="command-label">Windows · integrated runtimes</span><pre><code>.\install.bat</code></pre></div>
+            <div class="command-block"><span class="command-label">macOS / Linux · integrated runtimes</span><pre><code>chmod +x install.sh &amp;&amp; ./install.sh</code></pre></div>
+            <div class="command-block"><span class="command-label">OpenClaw / Hermes Agent · skills-only</span><pre><code>.\install-openclaw.bat
+.\install-hermes.bat
+
+bash ./install-openclaw.sh
+bash ./install-hermes.sh</code></pre></div>
+          </div>
+          <aside class="install-note">
+            <h3>即使 CLI 尚未安装，也会先准备文件。</h3>
+            <p>如果 PATH 中没有对应可执行文件，Olympus 只跳过 MCP 注册等依赖 CLI 命令的步骤。之后安装 CLI，再运行同一个安装器即可。</p>
+            <ul class="fact-list">
+              <li><strong>更新:</strong> git pull 后重新运行安装器</li>
+              <li><strong>显示全部:</strong> 使用 --include-source-only-skills</li>
+              <li><strong>保护冲突:</strong> 修改过的同名技能会移到 _olympus-preserved</li>
+              <li><strong>环境要求:</strong> Git 与 Node.js LTS</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="项目证据">
+      <div class="wrap">
+        <div class="evidence-strip">
+          <a href="https://github.com/Dannykkh/skill-olympus/releases/tag/v6.0.0">Release v6.0.0</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/blob/master/CHANGELOG.md">Changelog</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/tree/master/tests">Regression tests</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/blob/master/LICENSE">MIT License</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="../" translate="no"><span class="brand-mark" aria-hidden="true">Ω</span><span class="brand-name">Skill Olympus</span></a>
+        <p class="footer-copy">这是一套开源工作流系统，让个人开发者在多个 AI 编码运行时中延续同样的验证习惯和项目记忆。</p>
+      </div>
+      <div class="footer-meta">v6.0.0 · 2026 · source of truth: GitHub</div>
+    </div>
+  </footer>
+</body>
+</html>

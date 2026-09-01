@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja" class="locale-ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill Olympus v6 — 4つのCLIを、ひとつの開発システムに</title>
+  <meta name="description" content="Claude Code、Codex、Antigravity、Grokを共通の検証ワークフローでつなぎ、OpenClawとHermes Agentには移植可能なスキルを導入するオープンソースシステム。">
+  <meta name="theme-color" content="#0d0e12">
+  <link rel="canonical" href="https://dannykkh.github.io/skill-olympus/ja/">
+  <link rel="alternate" hreflang="ko" href="https://dannykkh.github.io/skill-olympus/">
+  <link rel="alternate" hreflang="en" href="https://dannykkh.github.io/skill-olympus/en/">
+  <link rel="alternate" hreflang="ja" href="https://dannykkh.github.io/skill-olympus/ja/">
+  <link rel="alternate" hreflang="zh-Hans" href="https://dannykkh.github.io/skill-olympus/zh-cn/">
+  <link rel="alternate" hreflang="x-default" href="https://dannykkh.github.io/skill-olympus/en/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Skill Olympus">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:locale:alternate" content="ko_KR">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale:alternate" content="zh_CN">
+  <meta property="og:title" content="Skill Olympus v6 — 4つのCLIを、ひとつの開発システムに">
+  <meta property="og:description" content="4つの統合CLI、2つのskills-onlyホスト、18の入口。設計から検証、記憶までを一本につなぎます。">
+  <meta property="og:url" content="https://dannykkh.github.io/skill-olympus/ja/">
+  <meta property="og:image" content="https://dannykkh.github.io/skill-olympus/assets/og-skill-olympus-v6.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Skill Olympus v6: one workflow system, six runtime surfaces">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Skill Olympus v6">
+  <meta name="twitter:description" content="4つのCLIを、検証可能なひとつの開発システムに。">
+  <meta name="twitter:image" content="https://dannykkh.github.io/skill-olympus/assets/og-skill-olympus-v6.png">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600;700&amp;family=Noto+Sans+JP:wght@400;500;700&amp;family=Noto+Serif+JP:wght@600&amp;display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=IBM+Plex+Mono:wght@500;600;700&amp;family=Noto+Sans+JP:wght@400;500;700&amp;family=Noto+Serif+JP:wght@600&amp;display=swap"></noscript>
+  <link rel="stylesheet" href="../assets/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "Skill Olympus",
+    "version": "6.0.0",
+    "description": "Claude Code、Codex CLI、Antigravity CLI、Grok Buildを統合し、OpenClawとHermes Agentには移植可能なスキルを提供するオープンソースのワークフローシステム。",
+    "codeRepository": "https://github.com/Dannykkh/skill-olympus",
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://dannykkh.github.io/skill-olympus/ja/",
+    "inLanguage": ["ko", "en", "ja", "zh-Hans"],
+    "programmingLanguage": ["JavaScript", "PowerShell", "Shell"]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ移動</a>
+  <header class="site-header">
+    <div class="wrap nav-shell">
+      <a class="brand" href="../" aria-label="Skill Olympus ホーム" translate="no">
+        <span class="brand-mark" aria-hidden="true">Ω</span>
+        <span class="brand-name">Skill Olympus <small>V6</small></span>
+      </a>
+      <nav class="section-nav" aria-label="ページ内メニュー">
+        <a href="#overview">全体像</a>
+        <a href="#workflow">ワークフロー</a>
+        <a href="#support">対応範囲</a>
+        <a href="#install">導入</a>
+      </nav>
+      <nav class="locale-nav" aria-label="言語">
+        <a class="locale-link" href="../" lang="ko" hreflang="ko" aria-label="한국어">KO</a>
+        <a class="locale-link" href="../en/" lang="en" hreflang="en" aria-label="English">EN</a>
+        <a class="locale-link" href="../ja/" lang="ja" hreflang="ja" aria-current="page" aria-label="日本語">JA</a>
+        <a class="locale-link" href="../zh-cn/" lang="zh-Hans" hreflang="zh-Hans" aria-label="简体中文">ZH</a>
+      </nav>
+      <a class="github-link" href="https://github.com/Dannykkh/skill-olympus">GitHub</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">v6.0.0 · 4 integrated · 2 skills-only</p>
+          <h1 id="hero-title">4つのCLIを、<span class="accent accent-block">ひとつの開発システムに。</span></h1>
+          <p class="hero-lede">Claude Code、Codex、Antigravity、Grokで、同じ進め方を使えます。Zeusが設計から根拠付きレポートまでを束ね、Chronosが作業を止めず、Mnemoが判断を次のセッションへ引き継ぎます。</p>
+          <div class="actions">
+            <a class="button button-primary" href="https://github.com/Dannykkh/skill-olympus">ソースを見る</a>
+            <a class="button button-secondary" href="#install">導入する</a>
+          </div>
+        </div>
+        <div class="signal-board" role="group" aria-label="プロジェクトの主な数値">
+          <div class="metric"><strong>100</strong><span>公開スキルソース</span></div>
+          <div class="metric"><strong>18</strong><span>ユーザー向けの入口</span></div>
+          <div class="metric"><strong>76</strong><span>必要時に読むモジュール</span></div>
+          <div class="metric"><strong>0</strong><span>初期登録される独自エージェント</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="overview" aria-labelledby="overview-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">01 / SYSTEM MAP</span>
+            <h2 id="overview-title">どこまで連携するかを、先に示します。</h2>
+          </div>
+          <p class="section-summary">すべてのホストを同じ水準で扱いません。ランタイム統合を検証済みの4つのCLIと、移植可能なスキルだけを導入する2つのホストを分けています。</p>
+        </div>
+        <figure>
+          <div class="system-frame">
+            <img src="../assets/system-overview.svg" width="1200" height="720" loading="lazy" decoding="async" alt="Claude Code、Codex、Antigravity、Grokは統合ランタイム。OpenClawとHermes Agentはskills-onlyホスト。依頼はZeusの設計、実装、監査、実行準備、テスト、根拠レポートを進み、ChronosとMnemoが継続性と記憶を支える。">
+            <div class="system-mobile" role="group" aria-label="Skill Olympus モバイル全体図">
+              <section class="system-mobile-group">
+                <h3>統合ランタイム</h3>
+                <ul>
+                  <li><span>Claude Code</span><small>21 active</small></li>
+                  <li><span>Codex CLI</span><small>20 active</small></li>
+                  <li><span>Antigravity</span><small>20 active</small></li>
+                  <li><span>Grok Build</span><small>shared 21</small></li>
+                </ul>
+              </section>
+              <section class="system-mobile-group">
+                <h3>skills-onlyホスト</h3>
+                <ul>
+                  <li><span>OpenClaw</span><small>18 portable</small></li>
+                  <li><span>Hermes Agent</span><small>18 portable</small></li>
+                </ul>
+              </section>
+              <section class="system-mobile-group">
+                <h3>Zeusデリバリーハーネス</h3>
+                <ol>
+                  <li><span>01 設計</span><small>Zephermine</small></li>
+                  <li><span>02 実装</span><small>native workers</small></li>
+                  <li><span>03 監査</span><small>Argos</small></li>
+                  <li><span>04 実行</span><small>Docker</small></li>
+                  <li><span>05 テスト</span><small>Minos</small></li>
+                  <li><span>06 報告</span><small>evidence</small></li>
+                </ol>
+              </section>
+              <div class="system-mobile-rail"><strong>Chronos</strong><span>完了条件を満たすまで進める継続レール</span></div>
+              <div class="system-mobile-rail"><strong>Mnemo</strong><span>判断、会話、検証、引き継ぎを残す記憶レール</span></div>
+            </div>
+          </div>
+          <figcaption class="system-caption">Skill Olympus v6 全体図 <span>18 active entry points · 76 source-only modules</span></figcaption>
+        </figure>
+        <div class="runtime-summary">
+          <div class="runtime-band">
+            <h3>Integrated</h3>
+            <p>Claude Code、Codex CLI、Antigravity CLI、Grok Buildには、ランタイム別の導入、記憶、オーケストレーション契約があります。</p>
+          </div>
+          <div class="runtime-band">
+            <h3>Skills-only</h3>
+            <p>OpenClawとHermes Agentには、有効なスキル18個とsource-onlyモジュール76個を導入します。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workflow" aria-labelledby="workflow-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">02 / ENTRY POINTS</span>
+            <h2 id="workflow-title">必要な深さだけ呼び出します。</h2>
+          </div>
+          <p class="section-summary">普段見えるのは18の入口だけです。専門モジュール76個は、依頼に必要なときだけカタログから読み込みます。</p>
+        </div>
+        <div class="workflow-index">
+          <article class="workflow-row"><span class="workflow-number">01</span><span class="workflow-name">Zeus</span><code class="workflow-call">/zeus</code><p class="workflow-description">一文の依頼から、設計、実装、監査、実行環境、テスト、根拠レポートまで進めます。</p></article>
+          <article class="workflow-row"><span class="workflow-number">02</span><span class="workflow-name">Zephermine</span><code class="workflow-call">/zephermine</code><p class="workflow-description">実装前に要件、API、QAシナリオ、フロー図を固めます。</p></article>
+          <article class="workflow-row"><span class="workflow-number">03</span><span class="workflow-name">Poseidon</span><code class="workflow-call">/agent-team</code><p class="workflow-description">現在使っているCLIのネイティブワーカーにファイルの担当を割り振り、並列で実装します。</p></article>
+          <article class="workflow-row"><span class="workflow-number">04</span><span class="workflow-name">Aphrodite</span><code class="workflow-call">/aphrodite</code><p class="workflow-description">利用者の仕事から、体験設計、実装、実画面の確認までつなげます。</p></article>
+          <article class="workflow-row"><span class="workflow-number">05</span><span class="workflow-name">Argos</span><code class="workflow-call">/argos</code><p class="workflow-description">設計成果物と実装を照合し、根拠付きで合否を判定します。</p></article>
+          <article class="workflow-row"><span class="workflow-number">06</span><span class="workflow-name">Minos</span><code class="workflow-call">/minos</code><p class="workflow-description">Playwrightシナリオを実行し、再現した不具合をテストが通るまで直します。</p></article>
+          <article class="workflow-row"><span class="workflow-number">07</span><span class="workflow-name">Chronos</span><code class="workflow-call">/chronos</code><p class="workflow-description">外部の検証結果が完了条件を満たすまで、一件ずつ作業を続けます。</p></article>
+          <article class="workflow-row"><span class="workflow-number">08</span><span class="workflow-name">Mnemo</span><code class="workflow-call">/mnemo</code><p class="workflow-description">過去の会話と判断を探し、次のセッションが再開できる状態を残します。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="support" aria-labelledby="support-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">03 / SUPPORT</span>
+            <h2 id="support-title">対応範囲を正確に分けます。</h2>
+          </div>
+          <p class="section-summary">スキル文書を読めることと、hooks、記憶、MCP、ネイティブワーカーまで連携することは、別の対応水準です。</p>
+        </div>
+        <div class="support-layout">
+          <section class="support-group" aria-labelledby="integrated-title">
+            <h3 id="integrated-title">統合ランタイム</h3>
+            <p class="support-intro">スキルとランタイム別アダプターを一緒に導入し、検証します。</p>
+            <dl class="support-list">
+              <div class="support-row"><dt>Claude Code</dt><dd>active 21、source-only 76、hooks、Mnemo、MCP、ネイティブsubagents</dd></div>
+              <div class="support-row"><dt>Codex CLI</dt><dd>active 20、source-only 76、notifyベースのMnemo、MCP、ネイティブworkers</dd></div>
+              <div class="support-row"><dt>Antigravity CLI</dt><dd>active 20、source-only 76、native Stop hooks、Mnemo、MCP、ネイティブworkflow</dd></div>
+              <div class="support-row"><dt>Grok Build</dt><dd>Claude互換層が共有するactive 21とsource-only 76、Grok用Mnemo</dd></div>
+            </dl>
+          </section>
+          <section class="support-group" aria-labelledby="portable-title">
+            <h3 id="portable-title">skills-only</h3>
+            <p class="support-intro">ホストのAgent Skillsに、再利用できるスキル本体を導入します。</p>
+            <dl class="support-list">
+              <div class="support-row"><dt>OpenClaw</dt><dd>active 18、source-only 76</dd></div>
+              <div class="support-row"><dt>Hermes Agent</dt><dd>active 18、source-only 76</dd></div>
+            </dl>
+            <p class="support-limit">plugins、hooks、Mnemo、MCP、独自エージェント、4つのCLI専用アダプターについて、同等の対応はうたいません。</p>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-index">04 / INSTALL</span>
+            <h2 id="install-title">TermSnapは一括で。ほかのホストは明示的に。</h2>
+          </div>
+          <p class="section-summary">標準インストーラーはClaude、Codex、Antigravity、Grokを準備します。OpenClawとHermes Agentには専用のskills-onlyインストーラーを使います。</p>
+        </div>
+        <div class="install-layout">
+          <div class="install-stack">
+            <div class="command-block"><span class="command-label">Clone</span><pre><code>git clone https://github.com/Dannykkh/skill-olympus.git
+cd skill-olympus</code></pre></div>
+            <div class="command-block"><span class="command-label">Windows · integrated runtimes</span><pre><code>.\install.bat</code></pre></div>
+            <div class="command-block"><span class="command-label">macOS / Linux · integrated runtimes</span><pre><code>chmod +x install.sh &amp;&amp; ./install.sh</code></pre></div>
+            <div class="command-block"><span class="command-label">OpenClaw / Hermes Agent · skills-only</span><pre><code>.\install-openclaw.bat
+.\install-hermes.bat
+
+bash ./install-openclaw.sh
+bash ./install-hermes.sh</code></pre></div>
+          </div>
+          <aside class="install-note">
+            <h3>CLIがなくても、先に資材を準備します。</h3>
+            <p>実行ファイルがPATHになければ、MCP登録などCLIコマンドが必要な処理だけを飛ばします。CLIを導入したあと、同じインストーラーをもう一度実行してください。</p>
+            <ul class="fact-list">
+              <li><strong>更新:</strong> git pullのあと、インストーラーを再実行</li>
+              <li><strong>全件を表示:</strong> --include-source-only-skillsを使用</li>
+              <li><strong>競合を保護:</strong> 変更済みの同名スキルは_olympus-preservedへ移動</li>
+              <li><strong>必要環境:</strong> GitとNode.js LTS</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="プロジェクトの根拠">
+      <div class="wrap">
+        <div class="evidence-strip">
+          <a href="https://github.com/Dannykkh/skill-olympus/releases/tag/v6.0.0">Release v6.0.0</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/blob/master/CHANGELOG.md">Changelog</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/tree/master/tests">Regression tests</a>
+          <a href="https://github.com/Dannykkh/skill-olympus/blob/master/LICENSE">MIT License</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="../" translate="no"><span class="brand-mark" aria-hidden="true">Ω</span><span class="brand-name">Skill Olympus</span></a>
+        <p class="footer-copy">ひとりの開発者が複数のAIコーディングCLIでも、同じ検証習慣と記憶を引き継げるように作ったオープンソースのワークフローシステムです。</p>
+      </div>
+      <div class="footer-meta">v6.0.0 · 2026 · source of truth: GitHub</div>
+    </div>
+  </footer>
+</body>
+</html>

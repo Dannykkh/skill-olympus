@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#0d0e12"/>
+  <rect x="5" y="5" width="54" height="54" fill="none" stroke="#e6bd32" stroke-width="3"/>
+  <text x="32" y="45" fill="#e6bd32" font-family="Georgia,serif" font-size="40" font-weight="700" text-anchor="middle">Ω</text>
+</svg>
