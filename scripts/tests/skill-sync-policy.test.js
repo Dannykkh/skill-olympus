@@ -7,10 +7,25 @@ const { spawnSync } = require("node:child_process");
 const { syncSkillSourceLibrary } = require("../skill-catalog");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
+const temporaryHomes = new Set();
 
 function makeTempHome(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  temporaryHomes.add(tempHome);
+  return tempHome;
 }
+
+test.afterEach(() => {
+  for (const tempHome of temporaryHomes) {
+    fs.rmSync(tempHome, {
+      recursive: true,
+      force: true,
+      maxRetries: 3,
+      retryDelay: 100,
+    });
+    temporaryHomes.delete(tempHome);
+  }
+});
 
 function writeFixtureFile(root, relativePath, content) {
   const target = path.join(root, relativePath);

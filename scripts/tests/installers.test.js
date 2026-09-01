@@ -47,6 +47,26 @@ const expectedSourceOnlySkillPattern = new RegExp(
   `source-only 스킬: ${expectedSourceOnlySkillCount}개`,
 );
 
+const temporaryHomes = new Set();
+
+function makeTempHome(prefix) {
+  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  temporaryHomes.add(tempHome);
+  return tempHome;
+}
+
+test.afterEach(() => {
+  for (const tempHome of temporaryHomes) {
+    fs.rmSync(tempHome, {
+      recursive: true,
+      force: true,
+      maxRetries: 3,
+      retryDelay: 100,
+    });
+    temporaryHomes.delete(tempHome);
+  }
+});
+
 function findFileWithContent(root, expectedContent, requiredPathPart = "") {
   if (!fs.existsSync(root)) return null;
   const stack = [root];
@@ -113,7 +133,7 @@ test("install.bat --help exits before changing runtime homes", () => {
     return;
   }
 
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-help-test-"));
+  const tempHome = makeTempHome("ccc-install-help-test-");
   const env = {
     ...process.env,
     HOME: tempHome,
@@ -151,7 +171,7 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     return;
   }
 
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-test-"));
+  const tempHome = makeTempHome("ccc-install-test-");
   const env = {
     ...process.env,
     HOME: tempHome,
@@ -453,7 +473,7 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
     return;
   }
 
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-bat-test-"));
+  const tempHome = makeTempHome("ccc-antigravity-bat-test-");
   const shimDir = path.join(tempHome, "bin");
   const googleHome = path.join(tempHome, ".gemini");
   fs.mkdirSync(shimDir, { recursive: true });
@@ -560,7 +580,7 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
 });
 
 test("Codex global sync does not apply project-manifest ownership to another home", () => {
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-codex-home-scope-test-"));
+  const tempHome = makeTempHome("ccc-codex-home-scope-test-");
   const codexHome = path.join(tempHome, ".codex");
   const projectManifestPath = path.join(
     repoRoot,
@@ -617,7 +637,7 @@ test("Codex global sync does not apply project-manifest ownership to another hom
 });
 
 test("Claude source-only policy preserves user-owned skill overrides without adding entries", () => {
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-skill-policy-test-"));
+  const tempHome = makeTempHome("ccc-skill-policy-test-");
   const settingsPath = path.join(tempHome, "settings.json");
   fs.writeFileSync(
     settingsPath,
@@ -659,7 +679,7 @@ test("Claude source-only policy preserves user-owned skill overrides without add
 });
 
 test("Antigravity hook config preserves unrelated groups and rejects the retired target", () => {
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-hooks-test-"));
+  const tempHome = makeTempHome("ccc-antigravity-hooks-test-");
   const hooksDir = path.join(tempHome, "config", "hooks");
   const configPath = path.join(tempHome, "config", "hooks.json");
   fs.mkdirSync(hooksDir, { recursive: true });
@@ -715,7 +735,7 @@ test("Antigravity hook config preserves unrelated groups and rejects the retired
 });
 
 test("Antigravity MCP adapter owns only the entries it installs", () => {
-  const googleHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-mcp-test-"));
+  const googleHome = makeTempHome("ccc-antigravity-mcp-test-");
   const env = { ...process.env, ANTIGRAVITY_HOME: googleHome };
   const configPath = path.join(googleHome, "config", "mcp_config.json");
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
@@ -752,7 +772,7 @@ test("Antigravity MCP adapter owns only the entries it installs", () => {
 });
 
 test("Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates", () => {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-turn-test-"));
+  const tempRoot = makeTempHome("ccc-antigravity-turn-test-");
   const transcriptPath = path.join(tempRoot, "transcript.jsonl");
   fs.writeFileSync(transcriptPath, [
     JSON.stringify({ step_index: 1, source: "USER_EXPLICIT", type: "USER_INPUT", content: "질문 <private>secret</private>" }),
@@ -793,7 +813,7 @@ test("Antigravity core hook blocks protected files and drives Chronos through St
   assert.equal(safety.status, 0, safety.stderr);
   assert.equal(JSON.parse(safety.stdout).decision, "deny");
 
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-chronos-test-"));
+  const tempRoot = makeTempHome("ccc-antigravity-chronos-test-");
   const stateDir = path.join(tempRoot, ".chronos");
   const statePath = path.join(stateDir, "loop-state.md");
   const transcriptPath = path.join(tempRoot, "transcript.jsonl");
@@ -928,7 +948,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
 });
 
 test("Claude skill sync installs only the allowlist and catalogs source-only paths", () => {
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-claude-skills-test-"));
+  const tempHome = makeTempHome("ccc-claude-skills-test-");
   const localSkill = path.join(tempHome, "skills", "local-only", "SKILL.md");
   fs.mkdirSync(path.dirname(localSkill), { recursive: true });
   fs.writeFileSync(localSkill, "---\nname: local-only\ndescription: local\n---\n");
@@ -1054,7 +1074,7 @@ test("shared runtime agent policy keeps every custom agent source-only by defaul
 });
 
 test("Claude and Antigravity agent syncs support default exclusion and explicit opt-in", () => {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-agent-policy-test-"));
+  const tempRoot = makeTempHome("ccc-agent-policy-test-");
   const claudeHome = path.join(tempRoot, ".claude");
   const googleHome = path.join(tempRoot, ".gemini");
   const cases = [
@@ -1190,7 +1210,7 @@ test("Claude and Antigravity agent syncs support default exclusion and explicit 
 });
 
 test("Antigravity sync migrates legacy Gemini layouts and preserves modified assets", () => {
-  const googleHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-legacy-sync-"));
+  const googleHome = makeTempHome("ccc-antigravity-legacy-sync-");
   const legacySkills = path.join(googleHome, "skills");
   fs.mkdirSync(legacySkills, { recursive: true });
   fs.cpSync(
@@ -1253,7 +1273,7 @@ test("Antigravity sync migrates legacy Gemini layouts and preserves modified ass
 });
 
 test("stale Olympus assets are moved to backup while local-only assets remain", () => {
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-prune-test-"));
+  const tempHome = makeTempHome("ccc-prune-test-");
   fs.mkdirSync(path.join(tempHome, "agents"), { recursive: true });
   fs.mkdirSync(path.join(tempHome, "skills", "pmworker"), { recursive: true });
   fs.mkdirSync(path.join(tempHome, "skills", "deploy-server"), { recursive: true });
@@ -1287,7 +1307,7 @@ test("stale Olympus assets are moved to backup while local-only assets remain", 
 });
 
 test("generate-catalogs creates global catalogs and honors excluded skills", () => {
-  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-catalog-test-"));
+  const tempHome = makeTempHome("ccc-catalog-test-");
   const result = spawnSync(
     process.execPath,
     [
@@ -1517,7 +1537,7 @@ test("agent descriptions avoid YAML plain-scalar colon ambiguity", () => {
 });
 
 test("Antigravity Mnemo migrates legacy Gemini entries without deleting user rules", () => {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-mnemo-test-"));
+  const tempRoot = makeTempHome("ccc-antigravity-mnemo-test-");
   const googleHome = path.join(tempRoot, ".gemini");
   fs.mkdirSync(googleHome, { recursive: true });
   fs.writeFileSync(
