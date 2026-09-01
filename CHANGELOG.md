@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.0.1] - 2026-09-01
+
+### Bug Fixes
+
+- **임시 데이터 정리**: 설치기·스킬 정책 테스트가 만든 임시 HOME을 각 테스트 종료 시 강제로 회수해 반복 실행으로 디스크가 누적되는 문제를 막았다. 프로젝트 생성물과 오래된 공유 캐시를 안전 경계 안에서 정리하는 PowerShell 도구도 추가했으며, 기본값은 dry-run이고 실제 삭제는 명시적 `-Execute`에서만 수행한다. (0436c1c)
+
 ### Documentation
 
-- **README·GitHub Pages 시각 개편**: Codex 중심의 구 Zeus·Chronos 래스터 이미지를 v6.0.0 전체 구조 SVG로 교체해 통합 CLI 4개, skills-only 호스트 2개, Zeus 6단계 전달 하네스, Chronos 지속성, Mnemo 기억을 한 장에 정리했다. README 4개 언어에 공식 웹사이트 링크를 추가하고, GitHub Pages는 기존 다크 에디토리얼 정체성을 유지한 채 한국어·영어·일본어·중국어 간체 정적 경로, 반응형 시스템 맵, 정확한 설치·지원 등급, hreflang·구조화 데이터·Open Graph 자산으로 갱신했다.
+- **README·GitHub Pages 시각 개편**: Codex 중심의 구 Zeus·Chronos 래스터 이미지를 v6.0.0 전체 구조 SVG로 교체해 통합 CLI 4개, skills-only 호스트 2개, Zeus 6단계 전달 하네스, Chronos 지속성, Mnemo 기억을 한 장에 정리했다. README 4개 언어에 공식 웹사이트 링크를 추가하고, GitHub Pages는 기존 다크 에디토리얼 정체성을 유지한 채 한국어·영어·일본어·중국어 간체 정적 경로, 반응형 시스템 맵, 정확한 설치·지원 등급, hreflang·구조화 데이터·Open Graph 자산으로 갱신했다. (44bff6a)
 
 ## [6.0.0] - 2026-09-01
 
