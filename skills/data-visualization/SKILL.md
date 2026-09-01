@@ -1,6 +1,11 @@
 ---
 name: data-visualization
-description: Create effective data visualizations with Python (matplotlib, seaborn, plotly). Use when building charts, choosing the right chart type for a dataset, creating publication-quality figures, or applying design principles like accessibility and color theory. 데이터 시각화/통계 그래프 요청, "이 데이터엔 어떤 차트?", 대시보드 차트 구성 판단에 실행. /data-visualization으로 실행. Credits: anthropics/knowledge-work-plugins (Apache-2.0)
+description: >
+  Create effective data visualizations with Python (matplotlib, seaborn, plotly). Use when building
+  charts, choosing the right chart type for a dataset, creating publication-quality figures, or
+  applying accessibility and color theory. 데이터 시각화, 통계 그래프, "이 데이터엔 어떤 차트?",
+  대시보드 차트 구성 판단, /data-visualization 요청에 사용한다. Based on
+  anthropics/knowledge-work-plugins (Apache-2.0).
 ---
 
 # Data Visualization Skill

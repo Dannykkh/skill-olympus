@@ -17,7 +17,7 @@
 ```
 1. AI Provider 감지
    → orchestrator_detect_providers()
-   → 사용 가능한 AI 확인 (Claude/Codex/Gemini)
+   → 사용 가능한 AI 확인 (Claude/Codex/Antigravity)
 
 2. 프로젝트 분석
    → orchestrator_analyze_codebase()
@@ -84,7 +84,7 @@ Vendor별 강점을 고정 가정하지 않습니다. 현재 모델·설정, 프
 
 ### Provider 등록 및 claim 계약
 
-- 자동 생성 Worker는 provider-prefixed ID에서 provider를 복원합니다. 수동 Worker는 `ORCHESTRATOR_AI_PROVIDER=claude|codex|gemini`를 명시합니다.
+- 자동 생성 Worker는 provider-prefixed ID에서 provider를 복원합니다. 수동 Worker는 `ORCHESTRATOR_AI_PROVIDER=claude|codex|antigravity`를 명시합니다.
 - `orchestrator_get_available_tasks()`는 현재 Worker provider와 일치하는 태스크 및 provider-agnostic 태스크만 반환합니다.
 - `orchestrator_claim_task({task_id})`는 pending 상태, provider, 선행 의존성을 하나의 원자적 compare-and-set으로 검사합니다. 동시 claim 중 정확히 하나만 성공합니다.
 - `ai_provider`가 없는 태스크는 어떤 Worker든 claim할 수 있지만, provider가 지정된 태스크는 같은 provider Worker만 claim할 수 있습니다.
@@ -175,7 +175,7 @@ Orchestrator task (PM이 생성)
 > 프로젝트 구조를 분석하고 태스크를 생성해줘
 
 [PM] orchestrator_detect_providers() 실행
-→ Full Mode: Claude + Codex + Gemini 사용 가능
+→ Full Mode: Claude + Codex + Antigravity 사용 가능
 
 [PM] orchestrator_analyze_codebase() 실행
 → 모듈 탐지: User, Auth, Product, Order

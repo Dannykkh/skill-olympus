@@ -2,15 +2,7 @@
 name: release-notes
 description: >
   Conventional Commits 기반 릴리즈 노트 자동 생성. 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release.
-  /release로 실행.
-triggers:
-  - "release"
-  - "릴리즈"
-  - "release-notes"
-  - "릴리즈 노트"
-  - "버전 올려"
-  - "changelog"
-auto_apply: false
+  /release, release, 릴리즈, release-notes, 릴리즈 노트, 버전 올려, changelog 요청에 사용한다.
 ---
 
 # Release Notes — 릴리즈 노트 자동화

@@ -14,7 +14,7 @@ description: >
 기존 `mermaid-diagrams` 스킬로 플로우차트를 그리고,
 구현 완료 후 실제 코드 경로가 다이어그램의 노드/분기와 일치하는지 자동 검증합니다.
 
-여러 독립 흐름을 분석할 때만 읽기 전용 역할(Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`)에 초안 또는 근거 반환을 위임할 수 있습니다. 작업자는 파일을 쓰지 않으며, 메인 컨텍스트만 `.mmd`, 인덱스, 검증 보고서와 최종 매칭 판정을 갱신합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 절차를 순차 실행합니다.
+여러 독립 흐름을 분석할 때만 읽기 전용 역할(Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`)에 초안 또는 근거 반환을 위임할 수 있습니다. 작업자는 파일을 쓰지 않으며, 메인 컨텍스트만 `.mmd`, 인덱스, 검증 보고서와 최종 매칭 판정을 갱신합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 절차를 순차 실행합니다.
 
 ---
 

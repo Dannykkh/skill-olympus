@@ -24,7 +24,7 @@ description: >
 - 이 모듈은 `.mmd`를 **읽기만** 하고 절대 수정하지 않습니다. flow-verifier 검증 체인의 입력을 바꾸지 않습니다.
 - **Claude 네이티브 경계**: Claude에서 Artifact(웹 페이지)로 출력할 다이어그램은 네이티브
   `artifact-diagramming` 스킬이 우선입니다. 이 모듈은 (a) 파일 산출물이 필요할 때(clio 문서 삽입,
-  PNG 내보내기), (b) Codex/Gemini/Grok 등 네이티브가 없는 CLI에서 사용합니다.
+  PNG 내보내기), (b) Codex/Antigravity/Grok 등 네이티브가 없는 CLI에서 사용합니다.
 - 데이터 차트(bar/line/scatter 등 통계 시각화)는 `data-visualization` 스킬 소관입니다.
   이 모듈은 구조·흐름·관계 다이어그램만 담당합니다.
 

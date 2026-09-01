@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Orchestrator Worker를 새 터미널에서 실행하는 스크립트
-# 멀티AI 지원: Claude, Codex, Gemini
+# 멀티AI 지원: Claude, Codex, Antigravity
 #
 # 사용법:
 #   ./spawn-worker.sh <worker-id> <project-root> <auto-terminate> <ai-provider> <log-file>
@@ -16,7 +16,7 @@ AI_PROVIDER="${4:-}"
 LOG_FILE="${5:-}"
 
 if [ -z "$AI_PROVIDER" ]; then
-    echo "ERROR: AI provider is required (claude|codex|gemini)" >&2
+    echo "ERROR: AI provider is required (claude|codex|antigravity)" >&2
     exit 2
 fi
 
@@ -94,17 +94,17 @@ case "$AI_PROVIDER" in
         write_log "CLI_STARTED: Codex CLI at $(command -v codex)"
         printf "%s" "$SYSTEM_PROMPT" | codex --approve-for-me --sandbox workspace-write exec --skip-git-repo-check
         ;;
-    gemini)
-        if ! command -v gemini &> /dev/null; then
-            write_log "ERROR: gemini command not found in PATH"
+    antigravity)
+        if ! command -v agy &> /dev/null; then
+            write_log "ERROR: agy command not found in PATH"
             exit 1
         fi
-        write_log "CLI_STARTED: Gemini CLI at $(command -v gemini)"
-        GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
-        timeout "$GEMINI_TIMEOUT_SECONDS" gemini --sandbox --approval-mode yolo --output-format text -p "$SYSTEM_PROMPT"
+        write_log "CLI_STARTED: Antigravity CLI at $(command -v agy)"
+        ANTIGRAVITY_TIMEOUT_SECONDS="${ANTIGRAVITY_TIMEOUT_SECONDS:-600}"
+        timeout "$ANTIGRAVITY_TIMEOUT_SECONDS" agy -p "$SYSTEM_PROMPT" --output-format text
         ;;
     *)
-        write_log "ERROR: Unknown AI provider: $AI_PROVIDER (claude|codex|gemini)"
+        write_log "ERROR: Unknown AI provider: $AI_PROVIDER (claude|codex|antigravity)"
         exit 1
         ;;
 esac

@@ -10,6 +10,7 @@ $maxIterations = 50
 $completionPromise = "null"
 $promptParts = @()
 $goalMode = $false
+$runtime = ""
 $i = 0
 
 while ($i -lt $Arguments.Count) {
@@ -53,6 +54,14 @@ Chronos Loop — AI가 반복하며 작업을 완성합니다
         "--goal-mode" {
             $goalMode = $true
         }
+        "--runtime" {
+            $i++
+            if ($i -ge $Arguments.Count -or $Arguments[$i] -notin @("claude", "codex", "antigravity")) {
+                Write-Error "runtime은 claude, codex, antigravity 중 하나여야 합니다."
+                exit 1
+            }
+            $runtime = $Arguments[$i]
+        }
         default {
             $promptParts += $Arguments[$i]
         }
@@ -81,10 +90,10 @@ if (-not $prompt) {
     exit 1
 }
 
-$stateDir = if ($env:CODEX_THREAD_ID) {
-    ".codex"
-} elseif ($env:GEMINI_SESSION_ID) {
+$stateDir = if ($runtime -eq "antigravity") {
     ".chronos"
+} elseif ($runtime -eq "codex" -or $env:CODEX_THREAD_ID) {
+    ".codex"
 } else {
     ".claude"
 }
@@ -96,12 +105,12 @@ New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
 if (Test-Path $statePath) {
     $existingContent = Get-Content $statePath -Raw
     $existingSession = if ($existingContent -match "session_id:\s*(.+)") { $Matches[1].Trim() } else { "" }
-    $currentSession = if ($env:CLAUDE_CODE_SESSION_ID) {
+    $currentSession = if ($runtime -eq "antigravity") {
+        $env:ANTIGRAVITY_CONVERSATION_ID
+    } elseif ($env:CLAUDE_CODE_SESSION_ID) {
         $env:CLAUDE_CODE_SESSION_ID
     } elseif ($env:CODEX_THREAD_ID) {
         $env:CODEX_THREAD_ID
-    } elseif ($env:GEMINI_SESSION_ID) {
-        $env:GEMINI_SESSION_ID
     } else {
         ""
     }
@@ -111,12 +120,12 @@ if (Test-Path $statePath) {
     }
 }
 
-$sessionId = if ($env:CLAUDE_CODE_SESSION_ID) {
+$sessionId = if ($runtime -eq "antigravity") {
+    $env:ANTIGRAVITY_CONVERSATION_ID
+} elseif ($env:CLAUDE_CODE_SESSION_ID) {
     $env:CLAUDE_CODE_SESSION_ID
 } elseif ($env:CODEX_THREAD_ID) {
     $env:CODEX_THREAD_ID
-} elseif ($env:GEMINI_SESSION_ID) {
-    $env:GEMINI_SESSION_ID
 } else {
     ""
 }

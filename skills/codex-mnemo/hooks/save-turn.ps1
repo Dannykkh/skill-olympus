@@ -31,7 +31,7 @@ function Write-DebugLog([string]$message) {
     } catch {}
 }
 
-# P1 parity: Claude/Gemini와 공유하는 mnemo-errors.log에 에러급 실패를 기록한다.
+# P1 parity: Claude/Antigravity와 공유하는 mnemo-errors.log에 에러급 실패를 기록한다.
 # Write-DebugLog는 Codex 전용 디버그 trace이고, 사용자에게 가시화할 에러는
 # 프로젝트의 .claude/mnemo-errors.log로 통합된다 (SessionStart 배너에서 집계됨).
 function Write-MnemoError {

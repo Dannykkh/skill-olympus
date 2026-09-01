@@ -5,14 +5,6 @@ description: >
   아키텍처 결정을 구조화된 ADR로 기록하고, API 문서·README·기술 가이드를 생성.
   "ADR 작성", "아키텍처 결정 기록", "기술 문서화", "ADR" 요청에 실행.
   /adr로 실행.
-triggers:
-  - "adr"
-  - "ADR"
-  - "아키텍처 결정"
-  - "architecture decision"
-  - "기술 문서화"
-  - "decision record"
-auto_apply: false
 license: MIT
 metadata:
   version: "1.0.0"

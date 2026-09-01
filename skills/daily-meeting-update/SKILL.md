@@ -1,7 +1,6 @@
 ---
 name: daily-meeting-update
 description: "Generate interactive daily standup/status updates from GitHub, Jira, and AI session history; use for daily, standup, scrum, status update, yesterday/today/blockers, or team sync."
-user-invocable: true
 ---
 
 # Daily Meeting Update
@@ -80,7 +79,7 @@ Check for available integrations **silently** (suppress errors, don't show to us
 | Integration | Detection |
 |-------------|-----------|
 | **Claude Code History** | Claude transcript directory exists with `.jsonl` files |
-| **Codex/Gemini Project History** | `conversations/*-codex.md` or `conversations/*-gemini.md` exists |
+| **Codex/Antigravity Project History** | `conversations/*-codex.md` or `conversations/*-antigravity.md` exists; `*-gemini.md` is legacy history only |
 | GitHub CLI | `gh auth status` succeeds |
 | Jira CLI | `jira` command exists |
 | Atlassian MCP | `mcp__atlassian__*` tools available |
@@ -89,7 +88,7 @@ Check for available integrations **silently** (suppress errors, don't show to us
 ### Step 2: Offer GitHub/Jira Integrations (if available)
 
 > Claude Code: use a structured question UI when available.
-> Codex/Gemini: use plain-text questions and concise numbered options.
+> Codex/Antigravity: use plain-text questions and concise numbered options.
 
 **GitHub/Git:**
 
@@ -155,12 +154,10 @@ Options:
 - "No, I have everything I need"
 ```
 
-**If yes, run the digest script. Prefer the project-local skill path first, then installed skill path:**
+**If yes, resolve `module_root` from the exact loaded `SKILL.md` and run the bundled digest script:**
 
 ```bash
-python3 skills/daily-meeting-update/scripts/claude_digest.py --format json
-# fallback if running from an installed global skill location:
-python3 ~/.claude/skills/daily-meeting-update/scripts/claude_digest.py --format json
+python3 "<module_root>/scripts/claude_digest.py" --format json
 ```
 
 **Then present sessions with numbered selection:**
@@ -184,9 +181,9 @@ Options:
 - User says they'll provide everything manually
 - Claude transcript directory doesn't exist
 
-**Codex/Gemini fallback:**
+**Codex/Antigravity fallback:**
 
-- If Claude history is unavailable but `conversations/*-codex.md` or `conversations/*-gemini.md` exists, read the previous day's project conversation file directly.
+- If Claude history is unavailable but `conversations/*-codex.md` or `conversations/*-antigravity.md` exists, read the previous day's project conversation file directly. Read `*-gemini.md` only as legacy history.
 - Summarize relevant work items from that file in plain text.
 - Ask the user to confirm which items belong in the standup; do not require structured multi-selection UI.
 
@@ -200,7 +197,7 @@ Options:
 ## Phase 2: Interview (with insights)
 
 > Claude Code: use a structured question UI for better UX.
-> Codex/Gemini: ask the same questions in plain text and keep options short.
+> Codex/Antigravity: ask the same questions in plain text and keep options short.
 
 **Use pulled data as context** to make questions smarter.
 

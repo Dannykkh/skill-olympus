@@ -28,7 +28,7 @@ Plan에서 독립적인 비즈니스/기술 프로세스 추출:
 
 ### 2. 읽기 전용 다이어그램 작업
 
-각 프로세스별 다이어그램을 결과 반환형 작업으로 생성합니다. Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`에 해당하는 읽기 전용 역할을 사용하며 파일 쓰기는 맡기지 않습니다. 네이티브 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 프롬프트를 순차 실행합니다.
+각 프로세스별 다이어그램을 결과 반환형 작업으로 생성합니다. Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`에 해당하는 읽기 전용 역할을 사용하며 파일 쓰기는 맡기지 않습니다. 네이티브 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 프롬프트를 순차 실행합니다.
 
 ```
 Run a read-only analysis job with this prompt:

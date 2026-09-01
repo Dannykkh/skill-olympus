@@ -35,9 +35,17 @@ git pull
 ./install.sh --all
 ```
 
-이 명령은 현재의 가벼운 기본값을 적용합니다. Claude/Grok 공유 표면에는 14개,
-Codex와 Gemini에는 각각 20개의 Olympus 스킬이 활성화되고, 나머지 공개 source-only 76개는 필요할 때
+이 명령은 현재의 가벼운 기본값을 적용합니다. Claude/Grok 공유 표면에는 21개,
+Codex와 Antigravity에는 각각 20개의 Olympus 스킬이 활성화되고, 나머지 공개 source-only 76개는 필요할 때
 읽을 수 있는 source-only 라이브러리로 남습니다.
+
+OpenClaw과 Hermes Agent는 기본 네 CLI 설치에 포함되지 않습니다. 호스트별 skills-only 설치기는
+런타임 어댑터 여섯 개를 제외하고 활성 18개와 source-only 76개를 설치합니다.
+
+```powershell
+.\install-openclaw.bat
+.\install-hermes.bat
+```
 
 ## 원하는 상태로 재설정
 
@@ -72,11 +80,13 @@ Codex와 Gemini에는 각각 20개의 Olympus 스킬이 활성화되고, 나머�
 ```text
 ~/.claude/_olympus-preserved/
 ~/.codex/_olympus-preserved/
-~/.gemini/_olympus-preserved/
+~/.gemini/_olympus-preserved/       # Antigravity가 사용하는 Google 공용 홈
+~/.openclaw/_olympus-preserved/     # OpenClaw skills-only 설치
+~/.hermes/_olympus-preserved/       # Hermes Agent skills-only 설치
 
 ~/.claude/_pruned-stale-olympus/
 ~/.codex/_pruned-stale-olympus/
-~/.gemini/_pruned-stale-olympus/
+~/.gemini/_pruned-stale-olympus/    # Antigravity가 사용하는 Google 공용 홈
 ```
 
 Windows에서는 다음 명령으로 보존된 스킬을 확인할 수 있습니다.
@@ -85,6 +95,8 @@ Windows에서는 다음 명령으로 보존된 스킬을 확인할 수 있습니
 Get-ChildItem "$env:USERPROFILE\.claude\_olympus-preserved" -Recurse -Filter SKILL.md -ErrorAction SilentlyContinue
 Get-ChildItem "$env:USERPROFILE\.codex\_olympus-preserved" -Recurse -Filter SKILL.md -ErrorAction SilentlyContinue
 Get-ChildItem "$env:USERPROFILE\.gemini\_olympus-preserved" -Recurse -Filter SKILL.md -ErrorAction SilentlyContinue
+Get-ChildItem "$env:USERPROFILE\.openclaw\_olympus-preserved" -Recurse -Filter SKILL.md -ErrorAction SilentlyContinue
+Get-ChildItem "$env:USERPROFILE\.hermes\_olympus-preserved" -Recurse -Filter SKILL.md -ErrorAction SilentlyContinue
 ```
 
 복구할 때는 해당 폴더를 대상 CLI의 `skills/` 아래에 복사합니다. Olympus 이름과 충돌했던

@@ -75,11 +75,12 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 ## Native-First 구현 경계 (항상 적용)
 
 - 일반 구현은 네이티브 코딩 능력과 프로젝트 코드·테스트·규칙을 먼저 따르고, 범용 코딩 표준 스킬은 사용자가 명시적으로 호출할 때만 사용한다.
+- 현재 런타임의 네이티브 workflow가 요청을 완결하면 그것을 먼저 사용한다. 겹치는 활성 스킬은 네이티브 엔진을 다시 구현하지 않고, 별도 산출물·정책·검증 계약처럼 명시된 고유 차이만 추가한다.
 - 기존 구조와 기존 composition point를 우선하며, 같은 역할의 새 계층이나 병렬 구조를 만들지 않는다.
 - 독립적으로 변경·테스트되는 책임만 모듈로 분리하고, 모듈은 내부를 숨긴 채 명시적 계약(interface/type/function)만 노출한다.
 - 모듈 간 순서·분기·조합은 기존 Application/Service/Composition Root 같은 하네스가 담당하고, 모듈끼리는 구현이 아니라 계약에만 의존한다.
 - 이 규칙은 두 개 이상의 독립 블록이 있거나 독립 변경 필요가 확인될 때만 적용한다. 단순 작업에는 새 인터페이스·레이어·하네스를 추가하지 않는다.
-- 네이티브 역할은 읽기 전용 탐색(Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`)과 쓰기·실행 작업(Claude `general-purpose`, Codex `worker`, Gemini `generalist`, Grok `general-purpose`)으로 분리한다. 읽기 전용 역할에 파일 쓰기를 맡기지 않는다.
+- 네이티브 역할은 읽기 전용 탐색(Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`)과 쓰기·실행 작업(Claude `general-purpose`, Codex `worker`, Antigravity 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트, Grok `general-purpose`)으로 분리한다. 읽기 전용 역할에 파일 쓰기를 맡기지 않는다.
 - 메인 컨텍스트가 공유 태스크 장부·활동 로그·완료 판정을 소유하고, 작업자는 고유 파일을 맡거나 결과만 반환한다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 순차 실행한다.
 - 기본 활성 스킬은 사용자 진입점 하네스다. 하네스가 source-only 하위 모듈을 필요로 하면 그 스킬을 호출하지 말고 카탈로그의 정확한 `SKILL.md`를 직접 읽는다. 참조와 실행 파일은 해석된 모듈 디렉터리를 기준으로 찾으며, 필수 모듈 누락은 실패 또는 `NOT RUN`으로 남기고 누락을 `PASS`로 처리하지 않는다.
 
@@ -91,8 +92,11 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 - 기본 활성 사용자 호출명은 CLI 간에 동일하게 유지합니다. Claude에서 `/themis`, `workpm`, `agent-team`으로 호출되면 Codex에서도 같은 이름으로 접근 가능해야 합니다. source-only 스킬의 slash 호출은 `--include-source-only-skills`로 활성화한 뒤에만 같은 보장을 적용합니다.
 - 내부 구현은 CLI별 실행 모델 차이를 반영해 달라질 수 있지만, 사용자 인터페이스와 핵심 결과는 맞춰야 합니다.
 - 단순 파일 복사만으로 parity를 판단하지 말고, 전역 설치본에서 실제로 동작하는지까지 검증합니다.
+- OpenClaw과 Hermes Agent는 별도 명시가 없는 한 **skills-only 지원 표면**입니다. 각각
+  `~/.openclaw/skills`, `~/.hermes/skills`에 공통 진입점과 source-only 카탈로그만 설치하며,
+  기존 네 CLI용 어댑터·훅·Mnemo·MCP·사용자 정의 에이전트 parity를 주장하지 않습니다.
 - Codex 스킬은 기본적으로 `~/.codex/skills/`에만 설치합니다. 이 저장소의 `.agents/skills` 미러는 격리 테스트용 `--include-project-skills` 옵션에서만 생성합니다.
-- 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(공통 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나눕니다. 호환되지 않는 어댑터를 제외하면 Claude는 97개(활성 21 + source-only 76), Codex와 Gemini는 각각 96개(활성 20 + source-only 76)입니다. Grok 논리 정책도 96개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 21개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
+- 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(공통 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 97개(활성 21 + source-only 76), Codex와 Antigravity 각각 96개(활성 20 + source-only 76), OpenClaw과 Hermes Agent 각각 94개(활성 18 + source-only 76)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 96개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 21개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
 - 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
 - 사용자 정의 에이전트는 기본 거부 정책으로 0개를 등록합니다. 현재 소스 42종(패시브 9, 네이티브 중복 7, 중복 전문·스킬 래퍼 24, 워크플로 호환 프롬프트 2)은 source-only이며, 새 에이전트도 고유 런타임 계약을 입증해 allowlist에 넣기 전에는 자동 활성화되지 않습니다. 전체 소스 복사가 필요할 때만 `--include-source-only-agents`를 사용하고, Codex 프로젝트 에이전트 미러는 `--include-project-agents`에서만 생성합니다.
 - 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모)
@@ -123,7 +127,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
-| 🤖 AI Tools | codex, gemini, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 4-CLI 네이티브 멀티에이전트 (orchestrator MCP는 폴백) + Codex Multi-Agent |
+| 🤖 AI Tools | codex, antigravity, orchestrator, workpm (다이달로스), agent-team, agent-team-codex | 외부 AI 모델 연동 + 멀티 AI 오케스트레이션 + 다이달로스(현장감독) PM + 4-CLI 네이티브 멀티에이전트 (orchestrator MCP는 폴백) + Codex Multi-Agent |
 | 🔮 Meta | agent-md-refactor, autoresearch, command-creator, plugin-forge, skill-judge, find-skills, manage-skills, project-gotchas, memory-distill, skill-evolve, verify-implementation | 플러그인/스킬 생성/검색/검증 + 오답노트 자동 관리 + raw 관찰 정제(rebuild) + 스킬 프롬프트 자동 최적화 (Hill Climbing) + gotcha/learned 기반 스킬 자기개선 루프 |
 | 📝 Documentation | api-handoff, crafting-effective-readmes, diagram-design, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely, docx, pdf, excel2md | 문서/다이어그램 + 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG 표현 계층) + 도메인 용어사전 (DDD Ubiquitous Language) + Office 문서 읽기/생성/편집 (Word/PDF/Excel) |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
@@ -139,7 +143,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown, youtube-transcript | 유틸리티 + YouTube 자막 추출/요약 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
-| 🧠 Memory/Session | mnemo, codex-mnemo, gemini-mnemo, grok-mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + CLI별 어댑터 (Codex notify / Gemini AfterAgent / Grok camelCase envelope) + 메모리 크기 점검 및 압축 |
+| 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + CLI별 어댑터 (Codex notify / Antigravity Stop / Grok camelCase envelope) + 메모리 크기 점검 및 압축 |
 
 ### Agents (참고 소스 42개: 최상위 40개 + 스킬 소유 2개, 기본 등록 0개)
 
@@ -196,9 +200,10 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 skills/
   {skill-name}/           # kebab-case directory name
     SKILL.md              # Required: skill definition
-    scripts/              # Required: executable scripts
-      {script-name}.sh    # Bash scripts (preferred)
-  {skill-name}.zip        # Required: packaged for distribution
+    scripts/              # Optional: deterministic helpers
+    references/           # Optional: details loaded only when needed
+    assets/               # Optional: files copied into generated output
+  {skill-name}.zip        # Release packaging only
 ```
 
 ### Naming Conventions
@@ -227,8 +232,11 @@ description: {One sentence describing when to use this skill. Include trigger ph
 ## Usage
 
 ```bash
-bash /mnt/skills/user/{skill-name}/scripts/{script}.sh [args]
+bash "<module_root>/scripts/{script}.sh" [args]
 ```
+
+`module_root` is the directory containing the exact `SKILL.md` loaded for this run. Never hardcode
+`~/.claude`, `~/.codex`, or `~/.gemini` as the location of the skill's own resources.
 
 **Arguments:**
 - `arg1` - Description (defaults to X)
@@ -261,12 +269,48 @@ Skills are loaded on-demand — only the skill name and description are loaded a
 
 ### Script Requirements
 
-- Use `#!/bin/bash` shebang
-- Use `set -e` for fail-fast behavior
-- Write status messages to stderr: `echo "Message" >&2`
-- Write machine-readable output (JSON) to stdout
-- Include a cleanup trap for temp files
-- Reference the script path as `/mnt/skills/user/{skill-name}/scripts/{script}.sh`
+- Add a script only when repeated deterministic execution materially improves reliability.
+- For Bash helpers, use `#!/bin/bash`, `set -e`, stderr for status, stdout for machine-readable output,
+  and a cleanup trap when temporary files are created.
+- Resolve scripts, references, and assets from `module_root`; do not assume a runtime-specific install home.
+- When a helper is not portable across the supported operating systems, document the supported runtime and
+  provide a main-context fallback instead of claiming cross-CLI parity.
+
+### Cross-CLI Authoring and Sync Gate
+
+`skills/{skill-name}/` is the single canonical source. Do not maintain separate Claude, Codex,
+Antigravity, and Grok copies in the repository.
+
+Before calling a skill cross-CLI compatible:
+
+1. Keep the standard folder + `SKILL.md` contract. The canonical cross-CLI frontmatter uses the currently
+   verified four-runtime intersection only: required `name` and `description`, plus optional `license` and
+   flat-string `metadata`. Put runtime requirements in the body. Although the upstream Agent Skills specification
+   defines `compatibility` and experimental `allowed-tools`, do not add them to the shared source until every
+   supported runtime validator accepts the same form.
+2. Do not depend on Claude extensions such as `disable-model-invocation`, `user-invocable`, `argument-hint`,
+   `context`, or `model`; other runtimes may ignore them. Express essential behavior in the description/body or
+   an explicit runtime adapter. Put provider-specific tool restrictions in that adapter rather than shared
+   frontmatter.
+3. Refer to host capabilities semantically (`read`, `search`, `edit`, `run`, `delegate`) rather than requiring
+   Claude-only tool names such as `TodoWrite`, `Agent`, or `SendMessage`.
+4. Audit the current runtime's official native workflows before adding a workflow skill. For Antigravity this
+   includes `/goal`, `/plan`, `/grill-me`, `/teamwork-preview`, `/learn`, `/schedule`, and `/browser`, plus native
+   skill, agent, task, hook, and MCP management. If a native workflow already completes the same job, do not
+   duplicate it. If the canonical skill adds a real deliverable or policy, name that delta and make the native
+   workflow the engine. A skill with no unique delta remains source-only or is not added.
+5. Put genuinely runtime-specific behavior behind an explicit branch or adapter. Hooks, transcript payloads,
+   native slash commands, agent schemas, and permission flags are not portable by file copy alone.
+6. Use current Antigravity paths and contracts: global skills under
+   `~/.gemini/antigravity-cli/skills/`, workspace skills under `.agents/skills/`, global agents and hooks under
+   `~/.gemini/config/`, and `agy` as the executable.
+7. Add a new skill as source-only by default. Promote it in `scripts/skill-install-policy.js` only after the
+   allowlist criteria are met. Add an incompatible runtime adapter to that runtime's exclusion list.
+8. Run the portable frontmatter, installer, and policy tests. A copied file or generated catalog is availability evidence, not proof
+   that every runtime-specific workflow executes successfully.
+
+Running `install.bat` or `bash install.sh` without arguments synchronizes the canonical library for Claude,
+Codex, Antigravity, and Grok. Grok consumes the Claude compatibility surface; it has no separate skill copy.
 
 ### Creating the Zip Package
 
@@ -279,7 +323,28 @@ zip -r {skill-name}.zip {skill-name}/
 
 ### End-User Installation
 
-Document these two installation methods for users:
+For this repository, recommend the all-runtime installer:
+
+```bash
+# Windows
+install.bat
+
+# macOS/Linux/Git Bash
+bash install.sh
+```
+
+The managed global locations are:
+
+| Runtime | Skill location |
+|---------|----------------|
+| Claude Code | `~/.claude/skills/{skill-name}/SKILL.md` |
+| Codex CLI | `${CODEX_HOME:-~/.codex}/skills/{skill-name}/SKILL.md` |
+| Antigravity CLI | `~/.gemini/antigravity-cli/skills/{skill-name}/SKILL.md` |
+| Grok Build | Claude compatibility surface at `~/.claude/skills/` |
+
+Antigravity workspace-only skills use `.agents/skills/{skill-name}/SKILL.md`.
+
+For a standalone manual Claude installation:
 
 **Claude Code:**
 ```bash

@@ -8,6 +8,7 @@ PROMPT_PARTS=()
 MAX_ITERATIONS=50
 COMPLETION_PROMISE="null"
 GOAL_MODE=false
+RUNTIME=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -54,6 +55,13 @@ HELP_EOF
             GOAL_MODE=true
             shift
             ;;
+        --runtime)
+            case "${2:-}" in
+                claude|codex|antigravity) RUNTIME="$2" ;;
+                *) echo "runtime은 claude, codex, antigravity 중 하나여야 합니다." >&2; exit 1 ;;
+            esac
+            shift 2
+            ;;
         *)
             PROMPT_PARTS+=("$1")
             shift
@@ -84,12 +92,12 @@ if [[ -z "$PROMPT" ]]; then
     exit 1
 fi
 
-if [ -n "${CODEX_THREAD_ID:-}" ]; then
+if [ "$RUNTIME" = "antigravity" ]; then
+    STATE_DIR=".chronos"
+    CURRENT_SESSION="${ANTIGRAVITY_CONVERSATION_ID:-}"
+elif [ "$RUNTIME" = "codex" ] || [ -n "${CODEX_THREAD_ID:-}" ]; then
     STATE_DIR=".codex"
     CURRENT_SESSION="${CODEX_THREAD_ID:-}"
-elif [ -n "${GEMINI_SESSION_ID:-}" ]; then
-    STATE_DIR=".chronos"
-    CURRENT_SESSION="${GEMINI_SESSION_ID:-}"
 else
     STATE_DIR=".claude"
     CURRENT_SESSION="${CLAUDE_CODE_SESSION_ID:-}"

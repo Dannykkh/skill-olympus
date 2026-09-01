@@ -18,10 +18,10 @@ param(
     [switch]$ManualMode,  # 각 CLI의 기본 대화형 권한 모드 사용
 
     [Parameter(Mandatory=$false)]
-    [switch]$MultiAI,  # Multi-AI 모드 활성화 (Claude + Codex + Gemini)
+    [switch]$MultiAI,  # Multi-AI 모드 활성화 (Claude + Codex + Antigravity)
 
     [Parameter(Mandatory=$false)]
-    [string[]]$AIProviders  # 워커별 AI 지정 (예: @('claude', 'codex', 'gemini'))
+    [string[]]$AIProviders  # 워커별 AI 지정 (예: @('claude', 'codex', 'antigravity'))
 )
 
 $ErrorActionPreference = "Stop"
@@ -75,11 +75,11 @@ function Get-AvailableAIProviders {
         Write-ColorOutput "  [✗] Codex CLI 없음" "Gray"
     }
 
-    if (Test-AIProvider "gemini") {
-        $providers += "gemini"
-        Write-ColorOutput "  [✓] Gemini CLI 감지됨 (Google)" "Green"
+    if (Test-AIProvider "agy") {
+        $providers += "antigravity"
+        Write-ColorOutput "  [✓] Antigravity CLI 감지됨 (Google)" "Green"
     } else {
-        Write-ColorOutput "  [✗] Gemini CLI 없음" "Gray"
+        Write-ColorOutput "  [✗] Antigravity CLI 없음" "Gray"
     }
 
     return $providers
@@ -98,8 +98,8 @@ function Get-AICommand {
         "codex" {
             if ($AutoMode) { "codex --approve-for-me --sandbox workspace-write" } else { "codex" }
         }
-        "gemini" {
-            if ($AutoMode) { "gemini --sandbox --approval-mode yolo" } else { "gemini" }
+        "antigravity" {
+            "agy"
         }
         default {
             throw "지원하지 않는 AI provider: $Provider"
@@ -183,7 +183,7 @@ Write-ColorOutput "`nAI Provider 감지 중..." "Yellow"
 $availableProviders = Get-AvailableAIProviders
 
 if ($availableProviders.Count -eq 0) {
-    Write-ColorOutput "오류: 지원되는 AI provider가 없습니다 (claude, codex, gemini)." "Red"
+    Write-ColorOutput "오류: 지원되는 AI provider가 없습니다 (claude, codex, antigravity)." "Red"
     exit 1
 }
 
@@ -364,12 +364,12 @@ $(for ($i = 1; $i -le $WorkerCount; $i++) { "- Worker-$i`: $(Join-Path $Worktree
    orchestrator_analyze_codebase 도구를 사용하여 프로젝트 구조 파악
 4. 태스크 생성 (AI 지정 가능):
    orchestrator_create_task 도구로 작업 생성
-   - ai_provider: 'claude' | 'codex' | 'gemini' (선택)
+   - ai_provider: 'claude' | 'codex' | 'antigravity' (선택)
 5. 진행 모니터링:
    orchestrator_get_progress 도구로 상태 확인
 
 ### Worker
-1. Worker 탭에서 해당 AI CLI 실행 (claude/codex/gemini)
+1. Worker 탭에서 해당 AI CLI 실행 (claude/codex/antigravity)
 2. 가용 태스크 확인:
    orchestrator_get_available_tasks
 3. 태스크 담당:

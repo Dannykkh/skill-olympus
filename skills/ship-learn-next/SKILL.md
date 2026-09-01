@@ -1,9 +1,6 @@
 ---
 name: ship-learn-next
 description: "Turn learning content such as YouTube transcripts, articles, or tutorials into concrete action plans, reps, or learning quests with Ship-Learn-Next."
-allowed-tools:
-  - Read
-  - Write
 ---
 
 # Ship-Learn-Next Action Planner
@@ -40,7 +37,7 @@ Read the file the user provides (transcript, article, notes):
 FILE_PATH="/path/to/content.txt"
 ```
 
-Use the Read tool to analyze the content.
+Use the current runtime's file-reading capability to analyze the content.
 
 ### Step 2: Extract Core Lessons
 

@@ -1,6 +1,6 @@
 # spawn-worker.ps1
 # Orchestrator Worker를 새 터미널에서 실행하는 스크립트
-# 멀티AI 지원: Claude, Codex, Gemini
+# 멀티AI 지원: Claude, Codex, Antigravity
 #
 # 사용법:
 #   .\spawn-worker.ps1 -WorkerId "worker-1" -ProjectRoot "C:\project" -AutoTerminate 1 -AIProvider "claude"
@@ -16,7 +16,7 @@ param(
     [string]$AutoTerminate = "1",
 
     [Parameter(Mandatory=$true)]
-    [ValidateSet("claude", "codex", "gemini")]
+    [ValidateSet("claude", "codex", "antigravity")]
     [string]$AIProvider,
 
     [Parameter(Mandatory=$false)]
@@ -117,29 +117,29 @@ try {
                 throw "Codex exited with code $providerExitCode"
             }
         }
-        "gemini" {
-            $cliPath = Get-Command gemini -ErrorAction SilentlyContinue
+        "antigravity" {
+            $cliPath = Get-Command agy -ErrorAction SilentlyContinue
             if (-not $cliPath) {
-                Write-Log "ERROR: gemini command not found in PATH" "Red"
+                Write-Log "ERROR: agy command not found in PATH" "Red"
                 exit 1
             }
-            Write-Log "CLI_STARTED: Gemini CLI at $($cliPath.Source)" "Green"
-            $geminiTimeout = if ($env:GEMINI_TIMEOUT_SECONDS) { [int]$env:GEMINI_TIMEOUT_SECONDS } else { 600 }
-            $geminiPrompt = Get-Content $promptFile -Raw
+            Write-Log "CLI_STARTED: Antigravity CLI at $($cliPath.Source)" "Green"
+            $antigravityTimeout = if ($env:ANTIGRAVITY_TIMEOUT_SECONDS) { [int]$env:ANTIGRAVITY_TIMEOUT_SECONDS } else { 600 }
+            $antigravityPrompt = Get-Content $promptFile -Raw
             $job = Start-Job -ScriptBlock {
                 param($prompt)
                 try {
-                    $output = gemini --sandbox --approval-mode yolo --output-format text -p $prompt 2>&1
+                    $output = agy -p $prompt --output-format text 2>&1
                     $exitCode = if ($null -eq $LASTEXITCODE) { 1 } else { $LASTEXITCODE }
                     [pscustomobject]@{ Output = @($output); ExitCode = $exitCode }
                 } catch {
                     [pscustomobject]@{ Output = @($_.Exception.Message); ExitCode = 1 }
                 }
-            } -ArgumentList $geminiPrompt
-            if (-not (Wait-Job $job -Timeout $geminiTimeout)) {
+            } -ArgumentList $antigravityPrompt
+            if (-not (Wait-Job $job -Timeout $antigravityTimeout)) {
                 Stop-Job $job -ErrorAction SilentlyContinue
                 Remove-Job $job -Force -ErrorAction SilentlyContinue
-                Write-Log "ERROR: Gemini timeout after ${geminiTimeout}s" "Red"
+                Write-Log "ERROR: Antigravity timeout after ${antigravityTimeout}s" "Red"
                 exit 124
             }
             $jobResult = Receive-Job $job -ErrorAction Stop
@@ -147,7 +147,7 @@ try {
             $providerExitCode = [int]$jobResult.ExitCode
             Remove-Job $job -Force
             if ($providerExitCode -ne 0) {
-                throw "Gemini exited with code $providerExitCode"
+                throw "Antigravity exited with code $providerExitCode"
             }
         }
     }

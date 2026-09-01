@@ -61,7 +61,7 @@
 
 ## 다른 CLI 공유
 
-Claude/Codex/Gemini가 같은 글로벌 사전을 공유할 수 있습니다.
+Claude/Codex/Antigravity가 같은 글로벌 사전을 공유할 수 있습니다.
 기본 위치는 `~/.agent-memory/domain-dictionaries/`이며, `AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수로 바꿀 수 있습니다. 구현은 `domain-dictionary` 스킬의 `references/global-sync.md`를 참조.
 
 ## 직접 편집

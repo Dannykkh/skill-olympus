@@ -23,7 +23,9 @@ const DEFAULT_DISABLED_BROAD_CODING_SKILLS = Object.freeze([
 // A skill qualifies as an entry point only when all four hold:
 //   1. The user invokes it directly, under a slash command no other skill claims.
 //   2. It produces a complete deliverable — it is not a stage of another harness.
-//   3. It does not duplicate a CLI-native capability (/code-review, native commit).
+//   3. It does not duplicate a CLI-native capability. If it overlaps one, the
+//      native workflow remains the engine and the skill must own a complete,
+//      documented extra deliverable or policy contract.
 //   4. Its call frequency justifies the startup description budget.
 //
 // Being referenced by another skill does NOT disqualify an entry point:
@@ -55,18 +57,38 @@ const DEFAULT_COMMON_RUNTIME_SKILLS = Object.freeze([
 const RUNTIME_SKILL_ADDITIONS = Object.freeze({
   claude: Object.freeze(["agent-team", "mnemo"]),
   codex: Object.freeze(["agent-team-codex", "codex-mnemo"]),
-  gemini: Object.freeze(["agent-team", "gemini-mnemo"]),
+  antigravity: Object.freeze(["agent-team", "antigravity-mnemo"]),
   grok: Object.freeze(["agent-team", "grok-mnemo"]),
+  // Skill-only hosts intentionally receive no Olympus runtime adapter. Their
+  // native plugin/hook surfaces are outside this install tier.
+  openclaw: Object.freeze([]),
+  hermes: Object.freeze([]),
 });
 
 // Claude and Grok share ~/.claude/skills through Grok's compatibility layer,
 // so the Claude home intentionally keeps both mnemo adapters. The other CLIs
 // have isolated registries and keep only their own adapter pair.
 const RUNTIME_SKILL_EXCLUSIONS = Object.freeze({
-  claude: Object.freeze(["agent-team-codex", "codex-mnemo", "gemini-mnemo"]),
-  codex: Object.freeze(["agent-team", "mnemo", "gemini-mnemo", "grok-mnemo"]),
-  gemini: Object.freeze(["agent-team-codex", "mnemo", "codex-mnemo", "grok-mnemo"]),
-  grok: Object.freeze(["agent-team-codex", "mnemo", "codex-mnemo", "gemini-mnemo"]),
+  claude: Object.freeze(["agent-team-codex", "codex-mnemo", "antigravity-mnemo"]),
+  codex: Object.freeze(["agent-team", "mnemo", "antigravity-mnemo", "grok-mnemo"]),
+  antigravity: Object.freeze(["agent-team-codex", "mnemo", "codex-mnemo", "grok-mnemo"]),
+  grok: Object.freeze(["agent-team-codex", "mnemo", "codex-mnemo", "antigravity-mnemo"]),
+  openclaw: Object.freeze([
+    "agent-team",
+    "agent-team-codex",
+    "mnemo",
+    "codex-mnemo",
+    "antigravity-mnemo",
+    "grok-mnemo",
+  ]),
+  hermes: Object.freeze([
+    "agent-team",
+    "agent-team-codex",
+    "mnemo",
+    "codex-mnemo",
+    "antigravity-mnemo",
+    "grok-mnemo",
+  ]),
 });
 
 const DEFAULT_RUNTIME_SKILL_ALLOWLIST = Object.freeze([

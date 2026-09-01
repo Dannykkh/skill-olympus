@@ -4,7 +4,9 @@
 // stdout: line1 = LLMs, line2 = Bundles (always all)
 // UI is written to stderr (stdout is for results only)
 
-const ALL_LLMS = ["claude", "codex", "gemini", "grok"];
+const ALL_LLMS = ["claude", "codex", "antigravity", "grok"];
+const SKILLS_ONLY_HOSTS = ["openclaw", "hermes"];
+const SUPPORTED_LLMS = [...ALL_LLMS, ...SKILLS_ONLY_HOSTS];
 
 // All bundles are core-installed (no selection needed)
 const ALL_BUNDLES = [
@@ -16,11 +18,13 @@ const ALL_BUNDLES = [
 ];
 
 const LLM_ITEMS = [
-  { id: "all", desc: "All (Claude + Codex + Gemini + Grok)" },
+  { id: "all", desc: "TermSnap defaults (Claude + Codex + Antigravity + Grok)" },
   { id: "claude", desc: "Claude Code" },
   { id: "codex", desc: "Codex CLI" },
-  { id: "gemini", desc: "Gemini CLI" },
+  { id: "antigravity", desc: "Google Antigravity CLI" },
   { id: "grok", desc: "Grok Build (Claude compatibility assets)" },
+  { id: "openclaw", desc: "OpenClaw (skills only)" },
+  { id: "hermes", desc: "Hermes Agent (skills only)" },
 ];
 
 // Ignore irrelevant flags passed through from install.bat/sh via %*
@@ -40,9 +44,23 @@ function parseArgs() {
         isAll = true;
         break;
       case "--llm":
-        llms = args[++i]
-          ?.split(",")
-          .map((s) => s.trim().toLowerCase());
+        {
+          const values = [];
+          while (i + 1 < args.length && !args[i + 1].startsWith("--")) {
+            values.push(args[++i]);
+          }
+          llms = values
+            .flatMap((value) => value.split(","))
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean)
+            .map((name) => {
+              if (name === "gemini") {
+                process.stderr.write("Gemini CLI target is retired; selecting Antigravity instead.\n");
+                return "antigravity";
+              }
+              return name;
+            });
+        }
         break;
       // --only, --skip are parsed for backward compat but ignored
       case "--only":
@@ -54,8 +72,14 @@ function parseArgs() {
 
   if (isAll) return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
   if (llms?.includes("all")) llms = [...ALL_LLMS];
-  if (llms) return { llms, bundles: ALL_BUNDLES };
-  // 기본값: 전체 설치 (Claude + Codex + Gemini + Grok)
+  if (llms) {
+    const unsupported = llms.filter((name) => !SUPPORTED_LLMS.includes(name));
+    if (unsupported.length > 0) {
+      throw new Error(`Unsupported CLI target(s): ${unsupported.join(", ")}`);
+    }
+    return { llms: [...new Set(llms)], bundles: ALL_BUNDLES };
+  }
+  // 기본값: 전체 설치 (Claude + Codex + Antigravity + Grok)
   return { llms: ALL_LLMS, bundles: ALL_BUNDLES };
 }
 

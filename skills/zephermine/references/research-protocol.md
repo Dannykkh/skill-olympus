@@ -27,10 +27,10 @@ This document defines the research decision and execution flow.
 
 ## Native Role Contract
 
-| Semantic role | Claude | Codex | Gemini | Grok | Use here |
+| Semantic role | Claude | Codex | Antigravity | Grok | Use here |
 |---------------|--------|-------|--------|------|----------|
-| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Return-only investigation; no file writes |
-| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Research work item that writes one assigned output file |
+| `read-only-analysis` | `Explore` | `explorer` | `research` | `explore` | Return-only investigation; no file writes |
+| `artifact-writer` | `general-purpose` | `worker` | 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트 | `general-purpose` | Research work item that writes one assigned output file |
 
 - Give every delegated work item one unique output file or make it explicitly return-only.
 - Main/Lead alone owns `research-decision.md`, the combined `research.md`, warning-stub integration, and all other shared state.

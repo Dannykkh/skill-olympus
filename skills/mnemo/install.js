@@ -494,7 +494,7 @@ function uninstall() {
 }
 
 // ── Run ──
-// Create the directory instead of bailing out. codex-mnemo and gemini-mnemo have
+// Create the directory instead of bailing out. codex-mnemo and antigravity-mnemo have
 // always done this ("directory not found, creating it") — only this script treated
 // a missing ~/.claude as fatal, which is what made a fresh machine install nothing.
 // The assets here are plain file copies, so they are valid without the claude CLI,

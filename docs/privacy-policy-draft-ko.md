@@ -49,7 +49,7 @@
 |---|---|---|
 | Anthropic (Claude API) | 대화 프롬프트, 작업 지시문, 대상 코드 | Claude CLI 워커 실행 시 |
 | OpenAI (Codex CLI) | 대화 프롬프트, 작업 지시문, 대상 코드. chronos 자동 재개 시 원본 작업 텍스트 재전송 | Codex 관련 스킬 실행 시 |
-| Google (Gemini CLI) | 대화 프롬프트, 작업 지시문, 대상 코드 | Gemini 관련 스킬 실행 시 |
+| Google (Antigravity CLI) | 대화 프롬프트, 작업 지시문, 대상 코드 | Antigravity 관련 스킬 실행 시 |
 | GitHub (raw.githubusercontent.com) | 사용자 데이터 없음. 단 HTTP 요청 특성상 IP 주소가 서버에 전달됨 | **매 세션 시작 시 자동** (버전 확인) |
 | Reddit | 검색 키워드 | reddit-researcher 스킬 실행 시 |
 | YouTube | 영상 URL 요청 | youtube-transcript 스킬 실행 시 |

@@ -9,6 +9,10 @@ description: Create and manage Claude Code plugins with proper structure, manife
 
 Build and manage Claude Code plugins with correct structure, manifests, and marketplace integration. Includes workflows, automation scripts, and reference docs.
 
+If the requested target is Antigravity, stop this Claude plugin workflow. Do not write `.claude-plugin` manifests
+or claim they are portable. Use the current official Antigravity plugin schema and CLI workflow in a separate
+runtime-specific task instead.
+
 ## When to Use
 
 - Creating new plugins for a marketplace

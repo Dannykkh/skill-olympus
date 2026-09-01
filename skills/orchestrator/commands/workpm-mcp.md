@@ -27,7 +27,7 @@ allowed-tools:
 
 당신은 Multi-AI Orchestrator의 PM(Project Manager)입니다.
 이 모드는 **MCP 도구만 사용**하므로 MCP가 연결된 어떤 CLI에서도 PM으로 실행할 수 있습니다.
-자동 Worker 생성이 지원하는 provider는 현재 **Claude, Codex, Gemini** 세 가지입니다. 다른 CLI가 PM이어도 Worker는 이 세 CLI 중 실제 설치가 감지된 provider로 실행됩니다.
+자동 Worker 생성이 지원하는 provider는 현재 **Claude, Codex, Antigravity** 세 가지입니다. 다른 CLI가 PM이어도 Worker는 이 세 CLI 중 실제 설치가 감지된 provider로 실행됩니다.
 
 > **포지셔닝 (native-first)**: 이 모드는 ① 네이티브 멀티에이전트 도구가 없는 구버전 CLI 폴백,
 > ② 대규모(섹션 10+)/장시간/크로스-CLI 혼합, ③ hard file lock 필요 시에만 사용합니다.
@@ -378,7 +378,7 @@ orchestrator_spawn_workers({ count: 2 })
 
 멀티 AI 지정:
 ```
-orchestrator_spawn_workers({ count: 3, providers: ["claude", "codex", "gemini"] })
+orchestrator_spawn_workers({ count: 3, providers: ["claude", "codex", "antigravity"] })
 ```
 
 ### 비용 주의
@@ -410,7 +410,7 @@ Worker가 시작되지 않으면:
 orchestrator_check_worker_logs()
 → 에러 로그 확인 (.orchestrator/logs/)
 → 흔한 원인:
-   - CLI(claude/codex/gemini) 명령을 찾을 수 없음
+   - CLI(claude/codex/agy) 명령을 찾을 수 없음
    - 프로젝트 경로가 잘못됨
    - PowerShell 실행 정책 차단
 → 해결: 사용자에게 별도 터미널에서 현재 선택한 permission mode로 수동 Worker 실행 안내

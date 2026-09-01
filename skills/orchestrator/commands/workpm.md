@@ -546,9 +546,9 @@ Phase 5: 도면 vs 실제 코드 대조 (공정 점검)
 | 태스크 유형 | 담당 | 비고 |
 |------------|------|------|
 | 대부분의 작업 | provider 미지정 | 가용한 어느 worker든 claim 가능 |
-| UI/프론트엔드 | claude 또는 gemini | Gemini CLI 설치 시 활용 가능 |
+| UI/프론트엔드 | claude 또는 antigravity | Antigravity CLI 설치 시 활용 가능 |
 | 대량 반복 코드 | claude 또는 codex | Codex CLI 설치 시 활용 가능 |
-| 코드 리뷰 (대용량) | claude 또는 gemini | 1M 토큰 컨텍스트 필요 시 |
+| 코드 리뷰 (대용량) | claude 또는 antigravity | 큰 컨텍스트가 필요하고 현재 모델이 지원할 때 |
 
 > `ai_provider`를 지정하면 해당 provider worker만 조회·claim할 수 있어야 합니다. 미지정 태스크는 provider-agnostic이며, 외부 CLI는 설치 확인 후에만 배정합니다.
 

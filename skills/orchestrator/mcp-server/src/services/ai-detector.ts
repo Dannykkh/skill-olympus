@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 // AI Provider 타입 정의
 // ============================================================================
 
-export type AIProvider = 'claude' | 'codex' | 'gemini';
+export type AIProvider = 'claude' | 'codex' | 'antigravity';
 
 export interface AIProviderInfo {
   name: AIProvider;
@@ -27,7 +27,7 @@ export interface WorkerProviderSelection {
   message: string;
 }
 
-const PROVIDER_ORDER: readonly AIProvider[] = ['claude', 'codex', 'gemini'];
+const PROVIDER_ORDER: readonly AIProvider[] = ['claude', 'codex', 'antigravity'];
 
 export function isAIProvider(value: string | undefined): value is AIProvider {
   return value !== undefined && PROVIDER_ORDER.includes(value as AIProvider);
@@ -44,12 +44,12 @@ export function resolveWorkerProvider(
 ): AIProvider | undefined {
   if (explicitProvider) {
     if (!isAIProvider(explicitProvider)) {
-      throw new Error(`Unsupported worker provider '${explicitProvider}'. Expected claude, codex, or gemini.`);
+      throw new Error(`Unsupported worker provider '${explicitProvider}'. Expected claude, codex, or antigravity.`);
     }
     return explicitProvider;
   }
 
-  const prefix = workerId.match(/^(claude|codex|gemini)-worker(?:-|$)/)?.[1];
+  const prefix = workerId.match(/^(claude|codex|antigravity)-worker(?:-|$)/)?.[1];
   return isAIProvider(prefix) ? prefix : undefined;
 }
 
@@ -68,7 +68,7 @@ export function selectWorkerProviders(
     return {
       success: false,
       providers: [],
-      message: 'No supported worker provider is installed (claude, codex, gemini).'
+      message: 'No supported worker provider is installed (claude, codex, antigravity).'
     };
   }
 
@@ -131,7 +131,7 @@ export function buildDetectionResult(providers: AIProviderInfo[]): DetectionResu
     providers,
     availableCount,
     mode: 'none',
-    modeDescription: 'No supported AI provider is installed (claude, codex, gemini).'
+    modeDescription: 'No supported AI provider is installed (claude, codex, antigravity).'
   };
 }
 
@@ -179,10 +179,10 @@ export function detectAIProviders(): DetectionResult {
       description: 'OpenAI Codex CLI'
     },
     {
-      name: 'gemini',
-      ...checkCLI('gemini', '--version'),
-      command: 'gemini',
-      description: 'Google Gemini CLI'
+      name: 'antigravity',
+      ...checkCLI('agy', '--version'),
+      command: 'agy',
+      description: 'Google Antigravity CLI'
     }
   ];
 
@@ -230,8 +230,8 @@ export function getProviderCommand(
       command = 'codex';
       break;
 
-    case 'gemini':
-      command = 'gemini';
+    case 'antigravity':
+      command = 'agy';
       break;
 
     default:

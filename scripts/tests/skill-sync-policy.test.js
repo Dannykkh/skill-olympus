@@ -30,7 +30,7 @@ function copySyncFixtureScripts(fixtureRoot) {
     "sync-claude-agents.js",
     "sync-claude-skills.js",
     "sync-codex-assets.js",
-    "sync-gemini-assets.js",
+    "sync-antigravity-assets.js",
   ];
   const fixtureScripts = path.join(fixtureRoot, "scripts");
   fs.mkdirSync(fixtureScripts, { recursive: true });
@@ -62,6 +62,11 @@ function writeManagedFixtureVersion(fixtureRoot, version) {
     fixtureRoot,
     path.join("hooks", "fixture-hook.js"),
     `// hook-${version}\n`,
+  );
+  writeFixtureFile(
+    fixtureRoot,
+    path.join("hooks", "antigravity-hook.js"),
+    `// antigravity-hook-${version}\n`,
   );
   writeFixtureFile(
     fixtureRoot,
@@ -255,14 +260,14 @@ test("sync CLIs reject unknown options before changing runtime homes", () => {
       manifest: ".codex-sync-manifest.json",
     },
     {
-      name: "gemini",
-      script: path.join(repoRoot, "scripts", "sync-gemini-assets.js"),
+      name: "antigravity",
+      script: path.join(repoRoot, "scripts", "sync-antigravity-assets.js"),
       args: ["--unknown-policy-flag"],
       env: {
         ...process.env,
-        GEMINI_HOME: makeTempHome("ccc-gemini-args-test-"),
+        ANTIGRAVITY_HOME: makeTempHome("ccc-antigravity-args-test-"),
       },
-      manifest: ".gemini-sync-manifest.json",
+      manifest: path.join("antigravity-cli", ".olympus-sync-manifest.json"),
     },
   ];
 
@@ -276,8 +281,9 @@ test("sync CLIs reject unknown options before changing runtime homes", () => {
     assert.notEqual(result.status, 0, `${entry.name} accepted an unknown option`);
     assert.match(result.stderr, /unknown option/);
     if (entry.manifest) {
-      const home =
-        entry.name === "codex" ? entry.env.CODEX_HOME : entry.env.GEMINI_HOME;
+      const home = entry.name === "codex"
+        ? entry.env.CODEX_HOME
+        : entry.env.ANTIGRAVITY_HOME;
       assert.equal(fs.existsSync(path.join(home, entry.manifest)), false);
     }
   }
@@ -341,21 +347,21 @@ test("managed asset hashes distinguish safe upgrades from user modifications", (
       ],
     },
     {
-      name: "gemini",
-      script: "sync-gemini-assets.js",
-      manifest: ".gemini-sync-manifest.json",
+      name: "antigravity",
+      script: "sync-antigravity-assets.js",
+      manifest: path.join("antigravity-cli", ".olympus-sync-manifest.json"),
       args: () => ["--include-source-only-agents"],
-      env: (home) => ({ ...process.env, GEMINI_HOME: home }),
+      env: (home) => ({ ...process.env, ANTIGRAVITY_HOME: home }),
       hashGroups: ["skills", "agents", "hooks", "supportDirectories"],
       targets: (home) => [
-        path.join(home, "skills", "design-plan", "SKILL.md"),
-        path.join(home, "agents", "fixture-agent.md"),
-        path.join(home, "agents", "references", "fixture.md"),
-        path.join(home, "hooks", "fixture-hook.js"),
+        path.join(home, "antigravity-cli", "skills", "design-plan", "SKILL.md"),
+        path.join(home, "config", "agents", "fixture-agent.md"),
+        path.join(home, "config", "agents", "references", "fixture.md"),
+        path.join(home, "config", "hooks", "antigravity-hook.js"),
       ],
       removedTargets: (home) => [
-        path.join(home, "skills", "design-plan", "removed-after-v1.txt"),
-        path.join(home, "agents", "references", "removed-after-v1.txt"),
+        path.join(home, "antigravity-cli", "skills", "design-plan", "removed-after-v1.txt"),
+        path.join(home, "config", "agents", "references", "removed-after-v1.txt"),
       ],
     },
   ];
@@ -495,7 +501,7 @@ test("catalog generation publishes a portable dormant library and sync manifests
   for (const scriptName of [
     "sync-claude-skills.js",
     "sync-codex-assets.js",
-    "sync-gemini-assets.js",
+    "sync-antigravity-assets.js",
   ]) {
     const source = fs.readFileSync(path.join(repoRoot, "scripts", scriptName), "utf8");
     const libraryIndex = source.lastIndexOf("syncSkillSourceLibrary(");
@@ -554,22 +560,22 @@ test("unlink removes exact untracked Olympus assets and preserves same-name user
       },
     },
     {
-      name: "gemini",
-      script: path.join(repoRoot, "scripts", "sync-gemini-assets.js"),
-      home: makeTempHome("ccc-gemini-unlink-test-"),
+      name: "antigravity",
+      script: path.join(repoRoot, "scripts", "sync-antigravity-assets.js"),
+      home: makeTempHome("ccc-antigravity-unlink-test-"),
       args() {
         return ["--unlink"];
       },
       env(home) {
-        return { ...process.env, GEMINI_HOME: home };
+        return { ...process.env, ANTIGRAVITY_HOME: home };
       },
       exactSource: path.join(repoRoot, "skills", "docx"),
       exactTarget(home) {
-        return path.join(home, "skills", "docx");
+        return path.join(home, "antigravity-cli", "skills", "docx");
       },
       modifiedSource: path.join(repoRoot, "skills", "pdf"),
       modifiedTarget(home) {
-        return path.join(home, "skills", "pdf");
+        return path.join(home, "antigravity-cli", "skills", "pdf");
       },
     },
   ];
@@ -624,7 +630,7 @@ test("installers stop when a required policy sync fails", () => {
   );
   assert.doesNotMatch(
     unixInstaller,
-    /sync-gemini-assets\.js[^\n]*&&\s*GEMINI_SYNC_RESULT=.*\|\|/,
+    /sync-antigravity-assets\.js[^\n]*&&\s*ANTIGRAVITY_SYNC_RESULT=.*\|\|/,
   );
   assert.match(unixInstaller, /필수 정책 동기화 실패[\s\S]{0,100}exit 1/);
   assert.match(windowsInstaller, /Required policy sync failed:[\s\S]{0,100}exit \/b 1/);
@@ -661,16 +667,16 @@ test("installers and the Codex audit resolve orchestrator MCP from the non-disco
   }
 });
 
-test("Gemini installer registers and removes orchestrator only in user scope", () => {
+test("Antigravity installers manage MCP through the global config adapter", () => {
   for (const relativePath of ["install.sh", "install.bat"]) {
     const source = fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
     assert.match(
       source,
-      /gemini mcp add --scope user orchestrator node/,
-      `${relativePath} can leak orchestrator registration into project settings`,
+      /install-mcp-antigravity\.js/,
+      `${relativePath} does not invoke the Antigravity MCP adapter`,
     );
-    assert.match(source, /gemini mcp remove --scope user orchestrator/);
-    assert.doesNotMatch(source, /gemini mcp (?:add|remove) orchestrator/);
+    assert.match(source, /install-mcp-antigravity\.js[\s\S]*--orchestrator/);
+    assert.doesNotMatch(source, /gemini\s+mcp/);
   }
 });
 

@@ -7,8 +7,8 @@ description: |
   frontend project that needs consistent UI foundation.
 license: MIT
 metadata:
-  version: 1.0.0
-  tags: [design-system, ui, components, design-tokens, accessibility, frontend]
+  version: "1.0.0"
+  tags: "design-system, ui, components, design-tokens, accessibility, frontend"
 ---
 
 # Design System Starter

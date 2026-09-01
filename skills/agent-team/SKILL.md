@@ -1,6 +1,10 @@
 ---
 name: agent-team
-description: zephermine 섹션 기반 네이티브 멀티에이전트 오케스트레이션. 의존성 분석, Wave 그룹핑, 파일 소유권 분리, 병렬 구현과 통합 검증을 수행한다. Claude, Codex, Gemini, Grok의 내장 탐색자·작업자를 사용하며 /agent-team 또는 /poseidon으로 실행한다.
+description: >
+  zephermine 섹션 기반 네이티브 멀티에이전트 오케스트레이션. 의존성 분석, Wave 그룹핑,
+  파일 소유권 분리, 병렬 구현과 통합 검증을 수행한다. Claude, Codex, Antigravity, Grok의
+  내장 탐색자·작업자를 사용하며 /agent-team 또는 /poseidon으로 실행한다. Antigravity의
+  일반 장기 팀 작업은 가용하면 /teamwork-preview를 우선하고, 이 스킬은 Olympus Wave·소유권·검증 계약이 필요할 때 사용한다.
 ---
 
 # Agent Team — Zephermine 섹션 병렬 실행
@@ -75,11 +79,21 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 > **native-first 원칙** (learned/020): 실행 엔진은 각 CLI의 네이티브 멀티에이전트에 위임하고,
 > orchestrator MCP는 네이티브가 없는 구버전 CLI의 폴백 + hard file-lock 정책 레이어로만 남긴다.
 
+### Antigravity `/teamwork-preview` 경계
+
+- 별도 `sections/`·Wave·파일 소유권·자재검사 산출물이 필요 없는 일반 장기·다중 에이전트 작업은,
+  현재 플랜과 런타임에서 사용할 수 있으면 Antigravity 네이티브 `/teamwork-preview`가 소유합니다.
+- 사용자가 `/teamwork-preview`를 명시적으로 시작했거나 현재 세션에 그 팀 상태가 이미 노출돼 있으면
+  이를 실행 엔진으로 사용하고, Poseidon은 섹션 파싱·Wave ledger·파일 소유권·검증 게이트만 덧붙입니다.
+- 이 스킬이 slash command를 프로그램적으로 호출할 수 있다고 가정하지 않습니다. 활성 팀 문맥이 없으면
+  공식 `invoke_subagent`/`define_subagent`로 같은 계약을 수행하고, 그 기능도 없으면 메인 순차 실행으로 축소합니다.
+- `/teamwork-preview`의 플랜·가용성 조건을 우회하거나 유료 기능을 자동 활성화하지 않습니다.
+
 | CLI | 읽기 전용 탐색·검토 | 구현·명령 실행 | 팀 조율 |
 |-----|--------------------|----------------|----------|
 | **Claude** | 내장 `Explore` | 내장 `general-purpose` 또는 이름 있는 background teammate | Agent Teams가 활성화된 경우 `Agent` + shared task list + `SendMessage` |
 | **Codex** | 내장 `explorer` | 내장 `worker` (`default`는 범용 폴백) | 현재 세션에 노출된 spawn/message/wait/interrupt 도구 |
-| **Gemini** | 내장 `codebase_investigator` | 내장 `generalist` | subagent 호출 결과를 Lead가 Wave ledger에 반영 |
+| **Antigravity** | 내장 `research` | 활성 `/teamwork-preview` 팀 또는 메인/쓰기 도구를 명시한 사용자 정의 서브에이전트 | 활성 팀 상태나 `invoke_subagent` 반환을 Lead가 Wave ledger에 반영 |
 | **Grok** | 내장 `explore` | 내장 `general-purpose` | subagent 호출 결과를 Lead가 Wave ledger에 반영 |
 
 역할명은 **의미 계약**입니다. 읽기 전용 역할에는 파일 생성을 지시하지 않고, 구현 역할에는 담당 파일·검증 명령·완료 보고 형식을 함께 전달합니다. CLI별 도구 이름이나 인자 스키마가 달라지면 현재 런타임이 노출한 도구를 사용하며, 이 문서의 예시 이름을 억지로 호출하지 않습니다.
@@ -95,11 +109,11 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 
 1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
 2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
-   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
-   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Antigravity는
+   `~/.gemini/antigravity-cli/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
 3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
-   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
-   `~/.gemini/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Antigravity
+   `~/.gemini/antigravity-cli/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
    `읽을 경로`의 절대 `SKILL.md`를 읽고, 누락·중복 행은 fail-closed입니다. 기본 경로가
    `.olympus/source-skills` 아래여도 조합하거나 추측하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모입니다. `references/`, `scripts/`, `commands/`는
@@ -172,11 +186,14 @@ Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니
 - Codex의 내장 `explorer`/`worker`/`default`를 사용합니다. 사용자 정의 `.toml` agent는 이 스킬의 필수 조건이 아닙니다.
 - subagent는 현재 세션의 sandbox와 approval policy를 상속합니다. 스킬이 `--yolo`, 승인 우회, sandbox 해제를 권장하거나 설정하지 않습니다.
 
-### Gemini 모드
-- Gemini CLI의 `experimental.enableAgents` 기본값은 `true`이며 설치기가 강제 변경하지 않습니다. 사용자가 명시적으로 껐다면 그 선택을 존중합니다.
-- `/agents`에서 내장 `codebase_investigator`와 `generalist` 인식을 확인합니다.
-- 구현 전문성은 전역 페르소나가 아니라 섹션 내용·프로젝트 설정·인접 코드·테스트를 위임 프롬프트에 임베딩해 전달
-- 공식 문서에 병렬 실행 명시 없음 — 병렬 위임 실패 시 Wave 내 순차 위임으로 폴백
+### Antigravity 모드
+- 일반 장기 팀 작업이고 Olympus 섹션·Wave·소유권·검증 산출물이 필요 없으면 가용한 `/teamwork-preview`를 우선합니다. 이미 활성화된 팀 문맥은 실행 엔진으로 재사용하며 중첩 PM/팀을 만들지 않습니다.
+- Antigravity TUI의 `/agents` 패널과 현재 세션의 도구 목록에서 내장 `research`와 사용 가능한
+  사용자 정의 에이전트를 확인합니다.
+- 읽기 전용 조사는 `research`, 구현은 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트에 맡깁니다.
+- 공식 `invoke_subagent`와 필요 시 `define_subagent`를 사용합니다. 메시지·상태·중단 기능은 현재
+  런타임이 실제 노출한 도구만 사용하고 이름을 추측하지 않습니다.
+- 구현 전문성은 전역 페르소나가 아니라 섹션 내용·프로젝트 설정·인접 코드·테스트를 위임 프롬프트에 임베딩해 전달합니다. 병렬 실행이 불가하면 Wave 내 순차 위임으로 축소합니다.
 
 ### Grok 모드
 - Grok Build는 네이티브 `general-purpose`, `explore`, `plan` 서브에이전트를 제공. Olympus source-only 프롬프트는 기본 설치하지 않음
@@ -326,7 +343,7 @@ See [teammate-context-template.md](references/teammate-context-template.md)
 #### Codex 모드 (spawn_agent)
 Wave 단위로 agent spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 프로젝트 기반 구현 계약 포함.
 
-#### Gemini 모드 (서브에이전트 위임)
+#### Antigravity 모드 (서브에이전트 위임)
 Wave 단위로 기본/범용 서브에이전트를 호출하고, 섹션 파일 전체 내용 + 담당 파일 +
 프로젝트 기반 구현 계약 + 파일 소유권 규칙을 위임 프롬프트로 전달.
 
@@ -343,7 +360,7 @@ See [wave-executor.md](references/wave-executor.md)
 각 Wave별 실행 사이클:
 1. 선행 Task의 blockedBy 해소 여부 확인
 2. teammate/agent에게 지시 (담당 파일, 도면 노드, 파일 소유권 규칙 포함)
-3. 진행 상황 모니터링 (Claude: shared task list/메시지, Codex: 현재 wait 도구, Gemini/Grok: subagent 반환 — 모든 요약을 체크리스트·파일 실존과 대조)
+3. 진행 상황 모니터링 (Claude: shared task list/메시지, Codex: 현재 wait 도구, Antigravity/Grok: subagent 반환 — 모든 요약을 체크리스트·파일 실존과 대조)
 4. 모든 Task completed → 다음 Wave로 진행
 
 **teammate 지시 핵심 요소:**
@@ -363,7 +380,7 @@ See [wave-executor.md](references/wave-executor.md)
 2. 리뷰 엔진은 native-first로 선택합니다.
    - Claude: 내장 `/review`; 병렬화가 필요하면 읽기 전용 Explore 작업자에 로드한 gate 전달
    - Codex: `/review` 또는 `codex review`; 읽기 전용 explorer에 로드한 gate 전달 가능
-   - Gemini: 읽기 전용 네이티브 subagent에 로드한 경로 C gate 전달
+   - Antigravity: 읽기 전용 `research` subagent에 로드한 경로 C gate 전달
    - Grok: bundled `review`; 실패하면 `explore` subagent에 같은 gate 전달
 3. source module을 읽지 못하면 위 resolver의 bounded native fallback만 실행하고
    `policy module: NOT RUN`, `review gate: DEGRADED`로 남깁니다.
@@ -432,7 +449,7 @@ Lead 의사결정 로그: conversations/{date}-team-poseidon.md
 | 측면 | agent-team (이 스킬) | orchestrator (기존) |
 |------|---------------------|---------------------|
 | 설치 | 불필요 (4-CLI 네이티브 내장 — 구버전만 env var) | MCP 서버 빌드 필요 |
-| 지원 CLI | Claude + Codex + Gemini + Grok (네이티브) | 네이티브 멀티에이전트가 없는 구버전 CLI |
+| 지원 CLI | Claude + Codex + Antigravity + Grok (네이티브) | 네이티브 멀티에이전트가 없는 구버전 CLI |
 | 파일 충돌 방지 | 소유권 규칙 (soft) | MCP lock_file (hard) |
 | 태스크 관리 | CLI별 네이티브 도구 | orchestrator MCP 도구 |
 | 사용 조건 | zephermine 섹션 또는 자유 모드 | 폴백 또는 hard lock 필요 시 |
@@ -468,7 +485,7 @@ Step {N} complete: {summary}
 | 컨텍스트 한도 초과 | 현재 Wave까지 결과와 ledger를 저장 → 실행 중 작업자를 안전하게 중단 → 사용자에게 새 세션에서 재개 안내 |
 | Codex spawn 실패 | 현재 세션의 multi-agent 가용성·thread cap·sandbox를 확인 → 범위를 줄여 재시도; 승인 우회 금지 |
 | Codex wait 타임아웃 | 현재 interrupt 도구로 중단 → 부분 변경 확인 → 범위를 줄여 재spawn |
-| Gemini 에이전트 미인식 | `/agents`로 확인 → CLI 버전과 사용자 `experimental.enableAgents` 설정 확인 → 실제 `agent` 도구가 없으면 Wave 내 메인 컨텍스트 순차 실행; hard lock 등이 필수일 때만 source-only resolver를 거친 orchestrator MCP 분기 |
+| Antigravity 에이전트 미인식 | TUI `/agents`와 현재 도구 목록으로 확인 → `invoke_subagent`가 없으면 Wave 내 메인 컨텍스트 순차 실행; hard lock 등이 필수일 때만 source-only resolver를 거친 orchestrator MCP 분기 |
 | spawn_subagent 실패 (Grok) | `grok inspect --json`으로 네이티브 서브에이전트 레지스트리 확인 → 재spawn 1회 → 실패 시 사용자 보고 |
 | 재시도 후에도 실패 | 해당 섹션을 메인 컨텍스트에서 순차 실행하거나 사용자에게 보고 |
 
@@ -478,7 +495,7 @@ Step {N} complete: {summary}
 
 - Claude 2.1.178+: implicit team이므로 `TeamDelete`를 호출하지 않습니다. 실행 중 named teammate에 shutdown을 요청하고 세션 정리는 런타임에 맡깁니다.
 - Codex: 실행 중 thread만 현재 interrupt/stop 기능으로 중단합니다. 완료 thread의 정리는 런타임 UI나 현재 제공 기능을 따릅니다.
-- Gemini/Grok: 호출 단위 child가 반환되면 별도 팀 정리가 없습니다.
+- Antigravity/Grok: 호출 단위 child가 반환되면 별도 팀 정리가 없습니다.
 - 어떤 CLI에서도 런타임 상태 디렉터리를 수동 삭제하지 않습니다.
 
 ```

@@ -6,7 +6,7 @@
 
 ## 기본 설치와 CLI 선택
 
-설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 Claude, Codex, Gemini, Grok용 자산을 함께 준비합니다. 선택한 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비하며, MCP 등록처럼 해당 실행 파일이 필요한 명령만 `skipped`로 보고합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 등록 단계를 완료합니다.
+설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 TermSnap 기본 대상인 Claude, Codex, Antigravity, Grok용 자산을 함께 준비합니다. OpenClaw과 Hermes Agent는 명시 선택 또는 호스트별 설치기로 스킬만 설치합니다. 선택한 통합 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비하며, MCP 설정처럼 해당 런타임에 필요한 구성도 직접 병합합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 실행 상태를 확인합니다.
 
 ```bash
 # 모든 CLI
@@ -20,7 +20,21 @@
 # 특정 CLI만
 .\install.bat --llm claude,codex
 ./install.sh --llm claude,codex
+
+# OpenClaw/Hermes Agent skills-only
+.\install-openclaw.bat
+.\install-hermes.bat
+bash ./install-openclaw.sh
+bash ./install-hermes.sh
+
+# TermSnap용 통합 설치기에서 두 skills-only 호스트 선택
+.\install.bat --llm openclaw,hermes
+./install.sh --llm openclaw,hermes
 ```
+
+skills-only 설치는 공통 활성 스킬 18개와 공개 source-only 모듈 76개를 배치합니다. 기존 네
+CLI용 `agent-team`·Mnemo 어댑터, 플러그인, 훅, MCP, 사용자 정의 에이전트는 설치하지 않습니다.
+호스트별 제거는 `install-openclaw.* --uninstall` 또는 `install-hermes.* --uninstall`을 사용합니다.
 
 `docs/smart-setup-registry.json`은 리소스 매핑 참고자료이며, `/smart-setup`이라는 활성 명령을 제공하지 않습니다. 프로젝트 유형별 외부 리소스는 아래 섹션에서 직접 선택합니다.
 
@@ -633,7 +647,7 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 ## 7-2. Orchestrator MCP 정책 레이어 설치 가이드
 
 > 일반적인 `workpm` 병렬 실행은 각 CLI의 네이티브 작업자를 사용하므로 별도 MCP 설치가 필요하지 않습니다.
-> hard file lock, 외부 태스크 보드, Claude/Codex/Gemini 혼합 Worker가 필요한 프로젝트만 Orchestrator MCP를 설치합니다.
+> hard file lock, 외부 태스크 보드, Claude/Codex/Antigravity 혼합 Worker가 필요한 프로젝트만 Orchestrator MCP를 설치합니다.
 > 최상위 `install.bat`/`install.sh`는 source-only Orchestrator 런타임을 각 CLI 홈에 준비하고,
 > CLI 실행 파일이 있으면 글로벌 MCP 등록도 시도합니다. 아래 `skills/orchestrator/install.js <project>` 절차는
 > 프로젝트별 명령·훅·`settings.local.json`이 실제로 필요할 때만 추가로 수행합니다.
@@ -765,7 +779,7 @@ claude plugin install pg-aiguide
 
 ### 글로벌 스킬 소스 (직접 제작, 주요 항목)
 
-공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 호환되지 않는 어댑터를 제외하면 Claude는 97개(활성 21 + source-only 76), Codex/Gemini는 각각 96개(활성 20 + source-only 76)입니다. Grok 설치 표면은 Claude의 활성 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
+공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 97개(활성 21 + source-only 76), Codex와 Antigravity 각각 96개(활성 20 + source-only 76), OpenClaw과 Hermes Agent 각각 94개(활성 18 + source-only 76)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
 
 | 이름 | 기본 상태 | 용도 |
 |------|-----------|------|

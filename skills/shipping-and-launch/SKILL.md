@@ -4,15 +4,6 @@ description: >
   프리런치 체크리스트 + 단계적 롤아웃 전략. 배포 전 품질 게이트, 모니터링 설정,
   롤백 계획을 체계적으로 점검. "런치", "배포 준비", "출시 체크리스트", "go-live" 요청에 실행.
   /launch로 실행.
-triggers:
-  - "launch"
-  - "런치"
-  - "출시"
-  - "go-live"
-  - "배포 준비"
-  - "릴리즈 체크리스트"
-  - "ship it"
-auto_apply: false
 license: MIT
 metadata:
   version: "1.0.0"

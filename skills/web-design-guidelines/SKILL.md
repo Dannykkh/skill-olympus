@@ -1,7 +1,6 @@
 ---
 name: web-design-guidelines
 description: Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI", "check accessibility", "audit design", "review UX", or "check my site against best practices".
-argument-hint: <file-or-pattern>
 metadata:
   author: vercel
   version: "1.0.0"
@@ -26,7 +25,7 @@ Fetch fresh guidelines before each review:
 https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
 ```
 
-Use WebFetch to retrieve the latest rules. The fetched content contains all the rules and output format instructions.
+Use the current runtime's web browsing or fetch capability to retrieve the latest rules. If no web capability is available, report that the current rules could not be verified instead of using a stale remembered copy. The fetched content contains all the rules and output format instructions.
 
 ## Usage
 

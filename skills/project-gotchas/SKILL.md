@@ -1,7 +1,7 @@
 ---
 name: project-gotchas
 description: >
-  오답노트 + 성공 패턴 자동 관리. CLI(Claude/Codex/Gemini/Grok)의 실패 패턴(gotchas)과
+  오답노트 + 성공 패턴 자동 관리. CLI(Claude/Codex/Antigravity/Grok)의 실패 패턴(gotchas)과
   성공 패턴(learned)을 2계층(글로벌 + 프로젝트별)으로 기록하고 참조.
   므네모(mnemo)가 생성하는 memory/ 폴더 안에서 크로스 CLI 참조 가능.
   트리거 1 (참조): 작업 시작 시 gotchas + learned를 확인.
@@ -14,7 +14,7 @@ description: >
 
 CLI의 실패 패턴과 성공 패턴을 자동 수집하고 명시적으로 정제합니다.
 글로벌 설치 1회로 어떤 프로젝트에서든 자동 작동합니다.
-므네모(mnemo)가 생성하는 `memory/` 폴더 안에 관리하여 Claude/Codex/Gemini/Grok 모두 참조 가능합니다.
+므네모(mnemo)가 생성하는 `memory/` 폴더 안에 관리하여 Claude/Codex/Antigravity/Grok 모두 참조 가능합니다.
 
 단순 오타·일회성 실수·이미 전역 지침에 등록된 규칙은 새 항목으로 만들지 않습니다.
 
@@ -36,7 +36,7 @@ CLI의 실패 패턴과 성공 패턴을 자동 수집하고 명시적으로 정
 
 - `memory/` 폴더가 없으면 자동 생성
 - 므네모가 이미 `memory/`를 관리하므로 별도 `.gitignore` 처리 불필요
-- Claude, Codex, Gemini 어떤 CLI에서든 접근 가능
+- Claude, Codex, Antigravity 어떤 CLI에서든 접근 가능
 
 ### 참조 순서
 
@@ -57,7 +57,7 @@ CLI의 실패 패턴과 성공 패턴을 자동 수집하고 명시적으로 정
 
 | 유형 | 설명 | 예시 |
 |------|------|------|
-| **CLI 오답** | Claude/Codex/Gemini가 반복 실수하는 패턴 | return text 폭발, YAML 형식 오류 |
+| **CLI 오답** | Claude/Codex/Antigravity가 반복 실수하는 패턴 | return text 폭발, YAML 형식 오류 |
 | **환경 함정** | OS/도구/라이브러리의 예상치 못한 동작 | PowerShell tail 성능, .bat 인코딩 |
 | **설치 함정** | dependency 누락, 설정 오류 | node_modules 누락 handshake 실패 |
 
@@ -142,7 +142,7 @@ skills/project-gotchas/
 hooks/
 ├── save-tool-use.ps1|sh          ← Claude PostToolUse: 도구 단위 관찰
 ├── codex-mnemo/save-turn.ps1|sh  ← Codex notify: 턴 단위 관찰
-├── gemini-mnemo/save-turn.ps1|sh ← Gemini AfterAgent: 턴 단위 관찰
+├── antigravity-mnemo/save-turn.js ← Antigravity Stop: 턴 단위 관찰
 └── grok-mnemo/save-turn.ps1|sh   ← Grok Stop: 턴 단위 관찰
 ```
 
@@ -161,7 +161,7 @@ hooks/save-tool-use.ps1|sh (기존 므네모 훅)
     ↓   시크릿 스크러빙
     ↓   observations.jsonl에 기록
     ↓
-Codex/Gemini/Grok: 턴 종료/응답 완료 훅
+Codex/Antigravity/Grok: 턴 종료/응답 완료 훅
     ↓
 save-turn.ps1|sh
     ↓ 응답에 에러 패턴이 있으면 memory/gotchas/observations.jsonl
@@ -182,7 +182,7 @@ memory/gotchas/·memory/learned/ 정제 파일 + index 갱신
 ### 훅 등록
 
 별도 등록 불필요. 므네모 설치 시 각 CLI에 맞는 훅이 자동 등록됩니다.
-Claude는 도구 단위 관찰, Codex/Gemini는 구조적 한계상 턴 단위 관찰입니다.
+Claude는 도구 단위 관찰, Codex/Antigravity는 구조적 한계상 턴 단위 관찰입니다.
 
 ### 설정 (config.json)
 

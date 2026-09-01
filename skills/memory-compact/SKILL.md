@@ -3,12 +3,6 @@ name: memory-compact
 description: >
   MEMORY.md 크기 점검 및 압축. 비대해진 메모리를 정리하여 성능 저하를 방지합니다. /memory-compact로 실행.
   대상은 프로젝트 루트 MEMORY.md 전용 — Claude 네이티브 auto-memory(~/.claude/projects/)의 MEMORY.md와 무관.
-triggers:
-  - "memory-compact"
-  - "메모리 정리"
-  - "메모리 압축"
-  - "MEMORY 정리"
-auto_apply: false
 ---
 
 # Memory Compact - MEMORY.md 압축 스킬

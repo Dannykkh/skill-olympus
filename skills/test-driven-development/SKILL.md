@@ -4,7 +4,6 @@ description: |
   Explicit `/test-driven-development` reference for a strict test-first workflow.
   Use only when the user explicitly requests TDD, "test first", or "테스트 먼저";
   do not auto-apply during routine implementation.
-disable-model-invocation: true
 ---
 
 # Test-Driven Development (TDD)

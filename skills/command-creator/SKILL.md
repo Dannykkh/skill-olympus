@@ -7,7 +7,7 @@ description: "Create Claude Code slash commands or reusable command workflows; u
 
 This skill guides the creation of Claude Code slash commands - reusable workflows that can be invoked with `/command-name` in Claude Code conversations.
 
-> Codex/Gemini/Grok note: slash commands are Claude-specific. If the runtime is not Claude Code, do not create `.claude/commands/` automatically. Instead propose either:
+> Codex/Antigravity/Grok note: slash commands are Claude-specific. If the runtime is not Claude Code, do not create `.claude/commands/` automatically. Instead propose either:
 > - a reusable skill under `skills/<name>/SKILL.md`
 > - a prompt recipe under `docs/prompts/<name>.md`
 
@@ -77,7 +77,7 @@ argument-hint: <placeholder> (optional, if command takes arguments)
 **First decide whether the target runtime is Claude Code.**
 
 - If the user explicitly wants a Claude slash command, continue with the workflow below.
-- If the user wants a reusable workflow for Codex/Gemini, stop the slash-command flow and create a skill/prompt artifact instead.
+- If the user wants a reusable workflow for Codex/Antigravity, stop the slash-command flow and create a skill/prompt artifact instead.
 
 **Auto-detect the appropriate location:**
 

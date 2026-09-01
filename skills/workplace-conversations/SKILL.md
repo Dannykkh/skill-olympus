@@ -1,7 +1,6 @@
 ---
 name: workplace-conversations
 description: Navigate difficult workplace conversations and deliver constructive feedback using Preparation-Delivery-Followup framework and SBI (Situation-Behavior-Impact) model. Use when preparing for tough conversations, giving feedback, managing conflicts, or handling sensitive discussions.
-allowed-tools: Read, Glob, Grep
 ---
 
 # Workplace Conversations & Feedback

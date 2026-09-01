@@ -1,6 +1,6 @@
 # 빠른 시작 가이드
 
-Claude Code, Codex, Gemini CLI, Grok Build에서 Olympus 커스터마이징을 설치하고 사용하는 방법입니다.
+Claude Code, Codex, Antigravity CLI, Grok Build에서 Olympus 커스터마이징을 설치하고 사용하는 방법입니다.
 
 ---
 
@@ -22,10 +22,28 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-인수 없이 실행하면 Claude, Codex, Gemini, Grok 전체를 대상으로 설치합니다. `--all`은 같은
+인수 없이 실행하면 Claude, Codex, Antigravity, Grok 전체를 대상으로 설치합니다. `--all`은 같은
 선택을 명시적으로 적는 옵션일 뿐 필수는 아닙니다. CLI 실행 파일이 아직 없어도 각 홈의
 스킬·카탈로그·source-only 라이브러리·훅·설정 파일은 준비하고, MCP 등록처럼 실행 파일이
 필요한 명령만 건너뜁니다. 나중에 CLI를 설치한 뒤 같은 설치기를 다시 실행하면 됩니다.
+
+OpenClaw과 Hermes Agent에는 플러그인 없이 스킬만 설치하는 별도 진입점이 있습니다.
+
+```powershell
+.\install-openclaw.bat
+.\install-hermes.bat
+
+# 통합 설치기에서 명시 선택하는 것도 동일
+.\install.bat --llm openclaw,hermes
+```
+
+```bash
+bash ./install-openclaw.sh
+bash ./install-hermes.sh
+```
+
+각 호스트에는 공통 활성 스킬 18개와 공개 source-only 모듈 76개가 설치됩니다. 기존 네 CLI용
+런타임 어댑터, 플러그인, 훅, Mnemo, MCP, 사용자 정의 에이전트는 포함하지 않습니다.
 
 ### 기존 설치 업데이트
 
@@ -39,7 +57,7 @@ git pull
 macOS/Linux에서는 `git pull && ./install.sh`을 실행합니다. `--uninstall` 후 재설치는 설치가
 깨졌거나 Olympus가 관리하는 훅·MCP 등록까지 처음부터 다시 구성할 때만 사용합니다.
 
-source-only는 삭제되거나 구버전으로 남은 스킬이 아니라, 현재 원본을 자동 탐색 레지스트리 밖의 카탈로그 경로에 보관하는 상태입니다. 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 호환되지 않는 어댑터를 제외하면 Codex/Gemini는 각각 96개(활성 20 + source-only 76), Claude는 97개(활성 21 + source-only 76)입니다. Grok의 논리 정책은 96개지만 실제 설치 표면은 Claude 공유 디렉터리의 활성 21개를 읽습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 내부 모듈을 카탈로그의 정확한 경로에서 직접 읽습니다. 사용자가 source-only 기능을 자연어로 요청해도 같은 방식으로 정확한 `SKILL.md`를 찾아 적용하며, 해당 이름의 slash 호출이 필요할 때만 `--include-source-only-skills`로 활성화합니다. Olympus 사용자 정의 에이전트는 기본 등록 0개이고 참고 소스 42개는 모두 source-only입니다. 일반 분업은 각 CLI의 네이티브 서브에이전트를 사용하며, 에이전트를 활용하는 스킬은 읽기 전용 탐색자와 쓰기 작업자를 구분하고 공유 상태는 메인 컨텍스트가 소유합니다.
+source-only는 삭제되거나 구버전으로 남은 스킬이 아니라, 현재 원본을 자동 탐색 레지스트리 밖의 카탈로그 경로에 보관하는 상태입니다. 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Codex와 Antigravity 각각 96개(활성 20 + source-only 76), Claude 97개(활성 21 + source-only 76), OpenClaw과 Hermes Agent 각각 94개(활성 18 + source-only 76)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok의 논리 정책은 96개지만 실제 설치 표면은 Claude 공유 디렉터리의 활성 21개를 읽습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 내부 모듈을 카탈로그의 정확한 경로에서 직접 읽습니다. 사용자가 source-only 기능을 자연어로 요청해도 같은 방식으로 정확한 `SKILL.md`를 찾아 적용하며, 해당 이름의 slash 호출이 필요할 때만 `--include-source-only-skills`로 활성화합니다. Olympus 사용자 정의 에이전트는 기본 등록 0개이고 참고 소스 42개는 모두 source-only입니다. 일반 분업은 통합 CLI의 네이티브 서브에이전트를 사용하며, 에이전트를 활용하는 스킬은 읽기 전용 탐색자와 쓰기 작업자를 구분하고 공유 상태는 메인 컨텍스트가 소유합니다.
 
 ---
 
@@ -132,7 +150,7 @@ source-only는 삭제되거나 구버전으로 남은 스킬이 아니라, 현�
 
 | 기능 | 동작 |
 |------|------|
-| **대화 자동 저장** | 모든 대화가 `conversations/`에 저장됨 (Claude/Codex/Gemini/Grok 통합) |
+| **대화 자동 저장** | 모든 대화가 `conversations/`에 저장됨 (Claude/Codex/Antigravity/Grok 통합) |
 | **키워드 태깅** | 응답 끝에 `#tags:`가 자동 저장되어 나중에 검색 가능 |
 | **과거 대화 검색** | "이전에 OAuth 구현한 적 있어?" → 자동으로 기록 검색 |
 

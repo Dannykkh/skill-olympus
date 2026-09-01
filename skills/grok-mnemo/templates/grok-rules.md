@@ -30,7 +30,7 @@
 
 - Grok 자체 transcript(`~/.grok/sessions/**/updates.jsonl`)는 mnemo 내부 백업 취급입니다.
   Read 도구로 직접 열지 마세요. 검색 대상은 **오직 프로젝트의 `conversations/*.md`** 입니다.
-- `conversations/`에서 못 찾으면 다른 CLI 파일(`*-claude.md`, `*-codex.md`, `*-gemini.md`)까지
+- `conversations/`에서 못 찾으면 다른 CLI 파일(`*-claude.md`, `*-codex.md`, `*-antigravity.md`)과 legacy `*-gemini.md`까지
   통합 검색한 뒤, 그래도 없으면 "관련 기록을 찾지 못했습니다"라고 솔직히 답변합니다.
 
 ## Grok 저장 경로 요약

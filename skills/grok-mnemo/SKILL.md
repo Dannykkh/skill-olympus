@@ -21,14 +21,14 @@ node skills/grok-mnemo/install.js --check      # 설치 상태 점검
 
 ## 4종 Mnemo 비교
 
-| | Claude Code (Mnemo) | Codex CLI | Gemini CLI | Grok Build (Grok-Mnemo) |
+| | Claude Code (Mnemo) | Codex CLI | Antigravity CLI | Grok Build (Grok-Mnemo) |
 |---|---|---|---|---|
-| 훅 | 2개 (Submit + Stop) | 1개 (notify) | 1개 (AfterAgent) | **1스크립트 2이벤트** (UserPromptSubmit + Stop) |
+| 훅 | 2개 (Submit + Stop) | 1개 (notify) | 1개 (Stop) | **1스크립트 2이벤트** (UserPromptSubmit + Stop) |
 | 데이터 전달 | stdin + transcript JSONL | argv JSON | stdin JSON | **stdin JSON (camelCase)** |
 | 페이로드 | prompt / transcript 파싱 | input/last-assistant-message | prompt / prompt_response | **prompt(`<user_query>` 래핑) / lastAssistantMessage** |
 | 설정 형식 | settings.json | config.toml | settings.json | **hooks/*.json 자동 스캔** |
 | 규칙 파일 | CLAUDE.md | AGENTS.md | AGENTS.md | **~/.grok/rules/*.md (델타만)** |
-| 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | `conversations/*-gemini.md` | **`conversations/*-grok.md`** |
+| 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | `conversations/*-antigravity.md` | **`conversations/*-grok.md`** |
 | 중복 방지 | 타임스탬프 | turn-id | 타임스탬프 | **타임스탬프 + reason 필터** |
 
 **Grok만의 특이점** (실측 근거, Grok Build 0.2.111):
@@ -96,7 +96,7 @@ Grok Build 대화
 | 핸드오프 | 공통 프로젝트 경로 `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 
 > 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.
-> Claude, Codex, Gemini, Grok이 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.
+> Claude, Codex, Antigravity, Grok이 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.
 
 ## 검색 규칙 (Grok 세션에서)
 

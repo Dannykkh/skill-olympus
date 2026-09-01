@@ -20,6 +20,12 @@
 
 기본 활성 slash 진입점은 파이프라인 하네스와 런타임 어댑터에만 제공됩니다. `docker-deploy`, `mermaid-diagrams`, `documentation-and-adrs`, `code-reviewer` 같은 source-only 기능은 자연어로 요청하면 카탈로그의 정확한 `SKILL.md`를 직접 읽어 적용합니다. 해당 이름의 slash 호출이 필요할 때만 `--include-source-only-skills`로 활성화합니다.
 
+Antigravity에서는 네이티브 workflow가 단순 요청을 먼저 소유합니다. `/goal`은 지속성, `/plan`과
+`/grill-me`는 가벼운 계획·인터뷰, `/teamwork-preview`는 가용한 일반 장기 팀 작업, `/learn`은 최근
+교정 학습, `/schedule`은 예약·반복 실행, `/browser`는 브라우저 관찰에 사용합니다. Olympus 하네스는
+저장형 설계 묶음, Wave·파일 소유권, 반복 가능한 테스트 증거, 검증·감사 로그가 필요한 경우에만
+추가합니다. 자세한 매트릭스는 [Antigravity CLI 통합](resources/antigravity-cli.md)을 따릅니다.
+
 ### 각 Phase의 역할
 
 | Phase | 진입점/요청 | 산출물 | 핵심 질문 |
@@ -34,7 +40,7 @@
 
 | Phase | 스킬 | 필요 시 명시적으로 쓰는 에이전트 | MCP |
 |-------|------|-----------------|-----|
-| **설계** | zephermine | 현재 CLI의 네이티브 계획·탐색 및 artifact-writer | Tavily/Exa (선택 리서치), 설치된 Codex/Gemini 외부 리뷰 프로세스 (선택) |
+| **설계** | zephermine | 현재 CLI의 네이티브 계획·탐색 및 artifact-writer | Tavily/Exa (선택 리서치), 설치된 Codex/Antigravity 외부 리뷰 프로세스 (선택) |
 | **아키텍처** | documentation-and-adrs, mermaid-diagrams (source-only 직접 로드) | 네이티브 계획·검토 | 공식 기술 문서 (필요 시) |
 | **구현** | agent-team/workpm (활성), orchestrator (MCP 분기에서만 source-only 직접 로드) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (라이브러리 문서) |
 | **검증** | minos (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
@@ -134,10 +140,10 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | **Main/Lead** | 통합 소유자 | `team-review.md`, 도메인사전 병합, 공유 상태와 완료 판정을 단독 소유 |
 | **MCP** | Tavily | 웹 리서치 (기술 트렌드, 경쟁사 분석) |
 | **MCP** | Exa | 코드 스니펫 검색 (구현 패턴, API 사용법) |
-| **외부 리뷰 프로세스** | Codex / Gemini CLI | 설치되고 해당 provider 실행이 가능할 때만 독립 도메인 분석에 사용; 실패·부재 시 현재 런타임의 `artifact-writer`, 이어서 Main 순차 실행으로 폴백 |
+| **외부 리뷰 프로세스** | Codex / Antigravity CLI | 설치되고 해당 provider 실행이 가능할 때만 독립 도메인 분석에 사용; 실패·부재 시 현재 런타임의 `artifact-writer`, 이어서 Main 순차 실행으로 폴백 |
 
-의미 역할은 Claude `Explore`/`general-purpose`, Codex `explorer`/`worker`, Gemini
-`codebase_investigator`/`generalist`, Grok `explore`/`general-purpose`로 매핑합니다. provider 이름을
+의미 역할은 Claude `Explore`/`general-purpose`, Codex `explorer`/`worker`, Antigravity
+`research`/Main 또는 명시적으로 정의한 쓰기 에이전트, Grok `explore`/`general-purpose`로 매핑합니다. provider 이름을
 역할처럼 하드코딩하지 않으며, 외부 CLI 프로세스와 현재 런타임의 네이티브 위임을 구분합니다.
 
 ### 산출물
@@ -207,7 +213,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | **입력** | sections/index.md | 사용자 지시 | 사용자 지시 |
 | **병렬** | Wave 기반 | PM이 독립 작업만 분배 | 외부 보드에서 분배 |
 
-읽기 전용 탐색은 Claude `Explore` / Codex `explorer` / Gemini `codebase_investigator` / Grok `explore`, 파일 변경과 명령 실행은 Claude `general-purpose` / Codex `worker` / Gemini `generalist` / Grok `general-purpose`로 매핑합니다. 메인 컨텍스트가 공유 장부와 완료 판정을 소유하고, 위임이 없거나 병렬 이득이 없으면 같은 절차를 순차 실행합니다.
+읽기 전용 탐색은 Claude `Explore` / Codex `explorer` / Antigravity `research` / Grok `explore`, 파일 변경과 명령 실행은 Claude `general-purpose` / Codex `worker` / Antigravity Main 또는 명시적으로 정의한 쓰기 에이전트 / Grok `general-purpose`로 매핑합니다. 메인 컨텍스트가 공유 장부와 완료 판정을 소유하고, 위임이 없거나 병렬 이득이 없으면 같은 절차를 순차 실행합니다.
 
 ### `/agent-team` 사용 시 리소스
 
@@ -236,9 +242,9 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | **source-only 모듈** | orchestrator | MCP 분기를 선택했을 때만 카탈로그에서 직접 읽는 정책 레이어, 태스크 보드, 파일 락 |
 | **커맨드** | workpm | PM 모드 (현재 CLI의 네이티브 작업자, 없으면 메인 순차 실행) |
 | **커맨드** | workpm-mcp | hard lock·외부 태스크 보드·혼합 CLI가 필요할 때의 MCP 정책 모드 |
-| **커맨드** | pmworker | 명시적 MCP 모드 Worker (Claude/Codex/Gemini) |
+| **커맨드** | pmworker | 명시적 MCP 모드 Worker (Claude/Codex/Antigravity) |
 | **MCP** | orchestrator | PM/Worker 간 통신, 태스크 상태 관리 |
-| **외부 AI** | Codex/Gemini CLI | 사용자가 혼합 CLI 실행을 선택했을 때만 명시 provider로 배정 |
+| **외부 AI** | Codex/Antigravity CLI | 사용자가 혼합 CLI 실행을 선택했을 때만 명시 provider로 배정 |
 
 ---
 

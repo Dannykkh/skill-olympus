@@ -38,7 +38,7 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | 리소스 | 설명 | 문서 |
 |--------|------|------|
 | **Codex CLI** | OpenAI Codex CLI 통합 | [상세](./codex-cli.md) |
-| **Gemini CLI** | Google Gemini CLI 통합 | [상세](./gemini-cli.md) |
+| **Antigravity CLI** | Google Antigravity CLI 통합 | [상세](./antigravity-cli.md) |
 | **Humanizer Skill** | AI 글쓰기 패턴 제거 (24개 패턴) | [상세](./humanizer-skill.md) |
 
 ### OCR & 문서 인식

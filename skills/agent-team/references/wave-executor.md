@@ -149,10 +149,10 @@ Wave 2+ 실행 시, 선행 섹션의 결과를 teammate에게 전달:
 |-----|----------------|-----------|----------------|
 | **Claude** | `Explore` | `general-purpose`; Agent Teams 활성 시 named background `Agent` | shared task list/`SendMessage`; 실행 중 teammate만 shutdown, implicit team은 자동 정리 |
 | **Codex** | `explorer` | `worker` (`default` 폴백) | 현재 `wait_agent`·`send_message`·`interrupt_agent` 계열 도구 |
-| **Gemini** | `codebase_investigator` | `generalist` | 호출 반환을 검증; 별도 팀 정리 없음 |
+| **Antigravity** | `research` | 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트 | 호출 반환을 검증; 별도 팀 정리 없음 |
 | **Grok** | `explore` | `general-purpose` | 호출 반환을 검증; 별도 팀 정리 없음 |
 
-**Gemini/Grok 공통 주의:**
+**Antigravity/Grok 공통 주의:**
 - 중간 개입 채널이 없다 (fire-and-return). 지시 프롬프트에 완료 기준·담당 파일·소유권 규칙을 빠짐없이 담을 것.
 - 반환 요약을 그대로 믿지 말 것 — 담당 파일 실존(Glob/Read)과 Acceptance Criteria 대조로 교차 검증.
 - 실패 시 재위임 1회 → 그래도 실패면 Lead가 직접 서브태스크 분해 또는 사용자 보고.

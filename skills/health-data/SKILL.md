@@ -3,22 +3,8 @@ name: health-data
 description: >
   Health Connect(Android)와 HealthKit(iOS) 건강 데이터 수집/동기화/저장 종합 가이드.
   React Native(Expo), Swift, Kotlin, Web 환경에서의 구현 패턴과 실전 gotcha 포함.
-  심박수, 수면, 걸음, 활동 에너지 등 주요 데이터 타입별 처리법.
-triggers:
-  - "Health Connect"
-  - "HealthKit"
-  - "헬스커넥트"
-  - "헬스킷"
-  - "심박수"
-  - "수면 데이터"
-  - "걸음 수"
-  - "heart rate"
-  - "sleep data"
-  - "steps"
-  - "건강 데이터"
-  - "health sync"
-  - "백그라운드 동기화"
-auto_apply: false
+  Health Connect, HealthKit, 헬스커넥트, 헬스킷, 심박수, 수면, 걸음 수, 건강 데이터,
+  health sync, 백그라운드 동기화 요청에 사용한다.
 ---
 
 # Health Data Integration Guide

@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **google runtime**: 로그인 종료된 개인용 Gemini CLI 런타임과 `gemini`/`gemini-mnemo` 스킬을 제거하고 Google Antigravity CLI(`agy`)와 `antigravity`/`antigravity-mnemo` 어댑터로 교체했다. 설치 대상 ID, 오케스트레이터 provider, 외부 리뷰 명령, 역할 매핑을 `antigravity`로 통일했으며, 구 `--llm gemini` 입력은 마이그레이션 경고 후 Antigravity를 선택하는 호환 별칭으로만 남긴다.
+
+### Features
+
+- **Antigravity 설치**: 스킬은 `~/.gemini/antigravity-cli/skills`, 에이전트·훅·MCP는 `~/.gemini/config`에 배치한다. native `Stop` 훅 기반 Mnemo 저장, camelCase transcript 파싱, Chronos 재진입, 보호 파일 차단, `mcp_config.json` 소유권 추적을 추가했다. 기존 Olympus Gemini 자산은 정본만 제거하고 수정본은 `_olympus-preserved`에 보존한다.
+- **OpenClaw·Hermes skills-only 설치**: `install-openclaw.*`와 `install-hermes.*`를 추가했다. 공통 동기화 엔진이 각각 `~/.openclaw/skills`, `~/.hermes/skills`에 활성 진입점 18개와 source-only 카탈로그를 설치하며, 네 CLI 전용 어댑터·플러그인·훅·Mnemo·MCP·에이전트는 제외한다. 기존 TermSnap 기본 설치 대상 네 개는 유지하고 `--llm openclaw,hermes`에서만 명시 선택한다.
+- **README 전환 구조와 다국어 안내**: 영문·한글 README를 가치 제안 → 빠른 설치 → 첫 실행 예시 → 실제 파이프라인 → 상황별 워크플로우 순서로 재구성하고, 같은 핵심 흐름을 담은 일본어·중국어 간체 안내를 추가했다. 중복 릴리즈 전문은 `CHANGELOG.md`로 일원화하고, 긴 신화·업데이트·source-only 설명은 핵심 흐름 밖으로 접었다. 루트 MIT `LICENSE`, 기여 절차, 생태계 출처도 추가했다.
+- **Antigravity 오케스트레이션**: provider 감지와 Worker 실행 명령을 `agy`로 전환하고 내장 `research` 및 명시적 쓰기 에이전트 역할에 맞췄다. 자동 Worker는 permission 우회 플래그를 추가하지 않고 현재 Antigravity permission policy를 따른다.
+- **Cross-CLI 스킬 작성 계약**: `skills/{name}` 한 곳을 Claude·Codex·Antigravity·Grok의 canonical 원본으로 고정하고, 네 런타임 검증기의 보수적 frontmatter 교집합과 의미 기반 capability 이름을 사용한다. Claude 확장 메타데이터, 도구명, 훅, slash, 에이전트 스키마는 공통 기능으로 가장하지 않고 런타임 분기 또는 어댑터로 격리한다.
+- **Antigravity native-first 라우팅**: `/goal`, `/plan`, `/grill-me`, `/teamwork-preview`, `/learn`, `/schedule`, `/browser`와 관리 command를 공식 네이티브 표면으로 분류했다. 기본 작업은 네이티브에 맡기고 Chronos·Zephermine·Poseidon/WorkPM·Mnemo evolve·Minos·Aphrodite는 각각 검증 로그, 저장형 설계 묶음, Wave/소유권, 누적 관찰 재구성, Playwright 재현, Experience Contract라는 고유 차이만 더한다.
+
+### Bug Fixes
+
+- **스킬 호환성**: canonical `SKILL.md` 22개에 남아 있던 Claude 확장 필드, 구형 `triggers`/`auto_apply`, 비표준 `allowed-tools` 목록과 `data-visualization`의 잘못된 YAML을 공통 Agent Skills 형식으로 정규화했다. Zephermine의 무조건부 `TodoWrite` 호출과 draw.io·daily update·Jira의 Claude 홈 고정 리소스 경로도 제거했다.
+- **설치기 안전성**: `install.bat --help`와 `install.sh --help`가 기본 전체 설치로 진행하지 않고 사전조건 확인 전에 종료되도록 수정하고, 격리된 runtime home이 생성되지 않는 회귀 테스트를 추가했다. Antigravity 에이전트 안내의 미확인 `agy agents list` 명령도 공식 TUI `/agents` 계약으로 바로잡았다.
+- **Windows 복수 대상 선택**: 배치 파일의 명령 치환 과정에서 `--llm a,b`가 여러 토큰으로 갈라질 때 첫 대상만 설치되던 문제를 수정했다. selector가 다음 옵션 전까지의 대상 토큰을 모두 수집해 쉼표·공백 형식을 동일하게 처리한다.
+- **Chronos Antigravity 분기**: Antigravity를 `/goal`이 없는 환경으로 분류하던 오래된 전제를 제거했다. `/goal`을 1순위 지속성 엔진으로 사용하고, `/schedule`은 시간 기반 반복 예약일 뿐 완료 게이트나 Claude `/loop` heartbeat 대체물이 아님을 명시했다. Zeus의 이중 Stop 게이트 방지 규칙도 Antigravity에 적용했다.
+
+### Tests
+
+- **Antigravity 회귀 검증**: 전역 자산 동기화·legacy 레이아웃 이관·Mnemo 설치/제거·비공개 블록 마스킹·turn 중복 방지·Stop Chronos·MCP 사용자 설정 보존·provider 라우팅을 격리된 홈과 런처 테스트로 고정했다.
+- **skills-only 호스트 회귀 검증**: OpenClaw·Hermes의 18 active/76 public source-only/6 adapter excluded 정책, 같은 이름 충돌 보존, 수정된 관리본 보존, 안전한 unlink, Windows 호스트별 래퍼의 실제 설치·제거를 격리 홈에서 검증한다.
+- **Agent Skills frontmatter**: 공개 100개와 로컬 전용 `deploymonitor`를 합친 101개 canonical skill의 이름·설명·보수적 공통 허용 필드·flat metadata를 전수 검사한다. Antigravity의 20 active/76 source-only/4 excluded 분류와 실제 `agy` 미실측 경고도 회귀 테스트로 고정했다.
+- **Antigravity native overlap**: Chronos, Zeus, Zephermine, Agent Team, WorkPM, Mnemo source modules, Minos, Aphrodite와 전역 `GEMINI.md` 규칙이 각 네이티브 workflow를 우선하고 고유 Olympus 계약만 추가하는지 회귀 검사한다.
+
 ## [5.4.0] - 2026-08-25
 
 ### Features

@@ -6,7 +6,7 @@
 
 위치: `~/.agent-memory/domain-dictionaries/`
 
-`AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수가 있으면 그 값을 우선합니다. 이 경로는 Claude/Codex/Gemini가 함께 쓰는 사용자 자산 위치입니다.
+`AGENT_DOMAIN_DICTIONARY_HOME` 환경 변수가 있으면 그 값을 우선합니다. 이 경로는 Claude/Codex/Antigravity가 함께 쓰는 사용자 자산 위치입니다.
 
 ```
 ~/.agent-memory/domain-dictionaries/
@@ -200,8 +200,8 @@ zephermine 컨텍스트 모드에서는 명확히 범용인 항목만 글로벌�
 
 ## 다른 CLI 호환
 
-이 글로벌 사전은 **Claude/Codex/Gemini 모두 공유**합니다.
+이 글로벌 사전은 **Claude/Codex/Antigravity 모두 공유**합니다.
 
 - 기본 공통 위치: `~/.agent-memory/domain-dictionaries/`
 - 환경 변수 override: `AGENT_DOMAIN_DICTIONARY_HOME`
-- 기존 CLI별 위치(`~/.claude`, `~/.codex`, `~/.gemini`)가 있으면 마이그레이션 입력으로만 참고하고, 새 기록은 공통 위치에 작성합니다.
+- 기존 CLI별 위치(`~/.claude`, `~/.codex`, `~/.gemini`)가 있으면 마이그레이션 입력으로만 참고하고, 새 기록은 공통 위치에 작성합니다. `.gemini`는 Antigravity의 Google 공유 루트입니다.

@@ -9,7 +9,7 @@ import * as path from 'path';
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 export type WorkerStatus = 'idle' | 'working' | 'offline';
 
-export type AIProvider = 'claude' | 'codex' | 'gemini';
+export type AIProvider = 'claude' | 'codex' | 'antigravity';
 
 export interface Task {
   id: string;

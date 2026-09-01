@@ -50,7 +50,7 @@ Data leaves your device only in these cases:
 |---|---|---|---|
 | Anthropic (US) | Prompts, task instructions, target code | Only when you invoke Claude CLI features | [FILL IN: EU-US Data Privacy Framework certification status / SCCs — check vendor] |
 | OpenAI (US) | Prompts, task instructions, target code; chronos auto-resume re-sends your original task text | Only when you invoke Codex features | [FILL IN: same] |
-| Google (US) | Prompts, task instructions, target code | Only when you invoke Gemini features | [FILL IN: same] |
+| Google (US) | Prompts, task instructions, target code | Only when you invoke Antigravity CLI features | [FILL IN: same] |
 | GitHub (US) | No user data in the request body; your IP address is inherently visible | **Automatically at every session start** (version check; disable with `OLYMPUS_UPDATE_CHECK_DISABLE=1`) | [FILL IN] |
 | Reddit / YouTube (US) | Search keywords / video URL requests | Only when you explicitly run those skills | [FILL IN] |
 

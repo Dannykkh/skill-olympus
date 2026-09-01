@@ -22,16 +22,18 @@ test('worker launchers keep automatic execution inside provider safety boundarie
   for (const launchScript of [powershell, shell]) {
     assert.match(launchScript, /claude[^\r\n]*--permission-mode auto/);
     assert.match(launchScript, /codex --approve-for-me --sandbox workspace-write exec/);
-    assert.match(launchScript, /gemini --sandbox --approval-mode yolo/);
+    assert.match(launchScript, /agy[^\r\n]*--output-format text/);
+    assert.doesNotMatch(launchScript, /agy[^\r\n]*--dangerously-skip-permissions/);
   }
 
   assert.match(launcher, /claude --permission-mode auto/);
   assert.match(launcher, /codex --approve-for-me --sandbox workspace-write/);
-  assert.match(launcher, /gemini --sandbox --approval-mode yolo/);
+  assert.match(launcher, /"agy"/);
+  assert.doesNotMatch(launcher, /agy --dangerously-skip-permissions/);
 
   assert.doesNotMatch(
     launchers,
-    /dangerously-skip-permissions|dangerously-bypass|ExecutionPolicy[^\r\n]*Bypass|\bcodex\s+-a\s+never|gemini[^\r\n]*--skip-trust/
+    /dangerously-bypass|ExecutionPolicy[^\r\n]*Bypass|\bcodex\s+-a\s+never|agy[^\r\n]*--skip-trust/
   );
 });
 
@@ -86,8 +88,8 @@ function toRelativeShellPath(filePath) {
 
 test('shell worker propagates each provider failure and never logs success', { skip: !bashAvailable }, () => {
   withFailureStubs(({ bin, project }) => {
-    for (const [provider, exitCode] of [['claude', 31], ['codex', 32], ['gemini', 33]]) {
-      writeFailureStub(bin, provider, exitCode);
+    for (const [provider, command, exitCode] of [['claude', 'claude', 31], ['codex', 'codex', 32], ['antigravity', 'agy', 33]]) {
+      writeFailureStub(bin, command, exitCode);
       const result = spawnSync(
         'bash',
         [
@@ -110,8 +112,8 @@ test('shell worker propagates each provider failure and never logs success', { s
 
 test('PowerShell worker propagates each provider failure and never logs success', { skip: !powershellAvailable }, () => {
   withFailureStubs(({ bin, project }) => {
-    for (const [provider, exitCode] of [['claude', 41], ['codex', 42], ['gemini', 43]]) {
-      writeFailureStub(bin, provider, exitCode);
+    for (const [provider, command, exitCode] of [['claude', 'claude', 41], ['codex', 'codex', 42], ['antigravity', 'agy', 43]]) {
+      writeFailureStub(bin, command, exitCode);
       const result = spawnSync(
         powershellCommand,
         [

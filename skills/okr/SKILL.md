@@ -2,15 +2,7 @@
 name: okr
 description: >
   OKR(목표와 핵심결과) 설정 및 관리. 분기별 목표 수립, 핵심결과 정의,
-  진행률 추적, 회고. /okr로 실행.
-triggers:
-  - "okr"
-  - "OKR"
-  - "목표 설정"
-  - "분기 계획"
-  - "핵심결과"
-  - "objectives"
-auto_apply: false
+  진행률 추적, 회고. /okr, 목표 설정, 분기 계획, 핵심결과, objectives 요청에 사용한다.
 ---
 
 # OKR — 목표와 핵심결과

@@ -10,8 +10,8 @@ set -euo pipefail
 
 HOOK_INPUT=$(cat)
 
-# 상태 파일 탐색: Claude(.claude), Codex(.codex), Gemini(.chronos) 순.
-# 이전에는 ".claude/loop-state.md"만 봐서 Gemini 세션의 .chronos 상태를 못 찾는 버그가 있었음.
+# 상태 파일 탐색: Claude(.claude), Codex(.codex), Antigravity(.chronos) 순.
+# Antigravity의 실제 Stop 배선은 antigravity-hook.js가 소유하며 이 스크립트는 공유 폴백입니다.
 STATE_FILE=""
 for candidate in ".claude/loop-state.md" ".codex/loop-state.md" ".chronos/loop-state.md"; do
     if [ -f "$candidate" ]; then

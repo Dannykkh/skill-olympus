@@ -5,14 +5,6 @@ description: >
   단일/배치 변환, 로그인 필요 페이지, 선택적 콘텐츠 추출.
   "웹 to 마크다운", "페이지 저장", "web2md" 요청에 실행.
   /web2md로 실행.
-triggers:
-  - "web2md"
-  - "web-to-markdown"
-  - "웹 to 마크다운"
-  - "페이지 저장"
-  - "웹페이지 변환"
-  - "URL to markdown"
-auto_apply: false
 license: MIT
 metadata:
   version: "2.0.0"

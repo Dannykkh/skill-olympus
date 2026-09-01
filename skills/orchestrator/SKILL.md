@@ -29,8 +29,11 @@ node "$MODULE_ROOT/install.js" <대상-프로젝트-경로> --uninstall  # 프�
 ```
 
 MCP 실행 파일은 활성 스킬 레지스트리가 아니라
-`~/.claude/.olympus/runtime-modules/orchestrator/`의 비노출 런타임 미러를
-우선 사용합니다. 전체 Olympus 설치에서는 이 미러와 의존성을 자동 관리합니다.
+현재 CLI의 비노출 런타임 미러를 우선 사용합니다. Claude/Grok은
+`~/.claude/.olympus/runtime-modules/orchestrator/`, Codex는
+`${CODEX_HOME:-~/.codex}/.olympus/runtime-modules/orchestrator/`, Antigravity는
+`~/.gemini/antigravity-cli/.olympus/runtime-modules/orchestrator/`입니다.
+전체 Olympus 설치에서는 이 미러와 의존성을 자동 관리합니다.
 
 ---
 
@@ -62,7 +65,7 @@ orchestrator/
 |-----|-------------------|-------------|
 | **Claude** | `workpm` | 내장 subagent; 실험 Agent Teams가 활성화되면 named teammate |
 | **Codex** | `workpm` | 내장 `explorer`/`worker`/`default` |
-| **Gemini** | `workpm` | 내장 `codebase_investigator`/`generalist` |
+| **Antigravity** | `workpm` | 내장 `research` + 메인/사용자 정의 쓰기 서브에이전트 |
 | **Grok** | `workpm` | 내장 `explore`/`general-purpose` |
 
 - `workpm`: 통합 PM 엔트리포인트. 각 CLI의 네이티브 멀티에이전트로 실행, 네이티브 부재 시 `workpm-mcp`로 폴백
@@ -75,7 +78,7 @@ pmworker
 - 통합 Worker 엔트리포인트
 - 가용 태스크 확인 및 수행
 - 파일 락 및 완료 보고
-- MCP 도구만 사용하므로 Claude/Codex/Gemini 모두 동작
+- MCP 도구만 사용하므로 Claude/Codex/Antigravity 모두 동작
 
 ---
 

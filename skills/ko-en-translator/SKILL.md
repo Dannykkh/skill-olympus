@@ -1,17 +1,12 @@
 ---
 name: ko-en-translator
-version: 1.0.0
 description: |
   한국어↔영어 양방향 번역 스킬. 일반 텍스트, 기술 문서, 코드 주석, README,
   커밋 메시지, i18n JSON/YAML 파일을 자연스럽게 번역합니다.
   "번역해줘", "translate", "한영 번역", "영한 번역", "i18n" 요청에 실행.
   /translate로 실행.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
+metadata:
+  version: "1.0.0"
 ---
 
 # Korean↔English Translator
@@ -256,7 +251,7 @@ Conventional Commits 형식의 커밋 메시지와 PR 설명을 번역합니다.
 ```
 
 ### 파일 번역
-Edit/Write 도구로 직접 파일을 수정합니다. 변경 전 원본을 먼저 읽습니다.
+현재 런타임의 파일 읽기·직접 편집 기능으로 수정합니다. 변경 전 원본을 먼저 읽습니다.
 
 ## Reference
 

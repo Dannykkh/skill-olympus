@@ -9,11 +9,39 @@ REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip 
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
+
+set "SHOW_HELP=0"
+for %%A in (%*) do (
+    if /i "%%~A"=="--help" set "SHOW_HELP=1"
+    if /i "%%~A"=="-h" set "SHOW_HELP=1"
+)
+if "!SHOW_HELP!"=="1" (
+    echo Usage: install.bat [options]
+    echo.
+    echo   --all                              Install four TermSnap default CLI targets
+    echo   --llm claude,codex,antigravity,grok,openclaw,hermes
+    echo                                      Install selected targets; OpenClaw/Hermes are skills-only
+    echo   --uninstall                        Remove managed assets
+    echo   --include-source-only-skills       Register optional source-only skills
+    echo   --include-broad-coding-skills      Register legacy broad coding skills
+    echo   --include-source-only-agents       Register optional custom agents
+    echo   --help, -h                         Show this help without changing files
+    exit /b 0
+)
+
 set "CLAUDE_DIR=%USERPROFILE%\.claude"
 set "CODEX_DIR=%CODEX_HOME%"
 if not defined CODEX_DIR set "CODEX_DIR=%USERPROFILE%\.codex"
 for %%I in ("%CODEX_DIR%") do set "CODEX_DIR=%%~fI"
-set "GEMINI_DIR=%USERPROFILE%\.gemini"
+set "ANTIGRAVITY_ROOT=%ANTIGRAVITY_HOME%"
+if not defined ANTIGRAVITY_ROOT set "ANTIGRAVITY_ROOT=%USERPROFILE%\.gemini"
+for %%I in ("%ANTIGRAVITY_ROOT%") do set "ANTIGRAVITY_ROOT=%%~fI"
+set "OPENCLAW_DIR=%OPENCLAW_HOME%"
+if not defined OPENCLAW_DIR set "OPENCLAW_DIR=%USERPROFILE%\.openclaw"
+for %%I in ("%OPENCLAW_DIR%") do set "OPENCLAW_DIR=%%~fI"
+set "HERMES_DIR=%HERMES_HOME%"
+if not defined HERMES_DIR set "HERMES_DIR=%USERPROFILE%\.hermes"
+for %%I in ("%HERMES_DIR%") do set "HERMES_DIR=%%~fI"
 set "CREATED_CLAUDE_DIR=0"
 set "HAS_CLAUDE_CLI=0"
 set "JQ_MISSING=0"
@@ -24,12 +52,14 @@ set "CODEX_SYNC_RESULT=not-run"
 set "CODEX_MCP_RESULT=not-run"
 set "CODEX_MULTI_AGENT_RESULT=not-run"
 set "CODEX_ORCH_RESULT=not-run"
-set "GEMINI_MNEMO_RESULT=not-run"
-set "GEMINI_SYNC_RESULT=not-run"
-set "GEMINI_MCP_RESULT=not-run"
-set "GEMINI_ORCH_RESULT=not-run"
-set "GEMINI_HOOKS_RESULT=not-run"
+set "ANTIGRAVITY_MNEMO_RESULT=not-run"
+set "ANTIGRAVITY_SYNC_RESULT=not-run"
+set "ANTIGRAVITY_MCP_RESULT=not-run"
+set "ANTIGRAVITY_ORCH_RESULT=not-run"
+set "ANTIGRAVITY_HOOKS_RESULT=not-run"
 set "GROK_MNEMO_RESULT=not-run"
+set "OPENCLAW_SYNC_RESULT=not-run"
+set "HERMES_SYNC_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 playwright chrome-devtools"
 set "LEGACY_MCP_SERVERS=sequential-thinking"
 set "INCLUDE_SOURCE_ONLY_AGENTS=0"
@@ -159,10 +189,10 @@ if "%MODE%" NEQ "uninstall" (
 )
 
 REM ============================================
-REM   --uninstall mode: Clean up settings (MCP, Mnemo, Hooks, Codex, Gemini)
+REM   --uninstall mode: Clean up all Olympus-managed runtime assets
 REM ============================================
 if "%MODE%"=="uninstall" (
-    echo [1/12] Removing settings.json hook config...
+    echo [1/14] Removing settings.json hook config...
     if exist "%CLAUDE_DIR%\settings.json" (
         node "%SCRIPT_DIR%install-hooks-config.js" "%CLAUDE_DIR%\hooks" "%CLAUDE_DIR%\settings.json" --uninstall
         echo       Done!
@@ -171,7 +201,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [2/12] Removing CLAUDE.md long-term memory rules...
+    echo [2/14] Removing CLAUDE.md long-term memory rules...
     if exist "%CLAUDE_DIR%\CLAUDE.md" (
         node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md" --uninstall
         echo       Done!
@@ -203,12 +233,12 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [3/12] MCP server settings are managed separately.
+    echo [3/14] MCP server settings are managed separately.
     echo       Uninstall: node "%SCRIPT_DIR%install-mcp.js" --uninstall ^<name^>
     echo       Done!
 
     echo.
-    echo [4/12] Removing Orchestrator MCP...
+    echo [4/14] Removing Orchestrator MCP...
     set "SAVE_CLAUDECODE=!CLAUDECODE!"
     set "CLAUDECODE="
     where claude >nul 2>nul
@@ -222,7 +252,7 @@ if "%MODE%"=="uninstall" (
     set "CLAUDECODE=!SAVE_CLAUDECODE!"
 
     echo.
-    echo [5/12] Removing Codex-Mnemo...
+    echo [5/14] Removing Codex-Mnemo...
     if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
         node "%SCRIPT_DIR%skills\codex-mnemo\install.js" --uninstall
         if !errorlevel! equ 0 (
@@ -238,7 +268,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [6/12] Unlinking Codex Skills/Agents/Hooks sync...
+    echo [6/14] Unlinking Codex Skills/Agents/Hooks sync...
     if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-codex-assets.js" --unlink
         if !errorlevel! equ 0 (
@@ -256,7 +286,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [7/12] Removing Codex MCP default/legacy set...
+    echo [7/14] Removing Codex MCP default/legacy set...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         if exist "%SCRIPT_DIR%install-mcp-codex.js" (
@@ -278,7 +308,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [8/12] Removing Codex Orchestrator MCP...
+    echo [8/14] Removing Codex Orchestrator MCP...
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
         call codex mcp remove orchestrator >nul 2>nul
@@ -295,18 +325,18 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [9/12] Removing Gemini-Mnemo...
-    if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
-        node "%SCRIPT_DIR%skills\gemini-mnemo\install.js" --uninstall
+    echo [9/14] Removing Antigravity-Mnemo...
+    if exist "%SCRIPT_DIR%skills\antigravity-mnemo\install.js" (
+        node "%SCRIPT_DIR%skills\antigravity-mnemo\install.js" --uninstall
         if !errorlevel! equ 0 (
-            set "GEMINI_MNEMO_RESULT=Removed"
+            set "ANTIGRAVITY_MNEMO_RESULT=Removed"
             echo       Done!
         ) else (
-            set "GEMINI_MNEMO_RESULT=Remove failed"
+            set "ANTIGRAVITY_MNEMO_RESULT=Remove failed"
             echo       [WARN] Remove failed exit: !errorlevel!
         )
     ) else (
-        set "GEMINI_MNEMO_RESULT=Skip: no install.js"
+        set "ANTIGRAVITY_MNEMO_RESULT=Skip: no install.js"
         echo       [WARN] install.js not found, skipping
     )
 
@@ -326,9 +356,9 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [10/12] Unlinking Gemini Skills/Agents/Hooks sync...
-    if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
-        node "%SCRIPT_DIR%scripts\sync-gemini-assets.js" --unlink
+    echo [10/14] Unlinking Antigravity Skills/Agents/Hooks sync...
+    if exist "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" (
+        node "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" --unlink
         if !errorlevel! equ 0 (
             echo       Done!
         ) else (
@@ -336,31 +366,42 @@ if "%MODE%"=="uninstall" (
             exit /b 1
         )
     ) else (
-        echo       [ERROR] sync-gemini-assets.js not found
+        echo       [ERROR] sync-antigravity-assets.js not found
         exit /b 1
     )
 
     echo.
-    echo [11/12] Removing Gemini settings.json hooks...
-    set "GEMINI_DIR=%USERPROFILE%\.gemini"
-    if exist "!GEMINI_DIR!\settings.json" (
-        node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!\hooks" "!GEMINI_DIR!\settings.json" --uninstall
+    echo [11/14] Removing Antigravity core hooks...
+    if exist "!ANTIGRAVITY_ROOT!\config\hooks.json" (
+        node "%SCRIPT_DIR%install-hooks-config.js" "!ANTIGRAVITY_ROOT!\config\hooks" "!ANTIGRAVITY_ROOT!\config\hooks.json" --uninstall --target antigravity
         echo       Done!
     ) else (
-        echo       [WARN] Gemini settings.json not found, skipping
+        echo       [WARN] Antigravity hooks.json not found, skipping
     )
 
     echo.
-    echo [12/12] Removing Gemini MCP/Orchestrator...
-    where gemini >nul 2>nul
-    if !errorlevel! equ 0 (
-        if exist "%SCRIPT_DIR%install-mcp-gemini.js" (
-            node "%SCRIPT_DIR%install-mcp-gemini.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS!
-        )
-        call gemini mcp remove --scope user orchestrator >nul 2>nul
+    echo [12/14] Removing Antigravity MCP/Orchestrator...
+    if exist "%SCRIPT_DIR%install-mcp-antigravity.js" (
+        node "%SCRIPT_DIR%install-mcp-antigravity.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS! orchestrator
         echo       Done!
     ) else (
-        echo       [WARN] gemini CLI not found, skipping
+        echo       [WARN] install-mcp-antigravity.js not found, skipping
+    )
+
+    echo.
+    echo [13/14] Removing OpenClaw skills-only assets...
+    node "%SCRIPT_DIR%scripts\sync-portable-skills.js" openclaw --home "!OPENCLAW_DIR!" --unlink
+    if !errorlevel! neq 0 (
+        echo       [ERROR] OpenClaw skill unlink failed: !errorlevel!
+        exit /b 1
+    )
+
+    echo.
+    echo [14/14] Removing Hermes Agent skills-only assets...
+    node "%SCRIPT_DIR%scripts\sync-portable-skills.js" hermes --home "!HERMES_DIR!" --unlink
+    if !errorlevel! neq 0 (
+        echo       [ERROR] Hermes skill unlink failed: !errorlevel!
+        exit /b 1
     )
 
     echo.
@@ -395,10 +436,16 @@ if "!LLMS!"=="" (
 REM Parse LLM flags
 set "HAS_CLAUDE=0"
 set "HAS_CODEX=0"
-set "HAS_GEMINI=0"
+set "HAS_ANTIGRAVITY=0"
+set "HAS_GROK=0"
+set "HAS_OPENCLAW=0"
+set "HAS_HERMES=0"
 echo ,!LLMS!, | findstr /i ",claude," >nul && set "HAS_CLAUDE=1"
 echo ,!LLMS!, | findstr /i ",codex," >nul && set "HAS_CODEX=1"
-echo ,!LLMS!, | findstr /i ",gemini," >nul && set "HAS_GEMINI=1"
+echo ,!LLMS!, | findstr /i ",antigravity," >nul && set "HAS_ANTIGRAVITY=1"
+echo ,!LLMS!, | findstr /i ",grok," >nul && set "HAS_GROK=1"
+echo ,!LLMS!, | findstr /i ",openclaw," >nul && set "HAS_OPENCLAW=1"
+echo ,!LLMS!, | findstr /i ",hermes," >nul && set "HAS_HERMES=1"
 
 REM Parse bundle flags
 set "HAS_ALL_BUNDLES=0"
@@ -421,8 +468,8 @@ echo.
 
 REM %CLAUDE_DIR%가 없으면 만들어서 설치한다.
 REM 예전에는 여기서 exit /b 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고
-REM 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Gemini 자산까지
-REM 통째로 설치되지 않았다. 자동 설치(비대화형)는 LLM을 전부 선택하므로 새
+REM 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Antigravity 자산까지
+REM 통째로 설치되지 않았다. 자동 설치 모드는 LLM을 전부 선택하므로 새
 REM 컴퓨터에서 아무것도 안 깔리는 원인이 됐다.
 REM
 REM skills/agents/hooks/CLAUDE.md/settings.json은 전부 파일 복사라 claude CLI 없이도
@@ -600,7 +647,7 @@ if 1==1 (
         REM 등록만 하면 되도록. 등록 자체는 claude CLI가 있어야 한다.
         if "!HAS_CLAUDE_CLI!"=="1" (
             REM `call` 필수 - PATH의 claude가 npm shim(claude.cmd)이면 call 없이 부를 때
-            REM 제어가 돌아오지 않아 install.bat이 여기서 통째로 끝난다(Codex/Gemini 미실행).
+            REM 제어가 돌아오지 않아 install.bat이 여기서 통째로 끝난다(Codex/Antigravity 미실행).
             call claude mcp remove orchestrator -s user >nul 2>nul
             call claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
             set "CLAUDE_ORCH_RESULT=Registered"
@@ -636,7 +683,7 @@ REM ============================================
 REM   Phase 2: Codex
 REM ============================================
 :phase_codex
-if "!HAS_CODEX!"=="0" goto :phase_gemini
+if "!HAS_CODEX!"=="0" goto :phase_antigravity
 echo.
 echo   --- Codex CLI ---
 
@@ -749,124 +796,110 @@ if 1==1 (
 )
 
 REM ============================================
-REM   Phase 3: Gemini
+REM   Phase 3: Google Antigravity
 REM ============================================
-:phase_gemini
-if "!HAS_GEMINI!"=="0" goto :phase_grok
+:phase_antigravity
+if "!HAS_ANTIGRAVITY!"=="0" goto :phase_grok
 echo.
-echo   --- Gemini CLI ---
+echo   --- Google Antigravity CLI ---
 
-REM Gemini-Mnemo (required + retry on failure) - AGENTS.md rules + save-turn hook + context.fileName
+where agy >nul 2>nul
+if !errorlevel! neq 0 echo       [WARN] agy CLI not found; assets will be installed for a later CLI setup.
+
 echo.
-echo   Installing Gemini-Mnemo... [required]
-if exist "%SCRIPT_DIR%skills\gemini-mnemo\install.js" (
-    node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
+echo   Installing Antigravity-Mnemo... [required]
+if exist "%SCRIPT_DIR%skills\antigravity-mnemo\install.js" (
+    node "%SCRIPT_DIR%skills\antigravity-mnemo\install.js"
     if !errorlevel! neq 0 (
         echo       [retry] First attempt failed, reinstalling...
-        node "%SCRIPT_DIR%skills\gemini-mnemo\install.js"
+        node "%SCRIPT_DIR%skills\antigravity-mnemo\install.js"
         if !errorlevel! equ 0 (
-            set "GEMINI_MNEMO_RESULT=Installed after retry"
+            set "ANTIGRAVITY_MNEMO_RESULT=Installed after retry"
         ) else (
-            set "GEMINI_MNEMO_RESULT=Install failed (including retry)"
+            set "ANTIGRAVITY_MNEMO_RESULT=Install failed (including retry)"
         )
     ) else (
-        set "GEMINI_MNEMO_RESULT=Installed"
+        set "ANTIGRAVITY_MNEMO_RESULT=Installed"
     )
 ) else (
-    set "GEMINI_MNEMO_RESULT=Skip: no install.js"
+    set "ANTIGRAVITY_MNEMO_RESULT=Skip: no install.js"
 )
-echo       !GEMINI_MNEMO_RESULT!
+echo       !ANTIGRAVITY_MNEMO_RESULT!
 
-REM Sync Gemini Skills/Agents/Hooks (always runs, required for zephermine)
 echo.
-echo   Syncing Gemini Skills/Agents/Hooks...
-if exist "%SCRIPT_DIR%scripts\sync-gemini-assets.js" (
-    node "%SCRIPT_DIR%scripts\sync-gemini-assets.js" !SOURCE_ONLY_SKILL_FLAG! !SOURCE_ONLY_AGENT_FLAG!
+echo   Syncing Antigravity Skills/Agents/Hooks...
+if exist "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" (
+    node "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" !SOURCE_ONLY_SKILL_FLAG! !SOURCE_ONLY_AGENT_FLAG!
     if !errorlevel! equ 0 (
-        set "GEMINI_SYNC_RESULT=Sync complete"
+        set "ANTIGRAVITY_SYNC_RESULT=Sync complete"
     ) else (
-        set "GEMINI_SYNC_RESULT=Sync failed"
+        set "ANTIGRAVITY_SYNC_RESULT=Sync failed"
         echo       [ERROR] Required policy sync failed: !errorlevel!
         exit /b 1
     )
 ) else (
-    set "GEMINI_SYNC_RESULT=Failed: no sync script"
-    echo       [ERROR] sync-gemini-assets.js not found
+    set "ANTIGRAVITY_SYNC_RESULT=Failed: no sync script"
+    echo       [ERROR] sync-antigravity-assets.js not found
     exit /b 1
 )
-echo       !GEMINI_SYNC_RESULT!
+echo       !ANTIGRAVITY_SYNC_RESULT!
 
-REM Gemini settings.json hook config (always set, required for mnemo)
-set "GEMINI_DIR=%USERPROFILE%\.gemini"
-set "NEED_GEMINI_HOOKS=1"
-if "!NEED_GEMINI_HOOKS!"=="1" (
-    echo.
-    echo   Configuring Gemini settings.json hooks...
-    REM Copy save-turn hook to gemini hooks directory
-    node "%SCRIPT_DIR%scripts\safe-copy.js" mkdir "!GEMINI_DIR!\hooks"
-    if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" (
-        node "%SCRIPT_DIR%scripts\safe-copy.js" file "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.ps1" "!GEMINI_DIR!\hooks\save-turn.ps1"
-    )
-    if exist "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" (
-        node "%SCRIPT_DIR%scripts\safe-copy.js" file "%SCRIPT_DIR%skills\gemini-mnemo\hooks\save-turn.sh" "!GEMINI_DIR!\hooks\save-turn.sh"
-    )
-    node "%SCRIPT_DIR%install-hooks-config.js" "!GEMINI_DIR!/hooks" "!GEMINI_DIR!\settings.json" --windows --components !BUNDLES! --llms !LLMS! --target gemini
-    set "GEMINI_HOOKS_RESULT=Configured"
+echo.
+echo   Configuring Antigravity hooks.json...
+node "%SCRIPT_DIR%install-hooks-config.js" "!ANTIGRAVITY_ROOT!/config/hooks" "!ANTIGRAVITY_ROOT!\config\hooks.json" --windows --components !BUNDLES! --llms !LLMS! --target antigravity
+if !errorlevel! equ 0 (
+    set "ANTIGRAVITY_HOOKS_RESULT=Configured"
 ) else (
-    set "GEMINI_HOOKS_RESULT=Skipped: hook bundle not selected"
+    set "ANTIGRAVITY_HOOKS_RESULT=Configuration failed"
+    exit /b 1
 )
 
-REM Gemini MCP (disabled — gemini CLI MCP support unstable)
 echo.
-echo   Gemini MCP install... [skipped: gemini CLI MCP not supported]
-set "GEMINI_MCP_RESULT=Skipped(disabled)"
-
-REM Gemini Orchestrator MCP (required)
-echo.
-echo   Registering Gemini Orchestrator MCP... [required]
-if 1==1 (
-    set "GEMINI_ORCH_DIR=!GEMINI_DIR!\.olympus\runtime-modules\orchestrator\mcp-server"
-    set "GEMINI_ORCH_DIST=!GEMINI_ORCH_DIR!\dist\index.js"
-    set "GEMINI_ORCH_SDK=!GEMINI_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
-    set "GEMINI_ORCH_SQLITE=!GEMINI_ORCH_DIR!\node_modules\better-sqlite3\package.json"
-    set "NEED_GEMINI_ORCH_BUILD=0"
-    if not exist "!GEMINI_ORCH_DIST!" set "NEED_GEMINI_ORCH_BUILD=1"
-    if not exist "!GEMINI_ORCH_SDK!" set "NEED_GEMINI_ORCH_BUILD=1"
-    if not exist "!GEMINI_ORCH_SQLITE!" set "NEED_GEMINI_ORCH_BUILD=1"
-    if "!NEED_GEMINI_ORCH_BUILD!"=="1" (
-        echo       Installing MCP server dependencies...
-        cd /d "!GEMINI_ORCH_DIR!" && call npm install >nul 2>nul && call npm run build >nul 2>nul
-        cd /d "%SCRIPT_DIR%"
-    )
-    set "GEMINI_ORCH_READY=1"
-    if not exist "!GEMINI_ORCH_DIST!" set "GEMINI_ORCH_READY=0"
-    if not exist "!GEMINI_ORCH_SDK!" set "GEMINI_ORCH_READY=0"
-    if not exist "!GEMINI_ORCH_SQLITE!" set "GEMINI_ORCH_READY=0"
-    where gemini >nul 2>nul
+echo   Installing Antigravity MCP servers...
+if exist "%SCRIPT_DIR%install-mcp-antigravity.js" (
+    node "%SCRIPT_DIR%install-mcp-antigravity.js" !DEFAULT_MCP_SERVERS!
     if !errorlevel! equ 0 (
-        if "!GEMINI_ORCH_READY!"=="1" (
-            set "GEMINI_ORCH_DIST_NORM=!GEMINI_ORCH_DIST:\=/!"
-            call gemini mcp remove --scope user orchestrator >nul 2>nul
-            call gemini mcp add --scope user orchestrator node "!GEMINI_ORCH_DIST_NORM!" >nul 2>nul
-            if !errorlevel! equ 0 (
-                set "GEMINI_ORCH_RESULT=Registered"
-            ) else (
-                set "GEMINI_ORCH_RESULT=Register failed"
-            )
-        ) else (
-            set "GEMINI_ORCH_RESULT=Skip: dependencies/build failed"
-            echo       [WARN] Run manually: cd /d "!GEMINI_ORCH_DIR!" ^&^& npm install ^&^& npm run build
-        )
+        set "ANTIGRAVITY_MCP_RESULT=Installed"
     ) else (
-        set "GEMINI_ORCH_RESULT=Skip: gemini CLI not found"
+        set "ANTIGRAVITY_MCP_RESULT=Install failed"
     )
-    echo       !GEMINI_ORCH_RESULT!
+) else (
+    set "ANTIGRAVITY_MCP_RESULT=Skip: no installer"
 )
+
+echo.
+echo   Registering Antigravity Orchestrator MCP... [required]
+set "ANTIGRAVITY_ORCH_DIR=!ANTIGRAVITY_ROOT!\antigravity-cli\.olympus\runtime-modules\orchestrator\mcp-server"
+set "ANTIGRAVITY_ORCH_DIST=!ANTIGRAVITY_ORCH_DIR!\dist\index.js"
+set "ANTIGRAVITY_ORCH_SDK=!ANTIGRAVITY_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
+set "ANTIGRAVITY_ORCH_SQLITE=!ANTIGRAVITY_ORCH_DIR!\node_modules\better-sqlite3\package.json"
+set "NEED_ANTIGRAVITY_ORCH_BUILD=0"
+if not exist "!ANTIGRAVITY_ORCH_DIST!" set "NEED_ANTIGRAVITY_ORCH_BUILD=1"
+if not exist "!ANTIGRAVITY_ORCH_SDK!" set "NEED_ANTIGRAVITY_ORCH_BUILD=1"
+if not exist "!ANTIGRAVITY_ORCH_SQLITE!" set "NEED_ANTIGRAVITY_ORCH_BUILD=1"
+if "!NEED_ANTIGRAVITY_ORCH_BUILD!"=="1" (
+    echo       Installing MCP server dependencies...
+    cd /d "!ANTIGRAVITY_ORCH_DIR!" && call npm install >nul 2>nul && call npm run build >nul 2>nul
+    cd /d "%SCRIPT_DIR%"
+)
+if exist "!ANTIGRAVITY_ORCH_DIST!" if exist "!ANTIGRAVITY_ORCH_SDK!" if exist "!ANTIGRAVITY_ORCH_SQLITE!" (
+    node "%SCRIPT_DIR%install-mcp-antigravity.js" --orchestrator "!ANTIGRAVITY_ORCH_DIST!"
+    if !errorlevel! equ 0 (
+        set "ANTIGRAVITY_ORCH_RESULT=Registered"
+    ) else (
+        set "ANTIGRAVITY_ORCH_RESULT=Register failed"
+    )
+) else (
+    set "ANTIGRAVITY_ORCH_RESULT=Skip: dependencies/build failed"
+    echo       [WARN] Run manually: cd /d "!ANTIGRAVITY_ORCH_DIR!" ^&^& npm install ^&^& npm run build
+)
+echo       !ANTIGRAVITY_ORCH_RESULT!
 
 REM ============================================
 REM   Grok Build
 REM ============================================
 :phase_grok
+if "!HAS_GROK!"=="0" if not exist "%USERPROFILE%\.grok" goto :phase_openclaw
 REM Grok reads skills/agents/MCP/rules from ~/.claude/ via [compat.claude].
 REM When Claude was not selected, prepare the minimal shared compatibility home
 REM here; Grok's conversation hook still uses its own grok-mnemo adapter.
@@ -920,6 +953,38 @@ if exist "%SCRIPT_DIR%skills\grok-mnemo\install.js" (
 )
 echo       !GROK_MNEMO_RESULT!
 
+REM ============================================
+REM   OpenClaw skills-only host
+REM ============================================
+:phase_openclaw
+if "!HAS_OPENCLAW!"=="0" goto :phase_hermes
+echo.
+echo   --- OpenClaw ^(skills only^) ---
+node "%SCRIPT_DIR%scripts\sync-portable-skills.js" openclaw --home "!OPENCLAW_DIR!" !SOURCE_ONLY_SKILL_FLAG!
+if !errorlevel! equ 0 (
+    set "OPENCLAW_SYNC_RESULT=Skills synced"
+) else (
+    set "OPENCLAW_SYNC_RESULT=Sync failed"
+    echo       [ERROR] OpenClaw skill sync failed: !errorlevel!
+    exit /b 1
+)
+
+REM ============================================
+REM   Hermes Agent skills-only host
+REM ============================================
+:phase_hermes
+if "!HAS_HERMES!"=="0" goto :install_done
+echo.
+echo   --- Hermes Agent ^(skills only^) ---
+node "%SCRIPT_DIR%scripts\sync-portable-skills.js" hermes --home "!HERMES_DIR!" !SOURCE_ONLY_SKILL_FLAG!
+if !errorlevel! equ 0 (
+    set "HERMES_SYNC_RESULT=Skills synced"
+) else (
+    set "HERMES_SYNC_RESULT=Sync failed"
+    echo       [ERROR] Hermes skill sync failed: !errorlevel!
+    exit /b 1
+)
+
 :install_done
 REM Restore CLAUDECODE env var
 set "CLAUDECODE=!SAVE_CLAUDECODE!"
@@ -949,18 +1014,32 @@ if "!HAS_CODEX!"=="1" (
     echo   - multi_agent: !CODEX_MULTI_AGENT_RESULT!
     echo   - Orchestrator: !CODEX_ORCH_RESULT!
 )
-if "!HAS_GEMINI!"=="1" (
-    echo   [Gemini]
-    echo   - Mnemo: !GEMINI_MNEMO_RESULT!
-    echo   - Skills/Agents/Hooks: !GEMINI_SYNC_RESULT!
-    echo   - Hooks: !GEMINI_HOOKS_RESULT!
-    echo   - MCP: !GEMINI_MCP_RESULT!
-    echo   - Orchestrator: !GEMINI_ORCH_RESULT!
+if "!HAS_ANTIGRAVITY!"=="1" (
+    echo   [Antigravity]
+    echo   - Mnemo: !ANTIGRAVITY_MNEMO_RESULT!
+    echo   - Skills/Agents/Hooks: !ANTIGRAVITY_SYNC_RESULT!
+    echo   - Hooks: !ANTIGRAVITY_HOOKS_RESULT!
+    echo   - MCP: !ANTIGRAVITY_MCP_RESULT!
+    echo   - Orchestrator: !ANTIGRAVITY_ORCH_RESULT!
 )
 if exist "%USERPROFILE%\.grok" (
     echo   [Grok]
     echo   - Mnemo: !GROK_MNEMO_RESULT!
     echo   - Skills/Agents/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
+)
+if "!HAS_OPENCLAW!"=="1" (
+    echo   [OpenClaw - skills only]
+    echo   - Skills: !OPENCLAW_DIR!\skills\
+    echo   - Catalog: !OPENCLAW_DIR!\SKILLS-CATALOG.md
+    echo   - Plugins/Hooks/Mnemo/MCP: not installed
+    echo   - Result: !OPENCLAW_SYNC_RESULT!
+)
+if "!HAS_HERMES!"=="1" (
+    echo   [Hermes Agent - skills only]
+    echo   - Skills: !HERMES_DIR!\skills\
+    echo   - Catalog: !HERMES_DIR!\SKILLS-CATALOG.md
+    echo   - Plugins/Hooks/Mnemo/MCP: not installed
+    echo   - Result: !HERMES_SYNC_RESULT!
 )
 if "!CREATED_CLAUDE_DIR!"=="1" (
     echo.

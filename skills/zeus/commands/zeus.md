@@ -34,9 +34,9 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, WebSearch, WebFetch
 
 ### CLI 자동 재개
 
-제품/기능 파이프라인으로 `/zeus`가 실행되면 Phase 0 전에 Chronos 자동 재개 가드를 시작합니다. 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Gemini: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 않습니다. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않습니다.
+제품/기능 파이프라인으로 `/zeus`가 실행되면 Phase 0 전에 Chronos 자동 재개 가드를 시작합니다. 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Antigravity: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 않습니다. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않습니다.
 
-Claude Code는 Stop 훅으로, Codex는 notify 체인으로, Gemini는 AfterAgent/worker 루프로 같은 Zeus 파이프라인을 이어갑니다.
+Claude Code는 Stop 훅으로, Codex는 notify 체인으로, Antigravity는 Stop/worker 루프로 같은 Zeus 파이프라인을 이어갑니다.
 현재 프로젝트의 `skills/auto-continue-loop/`가 없으면 현재 CLI의 글로벌 스킬 경로에 설치된 `auto-continue-loop`를 사용합니다.
 
 ```powershell

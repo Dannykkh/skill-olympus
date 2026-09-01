@@ -1,6 +1,10 @@
 ---
 name: zephermine
-description: Creates detailed, sectionized implementation plans through research, stakeholder interviews, domain expert analysis, database schema design, and multi-LLM review. Use when planning features that need thorough pre-implementation analysis. /zephermine로 실행. Also known as 젭마인, 제퍼마인, 제퍼미네.
+description: >
+  Creates a persisted, sectionized implementation artifact suite through research, stakeholder interviews,
+  domain analysis, database and API design, and multi-LLM review. Use for feature or product plans consumed by
+  downstream implementation and QA. Prefer lightweight native plan/interview workflows for small tasks; on
+  Antigravity those are /plan and /grill-me. /zephermine로 실행. Also known as 젭마인, 제퍼마인, 제퍼미네.
 ---
 
 # Zephermine
@@ -15,7 +19,11 @@ Orchestrates a multi-step planning process: Research → Interview → Spec Synt
 > 단일 작업용 계획 승인 게이트이고, 젭마인은 다운스트림(포세이돈·아르고스·미노스·제우스·견적)이 소비하는
 > **디스크 아티팩트**(plan.md, sections/, flow-diagrams/, qa-scenarios)를 만드는 설계 파이프라인입니다.
 > 단일 버그픽스·소규모 리팩토링은 plan mode, 기능/제품 단위 설계는 젭마인.
-> 주의: plan mode는 파일 쓰기 금지 모드이므로 **plan mode 안에서 젭마인을 실행하지 마세요** — 산출물 생성이 막힙니다.
+> Antigravity에서는 가벼운 구현 계획은 `/plan`, 누락 요구를 집중 인터뷰로 좁히는 일은 `/grill-me`가 먼저입니다.
+> 그 결과만 필요하면 젭마인을 시작하지 않습니다. `spec.md`, 도메인 사전, API/DB, flow, sections,
+> operation/QA 시나리오까지 디스크에 남겨 downstream이 소비해야 할 때만 젭마인을 사용합니다.
+> slash command를 프로그램적으로 호출한다고 가정하지 않으며, 현재 plan mode가 쓰기·승인 전용이면 그 안에서
+> 젭마인을 실행하지 않습니다. 사용자가 만든 네이티브 계획·인터뷰 결과는 쓰기 가능한 모드에서 입력으로 이어받습니다.
 
 ## CRITICAL: First Actions
 
@@ -124,7 +132,9 @@ Resume에서 Step 8/10/11의 사전 부산물을 보정하기 전에도 전역 �
 `domain-dictionary` 모듈을 다시 해석합니다. 이전 세션이 기록한 경로나 런타임 등록 상태를
 그대로 신뢰하지 않으며, 모듈을 읽지 못하면 보정 Step을 `BLOCKED`로 둡니다.
 
-9. Create TODO list with TodoWrite based on current state
+9. Create or update the current runtime's task ledger from the detected state. Use a native task-list tool only
+   when the runtime exposes one; otherwise record the remaining steps in the planning index and continue without
+   inventing a vendor-specific tool call.
 
 Print status:
 ```
@@ -178,10 +188,10 @@ This applies most strongly to Step 6 critical unknowns, Step 11 unresolved domai
 
 Use semantic roles instead of hardcoded tool calls, agent files, or models:
 
-| Semantic role | Claude | Codex | Gemini | Grok | Boundary |
+| Semantic role | Claude | Codex | Antigravity | Grok | Boundary |
 |---------------|--------|-------|--------|------|----------|
-| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Read-only; return findings only; never write files |
-| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Write only the one unique output file assigned to the work item |
+| `read-only-analysis` | `Explore` | `explorer` | `research` | `explore` | Read-only; return findings only; never write files |
+| `artifact-writer` | `general-purpose` | `worker` | 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트 | `general-purpose` | Write only the one unique output file assigned to the work item |
 
 - Every delegated work item must have either one unique output file or a return-only contract.
 - Main/Lead owns shared state and integration artifacts, including `research.md`, `team-review.md`, `plan.md`, `integration-notes.md`, domain dictionaries, manifests, and indexes.
@@ -202,11 +212,11 @@ Use semantic roles instead of hardcoded tool calls, agent files, or models:
 1. 현재 프로젝트에 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일을 읽습니다
    (소스 저장소 개발 경로).
 2. 없으면 현재 런타임 active root의 exact 파일을 확인합니다: Claude/Grok은
-   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
-   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Antigravity는
+   `~/.gemini/antigravity-cli/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
 3. 둘 다 없으면 현재 런타임의 전역 카탈로그를 엽니다: Claude/Grok은
-   `~/.claude/SKILLS-CATALOG.md`, Codex는 `~/.codex/SKILLS-CATALOG.md`, Gemini는
-   `~/.gemini/SKILLS-CATALOG.md`. 모듈명과 정확히 일치하는 행이 **하나일 때만** 그 행의
+   `~/.claude/SKILLS-CATALOG.md`, Codex는 `~/.codex/SKILLS-CATALOG.md`, Antigravity는
+   `~/.gemini/antigravity-cli/SKILLS-CATALOG.md`. 모듈명과 정확히 일치하는 행이 **하나일 때만** 그 행의
    `읽을 경로`에 적힌 절대 `SKILL.md`를 그대로 읽습니다. 행이 없거나 중복이면 fail-closed입니다.
    기본 경로가 보통 `.olympus/source-skills` 아래여도 경로를 조합하거나 추측하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모 디렉터리입니다. 모듈이 지시하는
@@ -408,7 +418,7 @@ See [team-review-protocol.md](references/team-review-protocol.md)
 - They synthesize `spec.md`, `interview.md`, `research.md`, `domain-research.md`, and `docs/domain-dictionary.md`.
 - External AI domain experts are time-boxed; timeout/failure falls back to the runtime's `artifact-writer`, then to sequential main-context execution or a warning stub.
 
-> Phase B 실행: Codex/Gemini 외부 CLI가 가용하면 분배하고, 없거나 실패하면 현재 CLI의 `artifact-writer` 역할로 실행합니다.
+> Phase B 실행: Codex/Antigravity 외부 CLI가 가용하면 분배하고, 없거나 실패하면 현재 CLI의 `artifact-writer` 역할로 실행합니다.
 
 **CRITICAL — Work-item return protocol:** Each writer owns one unique file and returns ONLY a 2-3 line summary. Main/Lead alone writes `team-review.md` and dictionary merges.
 
@@ -474,7 +484,7 @@ plan.md 하나를 바로 쓰면 외부 리뷰(Step 13)는 "그 하나"를 다듬
 
 See [external-review.md](references/external-review.md)
 
-Run the **Gemini** and **Codex** external CLI review processes in parallel when available. Treat them as independent review processes, not native delegation workers.
+Run the **Antigravity** and **Codex** external CLI review processes in parallel when available. Treat them as independent review processes, not native delegation workers.
 Each process writes only its unique file under `<planning_dir>/reviews/`; Main/Lead owns feedback integration and all edits to `plan.md`.
 
 ### 14. Integrate External Feedback
@@ -664,7 +674,7 @@ Other options:
 | [persona-journey-guide.md](references/persona-journey-guide.md) | Step 9 페르소나/여정맵 형식 상세 |
 | [team-review-protocol.md](references/team-review-protocol.md) | Step 10 전문가별 분석 프롬프트, Phase A/B 상세 |
 | [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 + 사전 변경 + 글로벌 반영 충돌 해결 |
-| [external-review.md](references/external-review.md) | Step 13 Gemini/Codex 외부 리뷰 프롬프트 |
+| [external-review.md](references/external-review.md) | Step 13 Antigravity/Codex 외부 리뷰 프롬프트 |
 | [schema-design-guide.md](references/schema-design-guide.md) | Step 16 DB 스키마 설계 절차, ERD/DDL 형식 |
 | [api-spec-guide.md](references/api-spec-guide.md) | Step 17 API 명세 형식, 엔드포인트 작성 규칙 |
 | [flow-diagrams-guide.md](references/flow-diagrams-guide.md) | Step 18 공정 도면 생성 절차, Mermaid 규칙 |

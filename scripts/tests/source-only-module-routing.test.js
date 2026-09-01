@@ -37,8 +37,8 @@ const EXPECTED_COMMON_RUNTIME_SKILLS = Object.freeze([
 const EXPECTED_RUNTIME_ADAPTERS = Object.freeze([
   "agent-team",
   "agent-team-codex",
+  "antigravity-mnemo",
   "codex-mnemo",
-  "gemini-mnemo",
   "grok-mnemo",
   "mnemo",
 ]);
@@ -160,7 +160,7 @@ const HARD_REFERENCE_ROOTS = Object.freeze({
 const MEMORY_TEMPLATES = Object.freeze([
   "skills/mnemo/templates/claude-md-rules.md",
   "skills/codex-mnemo/templates/agents-md-rules.md",
-  "skills/gemini-mnemo/templates/agents-md-rules.md",
+  "skills/antigravity-mnemo/templates/gemini-md-rules.md",
   "skills/grok-mnemo/templates/grok-rules.md",
 ]);
 
@@ -169,8 +169,7 @@ const MEMORY_HOOKS = Object.freeze([
   "hooks/save-response.sh",
   "skills/codex-mnemo/hooks/save-turn.ps1",
   "skills/codex-mnemo/hooks/save-turn.sh",
-  "skills/gemini-mnemo/hooks/save-turn.ps1",
-  "skills/gemini-mnemo/hooks/save-turn.sh",
+  "skills/antigravity-mnemo/hooks/save-turn.js",
   "skills/grok-mnemo/hooks/save-turn.ps1",
   "skills/grok-mnemo/hooks/save-turn.sh",
 ]);
@@ -190,6 +189,38 @@ function allRepoSkillNames() {
     )
     .map((entry) => entry.name)
     .sort();
+}
+
+function allRepoSkillEntries() {
+  return fs
+    .readdirSync(path.join(repoRoot, "skills"), { withFileTypes: true })
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        fs.existsSync(path.join(repoRoot, "skills", entry.name, "SKILL.md")),
+    )
+    .map((entry) => ({
+      name: entry.name,
+      relativePath: `skills/${entry.name}/SKILL.md`,
+      source: readRepoFile(`skills/${entry.name}/SKILL.md`).replace(/\r\n/g, "\n"),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function frontmatterField(lines, fieldName) {
+  const index = lines.findIndex((line) => line.startsWith(`${fieldName}:`));
+  if (index < 0) return null;
+  const inlineValue = lines[index].slice(fieldName.length + 1).trim();
+  if (inlineValue !== ">" && inlineValue !== "|") {
+    return { index, inlineValue, value: inlineValue.replace(/^(["'])|(["'])$/g, "") };
+  }
+
+  const body = [];
+  for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
+    if (/^[a-z][a-z0-9-]*:/i.test(lines[cursor])) break;
+    if (/^\s+\S/.test(lines[cursor])) body.push(lines[cursor].trim());
+  }
+  return { index, inlineValue, value: body.join(" ") };
 }
 
 function extractResolutionContract(source, relativePath) {
@@ -228,20 +259,21 @@ test("entry-point default deny keeps 18 common entry points, six adapters, and 7
   const allSkills = allRepoSkillNames();
   assert.equal(allSkills.length, 100, "public repository skill inventory changed; revisit policy counts");
 
-  for (const runtime of ["claude", "codex", "gemini", "grok"]) {
+  for (const runtime of ["claude", "codex", "antigravity", "grok", "openclaw", "hermes"]) {
     const selection = selectRuntimeSkills(
       allSkills,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
-    const expectedActiveCount = runtime === "claude" ? 21 : 20;
-    const expectedCompatibleCount = runtime === "claude" ? 97 : 96;
+    const skillsOnly = runtime === "openclaw" || runtime === "hermes";
+    const expectedActiveCount = skillsOnly ? 18 : runtime === "claude" ? 21 : 20;
+    const expectedAvailableCount = skillsOnly ? 94 : runtime === "claude" ? 97 : 96;
 
     assert.equal(selection.skillNames.length, expectedActiveCount, `${runtime} active count`);
     assert.equal(selection.defaultDisabledNames.length, 76, `${runtime} source-only count`);
     assert.equal(
       selection.skillNames.length + selection.defaultDisabledNames.length,
-      expectedCompatibleCount,
-      `${runtime} compatible dormant-library count`,
+      expectedAvailableCount,
+      `${runtime} available active-plus-source-only count`,
     );
     for (const moduleName of ROUTED_SOURCE_ONLY_MODULES) {
       assert.equal(
@@ -256,6 +288,183 @@ test("entry-point default deny keeps 18 common entry points, six adapters, and 7
       );
     }
   }
+});
+
+test("all canonical skills use portable Agent Skills frontmatter", () => {
+  const allowedTopLevelFields = new Set([
+    "name",
+    "description",
+    "license",
+    "metadata",
+  ]);
+  const entries = allRepoSkillEntries();
+  assert.equal(entries.length, 101, "local skill inventory changed; revisit portable metadata coverage");
+
+  for (const { name, relativePath, source } of entries) {
+    assert.match(source, /^---\n/, `${relativePath} has no opening frontmatter fence`);
+    const closingIndex = source.indexOf("\n---", 4);
+    assert.notEqual(closingIndex, -1, `${relativePath} has no closing frontmatter fence`);
+    const lines = source.slice(4, closingIndex).split("\n");
+    const topLevelFields = lines
+      .map((line) => line.match(/^([a-z][a-z0-9-]*):/i)?.[1])
+      .filter(Boolean);
+
+    for (const field of topLevelFields) {
+      assert.equal(
+        allowedTopLevelFields.has(field),
+        true,
+        `${relativePath} uses runtime-specific or unsupported frontmatter field ${field}`,
+      );
+    }
+
+    const nameField = frontmatterField(lines, "name");
+    const descriptionField = frontmatterField(lines, "description");
+    assert.ok(nameField, `${relativePath} is missing name`);
+    assert.ok(descriptionField, `${relativePath} is missing description`);
+    assert.equal(nameField.value, name, `${relativePath} name does not match its directory`);
+    assert.match(name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, `${relativePath} name is not kebab-case`);
+    assert.ok(descriptionField.value.length > 0, `${relativePath} has an empty description`);
+    assert.ok(
+      descriptionField.value.length <= 1024,
+      `${relativePath} description exceeds the Agent Skills 1024-character limit`,
+    );
+    if (![">", "|"].includes(descriptionField.inlineValue)) {
+      const quoted = /^(?:"[\s\S]*"|'[\s\S]*')$/.test(descriptionField.inlineValue);
+      if (!quoted) {
+        assert.doesNotMatch(
+          descriptionField.inlineValue,
+          /:\s/,
+          `${relativePath} has an ambiguous plain-scalar description; quote it or use a block`,
+        );
+      }
+    }
+
+    const metadataIndex = lines.findIndex((line) => line === "metadata:");
+    if (metadataIndex >= 0) {
+      for (let cursor = metadataIndex + 1; cursor < lines.length; cursor += 1) {
+        const line = lines[cursor];
+        if (/^[a-z][a-z0-9-]*:/i.test(line)) break;
+        if (line.trim() === "") continue;
+        const metadataEntry = line.match(/^  [a-z][a-z0-9_-]*:\s+(.+)$/i);
+        assert.ok(metadataEntry, `${relativePath} metadata values must be flat strings: ${line}`);
+        assert.doesNotMatch(
+          metadataEntry[1],
+          /^(?:\[|\{|>|\|)/,
+          `${relativePath} metadata value must be a string: ${line}`,
+        );
+      }
+    }
+  }
+});
+
+test("cross-CLI authoring rules and Antigravity compatibility boundaries stay explicit", () => {
+  const agents = readRepoFile("AGENTS.md");
+  assert.match(agents, /single canonical source/);
+  assert.match(agents, /~\/\.gemini\/antigravity-cli\/skills\//);
+  assert.match(agents, /install\.bat[\s\S]*bash install\.sh/);
+  assert.match(agents, /verified four-runtime intersection/);
+  assert.doesNotMatch(agents, /\/mnt\/skills\/user/);
+
+  const antigravityDocs = readRepoFile("docs/resources/antigravity-cli.md");
+  assert.match(antigravityDocs, /기본 활성 \| 20/);
+  assert.match(antigravityDocs, /source-only \| 76/);
+  assert.match(antigravityDocs, /런타임 제외 \| 4/);
+  assert.match(antigravityDocs, /실제 `agy` 세션 검증/);
+
+  assert.doesNotMatch(readRepoFile("skills/zephermine/SKILL.md"), /\bTodoWrite\b/);
+  assert.doesNotMatch(
+    readRepoFile("skills/draw-io/SKILL.md"),
+    /~\/\.claude\/skills\/draw-io/,
+  );
+  assert.doesNotMatch(
+    readRepoFile("skills/daily-meeting-update/SKILL.md"),
+    /~\/\.claude\/skills\/daily-meeting-update/,
+  );
+  assert.doesNotMatch(
+    readRepoFile("skills/jira/references/mcp.md"),
+    /~\/\.claude\/skills\/jira/,
+  );
+  assert.match(
+    readRepoFile("skills/orchestrator/SKILL.md"),
+    /~\/\.gemini\/antigravity-cli\/\.olympus\/runtime-modules\/orchestrator/,
+  );
+  assert.doesNotMatch(readRepoFile("QUICK-REFERENCE.md"), /codebase_investigator|\bgeneralist\b/);
+  assert.doesNotMatch(
+    readRepoFile(".claude-plugin/plugin.json"),
+    /Codex CLI, Gemini CLI, and Grok Build/,
+  );
+  assert.doesNotMatch(
+    readRepoFile(".claude-plugin/marketplace.json"),
+    /Codex CLI, Gemini CLI, and Grok Build/,
+  );
+});
+
+test("Antigravity native workflows own their basic jobs while Olympus skills document a unique delta", () => {
+  const nativeCommands = [
+    "/goal",
+    "/plan",
+    "/grill-me",
+    "/teamwork-preview",
+    "/learn",
+    "/schedule",
+    "/browser",
+    "/btw",
+  ];
+  const nativeManagement = ["/skills", "/agents", "/tasks", "/hooks", "/mcp"];
+  const surfaces = [
+    readRepoFile("GEMINI.md"),
+    readRepoFile("skills/antigravity-mnemo/templates/gemini-md-rules.md"),
+    readRepoFile("docs/resources/antigravity-cli.md"),
+  ];
+
+  for (const source of surfaces) {
+    for (const command of [...nativeCommands, ...nativeManagement]) {
+      assert.ok(source.includes(command), `${command} is missing from an Antigravity routing surface`);
+    }
+    assert.match(source, /프로그램적으로 호출.*가정하지 않/s);
+  }
+
+  const authoringRules = readRepoFile("AGENTS.md");
+  for (const command of nativeCommands.slice(0, -1)) {
+    assert.ok(authoringRules.includes(command), `${command} is missing from the cross-CLI authoring gate`);
+  }
+  assert.match(authoringRules, /native workflow[\s\S]*engine/i);
+  assert.match(authoringRules, /no unique delta remains source-only|고유 차이.*source-only/i);
+
+  const chronos = readRepoFile("skills/auto-continue-loop/SKILL.md");
+  assert.match(chronos, /Claude\/Codex\/Antigravity/);
+  assert.match(chronos, /네이티브 `\/goal`/);
+  assert.match(chronos, /`\/schedule`[\s\S]*(?:완료 게이트|heartbeat)[\s\S]*(?:아니|대체하지)/);
+  assert.doesNotMatch(chronos, /goal이 없는 환경\(Antigravity|Claude\/Codex에 `\/goal`|`\/goal`이 있는 Claude\/Codex에서/);
+  assert.match(readRepoFile("skills/zeus/SKILL.md"), /Claude\/Codex\/Antigravity에는 네이티브 `\/goal`/);
+
+  const agentTeam = readRepoFile("skills/agent-team/SKILL.md");
+  assert.match(agentTeam, /`\/teamwork-preview`[\s\S]*Wave[\s\S]*파일 소유권/);
+  assert.match(agentTeam, /프로그램적으로 호출.*가정하지 않습니다/s);
+  const workpm = readRepoFile("skills/workpm/SKILL.md");
+  assert.match(workpm, /`\/teamwork-preview`[\s\S]*리서치→제안→도면→구현→검증/);
+  assert.match(workpm, /중첩 PM을 만들지 않습니다/);
+
+  const zephermine = readRepoFile("skills/zephermine/SKILL.md");
+  assert.match(zephermine, /`\/plan`[\s\S]*`\/grill-me`/);
+  assert.match(zephermine, /spec\.md[\s\S]*API\/DB[\s\S]*operation\/QA/);
+
+  for (const relativePath of [
+    "skills/memory-distill/SKILL.md",
+    "skills/skill-evolve/SKILL.md",
+  ]) {
+    const source = readRepoFile(relativePath);
+    assert.match(source, /Antigravity `\/learn` 경계/);
+    assert.match(source, /여러 세션/);
+    assert.match(source, /프로그램적으로 호출/);
+  }
+
+  const aphrodite = readRepoFile("skills/design-plan/SKILL.md");
+  assert.match(aphrodite, /Antigravity `\/browser` 실행 경계/);
+  assert.match(aphrodite, /Experience Contract/);
+  const minos = readRepoFile("skills/minos/SKILL.md");
+  assert.match(minos, /`\/browser`[\s\S]*Playwright[\s\S]*exploratory-only/);
+  assert.match(minos, /Playwright 산출물[\s\S]*대체하지 않습니다/);
 });
 
 test("hard consumers resolve source-only modules from an exact catalog path and module root", () => {

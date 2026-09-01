@@ -1,4 +1,4 @@
-export type AIProvider = 'claude' | 'codex' | 'gemini';
+export type AIProvider = 'claude' | 'codex' | 'antigravity';
 export interface AIProviderInfo {
     name: AIProvider;
     available: boolean;

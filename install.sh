@@ -6,19 +6,47 @@
 # ============================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+show_help() {
+    echo "Usage: bash install.sh [options]"
+    echo ""
+    echo "  --all                              Install four TermSnap default CLI targets"
+    echo "  --llm claude,codex,antigravity,grok,openclaw,hermes"
+    echo "                                     Install selected targets; OpenClaw/Hermes are skills-only"
+    echo "  --uninstall                        Remove managed assets"
+    echo "  --include-source-only-skills       Register optional source-only skills"
+    echo "  --include-broad-coding-skills      Register legacy broad coding skills"
+    echo "  --include-source-only-agents       Register optional custom agents"
+    echo "  --help, -h                         Show this help without changing files"
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+    esac
+done
+
 CLAUDE_DIR="$HOME/.claude"
 CODEX_DIR="${CODEX_HOME:-$HOME/.codex}"
+ANTIGRAVITY_ROOT="${ANTIGRAVITY_HOME:-$HOME/.gemini}"
+OPENCLAW_DIR="${OPENCLAW_HOME:-$HOME/.openclaw}"
+HERMES_DIR="${HERMES_HOME:-$HOME/.hermes}"
 CODEX_MNEMO_RESULT="미실행"
 CODEX_SYNC_RESULT="미실행"
 CODEX_MCP_RESULT="미실행"
 CODEX_MULTI_AGENT_RESULT="미실행"
 CODEX_ORCH_RESULT="미실행"
-GEMINI_MNEMO_RESULT="미실행"
-GEMINI_SYNC_RESULT="미실행"
-GEMINI_MCP_RESULT="미실행"
-GEMINI_ORCH_RESULT="미실행"
-GEMINI_HOOKS_RESULT="미실행"
+ANTIGRAVITY_MNEMO_RESULT="미실행"
+ANTIGRAVITY_SYNC_RESULT="미실행"
+ANTIGRAVITY_MCP_RESULT="미실행"
+ANTIGRAVITY_ORCH_RESULT="미실행"
+ANTIGRAVITY_HOOKS_RESULT="미실행"
 GROK_MNEMO_RESULT="미실행"
+OPENCLAW_SYNC_RESULT="미실행"
+HERMES_SYNC_RESULT="미실행"
 CREATED_CLAUDE_DIR=0
 HAS_CLAUDE_CLI=0
 JQ_MISSING=0
@@ -130,10 +158,10 @@ if [ "$MODE" != "uninstall" ]; then
 fi
 
 # ============================================
-#   --uninstall 모드: 설정 정리 (MCP, Mnemo, Hooks, Codex, Gemini)
+#   --uninstall 모드: Olympus 관리 런타임 자산 전체 정리
 # ============================================
 if [ "$MODE" = "uninstall" ]; then
-    echo "[1/12] settings.json 훅 설정 제거 중..."
+    echo "[1/14] settings.json 훅 설정 제거 중..."
     if [ -f "$CLAUDE_DIR/settings.json" ]; then
         node "$SCRIPT_DIR/install-hooks-config.js" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/settings.json" --uninstall
         echo "      완료!"
@@ -142,7 +170,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[2/12] CLAUDE.md 장기기억 규칙 제거 중..."
+    echo "[2/14] CLAUDE.md 장기기억 규칙 제거 중..."
     if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
         node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md" --uninstall
         echo "      완료!"
@@ -171,12 +199,12 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[3/12] MCP 서버 설정은 별도 관리됩니다."
+    echo "[3/14] MCP 서버 설정은 별도 관리됩니다."
     echo "      제거: node \"$SCRIPT_DIR/install-mcp.js\" --uninstall <이름>"
     echo "      완료!"
 
     echo ""
-    echo "[4/12] Orchestrator MCP 제거 중..."
+    echo "[4/14] Orchestrator MCP 제거 중..."
     SAVE_CLAUDECODE="${CLAUDECODE:-}"
     unset CLAUDECODE
     if command -v claude >/dev/null 2>&1; then
@@ -190,7 +218,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[5/12] Codex-Mnemo 제거 중..."
+    echo "[5/14] Codex-Mnemo 제거 중..."
     if [ -f "$SCRIPT_DIR/skills/codex-mnemo/install.js" ]; then
         if node "$SCRIPT_DIR/skills/codex-mnemo/install.js" --uninstall; then
             CODEX_MNEMO_RESULT="제거 완료"
@@ -205,7 +233,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[6/12] Codex Skills/Agents/Hooks 동기화 해제 중..."
+    echo "[6/14] Codex Skills/Agents/Hooks 동기화 해제 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
         if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --unlink; then
             CODEX_SYNC_RESULT="해제 완료"
@@ -222,7 +250,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[7/12] Codex MCP 제거 중..."
+    echo "[7/14] Codex MCP 제거 중..."
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
             if node "$SCRIPT_DIR/install-mcp-codex.js" --uninstall context7 playwright chrome-devtools sequential-thinking; then
@@ -242,7 +270,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[8/12] Codex Orchestrator MCP 제거 중..."
+    echo "[8/14] Codex Orchestrator MCP 제거 중..."
     if command -v codex >/dev/null 2>&1; then
         if codex mcp remove orchestrator >/dev/null 2>&1; then
             CODEX_ORCH_RESULT="제거 완료"
@@ -257,17 +285,17 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[9/12] Gemini-Mnemo 제거 중..."
-    if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/install.js" ]; then
-        if node "$SCRIPT_DIR/skills/gemini-mnemo/install.js" --uninstall; then
-            GEMINI_MNEMO_RESULT="제거 완료"
+    echo "[9/14] Antigravity-Mnemo 제거 중..."
+    if [ -f "$SCRIPT_DIR/skills/antigravity-mnemo/install.js" ]; then
+        if node "$SCRIPT_DIR/skills/antigravity-mnemo/install.js" --uninstall; then
+            ANTIGRAVITY_MNEMO_RESULT="제거 완료"
             echo "      완료!"
         else
-            GEMINI_MNEMO_RESULT="제거 실패"
+            ANTIGRAVITY_MNEMO_RESULT="제거 실패"
             echo "      [경고] 제거 실패"
         fi
     else
-        GEMINI_MNEMO_RESULT="스킵(install.js 없음)"
+        ANTIGRAVITY_MNEMO_RESULT="스킵(install.js 없음)"
         echo "      [경고] install.js 없음, 건너뜀"
     fi
 
@@ -286,39 +314,49 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[10/12] Gemini Skills/Agents/Hooks 동기화 해제 중..."
-    if [ -f "$SCRIPT_DIR/scripts/sync-gemini-assets.js" ]; then
-        if node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" --unlink; then
+    echo "[10/14] Antigravity Skills/Agents/Hooks 동기화 해제 중..."
+    if [ -f "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" ]; then
+        if node "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" --unlink; then
             echo "      완료!"
         else
             echo "      [오류] 해제 실패"
             exit 1
         fi
     else
-        echo "      [오류] sync-gemini-assets.js 없음"
+        echo "      [오류] sync-antigravity-assets.js 없음"
         exit 1
     fi
 
     echo ""
-    GEMINI_DIR="$HOME/.gemini"
-    echo "[11/12] Gemini settings.json 훅 제거 중..."
-    if [ -f "$GEMINI_DIR/settings.json" ]; then
-        node "$SCRIPT_DIR/install-hooks-config.js" "$GEMINI_DIR/hooks" "$GEMINI_DIR/settings.json" --uninstall
+    echo "[11/14] Antigravity core hooks 제거 중..."
+    if [ -f "$ANTIGRAVITY_ROOT/config/hooks.json" ]; then
+        node "$SCRIPT_DIR/install-hooks-config.js" "$ANTIGRAVITY_ROOT/config/hooks" "$ANTIGRAVITY_ROOT/config/hooks.json" --uninstall --target antigravity
         echo "      완료!"
     else
-        echo "      [경고] Gemini settings.json 없음, 건너뜀"
+        echo "      [경고] Antigravity hooks.json 없음, 건너뜀"
     fi
 
     echo ""
-    echo "[12/12] Gemini MCP/Orchestrator 제거 중..."
-    if command -v gemini >/dev/null 2>&1; then
-        if [ -f "$SCRIPT_DIR/install-mcp-gemini.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-gemini.js" --uninstall context7 playwright chrome-devtools sequential-thinking
-        fi
-        gemini mcp remove --scope user orchestrator >/dev/null 2>&1 || true
+    echo "[12/14] Antigravity MCP/Orchestrator 제거 중..."
+    if [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
+        node "$SCRIPT_DIR/install-mcp-antigravity.js" --uninstall context7 playwright chrome-devtools sequential-thinking orchestrator
         echo "      완료!"
     else
-        echo "      [경고] gemini CLI 없음, 건너뜀"
+        echo "      [경고] install-mcp-antigravity.js 없음, 건너뜀"
+    fi
+
+    echo ""
+    echo "[13/14] OpenClaw skills-only 자산 제거 중..."
+    if ! node "$SCRIPT_DIR/scripts/sync-portable-skills.js" openclaw --home "$OPENCLAW_DIR" --unlink; then
+        echo "      [오류] OpenClaw Skill 동기화 해제 실패"
+        exit 1
+    fi
+
+    echo ""
+    echo "[14/14] Hermes Agent skills-only 자산 제거 중..."
+    if ! node "$SCRIPT_DIR/scripts/sync-portable-skills.js" hermes --home "$HERMES_DIR" --unlink; then
+        echo "      [오류] Hermes Skill 동기화 해제 실패"
+        exit 1
     fi
 
     echo ""
@@ -354,7 +392,10 @@ has_bundle() { echo ",$BUNDLES," | grep -qi ",$1,"; }
 
 HAS_CLAUDE=0; has_llm "claude" && HAS_CLAUDE=1
 HAS_CODEX=0;  has_llm "codex"  && HAS_CODEX=1
-HAS_GEMINI=0; has_llm "gemini" && HAS_GEMINI=1
+HAS_ANTIGRAVITY=0; has_llm "antigravity" && HAS_ANTIGRAVITY=1
+HAS_GROK=0; has_llm "grok" && HAS_GROK=1
+HAS_OPENCLAW=0; has_llm "openclaw" && HAS_OPENCLAW=1
+HAS_HERMES=0; has_llm "hermes" && HAS_HERMES=1
 
 HAS_ZEPHERMINE=0;  has_bundle "zephermine"  && HAS_ZEPHERMINE=1
 HAS_AGENT_TEAM=0;  has_bundle "agent-team"  && HAS_AGENT_TEAM=1
@@ -373,7 +414,7 @@ echo ""
 
 # $CLAUDE_DIR가 없으면 만들어서 설치한다.
 # 예전에는 여기서 exit 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고 한 번도
-# 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Gemini 자산까지 통째로
+# 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Antigravity 자산까지 통째로
 # 설치되지 않았다. 자동 설치(비대화형)는 LLM을 전부 선택하므로 새 컴퓨터에서
 # 아무것도 안 깔리는 원인이 됐다.
 #
@@ -658,114 +699,101 @@ fi
 fi # HAS_CODEX
 
 # ============================================
-#   Phase 3: Gemini
+#   Phase 3: Google Antigravity
 # ============================================
-if [ "$HAS_GEMINI" = "1" ]; then
+if [ "$HAS_ANTIGRAVITY" = "1" ]; then
 echo ""
-echo "  --- Gemini CLI ---"
+echo "  --- Google Antigravity CLI ---"
 
-GEMINI_DIR="$HOME/.gemini"
+if ! command -v agy >/dev/null 2>&1; then
+    echo "      [경고] agy CLI 없음; 나중에 CLI를 설치해도 쓸 수 있도록 자산은 설치합니다."
+fi
 
-# Gemini-Mnemo (필수 설치 + 실패 시 재시도) — AGENTS.md 규칙 + save-turn 훅 + context.fileName
 echo ""
-echo "  Gemini-Mnemo 설치 중... [필수]"
-if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/install.js" ]; then
-    if node "$SCRIPT_DIR/skills/gemini-mnemo/install.js"; then
-        GEMINI_MNEMO_RESULT="설치 완료"
+echo "  Antigravity-Mnemo 설치 중... [필수]"
+if [ -f "$SCRIPT_DIR/skills/antigravity-mnemo/install.js" ]; then
+    if node "$SCRIPT_DIR/skills/antigravity-mnemo/install.js"; then
+        ANTIGRAVITY_MNEMO_RESULT="설치 완료"
     else
         echo "      [재시도] 첫 번째 시도 실패, 재설치..."
-        if node "$SCRIPT_DIR/skills/gemini-mnemo/install.js"; then
-            GEMINI_MNEMO_RESULT="재시도 후 설치 완료"
+        if node "$SCRIPT_DIR/skills/antigravity-mnemo/install.js"; then
+            ANTIGRAVITY_MNEMO_RESULT="재시도 후 설치 완료"
         else
-            GEMINI_MNEMO_RESULT="설치 실패 (재시도 포함)"
+            ANTIGRAVITY_MNEMO_RESULT="설치 실패 (재시도 포함)"
         fi
     fi
 else
-    GEMINI_MNEMO_RESULT="스킵(install.js 없음)"
+    ANTIGRAVITY_MNEMO_RESULT="스킵(install.js 없음)"
 fi
-echo "      $GEMINI_MNEMO_RESULT"
+echo "      $ANTIGRAVITY_MNEMO_RESULT"
 
-# Gemini Skills/Agents/Hooks 동기화 (zephermine 필수이므로 항상 실행)
-if true; then
-    echo ""
-    echo "  Gemini Skills/Agents/Hooks 동기화 중..."
-    if [ -f "$SCRIPT_DIR/scripts/sync-gemini-assets.js" ]; then
-        if node "$SCRIPT_DIR/scripts/sync-gemini-assets.js" $SOURCE_ONLY_SKILL_FLAG $SOURCE_ONLY_AGENT_FLAG; then
-            GEMINI_SYNC_RESULT="동기화 완료"
-        else
-            GEMINI_SYNC_RESULT="동기화 실패"
-            echo "      [오류] 필수 정책 동기화 실패"
-            exit 1
-        fi
+echo ""
+echo "  Antigravity Skills/Agents/Hooks 동기화 중..."
+if [ -f "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" ]; then
+    if node "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" $SOURCE_ONLY_SKILL_FLAG $SOURCE_ONLY_AGENT_FLAG; then
+        ANTIGRAVITY_SYNC_RESULT="동기화 완료"
     else
-        GEMINI_SYNC_RESULT="실패(sync 스크립트 없음)"
-        echo "      [오류] sync-gemini-assets.js 없음"
+        ANTIGRAVITY_SYNC_RESULT="동기화 실패"
+        echo "      [오류] 필수 정책 동기화 실패"
         exit 1
     fi
-    echo "      $GEMINI_SYNC_RESULT"
-fi
-
-# Gemini settings.json 훅 설정 (mnemo 필수이므로 항상 설정)
-NEED_GEMINI_HOOKS=1
-if [ "$NEED_GEMINI_HOOKS" = "1" ]; then
-    echo ""
-    echo "  Gemini settings.json 훅 설정 중..."
-    # save-turn 훅을 gemini hooks 디렉토리에 복사
-    mkdir -p "$GEMINI_DIR/hooks"
-    if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/hooks/save-turn.sh" ]; then
-        cp "$SCRIPT_DIR/skills/gemini-mnemo/hooks/save-turn.sh" "$GEMINI_DIR/hooks/"
-        chmod +x "$GEMINI_DIR/hooks/save-turn.sh"
-    fi
-    if [ -f "$SCRIPT_DIR/skills/gemini-mnemo/hooks/save-turn.ps1" ]; then
-        cp "$SCRIPT_DIR/skills/gemini-mnemo/hooks/save-turn.ps1" "$GEMINI_DIR/hooks/"
-    fi
-    node "$SCRIPT_DIR/install-hooks-config.js" "$GEMINI_DIR/hooks" "$GEMINI_DIR/settings.json" --bash --components "$BUNDLES" --llms "$LLMS" --target gemini
-    GEMINI_HOOKS_RESULT="설정 완료"
 else
-    GEMINI_HOOKS_RESULT="건너뜀: 훅 번들 미선택"
+    ANTIGRAVITY_SYNC_RESULT="실패(sync 스크립트 없음)"
+    echo "      [오류] sync-antigravity-assets.js 없음"
+    exit 1
+fi
+echo "      $ANTIGRAVITY_SYNC_RESULT"
+
+echo ""
+echo "  Antigravity hooks.json 설정 중..."
+if node "$SCRIPT_DIR/install-hooks-config.js" "$ANTIGRAVITY_ROOT/config/hooks" "$ANTIGRAVITY_ROOT/config/hooks.json" --bash --components "$BUNDLES" --llms "$LLMS" --target antigravity; then
+    ANTIGRAVITY_HOOKS_RESULT="설정 완료"
+else
+    ANTIGRAVITY_HOOKS_RESULT="설정 실패"
+    exit 1
 fi
 
-# Gemini MCP (비활성화 — gemini CLI의 MCP 지원이 불안정하여 설치 루틴 제외)
 echo ""
-echo "  Gemini MCP 설치... [건너뜀: gemini CLI MCP 미지원]"
-GEMINI_MCP_RESULT="건너뜀(비활성화)"
-
-# Gemini Orchestrator MCP (필수 설치)
-echo ""
-echo "  Gemini Orchestrator MCP 등록 중... [필수]"
-if true; then
-    GEMINI_ORCH_MODULE_DIR="$GEMINI_DIR/.olympus/runtime-modules/orchestrator"
-    GEMINI_ORCH_DIST="$GEMINI_ORCH_MODULE_DIR/mcp-server/dist/index.js"
-    GEMINI_ORCH_SDK="$GEMINI_ORCH_MODULE_DIR/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
-    GEMINI_ORCH_SQLITE="$GEMINI_ORCH_MODULE_DIR/mcp-server/node_modules/better-sqlite3/package.json"
-    if [ ! -f "$GEMINI_ORCH_DIST" ] || [ ! -f "$GEMINI_ORCH_SDK" ] || [ ! -f "$GEMINI_ORCH_SQLITE" ]; then
-        echo "      MCP 서버 빌드 중..."
-        (cd "$GEMINI_ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
-    fi
-    if command -v gemini >/dev/null 2>&1; then
-        if [ -f "$GEMINI_ORCH_DIST" ] && [ -f "$GEMINI_ORCH_SDK" ] && [ -f "$GEMINI_ORCH_SQLITE" ]; then
-            gemini mcp remove --scope user orchestrator >/dev/null 2>&1 || true
-            if gemini mcp add --scope user orchestrator node "$GEMINI_ORCH_DIST" >/dev/null 2>&1; then
-                GEMINI_ORCH_RESULT="등록 완료"
-            else
-                GEMINI_ORCH_RESULT="등록 실패"
-            fi
-        else
-            GEMINI_ORCH_RESULT="스킵(빌드 실패)"
-        fi
+echo "  Antigravity MCP 설치 중..."
+if [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
+    if node "$SCRIPT_DIR/install-mcp-antigravity.js" context7 playwright chrome-devtools; then
+        ANTIGRAVITY_MCP_RESULT="설치 완료"
     else
-        GEMINI_ORCH_RESULT="스킵(gemini CLI 없음)"
+        ANTIGRAVITY_MCP_RESULT="설치 실패"
     fi
-    echo "      $GEMINI_ORCH_RESULT"
+else
+    ANTIGRAVITY_MCP_RESULT="스킵(installer 없음)"
 fi
 
-fi # HAS_GEMINI
+echo ""
+echo "  Antigravity Orchestrator MCP 등록 중... [필수]"
+ANTIGRAVITY_ORCH_MODULE_DIR="$ANTIGRAVITY_ROOT/antigravity-cli/.olympus/runtime-modules/orchestrator"
+ANTIGRAVITY_ORCH_DIST="$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server/dist/index.js"
+ANTIGRAVITY_ORCH_SDK="$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
+ANTIGRAVITY_ORCH_SQLITE="$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server/node_modules/better-sqlite3/package.json"
+if [ ! -f "$ANTIGRAVITY_ORCH_DIST" ] || [ ! -f "$ANTIGRAVITY_ORCH_SDK" ] || [ ! -f "$ANTIGRAVITY_ORCH_SQLITE" ]; then
+    echo "      MCP 서버 빌드 중..."
+    (cd "$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
+fi
+if [ -f "$ANTIGRAVITY_ORCH_DIST" ] && [ -f "$ANTIGRAVITY_ORCH_SDK" ] && [ -f "$ANTIGRAVITY_ORCH_SQLITE" ]; then
+    if node "$SCRIPT_DIR/install-mcp-antigravity.js" --orchestrator "$ANTIGRAVITY_ORCH_DIST"; then
+        ANTIGRAVITY_ORCH_RESULT="등록 완료"
+    else
+        ANTIGRAVITY_ORCH_RESULT="등록 실패"
+    fi
+else
+    ANTIGRAVITY_ORCH_RESULT="스킵(빌드 실패)"
+fi
+echo "      $ANTIGRAVITY_ORCH_RESULT"
+
+fi # HAS_ANTIGRAVITY
 
 # ============================================
 #   Grok Build
 # ============================================
 # Grok은 [compat.claude]로 ~/.claude/ 자산을 읽는다. Claude를 선택하지 않은
 # 설치에서는 여기서 최소 공유 홈을 준비하고, 대화 훅만 grok-mnemo를 사용한다.
+if [ "$HAS_GROK" = "1" ] || [ -d "$HOME/.grok" ]; then
 echo ""
 echo "  --- Grok Build ---"
 echo ""
@@ -813,6 +841,37 @@ else
     GROK_MNEMO_RESULT="스킵(install.js 없음)"
 fi
 echo "      $GROK_MNEMO_RESULT"
+fi # HAS_GROK
+
+# ============================================
+#   OpenClaw skills-only host
+# ============================================
+if [ "$HAS_OPENCLAW" = "1" ]; then
+    echo ""
+    echo "  --- OpenClaw (skills only) ---"
+    if node "$SCRIPT_DIR/scripts/sync-portable-skills.js" openclaw --home "$OPENCLAW_DIR" $SOURCE_ONLY_SKILL_FLAG; then
+        OPENCLAW_SYNC_RESULT="Skill 동기화 완료"
+    else
+        OPENCLAW_SYNC_RESULT="Skill 동기화 실패"
+        echo "      [오류] OpenClaw Skill 동기화 실패"
+        exit 1
+    fi
+fi
+
+# ============================================
+#   Hermes Agent skills-only host
+# ============================================
+if [ "$HAS_HERMES" = "1" ]; then
+    echo ""
+    echo "  --- Hermes Agent (skills only) ---"
+    if node "$SCRIPT_DIR/scripts/sync-portable-skills.js" hermes --home "$HERMES_DIR" $SOURCE_ONLY_SKILL_FLAG; then
+        HERMES_SYNC_RESULT="Skill 동기화 완료"
+    else
+        HERMES_SYNC_RESULT="Skill 동기화 실패"
+        echo "      [오류] Hermes Skill 동기화 실패"
+        exit 1
+    fi
+fi
 
 # CLAUDECODE 환경변수 복원
 if [ -n "$SAVE_CLAUDECODE" ]; then
@@ -844,18 +903,32 @@ if [ "$HAS_CODEX" = "1" ]; then
     echo "  - multi_agent: $CODEX_MULTI_AGENT_RESULT"
     echo "  - Orchestrator: $CODEX_ORCH_RESULT"
 fi
-if [ "$HAS_GEMINI" = "1" ]; then
-    echo "  [Gemini]"
-    echo "  - Mnemo: $GEMINI_MNEMO_RESULT"
-    echo "  - Skills/Agents/Hooks: $GEMINI_SYNC_RESULT"
-    echo "  - Hooks: $GEMINI_HOOKS_RESULT"
-    echo "  - MCP: $GEMINI_MCP_RESULT"
-    echo "  - Orchestrator: $GEMINI_ORCH_RESULT"
+if [ "$HAS_ANTIGRAVITY" = "1" ]; then
+    echo "  [Antigravity]"
+    echo "  - Mnemo: $ANTIGRAVITY_MNEMO_RESULT"
+    echo "  - Skills/Agents/Hooks: $ANTIGRAVITY_SYNC_RESULT"
+    echo "  - Hooks: $ANTIGRAVITY_HOOKS_RESULT"
+    echo "  - MCP: $ANTIGRAVITY_MCP_RESULT"
+    echo "  - Orchestrator: $ANTIGRAVITY_ORCH_RESULT"
 fi
-if [ -d "$HOME/.grok" ]; then
+if [ "$HAS_GROK" = "1" ] || [ -d "$HOME/.grok" ]; then
     echo "  [Grok]"
     echo "  - Mnemo: $GROK_MNEMO_RESULT"
     echo "  - Skills/Agents/MCP: compat.claude 직접 읽기 (sync 불필요)"
+fi
+if [ "$HAS_OPENCLAW" = "1" ]; then
+    echo "  [OpenClaw - skills only]"
+    echo "  - Skills: $OPENCLAW_DIR/skills/"
+    echo "  - Catalog: $OPENCLAW_DIR/SKILLS-CATALOG.md"
+    echo "  - Plugins/Hooks/Mnemo/MCP: 설치 안 함"
+    echo "  - 결과: $OPENCLAW_SYNC_RESULT"
+fi
+if [ "$HAS_HERMES" = "1" ]; then
+    echo "  [Hermes Agent - skills only]"
+    echo "  - Skills: $HERMES_DIR/skills/"
+    echo "  - Catalog: $HERMES_DIR/SKILLS-CATALOG.md"
+    echo "  - Plugins/Hooks/Mnemo/MCP: 설치 안 함"
+    echo "  - 결과: $HERMES_SYNC_RESULT"
 fi
 if [ "$CREATED_CLAUDE_DIR" = "1" ]; then
     echo ""

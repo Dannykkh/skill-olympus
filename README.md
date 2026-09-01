@@ -1,81 +1,63 @@
-**Language:** English | [한국어](README-ko.md)
+**Language:** English | [한국어](README-ko.md) | [日本語](README-ja.md) | [简体中文](README-zh-CN.md)
 
 # Skill Olympus
 
-### Twelve Greek gods. One command. A working SaaS.
+### A persistent product team for your coding agent.
 
-> *Speak the name of cloud-gathering Zeus, and the entire pantheon descends —*
-> *Zephermine drafts the spec, Poseidon raises the fleet, Argos counts every plank,*
-> *Minos judges every test, and Clio carves the whole story into bronze.*
+Plan, build, inspect, test, document, and remember across sessions — without replacing the native
+workers already built into your CLI.
 
 [![Stars](https://img.shields.io/github/stars/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/stargazers)
 [![Forks](https://img.shields.io/github/forks/Dannykkh/skill-olympus?style=flat)](https://github.com/Dannykkh/skill-olympus/network/members)
+[![Latest release](https://img.shields.io/github/v/release/Dannykkh/skill-olympus?display_name=tag)](https://github.com/Dannykkh/skill-olympus/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-✓-D97757?logo=anthropic&logoColor=white)
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
-![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-✓-4285F4?logo=google&logoColor=white)
+![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
 ![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
+![OpenClaw](https://img.shields.io/badge/OpenClaw-skills--only-5B4B8A)
+![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-skills--only-8A5A44)
 
-A production agent harness for **Claude Code**, **Codex CLI**, **Gemini CLI**, and **Grok Build** — a **harness-engineering** and **loop-engineering** stack,
-named after the Twelve Olympians, forged across 3 months of daily real-product builds.
+Skill Olympus is a production-oriented harness for solo builders using **Claude Code**, **Codex CLI**,
+**Antigravity CLI**, or **Grok Build**. Install the same workflow surface across your CLIs, call one
+specialist for a focused job, or let Zeus drive the full delivery loop.
 
 ```bash
 /zeus "Build a shopping mall. React + Spring Boot + PostgreSQL"
 ```
 
-One line. Twelve gods. Design → Implement → Inspect → Test → Ship.
-**No questions asked. No blueprints needed. No human in the loop.**
+One request becomes persisted planning artifacts, implementation, inspection, executable tests, and an
+evidence report. Olympus treats running out of turns as incomplete, not success.
 
-> **Built for the loop-engineering era.** Agents don't run on a single prompt — they run on loops:
-> act → observe → verify, repeated until an **objectively verifiable completion criterion** is met.
-> Olympus was built that way from the start — Chronos (verification gate that runs real tests),
-> Minos (fix-until-pass), Argos (AC cross-check), Clio (GO/NO-GO). Since v4.7.0 these loops run
-> on top of CLI-native features (`/goal` stop gate, review engines, built-in subagents) —
-> the harness is the foundation, the loop is the operating model.
-> And since v4.8.0 the loops know how to **stay** running: a loop survives on structure,
-> not willpower — heartbeat in the machine, state in the audit log, blocked issues parked
-> with decision-ready briefs, and false completion claims rejected at the hook level.
+[Quick start](#quick-start) · [Choose a workflow](#choose-a-workflow) · [CLI support](#cross-cli-support) · [Browse all skills](#whats-inside)
+
+> Olympus is not a prompt dump. Eighteen focused entry points stay discoverable by default; lower-level
+> modules remain available through a source catalog, while each integrated CLI keeps its native agents,
+> review engine, and task primitives.
 
 ---
 
-### What you actually get
+## Why Olympus
 
-| | |
+| What you need | What Olympus adds |
 |---|---|
-| 🏛️ **The Pantheon** | 12 Greek gods (skills), each forged for one craft. Call one, or call Zeus to summon all twelve at once |
-| ⚡ **One-command pipeline** | `/zeus "..."` ships an entire SaaS with zero human interaction (design → build → inspect → test) |
-| 🧠 **Cross-CLI memory** | Persistent 3-layer memory (`mnemo`) that survives across sessions and across Claude/Codex/Gemini/Grok |
-| 🔁 **Tireless loop** | `/chronos` autonomously runs FIND → FIX → VERIFY until the bug dies or the dawn breaks |
-| 👁️ **Hundred-eyed watchman** | `/argos` cross-references spec ↔ code ↔ tests. Nothing slips past 100 eyes |
-| ⚖️ **Underworld judge** | `/minos` weighs every Playwright test on golden scales. Fix-until-pass loop, no escape |
-| 📜 **The chronicler** | `/clio` — closer + muse. GO/NO-GO judgment first, then carves PRD, flow diagrams, docs, and doc site onto bronze |
-| 🏠 **Keeper of the hearth** | The `hestia` workflow scans dead code, unused exports, and orphan files; run it with `/hestia` |
-| 📋 **Launch checklist (optional)** | The source-only `shipping-and-launch` workflow covers pre-launch gates, staged rollout, and rollback planning |
-| 📐 **Decision records (optional)** | The source-only `documentation-and-adrs` workflow records alternatives, trade-offs, and superseded decisions |
+| **A product from one sentence** | `/zeus` connects planning, implementation, inspection, runtime setup, tests, and an evidence-backed final report |
+| **A loop that does not bluff** | `/chronos` runs FIND → FIX → VERIFY, records state, and reports exhaustion or blockers honestly |
+| **Proof that code matches intent** | `/argos` compares the specification, code, APIs, scenarios, diagrams, and security boundaries |
+| **Browser tests that actually run** | `/minos` writes Playwright scenarios, executes them, and repairs failures within a bounded loop |
+| **Memory across sessions** | `mnemo` keeps an index, semantic memory, searchable conversations, and resumable handoffs |
+| **Less prompt noise** | A small active registry routes into 76 source-only modules only when the work needs them |
 
-**100 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per installed surface, 76 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 CLIs · 1 mythology**
-
----
-
-## Harness and Loop Engineering
-
-Zeus is the harness layer: one non-interactive request is kept alive, decomposed, implemented, inspected, deployed, tested, and reported without handing "next steps" back to the user. In this repo that means `skills/zeus/SKILL.md` bootstraps Chronos persistence, drives Zephermine planning, routes implementation through Poseidon (`agent-team-codex` on Codex), then requires Argos, Docker, Minos, and a final evidence report before SUCCESS is allowed.
-
-<p align="center">
-  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Zeus harness engineering pipeline from Chronos guard through Zephermine, Poseidon, Argos, Docker, Minos, and evidence report" width="1100">
-</p>
-
-Chronos is the loop layer under that harness. It prefers native `/goal`, falls back to the Codex notify chain (`save-turn -> continue-loop -> codex exec --skip-git-repo-check resume --last -`), and only stops on `Chronos Complete` or an exact matching `<promise>`. Exhaustion is reported as incomplete, blockers are parked with Owner Decision Briefs, and each cycle returns to READ -> FIND -> FIX -> VERIFY -> LOG.
-
-<p align="center">
-  <img src="docs/assets/chronos-loop-engineering-codex-imagegen.png" alt="Chronos loop engineering with native goal, Codex notify fallback, resume chain, verification cycle, completion contract, park, and exhausted outcomes" width="1100">
-</p>
+**100 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 76 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + 2 skills-only hosts · 1 mythology**
 
 ---
 
 ## Quick Start
 
-### First install
+Requires Git and Node.js LTS. The target AI CLI can be installed before or after Olympus; rerun the
+installer later to finish CLI-dependent registration.
+
+### Install the four integrated runtimes
 
 ```bash
 # Clone
@@ -89,10 +71,48 @@ cd skill-olympus
 chmod +x install.sh && ./install.sh
 ```
 
-Running without arguments is the default full installation for Claude, Codex, Gemini, and Grok.
+Running without arguments is the default full installation for Claude, Codex, Antigravity, and Grok.
 `--all` is an optional explicit spelling of the same selection. The installer prepares each selected
 CLI's files even when that CLI executable is not on `PATH`; only CLI-dependent commands such as MCP
 registration are skipped. Install the missing CLI and rerun the same installer to finish those commands.
+
+### Try a workflow
+
+```text
+/zeus "Build a small inventory SaaS with React, Spring Boot, and PostgreSQL"
+/chronos "Fix the checkout flow until its tests pass"
+/aphrodite "Redesign this dashboard around the operator's daily tasks"
+/argos docs/plan/checkout
+/mnemo "What did we decide about authentication?"
+```
+
+Skills can also activate from a matching natural-language request; slash names make the intended
+workflow explicit.
+
+### OpenClaw and Hermes Agent: skills-only install
+
+These entry points install the 18 portable user-facing skills plus the 76 source-only modules. They
+do not install plugins, hooks, Mnemo, MCP, custom agents, or the existing four-CLI runtime adapters.
+
+```powershell
+# Windows: one host at a time
+.\install-openclaw.bat
+.\install-hermes.bat
+
+# Or select both through the TermSnap-oriented installer
+.\install.bat --llm openclaw,hermes
+```
+
+```bash
+# macOS/Linux
+bash ./install-openclaw.sh
+bash ./install-hermes.sh
+```
+
+Use `--uninstall` with a host-specific installer to remove only that host's Olympus-managed skills.
+
+<details>
+<summary><strong>Updating, uninstalling, and source-only modules</strong></summary>
 
 ### Updating an existing installation
 
@@ -127,7 +147,7 @@ discovery directory**.
 .\install.bat --include-source-only-skills
 ```
 
-That's it. The 99 public sources split into a 17-skill default allowlist union (11 user-facing harnesses + 6 runtime adapters) and 82 source-only internal or optional modules. Runtime compatibility then removes adapters meant for other CLIs: Codex and Gemini each expose 95 compatible entries (13 active + 82 source-only), while Claude exposes 96 (14 + 82). Grok's standalone policy is also 95 (13 + 82), but the installed Grok surface reads the shared Claude directory and therefore sees the same 14 active entries as Claude. The internal-only `deploymonitor` source remains local and is not part of the public distribution. Active harnesses resolve required source-only modules through the catalog and read them directly; those modules do not need independent registration. **No Olympus custom agent is registered by default**; all 42 agent references remain source-only, and each CLI keeps its native subagents. New skill and agent sources are default-denied until deliberately allowlisted.
+That's it. The 100 public sources split into a 24-skill default allowlist union (18 user-facing harnesses + 6 runtime adapters) and 76 source-only internal or optional modules. Runtime compatibility then removes adapters meant for other CLIs: Codex and Antigravity each expose 96 compatible entries (20 active + 76 source-only), while Claude exposes 97 (21 + 76). Grok's standalone policy is also 96 (20 + 76), but the installed Grok surface reads the shared Claude directory and therefore sees the same 21 active entries as Claude. OpenClaw and Hermes Agent deliberately exclude all six runtime adapters and expose 94 compatible entries (18 active + 76 source-only). The internal-only `deploymonitor` source remains local and is not part of the public distribution. Active harnesses resolve required source-only modules through the catalog and read them directly; those modules do not need independent registration. **No Olympus custom agent is registered by default**; all 42 agent references remain source-only, and each integrated CLI keeps its native subagents. New skill and agent sources are default-denied until deliberately allowlisted.
 
 > A missing CLI does not suppress asset preparation. Its skill catalog, source library, hooks, and
 > configuration files are prepared; only commands that require the executable are reported as skipped.
@@ -138,6 +158,34 @@ That's it. The 99 public sources split into a 17-skill default allowlist union (
 > full opt-in, collision recovery, and uninstall/reinstall procedure.
 > Recovery is manual: copy the preserved skill back only after giving both its directory and frontmatter
 > `name` a unique name. Otherwise the next sync will preserve it again. `--uninstall` never restores backups.
+
+</details>
+
+---
+
+## How it works
+
+Zeus is the harness layer: one request is kept alive, decomposed, implemented, inspected, prepared for
+runtime use, tested, and reported without handing an unverified next step back to the user. It bootstraps
+Chronos persistence, drives Zephermine planning, routes implementation through the current CLI's native
+workers, and requires Argos, Docker, Minos, and a final evidence report before SUCCESS is allowed.
+
+<p align="center">
+  <img src="docs/assets/zeus-harness-engineering-codex-imagegen.png" alt="Zeus harness engineering pipeline from Chronos guard through Zephermine, Poseidon, Argos, Docker, Minos, and evidence report" width="1100">
+</p>
+
+Chronos is the loop layer under that harness. It prefers native `/goal`, uses runtime-specific continuation
+when needed, and returns to READ → FIND → FIX → VERIFY → LOG. Exhaustion is incomplete, and blocked work
+is parked with an Owner Decision Brief instead of being reported as success.
+
+<details>
+<summary><strong>See the Chronos continuation architecture</strong></summary>
+
+<p align="center">
+  <img src="docs/assets/chronos-loop-engineering-codex-imagegen.png" alt="Chronos loop engineering with native goal, Codex notify fallback, resume chain, verification cycle, completion contract, park, and exhausted outcomes" width="1100">
+</p>
+
+</details>
 
 ---
 
@@ -177,6 +225,9 @@ Below stand the immortals. Call upon one — or call upon all.
 | `mnemo` | **Mnemo** (므네모) | *Mnemosyne, Titaness of Memory, Mother of all the Muses* | The Keeper — She forgets nothing; her daughters are born of her remembering |
 
 ---
+
+<details>
+<summary><strong>Read the Olympus lore</strong></summary>
 
 ### Songs from the Mountain
 
@@ -257,232 +308,42 @@ Three layers she keeps — the index of names, the meaning of things, the tale i
 and her remembering crosses every session, every CLI, every dawn.
 *"Forget nothing, child. The word you spoke long ago is the gift you needed now."*
 
----
-
-## What's New
-
-### v5.3.0 — Codex Rollout-Format Reconcile (August 2026)
-
-`reconcile_codex_conversations.py` is rewritten around the current Codex rollout format's turn lifecycle (`task_started`/`task_complete` event_msg entries). Conversation backfill now excludes developer-injected instructions, commentary-phase output, tool payloads, and subagent/fork-owned turns, with canonicalization and chronological-order verification on the written markdown — backed by a new 12-case Python test suite plus an install-check test. The save-turn hooks gain `.mnemo-root` marker-based project-root detection, and `install.js --check` now verifies source-to-installed hook parity. A first-reconcile crash on projects without a `conversations/` directory is fixed, and the codex-home test fixture is modernized to the current rollout format while keeping the `apply_patch` entry the hook bridge parses.
-
-### v5.2.0 — Editorial Diagram Layer (August 2026)
-
-A new source-only `diagram-design` module partially vendors [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) v2.6 (MIT, pinned at upstream `648c2a5`) as a presentation layer: pipeline `.mmd` files stay canonical for flow-verifier and zephermine, while human-facing deliverables render as brand-token, self-contained HTML + inline SVG. `mermaid_extract.py` converts existing flowchart/sequence/state/ER sources to a JSON IR with zero dependencies, and the upstream interactive brand gate is replaced by automatic `DESIGN.md` token mapping so zero-interaction pipelines keep working. Clio gains `--render-diagrams` (Phase 3-3c) to render only the diagrams actually cited in PRD/TECHNICAL docs, and `mermaid-diagrams` absorbs a compressed Editorial Style Rules section (1–2 accent nodes, 9-node density budget, shape-carries-type, near-black tokens) so plain Mermaid output improves too.
-
-### v5.1.0 — Aphrodite Evidence Gates · Browser Motion · Dual Video Engines (August 2026)
-
-Aphrodite now treats Codex Product Design as an optional execution adapter whose exact marketplace selector must be verified before it can be recommended once; an empty marketplace or unverified selector remains `UNKNOWN`, so local design work continues without fabricated plugin output or installation pressure. Local and ready-adapter results use the same brief, Experience Contract, `DESIGN.md`, content, data, states, viewport, and theme. The contract now records Product Facts, Content Integrity, Asset Provenance, and a browser-only motion ladder that prefers CSS, View Transitions, and scroll-driven animations before justified GSAP Timeline, ScrollTrigger, Flip, SplitText, or SVG plugins. Separately, `video-maker` now routes each video project to exactly one engine: Remotion for React/TSX or HyperFrames for HTML/CSS/GSAP, with engine-specific runtime and license gates plus shared render QA. HyperFrames is not an Aphrodite runtime, and no video engine is globally installed or synchronized by the skill.
-
-### v5.0.0 — Entrypoint-Only Registry · Native Agents · Provider-Safe Runtime Routing (August 2026)
-
-Olympus now keeps only user-facing harnesses and the current CLI's runtime adapters in automatic discovery. The 99 public skill sources split into an allowlist union of 17 (11 common entrypoints plus 6 runtime adapters) and 82 source-only modules: Claude and the Grok-shared Claude surface expose 14 active skills, while Codex and Gemini expose 13; all three homes retain the same 82-module source library through exact catalog paths. The internal-only `deploymonitor` source remains local and is excluded from public release counts. Source-only means current code is available for direct, on-demand reading without consuming slash-menu or startup-description budget; `--include-source-only-skills` remains the explicit full-registry opt-in. Olympus custom agents now default to zero: orchestration uses each CLI's semantic read-only and write-capable native roles, with Main owning shared state and sequential fallback when delegation is unavailable. Runtime-specific adapters are selected by provider so Claude/Grok, Codex, and Gemini do not load one another's incompatible mnemo or agent-team entrypoints. The installer now treats no arguments as all four CLIs, prepares assets even when a CLI executable is absent, skips only executable-dependent registration, preserves unrelated third-party names, and moves modified same-name collisions to `_olympus-preserved` for manual recovery.
-
-### v4.21.0 — Aphrodite Experience-Led Redesign · Stitch as Execution Adapter · Zeus Scope Gate (August 2026)
-
-Aphrodite no longer starts from color tokens. The pipeline now runs source-mode routing → site-benchmark dissection (evidence-backed Adopt/Adapt/Avoid verdicts on header, message, section order, CTA, trust, and mobile transformations) → three actually-rendered directions → an **Experience Contract** capturing user tasks, messaging, CTAs, trust, and responsive behavior → implementation → rendered UX/accessibility/performance gates → a learning handoff, with a validation script enforcing the contract shape. Stitch is repositioned as an execution adapter: it compiles Aphrodite's decisions (`DESIGN.md`, design-refs) into Stitch MCP operations — work-contract, state-management, and file-transfer patterns selectively adopted from google-labs-code/stitch-skills — and never invents a visual direction of its own. Zeus gained a **scope gate**: a zero-interaction run has no user to approve scope creep, so any task, feature, or dependency not in the fixed plan must answer three questions (does it serve the one-line goal? what observed evidence demands it now? would something smaller do?) and record a pass/reduce/hold verdict in the Decision Ledger — held items surface as Deferred for post-hoc promotion (principle absorbed from hosioobo/track).
-
-### v4.20.2 — Themis: Official-Guideline Pinning · Runtime Freshness Check (August 2026)
-
-(spans v4.20.1–v4.20.2) The Korean policy path is now anchored to the PIPC's official **Privacy Policy Writing Guideline (Apr 2025)**: the guideline edition is pinned in the skill, and at generation time Themis fetches the official notice board to detect newer revisions — adopting them and telling the user when one exists (environments without web tools fall back to the pinned edition with an explicit "check latest" note). The ko template gained the 2025.4 specifics: a grievance-handling contact separate from the privacy officer, behavioral-advertising collection/refusal clauses, and a children's-data clause (Art. 22-2). Statute citations are verified against law.go.kr by direct fetch; the briefly-added optional law-MCP integration was removed as an unnecessary dependency — the "guidelines keep changing" problem is solved by runtime checks, not by owning scraper infrastructure.
-
-### v4.20.0 — Themis: Privacy-Policy Generator · mnemo Opt-Out (August 2026)
-
-Themis, Titaness of law and order, joins as skill #100. She audits a codebase for every point where personal data is received, stored, sent out, or deleted (5 audit questions + grep hints + a trap checklist covering soft deletes, append-only logs, uninstall scope, masking coverage, silent outbound requests, and `git ls-files`-verified ignore rules), interviews the operator for the 14 things code cannot tell you (privacy officer, retention, children, server region, marketing use…), then generates per-country policy drafts (Korean PIPA Art. 30 / US CCPA-CPRA / EU GDPR Art. 13) from audit facts only — unverified items stay explicit fill-in blanks, legal judgments are flagged for counsel, and every draft carries a not-legal-advice notice. Dogfooded on this very repo: the three resulting drafts ship as `docs/privacy-policy-draft-*`. That audit also exposed our own gap — recording hooks with no off switch — so mnemo gained `MNEMO_DISABLE` (all 15 hook entry points across 4 CLIs exit immediately; existing data untouched) and the session-start version check gained `OLYMPUS_UPDATE_CHECK_DISABLE`, both verified by on/off comparison runs.
-
-### v4.19.0 — Native-First Realignment: 4-CLI Native Multi-Agent · impeccable Detection Hook (August 2026)
-
-The Aphrodite interference experiment (real defects: native-alone 1 ≪ custom 20 ≈ mixed 25) proved the native-first principle — **"engines upstream, extensions local"** — and this release applies it across the skill roster. Design axis: the frontend-design fork now yields auto-invocation to the official plugin (with the v2.9.1 core grafted in), and prohibition rules moved from prompts to a linter — impeccable's 59 deterministic rules wired as a PostToolUse hook. Shipping that surfaced a real defect: PostToolUse exit-0 plain stdout never reaches the model, so the hook was rewritten to emit `hookSpecificOutput.additionalContext` JSON (without this fix it would have run silently forever). Multi-agent axis: with all four CLIs now shipping native multi-agent, Poseidon and Daedalus delegate execution to each CLI's native primitives (Claude Agent Teams / Codex spawn_agent / Gemini subagents / Grok spawn_subagent), repositioning the orchestrator MCP as a policy layer for hard file locks and external task boards plus a legacy fallback. Zeus gained an ultracode-session-only Workflow verification fan-out branch, Chronos got its Gemini AfterAgent wiring corrected (plus removal of stale deprecated `/loop` help text), and Argos now delegates its generic code-quality layer to the native review engines while keeping spec-vs-implementation audit as its own domain. Humanizer re-absorbed both upstreams (blader v2.9.1 + im-not-ai v2.3). The Gemini paths are designed from official docs but not yet field-tested — the verification checklist is on record.
-
-### v4.15.0 — Grok Build Support: grok-mnemo Adapter (July 2026)
-
-Grok Build (xAI's CLI) joins the roster with near-zero integration cost: `grok inspect --json` confirmed that Grok reads `~/.claude/` directly via its `[compat.claude]` defaults — 99 skills, 41 agents, MCP servers, and the global CLAUDE.md rules all load without any sync script. The only real parity gap was mnemo auto-save: Grok's hook envelope is camelCase (no `transcript_path`), so Claude's Stop hooks silently no-op'd and Grok conversations were never recorded. **grok-mnemo** closes that gap — one script dispatching on two events (UserPromptSubmit strips Grok's `<user_query>` wrapper; Stop saves `lastAssistantMessage` directly, no transcript parsing, filtering out the session-end observe re-fire by `reason == "end_turn"`), writing to `conversations/YYYY-MM-DD-grok.md`. Since Grok also loads `~/.claude/settings.json` hooks, the five Claude mnemo hook pairs gained a `GROK_HOOK_EVENT` guard to prevent double/mislabeled saves (Grok prompts were landing in `-claude.md`). Shipping this surfaced two environment gotchas now on record: Korean-commented `.ps1` files must be UTF-8 **with BOM** (PowerShell 5.1 reads BOM-less files as CP949, and a misdecoded comment can swallow the newline and absorb the next code line — the `<user_query>` strip silently never ran), and the installer test had been failing on `NoDefaultCurrentDirectoryInExePath=1` machines because it invoked `install.bat` by relative name. Verified end to end with a real `grok -p` headless session.
-
-### v4.14.0 — Layout Block Anatomy · Atmosphere Recipe · Prompt Consumption Gate (July 2026)
-
-A full round-trip: build a real page with Aphrodite, notice it's still generic, fix the pipeline, rebuild, repeat — validated end-to-end on this project's own landing page (`dannykkh.github.io/skill-olympus`). **Layout block anatomy:** bag-ui's (MIT) block wireframe catalog translated into a structure grammar — 30 block anatomy contracts (Marketing/App/Ecommerce) with shared rules (three-level ink hierarchy, exactly-one emphasis per block, CTA syntax, sustained-asymmetry ratio reuse across sections) wired in as design-plan Phase 2.5, so structure is locked before style. **Prompt consumption gate:** DESIGN.md's prose contracts and `docs/design-refs/` superprompts were being produced but never mandatorily read at implementation time — Phase 3 now requires reading them first, and direction cards must be saved to file instead of living only in chat. **Atmosphere/texture recipe:** SKILL.md told implementers to add grain/mesh/noise "atmosphere" with no verified CSS values to reach for, so it evaporated in practice — a new `technique-recipes.md` §11 supplies a real grain overlay, a restrained mesh gradient, an emphasis-break rule for repeated blocks, and a "boring test." The rebuild also surfaced two ground-truth bugs only visible by actually shipping: a font-loading false negative (`document.fonts` reports "unloaded" for subsetted Korean webfonts even after the network fetch succeeds — verified by inspecting the actual `woff2` requests) and a mobile CSS-selector bug (`.pipeline-grid > div` deleted the whole timeline, not just the empty gutter) caught by screenshot, not static review.
-
-### v4.13.0 — Data Visualization Skill (July 2026)
-
-Vendored Anthropic's official `data-visualization` skill (from `anthropics/knowledge-work-plugins`, Apache-2.0, body unmodified) — chart-selection guidance by data relationship (trend/comparison/ranking/distribution/correlation/flow), chart anti-patterns (pie charts over 6 slices, 3D, dual axes), Python code patterns (matplotlib/seaborn/plotly), design principles, and an accessibility checklist.
-
-### v4.12.0 — Style Recipes · Reference Capture · Chronos Heartbeat (July 2026)
-
-Aphrodite absorbed the best of MengTo/Skills (MIT) after a full read-through. **12 style recipes:** each aesthetic capsuled as "identity boundary + hex tokens + Korean/Latin font stacks + tuning knobs + avoid list" — the original's value-less prose was fixed by binding to our CSV DBs, and every color pair was verified by WCAG computation (3 sub-4.5:1 pairs fixed before shipping). **9 technique recipes:** copy-paste-ready values for shadows, progressive blur, border gradients, text reveals, and the GSAP+Lenis motion system. **Reference capture (Phase 2 rework):** screenshots/URLs/videos/HTML become section-anatomy superprompts (`docs/design-refs/`) — prompts as versioned assets. **Chronos heartbeat:** skipping `/goal` setup used to leave the loop engineless and stall mid-run; the new 1.5-tier engine re-enters via native `/loop` intervals (`--heartbeat`), and score-based completion (e.g., "90+ points") is now formalized as a 3-part `--completion-promise` (threshold, measurement, printed evidence). The pipeline was validated end-to-end with an editorial-tech sample page (Korean fallback rendering, motion, responsive, contrast), surfacing and fixing gotcha 045 (`document.fonts.check()` false-negatives on unicode-range subset fonts).
-
-### v4.11.0 — Unknowns-First Planning · Lean Zephermine Flow · Implementation Learning Loop (July 2026)
-
-Zephermine now plans around what is unknown instead of stopping for broad preference interviews. **Unknowns-first discovery:** Step 4 auto-selects codebase/web/GitHub/academic/competitor research from the spec and risk profile, writes `research-decision.md`, then Step 5A writes `unknowns.md` with known knowns, known unknowns, unknown knowns, unknown unknowns, and architecture-changing questions. **Lean interview:** Step 6 asks only critical blockers that could change architecture, data model, security boundary, UX flow, rollout, or compliance; otherwise it writes inferred assumptions and continues. **No-stop domain flow:** `domain-dictionary` now auto-seeds clear global terms, auto-merges low-risk ADD/REFINE/MERGE updates, and asks only on blocking dictionary conflicts. **Implementation learning:** workpm and agent-team prompts now keep `implementation-notes.md` deviations; Clio can generate a `CHANGE-QUIZ.md`; frontend-design can use divergent static prototypes to surface "you know it when you see it" preferences before implementation.
-
-### v4.10.0 — DESIGN.md as Canonical Source · Korean Font Real-Load Guardrails · Hook Timeout & Schema Fixes (July 2026)
-
-Driven by running `/aphrodite` end-to-end on a real Korean-language UI. **DESIGN.md canonical source:** Google's `@google/design.md` format (YAML tokens + two-layer prose) is adopted as Aphrodite's design source of truth, with the agent wiring, single-source, and verification Google omits — a new `design-md-guide.md` (schema + lint/export + legacy migration), CSV palettes pinned into DESIGN.md to stop re-invocation drift, and a "read DESIGN.md first" rule injected into the 3-CLI always-on guardrails. **Korean font real-load guardrail:** picking a Latin-only pairing let Korean silently fall back to a system font (Space Grotesk/DM Sans have no Hangul glyphs) — fonts must now be actually loaded (`@import`/`<link>` + `document.fonts.check`), and Korean UIs prefer a Korean-only pairing (Hahmlet/Noto Serif KR + Pretendard/Noto Sans KR) that covers both scripts, structurally avoiding the fallback trap (gotcha 041); the Latin+Pretendard stack remains the fallback path. **Dark/light theme rule:** the three commonly-missed spots (container `div` backgrounds, text-color inversion, `<select>` option `color-scheme`) are now checked by the mnemo guardrail and ui-ux-auditor. **Fixes:** hook 30s-timeout prevention (60s timeout + `powershell -NoProfile` across all four hook-command generators, closing "hook timed out after 30s — output discarded"), and AskUserQuestion schema violations (≤4 options, ≤12-char headers) in the Aphrodite presets and zephermine templates.
-
-### v4.9.0 — Always-on Design Guardrail · Consult-Before-Implement · Handoff Feature Map (June 2026)
-
-Three always-on capabilities, plus a compatibility audit. **Design guardrail injection:** frontend-design's anti-slop guidance only fired when the skill was explicitly invoked (the `auto_apply` field is read by no hook — a no-op), so casual design requests defaulted to "internet-average" output. The condensed guardrail is now injected into the 3-CLI always-on context (CLAUDE.md/AGENTS.md), updated to the 2026 web platform — native scroll-driven `animation-timeline` first (GSAP·Lenis only for pin/snap/WebGL), View Transitions API, container queries, `:has()`, OKLCH — plus a Korean/Latin font-pairing principle (Pretendard + noonnu, matched by weight/contrast DNA). Condensed ~24% and browser-verified on three distinct directions (dopamine SaaS / editorial / brutalist). **Consult-before-implement guard:** "implement X" requests now check existing work first (codemap → README/handoffs → grep), classify new/improve/duplicate, and compare against adjacent pipelines (zeus·zephermine·agent-team) — closing the "re-implementing what already exists" loop. **Handoff feature map:** every handoff records a Feature/Flow/Decision Snapshot + a Menu/Screen Map (screen-level features with done/partial/planned status), with diagrams required only for feature-bearing sessions. **agent-team·chronos** gain a static boundary-coherence cross-check ("build passes ≠ correct" — TS generics hide API↔hook contract mismatches) and chronos grounds its FIND in tool signals before model intuition. **Compatibility audit:** Pydantic v2, Next.js 15 async params, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4, and stale tool/model labels across the utility skills.
-
-### v4.8.7 — Loop Honesty: Completion Contract, Independent Verify, Exhaustion Surfacing (June 2026)
-
-Loop Library 028/034 patterns propagated across the loop stack. A **completion contract** (each requirement mapped to reproducible evidence, scored `proved/weak/missing/contradicted`, and **exhaustion never reported as success**) now governs termination in Chronos, Zeus, minos, autoresearch, argos, agent-team, and workpm. **Independent cross-model verification** is added where a single actor would otherwise grade its own work — autoresearch re-scores the final champion with a different model family, and Zeus's argos gate runs cross-model only on risk triggers (deterministic build/test/static gate first, the other model in the background) so the implementation path stays fast. At the **hook layer**, loop-stop and continue-loop now surface `EXHAUSTED` on max-iterations/stale termination and inject a final-allowed-turn honest-report warning (dry-run verified, ps1 5/5; sh syntax-checked). Hermes gains a grounding guard: TAM/SAM/SOM figures require a cited source or an explicit `[확인 필요]`.
-
-### v4.8.1 — mnemo Root-Resolution Fix (June 2026)
-
-Auto-save hooks used to key off the *latest* cwd, so a `cd` into a subfolder (e.g. `reference/1week`) in a **non-git** project scattered `conversations/`·`memory/` into that subfolder. Root resolution is now a 2-pass candidate evaluation — Pass 1 takes the first candidate with a git root (a git repo normalizes from any subfolder), Pass 2 falls back to the **session-launch cwd** for non-git projects, so a persisted `cd` can't move the anchor. Also guards an environment where HOME itself is a git repo (HOME excluded from candidates; a git root equal to HOME is treated as a dotfiles repo and skipped). Applied across all 8 hooks (save-response/save-conversation/save-tool-use/reconcile-conversations × ps1·sh) with installed copies synced; PS 7/7 · SH 7/7 scenario tests pass.
-
-### v4.8.0 — Loop Programming: Park, Brief, Re-entry (June 2026)
-
-> A loop is sustained by structure, not by the model's will to continue.
-> Five failure modes, five structural cures: heartbeat in the machine, state outside the
-> context window, blockers parked instead of blocking, idle work defined, and the human
-> taken off the critical path with decision-ready briefs.
-
-<p align="center">
-  <img src="docs/assets/chronos-loop-programming.svg" alt="Chronos loop programming cycle" width="860">
-</p>
-
-The loop state lives in the audit log, not the context window; each cycle re-enters through READ, verifies with objective checks, parks valid blockers with decision-ready briefs, and lets hooks reject false completion claims.
-
-- **Chronos PARK rule** — one blocked issue can no longer stall the whole loop. Four valid park reasons (verification 3-fail / permission boundary / missing external access / product decision); declaring "blocked" without naming a reason counts as evasion; the worker must go as far as it can (reproduce, root-cause, in-permission fixes) before parking
-- **Escalation ladder before PARK** — a verification failure is not parked to the owner until the model raises its own capability once (higher reasoning effort, a stronger model, or a focused review pass when neither is available). Same-approach retries alone cannot trigger a park; escalation runs at most once per issue and its outcome is recorded in the Owner Decision Brief evidence
-- **Owner Decision Brief** — parked issues are reported decision-ready, never as raw questions: what / why now / evidence / trade-offs / **recommendation (mandatory — never offload analysis to the owner)** / exact choices. The owner's job becomes a 4-way choice: approve as recommended, reject, grant exactly one access, or pick a documented alternative
-- **Re-entry protocol (READ step)** — every cycle re-reads `docs/chronos/chronos-log.md` before FIND; when the model's memory and the log disagree, **the log wins**. A new session resumes the loop from the audit log alone — loop state lives in files, not in the context window
-- **Deadlock guard** — goal statements now include the park clause: when only parked issues remain, the loop ends with a Brief-carrying `Chronos Complete` report. Outputting an untrue `<promise>` is forbidden — and the hooks stop rewarding it: the "any `<promise>` tag = done" branch is removed from loop-stop/continue-loop (a mismatched promise re-injects instead of terminating), multiline promises now match, and re-injection nudges teach the park rule. loop-stop.ps1 functionally tested (4/4 cases: mismatch-rejected / exact-match / parked-only complete / no-marker re-inject); .sh mirrored + syntax-verified
-- **Zeus Decision Ledger** — `[ZEUS-AUTO:taste]` decisions now record rationale + rejected alternatives + **how to reverse**; zero-interaction stays intact — approval moves post-hoc instead of pre-hoc, with reversible defaults preferred
-- **codex-mnemo installer fix** — notify-wrapper check order corrected: a wrapper that chains save-turn is preserved (refreshed) before the IDE-notification removal heuristic runs. External tools sharing Codex's single notify slot are no longer silently disconnected by reinstall
-
-### v4.7.1 — Design Visual Verification + Clio Gate Hardening (June 2026)
-
-- **ui-ux-auditor visual verification** — after the Grep static scan (first-pass signal), it now starts the dev server, captures screenshots (desktop 1440×900 / mobile 390×844 × light/dark), and **scores by directly observing the rendered screen**. When observation and code inference conflict, observation wins. Falls back to static-only with a `*` grade marker when no server can start. Proven end-to-end with a 4-planted-defect smoke test (dark-mode contrast collapse, purple gradient, symmetric 3-col grid, fixed-width overflow) — 4/4 caught by observation
-- **clio v2.1.1 — GO/NO-GO verdict hardening** — minos results now enter the verdict (PASS/CONDITIONAL/FAIL), vacuous GO blocked (zero tests caps at CONDITIONAL GO), gate bypass via `--force`/`--docs-only` must be flagged on every artifact
-- **Aphrodite scope boundary** — Phase 3 implementation limited to "appearance": tokens, markup, styles, visual interactions are hers; state, API wiring, business logic belong to Poseidon/Daedalus (no logic changes in pipeline mode)
-
-### v4.7.0 — Native Harness Integration (June 2026)
-
-> Groundwork for loop engineering — aligning the loop's parts (stop gate, review engine, team tools) with CLI-native features.
-
-- **code-reviewer v4.1 — engine delegation + policy layer** — generic review is delegated to an available runtime engine (Claude built-in review, Codex `codex review --base`, Grok bundled review); runtimes without one use the full path. The skill adds Scope Drift, domain checks, read-only-by-default action triage, and a safe explicit repository-security audit. Remote/billed ultra review is never invoked or suggested
-- **Chronos legacy `/loop` alias retired** — name collision with native `/loop` (interval re-runner) hijacked the alias on Claude. Removed across all CLIs + goal (stop gate) / loop (re-runner) / chronos (loop discipline) comparison table
-- **Audit follow-ups (5 parallel Explore agents)** — zeus × /goal relationship (hook auto-resume stays default for zero-interaction; bootstrap skipped when a goal is pre-set to avoid double stop gates), agent-team experimental env var demoted to legacy, project-root memory vs native auto-memory boundary in 4 files, orchestrator native-vs-MCP selection criteria, chronos `--flow-verify` receiver definition, zephermine vs native plan-mode distinction
-- **clio v2.1.0 — humanizer Korean copyediting hookup** — translationese/AI-style constraints injected at generation + post-generation S1 pass (USER-MANUAL > PRD > TECHNICAL priority)
-- **Codex native `/review` documented** — TUI `/review`, `codex review --base/--uncommitted`, `codex exec review` in `docs/resources/codex-cli.md`
-
-### v4.6.0 — Humanizer Korean Writing Module (June 2026)
-
-- **Korean translationese module (67 patterns, 10 categories)** — comma-after-connective (4.84x vs human writing, strongest single signal), ~성/~적/~화 nominalization, progressive overuse, literal pronoun translation. Quantitative first-pass scan + genre guardrails (essay/paper/blog/script/formal)
-- **Severity tiers + over-editing guard** — S1 (always remove) / S2 (clusters only) / S3 (overlaps only) across 24 English + 67 Korean patterns; 30% change-rate warning / 50% hard stop against meaning damage
-- **Copyediting procedure** — do-not masking (proper nouns, numbers, quotes), risk-ordered rewriting, live change-rate tracking + rollback (based on im-not-ai v2.0 taxonomy)
-
-### v4.5.0 — Chronos × Native /goal Integration (June 2026)
-
-- **Reframed as a /goal wrapper** — Native `/goal` ("Set a goal Claude checks before stopping") landed in Claude Code and Codex. Chronos now layers its discipline on top of `/goal` (the persistence engine) instead of owning the loop: verification gate, priority cycle, audit log
-- **Goal-statement model (no auto-invocation)** — Chronos cannot call `/goal` programmatically (no slash-command tool), so it generates a goal statement with its rules baked in and the user sets `/goal` once. The earlier "auto-delegation" framing was an impossible fiction and was removed
-- **3-tier persistence fallback** — `/goal` (tier 1) → Stop hook / notify (tier 2) → direct loop (tier 3). Hooks are preserved so Chronos keeps working on Gemini / older builds (parity)
-- **Hard guard against hook collision** — `setup-loop --goal-mode` removes any existing `loop-state.md` across `.claude/.codex/.chronos`, so the Stop hook has nothing to re-inject. Collision is impossible at the code level, not by convention. Verified with isolated `.ps1`/`.sh` tests
-- **Codex vs Claude /goal differences documented** — same entry syntax, different completion judging (Codex runs commands directly; Claude's evaluator only sees chat output). Goal statements now require "print the verification result to chat" + a turn cap for cross-CLI compatibility
-
-### v4.4.2 — Chronos Hardening + Cross-CLI Parity (May 2026)
-
-- **Done-pattern false positive fixed** — Stop hook killed loops mid-cycle when the agent narrated progress ("모든 작업 완료, 다음 진행"). Loose narrative regexes (`모든.*작업.*완료`, `더 이상.*고칠.*없`, etc.) removed; only the explicit `Chronos Complete` marker and `<promise>` tag terminate the loop, matching the documented contract
-- **tail-500 guard removed** — The 500-char window prevented stop signals when the marker sat above long explanations. Detection now scans the full assistant output; the guard's original anti-false-positive purpose disappeared once loose patterns were dropped
-- **Gemini state-path bug fixed** — `loop-stop.ps1/.sh` hard-coded `.claude/loop-state.md` and silently passed through Gemini's `.chronos/loop-state.md`, breaking Chronos on Gemini entirely. Hooks now probe `.claude/`, `.codex/`, `.chronos/` in order
-- **Notification fanout removed** — Desktop/IDE notification chaining stripped from Mnemo installers and save-turn hooks. save-turn, Chronos, and hook-bridge flows preserved
-- **Codex compatibility audit refreshed** — Verified `notify → ide-response-notify-wrapper → save-turn → continue-loop → codex exec resume --last` chain end-to-end
-- **Memory distill** — gotchas/learned entries refined via memory-distill regular runs
-- **Stress-tested** — 5-iteration counter loop confirmed re-injection mechanism end-to-end on Claude (Stop hook block + reason re-inject)
-
-### v4.4.1 — mnemo Audit Patches (May 2026)
-
-- **mnemo-status notify hook (no LLM cost)** — Stop/save-turn hooks now check raw jsonl total and last-handoff age. When `notify_threshold_total` (500) or `notify_threshold_handoff_days` (14) is exceeded, writes `memory/.mnemo-status.md` + stderr one-liner. Pure text, zero LLM calls
-- **Design ↔ docs alignment** — v4.4.0 mentioned a "threshold 50 auto-analyzer" that had no implementation (the auto-analyzer is intentionally absent to avoid silent LLM cost). config.json / SKILL.md now reflect the actual design: distillation runs only via `/memory-distill` or handoff
-- **list_handoffs.py fix** — `YYYY-MM-DD-{slug}.md` filenames (no HHMMSS) were showing "Date Unknown"; now parsed correctly
-- **check_staleness.py --all** — bulk mode for `docs/handoffs/`; previously required one file per invocation
-- **Codex sync EXCLUDE** — `gemini-mnemo` was leaking into `~/.codex/skills/`; now correctly excluded
-
-### v4.4.0 — /memory-distill + Dreaming-Equivalent Self-Improvement (May 2026)
-
-- **`/memory-distill` skill (new)** — User-triggered distillation of raw `observations.jsonl` into refined `.md`. Modes: `--scan`, `--apply`, `--rebuild`. The `--rebuild` mode merges duplicates, resolves contradictions (SUPERSEDED pattern), and archives originals to `.archive/` — same logic Anthropic Dreaming runs in the cloud
-- **gotcha-analyzer model upgrade** — `cleanup-low` (Haiku/mini/flash-lite) → main session model inheritance. Claude Opus 4.7 / GPT-5.5 / Gemini 3.1 Pro analysis quality, equivalent to Dreaming's `model: claude-opus-4-7`
-- **Threshold downgrade 20 → 50** — Auto analyzer becomes safety net; primary distillation moves to handoff and `/memory-distill`
-- **Multi-tier triggers** — Stop hook (collect) → threshold 50 (safety net) → `/memory-distill` (user-driven) → handoff (session boundary)
-
-### v4.3.0 — Mnemo Memory Integrity Pass (May 2026)
-
-- **Handoff path migration** — `.claude/handoffs/` → **`docs/handoffs/`** for cross-CLI sharing (gitignore was hiding handoffs from teammates)
-- **Auto gotcha/learned extraction** — handoff procedure now auto-extracts new jsonl observations into refined `.md` files (no review prompt, secret scrubbing)
-- **Memory item hardening** — 3 mnemo templates gain explicit guards: `source:` single-word only, `tags:` ≥3 keywords, no generic titles, ≤3 lines body
-- **Memory hygiene** — 48 missing `source:` fields back-filled across 4 `memory/*.md` files; MEMORY.md cleanup (118→54 lines)
-
-### v4.2.0 — Markdown → Publication-Quality PDF (May 2026)
-
-- **pdf skill** — Markdown → PDF generator (playwright + Chromium), Korean defaults (A4 + 25mm + Pretendard)
-- **Clio integration** — Phase 3-4 auto-emits PRD/TECHNICAL/USER-MANUAL.md as PDF alongside Markdown
-- **Cover/TOC/watermark** — `--cover --toc --title --author --org --watermark "초안" --confidential`
-
-### v4.1.0 — Domain Dictionary Pipeline (Apr 2026)
-
-- **domain-dictionary** (new skill) — DDD Ubiquitous Language for Korean SI environments. 3-tier storage: master (`docs/domain-dictionary.md`) + delta (`<planning_dir>/`) + global (`~/.claude/memory/domain-dictionaries/`)
-- **Full pipeline integration** — 12 skills now share a single dictionary: zephermine, code-reviewer, argos, poseidon, daedalus, minos, clio, hermes, athena, hestia + 2 codex variants
-- **zephermine 6-Phase grouping** — 26 steps reorganized into Discovery/Spec/Domain/Plan/Design/Validation. Dictionary v1→v2→v3 evolves as Step 8/10/11 byproducts (no extra steps)
-- **explain --zoom-out** — new mode showing callers/siblings/upper map (absorbed from mattpocock/skills)
-- **code-reviewer module-depth** — new category for "shallow vs deep module" refactoring opportunities (absorbed improve-codebase-architecture)
-- **argos Phase 8** — domain dictionary audit (4 checks: identifier compliance / forbidden terms / Korean UI labels / unregistered new identifiers)
-
-### v1.9.0 — Athena CEO Coaching (Mar 2026)
-
-- **ceo (Athena)** — CEO coaching skill: Go/No-Go gate, strategic challenge, scope decisions (Expand/Reduce/Pivot/Kill)
-- **Pipeline expansion** — New phase: `/hermes` → `/athena` → `/zephermine` (Analyze → Challenge → Design)
-- **Hermes synergy** — Athena auto-reads Hermes output for data-driven strategic challenge
-- **README overhaul** — Star-optimized structure, Meet the Team with Greek myth naming
-
-### v1.8.0 — Project Gotchas + Learned Patterns (Mar 2026)
-
-- **project-gotchas** — Auto mistake tracking + success pattern learning (analyzer inherits main session model — Opus/Sonnet quality, Dreaming-equivalent)
-- **2-layer storage** — Global (`memory/gotchas/`) + project-specific (`memory/learned/`)
-- **Cross-CLI observation** — Claude save-tool-use + Codex/Gemini save-turn hooks integrated
-- **CHANGELOG.md** — Version history v1.0.0 ~ v1.8.0
-
-### v1.7.0 — Orchestrator SQLite WAL + Minos Step 5 (Mar 2026)
-
-- **orchestrator** — state.json → SQLite WAL migration for crash recovery
-- **minos** — Playwright MCP real-browser QA testing
-- **codemap** — CodeMap index for codebase navigation
-
-### v1.6.0 — Design + Business + Skill Best Practices (Mar 2026)
-
-- **design-plan (Aphrodite)** — Design orchestrator with 9 palettes, 47 font pairings, 84 styles
-- **estimate** — Development cost estimation with Excel output
-- **biz-strategy (Hermes)** — Business model canvas, TAM/SAM/SOM, GTM strategy
-- **Anthropic best practices** — Applied across all skills
-
-See the full changelog in [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/Dannykkh/skill-olympus/releases).
+</details>
 
 ---
 
-## Core Pipeline
+## Recent changes
 
-One command does everything:
+- **Antigravity migration:** the retired personal Gemini CLI target is replaced by Google Antigravity CLI, including skills, hooks, Mnemo, MCP, and native-first routing.
+- **OpenClaw and Hermes Agent:** dedicated skills-only installers add 18 active entry points and the source catalog without claiming plugin or hook parity.
+- **Lean registry:** 18 common user entry points stay active while 76 lower-level modules load from the source catalog only when needed.
 
-```
-/zeus "Build a shopping mall. React + Spring Boot"
-    → Design (26-step interview) → Implement (parallel workers) → Inspect → Test
-    → Zero interaction — never asks questions, all decisions automated
-```
-
-| Phase | Skill | What it does |
-|-------|-------|-------------|
-| **Analyze** | `/hermes` (헤르메스) | Business model, TAM/SAM/SOM, GTM, metrics, cohort |
-| **Challenge** | `/athena` (아테나) | CEO coaching — Go/No-Go gate, scope decisions, kill test |
-| **Design** | `/zephermine` (젭마인) | 26-step interview → SPEC.md → role-based native review |
-| **Implement** | `/agent-team` | Wave-grouped execution with the current CLI's native workers |
-| **Inspect** | `/argos` (아르고스) | Construction inspection: verify code matches design |
-| **Test** | `/minos` (미노스) | Playwright E2E tests + fix-until-pass loop |
-| **Deliver** | `/clio` (클리오) | Flow diagrams + PRD + technical docs + user manual |
-| **Full Auto** | `/zeus` (제우스) | Seven phases: parse → Zephermine → agent-team/workpm → Argos → Docker → Minos → evidence report |
-
-Each skill works standalone or as part of the pipeline. Hermes, Athena, and Clio are optional standalone
-stages; Zeus does not invoke them in its Phase 0–6 contract.
+See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Dannykkh/skill-olympus/releases) for the complete history.
 
 ---
+
+## Choose a workflow
+
+Start with the outcome you want. Every workflow works independently; Zeus composes the delivery path
+without silently adding the optional business, CEO, or documentation stages.
+
+| I want to… | Start with | Result |
+|---|---|---|
+| Build a product from one sentence | `/zeus` | Planned, implemented, inspected, tested project plus an evidence report |
+| Decide whether an idea is worth building | `/hermes` → `/athena` | Business case followed by a Go/No-Go and scope verdict |
+| Turn an unclear feature into an implementation-ready plan | `/zephermine` | Spec, plan, schema, API contract, flows, and QA scenarios |
+| Implement an existing plan in dependency-safe waves | `/agent-team` or `/poseidon` | Native-worker implementation plus an integration gate |
+| Start coding without a prior spec | `/workpm` or `/daedalus` | Researched proposal, implementation, and verification log |
+| Design or redesign a real interface | `/aphrodite` | Experience Contract, `DESIGN.md`, rendered directions, and implementation |
+| Verify code against the plan | `/argos` | Evidence-linked construction inspection report |
+| Make browser and API tests pass | `/minos` | Playwright tests and bounded repair cycles |
+| Keep fixing until a measurable condition is met | `/chronos` | Resumable audit log, verified fixes, or an honest blocker brief |
+| Close the project and write the docs | `/clio` | GO/NO-GO, diagrams, PRD, technical guide, and user manual |
+
+---
+
+<details>
+<summary><strong>Detailed inputs and outputs for each primary workflow</strong></summary>
 
 ## How the Gods Work — Practical Guide
 
@@ -581,31 +442,56 @@ stages; Zeus does not invoke them in its Phase 0–6 contract.
 **`mnemo` — Cross-CLI memory (Keeper)**
 - **When:** always — and whenever you ask "what did we do before?"
 - **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks. Opt-out: `MNEMO_DISABLE=1` (version check: `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
-- **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Gemini/Grok; past-conversation search; auto handoff near the context limit.
+- **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Antigravity/Grok; past-conversation search; auto handoff near the context limit.
 - **Output:** `MEMORY.md` (index) + `memory/*.md` (semantic) + `conversations/*.md` (episodic).
 - **Next:** —
+
+</details>
 
 ---
 
 ## Cross-CLI Support
 
 One source library and the same user-facing workflows, with runtime-native defaults for each CLI.
+The four columns below are the native Olympus support tier: they have an installer target plus
+runtime-specific policy or adapters, not merely a readable `SKILL.md`.
 
-| Feature | Claude Code | Codex CLI | Gemini CLI | Grok Build |
+| Feature | Claude Code | Codex CLI | Antigravity CLI | Grok Build |
 |---------|------------|-----------|------------|------------|
-| Skills | 14 active in `~/.claude/skills/` | 13 active in `~/.codex/skills/` | 13 active in `~/.gemini/skills/` | same 14 from Claude compatibility layer |
-| Custom agents | none by default (`~/.claude/agents/` only on opt-in) | none by default; Codex requires `.toml` | none by default (`~/.gemini/agents/` only on opt-in) | none from Olympus by default |
-| Memory (Mnemo) | save-response hook | save-turn hook | save-turn hook | grok-mnemo hook |
-| Gotchas/Learned | save-tool-use hook | save-turn hook | save-turn hook | grok-mnemo hook |
+| Skills | 21 active in `~/.claude/skills/` | 20 active in `~/.codex/skills/` | 20 active in `~/.gemini/antigravity-cli/skills/` | same 21 from Claude compatibility layer |
+| Custom agents | none by default (`~/.claude/agents/` only on opt-in) | none by default; Codex requires `.toml` | none by default (`~/.gemini/config/agents/` only on opt-in) | none from Olympus by default |
+| Memory (Mnemo) | save-response hook | save-turn hook | native `Stop` hook | grok-mnemo hook |
+| Gotchas/Learned | save-tool-use hook | save-turn hook | turn-level `Stop` hook | grok-mnemo hook |
 | Orchestration | native workers; optional MCP | native workers; optional MCP | native workers; optional MCP | native workers; MCP PM host only |
-| Install | no-argument installer prepares assets; CLI commands run when `claude` exists | same installer prepares assets; MCP commands run when `codex` exists | same installer prepares assets; MCP commands run when `gemini` exists | shared Claude assets; grok-mnemo runs when Grok home exists |
+| Install | no-argument installer prepares assets; CLI commands run when `claude` exists | same installer prepares assets; MCP commands run when `codex` exists | same installer writes skills, hooks, and `mcp_config.json`; `agy` is needed only to run Antigravity | shared Claude assets; grok-mnemo runs when Grok home exists |
 
-Cross-CLI sync is handled by `sync-claude-skills.js`, `sync-codex-assets.js`, and `sync-gemini-assets.js`.
+### Portable Agent Skills hosts
+
+The hosts below implement Agent Skills, but Olympus does not yet claim end-to-end runtime support
+for them. A skill being discoverable does not prove that its scripts, slash aliases, hooks,
+permissions, subagent delegation, or completion loop behave the same way.
+
+| Host | What is portable now | What is still missing for Olympus parity |
+|------|----------------------|-------------------------------------------|
+| [OpenCode](https://opencode.ai/docs/skills) | Reads standard skills from `~/.claude/skills` and `.agents/skills` | Dedicated install policy, aliases, hooks/Mnemo, MCP, and native-worker verification |
+| [Cursor](https://prod.cursor.com/docs/skills) | Reads local Claude and Codex skill directories as compatibility sources | Dedicated install policy, aliases, hooks/Mnemo, MCP, and overlap audit against Cursor built-ins |
+| [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | Supports standard project and personal Agent Skills | The current global Claude install is not a Copilot personal root; installer, aliases, hooks/Mnemo, and orchestration adapters are absent |
+| [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md) | Implements Agent Skills and can be configured to read Claude/Codex roots | No default install target or runtime adapter; explicit invocation uses Pi's `/skill:<name>` form |
+| [Hermes Agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/guides/work-with-skills.md) | `install-hermes.*` installs 18 active skills and the source catalog under `~/.hermes` | Olympus aliases, plugins/hooks/Mnemo, MCP, and orchestration mapping are absent |
+| [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*` installs 18 active skills and the source catalog under `~/.openclaw` | Plugin packaging, Olympus aliases, hooks/Mnemo, MCP, and native-subagent verification are absent |
+
+The accurate short claim is therefore: **integrated on Claude Code, Codex CLI, Antigravity CLI, and
+Grok Build; skills-only installation on OpenClaw and Hermes Agent; portable skill bodies for other Agent Skills hosts.** [Paperthin](https://github.com/LilMGenius/paperthin)'s broader
+"on any agent" wording describes a lightweight skill-format surface; it would overstate Olympus's
+hooked, stateful harness today.
+
+Cross-CLI sync is handled by `sync-claude-skills.js`, `sync-codex-assets.js`, `sync-antigravity-assets.js`,
+and the skills-only `sync-portable-skills.js`.
 Codex skills install globally only by default, avoiding duplicate discovery from this repo's
 `.agents/skills`; use `node scripts/sync-codex-assets.js --include-project-skills` only for an
 isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
 contains 24 skills: 18 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
-3 or 4 incompatible adapters, leaving Claude with 21 active skills and Codex/Gemini/standalone Grok
+3 or 4 incompatible adapters, leaving Claude with 21 active skills and Codex/Antigravity/standalone Grok
 with 20; the installed Grok surface reads Claude's shared 21. The same 76 public non-allowlisted sources are
 copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
 `SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
@@ -620,10 +506,10 @@ All four runtime surfaces keep all 42 custom-agent source references source-only
 
 Agent-using skills keep their orchestration logic and map semantic roles to each CLI's built-ins:
 
-| Semantic role | Claude | Codex | Gemini | Grok |
+| Semantic role | Claude | Codex | Antigravity | Grok |
 |---------------|--------|-------|--------|------|
-| Read-only exploration | `Explore` | `explorer` | `codebase_investigator` | `explore` |
-| File changes and commands | `general-purpose` / named teammate | `worker` | `generalist` | `general-purpose` |
+| Read-only exploration | `Explore` | `explorer` | `research` | `explore` |
+| File changes and commands | `general-purpose` / named teammate | `worker` | Main or an explicitly defined write-capable agent | `general-purpose` |
 
 The main context owns shared state and completion decisions. Workers get a unique file or return-only task; when delegation is unavailable or brings no parallel benefit, the same workflow runs sequentially in the main context.
 
@@ -654,13 +540,13 @@ Includes deterministic gotcha/learned capture:
 
 ## What's Inside
 
-### Skill sources (101; default union 17, 13 or 14 active per installed surface)
+### Skill sources (100; default union 24, 20 or 21 active per installed surface)
 
 The table is the source inventory, not the startup registry. Low-frequency format tools, provider integrations, framework cookbooks, and generators remain source-only until explicitly invoked through the catalog or installed with the opt-in flag.
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
-| **AI Tools** | codex, gemini, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
+| **AI Tools** | codex, antigravity, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
 | **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
 | **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 9 palettes, 47 font pairings, 84 styles, 14 themes (4 Hangul), SEO+AEO+GEO dual-score audit (search / AI visibility), chart selection guide |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
@@ -704,7 +590,7 @@ All 42 remain source-only under a default-deny policy and can be copied for expl
 
 ## Native and Multi-AI Orchestration
 
-By default, `workpm` distributes work to the current CLI's native workers. The MCP policy layer is only for hard file locks, an external task board, or a deliberate Claude + Codex + Gemini mix.
+By default, `workpm` distributes work to the current CLI's native workers. The MCP policy layer is only for hard file locks, an external task board, or a deliberate Claude + Codex + Antigravity mix.
 
 ```
 Default:             /workpm → analyze → native workers → verify
@@ -713,103 +599,61 @@ Optional MCP mode:
 Terminal 1 (PM):     /daedalus --mcp → create provider-aware tasks
 Terminal 2 (Claude): /pmworker → claim Claude/agnostic task → complete
 Terminal 3 (Codex):  /pmworker → claim Codex/agnostic task → complete
-Terminal 4 (Gemini): /pmworker → claim Gemini/agnostic task → complete
+Terminal 4 (Antigravity): /pmworker → claim Antigravity/agnostic task → complete
 ```
 
 | Component | Description |
 |-----------|-------------|
 | **workpm** | Default PM entrypoint using the current CLI's native workers |
 | **Orchestrator MCP** | Optional SQLite WAL task queue, provider routing, file locks, dependency resolution |
-| **pmworker** | Worker entrypoint for the explicit MCP mode (Claude/Codex/Gemini) |
+| **pmworker** | Worker entrypoint for the explicit MCP mode (Claude/Codex/Antigravity) |
 
 ---
 
-## External Resources
+## Ecosystem and credits
 
-### Recommended Skills
+Olympus uses the open `SKILL.md` model and learns from the broader agent-skills ecosystem:
 
-| Resource | Description | Install |
-|----------|-------------|---------|
-| [everything-claude-code](https://github.com/affaan-m/everything-claude-code) | Anthropic hackathon winner (28 agents, 116 skills) | `/plugin marketplace add` |
-| [Vercel Agent Skills](https://github.com/vercel-labs/agent-skills) | React/Next.js best practices (45+ rules) | `npx add-skill vercel-labs/agent-skills` |
-| [claude-code-dotnet](https://github.com/Aaronontheweb/claude-code-dotnet) | C#/WPF/MAUI/.NET skills | `npx add-skill Aaronontheweb/claude-code-dotnet` |
+- [Agent Skills specification](https://agentskills.io/specification) — portable skill structure
+- [Anthropic Skills](https://github.com/anthropics/skills) — official examples and complex document workflows
+- [Vercel skills CLI](https://github.com/vercel-labs/skills) — cross-agent discovery and installation ecosystem
+- [Superpowers](https://github.com/obra/superpowers) — methodology-first agent workflows
+- [Paperthin](https://github.com/LilMGenius/paperthin) — low-level, cross-agent design patterns
 
-### Recommended MCP Servers
-
-| MCP | Description | Install |
-|-----|-------------|---------|
-| [Context7](https://github.com/upstash/context7) | Latest library docs (Next.js 15, React 19) | `claude mcp add context7 -- npx -y @upstash/context7-mcp` |
-| [Playwright](https://github.com/microsoft/playwright-mcp) | Browser automation for QA | `claude mcp add playwright -- npx -y @playwright/mcp@latest` |
-| [Stitch](https://github.com/anthropics/stitch-mcp) | Google Stitch UI design | `npx -p stitch-mcp-auto stitch-mcp-auto-setup` |
-
-### Skills Directory
-
-| Resource | Description |
-|----------|-------------|
-| [skills.sh](https://skills.sh/) | 25K+ skills directory by Vercel |
-| [awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) | 200+ curated skills |
-| [awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) | Claude Code resource curation |
+Vendored components keep their upstream license files inside the relevant skill directories.
 
 ---
 
-## Version History
+## Documentation
 
-| Version | Date | Highlights |
-|---------|------|------------|
-| **[v5.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.4.0)** | **2026-08-25** | **Entry-point policy redefinition + seo-audit dual scores** — active/source-only decided by four conditions (unique slash, complete deliverable, no native overlap, call frequency) instead of mythological naming; "being referenced is not a demotion reason" made explicit; allowlist 17→24 promoting `api-tester`, `explain`, `hestia`, `ko-en-translator`, `release-notes`, `seo-audit`, `video-maker`, while three harness-internal modules stay source-only; active counts Claude/Grok 21, Codex/Gemini 20; seo-audit v3.0.0 with separate search/AI-visibility scores, `na` renormalization, P0 40-point cap, and a Korean-aware fact-density meter; `llms.txt` weighted 0, `FAQPage` P1→P2; skill counts unified on the public 100 baseline |
-| **[v5.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.3.0)** | **2026-08-23** | **Codex rollout-format reconcile** — turn-lifecycle rewrite of `reconcile_codex_conversations.py` excluding injected instructions, commentary, tool payloads, and subagent/fork turns; 12-case Python test suite; `.mnemo-root` marker root detection in save-turn hooks; `install.js --check` source parity; first-reconcile `conversations/` crash fix; codex-home fixture modernized |
-| **[v5.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.2.0)** | **2026-08-23** | **Editorial diagram presentation layer** — source-only `diagram-design` module vendored from cathrynlavery/diagram-design v2.6 (MIT); `.mmd` stays canonical while human-facing deliverables render as brand-token HTML+inline SVG; dependency-free `mermaid_extract.py` IR bridge; `DESIGN.md` token mapping replaces the interactive brand gate; clio `--render-diagrams` (Phase 3-3c); Editorial Style Rules absorbed into `mermaid-diagrams`; public registry 100 sources / 83 source-only |
-| **[v5.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.1.0)** | **2026-08-17** | **Aphrodite evidence gates + browser motion contract + dual video engines** — exact-selector Product Design recommendation with `UNKNOWN` local fallback; same-contract adapter comparison; facts, content, and asset provenance; CSS-first GSAP escalation for live web UI; separate `video-maker` routing to one Remotion or HyperFrames engine with runtime, license, and render QA gates |
-| **[v5.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v5.0.0)** | **2026-08-13** | **Entrypoint-only registry + native-agent default + provider-safe routing** — 99 public skill sources become 17 allowlisted entrypoints/adapters plus 82 directly readable source-only modules (`deploymonitor` remains internal-only); active surfaces are Claude/shared Grok 14 and Codex/Gemini 13; Olympus custom-agent registration defaults to 0 while semantic native roles and Main-owned state provide delegation with sequential fallback; incompatible runtime adapters are excluded per provider; no-argument install targets all four CLIs, prepares assets without installed executables, skips only CLI-specific commands, and preserves same-name modifications for manual collision recovery |
-| **[v4.21.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.21.0)** | **2026-08-10** | **Aphrodite experience-led redesign + Stitch execution adapter + Zeus scope gate** — design-plan pipeline: source routing → benchmark dissection (Adopt/Adapt/Avoid) → three rendered directions → Experience Contract (tasks, message, CTA, trust, mobile transformations; validator-enforced) → implementation → rendered UX/a11y/perf gates → learning handoff; Stitch compiles Aphrodite's decisions into Stitch MCP operations (contract/state/transfer patterns from google-labs-code/stitch-skills) instead of inventing direction; Zeus records pass/reduce/hold verdicts in the Decision Ledger before any off-plan task/feature/dependency, holds surfacing as Deferred (absorbed from hosioobo/track) |
-| **[v4.20.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.2)** | **2026-08-08** | **Themis guideline pinning + runtime freshness check** (spans v4.20.1–v4.20.2) — Korean drafts anchored to the PIPC Writing Guideline (2025.4) with a generation-time notice-board check that detects and adopts newer revisions (user notified; pinned-edition fallback without web tools); ko template aligned to 2025.4 (grievance contact, behavioral-ads clause, children Art. 22-2); statute citations verified via law.go.kr direct fetch — law-MCP dependency removed as unnecessary |
-| **[v4.20.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.20.0)** | **2026-08-08** | **Themis privacy-policy generator + mnemo opt-out** — skill #100 Themis audits a codebase for personal-data collection/storage/outbound/deletion (trap checklist: soft delete, append-only logs, masking coverage, silent outbound, `git ls-files`-verified ignores), interviews the operator for the 14 things code can't tell (officer, retention, children, server region…), then drafts per-country policies (PIPA Art. 30 / CCPA-CPRA / GDPR Art. 13) from file:line evidence only — blanks are never invented; dogfooded on this repo (3 drafts shipped). The audit exposed our own no-off-switch recording hooks → `MNEMO_DISABLE` (15 hook entry points, 4 CLIs) + `OLYMPUS_UPDATE_CHECK_DISABLE`, verified by on/off comparison runs |
-| **[v4.19.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.19.0)** | **2026-08-05** | **Native-first realignment** — the Aphrodite interference experiment (real defects: native-alone 1 ≪ custom 20 ≈ mixed 25) proved "engines upstream, extensions local," now applied roster-wide: frontend-design fork yields auto-invocation to the official plugin + impeccable's 59 deterministic rules as a PostToolUse hook (fixing a real defect: PostToolUse exit-0 stdout never reaches the model — rewritten as `additionalContext` JSON); Poseidon/Daedalus delegate to each CLI's native multi-agent (Claude Agent Teams / Codex spawn_agent / Gemini subagents / Grok spawn_subagent) with orchestrator MCP repositioned as hard-lock policy layer + legacy fallback; Zeus gains an ultracode-only Workflow fan-out branch; Chronos Gemini AfterAgent wiring corrected + deprecated `/loop` help remnants removed; Argos delegates its generic quality layer to native review engines (spec audit stays its own); humanizer re-synced to both upstreams (blader v2.9.1 + im-not-ai v2.3); Gemini paths designed from official docs, field test pending |
-| **[v4.15.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.15.0)** | **2026-07-25** | **Grok Build support: grok-mnemo adapter** — measured with `grok inspect --json` that Grok reads `~/.claude/` skills/agents/MCP/rules directly via `[compat.claude]` defaults (no sync script needed); the one parity gap, mnemo auto-save, closed by a UserPromptSubmit+Stop adapter (`<user_query>` wrapper strip, `end_turn`-only saves, `lastAssistantMessage` direct save, `conversations/*-grok.md`); `GROK_HOOK_EVENT` guard on 5 Claude mnemo hook pairs stops double/mislabeled saves; installer-test fix for `NoDefaultCurrentDirectoryInExePath=1` machines (absolute path + `windowsVerbatimArguments`); new gotcha: Korean-commented `.ps1` needs UTF-8 BOM or PS 5.1's CP949 misdecode silently merges code lines into comments; verified with a real `grok -p` headless session |
-| **[v4.14.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.14.0)** | **2026-07-22** | **Layout block anatomy · atmosphere recipe · prompt consumption gate** — bag-ui's (MIT) block wireframe catalog translated into 30 structure contracts wired as design-plan Phase 2.5; Phase 3 now requires reading DESIGN.md prose contracts and `docs/design-refs/` superprompts before implementing (previously produced but never mandatorily consumed); `technique-recipes.md` §11 supplies verified grain/mesh/emphasis-break/sustained-variance values where SKILL.md previously only instructed "add atmosphere" with nothing to implement against; all three gaps found and fixed by shipping this project's own landing page end to end (including a Korean-webfont `document.fonts` false-negative and a mobile CSS-selector bug caught by screenshot) |
-| **[v4.13.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.13.0)** | **2026-07-10** | **Data-visualization skill (vendored from Anthropic)** — chart selection by data relationship (trend/comparison/ranking/distribution/correlation/flow), chart anti-patterns (pie >6 categories, 3D never, dual-axis caution), Python (matplotlib/seaborn/plotly) code patterns, design principles, accessibility checklist; Apache-2.0 attribution kept, invocable as `/data-visualization`, role split vs design-plan/mermaid-diagrams documented; 96 -> 97 skills across 3 CLIs |
-| [v4.12.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.12.2) | 2026-07-10 | **Non-git project-root guard** — when git yields no root, hooks walk ancestors for an existing mnemo marker (`MEMORY.md`/`conversations/`, HOME excluded) then cut before build-output segments (bin/obj/dist/...); stops `conversations/`·`memory/` scattering into `bin\Debug` or app-data folders; 12 files (4 Claude hooks + codex/gemini save-turn, ps1+sh) |
-| [v4.12.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.12.1) | 2026-07-10 | **Hook stdin watchdog fail-open** — fixes "UserPromptSubmit hook timed out after 60s" (stdin starvation on mid-turn prompt submission): 15s bounded stdin read + quiet exit, PS 5.1 `[Console]::In` sync-blocking workaround (StreamReader over OpenStandardInput), exit-on-timeout rule (orphaned read + native spawn = deadlock, reproduced), chronos continue-loop payload order argv-first, HOME git-root guard on codex/gemini save-turn |
-| **[v4.12.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.12.0)** | **2026-07-09** | **Style Recipes · Reference Capture · Chronos Heartbeat** — 12 style recipes (hex + Korean/Latin font stacks, WCAG-computed) + 9 technique recipes (shadows/blur/border-gradient/reveals/GSAP+Lenis) + Phase 2 reference capture (section-anatomy superprompts); Chronos 1.5-tier heartbeat engine (`--heartbeat`, native /loop interval re-entry) + score-based completion contract; validated end-to-end with an editorial-tech sample + gotcha 045 (fonts.check subset false-negative) |
-| **[v4.11.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.11.0)** | **2026-07-05** | **Unknowns-first planning · lean Zephermine flow · implementation learning loop** — Zephermine auto-selects research and records `research-decision.md`, adds `unknowns.md` before interviews, asks only architecture-changing blockers, and writes inferred assumptions otherwise; domain-dictionary now auto-seeds/auto-merges low-risk terms and asks only on blocking conflicts; workpm/agent-team keep `implementation-notes.md` deviations, Clio can generate `CHANGE-QUIZ.md`, and frontend-design can prototype divergent directions to expose unknown knowns before implementation |
-| **[v4.10.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.10.0)** | **2026-07-01** | **DESIGN.md canonical source · Korean font real-load guardrails · hook timeout & schema fixes** — Google `@google/design.md` format adopted as Aphrodite's design source of truth (new `design-md-guide.md`, palettes pinned to stop drift, "read DESIGN.md first" in 3-CLI always-on); Korean font real-load (`@import` + `document.fonts.check`, Korean-only pairing preferred to avoid silent system fallback, gotcha 041); dark/light rule (container `div` bg · text inversion · `<select>` `color-scheme`); hook 30s-timeout prevention (60s + `-NoProfile` across 4 generators); AskUserQuestion schema fixes (≤4 options, ≤12-char headers) |
-| **[v4.9.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.9.0)** | **2026-06-25** | **Always-on design guardrail · consult-before-implement · handoff feature map** — anti-slop design guidance injected into the 3-CLI always-on context (frontend-design `auto_apply` was a no-op), updated to the 2026 web platform (native scroll-driven `animation-timeline` first, View Transitions, container queries, `:has()`, OKLCH) + Korean/Latin font pairing, condensed ~24%, browser-verified on 3 directions; consult-before-implement guard (codemap-first → handoffs → grep → classify, compare adjacent pipelines); handoff Feature/Flow/Decision Snapshot + Menu/Screen Map; **harness-engineering** boundary-coherence cross-check on agent-team·chronos (build-pass≠correct) + **loop-engineering** tool-grounded FIND on chronos; compat audit (Pydantic v2, Next.js 15, MySQL 8.4, docker compose v2, MUI v7, OpenAPI 3.1, Tailwind v4) |
-| **[v4.8.7](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.7)** | **2026-06-23** | **Loop honesty (028/034)** — completion contract (requirement→evidence, 4-state scoring, exhaustion≠success) across Chronos·Zeus·minos·autoresearch·argos·agent-team·workpm; independent cross-model verify (autoresearch champion re-score; Zeus argos risk-gated cross-model — deterministic gate first, other model in background); hook-layer `EXHAUSTED` surfacing + final-turn honest-report warning (loop-stop·continue-loop ps1/sh, dry-run ps1 5/5); Hermes TAM/SAM/SOM source-citation grounding guard |
-| **[v4.8.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.1)** | **2026-06-14** | **mnemo root-resolution fix** — auto-save hooks no longer misplace `conversations/`·`memory/` into a subfolder when you `cd` deeper in a non-git project; 2-pass project-root (git root if any candidate resolves, else session-launch cwd) + HOME-as-git-repo guard; applied across 8 hooks (ps1·sh) + installed copies, PS 7/7 · SH 7/7 |
-| **[v4.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.8.0)** | **2026-06-13** | **Loop programming: park, brief, re-entry** — Chronos PARK rule (4 reasons; reasonless "blocked" = evasion) + Owner Decision Brief (decision-ready escalation, mandatory recommendation, 4-way owner choice) + re-entry protocol (log beats memory; new-session resume from audit log); deadlock guard for parked-only queues (no untrue `<promise>`; hooks stop rewarding mismatched tags — ps1 tested 4/4, multiline match added, park rule in re-injection nudges); Zeus Decision Ledger (rationale + alternatives + how-to-reverse, post-hoc approval); codex-mnemo notify order fix (save-turn-chaining wrappers preserved across reinstalls) |
-| **[v4.7.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.1)** | **2026-06-11** | **Design visual verification + Clio gate hardening** — ui-ux-auditor scores by observing rendered screenshots (observation beats grep; 4/4 planted-defect smoke test), clio v2.1.1 verdict hardening (minos in verdict, vacuous GO blocked, bypass flagged), Aphrodite scope limited to appearance |
-| **[v4.7.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.7.0)** | **2026-06-11** | **Native harness integration** — code-reviewer v4 (engine delegation: Claude /code-review · Codex `codex review --base`, policy layer P1~P5 with Scope Drift/Fix-First/domain checklists, Gemini full-path fallback); Chronos legacy `/loop` alias retired (native /loop name collision) + goal/loop/chronos comparison table; audit follow-ups (zeus /goal relationship + double stop-gate guard, agent-team env var demoted to legacy, project-root memory vs native auto-memory boundary in 4 files, orchestrator native-vs-MCP selection criteria, chronos `--flow-verify` receiver definition); clio v2.1.0 humanizer Korean copyediting hookup; zephermine vs native plan-mode distinction |
-| **[v4.6.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.6.0)** | **2026-06-10** | **Humanizer Korean writing module** — 67 translationese patterns in 10 categories (A~J), quantitative first-pass scan (comma-after-connective 4.84x signal), genre guardrails, S1/S2/S3 severity tiers, procedural over-editing guard (do-not masking, change-rate rollback); absorbed im-not-ai v2.0 taxonomy; deployed to 3 CLIs |
-| **[v4.5.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.5.0)** | **2026-06-05** | **Chronos × native /goal integration** — reframed as a /goal wrapper (goal=persistence, Chronos=verification gate/priority/log); goal-statement model (no auto-invocation — generates the statement, user sets /goal once); 3-tier fallback (goal → hook/notify → direct) for Gemini parity; hard guard `setup-loop --goal-mode` clears loop-state to make hook collision impossible at the code level (tested .ps1/.sh); Codex vs Claude judging differences documented |
-| **[v4.4.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.2)** | **2026-05-30** | **Chronos hardening + cross-CLI parity** — done-pattern false positive removed (`Chronos Complete` + `<promise>` only); tail-500 guard dropped (full-output marker scan); Gemini state-path bug fixed (3-path probe `.claude/.codex/.chronos`); notification fanout stripped from Mnemo installers/save-turn; stress-tested 5-iteration re-injection on Claude |
-| [v4.4.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.1) | 2026-05-11 | **mnemo audit patches** — Stop/save-turn `notify_mnemo_status` hook (zero-LLM-cost user awareness via `memory/.mnemo-status.md` + stderr); SKILL.md/config.json aligned with actual design (no auto-analyzer); `list_handoffs.py` parses `YYYY-MM-DD-{slug}` filenames; `check_staleness.py --all` bulk mode; Codex EXCLUDE adds `gemini-mnemo` |
-| [v4.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.4.0) | 2026-05-08 | **/memory-distill + Dreaming-equivalent self-improvement** — new user-triggered skill with `--scan`/`--apply`/`--rebuild` modes (duplicate merge, SUPERSEDED conflict resolution, archive backup); gotcha-analyzer upgraded from cleanup-low to main session model inheritance (Opus/GPT-5.5/3.1-Pro analysis quality); threshold 20→50 (safety-net role); multi-tier distillation triggers |
-| [v4.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.3.0) | 2026-05-05 | **Mnemo Memory Integrity Pass** — handoffs to `docs/handoffs/` (cross-CLI shareable); auto gotcha/learned extraction in handoff (no review, secret scrubbing); item format hardening (source/tags/title/length); 48 source backfills; 3-CLI parity verified |
-| [v4.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.2.0) | 2026-05-04 | Markdown → publication-quality PDF — pdf skill adds generator (playwright + Pretendard), Korean defaults (A4 + 25mm), automatic Clio Phase 3-4 integration |
-| **[v4.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.1.0)** | **2026-04-28** | **Domain Dictionary Pipeline** — new domain-dictionary skill (DDD Ubiquitous Language) integrated across 12 skills with 3-tier storage (master/delta/global); zephermine 6-Phase grouping; explain --zoom-out; code-reviewer module-depth |
-| [v4.0.2](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.2) | 2026-04-27 | Skill description diet — shorter routing metadata for safer Codex/Claude prompt budgets; docs and installed copies synced |
-| [v4.0.1](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.1) | 2026-04-20 | Hook install cleanup, stale references removed, structure principles replace old line-count guidance |
-| [v4.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v4.0.0) | 2026-04-20 | The Great Cleanup: skill/agent consolidation, obsolete hooks archived, Skill Olympus quality pass |
-| **[v3.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v3.0.0)** | **2026-04-08** | **🏛️ Skill Olympus — The Pantheon Awakens** (repo rename, 그리스 신화 통일, mnemo 데이터 유실 방지 종합 개편, 3-CLI parity, README 호메로스 톤) |
-| [v2.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v2.1.0) | 2026-04-06 | Pipeline Integrity Audit + gstack-Inspired Improvements (Zeus 7-Phase, hermes/athena 강화, AI Slop 탐지) |
-| [v2.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v2.0.0) | 2026-03-25 | Athena CEO Coaching + Pipeline Expansion |
-| [v1.9.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.9.0) | 2026-03-24 | Athena CEO Coaching + Pipeline Expansion |
-| [v1.8.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.8.0) | 2026-03-23 | Project Gotchas + Learned Patterns |
-| [v1.7.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.7.0) | 2026-03-21 | Orchestrator SQLite WAL + Minos |
-| [v1.6.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.6.0) | 2026-03-18 | Design + Business + Skill Best Practices |
-| [v1.5.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.5.0) | 2026-03-09 | Closer + SEO Audit + Pipeline Overhaul |
-| [v1.4.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.4.0) | 2026-03-02 | Chronos + Argos + Memory Compact |
-| [v1.3.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.3.0) | 2026-02-19 | Cross-CLI: Codex + Gemini |
-| [v1.2.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.2.0) | 2026-02-09 | Agent-Team + Zeus + QA Pipeline |
-| [v1.1.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.1.0) | 2026-02-01 | Zephermine + Mnemo + Install |
-| [v1.0.0](https://github.com/Dannykkh/skill-olympus/releases/tag/v1.0.0) | 2026-01-29 | Initial Release |
+- [Setup and installer options](SETUP.md)
+- [Workflow guide](docs/workflow-guide.md)
+- [Skill registry and collision recovery](docs/skill-registry-migration.md)
+- [Changelog](CHANGELOG.md)
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening a PR, read [AGENTS.md](AGENTS.md), keep one
+canonical skill source under `skills/`, and run the repository tests.
+
+```powershell
+$tests = (Get-ChildItem scripts/tests -Filter '*.test.js').FullName
+node --test $tests
+```
+
+```bash
+node --test scripts/tests/*.test.js
+```
+
+If Olympus saves you a planning pass, a failed handoff, or a debugging loop, starring the repository
+helps other solo builders find it.
 
 ---
 
 ## License
 
-MIT License
+[MIT](LICENSE)
 
 ---
 
-**Last Updated:** 2026-08-13
+**Last Updated:** 2026-09-01

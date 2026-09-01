@@ -23,7 +23,7 @@ PM + Multi-AI Worker 병렬 처리 시스템의 완전한 사용 가이드입니
 
 ### 무엇인가?
 
-Multi-AI Orchestrator는 여러 AI CLI (Claude, Codex, Gemini)를 동시에 활용하여 대규모 작업을 병렬로 처리하는 시스템입니다.
+Multi-AI Orchestrator는 여러 AI CLI (Claude, Codex, Antigravity)를 동시에 활용하여 대규모 작업을 병렬로 처리하는 시스템입니다.
 
 ### 언제 사용하나?
 
@@ -38,7 +38,7 @@ Multi-AI Orchestrator는 여러 AI CLI (Claude, Codex, Gemini)를 동시에 활�
 
 - **파일 락킹**: 다중 Worker 간 파일 충돌 방지
 - **태스크 의존성**: 선행 작업 완료 후 자동 언블록
-- **Multi-AI**: Claude + Codex + Gemini 병렬 실행
+- **Multi-AI**: Claude + Codex + Antigravity 병렬 실행
 - **Fail-closed provider routing**: 설치된 provider만 선택하며 요청한 provider가 없으면 임의 대체하지 않음
 - **2단계 워크플로우**: 리서치→제안→승인→구현 분리
 - **Activity Log**: 결정/진행/에러 통합 타임라인
@@ -117,7 +117,7 @@ orchestrator_log_activity({
               ↓               ↓               ↓
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
 │   Worker-1      │ │   Worker-2      │ │   Worker-3      │
-│   (Claude)      │ │   (Codex)       │ │   (Gemini)      │
+│   (Claude)      │ │   (Codex)       │ │ (Antigravity)   │
 │                 │ │                 │ │                 │
 │ pmworker 입력   │ │ pmworker 입력   │ │ pmworker 입력   │
 │   ↓             │ │   ↓             │ │   ↓             │
@@ -198,7 +198,7 @@ npm run build
 |-----|--------|------|------|
 | **Claude** | `workpm` | Agent Teams (네이티브) | 팀원과 실시간 대화, 해고/재고용 |
 | **Codex** | `workpm` | 내장 `explorer`/`worker` 역할 | 현재 런타임의 위임·대기·중단 기능 사용 |
-| **Gemini** | `workpm` | 서브에이전트 (네이티브, 미실측) | 인식 실패 시 `workpm-mcp` |
+| **Antigravity** | `workpm` | `research`/사용자 정의 서브에이전트 | 인식 실패 시 `workpm-mcp` |
 | **Grok** | `workpm` | 내장 `explore`/`general-purpose` 역할 | 현재 런타임의 서브에이전트 기능 사용 |
 | (공통 폴백) | `workpm-mcp` | MCP 전용 | 태스크 기반, 자동 Worker 실행 |
 
@@ -236,11 +236,11 @@ Phase 2: 구현 & 검증
 orchestrator_detect_providers() 실행 결과:
 {
   "mode": "full",
-  "modeDescription": "Full Mode: claude + codex + gemini (3 AI providers)",
+  "modeDescription": "Full Mode: claude + codex + antigravity (3 AI providers)",
   "providers": [
     {"name": "claude", "available": true, "version": "1.0.0"},
     {"name": "codex", "available": true, "version": "2.1.0"},
-    {"name": "gemini", "available": true, "version": "3.0.0"}
+    {"name": "antigravity", "available": true, "version": "[detected]"}
   ]
 }
 ```
@@ -484,22 +484,22 @@ orchestrator_fail_task({
 orchestrator_spawn_workers({count: 3})
 ```
 
-시스템은 자동 생성이 지원되는 Claude/Codex/Gemini CLI를 감지합니다. `providers`를 생략하면 고정 순서 `claude → codex → gemini` 중 실제 설치된 첫 provider를 모든 빈 슬롯에 사용합니다. 하나도 감지되지 않으면 생성 요청은 실패합니다.
+시스템은 자동 생성이 지원되는 Claude/Codex/Antigravity CLI를 감지합니다. `providers`를 생략하면 고정 순서 `claude → codex → antigravity` 중 실제 설치된 첫 provider를 모든 빈 슬롯에 사용합니다. 하나도 감지되지 않으면 생성 요청은 실패합니다.
 
 ### 수동 배정 모드
 
 ```
 orchestrator_spawn_workers({
   count: 3,
-  providers: ["claude", "codex", "gemini"]
+  providers: ["claude", "codex", "antigravity"]
 })
 ```
 
 - Worker-1: Claude
 - Worker-2: Codex
-- Worker-3: Gemini
+- Worker-3: Antigravity
 
-자동 Worker는 Claude의 auto permission mode, Codex의 workspace-write sandbox 안 자동 리뷰, Gemini의 sandbox 안 자동 승인을 사용합니다. approval/sandbox 전체 우회와 workspace trust 우회는 사용하지 않습니다. 더 엄격한 정책이 필요하면 조직이 승인한 permission mode로 Worker를 수동 실행합니다.
+자동 Worker는 Claude의 auto permission mode, Codex의 workspace-write sandbox, Antigravity의 현재 permission policy를 사용합니다. Antigravity headless 실행이 권한 확인 때문에 중단되면 우회 플래그를 자동 추가하지 않고, 조직 또는 개인이 승인한 permission policy를 먼저 구성한 뒤 다시 실행합니다.
 
 ### Fail-closed 동작
 
@@ -529,7 +529,7 @@ workpm
 
 **PM 응답:**
 ```
-AI 감지: Full Mode (Claude + Codex + Gemini)
+AI 감지: Full Mode (Claude + Codex + Antigravity)
 
 태스크 분해:
 1. user-model (provider-agnostic, priority: 3)
@@ -596,7 +596,7 @@ workpm
 | 도구 | 설명 | 파라미터 |
 |------|------|----------|
 | `orchestrator_detect_providers` | 설치된 AI CLI 감지 | - |
-| `orchestrator_get_provider_info` | 설치 상태와 안전한 기본 실행 명령 조회 | `provider`: claude/codex/gemini |
+| `orchestrator_get_provider_info` | 설치 상태와 안전한 기본 실행 명령 조회 | `provider`: claude/codex/antigravity |
 
 ### PM 전용
 
@@ -663,7 +663,7 @@ orchestrator_get_file_locks()
 # 각 CLI 설치 확인
 claude --version
 codex --version
-gemini --version
+agy --version
 
 # PATH 확인
 where claude

@@ -12,6 +12,13 @@ description: >
 > memory-distill이 정제한 gotcha/learned에서 개선 후보를 찾으면 이 스킬을 실행합니다.
 > 축적된 실패/성공 관찰을 체크리스트로 변환하여 autoresearch에 넘깁니다.
 
+## Antigravity `/learn` 경계
+
+Antigravity 네이티브 `/learn`은 현재 대화에서 드러난 교정·선호를 Rules 또는 Skill로 바로 정리할 때
+우선합니다. 이 모듈은 여러 세션에서 누적·정제된 gotcha/learned를 기존 스킬에 매핑하고, 최소 관찰 수와
+대조 체크리스트를 거쳐 반복 가능한 개선인지 검증하는 경로입니다. `/learn`을 프로그램적으로 호출하거나
+한 번의 최근 교정을 누적 개선 근거로 승격하지 않습니다.
+
 ## Autoresearch source-only handoff
 
 `autoresearch`가 활성 스킬이나 slash command로 등록됐다고 가정하지 않습니다. 상위 하네스가

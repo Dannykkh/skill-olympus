@@ -273,7 +273,7 @@ GitHub 리포지토리, 이슈, PR 관리를 위한 MCP 서버입니다.
 **설치 (자동 설정):**
 
 ```bash
-# 자동 설치 - Claude Code, Gemini CLI, Codex CLI에 자동 설정
+# 자동 설치 - Claude Code, Antigravity CLI, Codex CLI에 자동 설정
 npx -p stitch-mcp-auto stitch-mcp-auto-setup
 ```
 

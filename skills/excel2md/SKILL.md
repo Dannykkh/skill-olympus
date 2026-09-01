@@ -4,13 +4,6 @@ description: >
   .xlsx 엑셀 파일 읽기/변환 전문 스킬. JSON/마크다운 변환, 임베디드 이미지 자동 추출,
   시트별 파일 생성.
   ".xlsx", "엑셀", "excel", "스프레드시트" 요청에 실행.
-triggers:
-  - "excel"
-  - "엑셀"
-  - "xlsx"
-  - "스프레드시트"
-  - "spreadsheet"
-auto_apply: false
 license: MIT
 metadata:
   version: "2.0.0"

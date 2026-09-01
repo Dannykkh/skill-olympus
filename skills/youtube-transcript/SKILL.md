@@ -1,14 +1,6 @@
 ---
 name: youtube-transcript
 description: YouTube 영상 자막을 추출하고 요약합니다. yt-dlp 기반으로 MCP 없이 로컬에서 안정적으로 동작합니다. /youtube-transcript 또는 "이 영상 자막 가져와"로 실행.
-triggers:
-  - "youtube-transcript"
-  - "유튜브 자막"
-  - "영상 자막"
-  - "자막 가져와"
-  - "youtube summary"
-  - "영상 요약"
-auto_apply: false
 ---
 
 # YouTube Transcript

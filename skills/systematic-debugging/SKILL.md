@@ -3,7 +3,6 @@ name: systematic-debugging
 description: |
   Explicit `/systematic-debugging` reference for a structured root-cause audit.
   Use only when the user requests this workflow; routine diagnosis stays native.
-disable-model-invocation: true
 ---
 
 # Systematic Debugging

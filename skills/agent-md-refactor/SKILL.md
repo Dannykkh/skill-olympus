@@ -113,7 +113,7 @@ Organize remaining instructions into logical categories.
 ```
 project-root/
 ├── CLAUDE.md (or AGENTS.md)     # Minimal root with links
-└── .claude/                      # Or docs/agent-instructions/
+└── docs/agent-instructions/      # Runtime-neutral detailed rules
     ├── typescript.md
     ├── testing.md
     ├── code-style.md
@@ -137,11 +137,11 @@ One-sentence description of the project.
 ## Detailed Instructions
 
 For specific guidelines, see:
-- [TypeScript Conventions](.claude/typescript.md)
-- [Testing Guidelines](.claude/testing.md)
-- [Code Style](.claude/code-style.md)
-- [Git Workflow](.claude/git-workflow.md)
-- [Architecture Patterns](.claude/architecture.md)
+- [TypeScript Conventions](docs/agent-instructions/typescript.md)
+- [Testing Guidelines](docs/agent-instructions/testing.md)
+- [Code Style](docs/agent-instructions/code-style.md)
+- [Git Workflow](docs/agent-instructions/git-workflow.md)
+- [Architecture Patterns](docs/agent-instructions/architecture.md)
 ```
 
 **Each linked file template:**
@@ -233,7 +233,7 @@ Identify instructions that should be removed entirely.
 
 ### Before (Bloated Root)
 ```markdown
-# CLAUDE.md
+# AGENTS.md (or CLAUDE.md)
 
 This is a React project.
 
@@ -266,9 +266,9 @@ React dashboard for real-time analytics visualization.
 - `pnpm build` - Production build
 
 ## Guidelines
-- [Code Style](.claude/code-style.md)
-- [Testing](.claude/testing.md)
-- [TypeScript](.claude/typescript.md)
+- [Code Style](docs/agent-instructions/code-style.md)
+- [Testing](docs/agent-instructions/testing.md)
+- [TypeScript](docs/agent-instructions/typescript.md)
 ```
 
 ---

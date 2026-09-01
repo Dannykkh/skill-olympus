@@ -33,6 +33,7 @@ style="text;html=1;fontSize=27;fontFamily=Noto Sans JP;"
 ## 3. Conversion Commands
 
 See conversion script at [scripts/convert-drawio-to-png.sh](scripts/convert-drawio-to-png.sh).
+Resolve `module_root` as the directory containing this exact `SKILL.md` before running a bundled helper.
 
 ```sh
 # Convert all .drawio files
@@ -41,8 +42,8 @@ mise exec -- pre-commit run --all-files
 # Convert specific .drawio file
 mise exec -- pre-commit run convert-drawio-to-png --files assets/my-diagram.drawio
 
-# Run script directly (using skill's script)
-bash ~/.claude/skills/draw-io/scripts/convert-drawio-to-png.sh assets/diagram1.drawio
+# Run script directly (using the loaded skill's module root)
+bash "<module_root>/scripts/convert-drawio-to-png.sh" assets/diagram1.drawio
 ```
 
 Internal command used:
@@ -247,8 +248,8 @@ Good example (sufficient margin):
 AWS icon search examples:
 
 ```sh
-python ~/.claude/skills/draw-io/scripts/find_aws_icon.py ec2
-python ~/.claude/skills/draw-io/scripts/find_aws_icon.py lambda
+python "<module_root>/scripts/find_aws_icon.py" ec2
+python "<module_root>/scripts/find_aws_icon.py" lambda
 ```
 
 ## 8. Checklist

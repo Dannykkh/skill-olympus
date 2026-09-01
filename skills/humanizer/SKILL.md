@@ -1,6 +1,5 @@
 ---
 name: humanizer
-version: 2.9.1-ko.1
 description: |
   Remove signs of AI-generated writing from text. Use when editing or reviewing
   text to make it sound more natural and human-written. Based on Wikipedia's
@@ -16,13 +15,9 @@ description: |
   (S1/S2/S3) and a procedural over-editing guard (do-not masking, risk-ordered
   rewriting, live change-rate rollback) prevents meaning-damaging rewrites.
 
-  Credits: Original skill by @blader - https://github.com/blader/humanizer
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
+metadata:
+  version: "2.9.1-ko.1"
+  upstream: "blader/humanizer"
 ---
 
 # Humanizer: Remove AI Writing Patterns

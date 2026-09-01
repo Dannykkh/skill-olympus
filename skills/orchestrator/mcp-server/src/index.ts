@@ -51,7 +51,7 @@ const CreateTaskSchema = z.object({
   depends_on: z.array(z.string()).optional().describe('선행 태스크 ID 목록'),
   scope: z.array(z.string()).optional().describe('수정 가능 파일 범위'),
   priority: z.number().optional().describe('우선순위 (높을수록 먼저, 기본: 1)'),
-  ai_provider: z.enum(['claude', 'codex', 'gemini']).optional().describe('실행할 AI Provider. 생략하면 provider-agnostic이며, 명시한 provider가 미설치면 생성 실패')
+  ai_provider: z.enum(['claude', 'codex', 'antigravity']).optional().describe('실행할 AI Provider. 생략하면 provider-agnostic이며, 명시한 provider가 미설치면 생성 실패')
 });
 
 // Worker 도구 스키마
@@ -96,7 +96,7 @@ const ReadPlanSchema = z.object({
 const SpawnWorkersSchema = z.object({
   count: z.number().min(1).max(10).default(1).describe('생성할 Worker 수 (1-10)'),
   auto_terminate: z.boolean().default(true).describe('태스크 완료 시 자동 종료 여부'),
-  providers: z.array(z.enum(['claude', 'codex', 'gemini'])).optional().describe('각 Worker에 할당할 AI Provider 배열. 빠진 항목은 감지된 첫 provider를 사용')
+  providers: z.array(z.enum(['claude', 'codex', 'antigravity'])).optional().describe('각 Worker에 할당할 AI Provider 배열. 빠진 항목은 감지된 첫 provider를 사용')
 });
 
 // Activity Log 스키마
@@ -128,7 +128,7 @@ const TOOLS: Tool[] = [
   // Multi-AI 관리 도구
   {
     name: 'orchestrator_detect_providers',
-    description: '설치된 AI CLI (Claude, Codex, Gemini)를 감지하고 사용 가능한 모드를 반환합니다.',
+    description: '설치된 AI CLI (Claude, Codex, Antigravity)를 감지하고 사용 가능한 모드를 반환합니다.',
     inputSchema: {
       type: 'object',
       properties: {}
@@ -142,7 +142,7 @@ const TOOLS: Tool[] = [
       properties: {
         provider: {
           type: 'string',
-          enum: ['claude', 'codex', 'gemini'],
+          enum: ['claude', 'codex', 'antigravity'],
           description: '정보를 조회할 AI Provider'
         }
       },
@@ -183,7 +183,7 @@ const TOOLS: Tool[] = [
         priority: { type: 'number', description: '우선순위 (높을수록 먼저, 기본: 1)' },
         ai_provider: {
           type: 'string',
-          enum: ['claude', 'codex', 'gemini'],
+          enum: ['claude', 'codex', 'antigravity'],
           description: '이 태스크를 실행할 AI Provider. 미지정 시 provider-agnostic으로 모든 Worker가 claim 가능'
         }
       },
@@ -233,7 +233,7 @@ const TOOLS: Tool[] = [
       properties: {
         count: { type: 'number', description: '생성할 Worker 수 (1-10, 기본: 1)', minimum: 1, maximum: 10 },
         auto_terminate: { type: 'boolean', description: '태스크 완료 시 자동 종료 (기본: true)' },
-        providers: { type: 'array', items: { type: 'string', enum: ['claude', 'codex', 'gemini'] }, description: '각 Worker에 할당할 AI (예: ["claude", "codex", "gemini"]). 빠진 항목은 실제 설치가 감지된 첫 provider 사용' }
+        providers: { type: 'array', items: { type: 'string', enum: ['claude', 'codex', 'antigravity'] }, description: '각 Worker에 할당할 AI (예: ["claude", "codex", "antigravity"]). 빠진 항목은 실제 설치가 감지된 첫 provider 사용' }
       }
     }
   },

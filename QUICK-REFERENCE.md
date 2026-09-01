@@ -2,7 +2,7 @@
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
 >
-> Olympus 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 21개, Codex/Gemini는 활성 20개이며 Grok 설치 표면은 Claude의 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
+> Olympus 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 21개, Codex/Antigravity는 활성 20개이며 Grok 설치 표면은 Claude의 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
 >
 > **호출 규칙:** 아래 `고정 호출명` 표만 기본 slash 진입점입니다. source-only 항목은 자연어로 기능을 요청하면 LLM이나 활성 하네스가 카탈로그의 현재 `SKILL.md`를 직접 읽어 적용합니다. source-only 이름을 `/name`으로 입력하는 방식은 `--include-source-only-skills`로 활성 등록한 환경에서만 보장됩니다. 표의 “opt-in 시 `/name`” 표기도 모두 이 조건을 뜻합니다.
 
@@ -98,7 +98,7 @@
 |--------|------|------|
 | **네이티브 작업자** | 프로젝트 테스트를 기준으로 Red-Green-Refactor 수행 | 별도 설치 없음 |
 | **test-driven-development (source-only 스킬)** | TDD 절차를 명시적으로 강화할 때 사용 | 카탈로그의 원본 경로 |
-| **minos (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) | 이 저장소의 `skills/minos/` |
+| **minos (로컬)** | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프. Antigravity `/browser`는 탐색 후보 수집에만 쓰고 판정은 코드화 | 이 저장소의 `skills/minos/` |
 
 ### 코드 리뷰
 
@@ -118,7 +118,8 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **zephermine (로컬)** | 인터뷰 → 리서치 → 도메인 분석 → 스펙 → 섹션 분리 (Multi-AI 도메인 전문가 포함) | 이 저장소의 `skills/zephermine/` |
+| **Antigravity `/plan`, `/grill-me`** | 가벼운 구현 계획 또는 집중 요구사항 인터뷰 | 별도 설치 없음 |
+| **zephermine (로컬)** | 저장형 spec·API/DB·flow·sections·QA 묶음이 필요한 기능/제품 설계 | 이 저장소의 `skills/zephermine/` |
 | **네이티브 탐색자·작업자** | 구현 전 코드 탐색과 계획 검토 | 별도 설치 없음 |
 
 ### 리팩토링
@@ -273,13 +274,13 @@ claude plugin install voltagent-qa-sec
 | 경로 | 설명 |
 |------|------|
 | `skills/zeus/` | 전자동 7단계 — 설명 파싱→젭마인→agent-team/workpm→아르고스→Docker→미노스→증거 보고 (`/zeus`; Hermes/Athena/Clio는 암묵 호출하지 않음) |
-| `skills/zephermine/` | 설계 자동화 — 인터뷰 → 도메인 분석 → 스펙 → QA 시나리오 → 섹션 분리 |
+| `skills/zephermine/` | 저장형 설계 자동화 — Antigravity의 가벼운 `/plan`·`/grill-me`보다 큰 spec→API/DB→flow→QA→sections 묶음 |
 | `skills/domain-dictionary/` | 도메인 용어사전(DDD Ubiquitous Language) — 영-한 매핑, 동의어/이의어/과부하 탐지, zephermine 자동 호출 |
-| `skills/minos/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프 (미노스) |
+| `skills/minos/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프. `/browser` 관찰은 Playwright로 재현한 뒤 판정 증거로 승격 |
 | `skills/argos/` | 감리/검증 — Phase 0~7에서 정적·런타임·API·QA·도면·디자인·보안 검증 (아르고스) |
 | `skills/docker-db-backup/` | Docker DB 자동 백업 (PostgreSQL/MySQL/MariaDB) |
 | `skills/docker-deploy/` | Docker 배포 (Cython/PyArmor) |
-| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — 엔진: /goal 1순위, /loop 심장박동 1.5순위 `--heartbeat`) |
+| `skills/auto-continue-loop/` | 자동 리뷰-수정-검증 루프 (/chronos — Claude/Codex/Antigravity `/goal` 1순위, Claude `/loop` 심장박동 1.5순위; Antigravity `/schedule`은 반복 예약용) |
 | `skills/seo-audit/` | SEO+AEO+GEO 감사 — 10영역 정적 분석 + **검색 SEO / AI 가시성 2축 점수** (평균내지 않음). 팩트 밀도 계측기(한국어 대응) + P0 상한 + na 재정규화 |
 | `skills/autoresearch/` | 스킬 프롬프트 자동 최적화 — Hill Climbing 루프로 SKILL.md 개선 (Karpathy autoresearch 패턴) |
 | `skills/reddit-researcher/` | Reddit 시장 조사 — 리드 스코어링, Pain Point 분류, 경쟁사 추적 |
@@ -290,7 +291,7 @@ claude plugin install voltagent-qa-sec
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
 | `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |
-| `skills/agent-team/` | 공통 네이티브 역할 계약 (읽기: Explore/explorer/codebase_investigator/explore, 쓰기: general-purpose/worker/generalist/general-purpose). Main이 공유 상태를 소유하고 위임 불가 시 순차 실행 |
+| `skills/agent-team/` | 공통 네이티브 역할 + Wave·파일 소유권·검증 계약. Antigravity 일반 장기 팀 작업은 가용한 `/teamwork-preview`를 우선하고, Poseidon은 추가 장부가 필요할 때만 사용 |
 | `skills/agent-team-codex/` | Codex의 `/agent-team` 호출이 라우팅되는 전용 adapter. stable multi-agent + Main 소유 Activity Log |
 | `skills/mermaid-diagrams/` | Mermaid 다이어그램 (ERD 포함) |
 | `skills/diagram-design/` | 에디토리얼 다이어그램 렌더링 — .mmd/설명 → 브랜드 토큰 HTML+inline SVG 표현 계층 (cathrynlavery/diagram-design MIT 부분 벤더링) |

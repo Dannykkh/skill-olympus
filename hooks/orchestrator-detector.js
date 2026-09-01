@@ -38,14 +38,14 @@ Start now: Read skills/workpm/SKILL.md, then skills/orchestrator/commands/workpm
 }
 
 /**
- * Build PM mode context (MCP only — works on Claude, Codex, Gemini)
+ * Build PM mode context (MCP only — works on Claude, Codex, Antigravity)
  */
 function buildPMMCPContext() {
   return `
 [PM MODE — MCP ONLY]
 
 Read skills/orchestrator/commands/workpm-mcp.md and follow the 4-phase workflow exactly as written.
-This mode uses ONLY orchestrator_* MCP tools — works on Claude, Codex, and Gemini.
+This mode uses ONLY orchestrator_* MCP tools — works on Claude, Codex, and Antigravity.
 
 Start now: Read skills/orchestrator/commands/workpm-mcp.md
 `;

@@ -1,8 +1,8 @@
 ---
 name: react-dev
-version: 1.0.0
 description: "Explicit `/react-dev` reference for advanced React/TypeScript typing and integration patterns. Do not auto-use for routine React implementation."
-disable-model-invocation: true
+metadata:
+  version: "1.0.0"
 ---
 
 # React TypeScript

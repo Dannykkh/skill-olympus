@@ -85,7 +85,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
       path.join(shimDir, "node"),
       `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
     );
-    for (const command of ["claude", "codex", "gemini", "jq"]) {
+    for (const command of ["claude", "codex", "agy", "jq"]) {
       writeExecutable(path.join(shimDir, command), "#!/usr/bin/env bash\nexit 0\n");
     }
     writeExecutable(
@@ -95,14 +95,14 @@ function runIsolatedInstaller(bash, args, options = {}) {
 
     seedOrchestratorRuntime(path.join(tempHome, ".claude"));
     seedOrchestratorRuntime(codexHome);
-    seedOrchestratorRuntime(path.join(tempHome, ".gemini"));
+    seedOrchestratorRuntime(path.join(tempHome, ".gemini", "antigravity-cli"));
     if (createGrokHome) fs.mkdirSync(path.join(tempHome, ".grok"), { recursive: true });
 
     const env = {
       ...process.env,
       HOME: shellPath(tempHome),
       USERPROFILE: tempHome,
-      GEMINI_HOME: shellPath(path.join(tempHome, ".gemini")),
+      ANTIGRAVITY_HOME: shellPath(path.join(tempHome, ".gemini")),
       GROK_HOME: shellPath(path.join(tempHome, ".grok")),
       FAIL_PRUNE: failPrune ? "1" : "0",
       OLYMPUS_UPDATE_CHECK_DISABLE: "1",
@@ -123,6 +123,46 @@ function runIsolatedInstaller(bash, args, options = {}) {
 
 const bash = findBash();
 
+test(
+  "install.sh --help exits before changing runtime homes",
+  { skip: bash ? false : "bash is unavailable" },
+  () => {
+    const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-sh-help-test-"));
+    const shimDir = path.join(tempHome, "bin");
+
+    try {
+      fs.mkdirSync(shimDir, { recursive: true });
+      writeExecutable(
+        path.join(shimDir, "node"),
+        "#!/usr/bin/env bash\necho 'unexpected node invocation' >&2\nexit 93\n",
+      );
+      const env = {
+        ...process.env,
+        HOME: shellPath(tempHome),
+        USERPROFILE: tempHome,
+        CODEX_HOME: shellPath(path.join(tempHome, ".codex")),
+        ANTIGRAVITY_HOME: shellPath(path.join(tempHome, ".gemini")),
+        PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
+      };
+      const result = spawnSync(
+        bash,
+        ["--noprofile", "--norc", "-u", shellPath(installSh), "--help"],
+        { cwd: repoRoot, env, encoding: "utf8", timeout: 30_000 },
+      );
+      const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+
+      assert.equal(result.status, 0, output);
+      assert.match(output, /Usage: bash install\.sh \[options\]/);
+      assert.doesNotMatch(output, /unexpected node invocation|Skills 설치 중|설치 완료/);
+      for (const runtimeHome of [".claude", ".codex", ".gemini", ".grok"]) {
+        assert.equal(fs.existsSync(path.join(tempHome, runtimeHome)), false);
+      }
+    } finally {
+      fs.rmSync(tempHome, { recursive: true, force: true });
+    }
+  },
+);
+
 for (const scenario of [
   { name: "default selection and CODEX_HOME fallback", args: [], override: false },
   { name: "--all selection and CODEX_HOME override", args: ["--all"], override: true },
@@ -138,12 +178,12 @@ for (const scenario of [
 
       assert.equal(result.error, undefined, output);
       assert.equal(result.status, 0, output);
-      assert.match(output, /LLM: claude,codex,gemini,grok/);
+      assert.match(output, /LLM: claude,codex,antigravity,grok/);
       assert.doesNotMatch(output, /unbound variable/);
       assert.doesNotMatch(output, /unexpected npm invocation/);
 
       const codexSummary = output.match(
-        /\n  \[Codex\]\n([\s\S]*?)(?:\n  \[(?:Gemini|Grok)\]|\n  If a same-name asset)/,
+        /\n  \[Codex\]\n([\s\S]*?)(?:\n  \[(?:Antigravity|Grok)\]|\n  If a same-name asset)/,
       );
       assert.ok(codexSummary, output);
       assert.match(codexSummary[1], /- Orchestrator: 등록 완료/);

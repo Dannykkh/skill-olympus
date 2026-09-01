@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-const PROVIDER_ORDER = ['claude', 'codex', 'gemini'];
+const PROVIDER_ORDER = ['claude', 'codex', 'antigravity'];
 export function isAIProvider(value) {
     return value !== undefined && PROVIDER_ORDER.includes(value);
 }
@@ -11,11 +11,11 @@ export function isAIProvider(value) {
 export function resolveWorkerProvider(workerId, explicitProvider) {
     if (explicitProvider) {
         if (!isAIProvider(explicitProvider)) {
-            throw new Error(`Unsupported worker provider '${explicitProvider}'. Expected claude, codex, or gemini.`);
+            throw new Error(`Unsupported worker provider '${explicitProvider}'. Expected claude, codex, or antigravity.`);
         }
         return explicitProvider;
     }
-    const prefix = workerId.match(/^(claude|codex|gemini)-worker(?:-|$)/)?.[1];
+    const prefix = workerId.match(/^(claude|codex|antigravity)-worker(?:-|$)/)?.[1];
     return isAIProvider(prefix) ? prefix : undefined;
 }
 /**
@@ -29,7 +29,7 @@ export function selectWorkerProviders(count, requestedProviders, availableProvid
         return {
             success: false,
             providers: [],
-            message: 'No supported worker provider is installed (claude, codex, gemini).'
+            message: 'No supported worker provider is installed (claude, codex, antigravity).'
         };
     }
     const requestedSlots = (requestedProviders || []).slice(0, count);
@@ -80,7 +80,7 @@ export function buildDetectionResult(providers) {
         providers,
         availableCount,
         mode: 'none',
-        modeDescription: 'No supported AI provider is installed (claude, codex, gemini).'
+        modeDescription: 'No supported AI provider is installed (claude, codex, antigravity).'
     };
 }
 // ============================================================================
@@ -125,10 +125,10 @@ export function detectAIProviders() {
             description: 'OpenAI Codex CLI'
         },
         {
-            name: 'gemini',
-            ...checkCLI('gemini', '--version'),
-            command: 'gemini',
-            description: 'Google Gemini CLI'
+            name: 'antigravity',
+            ...checkCLI('agy', '--version'),
+            command: 'agy',
+            description: 'Google Antigravity CLI'
         }
     ];
     return buildDetectionResult(providers);
@@ -163,8 +163,8 @@ export function getProviderCommand(provider, options = {}) {
         case 'codex':
             command = 'codex';
             break;
-        case 'gemini':
-            command = 'gemini';
+        case 'antigravity':
+            command = 'agy';
             break;
         default:
             throw new Error(`Unsupported AI provider: ${String(provider)}`);

@@ -30,7 +30,7 @@ find_mnemo_marker_root() {
     return 1
 }
 
-# P1 parity: Claude/Gemini와 공유하는 .claude/mnemo-errors.log에 에러급 실패를 기록한다.
+# P1 parity: Claude/Antigravity와 공유하는 .claude/mnemo-errors.log에 에러급 실패를 기록한다.
 # debug_log는 Codex 전용 trace이고, 사용자에게 가시화할 에러는 프로젝트 공용 로그로 통합된다.
 log_mnemo_error() {
     local ctx="$1"

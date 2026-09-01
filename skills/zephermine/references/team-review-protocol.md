@@ -51,10 +51,10 @@ Step 8 끝에서 생성된 `docs/domain-dictionary.md` v1 사전을 **모든 6�
 
 ### Native Role Contract
 
-| Semantic role | Claude | Codex | Gemini | Grok | Boundary |
+| Semantic role | Claude | Codex | Antigravity | Grok | Boundary |
 |---------------|--------|-------|--------|------|----------|
-| `read-only-analysis` | `Explore` | `explorer` | `codebase_investigator` | `explore` | Read-only and return-only; never write files |
-| `artifact-writer` | `general-purpose` | `worker` | `generalist` | `general-purpose` | Write only the one assigned `team-reviews/*.md` file |
+| `read-only-analysis` | `Explore` | `explorer` | `research` | `explore` | Read-only and return-only; never write files |
+| `artifact-writer` | `general-purpose` | `worker` | 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트 | `general-purpose` | Write only the one assigned `team-reviews/*.md` file |
 
 - The six expert work items use `artifact-writer` because each produces one unique file.
 - Main/Lead alone owns `team-review.md`, domain-dictionary merges, shared run summaries, prompts shared across workers, and every other shared file. Each external process may write only its provider/task-specific run log.
@@ -97,7 +97,7 @@ Phase B (domain-research.md 활용):
 
 인터뷰에서 파악한 산업군(`[Industry: {산업군}]` 태그)을 기반으로 페르소나를 동적 결정.
 
-> **Multi-AI 지원**: 도메인 전문가는 Codex/Gemini CLI가 설치되어 있으면 외부 AI로 실행해 단일 런타임 편향을 보완합니다. 고정 전문가(UX, Architecture, Red Team)는 현재 CLI의 `artifact-writer`로 실행하고, 위임할 수 없으면 메인 컨텍스트에서 순차 실행합니다.
+> **Multi-AI 지원**: 도메인 전문가는 Codex/Antigravity CLI가 설치되어 있으면 외부 AI로 실행해 단일 런타임 편향을 보완합니다. 고정 전문가(UX, Architecture, Red Team)는 현재 CLI의 `artifact-writer`로 실행하고, 위임할 수 없으면 메인 컨텍스트에서 순차 실행합니다.
 
 ## 산업군 → 도메인 전문가 매핑
 
@@ -121,7 +121,7 @@ Step 10 must not become a second full research phase. Step 5 is for broad resear
 Default mode is **standard**:
 - Domain Researcher does triage first, then only fills missing industry context.
 - Domain Process Expert and Domain Technical Expert do not perform fresh web search by default.
-- External AI domain experts use short timeouts: Codex default 600s, Gemini default 600s.
+- External AI domain experts use short timeouts: Codex default 600s, Antigravity default 600s.
 - If a budget is reached, write "Follow-up needed" in the output file and continue.
 
 Use **deep** mode only when the user explicitly asks for deep domain research or the project is clearly high-risk/high-regulation.
@@ -150,20 +150,20 @@ Never repeat Step 5 research. If `research.md` already covers a topic, cite it a
 
 ### 3단계: External AI CLI 감지
 
-도메인 전문가에 외부 AI(Codex/Gemini CLI)를 활용하여 현재 런타임의 단일 관점 편향을 보완합니다.
+도메인 전문가에 외부 AI(Codex/Antigravity CLI)를 활용하여 현재 런타임의 단일 관점 편향을 보완합니다.
 
 ```bash
 which codex 2>/dev/null && echo "codex: OK" || echo "codex: NOT FOUND"
-which gemini 2>/dev/null && echo "gemini: OK" || echo "gemini: NOT FOUND"
+which agy 2>/dev/null && echo "antigravity: OK" || echo "antigravity: NOT FOUND"
 ```
 
 **실행 모드 결정:**
 
-| Codex | Gemini | 모드 | Process Expert | Technical Expert |
+| Codex | Antigravity | 모드 | Process Expert | Technical Expert |
 |-------|--------|------|----------------|------------------|
-| ✅ | ✅ | **Dual-AI** | Codex | Gemini |
+| ✅ | ✅ | **Dual-AI** | Codex | Antigravity |
 | ✅ | ❌ | **Single-AI** | Codex | Codex |
-| ❌ | ✅ | **Single-AI** | Gemini | Gemini |
+| ❌ | ✅ | **Single-AI** | Antigravity | Antigravity |
 | ❌ | ❌ | **Native runtime** | `artifact-writer` | `artifact-writer` |
 
 **외부 AI 장점:** 같은 산업 분석을 서로 다른 LLM이 수행하면 다양한 관점을 확보하고 단일 런타임 편향을 줄일 수 있습니다.
@@ -497,7 +497,7 @@ Native work item:
 
 #### External AI 모드: 도메인 전문가 CLI 실행
 
-3단계에서 Codex 또는 Gemini CLI가 감지된 경우, 위 native writer 모드를 **아래 외부 CLI 실행으로 대체**할 수 있습니다.
+3단계에서 Codex 또는 Antigravity CLI가 감지된 경우, 위 native writer 모드를 **아래 외부 CLI 실행으로 대체**할 수 있습니다.
 `domain-research.md`는 동일하게 입력으로 전달합니다.
 
 > 고정 전문가(UX, Architecture, Red Team)는 현재 CLI의 `artifact-writer`로 실행합니다. 네이티브 위임이 없으면 메인 컨텍스트에서 순차 실행하되, 각 결과는 고유 파일로 저장하고 1-2줄 요약만 남깁니다.
@@ -647,41 +647,35 @@ if [ ! -s "<planning_dir>/team-reviews/domain-process-analysis.md" ]; then
 fi
 ```
 
-**3. Gemini 실행** (기본 timeout 10분, 필요 시 `GEMINI_TIMEOUT_SECONDS`로 조정):
+**3. Antigravity 실행** (기본 timeout 10분, 필요 시 `ANTIGRAVITY_DOMAIN_TIMEOUT_SECONDS`로 조정):
 
-> Gemini는 `@file` 문법으로 파일을 직접 첨부합니다. `research.md`와 `docs/domain-dictionary.md`는 단계에 따라 없을 수 있으므로 존재 여부를 확인 후 인자로 추가합니다.
-> 백그라운드/자동화에서는 `--approval-mode yolo`와 `-p/--prompt`를 함께 사용합니다. positional prompt만 쓰면 Gemini CLI가 interactive 모드로 들어가 승인 대기에서 멈출 수 있습니다.
-> Gemini는 종종 응답이 늦거나 네트워크/서버 문제로 반환이 없을 수 있으므로 장시간 기다리지 않습니다. 기본 600초 안에 결과가 없으면 실패로 기록하고 폴백합니다.
+> Antigravity는 `agy -p` headless 모드로 실행하고 workspace 안의 입력 파일 경로를 프롬프트에 명시합니다. `research.md`와 `docs/domain-dictionary.md`는 존재할 때만 읽도록 지시합니다.
+> 이 단계는 읽기 전용 분석이므로 `--dangerously-skip-permissions`를 사용하지 않습니다. permission policy가 읽기를 허용하지 않으면 실패로 기록하고 폴백합니다.
+> 모델은 하드코딩하지 않습니다. 명시 선택이 필요하면 `agy models`의 현재 목록을 먼저 확인합니다.
 
 ```bash
-GEMINI_TIMEOUT_SECONDS="${GEMINI_TIMEOUT_SECONDS:-600}"
-timeout "$GEMINI_TIMEOUT_SECONDS" bash -c '
-EXTRA_FILES=""
-[ -f "<planning_dir>/research.md" ] && EXTRA_FILES="$EXTRA_FILES
-@<planning_dir>/research.md"
-[ -f "docs/domain-dictionary.md" ] && EXTRA_FILES="$EXTRA_FILES
-@docs/domain-dictionary.md"
-
-gemini --approval-mode yolo \
-  --output-format text \
+ANTIGRAVITY_DOMAIN_TIMEOUT_SECONDS="${ANTIGRAVITY_DOMAIN_TIMEOUT_SECONDS:-600}"
+timeout "$ANTIGRAVITY_DOMAIN_TIMEOUT_SECONDS" agy \
   -p "$(cat "<planning_dir>/team-reviews/domain-technical-prompt.txt")
 
-@<planning_dir>/spec.md
-@<planning_dir>/interview.md
-@<planning_dir>/team-reviews/domain-research.md
-$EXTRA_FILES" \
+Read these exact workspace files before answering:
+- <planning_dir>/spec.md
+- <planning_dir>/interview.md
+- <planning_dir>/team-reviews/domain-research.md
+- <planning_dir>/research.md, only if it exists
+- docs/domain-dictionary.md, only if it exists" \
+  --output-format text \
   > "<planning_dir>/team-reviews/domain-technical-analysis.md" 2>> "<planning_dir>/team-reviews/domain-technical-run.log"
-'
-GEMINI_EXIT=$?
+ANTIGRAVITY_EXIT=$?
 
 # 실패 체크: timeout(124) 또는 빈 파일
-if [ $GEMINI_EXIT -eq 124 ]; then
-  echo "[WARN] Gemini timeout (${GEMINI_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/domain-technical-run.log"
-elif [ $GEMINI_EXIT -ne 0 ]; then
-  echo "[WARN] Gemini 종료코드: $GEMINI_EXIT" >> "<planning_dir>/team-reviews/domain-technical-run.log"
+if [ $ANTIGRAVITY_EXIT -eq 124 ]; then
+  echo "[WARN] Antigravity timeout (${ANTIGRAVITY_DOMAIN_TIMEOUT_SECONDS}s 초과)" >> "<planning_dir>/team-reviews/domain-technical-run.log"
+elif [ $ANTIGRAVITY_EXIT -ne 0 ]; then
+  echo "[WARN] Antigravity 종료코드: $ANTIGRAVITY_EXIT" >> "<planning_dir>/team-reviews/domain-technical-run.log"
 fi
 if [ ! -s "<planning_dir>/team-reviews/domain-technical-analysis.md" ]; then
-  echo "[WARN] Gemini 출력 비어있음 → native writer 또는 main-context 폴백 필요" >> "<planning_dir>/team-reviews/domain-technical-run.log"
+  echo "[WARN] Antigravity 출력 비어있음 → native writer 또는 main-context 폴백 필요" >> "<planning_dir>/team-reviews/domain-technical-run.log"
 fi
 ```
 
@@ -689,9 +683,9 @@ fi
 >
 > | 모드 | Process Expert → | Technical Expert → |
 > |------|------------------|--------------------|
-> | **Dual-AI** | Codex (위 2번) | Gemini (위 3번) |
+> | **Dual-AI** | Codex (위 2번) | Antigravity (위 3번) |
 > | **Single-AI (Codex)** | Codex (process 프롬프트) | Codex (technical 프롬프트) |
-> | **Single-AI (Gemini)** | Gemini (process 프롬프트) | Gemini (technical 프롬프트) |
+> | **Single-AI (Antigravity)** | Antigravity (process 프롬프트) | Antigravity (technical 프롬프트) |
 > | **Native runtime** | `artifact-writer` | `artifact-writer` |
 >
 > **실패 폴백**: 실행 후 해당 작업의 `domain-*-run.log`를 확인하고, 출력 파일이 비어있거나 오류면 그 전문가만 현재 CLI의 `artifact-writer`로 재실행합니다. 네이티브 위임도 불가능하면 Main/Lead가 같은 프롬프트를 메인 컨텍스트에서 순차 실행합니다.

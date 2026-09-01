@@ -21,7 +21,7 @@ PR 단위 코드 리뷰 오케스트레이터. v4부터 **리뷰 엔진과 정�
   ├─ Step 2: 엔진 선택 (CLI 감지)
   │    ├─ 경로 A: Claude/Grok → 사용 가능한 review 엔진
   │    ├─ 경로 B: Codex   → 네이티브 codex review
-  │    └─ 경로 C: 풀 경로 (네이티브 없음 — Gemini 등)
+  │    └─ 경로 C: 풀 경로 (네이티브 없음 — Antigravity 등)
   └─ Step 3: 정책 레이어 P1~P5 (공통)
        P1 Scope Drift → P2 도메인 보강 패스 → P3 Suppressions
        → P4 Action Triage → P5 통합 보고서
@@ -75,7 +75,7 @@ echo "BRANCH: $(git branch --show-current 2>/dev/null)"
 | Claude Code | 활성 review skill/command가 실제로 존재 | **A — 런타임 위임** |
 | Codex CLI | Codex 세션에서 실행 중 (`codex` CLI 환경) | **B — codex review** |
 | Grok Build | bundled `review` skill 존재 | **A — 런타임 위임** |
-| Gemini 또는 review 기능이 없는 런타임 | 위 조건 불충족 | **C — 풀 경로** |
+| Antigravity 또는 review 기능이 없는 런타임 | 위 조건 불충족 | **C — 풀 경로** |
 
 네이티브 엔진 호출이 실패하면 경로 C로 폴백하고, P5 보고서에 폴백 사유를 기록합니다.
 사용자가 명시적으로 요청하면("풀 경로로 리뷰", "specialist 리뷰") Claude/Codex에서도 경로 C를 사용합니다.
@@ -277,7 +277,7 @@ PR Quality Score: X/10
 
 ## 풀 경로 상세 (경로 C)
 
-네이티브 엔진이 없는 환경(Gemini 등) 또는 네이티브 호출 실패 시 사용합니다.
+네이티브 엔진이 없는 환경(Antigravity 등) 또는 네이티브 호출 실패 시 사용합니다.
 
 ### C-1: Scope 감지
 

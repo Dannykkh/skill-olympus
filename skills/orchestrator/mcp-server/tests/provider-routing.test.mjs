@@ -18,7 +18,7 @@ test('single-provider detection names the provider that is actually available', 
   const result = detector.buildDetectionResult([
     provider('claude', false),
     provider('codex', true),
-    provider('gemini', false)
+    provider('antigravity', false)
   ]);
 
   assert.equal(result.mode, 'single');
@@ -31,7 +31,7 @@ test('no-provider detection reports a distinct unavailable mode', () => {
   const result = detector.buildDetectionResult([
     provider('claude', false),
     provider('codex', false),
-    provider('gemini', false)
+    provider('antigravity', false)
   ]);
 
   assert.equal(result.mode, 'none');
@@ -40,17 +40,17 @@ test('no-provider detection reports a distinct unavailable mode', () => {
 });
 
 test('omitted worker providers use the first detected provider in canonical order', () => {
-  const result = detector.selectWorkerProviders(3, undefined, ['gemini', 'codex']);
+  const result = detector.selectWorkerProviders(3, undefined, ['antigravity', 'codex']);
 
   assert.equal(result.success, true);
   assert.deepEqual(result.providers, ['codex', 'codex', 'codex']);
 });
 
 test('missing requested slots use the first detected provider', () => {
-  const result = detector.selectWorkerProviders(3, ['gemini'], ['codex', 'gemini']);
+  const result = detector.selectWorkerProviders(3, ['antigravity'], ['codex', 'antigravity']);
 
   assert.equal(result.success, true);
-  assert.deepEqual(result.providers, ['gemini', 'codex', 'codex']);
+  assert.deepEqual(result.providers, ['antigravity', 'codex', 'codex']);
 });
 
 test('worker selection fails closed for unavailable or absent providers', () => {
@@ -64,7 +64,7 @@ test('worker selection fails closed for unavailable or absent providers', () => 
 });
 
 test('worker provider resolves from explicit metadata before the worker id', () => {
-  assert.equal(detector.resolveWorkerProvider('codex-worker-1', 'gemini'), 'gemini');
+  assert.equal(detector.resolveWorkerProvider('codex-worker-1', 'antigravity'), 'antigravity');
   assert.equal(detector.resolveWorkerProvider('codex-worker-1'), 'codex');
   assert.equal(detector.resolveWorkerProvider('manual-worker'), undefined);
   assert.throws(
@@ -77,10 +77,10 @@ test('provider command guidance never adds approval bypass flags or a Claude fal
   assert.equal(detector.getProviderStrengths, undefined);
   assert.equal(detector.getProviderCommand('claude'), 'claude');
   assert.equal(detector.getProviderCommand('codex'), 'codex');
-  assert.equal(detector.getProviderCommand('gemini'), 'gemini');
+  assert.equal(detector.getProviderCommand('antigravity'), 'agy');
   assert.throws(() => detector.getProviderCommand('other'), /unsupported ai provider/i);
 
-  for (const providerName of ['claude', 'codex', 'gemini']) {
+  for (const providerName of ['claude', 'codex', 'antigravity']) {
     const command = detector.getProviderCommand(providerName);
     assert.doesNotMatch(command, /dangerously|yolo|approval|\-a never/i);
   }

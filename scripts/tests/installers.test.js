@@ -4,6 +4,10 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const {
+  appendTurn: appendAntigravityTurn,
+  latestTurn: latestAntigravityTurn,
+} = require("../../skills/antigravity-mnemo/hooks/save-turn");
 const { collectAgentFiles } = require("../agent-files");
 const { pruneStaleAssets } = require("../prune-stale-assets");
 const {
@@ -26,13 +30,14 @@ const {
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const installBat = path.join(repoRoot, "install.bat");
+const installAntigravityMcp = path.join(repoRoot, "install-mcp-antigravity.js");
 const generateCatalogs = path.join(repoRoot, "scripts", "generate-catalogs.js");
 const installHooksConfig = path.join(repoRoot, "install-hooks-config.js");
 const syncClaudeAgents = path.join(repoRoot, "scripts", "sync-claude-agents.js");
 const syncClaudeSkills = path.join(repoRoot, "scripts", "sync-claude-skills.js");
 const syncCodexAssets = path.join(repoRoot, "scripts", "sync-codex-assets.js");
-const syncGeminiAssets = path.join(repoRoot, "scripts", "sync-gemini-assets.js");
-const installGeminiMnemo = path.join(repoRoot, "skills", "gemini-mnemo", "install.js");
+const syncAntigravityAssets = path.join(repoRoot, "scripts", "sync-antigravity-assets.js");
+const installAntigravityMnemo = path.join(repoRoot, "skills", "antigravity-mnemo", "install.js");
 const expectedSourceOnlySkillCount = fs.existsSync(
   path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
 )
@@ -101,6 +106,44 @@ function assertDormantOrchestratorModule(home, runtimeName) {
     `${runtimeName} unexpectedly registered orchestrator as an active skill`,
   );
 }
+
+test("install.bat --help exits before changing runtime homes", () => {
+  if (process.platform !== "win32") {
+    test.skip("Windows-only installer test");
+    return;
+  }
+
+  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-help-test-"));
+  const env = {
+    ...process.env,
+    HOME: tempHome,
+    USERPROFILE: tempHome,
+    CODEX_HOME: path.join(tempHome, ".codex"),
+    ANTIGRAVITY_HOME: path.join(tempHome, ".gemini"),
+    OLYMPUS_UPDATE_CHECK_DISABLE: "1",
+  };
+
+  try {
+    const command = `call "${installBat}" --help`;
+    const result = spawnSync("cmd.exe", ["/d", "/c", command], {
+      cwd: repoRoot,
+      env,
+      encoding: "utf8",
+      timeout: 30_000,
+      windowsVerbatimArguments: true,
+    });
+    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+
+    assert.equal(result.status, 0, output);
+    assert.match(output, /Usage: install\.bat \[options\]/);
+    assert.doesNotMatch(output, /Installing Skills|Installation complete/);
+    for (const runtimeHome of [".claude", ".codex", ".gemini", ".grok"]) {
+      assert.equal(fs.existsSync(path.join(tempHome, runtimeHome)), false);
+    }
+  } finally {
+    fs.rmSync(tempHome, { recursive: true, force: true });
+  }
+});
 
 test("codex-only install.bat succeeds without a preexisting .claude directory", () => {
   if (process.platform !== "win32") {
@@ -404,6 +447,118 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   }
 });
 
+test("Antigravity-only install.bat writes the current Google CLI layout", () => {
+  if (process.platform !== "win32") {
+    test.skip("Windows-only installer test");
+    return;
+  }
+
+  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-bat-test-"));
+  const shimDir = path.join(tempHome, "bin");
+  const googleHome = path.join(tempHome, ".gemini");
+  fs.mkdirSync(shimDir, { recursive: true });
+  fs.writeFileSync(path.join(shimDir, "agy.cmd"), "@exit /b 0\r\n", "utf8");
+  // Dependency installation is not part of this layout test. A failed optional
+  // orchestrator build must not prevent the core Antigravity assets from landing.
+  fs.writeFileSync(path.join(shimDir, "npm.cmd"), "@exit /b 97\r\n", "utf8");
+  const env = {
+    ...process.env,
+    HOME: tempHome,
+    USERPROFILE: tempHome,
+    ANTIGRAVITY_HOME: googleHome,
+    CODEX_HOME: path.join(tempHome, ".codex"),
+    OLYMPUS_UPDATE_CHECK_DISABLE: "1",
+    PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
+  };
+
+  try {
+    const command = `echo.| call "${installBat}" --llm antigravity`;
+    const result = spawnSync("cmd.exe", ["/d", "/c", command], {
+      cwd: repoRoot,
+      env,
+      encoding: "utf8",
+      timeout: 120000,
+      windowsVerbatimArguments: true,
+    });
+    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+    assert.equal(result.error, undefined, output);
+    assert.equal(result.status, 0, output);
+
+    assert.equal(
+      fs.existsSync(path.join(googleHome, "antigravity-cli", "skills", "antigravity", "SKILL.md")),
+      false,
+      output,
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          googleHome,
+          "antigravity-cli",
+          ".olympus",
+          "source-skills",
+          "antigravity",
+          "SKILL.md",
+        ),
+      ),
+      true,
+      "The Antigravity review adapter should remain available through the source-only catalog",
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(googleHome, "antigravity-cli", "skills", "antigravity-mnemo", "SKILL.md"),
+      ),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(path.join(googleHome, "antigravity-cli", "skills", "gemini", "SKILL.md")),
+      false,
+    );
+    assert.equal(
+      fs.existsSync(path.join(googleHome, "config", "hooks", "antigravity-hook.js")),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(path.join(googleHome, "config", "hooks", "olympus-save-turn.js")),
+      true,
+    );
+
+    const hooks = JSON.parse(
+      fs.readFileSync(path.join(googleHome, "config", "hooks.json"), "utf8"),
+    );
+    assert.equal(
+      hooks["olympus-core"].PreToolUse[0].matcher,
+      "write_to_file|replace_file_content|multi_replace_file_content",
+    );
+    assert.match(hooks["olympus-core"].Stop[0].command, /antigravity-hook\.js" chronos/);
+    assert.match(
+      hooks["olympus-antigravity-mnemo"].Stop[0].command,
+      /olympus-save-turn\.js/,
+    );
+
+    const rules = fs.readFileSync(path.join(googleHome, "GEMINI.md"), "utf8");
+    assert.match(rules, /ANTIGRAVITY-MNEMO:START/);
+    for (const command of [
+      "/goal",
+      "/plan",
+      "/grill-me",
+      "/teamwork-preview",
+      "/learn",
+      "/schedule",
+      "/browser",
+    ]) {
+      assert.ok(rules.includes(command), `installed Antigravity rules omit ${command}`);
+    }
+    const mcp = JSON.parse(
+      fs.readFileSync(path.join(googleHome, "config", "mcp_config.json"), "utf8"),
+    );
+    assert.ok(mcp.mcpServers.context7);
+    assert.match(output, /\[Antigravity\]/);
+    assert.doesNotMatch(output, /not recognized as an internal or external command/i);
+  } finally {
+    fs.rmSync(tempHome, { recursive: true, force: true });
+  }
+});
+
 test("Codex global sync does not apply project-manifest ownership to another home", () => {
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-codex-home-scope-test-"));
   const codexHome = path.join(tempHome, ".codex");
@@ -503,6 +658,195 @@ test("Claude source-only policy preserves user-owned skill overrides without add
   assert.equal(Object.keys(settings.skillOverrides).length, 3);
 });
 
+test("Antigravity hook config preserves unrelated groups and rejects the retired target", () => {
+  const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-hooks-test-"));
+  const hooksDir = path.join(tempHome, "config", "hooks");
+  const configPath = path.join(tempHome, "config", "hooks.json");
+  fs.mkdirSync(hooksDir, { recursive: true });
+  fs.writeFileSync(path.join(hooksDir, "antigravity-hook.js"), "// fixture\n", "utf8");
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ thirdParty: { Stop: [{ type: "command", command: "node third-party.js" }] } }),
+    "utf8",
+  );
+
+  const install = spawnSync(process.execPath, [
+    installHooksConfig,
+    hooksDir,
+    configPath,
+    "--bash",
+    "--components",
+    "all",
+    "--target",
+    "antigravity",
+  ], { encoding: "utf8", timeout: 30000 });
+  assert.equal(install.status, 0, install.stderr);
+  const configured = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  assert.ok(configured.thirdParty);
+  assert.equal(
+    configured["olympus-core"].PreToolUse[0].matcher,
+    "write_to_file|replace_file_content|multi_replace_file_content",
+  );
+  assert.match(configured["olympus-core"].PreToolUse[0].hooks[0].command, /antigravity-hook\.js" safety/);
+  assert.match(configured["olympus-core"].Stop[0].command, /antigravity-hook\.js" chronos/);
+
+  const retired = spawnSync(process.execPath, [
+    installHooksConfig,
+    hooksDir,
+    configPath,
+    "--bash",
+    "--target",
+    "gemini",
+  ], { encoding: "utf8", timeout: 30000 });
+  assert.notEqual(retired.status, 0);
+  assert.match(retired.stderr, /retired.*antigravity/i);
+
+  const uninstall = spawnSync(process.execPath, [
+    installHooksConfig,
+    hooksDir,
+    configPath,
+    "--uninstall",
+    "--target",
+    "antigravity",
+  ], { encoding: "utf8", timeout: 30000 });
+  assert.equal(uninstall.status, 0, uninstall.stderr);
+  const remaining = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  assert.deepEqual(Object.keys(remaining), ["thirdParty"]);
+});
+
+test("Antigravity MCP adapter owns only the entries it installs", () => {
+  const googleHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-mcp-test-"));
+  const env = { ...process.env, ANTIGRAVITY_HOME: googleHome };
+  const configPath = path.join(googleHome, "config", "mcp_config.json");
+  fs.mkdirSync(path.dirname(configPath), { recursive: true });
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ mcpServers: { personal: { command: "personal-mcp" } } }),
+    "utf8",
+  );
+
+  const install = spawnSync(process.execPath, [installAntigravityMcp, "context7", "playwright"], {
+    cwd: repoRoot,
+    env,
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(install.status, 0, install.stderr);
+  let config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  assert.deepEqual(config.mcpServers.personal, { command: "personal-mcp" });
+  assert.equal(config.mcpServers.context7.command, "npx");
+  assert.equal(config.mcpServers.playwright.command, "npx");
+
+  config.mcpServers.context7.args.push("--user-modified");
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf8");
+  const uninstall = spawnSync(
+    process.execPath,
+    [installAntigravityMcp, "--uninstall", "context7", "playwright"],
+    { cwd: repoRoot, env, encoding: "utf8", timeout: 30000 },
+  );
+  assert.equal(uninstall.status, 0, uninstall.stderr);
+  config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  assert.ok(config.mcpServers.context7, "modified managed entry should be preserved");
+  assert.equal(Object.prototype.hasOwnProperty.call(config.mcpServers, "playwright"), false);
+  assert.deepEqual(config.mcpServers.personal, { command: "personal-mcp" });
+});
+
+test("Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-turn-test-"));
+  const transcriptPath = path.join(tempRoot, "transcript.jsonl");
+  fs.writeFileSync(transcriptPath, [
+    JSON.stringify({ step_index: 1, source: "USER_EXPLICIT", type: "USER_INPUT", content: "질문 <private>secret</private>" }),
+    JSON.stringify({ step_index: 2, source: "MODEL", type: "THOUGHT", content: "internal reasoning" }),
+    JSON.stringify({ step_index: 3, source: "MODEL", type: "MESSAGE", content: { text: "최종 답변" } }),
+    "",
+  ].join("\n"), "utf8");
+  const payload = { conversationId: "conversation-1", transcriptPath };
+  const turn = latestAntigravityTurn(payload);
+  assert.equal(turn.userText, "질문 [PRIVATE]");
+  assert.equal(turn.assistantText, "최종 답변");
+  assert.equal(turn.order, 3);
+
+  appendAntigravityTurn(tempRoot, payload, turn);
+  appendAntigravityTurn(tempRoot, payload, turn);
+  const date = new Date().toISOString().slice(0, 10);
+  const saved = fs.readFileSync(
+    path.join(tempRoot, "conversations", `${date}-antigravity.md`),
+    "utf8",
+  );
+  assert.equal((saved.match(/antigravity-turn:/g) || []).length, 1);
+  assert.match(saved, /질문 \[PRIVATE\]/);
+  assert.doesNotMatch(saved, /secret|internal reasoning/);
+  assert.equal(fs.existsSync(path.join(tempRoot, "MEMORY.md")), true);
+});
+
+test("Antigravity core hook blocks protected files and drives Chronos through Stop", () => {
+  const adapter = path.join(repoRoot, "hooks", "antigravity-hook.js");
+  const safety = spawnSync(process.execPath, [adapter, "safety"], {
+    cwd: repoRoot,
+    input: JSON.stringify({
+      workspacePaths: [repoRoot],
+      toolCall: { args: { filePath: ".env" } },
+    }),
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(safety.status, 0, safety.stderr);
+  assert.equal(JSON.parse(safety.stdout).decision, "deny");
+
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-chronos-test-"));
+  const stateDir = path.join(tempRoot, ".chronos");
+  const statePath = path.join(stateDir, "loop-state.md");
+  const transcriptPath = path.join(tempRoot, "transcript.jsonl");
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(statePath, [
+    "---",
+    "iteration: 0",
+    "max_iterations: 2",
+    "completion_promise: null",
+    "session_id: conversation-1",
+    "---",
+    "계속 검증하고 수정한다.",
+    "",
+  ].join("\n"), "utf8");
+  fs.writeFileSync(
+    transcriptPath,
+    `${JSON.stringify({ source: "MODEL", type: "MESSAGE", content: "아직 진행 중" })}\n`,
+    "utf8",
+  );
+  const payload = JSON.stringify({
+    conversationId: "conversation-1",
+    workspacePaths: [tempRoot],
+    transcriptPath,
+  });
+  const continued = spawnSync(process.execPath, [adapter, "chronos"], {
+    cwd: repoRoot,
+    input: payload,
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(continued.status, 0, continued.stderr);
+  const continuedResult = JSON.parse(continued.stdout);
+  assert.equal(continuedResult.decision, "continue");
+  assert.match(continuedResult.reason, /계속 검증하고 수정한다\./);
+  assert.equal(Object.hasOwn(continuedResult, "systemMessage"), false);
+  assert.match(fs.readFileSync(statePath, "utf8"), /^iteration: 1$/m);
+
+  fs.writeFileSync(
+    transcriptPath,
+    `${JSON.stringify({ source: "MODEL", type: "MESSAGE", content: "Chronos Complete" })}\n`,
+    "utf8",
+  );
+  const completed = spawnSync(process.execPath, [adapter, "chronos"], {
+    cwd: repoRoot,
+    input: payload,
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(completed.status, 0, completed.stderr);
+  assert.equal(JSON.parse(completed.stdout).decision, "allow");
+  assert.equal(fs.existsSync(statePath), false);
+});
+
 test("shared runtime skill policy is fail-closed with narrow and full opt-ins", () => {
   assert.equal(DEFAULT_DISABLED_BROAD_CODING_SKILLS.length, 8);
   assert.deepEqual(DEFAULT_COMMON_RUNTIME_SKILLS, [
@@ -564,7 +908,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
   ]);
   assert.deepEqual(fullOptIn.defaultDisabledNames, []);
 
-  for (const runtime of ["claude", "codex", "gemini", "grok"]) {
+  for (const runtime of ["claude", "codex", "antigravity", "grok"]) {
     const selection = selectRuntimeSkills(
       DEFAULT_RUNTIME_SKILL_ALLOWLIST,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
@@ -709,25 +1053,35 @@ test("shared runtime agent policy keeps every custom agent source-only by defaul
   assert.deepEqual(optedIn.defaultDisabledNames, []);
 });
 
-test("Claude and Gemini agent syncs support default exclusion and explicit opt-in", () => {
+test("Claude and Antigravity agent syncs support default exclusion and explicit opt-in", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-agent-policy-test-"));
   const claudeHome = path.join(tempRoot, ".claude");
-  const geminiHome = path.join(tempRoot, ".gemini");
-  const geminiEnv = { ...process.env, GEMINI_HOME: geminiHome };
-  fs.mkdirSync(geminiHome, { recursive: true });
-  fs.writeFileSync(
-    path.join(geminiHome, "settings.json"),
-    JSON.stringify({ enableAgents: true, experimental: { worktrees: false } }),
-    "utf8",
-  );
+  const googleHome = path.join(tempRoot, ".gemini");
+  const cases = [
+    {
+      name: "Claude",
+      script: syncClaudeAgents,
+      scriptArgs: [claudeHome],
+      env: process.env,
+      catalogHome: claudeHome,
+      agentsHome: path.join(claudeHome, "agents"),
+      skillsHome: path.join(claudeHome, "skills"),
+    },
+    {
+      name: "Antigravity",
+      script: syncAntigravityAssets,
+      scriptArgs: [],
+      env: { ...process.env, ANTIGRAVITY_HOME: googleHome },
+      catalogHome: path.join(googleHome, "antigravity-cli"),
+      agentsHome: path.join(googleHome, "config", "agents"),
+      skillsHome: path.join(googleHome, "antigravity-cli", "skills"),
+    },
+  ];
 
-  for (const [script, scriptArgs, env, home] of [
-    [syncClaudeAgents, [claudeHome], process.env, claudeHome],
-    [syncGeminiAssets, [], geminiEnv, geminiHome],
-  ]) {
-    const defaultResult = spawnSync(process.execPath, [script, ...scriptArgs], {
+  for (const entry of cases) {
+    const defaultResult = spawnSync(process.execPath, [entry.script, ...entry.scriptArgs], {
       cwd: repoRoot,
-      env,
+      env: entry.env,
       encoding: "utf8",
       timeout: 120000,
     });
@@ -737,50 +1091,48 @@ test("Claude and Gemini agent syncs support default exclusion and explicit opt-i
       `Default agent sync failed\nstdout:\n${defaultResult.stdout}\nstderr:\n${defaultResult.stderr}`,
     );
     const defaultCatalog = fs.readFileSync(
-      path.join(home, "AGENTS-CATALOG.md"),
+      path.join(entry.catalogHome, "AGENTS-CATALOG.md"),
       "utf8",
     );
     assert.match(defaultCatalog, /총 0개 에이전트가 설치되어 있습니다/);
     assert.equal(
-      fs.existsSync(path.join(home, "agents")),
+      fs.existsSync(entry.agentsHome),
       false,
       "Default sync should not leave an empty custom-agent directory",
     );
-    if (script === syncGeminiAssets) {
-      const settings = JSON.parse(
-        fs.readFileSync(path.join(geminiHome, "settings.json"), "utf8"),
-      );
-      assert.equal(
-        Object.prototype.hasOwnProperty.call(settings, "enableAgents"),
-        false,
-        "Gemini sync retained the obsolete top-level enableAgents setting",
-      );
-      assert.deepEqual(settings.experimental, { worktrees: false });
+    if (entry.script === syncAntigravityAssets) {
       const manifest = JSON.parse(
-        fs.readFileSync(path.join(geminiHome, ".gemini-sync-manifest.json"), "utf8"),
+        fs.readFileSync(
+          path.join(entry.catalogHome, ".olympus-sync-manifest.json"),
+          "utf8",
+        ),
       );
       assert.equal(manifest.managedSkills.length, 20);
       const skillsCatalog = fs.readFileSync(
-        path.join(geminiHome, "SKILLS-CATALOG.md"),
+        path.join(entry.catalogHome, "SKILLS-CATALOG.md"),
         "utf8",
       );
       assert.match(skillsCatalog, /기본 활성 스킬: 20개/);
       assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
-      assertDormantOrchestratorModule(geminiHome, "Gemini");
+      assertDormantOrchestratorModule(entry.catalogHome, "Antigravity");
+      assert.equal(
+        fs.existsSync(path.join(googleHome, "config", "hooks", "antigravity-hook.js")),
+        true,
+      );
     }
     for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-      assert.equal(fs.existsSync(path.join(home, "agents", name)), false);
+      assert.equal(fs.existsSync(path.join(entry.agentsHome, name)), false);
       assert.equal(defaultCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), false);
     }
 
     const optInResult = spawnSync(
       process.execPath,
-      [script, ...scriptArgs, "--include-source-only-agents"],
-      { cwd: repoRoot, env, encoding: "utf8", timeout: 120000 },
+      [entry.script, ...entry.scriptArgs, "--include-source-only-agents"],
+      { cwd: repoRoot, env: entry.env, encoding: "utf8", timeout: 120000 },
     );
     assert.equal(optInResult.status, 0);
     const optInCatalog = fs.readFileSync(
-      path.join(home, "AGENTS-CATALOG.md"),
+      path.join(entry.catalogHome, "AGENTS-CATALOG.md"),
       "utf8",
     );
     assert.match(
@@ -792,49 +1144,112 @@ test("Claude and Gemini agent syncs support default exclusion and explicit opt-i
       /복사된 source-only 참고 파일: 0개/,
     );
     for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-      assert.equal(fs.existsSync(path.join(home, "agents", name)), true);
+      assert.equal(fs.existsSync(path.join(entry.agentsHome, name)), true);
       assert.equal(optInCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), true);
     }
     assert.match(optInCatalog, /\| chronos-worker \| active \|/);
     assert.equal(
-      fs.existsSync(path.join(home, "agents", "references")),
+      fs.existsSync(path.join(entry.agentsHome, "references")),
       true,
       "Source-only opt-in did not copy shared agent references",
     );
-    if (script === syncGeminiAssets) {
-      for (const name of RUNTIME_SKILL_EXCLUSIONS.gemini) {
-        const staleExcludedDir = path.join(geminiHome, "skills", name);
+    if (entry.script === syncAntigravityAssets) {
+      for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
+        const staleExcludedDir = path.join(entry.skillsHome, name);
         fs.mkdirSync(staleExcludedDir, { recursive: true });
         fs.writeFileSync(path.join(staleExcludedDir, "SKILL.md"), "stale incompatible copy");
       }
     }
 
-    const returnToDefaultResult = spawnSync(process.execPath, [script, ...scriptArgs], {
+    const returnToDefaultResult = spawnSync(process.execPath, [entry.script, ...entry.scriptArgs], {
       cwd: repoRoot,
-      env,
+      env: entry.env,
       encoding: "utf8",
       timeout: 120000,
     });
     assert.equal(returnToDefaultResult.status, 0);
     const restoredCatalog = fs.readFileSync(
-      path.join(home, "AGENTS-CATALOG.md"),
+      path.join(entry.catalogHome, "AGENTS-CATALOG.md"),
       "utf8",
     );
     for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-      assert.equal(fs.existsSync(path.join(home, "agents", name)), false);
+      assert.equal(fs.existsSync(path.join(entry.agentsHome, name)), false);
       assert.equal(restoredCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), false);
     }
-    assert.equal(fs.existsSync(path.join(home, "agents", "references")), false);
-    if (script === syncGeminiAssets) {
-      for (const name of RUNTIME_SKILL_EXCLUSIONS.gemini) {
+    assert.equal(fs.existsSync(path.join(entry.agentsHome, "references")), false);
+    if (entry.script === syncAntigravityAssets) {
+      for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
         assert.equal(
-          fs.existsSync(path.join(geminiHome, "skills", name)),
+          fs.existsSync(path.join(entry.skillsHome, name)),
           false,
-          `Gemini retained incompatible skill ${name}`,
+          `Antigravity retained incompatible skill ${name}`,
         );
       }
     }
   }
+});
+
+test("Antigravity sync migrates legacy Gemini layouts and preserves modified assets", () => {
+  const googleHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-legacy-sync-"));
+  const legacySkills = path.join(googleHome, "skills");
+  fs.mkdirSync(legacySkills, { recursive: true });
+  fs.cpSync(
+    path.join(repoRoot, "skills", "design-plan"),
+    path.join(legacySkills, "design-plan"),
+    { recursive: true },
+  );
+  fs.cpSync(
+    path.join(repoRoot, "skills", "pdf"),
+    path.join(legacySkills, "pdf"),
+    { recursive: true },
+  );
+  fs.appendFileSync(
+    path.join(legacySkills, "pdf", "SKILL.md"),
+    "\nuser legacy customization\n",
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(googleHome, ".gemini-sync-manifest.json"),
+    JSON.stringify({
+      managedSkills: ["design-plan", "pdf"],
+      managedAgents: [],
+      managedHooks: [],
+      managedSupportDirectories: [],
+      managedAssetHashes: { skills: {}, agents: {}, hooks: {}, supportDirectories: {} },
+    }),
+    "utf8",
+  );
+  fs.writeFileSync(
+    path.join(googleHome, "SKILLS-CATALOG.md"),
+    "# Legacy\n\n설치 과정에서 자동 생성\n",
+    "utf8",
+  );
+
+  const result = spawnSync(process.execPath, [syncAntigravityAssets], {
+    cwd: repoRoot,
+    env: { ...process.env, ANTIGRAVITY_HOME: googleHome },
+    encoding: "utf8",
+    timeout: 120000,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(fs.existsSync(path.join(googleHome, ".gemini-sync-manifest.json")), false);
+  assert.equal(fs.existsSync(path.join(legacySkills, "design-plan")), false);
+  assert.equal(fs.existsSync(path.join(legacySkills, "pdf")), false);
+  assert.equal(
+    fs.existsSync(
+      path.join(googleHome, "antigravity-cli", "skills", "design-plan", "SKILL.md"),
+    ),
+    true,
+  );
+  assert.ok(
+    findFileWithContent(
+      path.join(googleHome, "_olympus-preserved"),
+      fs.readFileSync(path.join(repoRoot, "skills", "pdf", "SKILL.md"), "utf8")
+        + "\nuser legacy customization\n",
+      "legacy-gemini-skills",
+    ),
+    "modified legacy Gemini skill was not preserved",
+  );
 });
 
 test("stale Olympus assets are moved to backup while local-only assets remain", () => {
@@ -939,7 +1354,7 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
   const templatePaths = {
     claude: path.join(repoRoot, "skills", "mnemo", "templates", "claude-md-rules.md"),
     codex: path.join(repoRoot, "skills", "codex-mnemo", "templates", "agents-md-rules.md"),
-    gemini: path.join(repoRoot, "skills", "gemini-mnemo", "templates", "agents-md-rules.md"),
+    antigravity: path.join(repoRoot, "skills", "antigravity-mnemo", "templates", "gemini-md-rules.md"),
     grok: path.join(repoRoot, "skills", "grok-mnemo", "templates", "grok-rules.md"),
   };
   const templates = Object.fromEntries(
@@ -952,7 +1367,7 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
   const aliasRuntime = {
     claude: "claude",
     codex: "codex",
-    gemini: "gemini",
+    antigravity: "antigravity",
   };
   for (const [templateName, runtime] of Object.entries(aliasRuntime)) {
     const aliasSection = templates[templateName]
@@ -978,9 +1393,9 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
   assert.equal(grokSkills.includes("grok-mnemo"), true);
   assert.equal(grokSkills.includes("agent-team"), true);
 
-  for (const name of ["claude", "codex", "gemini"]) {
+  for (const name of ["claude", "codex", "antigravity"]) {
     assert.match(templates[name], /## Native-First 구현 경계/);
-    assert.match(templates[name], /임의 프로젝트 cwd에서 상대경로를 그대로 실행하지 않는다/);
+    assert.match(templates[name], /임의 프로젝트 cwd에서 상대경로를 그대로 실행하지 않(?:는다|습니다)/);
     assert.doesNotMatch(templates[name], /web-preview-guide/);
   }
   assert.match(templates.grok, /카탈로그의 source-only 원본을 기준으로 절대경로/);
@@ -995,28 +1410,30 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
   }
   assert.match(templates.claude, /`Explore`.*`general-purpose`/);
   assert.match(templates.codex, /`explorer`.*`worker`/);
-  assert.match(templates.gemini, /`codebase_investigator`.*`generalist`/);
+  assert.match(templates.antigravity, /Antigravity.*`research`/);
   assert.match(templates.grok, /`explore`.*`general-purpose`/);
-  assert.match(templates.gemini, /Gemini CLI는 네이티브 서브에이전트/);
-  assert.match(templates.gemini, /BeforeTool\/AfterTool\/BeforeAgent\/AfterAgent/);
-  assert.doesNotMatch(templates.gemini, /Multi-agent 부재|자체 transcript 부재|PostToolUse 부재/);
+  assert.match(
+    templates.antigravity,
+    /PreToolUse[\s\S]*PostToolUse[\s\S]*PreInvocation[\s\S]*PostInvocation[\s\S]*Stop/,
+  );
+  assert.match(templates.antigravity, /구 Gemini CLI의 `BeforeTool`/);
   assert.match(templates.grok, /글로벌 `~\/.claude\/CLAUDE\.md`를 rules 호환으로 이미 로드/);
 });
 
 test("project instruction files keep native role ownership aligned", () => {
   const agents = fs.readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
-  const gemini = fs.readFileSync(path.join(repoRoot, "GEMINI.md"), "utf8");
+  const antigravity = fs.readFileSync(path.join(repoRoot, "GEMINI.md"), "utf8");
 
   for (const text of [agents]) {
-    assert.match(text, /`Explore`.*`explorer`.*`codebase_investigator`.*`explore`/);
-    assert.match(text, /`general-purpose`.*`worker`.*`generalist`.*`general-purpose`/);
+    assert.match(text, /`Explore`.*`explorer`.*`research`.*`explore`/);
+    assert.match(text, /`general-purpose`.*`worker`.*Antigravity.*`general-purpose`/);
     assert.match(text, /공유 태스크 장부·활동 로그·완료 판정/);
     assert.match(text, /메인 컨텍스트에서 순차 실행/);
   }
-  assert.match(gemini, /사용자 정의 에이전트는 기본 등록 0개/);
-  assert.match(gemini, /`codebase_investigator`.*`generalist`/);
-  assert.match(gemini, /공유 태스크 장부·활동 로그·완료 판정/);
-  assert.match(gemini, /메인 컨텍스트에서 순차 실행/);
+  assert.match(antigravity, /사용자 정의 에이전트는 기본 등록 0개/);
+  assert.match(antigravity, /Antigravity 내장 `research`/);
+  assert.match(antigravity, /공유 태스크 장부·활동 로그·완료 판정/);
+  assert.match(antigravity, /메인 컨텍스트에서 순차 실행/);
 });
 
 test("install surfaces disclose skill registry migration and recovery", () => {
@@ -1055,6 +1472,29 @@ test("install surfaces disclose skill registry migration and recovery", () => {
   assert.doesNotMatch(setup, /install(?:\.bat|\.sh) --(?:link|unlink)/);
 });
 
+test("localized README surfaces stay connected and disclose portable hosts", () => {
+  const readmes = new Map(
+    ["README.md", "README-ko.md", "README-ja.md", "README-zh-CN.md"].map(
+      (name) => [name, fs.readFileSync(path.join(repoRoot, name), "utf8")],
+    ),
+  );
+
+  for (const [name, contents] of readmes) {
+    for (const peer of readmes.keys()) {
+      if (peer !== name) {
+        assert.match(contents, new RegExp(peer.replaceAll(".", "\\.")), `${name} must link ${peer}`);
+      }
+    }
+    assert.match(contents, /install-openclaw\.(?:bat|sh)/);
+    assert.match(contents, /install-hermes\.(?:bat|sh)/);
+    assert.match(contents, /skills-only/i);
+    assert.match(contents, /docs\/skill-registry-migration\.md/);
+  }
+
+  assert.match(readmes.get("README-ja.md"), /通常の更新では、先にアンインストールする必要はありません/);
+  assert.match(readmes.get("README-zh-CN.md"), /正常更新前\s*不需要先卸载/);
+});
+
 test("agent descriptions avoid YAML plain-scalar colon ambiguity", () => {
   const agentFiles = collectAgentFiles(
     path.join(repoRoot, "agents"),
@@ -1076,22 +1516,16 @@ test("agent descriptions avoid YAML plain-scalar colon ambiguity", () => {
   }
 });
 
-test("Gemini Mnemo migrates only known legacy global instruction copies", () => {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-gemini-mnemo-test-"));
-  const geminiHome = path.join(tempRoot, ".gemini");
-  fs.mkdirSync(geminiHome, { recursive: true });
+test("Antigravity Mnemo migrates legacy Gemini entries without deleting user rules", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-antigravity-mnemo-test-"));
+  const googleHome = path.join(tempRoot, ".gemini");
+  fs.mkdirSync(googleHome, { recursive: true });
   fs.writeFileSync(
-    path.join(geminiHome, "AGENTS.md"),
+    path.join(googleHome, "AGENTS.md"),
     [
       "# AGENTS.md",
       "",
-      "This file provides guidance to AI coding agents.",
-      "",
-      "## Creating a New Skill",
-      "legacy content",
-      "",
-      "## Hooks (Automatic Enforcement)",
-      "legacy content",
+      "user-owned rule",
       "",
       "<!-- GEMINI-MNEMO:START -->",
       "old rules",
@@ -1101,19 +1535,39 @@ test("Gemini Mnemo migrates only known legacy global instruction copies", () => 
     "utf8",
   );
   fs.writeFileSync(
-    path.join(geminiHome, "GEMINI.md"),
+    path.join(googleHome, "GEMINI.md"),
     [
-      "# Claude Code Customizations",
-      "## Why This Project?",
-      "## Project Structure",
-      "**Last Updated:** 2026-02-19",
+      "# User Antigravity Rules",
+      "keep this rule",
       "",
     ].join("\n"),
     "utf8",
   );
+  fs.writeFileSync(
+    path.join(googleHome, "settings.json"),
+    JSON.stringify({
+      enableAgents: true,
+      experimental: { worktrees: false },
+      hooks: {
+        AfterAgent: [{
+          hooks: [
+            { command: `bash "${path.join(googleHome, "hooks", "save-turn.sh")}"` },
+            { command: "bash /custom/hooks/save-turn.sh" },
+          ],
+        }],
+      },
+    }, null, 2),
+    "utf8",
+  );
+  fs.mkdirSync(path.join(googleHome, "hooks"), { recursive: true });
+  fs.writeFileSync(
+    path.join(googleHome, "hooks", "save-turn.sh"),
+    "user-modified legacy hook",
+    "utf8",
+  );
 
-  const env = { ...process.env, GEMINI_HOME: geminiHome };
-  const result = spawnSync(process.execPath, [installGeminiMnemo], {
+  const env = { ...process.env, ANTIGRAVITY_HOME: googleHome };
+  const result = spawnSync(process.execPath, [installAntigravityMnemo], {
     cwd: repoRoot,
     env,
     encoding: "utf8",
@@ -1122,16 +1576,59 @@ test("Gemini Mnemo migrates only known legacy global instruction copies", () => 
   assert.equal(
     result.status,
     0,
-    `Gemini Mnemo migration failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+    `Antigravity Mnemo migration failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
 
-  const agentsText = fs.readFileSync(path.join(geminiHome, "AGENTS.md"), "utf8");
-  assert.doesNotMatch(agentsText, /This file provides guidance to AI coding agents/);
-  assert.match(agentsText, /## Native-First 구현 경계/);
-  assert.match(agentsText, /Gemini CLI는 네이티브 서브에이전트/);
-  assert.equal(fs.existsSync(path.join(geminiHome, "GEMINI.md")), false);
+  const agentsText = fs.readFileSync(path.join(googleHome, "AGENTS.md"), "utf8");
+  assert.match(agentsText, /user-owned rule/);
+  assert.doesNotMatch(agentsText, /GEMINI-MNEMO|old rules/);
+  const rulesText = fs.readFileSync(path.join(googleHome, "GEMINI.md"), "utf8");
+  assert.match(rulesText, /keep this rule/);
+  assert.match(rulesText, /ANTIGRAVITY-MNEMO:START/);
+  assert.match(rulesText, /Antigravity의 `research`/);
+
+  const settings = JSON.parse(fs.readFileSync(path.join(googleHome, "settings.json"), "utf8"));
+  assert.equal(Object.prototype.hasOwnProperty.call(settings, "enableAgents"), false);
+  assert.deepEqual(settings.experimental, { worktrees: false });
+  assert.deepEqual(settings.hooks.AfterAgent[0].hooks, [
+    { command: "bash /custom/hooks/save-turn.sh" },
+  ]);
+  const hooksConfig = JSON.parse(
+    fs.readFileSync(path.join(googleHome, "config", "hooks.json"), "utf8"),
+  );
+  assert.match(
+    hooksConfig["olympus-antigravity-mnemo"].Stop[0].command,
+    /olympus-save-turn\.js/,
+  );
   assert.equal(
-    fs.existsSync(path.join(geminiHome, "GEMINI.md.olympus-legacy.bak")),
+    fs.existsSync(path.join(googleHome, "config", "hooks", "olympus-save-turn.js")),
     true,
   );
+  assert.ok(
+    findFileWithContent(
+      path.join(googleHome, "_olympus-preserved"),
+      "user-modified legacy hook",
+      "legacy-gemini-mnemo",
+    ),
+    "modified legacy hook was not preserved",
+  );
+
+  const check = spawnSync(process.execPath, [installAntigravityMnemo, "--check"], {
+    cwd: repoRoot,
+    env,
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(check.status, 0, check.stderr);
+
+  const uninstall = spawnSync(process.execPath, [installAntigravityMnemo, "--uninstall"], {
+    cwd: repoRoot,
+    env,
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(uninstall.status, 0, uninstall.stderr);
+  const remainingRules = fs.readFileSync(path.join(googleHome, "GEMINI.md"), "utf8");
+  assert.match(remainingRules, /keep this rule/);
+  assert.doesNotMatch(remainingRules, /ANTIGRAVITY-MNEMO/);
 });

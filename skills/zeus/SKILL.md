@@ -73,11 +73,11 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
 
 1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
 2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
-   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
-   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Antigravity는
+   `~/.gemini/antigravity-cli/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
 3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
-   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
-   `~/.gemini/SKILLS-CATALOG.md`)에서 모듈명과 정확히 일치하는 행을 찾습니다. 행이 정확히
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Antigravity
+   `~/.gemini/antigravity-cli/SKILLS-CATALOG.md`)에서 모듈명과 정확히 일치하는 행을 찾습니다. 행이 정확히
    하나일 때만 `읽을 경로`의 절대 `SKILL.md`를 그대로 읽고, 누락·중복 행은 fail-closed입니다.
    기본 경로가 보통 `.olympus/source-skills` 아래여도 직접 조합하거나 추측하지 않습니다.
 4. `module_root`는 그 `SKILL.md`의 부모입니다. 모듈의 `references/`, `scripts/`,
@@ -100,19 +100,19 @@ SUCCESS로 표시하지 않습니다. MCP 분기가 선택됐지만 `orchestrato
 
 Zeus는 `zephermine → agent-team/workpm → argos → docker-deploy → minos → report`를 하나의 긴 작업으로 밀어붙이는 스킬입니다. 모델 지시만으로는 중간 보고 후 멈출 수 있으므로, 제품 파이프라인 요청으로 Zeus를 실행할 때는 Phase 0 전에 Chronos 자동 재개 가드를 부트스트랩합니다.
 
-**네이티브 /goal과의 관계:** Claude/Codex에는 네이티브 `/goal`(Stop 게이트)이 있고, 크로노스는 이를 1순위 지속성 엔진으로 씁니다. 그러나 `/goal`은 사용자 입력으로만 켜지므로(스킬이 자동 호출 불가), zero-interaction이 원칙인 Zeus는 **사용자 입력이 필요 없는 훅 자동 재개를 기본 엔진으로 유지**합니다. 단:
+**네이티브 /goal과의 관계:** Claude/Codex/Antigravity에는 네이티브 `/goal`이 있고, 크로노스는 이를 1순위 지속성 엔진으로 씁니다. 그러나 `/goal`은 사용자 입력으로만 켜지므로(스킬이 자동 호출 불가), zero-interaction이 원칙인 Zeus는 **사용자 입력이 필요 없는 훅 자동 재개를 기본 엔진으로 유지**합니다. 단:
 - 사용자가 `/zeus` 실행 전에 `/goal`을 이미 설정했다고 밝힌 경우 → goal이 지속성을 담당하므로 **setup-loop 부트스트랩을 생략**합니다 (goal + 훅 이중 Stop 게이트 방지 — 크로노스 `--goal-mode`와 동일한 충돌 방지 원칙)
 - 파이프라인을 멈추고 `/goal` 설정을 요청하지 않습니다 (zero-interaction 위반)
 
 CLI별 재개 방식:
 - Claude Code: `.claude/loop-state.md` + Claude stop lifecycle hook
 - Codex: `.codex/loop-state.md` + notify `save-turn -> continue-loop -> codex exec resume --last`
-- Gemini: `.chronos/loop-state.md` + AfterAgent/worker 루프
+- Antigravity: `.chronos/loop-state.md` + Stop 훅/worker 루프
 
 **부트스트랩 조건:**
 - 사용자 요청이 Zeus 자체 점검/문서 수정이 아니라 제품/기능 구현 파이프라인일 것
 - `auto-continue-loop/scripts/setup-loop.ps1` 또는 `.sh`를 찾을 수 있을 것. 현재 프로젝트의 `skills/auto-continue-loop/`를 먼저 쓰고, 없으면 현재 CLI의 글로벌 스킬 경로를 사용한다.
-- 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Gemini: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 말고 기존 루프를 존중할 것. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않는다.
+- 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Antigravity: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 말고 기존 루프를 존중할 것. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않는다.
 
 **Windows PowerShell:**
 ```powershell
@@ -254,10 +254,10 @@ Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
 
 **판별 방법**: Phase 2 시작 시 섹션별 파일 범위가 독립적인지와 현재 CLI의 네이티브 위임 기능을 함께 확인합니다. 위임 자체가 가능해도 같은 파일을 순서대로 고쳐야 하면 메인 순차 경로를 선택합니다.
 
-| 의미 역할 | Claude | Codex | Gemini | Grok |
+| 의미 역할 | Claude | Codex | Antigravity | Grok |
 |-----------|--------|-------|--------|------|
-| 읽기 전용 탐색 | `Explore` | `explorer` | `codebase_investigator` | `explore` |
-| 파일 수정·명령 실행 | `general-purpose` / named teammate | `worker` | `generalist` | `general-purpose` |
+| 읽기 전용 탐색 | `Explore` | `explorer` | `research` | `explore` |
+| 파일 수정·명령 실행 | `general-purpose` / named teammate | `worker` | 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트 | `general-purpose` |
 
 읽기 전용 역할에는 파일 쓰기를 지시하지 않습니다. 메인 컨텍스트가 `zeus-log.md`, Wave ledger, 공유 활동 로그와 완료 판정을 단독 소유하고, 작업자는 고유 파일 범위 또는 반환값만 담당합니다.
 
@@ -297,7 +297,7 @@ argos의 1차 감리는 결정론적이다 — 정적 분석·빌드·테스트 
 아래 **위험 신호가 있는 변경에 한해**, 종료 직전 1회 교차모델 리뷰를 추가한다:
 
 - 위험 신호: 인증/결제/보안 경로, DB 마이그레이션, 공개 API 변경, 동시성/트랜잭션, 테스트가 없는 영역, 큰 diff.
-- 방식: Claude 구현분을 다른 패밀리(`gemini` 또는 Codex `/review`)가 1패스 리뷰 → 블로커만 수정. 정말 중요한 소수는 양쪽이 동일 버전을 승인할 때까지 최대 2라운드.
+- 방식: Claude 구현분을 다른 패밀리(Antigravity의 Gemini 모델 또는 Codex `/review`)가 1패스 리뷰 → 블로커만 수정. 정말 중요한 소수는 양쪽이 동일 버전을 승인할 때까지 최대 2라운드.
 - zero-interaction 유지: 리뷰는 백그라운드로 띄워 Phase 4와 병렬 진행한다. 한쪽 패밀리만 가용하면 single-model review로 라벨하고 consensus를 주장하지 않는다.
 - 결과(적용 여부·사유·승인 커밋)를 Decision Ledger에 `[ZEUS-AUTO:taste]`로 기록한다.
 

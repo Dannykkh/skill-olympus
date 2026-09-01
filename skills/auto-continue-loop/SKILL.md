@@ -7,7 +7,8 @@ description: >
   막힌 이슈 주차(PARK) + Owner Decision Brief, 감사 로그 기반 재진입 — 을 더합니다.
   크로노스는 goal을 자동 호출하지 않고, 규율을 녹인 goal 목표문을 생성·제시합니다(설정은 /goal 입력 한 번).
   Claude에서 /goal 설정 없이 돌릴 때는 네이티브 /loop 인터벌 재진입(심장박동, --heartbeat)을 1.5순위 엔진으로 씁니다.
-  goal이 없는 환경(Gemini/구버전)에서는 Stop 훅·notify 자동 재개로 폴백합니다.
+  /goal이 없거나 사용자가 켜지 않은 환경에서는 Stop 훅·notify 자동 재개로 폴백합니다.
+  Antigravity의 /schedule은 반복 예약용이며 완료 게이트가 아니므로 유한한 fix-until-pass 루프를 대신하지 않습니다.
   --max-iterations와 --completion-promise로 제어. 품질 점수(90점 이상 등)를 완료 조건으로 쓰려면
   반드시 --completion-promise에 명시해야 합니다(자동 감지 안 됨). /chronos로 실행. Also known as 크로노스.
   주의: 네이티브 /loop(주기 반복 실행기)와는 별개 — 구 별칭 /loop는 충돌로 폐기됨.
@@ -26,7 +27,7 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 
 ## /goal과 크로노스 — 역할 분리
 
-2026년 5월 Claude Code와 Codex에 네이티브 `/goal`("Set a goal Claude checks before stopping")이 들어왔습니다.
+Claude Code, Codex, Antigravity는 네이티브 `/goal`을 제공합니다.
 이건 **멈추기 전에 목표 달성을 체크하는 Stop 게이트**로, 크로노스의 `loop-stop` 훅과 **같은 레이어**입니다.
 그래서 둘은 "자동 위임" 관계가 아니라 **역할을 나누는** 관계입니다.
 
@@ -53,11 +54,11 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 
 "크로노스를 호출하면 goal이 자동으로 돌아간다"가 아니라, **"크로노스가 goal을 잘 쓰도록 목표문을 짜주고, 켜는 건 사용자"**입니다.
 
-### goal 목표문 필수 요소 (Codex·Claude 공통)
+### goal 목표문 필수 요소 (공통)
 
-크로노스가 생성하는 goal 목표문은 양쪽 CLI에서 동일하게 작동하도록 아래 5가지를 반드시 포함합니다.
+크로노스가 생성하는 goal 목표문은 지원 런타임에서 동일하게 작동하도록 아래 6가지를 반드시 포함합니다.
 특히 **Claude `/goal`의 평가자는 명령을 실행하지 않고 Claude의 대화 출력만 보고 완료를 판정**합니다.
-따라서 "검증 결과를 대화에 출력"이 빠지면 평가자가 PASS를 인식하지 못합니다(Codex는 직접 실행하므로 무관하지만, 양쪽 호환을 위해 항상 포함).
+Antigravity의 내부 판정 방식을 추정하지 않으며, 모든 런타임에서 "검증 결과를 대화에 출력"을 공통 계약으로 둡니다.
 
 1. **측정 가능한 end state** — 예: "test/auth 전부 통과 + 커버리지 80% 이상"
 2. **검증 방법 명시** — 어떤 명령으로 증명하는지: "`npm test`가 exit 0"
@@ -77,9 +78,9 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 
 | 우선순위 | 엔진 | 조건 | 크로노스의 연동 방식 |
 |----------|------|------|----------------------|
-| **1순위** | 네이티브 `/goal` | Claude/Codex에 `/goal` 존재 + 사용자가 목표문 설정 | goal 목표문 **생성·제시** → 사용자가 `/goal` 설정 |
+| **1순위** | 네이티브 `/goal` | Claude/Codex/Antigravity에서 사용자가 목표문 설정 | goal 목표문 **생성·제시** → 사용자가 `/goal` 설정 |
 | **1.5순위** | 네이티브 `/loop` 심장박동 (Claude 전용) | `--heartbeat` 지정, 또는 사용자가 `/goal` 설정을 원치 않음 | 크로노스가 **Skill 도구로 `/loop`를 직접 호출** (인터벌 재진입 — 사용자 입력 불필요) |
-| **2순위** | Stop 훅 / notify / AfterAgent 재개 | `/goal`·`/loop` 없음 + 훅 인프라 설치됨 (Claude Stop / Codex notify / Gemini AfterAgent) | `setup-loop`로 상태 파일 생성 → 훅이 재투입 |
+| **2순위** | Stop 훅 / notify 재개 | `/goal` 미지원·미설정 + `/loop` 없음 + 훅 인프라 설치됨 (Claude Stop / Codex notify / Antigravity Stop) | `setup-loop`로 상태 파일 생성 → 훅이 재투입 |
 | **3순위** | 직접 루프 | 위 모두 불가 (훅 미설치 환경) | 메인 컨텍스트에서 직접 사이클 반복 |
 
 > goal·heartbeat·훅은 모두 같은 지속성 레이어라 **동시에 켜면 중복**됩니다. 1순위(goal)와 1.5순위(heartbeat) 진입 시
@@ -90,6 +91,10 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 > **1순위의 함정(중요)**: `/goal`은 네이티브 커맨드라 크로노스가 대신 켤 수 없습니다. 목표문을 제시받고
 > **사용자가 `/goal`로 설정하지 않으면 지속성 엔진이 없는 상태**(사실상 3순위)로 돌게 되어 루프가 중간에 멈춥니다.
 > 설정이 번거로우면 `--heartbeat`(1.5순위)를 쓰세요 — 이쪽은 크로노스가 직접 겁니다.
+
+> **Antigravity `/schedule` 경계:** 일정 시각 실행, cron, "매 N분 확인" 같은 반복 모니터링은 네이티브
+> `/schedule`이 소유합니다. 크로노스는 하나의 유한 작업을 FIND→FIX→VERIFY하며 검증 통과까지 이어가는
+> 완료 계약을 소유합니다. `/schedule`을 1.5순위 심장박동이나 `/goal` 대체물로 자동 선택하지 않습니다.
 
 ---
 
@@ -149,10 +154,10 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
   "의지" 문제가 재발합니다. 인터벌은 하네스가 무조건 재투입합니다.
 - **재진입은 멱등**: 매 발화가 로그·완료 계약을 먼저 확인하고, 이미 완료 상태면 일하지 않고 루프만 중지합니다.
 - 규율(검증 게이트·주차·완료 계약)은 로그 상단에 기록해 두므로, 재진입 발화가 컨텍스트 없이 시작해도 복원됩니다.
-- Codex/Gemini에는 네이티브 `/loop`가 없으므로 이 엔진은 **Claude 전용** — 다른 CLI는 2·3순위로 폴백.
+- Codex/Antigravity에는 Claude식 네이티브 `/loop`가 없으므로 이 엔진은 **Claude 전용** — 다른 CLI는 2·3순위로 폴백. Antigravity `/schedule`은 시간 기반 예약이며 이 완료 게이트와 같지 않습니다.
 - `/goal`과 동시 사용 금지 (같은 지속성 레이어 중복 — 하나만).
 
-### 2순위 — Stop 훅 / notify 폴백 (goal 없는 환경)
+### 2순위 — Stop 훅 / notify 폴백 (goal 미지원·미설정 환경)
 
 ```
 → 1. setup-loop.sh가 CLI별 상태 파일 생성 (.claude/ · .codex/ · .chronos/loop-state.md)
@@ -160,7 +165,7 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 → 3. turn 종료/세션 종료 시도 → 훅 체인이 상태 파일 재검증해 재투입:
      - Claude: loop-stop.sh(Stop 훅)가 block + 같은 프롬프트 재투입
      - Codex: save-turn notify → continue-loop → codex exec resume --last
-     - Gemini: AfterAgent 훅(loop-stop.ps1|sh)이 .chronos/loop-state.md 검사 (실세션 재투입 미실측 — 엔진 배선 참조)
+     - Antigravity: `antigravity-hook.js chronos` Stop 훅이 `.chronos/loop-state.md` 검사
 → 4. <promise>조건</promise> 출력 → 훅이 매칭 → 상태 파일 삭제 → 종료
 ```
 
@@ -168,7 +173,7 @@ goal은 *지치지 않는 의지*(Stop 게이트), 크로노스는 *멈출 줄 �
 
 지속성 엔진이 없으면 메인 컨텍스트에서 사이클을 순차 반복합니다. `--max-iterations`까지 또는 검증 게이트 통과까지 진행하되, 컨텍스트 한도에 유의합니다.
 
-`chronos-worker`라는 커스텀 에이전트 이름은 지속성 엔진이 아니며 기본 등록하지 않습니다. 한 사이클을 격리할 이점이 있을 때만 general-write 역할(Claude `general-purpose`, Codex `worker`, Gemini `generalist`, Grok `general-purpose`)에 고유 파일 범위·검증 게이트·현재 로그·주차 목록을 함께 넘깁니다. 큐, 공유 로그, 재시도, 완료 판정과 다음 사이클은 메인 Chronos 하네스가 계속 소유합니다.
+`chronos-worker`라는 커스텀 에이전트 이름은 지속성 엔진이 아니며 기본 등록하지 않습니다. 한 사이클을 격리할 이점이 있을 때만 general-write 역할(Claude `general-purpose`, Codex `worker`, Antigravity 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트, Grok `general-purpose`)에 고유 파일 범위·검증 게이트·현재 로그·주차 목록을 함께 넘깁니다. 큐, 공유 로그, 재시도, 완료 판정과 다음 사이클은 메인 Chronos 하네스가 계속 소유합니다.
 
 ---
 
@@ -210,7 +215,7 @@ pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 **공식 호출명:** `/chronos` (별칭: `크로노스`)
 
 > **구 별칭 `/loop` 폐기 (2026-06-11):** Claude Code에 네이티브 `/loop`(주기 반복 실행기)가 들어오면서
-> 이름이 충돌해 크로노스 별칭에서 제거했습니다. 크로스-CLI 호출명 통일 정책에 따라 Codex/Gemini에서도 동일하게 제거.
+> 이름이 충돌해 크로노스 별칭에서 제거했습니다. 크로스-CLI 호출명 통일 정책에 따라 Codex/Antigravity에서도 동일하게 제거.
 
 > **언제 무엇을 쓰나 (네이티브 3종과의 구분):**
 >
@@ -238,11 +243,11 @@ pwsh -File skills/auto-continue-loop/scripts/cancel-loop.ps1
 
 1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
 2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
-   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
-   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Antigravity는
+   `~/.gemini/antigravity-cli/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
 3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
-   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
-   `~/.gemini/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Antigravity
+   `~/.gemini/antigravity-cli/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
    `읽을 경로`의 절대 `SKILL.md`를 읽고, 누락·중복 행은 fail-closed입니다. 기본 경로가
    `.olympus/source-skills` 아래여도 조합하거나 추측하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모입니다. 해당 모듈의 `references/`, `scripts/`,
@@ -320,7 +325,7 @@ tsconfig.json → npx tsc --noEmit
 
 - **1순위(goal 가용):** [동작 원리 1순위](#1순위--goal-목표문-생성--연동)의 형식으로 **goal 목표문을 생성해 제시**하고, 사용자가 `/goal`로 설정하도록 안내합니다. 진입 시 `setup-loop --goal-mode`를 실행해 기존 `loop-state.md`를 모두 제거합니다 — 폴백 상태 파일을 만들지 않으므로 Stop 훅이 발동할 대상이 코드 레벨에서 사라져 이중 재투입 충돌이 **불가능**합니다(하드 가드). 로그(`docs/chronos/`)만 초기화합니다.
 - **1.5순위(`--heartbeat` 또는 사용자가 goal 설정 생략 의사):** `setup-loop --goal-mode`로 상태 파일을 제거(하드 가드 공유)한 뒤, **Skill 도구로 네이티브 `/loop <interval> {재진입 프롬프트}`를 직접 호출**합니다. 규율(검증 게이트·완료 계약·우선순위)을 로그 상단에 기록해 재진입 발화가 컨텍스트 없이도 복원하게 합니다.
-- **2·3순위(폴백):** `setup-loop.sh`(또는 `.ps1`)로 공유 상태 파일을 생성합니다. Claude는 `.claude/loop-state.md`, Codex는 `.codex/loop-state.md`, Gemini는 `.chronos/loop-state.md`를 사용합니다.
+- **2·3순위(폴백):** `setup-loop.sh`(또는 `.ps1`)로 공유 상태 파일을 생성합니다. Claude는 `.claude/loop-state.md`, Codex는 `.codex/loop-state.md`, Antigravity는 `--runtime antigravity`와 `.chronos/loop-state.md`를 사용합니다.
 
 ```
 크로노스(Chronos) 시작
@@ -385,7 +390,7 @@ PASS stub을 만들지 않고 `NOT RUN`과 Owner Decision Brief를 남깁니다.
 대부분의 사이클은 검증 게이트(테스트 명령)가 결정론적으로 PASS/FAIL을 가른다 — 이 경우 다른 모델을 부르지 않는다(느리고 새 신호가 없다).
 그러나 산출물이 **스펙·설계·문서처럼 실행 테스트로 판정할 수 없는** 경우에 한해, VERIFY를 Loop Library 034(multi-LLM convergence)로 대체한다:
 
-- 서로 다른 두 모델 패밀리(예: Claude + Codex/Gemini)가 **동일 버전**을 변경 없이 승인할 때까지 bounded 반복(기본 N=2라운드).
+- 서로 다른 두 모델 패밀리(예: Claude + Codex 또는 Antigravity의 Gemini 모델)가 **동일 버전**을 변경 없이 승인할 때까지 bounded 반복(기본 N=2라운드).
 - 한 라운드에서 수정이 생기면 양쪽이 새 버전을 다시 본다. **옛 버전의 깨끗한 리뷰를 새 버전 승인으로 간주하지 않는다.**
 - 반복 불일치(oscillation)·라운드 한도 도달·한쪽 패밀리 부재는 합의가 아니라 **stall**로 보고하고, 해당 이슈를 주차(PARK)한다.
 - 한 패밀리만 가용하면 single-model review로 라벨하고 consensus를 주장하지 않는다.
@@ -619,10 +624,10 @@ Get-Content docs/chronos/chronos-log.md -Wait
 
 ### 네이티브 `/goal` (1순위)
 
-별도 설치가 필요 없습니다. `/goal`이 있는 Claude/Codex에서 크로노스가 규율을 녹인 목표문을 제시하고, 사용자가 `/goal`로 켭니다.
+별도 설치가 필요 없습니다. `/goal`이 있는 Claude/Codex/Antigravity에서 크로노스가 규율을 녹인 목표문을 제시하고, 사용자가 `/goal`로 켭니다.
 크로노스는 `/goal`을 자동 호출하지 않습니다(슬래시 커맨드 호출 도구 부재). 목표문 생성·제시까지가 크로노스의 역할입니다.
 
-진입 문법(`/goal <목표>`)은 양쪽이 같지만, 활성화·판정·관리가 다릅니다. 크로노스는 목표문을 자연어로 짜므로 이 차이를 우회하지만, 사용자 안내 시 참고하세요.
+세 런타임 모두 `/goal` 진입점을 제공하지만 활성화·판정·관리 세부는 런타임이 소유합니다. 크로노스는 공통 자연어 목표문과 외부 검증 출력만 요구하며 문서에 없는 세부 명령을 추측하지 않습니다.
 
 ### 네이티브 `/loop` 심장박동 (1.5순위, Claude 전용)
 
@@ -633,6 +638,8 @@ Stop 훅과의 이중 재투입을 하드 가드로 차단합니다.
 - 중단: 사용자가 `/loop` 중지를 지시하거나, 완료 시 재진입 프롬프트가 스스로 중지합니다.
 - `/goal`이 이미 설정된 세션에서는 heartbeat를 걸지 않습니다 (같은 레이어 중복 금지).
 
+다음 표는 별도로 확인된 Codex와 Claude의 관리 차이입니다. Antigravity는 공식 `/goal` 계약까지만 의존합니다.
+
 | 항목 | Codex `/goal` | Claude `/goal` |
 |------|---------------|----------------|
 | 활성화 | `features.goals` 필요할 수 있음 (`codex features enable goals`) | v2.1.139+면 기본 |
@@ -640,7 +647,7 @@ Stop 훅과의 이중 재투입을 하드 가드로 차단합니다.
 | 진행 확인 | TUI 상태 | `/goal` (인자 없이) → 턴/토큰/마지막 사유 |
 | 중단/관리 | `/goal pause` · `/goal resume` · `/goal clear` | `/goal clear` (별칭 stop/off/reset/cancel) |
 
-> **판정 차이가 핵심**: Claude 평가자는 명령을 실행하지 않으므로, 목표문에 "검증 결과를 대화에 출력"이 반드시 있어야 PASS가 인식됩니다(위 [goal 목표문 필수 요소](#goal-목표문-필수-요소-codexclaude-공통) 참조).
+> **판정 차이가 핵심**: Claude 평가자는 명령을 실행하지 않으므로, 목표문에 "검증 결과를 대화에 출력"이 반드시 있어야 PASS가 인식됩니다(위 [goal 목표문 필수 요소](#goal-목표문-필수-요소-공통) 참조).
 
 ### Claude Code 훅 (2순위 폴백)
 
@@ -670,14 +677,12 @@ Codex는 `Stop` 이벤트가 없으므로 root `hooks/loop-stop.*`를 직접 쓰
 
 Codex 재개는 background `codex exec resume --last`로 수행되며, 현재 프로젝트의 `docs/chronos/codex-resume.log`에 로그가 남습니다.
 
-### Gemini CLI (2순위 폴백 — 실세션 미실측)
+### Antigravity CLI (goal 미사용 시 2순위 폴백)
 
-`sync-gemini-assets.js`가 훅을 복사하고, `~/.gemini/settings.json`의 **AfterAgent** 이벤트에 `loop-stop.ps1|sh`가 등록됩니다.
-Gemini 세션(`GEMINI_SESSION_ID`)에서 setup-loop가 `.chronos/loop-state.md`를 만들면 AfterAgent가 같은 loop-stop 체인을 실행합니다.
+`sync-antigravity-assets.js`가 `antigravity-hook.js`를 `~/.gemini/config/hooks/`에 복사하고, `install-hooks-config.js --target antigravity`가 `~/.gemini/config/hooks.json`의 **Stop** 이벤트에 Chronos 핸들러를 등록합니다.
+`setup-loop.sh --runtime antigravity` 또는 PowerShell 대응 명령이 `.chronos/loop-state.md`를 만들면 Stop 훅이 Antigravity의 camelCase `conversationId`와 `transcriptPath`를 사용해 완료 여부를 검사하고 `decision: continue`로 다음 턴을 재투입합니다.
 
-- ⚠️ **실세션 미실측**: 재투입이 성립하려면 Gemini 페이로드가 session/transcript 상당 필드를 제공하고
-  `decision: block` 재투입을 지원해야 합니다 (gotcha 017: 과거 Gemini는 transcript 부재 — 현행 버전 실측 필요).
-  실측 전까지는 3순위(직접 루프)를 예비 경로로 두세요.
+- 설치기 계약 테스트와 합성 transcript 검증 전에는 `VERIFIED`로 보고하지 않습니다. 실제 Antigravity 세션에서 Stop 재투입을 확인할 수 없는 환경에서는 3순위 직접 루프를 사용합니다.
 
 ---
 

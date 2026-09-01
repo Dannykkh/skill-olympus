@@ -5,20 +5,21 @@ description: >
   사용자 트리거 스킬. 핸드오프 의존이 약할 때 의지로 호출. Dreaming-like
   rebuild 모드 지원 (기존 정제 .md + 새 관찰 통합 + 중복/모순 제거).
   /memory-distill로 실행. 또한 핸드오프 자동 정제와 동일 로직을 공유.
-  대상은 프로젝트 루트 memory/ 전용 — Claude 네이티브 auto-memory(~/.claude/projects/)와 무관.
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
+  대상은 프로젝트 루트 memory/ 전용 — 호스트 네이티브 메모리나 Antigravity /learn과 무관.
 ---
 
 # Memory Distill — observations.jsonl → 정제 .md
 
 > 핸드오프가 충분히 자주 발동되지 않을 때, 사용자 의지로 raw 관찰을 정제 .md로 굳힙니다.
 > append-only 누적의 부풀음을 막기 위해 **rebuild 모드**로 기존 정제 .md를 통합합니다.
+
+## Antigravity `/learn` 경계
+
+Antigravity 네이티브 `/learn`은 현재 대화의 교정·선호를 Rules 또는 Skill로 정리하는 빠른 학습 경로입니다.
+최근 세션의 한두 교정을 런타임 규칙으로 남기는 요청은 `/learn`이 우선입니다. 이 모듈은 여러 세션에 걸쳐
+프로젝트 루트에 쌓인 `observations.jsonl`을 클러스터링하고, 중복·모순을 제거하며, 기존 정제 파일까지
+재구성하는 저장소 수준 유지보수를 소유합니다. `/learn`을 프로그램적으로 호출하거나 그 결과를 이 모듈의
+rebuild 증거로 간주하지 않습니다.
 
 ## 사용법
 
@@ -81,7 +82,7 @@ allowed-tools:
 
 `--min-cluster` 미만인 단발 관찰은 무시 (노이즈).
 
-입력이 커서 격리 분석이 유리할 때만 **읽기 전용 클러스터 후보 추출**을 네이티브 역할에 위임합니다: Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`. 작업자는 스크럽된 관찰만 읽고 후보를 반환하며 파일을 쓰지 않습니다. 별도 `gotcha-analyzer` 이름은 필요하지 않습니다. 모드 판정, archive, 재번호, 파일 쓰기, index/MEMORY 동기화는 이 스킬을 실행한 메인 하네스가 소유합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 클러스터링을 순차 실행합니다.
+입력이 커서 격리 분석이 유리할 때만 **읽기 전용 클러스터 후보 추출**을 네이티브 역할에 위임합니다: Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`. 작업자는 스크럽된 관찰만 읽고 후보를 반환하며 파일을 쓰지 않습니다. 별도 `gotcha-analyzer` 이름은 필요하지 않습니다. 모드 판정, archive, 재번호, 파일 쓰기, index/MEMORY 동기화는 이 스킬을 실행한 메인 하네스가 소유합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 클러스터링을 순차 실행합니다.
 
 ### Phase 3: 출력 형식
 

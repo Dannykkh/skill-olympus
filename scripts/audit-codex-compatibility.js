@@ -98,7 +98,7 @@ const detectionPatterns = [
 
 const prioritySkillReasons = {
   "daily-meeting-update":
-    "Codex/Gemini fallback을 문서화했지만, 여전히 Claude 히스토리와 구조화된 질문 UX 비중이 큽니다.",
+    "Codex/Antigravity fallback을 문서화했지만, 여전히 Claude 히스토리와 구조화된 질문 UX 비중이 큽니다.",
   "manage-skills":
     "경로는 `skills/`와 `AGENTS.md` 기준으로 보정됐지만, 확인 단계와 일부 문구가 아직 Claude식 상호작용에 가깝습니다.",
   mnemo:

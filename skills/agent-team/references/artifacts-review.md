@@ -66,7 +66,7 @@ section-02-api:
 **실행 조건:**
 - `src/`, `app/`, `lib/` 등 기존 소스가 있는지 확인
 - **없으면** (신규 프로젝트) → 건너뜀
-- **있으면** → 현재 CLI의 읽기 전용 탐색 역할(Claude `Explore`, Codex `explorer`, Gemini `codebase_investigator`, Grok `explore`)로 영향도 분석. 위임이 없으면 Lead가 같은 검사를 순차 실행
+- **있으면** → 현재 CLI의 읽기 전용 탐색 역할(Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`)로 영향도 분석. 위임이 없으면 Lead가 같은 검사를 순차 실행
 
 **분석 내용:**
 - 각 섹션이 수정할 파일 목록 추출 (섹션 스펙에서 파일 경로 파싱)

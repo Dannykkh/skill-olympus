@@ -1,6 +1,10 @@
 ---
 name: workpm
-description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 PM. 리서치, 제안, 도면, 구현, 검증을 자체 진행하며 Claude, Codex, Gemini, Grok의 내장 탐색자·작업자를 우선 사용한다. /workpm 또는 /daedalus로 실행한다.
+description: >
+  다이달로스(Daedalus) — 설계 없이 바로 구현할 때 사용하는 5단계 PM. 리서치, 제안, 도면,
+  구현, 검증을 자체 진행하며 Claude, Codex, Antigravity, Grok의 내장 탐색자·작업자를 우선 사용한다.
+  Antigravity의 일반 장기 팀 작업은 /teamwork-preview를 우선하고, 이 스킬은 5단계 장부와 산출물이 필요할 때 사용한다.
+  /workpm 또는 /daedalus로 실행한다.
 ---
 
 # Daedalus (다이달로스) — 현장감독 PM
@@ -20,6 +24,17 @@ description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 �
 다이달로스는 **설계 산출물이 없을 때** 스스로 리서치 → 제안 → 도면 작성 → 구현까지 전체를 관리합니다.
 젭마인 산출물이 이미 있다면 `/agent-team`이 더 적합합니다 (섹션 파싱 + Wave 정렬 + 전문가 매칭).
 
+## 네이티브 기능과의 경계
+
+- 작은 직접 구현은 현재 Antigravity 메인 컨텍스트가 그대로 수행합니다. 구현 전 계획만 필요하면 네이티브
+  `/plan`, 요구사항 누락을 집중 질문으로 좁히는 일만 필요하면 `/grill-me`가 우선입니다.
+- 일반적인 장기·다중 에이전트 실행은 현재 플랜과 런타임에서 가용한 Antigravity
+  `/teamwork-preview`가 우선입니다. 이미 그 팀 문맥이 활성화돼 있으면 실행 엔진으로 재사용하고 중첩 PM을 만들지 않습니다.
+- WorkPM의 고유 범위는 설계 없이 시작한 요청을 **리서치→제안→도면→구현→검증** 5단계 장부와
+  완료 증거까지 끌고 가는 것입니다. 이 산출물 계약이 필요할 때만 네이티브 엔진 위에 얹습니다.
+- slash command는 사용자/TUI 진입점입니다. 스킬이 `/plan`, `/grill-me`, `/teamwork-preview`를
+  프로그램적으로 호출하거나 플랜 제한을 우회한다고 가정하지 않습니다.
+
 ## 실행 경로
 
 > **native-first 원칙** (learned/020): 워크플로우(5단계)는 공통, 실행 프리미티브만 CLI별 네이티브로 교체.
@@ -28,7 +43,7 @@ description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 �
 |-----|----------|----------|
 | Claude Code | 내장 subagent; 실험 Agent Teams가 활성화되면 named teammate | `${orchestrator_root}/commands/workpm.md` |
 | Codex | 내장 `explorer`/`worker`/`default` | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
-| Gemini | 내장 `codebase_investigator`/`generalist` | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
+| Antigravity | 활성 `/teamwork-preview` 팀 또는 내장 `research` + 메인/사용자 정의 쓰기 서브에이전트 | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
 | Grok | 내장 `explore`/`general-purpose`/`plan` | `${orchestrator_root}/commands/workpm.md` + 아래 역할 표 |
 | (폴백) | Orchestrator MCP PM/Worker — 네이티브 도구로 요구 계약을 충족할 수 없을 때만 | `${orchestrator_root}/commands/workpm-mcp.md` |
 
@@ -41,11 +56,11 @@ description: 다이달로스(Daedalus) — 설계 없이 바로 구현할 때 �
 
 1. 현재 프로젝트의 `skills/{name}/SKILL.md`가 실제로 있으면 그 exact 파일.
 2. 없으면 현재 런타임 active root의 exact 파일: Claude/Grok은
-   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Gemini는
-   `~/.gemini/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
+   `~/.claude/skills/{name}/SKILL.md`, Codex는 `~/.codex/skills/{name}/SKILL.md`, Antigravity는
+   `~/.gemini/antigravity-cli/skills/{name}/SKILL.md` (명시 opt-in 설치 지원).
 3. 둘 다 없으면 현재 런타임 전역 카탈로그(Claude/Grok
-   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Gemini
-   `~/.gemini/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
+   `~/.claude/SKILLS-CATALOG.md`, Codex `~/.codex/SKILLS-CATALOG.md`, Antigravity
+   `~/.gemini/antigravity-cli/SKILLS-CATALOG.md`)에서 정확한 모듈명 행을 찾습니다. 행이 하나일 때만
    `읽을 경로`의 절대 `SKILL.md`를 읽고, 누락·중복 행은 fail-closed입니다. 기본 설치에서
    보통 `.olympus/source-skills`를 가리켜도 경로를 추측하거나 조합하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모입니다. `references/`, `scripts/`, `commands/`는
@@ -74,7 +89,7 @@ MCP 파일을 읽지 못하면 안전하게 직렬화 가능한 작업만 메인
 |-----|--------------------|----------------|-----------|
 | **Claude** | `Explore` | `general-purpose`; Agent Teams 활성 시 named background `Agent` | shared task list/메시지; implicit team 자동 정리 |
 | **Codex** | `explorer` | `worker` (`default` 폴백) | 현재 spawn/message/wait/interrupt 기능 |
-| **Gemini** | `codebase_investigator` | `generalist` | 호출 반환을 Lead가 검증 |
+| **Antigravity** | `research` | 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트 | 호출 반환을 Lead가 검증 |
 | **Grok** | `explore` | `general-purpose` | 호출 반환을 Lead가 검증 |
 
 읽기 전용 역할에는 파일 생성을 지시하지 않습니다. 구현 역할은 고유 파일 범위와 검증 계약을 받습니다. 위임이 없거나 실패하면 메인 컨텍스트에서 순차 실행하고, hard lock·외부 ledger·크로스-CLI 혼합이 필요할 때만 MCP로 전환합니다.
@@ -123,7 +138,7 @@ MCP 파일을 읽지 못하면 안전하게 직렬화 가능한 작업만 메인
 
 | 경로 | 단계 | 차이 |
 |-----|------|------|
-| 네이티브 (Claude/Codex/Gemini/Grok) | 5단계 | Phase 3에 영향도 분석 포함 |
+| 네이티브 (Claude/Codex/Antigravity/Grok) | 5단계 | Phase 3에 영향도 분석 포함 |
 | 폴백 (orchestrator MCP) | 4단계 | 영향도 분석을 별도 Phase로 두지 않고 구현 계획에 흡수 |
 
 ## Start

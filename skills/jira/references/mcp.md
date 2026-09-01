@@ -272,7 +272,9 @@ resolved >= -7d AND project = PROJ ORDER BY resolved DESC
 ## Issue Linking
 
 ### Limitation
-The Atlassian MCP does not currently support creating issue links. Use the bundled `jira-link-issues` script instead.
+The configured Atlassian MCP may not expose issue-link creation. Inspect the currently available MCP tools and
+the installed Jira CLI help before acting; capabilities vary by server and version. This skill does not bundle a
+`jira-link-issues` helper.
 
 ### Link Types
 
@@ -284,18 +286,12 @@ The Atlassian MCP does not currently support creating issue links. Use the bundl
 | Clones | is cloned by | clones | Cloned issues |
 | Duplicates | is duplicated by | duplicates | Duplicate issues |
 
-### Script Usage
+### Execution Gate
 
-```bash
-# Link PROJ-123 depends on PROJ-456
-~/.claude/skills/jira/jira-link-issues PROJ-123 PROJ-456 "Depends On"
-
-# PROJ-100 blocks PROJ-200
-~/.claude/skills/jira/jira-link-issues PROJ-100 PROJ-200 "Blocks"
-
-# General relationship
-~/.claude/skills/jira/jira-link-issues PROJ-50 PROJ-75 "Relates To"
-```
+1. If an available MCP tool or installed Jira CLI command explicitly supports issue links, fetch the current issues
+   and link types, show the proposed inward/outward relationship, obtain approval, execute, and verify.
+2. Otherwise report issue-link creation as `NOT RUN` and direct the user to the current Atlassian REST API
+   documentation. Do not invent a helper path or claim the link was created.
 
 ### Finding Link Types
 Query the Jira API to get available link types:

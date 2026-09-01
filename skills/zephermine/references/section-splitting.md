@@ -56,7 +56,7 @@ END_MANIFEST -->
 
 ### Launch Batched Section Jobs
 
-For each dependency layer, include at most 3 section jobs in one batch. Map general-write to Claude `general-purpose`, Codex `worker`, Gemini `generalist`, or Grok `general-purpose`. Assign exactly one section file to each job. Main/Lead alone owns `sections/index.md`, the batch ledger, and completion judgment. If native delegation is unavailable or parallelism has no benefit, Main writes the sections sequentially.
+For each dependency layer, include at most 3 section jobs in one batch. Map general-write to Claude `general-purpose`, Codex `worker`, Antigravity main or a custom subagent with explicit write tools, or Grok `general-purpose`. Assign exactly one section file to each job. Main/Lead alone owns `sections/index.md`, the batch ledger, and completion judgment. If native delegation is unavailable or parallelism has no benefit, Main writes the sections sequentially.
 
 ```text
 Job prompt:

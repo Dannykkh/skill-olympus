@@ -205,6 +205,12 @@ CPU 감지 명령어 및 출력 형식: See [server-setup.md](references/server-
 자동화 테스트(Step 4) 이후, **탐색용 Playwright 스크립트를 생성·실행**하여 실제 브라우저에서
 탐색적 QA를 수행합니다. 자동화 테스트가 잡지 못하는 콘솔 에러, 네트워크 실패, 레이아웃 깨짐을 발견합니다.
 
+Antigravity에서 사용자가 `/browser`를 명시적으로 열었거나 현재 세션에 browser capability가 노출돼
+있으면 초기 탐색과 재현 후보 수집에 사용할 수 있습니다. 이 스킬이 slash command를 프로그램적으로
+호출한다고 가정하지 않습니다. 네이티브 browser에서 발견한 이슈는 반복 가능한 Playwright 테스트나
+`tests/explore/*.spec.ts`로 재현한 뒤에만 자동 PASS/FAIL 증거로 승격하며, 코드화하지 못한 관찰은
+`exploratory-only`로 보고합니다. `/browser`는 Step 2~5의 Playwright 산출물과 Healer 재실행을 대체하지 않습니다.
+
 > 상세 프로토콜: [references/browser-explorer.md](references/browser-explorer.md)
 
 ### 설계 원칙 (gstack browser 차용)
@@ -269,7 +275,7 @@ retry = 0
 WHILE (실패한 테스트 존재) AND (retry < max_retries):
   1. 실패 로그 분석 (에러 메시지, 스택 트레이스)
   2. 원인 분류 → 수정 대상 결정
-  3. 수정 적용 (Edit 도구)
+  3. 수정 적용 (현재 런타임의 직접 편집 기능)
   4. 재실행 (실패한 테스트만)
   5. retry++
 

@@ -40,12 +40,12 @@ description: >
    경로를 추측하지 않고 2번으로 갑니다.
 2. 없으면 현재 런타임의 활성 루트에서 정확한 `skills/<name>/SKILL.md`를 확인합니다. Codex는
    `$CODEX_HOME/skills`(미설정이면 `~/.codex/skills`), Claude와 Grok 호환 표면은
-   `~/.claude/skills`, Gemini는 `~/.gemini/skills`입니다. 파일 존재와 frontmatter 이름이
+   `~/.claude/skills`, Antigravity는 `~/.gemini/antigravity-cli/skills`입니다. 파일 존재와 frontmatter 이름이
    모두 일치할 때만 사용하고, 아니면 3번으로 갑니다.
 3. 없으면 현재 런타임의 전역 `SKILLS-CATALOG.md`를 읽습니다. Codex는
    `$CODEX_HOME/SKILLS-CATALOG.md`(미설정이면 `~/.codex/SKILLS-CATALOG.md`), Claude와
-   Grok 호환 표면은 `~/.claude/SKILLS-CATALOG.md`, Gemini는
-   `~/.gemini/SKILLS-CATALOG.md`입니다. 첫 번째 셀이 정확히 `<name>`인 행
+   Grok 호환 표면은 `~/.claude/SKILLS-CATALOG.md`, Antigravity는
+   `~/.gemini/antigravity-cli/SKILLS-CATALOG.md`입니다. 첫 번째 셀이 정확히 `<name>`인 행
    (`| <name> | ... | ... | <읽을 경로> |`) 하나를 찾아 `읽을 경로`의 절대 `SKILL.md`를
    그대로 사용합니다. 정확한 이름의 행이 0개이거나 2개 이상이면 해석 실패이며 다른 행이나
    레지스트리 경로를 추측하지 않습니다.

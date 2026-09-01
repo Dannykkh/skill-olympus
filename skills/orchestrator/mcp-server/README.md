@@ -6,7 +6,7 @@ PM + Multi-AI Worker 병렬 처리를 위한 MCP 서버입니다.
 
 - **파일 락킹**: 다중 Worker 간 파일 충돌 방지
 - **태스크 의존성 관리**: 선행 태스크 완료 후 자동 언블록
-- **Multi-AI 지원**: MCP에 연결된 어떤 CLI도 PM으로 사용할 수 있고, 자동 Worker 생성은 Claude/Codex/Gemini를 지원
+- **Multi-AI 지원**: MCP에 연결된 어떤 CLI도 PM으로 사용할 수 있고, 자동 Worker 생성은 Claude/Codex/Antigravity를 지원
 - **Fail-closed routing**: 설치된 provider만 선택하며 요청 provider가 없으면 다른 CLI로 조용히 대체하지 않음
 
 ## 설치
@@ -47,7 +47,7 @@ node install-orchestrator.js <대상-프로젝트-경로> --uninstall
 .\scripts\launch.ps1 -ProjectPath "C:\your\project" -MultiAI
 
 # Worker 별 AI 직접 지정
-.\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'gemini')
+.\scripts\launch.ps1 -ProjectPath "C:\your\project" -AIProviders @('claude', 'codex', 'antigravity')
 
 # Worker 수 지정
 .\scripts\launch.ps1 -ProjectPath "C:\your\project" -WorkerCount 5
@@ -62,10 +62,10 @@ node install-orchestrator.js <대상-프로젝트-경로> --uninstall
 .\scripts\launch.ps1 -ProjectPath "C:\your\project" -CleanStart
 ```
 
-자동 Worker 스크립트는 Claude의 auto permission mode, Codex의 workspace-write sandbox 안 자동 리뷰, Gemini의 sandbox 안 자동 승인을 기본으로 사용합니다. approval/sandbox 전체 우회나 workspace trust 우회는 사용하지 않습니다. 더 엄격한 조직 정책이 있으면 자동 실행 대신 승인된 permission mode로 Worker를 수동 실행합니다.
+자동 Worker 스크립트는 Claude의 auto permission mode, Codex의 workspace-write sandbox, Antigravity의 현재 permission policy를 사용합니다. Antigravity headless 실행이 권한 확인 때문에 중단되면 안전 우회 플래그를 자동 추가하지 않고, 사용자가 승인한 permission policy를 먼저 구성한 뒤 다시 실행합니다.
 
 **Multi-AI 모드:**
-- **Full Mode**: Claude + Codex + Gemini 3개 AI 병렬 처리
+- **Full Mode**: Claude + Codex + Antigravity 3개 AI 병렬 처리
 - **Dual Mode**: 사용 가능한 2개 AI 병렬 처리
 - **Single Mode**: 실제 감지된 provider 하나만 사용
 - **None Mode**: 지원 provider 없음; Worker 생성 실패
@@ -90,7 +90,7 @@ node install-orchestrator.js <대상-프로젝트-경로> --uninstall
 }
 ```
 
-PM 프로세스는 `ORCHESTRATOR_AI_PROVIDER`를 생략할 수 있습니다. 수동 Worker는 `ORCHESTRATOR_AI_PROVIDER`를 `claude`, `codex`, `gemini` 중 하나로 설정합니다. 자동 생성 Worker는 provider-prefixed ID에서도 provider를 복원하지만, 수동 구성은 명시적 환경 변수를 권장합니다.
+PM 프로세스는 `ORCHESTRATOR_AI_PROVIDER`를 생략할 수 있습니다. 수동 Worker는 `ORCHESTRATOR_AI_PROVIDER`를 `claude`, `codex`, `antigravity` 중 하나로 설정합니다. 자동 생성 Worker는 provider-prefixed ID에서도 provider를 복원하지만, 수동 구성은 명시적 환경 변수를 권장합니다.
 
 ## Provider 및 claim 계약
 
@@ -98,7 +98,7 @@ PM 프로세스는 `ORCHESTRATOR_AI_PROVIDER`를 생략할 수 있습니다. 수
 - `ai_provider`를 지정하면 같은 provider로 등록된 Worker에게만 목록에 보이고 claim이 허용됩니다.
 - claim은 상태, provider, 선행 의존성을 하나의 원자적 compare-and-set에서 검사하므로 동시 요청 중 정확히 한 Worker만 성공합니다.
 - 지정 provider가 설치되지 않았으면 태스크 생성과 Worker 생성은 실패하며 Claude 등으로 자동 대체하지 않습니다.
-- `orchestrator_spawn_workers`에서 `providers`를 생략하거나 배열이 짧으면 `claude → codex → gemini` 순서 중 실제 감지된 첫 provider로 빈 슬롯을 채웁니다. 아무 provider도 없으면 실패합니다.
+- `orchestrator_spawn_workers`에서 `providers`를 생략하거나 배열이 짧으면 `claude → codex → antigravity` 순서 중 실제 감지된 첫 provider로 빈 슬롯을 채웁니다. 아무 provider도 없으면 실패합니다.
 
 ## MCP 도구
 
@@ -106,7 +106,7 @@ PM 프로세스는 `ORCHESTRATOR_AI_PROVIDER`를 생략할 수 있습니다. 수
 
 | 도구 | 설명 |
 |------|------|
-| `orchestrator_detect_providers` | 설치된 AI CLI 감지 (Claude/Codex/Gemini) |
+| `orchestrator_detect_providers` | 설치된 AI CLI 감지 (Claude/Codex/Antigravity) |
 | `orchestrator_get_provider_info` | AI Provider 설치 상태와 안전한 기본 실행 명령 조회 |
 
 ### PM 전용 도구
@@ -145,7 +145,7 @@ PM 프로세스는 `ORCHESTRATOR_AI_PROVIDER`를 생략할 수 있습니다. 수
 
 ```
 1. orchestrator_detect_providers() - AI CLI 감지
-   → 결과: { mode: "full", providers: ["claude", "codex", "gemini"] }
+   → 결과: { mode: "full", providers: ["claude", "codex", "antigravity"] }
 
 2. orchestrator_analyze_codebase() - 프로젝트 분석
 

@@ -1,6 +1,6 @@
 # IDE Integration Guide
 
-이 문서는 Claude Code, Codex, Gemini를 IDE에서 관찰할 때의 지원 범위를 정리합니다.
+이 문서는 Claude Code, Codex, Antigravity를 IDE에서 관찰할 때의 지원 범위를 정리합니다.
 
 ## Policy
 
@@ -52,9 +52,9 @@ Codex turn complete
 tui.notifications = false
 ```
 
-### Gemini
+### Antigravity
 
-Gemini도 Mnemo 저장 경로를 통해 대화 산출물을 갱신합니다. Claude 전용 `Stop` 훅이나 Codex 전용 `notify` 설정을 그대로 복사하지 않습니다.
+Antigravity는 `~/.gemini/config/hooks.json`의 native `Stop` 훅으로 Mnemo 대화 산출물을 갱신합니다. payload의 `conversationId`, `workspacePaths`, `transcriptPath`를 사용하며, 구 Gemini CLI의 `AfterAgent` 설정이나 Codex 전용 `notify` 설정을 복사하지 않습니다.
 
 ## IDE Read Model
 

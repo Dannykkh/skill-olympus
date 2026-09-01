@@ -4,21 +4,10 @@ description: >
   코드 부채 정리 + 안전한 마이그레이션 + 코드 최소화(reducing-entropy).
   레거시 코드 폐기 계획, API 버전 전환, 라이브러리 마이그레이션, 단계적 제거,
   Dead Code 탐지, LOC 측정. /deprecate로 실행.
-triggers:
-  - "deprecate"
-  - "마이그레이션"
-  - "migration"
-  - "레거시 정리"
-  - "legacy cleanup"
-  - "API 버전 전환"
-  - "코드 부채"
-  - "tech debt"
-auto_apply: false
 license: MIT
 metadata:
   version: "2.0.0"
-  merged_from:
-    - reducing-entropy
+  merged-from: "reducing-entropy"
 ---
 
 # Deprecation & Migration — 코드 부채 정리 + 안전한 마이그레이션

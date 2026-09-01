@@ -1,6 +1,6 @@
 # MCP Configuration Management
 
-Pre-configured MCP server settings for Claude Code/Codex/Gemini.
+Pre-configured MCP server settings for Claude Code, Codex, and Antigravity.
 
 ## Available MCP Servers
 

@@ -14,8 +14,8 @@ $ErrorActionPreference = "Stop"
 try { [Console]::InputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 $hookInput = [Console]::In.ReadToEnd()
 
-# 상태 파일 탐색: Claude(.claude), Codex(.codex), Gemini(.chronos) 순.
-# 이전에는 ".claude/loop-state.md"만 봐서 Gemini 세션의 .chronos 상태를 못 찾는 버그가 있었음.
+# 상태 파일 탐색: Claude(.claude), Codex(.codex), Antigravity(.chronos) 순.
+# Antigravity의 실제 Stop 배선은 antigravity-hook.js가 소유하며 이 스크립트는 공유 폴백입니다.
 $stateCandidates = @(".claude/loop-state.md", ".codex/loop-state.md", ".chronos/loop-state.md")
 $stateFile = $stateCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
