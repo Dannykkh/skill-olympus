@@ -22,6 +22,31 @@ HyperFrames를 선택한 경우에만 읽습니다. HTML이 영상의 정본이�
 - 일회성 `npx`가 필요해도 unpinned `npx hyperframes`나 `@latest`를 사용하지 않습니다.
 - HyperFrames를 Aphrodite 또는 일반 웹페이지의 모션 런타임으로 추가하지 않습니다.
 
+## 전역 번들 모듈 (설치되어 있을 때만)
+
+사용자가 HeyGen 번들을 전역 스킬 디렉터리에 이미 설치해 두었으면 아래 모듈만 직접 읽습니다.
+경로는 현재 CLI의 활성 스킬 루트 기준이며, Claude는 `~/.claude/skills/`입니다. 번들이 없으면 이
+문서만으로 진행하고 TTS·전사·자막 단계는 `NOT RUN`으로 남깁니다.
+
+| 모듈 | 읽을 파일 | 읽는 시점 |
+|---|---|---|
+| `hyperframes-core` | `hyperframes-core/SKILL.md`, `references/data-attributes.md`, `references/determinism-rules.md` | 컴포지션 HTML을 쓰기 전 |
+| `hyperframes-core` | `references/storyboard-format.md`, `references/script-format.md` | `STORYBOARD.md`, `SCRIPT.md`를 쓰기 전 |
+| `hyperframes-cli` | `hyperframes-cli/SKILL.md`, `references/lint-validate-inspect.md`, `references/preview-render.md` | lint·preview·render 명령을 정할 때 |
+| `media-use` | `media-use/audio/references/tts.md`, `tts-to-captions.md`, `transcribe.md`, `captions/*.md` | 나레이션 또는 자막이 필요할 때 |
+
+읽지 않는 것:
+
+- `hyperframes` 라우터와 intent interview. 진입점과 brief는 `video-maker`가 소유합니다.
+- `general-video`, `faceless-explainer`, `product-launch-video` 같은 워크플로우 스킬. 설치되어 있지
+  않고, 설치하지도 않습니다.
+- `figma`, `hyperframes-registry`, `hyperframes-animation`, `hyperframes-keyframes`, `hyperframes-audio`,
+  `hyperframes-creative`는 선택 모듈입니다. 해당 기능이 brief에 명시될 때만 그 `SKILL.md`를 읽습니다.
+
+번들 규칙과 충돌하면 이 스킬이 우선합니다. 번들의 `npx hyperframes@latest upgrade` 안내는 따르지
+않고 프로젝트 pin을 유지하며, 번들의 HeyGen 로그인 preflight는 "요금·계정이 필요한 공급자는 확인
+후 사용"이라는 이 스킬의 규칙으로 대체합니다.
+
 ## 기본 구조
 
 ```text

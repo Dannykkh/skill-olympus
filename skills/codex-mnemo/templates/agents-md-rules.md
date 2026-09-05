@@ -147,6 +147,7 @@ Codex는 Claude처럼 커스텀 slash command 레지스트리를 직접 제공�
 - `/hermes`, `헤르메스` → `biz-strategy`
 - `/athena`, `아테나` → `ceo`
 - `/mnemo`, `므네모`, `mnemo` → `codex-mnemo`
+- `/video-maker`, `비디오메이커`, `영상 만들어줘`, `영상 제작` → `video-maker` (전역에 설치된 HyperFrames 번들의 `/hyperframes` 라우터는 진입점이 아님)
 
 **동작 방식:**
 - 예: 사용자가 `/chronos 인증 버그 고쳐줘`라고 입력하면, 이를 `auto-continue-loop` skill의 명시적 호출로 해석하고 해당 워크플로우를 따릅니다.

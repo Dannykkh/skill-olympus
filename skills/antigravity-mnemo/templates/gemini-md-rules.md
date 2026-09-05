@@ -41,6 +41,8 @@ slash command는 사용자/TUI 진입점입니다. 스킬이 프로그램적으�
 
 사용자가 스킬을 요청하면 위 순서로 찾습니다. 카탈로그의 source-only 하위 모듈은 `읽을 경로`의 정확한 `SKILL.md`를 직접 읽어 그 요청 동안만 사용합니다. 필수 모듈이 없으면 `NOT RUN`으로 남기며 활성 slash command라고 가정하지 않습니다.
 
+영상·비디오·MP4 제작 요청은 활성 `video-maker`가 진입점입니다. 전역 스킬 디렉터리에 설치된 HyperFrames 번들의 `hyperframes` 라우터와 워크플로우 스킬은 진입점이 아니며, `video-maker`가 HyperFrames를 선택했을 때 그 문서가 지정한 모듈만 정확한 `SKILL.md` 경로로 읽습니다.
+
 스킬 문서의 상대경로는 선택한 `SKILL.md`가 있는 모듈 디렉터리를 기준으로 해석하며, 임의 프로젝트 cwd에서 상대경로를 그대로 실행하지 않는다.
 
 메모리 압축이나 정제가 필요하면 같은 절차로 source-only `memory-compact` 또는 `memory-distill`의 정확한 `SKILL.md`를 읽습니다.

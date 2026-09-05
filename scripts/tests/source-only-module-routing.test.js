@@ -633,18 +633,54 @@ test("video-maker routes one project to Remotion or HyperFrames without global s
     "skills/video-maker/references/hyperframes-engine.md",
   );
   const qa = readRepoFile("skills/video-maker/references/video-qa.md");
+  const voice = readRepoFile(
+    "skills/video-maker/references/voice-captions.md",
+  );
 
   assert.match(source, /Remotion은 React\/TSX/);
   assert.match(source, /HyperFrames는 HTML\/CSS\/GSAP/);
   assert.match(source, /두 엔진을 같은 프로젝트에[\s\S]*함께 설치하지 않습니다/);
   assert.match(source, /선택하지 않은\s*엔진 reference는 읽거나 적용하지 않습니다/);
-  assert.match(source, /`npx skills add heygen-com\/hyperframes`를 실행하지 않습니다/);
+  assert.match(source, /`npx skills add heygen-com\/hyperframes`/);
+  assert.match(source, /실행하지 않습니다/);
   assert.match(source, /복사·동기화하지 않습니다/);
   assert.match(remotion, /useCurrentFrame\(\)/);
   assert.match(hyperframes, /window\.__timelines/);
   assert.match(hyperframes, /Aphrodite 또는 일반 웹페이지의 모션 런타임으로 추가하지 않습니다/);
   assert.match(qa, /ffprobe/);
   assert.match(qa, /License\/permission/);
+
+  // 영상 요청 진입점은 video-maker이며, 전역 HyperFrames 번들 라우터는 진입점이 아니다.
+  assert.match(source, /영상 요청의 유일한 진입점/);
+  assert.match(source, /`hyperframes` 라우터[\s\S]*진입점으로 쓰지 않습니다/);
+  assert.match(source, /`\/hyperframes`, `\/media-use` 같은 slash 호출로 넘기지 않습니다/);
+  assert.match(source, /이미 설치된 서드파티 스킬 번들은 제거·갱신·재설치하지 않습니다/);
+
+  // 어느 엔진이든 Script → Voice → Composition → Captions → Render 5단계를 같은 계약으로 다룬다.
+  for (const stage of ["Script", "Voice", "Composition", "Captions", "Render"]) {
+    assert.match(source, new RegExp(`^\\| ${stage} \\|`, "m"), `SKILL.md lacks pipeline stage ${stage}`);
+  }
+  assert.match(source, /스크립트와 스토리보드는 프레임워크가 만들어 주지 않으며/);
+
+  // 번들 모듈은 설치되어 있을 때만 정확한 파일 경로로 읽고, 워크플로우 스킬은 읽지 않는다.
+  assert.match(hyperframes, /## 전역 번들 모듈 \(설치되어 있을 때만\)/);
+  for (const module of ["hyperframes-core", "hyperframes-cli", "media-use"]) {
+    assert.match(hyperframes, new RegExp(`^\\| \`${module}\` \\|`, "m"), `hyperframes-engine.md lacks module ${module}`);
+  }
+  assert.match(hyperframes, /번들이 없으면 이\s*문서만으로 진행하고[\s\S]*`NOT RUN`/);
+  assert.match(hyperframes, /`npx hyperframes@latest upgrade` 안내는 따르지\s*않고/);
+
+  // TTS 공급자는 교체 가능한 계약이며, 자막 정렬은 timestamps 유무로 분기한다.
+  for (const provider of ["HeyGen", "ElevenLabs", "Typecast", "Edge TTS", "Kokoro"]) {
+    assert.match(voice, new RegExp(`^\\| ${provider} \\|`, "m"), `voice-captions.md lacks provider ${provider}`);
+  }
+  assert.match(voice, /API 키는 환경 변수로만 읽고/);
+  assert.match(voice, /요금이 발생하는 호출은[\s\S]*확인을\s*받습니다/);
+  assert.match(voice, /## 5\. 자막 정렬 분기/);
+  assert.match(voice, /`\.en` 모델은 비영어 음성을 영어로 번역하므로/);
+  assert.match(voice, /@remotion\/captions/);
+  assert.match(voice, /tts-to-captions\.md/);
+  assert.match(remotion, /createTikTokStyleCaptions/);
 });
 
 test("mnemo templates and hooks route memory maintenance without active slash assumptions", () => {

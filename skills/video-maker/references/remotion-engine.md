@@ -84,6 +84,16 @@ npm run video:render -- <CompositionId> out/video.mp4
 CI나 자동화에서는 대화형 Studio 대신 typecheck, compositions, still, 제한 구간 draft render를
 사용합니다. 최종 옵션은 현재 설치 버전의 공식 CLI 문서로 확인합니다.
 
+## 나레이션과 자막
+
+- 음성 생성과 자막 정렬 분기는 [voice-captions.md](voice-captions.md)를 따릅니다.
+- 자막 렌더는 `@remotion/captions`의 `Caption` 타입, `parseSrt`, `createTikTokStyleCaptions`를
+  사용하고 page마다 `<Sequence>`를 둡니다. 자막 타이밍을 컴포넌트 안에서 손으로 계산하지 않습니다.
+- 전사가 필요하면 `@remotion/install-whisper-cpp`를 정확한 버전으로 추가하고 16kHz WAV로 변환한 뒤
+  `tokenLevelTimestamps: true`로 실행합니다.
+- remotion-dev/skills 번들은 참고 문서일 뿐이며 설치를 전제하지 않습니다. 공식 근거는
+  https://github.com/remotion-dev/skills/tree/main/skills/remotion-captions 입니다.
+
 ## Remotion을 선택하지 않을 조건
 
 - 결과 원본을 순수 HTML/CSS/GSAP로 유지해야 함

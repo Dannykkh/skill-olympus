@@ -544,7 +544,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | **문서** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3개 | 다이어그램, 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG, cathrynlavery/diagram-design MIT 벤더링), 프레젠테이션, 문서, 도메인 용어사전 |
 | **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing), 관리, 릴리즈 |
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |
-| **미디어** | video-maker | Remotion(React/TSX) 또는 HyperFrames(HTML/CSS/GSAP), 프로젝트당 엔진 하나 |
+| **미디어** | video-maker | 스크립트→음성(TTS)→컴포지션→자막→렌더를 Remotion(React/TSX) 또는 HyperFrames(HTML/CSS/GSAP)로, 프로젝트당 엔진 하나, TTS 공급자 선택(HeyGen·ElevenLabs·Typecast·Edge TTS·Kokoro) |
 | **리서치** | reddit-researcher | 시장 조사 + 리드 스코어링 |
 | **번역** | ko-en-translator | 한↔영 양방향 번역 (기술 문서, 코드, i18n) |
 | **유틸** | humanizer, jira, datadog-cli, excel2md + 3개 | AI 패턴 제거, 통합 |

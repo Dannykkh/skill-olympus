@@ -151,6 +151,7 @@ API 키는 <private>sk-1234abcd</private> 입니다.
 - `/hermes`, `헤르메스` → `biz-strategy`
 - `/athena`, `아테나` → `ceo`
 - `/mnemo`, `므네모`, `mnemo` → `mnemo`
+- `/video-maker`, `비디오메이커`, `영상 만들어줘`, `영상 제작` → `video-maker` (전역에 설치된 HyperFrames 번들의 `/hyperframes` 라우터는 진입점이 아님)
 
 ## 과거 대화 검색 규칙
 

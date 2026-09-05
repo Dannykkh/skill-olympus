@@ -99,7 +99,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 - 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(공통 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 97개(활성 21 + source-only 76), Codex와 Antigravity 각각 96개(활성 20 + source-only 76), OpenClaw과 Hermes Agent 각각 94개(활성 18 + source-only 76)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 96개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 21개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
 - 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
 - 사용자 정의 에이전트는 기본 거부 정책으로 0개를 등록합니다. 현재 소스 42종(패시브 9, 네이티브 중복 7, 중복 전문·스킬 래퍼 24, 워크플로 호환 프롬프트 2)은 source-only이며, 새 에이전트도 고유 런타임 계약을 입증해 allowlist에 넣기 전에는 자동 활성화되지 않습니다. 전체 소스 복사가 필요할 때만 `--include-source-only-agents`를 사용하고, Codex 프로젝트 에이전트 미러는 `--include-project-agents`에서만 생성합니다.
-- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모)
+- 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모), `/video-maker`(비디오메이커, 영상 요청 진입점)
 
 ---
 
@@ -139,7 +139,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📦 Git | commit-work, release-notes | Git 워크플로우 & 릴리즈 노트 자동화 (버전+CHANGELOG+태그) |
 | 💰 Estimation | estimate | 개발 견적서 자동 생성 (비용 그룹별 공수 산정 → 엑셀 출력) |
 | 📈 Business | biz-strategy (헤르메스), ceo (아테나), okr | 사업성 검토, CEO 코칭 (Go/No-Go), OKR 목표 관리 |
-| 🎬 Media | video-maker | Remotion(React/TSX)·HyperFrames(HTML/CSS/GSAP) 선택형 코드 영상 제작. 전역 설치·동기화 없이 프로젝트 엔진 하나만 사용 |
+| 🎬 Media | video-maker | 영상 요청 진입점. Remotion(React/TSX)·HyperFrames(HTML/CSS/GSAP) 중 엔진 하나로 스크립트→음성(TTS)→컴포지션→자막→렌더. TTS 공급자(HeyGen·ElevenLabs·Typecast·Edge TTS·Kokoro) 선택, 전역 HyperFrames 번들은 source-only 모듈로만 읽음 |
 | 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown, youtube-transcript | 유틸리티 + YouTube 자막 추출/요약 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
