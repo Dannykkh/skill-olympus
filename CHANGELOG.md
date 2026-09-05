@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.1.0] - 2026-09-05
+
+### Features
+
+- **video-maker**: 영상 요청의 유일한 진입점으로 선언하고, 전역에 설치된 HeyGen HyperFrames 스킬 번들의 `hyperframes` 라우터와 워크플로우 스킬은 진입점으로 쓰지 않는다. HyperFrames를 선택했을 때만 `hyperframes-core`·`hyperframes-cli`·`media-use`를 정확한 파일 경로로 읽는 source-only 모듈로 취급하며, 번들이 없으면 TTS·전사·자막 단계를 `NOT RUN`으로 남긴다. 어느 엔진이든 Script→Voice→Composition→Captions→Render 5단계를 같은 계약으로 다루고 필요 없는 단계는 `SKIPPED`로 구분한다. 새 `references/voice-captions.md`는 HeyGen·ElevenLabs·Typecast·Edge TTS·Kokoro를 교체 가능한 TTS 공급자 계약으로 정리하고, 타임스탬프 유무에 따른 자막 정렬 분기, 엔진별 자막 소비, 한국어 자막 주의사항을 담는다. mnemo·codex-mnemo 템플릿에 `/video-maker`·`영상 만들어줘` 고정 alias, antigravity-mnemo 템플릿에 영상 진입점 문구를 추가했고, 라우팅 테스트에 진입점·5단계·번들 모듈·TTS 공급자 단언을 더했다. (a40003e)
+
+### Tests
+
+- **clean-clone**: portable-skill-hosts와 source-only-module-routing 테스트가 source-only 77개·스킬 101개를 고정해 git에 추적되지 않는 로컬 전용 `deploymonitor`가 없는 clean clone에서 3건이 실패하던 문제를 고쳤다. installers 테스트와 같은 방식으로 `deploymonitor` 존재 여부에 따라 76/77, 100/101을 계산한다. (2b6c785)
+
 ## [6.0.1] - 2026-09-01
 
 ### Bug Fixes
