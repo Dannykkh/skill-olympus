@@ -130,7 +130,13 @@ for (const runtime of ["openclaw", "hermes"]) {
 
       const catalog = fs.readFileSync(path.join(home, "SKILLS-CATALOG.md"), "utf8");
       assert.match(catalog, /기본 활성 스킬: 18개/);
-      assert.match(catalog, /source-only 스킬: 77개/);
+      // 로컬 전용 deploymonitor는 git에 추적되지 않으므로 clean clone에서는 source-only가 76개다.
+      const sourceOnlyCount = fs.existsSync(
+        path.join(__dirname, "..", "..", "skills", "deploymonitor", "SKILL.md"),
+      )
+        ? 77
+        : 76;
+      assert.match(catalog, new RegExp(`source-only 스킬: ${sourceOnlyCount}개`));
 
       const managedSkill = path.join(home, "skills", "api-tester", "SKILL.md");
       fs.appendFileSync(managedSkill, "\nuser-managed-change\n", "utf8");

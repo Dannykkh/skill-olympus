@@ -298,7 +298,17 @@ test("all canonical skills use portable Agent Skills frontmatter", () => {
     "metadata",
   ]);
   const entries = allRepoSkillEntries();
-  assert.equal(entries.length, 101, "local skill inventory changed; revisit portable metadata coverage");
+  // 공개 추적 스킬 100개에 git에 추적되지 않는 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
+  const expectedEntries = fs.existsSync(
+    path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
+  )
+    ? 101
+    : 100;
+  assert.equal(
+    entries.length,
+    expectedEntries,
+    "skill inventory changed; revisit portable metadata coverage",
+  );
 
   for (const { name, relativePath, source } of entries) {
     assert.match(source, /^---\n/, `${relativePath} has no opening frontmatter fence`);
