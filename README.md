@@ -120,6 +120,16 @@ Use `--uninstall` with a host-specific installer to remove only that host's Olym
 A normal update does not require an uninstall first. Running the installer again reconciles only
 Olympus-managed names with the current policy and leaves unrelated third-party skill names in place.
 
+Codex sync also checks direct skill folders in `${CODEX_HOME:-~/.codex}/skills` and
+`~/.agents/skills`. When the frontmatter name and the complete file trees match, it keeps the
+Codex copy enabled and disables the shared copy through `config.toml`; both copies stay on disk.
+Different contents are reported for review, and explicit user enable/disable settings are preserved.
+On later syncs, installer-owned disables are removed when the copies diverge or one disappears;
+uninstall removes only the unedited installer-owned config block. Changed configs are backed up under
+the Codex home's `.olympus/backups/`. Linked resources or unsupported config forms produce a warning
+and are left for manual review. This check excludes nested skill folders and plugin bundles.
+Restart Codex after configuration changes. Many distinct skills can still trigger the description-budget warning.
+
 ```powershell
 git pull
 .\install.bat

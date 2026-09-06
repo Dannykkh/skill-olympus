@@ -42,6 +42,7 @@ function copySyncFixtureScripts(fixtureRoot) {
     "prune-stale-assets.js",
     "skill-catalog.js",
     "skill-install-policy.js",
+    "codex-skill-dedup.js",
     "sync-claude-agents.js",
     "sync-claude-skills.js",
     "sync-codex-assets.js",

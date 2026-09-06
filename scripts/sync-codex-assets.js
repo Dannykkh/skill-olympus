@@ -29,6 +29,7 @@ const {
   RUNTIME_SKILL_EXCLUSIONS,
   selectRuntimeSkills,
 } = require("./skill-install-policy");
+const { reconcileCodexSkillDuplicates } = require("./codex-skill-dedup");
 
 const args = process.argv.slice(2);
 const knownArgs = new Set([
@@ -1033,6 +1034,8 @@ function run() {
   syncHooks(targets.projectHooks, hookFiles, mode);
   syncHooks(targets.codexHooks, hookFiles, mode);
   syncHooks(targets.codexHooks, codexNotifyHookFiles, mode);
+
+  reconcileCodexSkillDuplicates({ codexHome, unlink: mode === "unlink" });
 
   if (mode === "unlink") {
     safeRm(path.join(repoRoot, ".agents", ".codex-sync-manifest.json"));

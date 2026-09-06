@@ -185,6 +185,13 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   // compat.claude. A Codex-only selection must still prepare that shared home
   // when Grok is installed.
   fs.mkdirSync(path.join(tempHome, ".grok"), { recursive: true });
+  const externalSkillPaths = [".codex", ".agents"].map((home) =>
+    path.join(tempHome, home, "skills", "external-duplicate", "SKILL.md"),
+  );
+  for (const skillPath of externalSkillPaths) {
+    fs.mkdirSync(path.dirname(skillPath), { recursive: true });
+    fs.writeFileSync(skillPath, "---\nname: external-duplicate\ndescription: fixture\n---\n");
+  }
   const projectManifestPath = path.join(
     repoRoot,
     ".agents",
@@ -213,6 +220,10 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     0,
     `install.bat failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
+  const dedupConfig = fs.readFileSync(path.join(env.CODEX_HOME, "config.toml"), "utf8");
+  assert.match(result.stdout, /\[codex-dedup\] disabled=1/);
+  assert.ok(dedupConfig.includes(JSON.stringify(externalSkillPaths[1].replace(/\\/g, "/"))));
+  assert.ok(externalSkillPaths.every((skillPath) => fs.existsSync(skillPath)));
 
   assert.equal(
     fs.existsSync(path.join(tempHome, ".codex", "hooks", "save-turn.ps1")),
@@ -343,6 +354,8 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     timeout: 120000,
   });
   assert.equal(defaultResult.status, 0);
+  assert.doesNotMatch(defaultResult.stderr, /duplicate-skill config block was edited/);
+  assert.match(defaultResult.stdout, /\[codex-dedup\] disabled=1/);
   assert.equal(
     fs.existsSync(path.join(tempHome, ".codex", "skills", "react-dev", "SKILL.md")),
     false,
