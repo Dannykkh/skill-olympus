@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.1.1] - 2026-09-06
+
+### Bug Fixes
+
+- **Codex 스킬 중복 등록**: `install.bat`·`install.sh`의 Codex 동기화가 `${CODEX_HOME:-~/.codex}/skills`와 `~/.agents/skills` 바로 아래의 스킬을 비교한다. frontmatter 이름과 전체 파일 트리가 같은 사본은 Codex 쪽을 유지하고 공유 경로만 `config.toml`에서 비활성화해 스킬 설명 예산의 중복 소모를 줄인다. 원본 파일과 명시적 사용자 설정은 보존하며, 내용이 다르거나 링크·설정 형식을 안전하게 판정할 수 없으면 수동 검토를 안내한다. 설치기가 추가한 설정은 사본이 달라지거나 사라지면 해제되고, 제거 시에도 수정되지 않은 관리 항목만 회수한다. 설정 변경 전 백업과 Codex MCP 설정 재작성 후 재설치 회귀 검증을 포함한다. 중첩 스킬·플러그인 번들은 대상에서 제외되며, 적용 후 Codex 재시작이 필요하다. (d56e34e)
+
+### Tests
+
+- **설치·설정 보존**: 동일 사본·내용 변경·사용자 설정·TOML 문자열과 테이블·링크 경로·제거·반복 동기화에 대한 회귀 테스트 13개를 추가했다. Windows 실제 `install.bat` 테스트에서도 중복 비활성화, 원본 보존, MCP 등록 후 재설치 동작을 검증한다. (d56e34e)
+
 ## [6.1.0] - 2026-09-05
 
 ### Features
