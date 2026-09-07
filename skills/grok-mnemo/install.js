@@ -123,6 +123,11 @@ function check() {
     console.log("      Fix: node skills/grok-mnemo/install.js");
     issues++;
   }
+  const helperDest = path.join(hooksDir, "grok-mnemo-append-event.js");
+  if (!fs.existsSync(helperDest) || fs.readFileSync(helperDest, "utf8") !== fs.readFileSync(path.join(sourceDir, "hooks", "append-event.js"), "utf8")) {
+    console.log("      MISSING or stale grok-mnemo-append-event.js");
+    issues++;
+  }
 
   console.log("\n[2/3] Checking hook registration (grok-mnemo.json)...");
   if (!fs.existsSync(hookJsonPath)) {
@@ -181,7 +186,8 @@ function install() {
   const dest = path.join(hooksDir, hookScriptName());
   // 만들기 전에 먼저 검증한다. 예전에는 ensureDir()가 앞에 있어, 소스가 없으면
   // 빈 hooks/ 디렉터리만 남기고 죽었다.
-  if (!fs.existsSync(src)) {
+  const helperSrc = path.join(sourceDir, "hooks", "append-event.js");
+  if (!fs.existsSync(src) || !fs.existsSync(helperSrc)) {
     console.error(`      Error: hook source file missing — nothing was installed:`);
     console.error(`        - ${src}`);
     console.error("      레포가 온전하지 않습니다. 다시 clone 하거나");
@@ -191,6 +197,7 @@ function install() {
 
   ensureDir(hooksDir);
   copyFile(src, dest);
+  copyFile(helperSrc, path.join(hooksDir, "grok-mnemo-append-event.js"));
   if (!isWindows) {
     fs.chmodSync(dest, 0o755);
   }
@@ -243,7 +250,7 @@ function uninstall() {
 `);
 
   console.log("[1/3] Removing hook scripts...");
-  for (const file of ["grok-mnemo-save-turn.ps1", "grok-mnemo-save-turn.sh"]) {
+  for (const file of ["grok-mnemo-save-turn.ps1", "grok-mnemo-save-turn.sh", "grok-mnemo-append-event.js"]) {
     if (removeFile(path.join(hooksDir, file))) {
       console.log(`      - ${file} removed`);
     }

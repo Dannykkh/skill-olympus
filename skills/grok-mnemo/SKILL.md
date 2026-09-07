@@ -29,7 +29,7 @@ node "<module_root>/install.js" --check      # 설치 상태 점검
 | 설정 형식 | settings.json | config.toml | config/hooks.json | **hooks/*.json 자동 스캔** |
 | 규칙 파일 | CLAUDE.md | AGENTS.md | GEMINI.md | **~/.grok/rules/*.md (델타만)** |
 | 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | `conversations/*-antigravity.md` | **`conversations/*-grok.md`** |
-| 중복 방지 | 타임스탬프 | turn-id | 타임스탬프 | **타임스탬프 + reason 필터** |
+| 중복 방지 | 타임스탬프 | turn-id | 타임스탬프 | **이벤트 식별자 또는 세션 입력·응답 상태 + reason 필터** |
 
 **Grok만의 특이점** (실측 근거, Grok Build 0.2.111):
 
@@ -60,7 +60,8 @@ grok-mnemo/
 ├── install.js                   # 설치/제거 스크립트
 ├── hooks/
 │   ├── save-turn.ps1            # Windows 훅 스크립트 (2이벤트 분기)
-│   └── save-turn.sh             # Linux/Mac 훅 스크립트 (2이벤트 분기)
+│   ├── save-turn.sh             # Linux/Mac 훅 스크립트 (2이벤트 분기)
+│   └── append-event.js          # Node.js 공통 저장·중복 방지
 └── templates/
     └── grok-rules.md            # ~/.grok/rules/ 주입 규칙 (Grok 전용 델타)
 ```
@@ -89,14 +90,24 @@ Grok Build 대화
 | 파일 | 위치 |
 |------|------|
 | 대화 로그 | `conversations/YYYY-MM-DD-grok.md` |
+| 이벤트 인덱스 | `conversations/.grok-events.json` (식별자·내용의 해시와 세션 진행 상태) |
 | 의미기억 | `MEMORY.md` (프로젝트 루트) |
 | 훅 스크립트 | `~/.grok/hooks/grok-mnemo-save-turn.ps1\|.sh` |
+| 공통 저장기 | `~/.grok/hooks/grok-mnemo-append-event.js` |
 | 훅 등록 | `~/.grok/hooks/grok-mnemo.json` |
 | 규칙 | `~/.grok/rules/grok-mnemo.md` |
 | 핸드오프 | 공통 프로젝트 경로 `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 
 > 핸드오프는 CLI별 홈 디렉터리가 아니라 프로젝트 안의 공통 디렉터리 `docs/handoffs/`를 사용합니다.
 > Claude, Codex, Antigravity, Grok이 같은 프로젝트 핸드오프를 이어받기 위한 의도된 동작입니다.
+
+## 저장 식별과 한계
+
+두 셸 어댑터 모두 Node.js 저장기를 실행한다. `sessionId`와 함께 `eventId`, `messageId`, `promptId`, `turnId` 중 제공된 식별자를 사용해 지연 재전달을 걸러낸다. 이 식별자들은 선택 입력이다. [Grok 공식 훅 문서](https://docs.x.ai/build/features/hooks)가 모든 페이로드에서 이를 제공한다고 보장하지 않는다.
+
+식별자가 없으면 직전 역할·내용과 입력 순번으로 연속 중복을 제거한다. 응답 후 같은 문장을 새로 입력하면 별도 턴으로 보존한다. 이 경우 과거 입력·응답 쌍 전체의 재전달과 동일한 새 대화는 구분할 수 없다. 세션 정보까지 없으면 다른 대화를 잘못 버리지 않도록 중복 제거를 하지 않는다.
+
+파일 잠금으로 동시 저장을 직렬화하고 종료된 프로세스의 잠금은 회수한다. 인덱스 손상이나 잠금 시간 초과는 기존 오류 로그·`MNEMO_STRICT` 규칙을 따른다. 인덱스를 지우면 과거 이벤트의 중복 판정 근거가 사라지므로 일반 청소 대상으로 취급하지 않는다.
 
 ## 검색 규칙 (Grok 세션에서)
 

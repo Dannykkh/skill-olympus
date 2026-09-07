@@ -1,4 +1,4 @@
-﻿# save-turn.ps1 - Grok Build 훅: User+Assistant 턴을 대화 파일에 저장
+# save-turn.ps1 - Grok Build 훅: User+Assistant 턴을 대화 파일에 저장
 # 한 스크립트가 두 이벤트를 처리한다 (hookEventName으로 분기):
 #   - user_prompt_submit: payload.prompt (<user_query> 래퍼 제거) -> User 저장
 #   - stop (reason == end_turn): payload.lastAssistantMessage -> Assistant 저장
@@ -25,6 +25,7 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 # BOM 없는 UTF-8 인코더 (PS의 [System.Text.Encoding]::UTF8은 BOM 포함이라 사용 안 함)
 $Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+$OutputEncoding = $Utf8NoBom
 
 function Write-MnemoError {
     param([string]$Context, [string]$Message)
@@ -301,59 +302,14 @@ if (-not (Test-Path $ConvDir)) {
     New-Item -ItemType Directory -Path $ConvDir -Force | Out-Null
 }
 
-# 파일 없으면 frontmatter 헤더 생성
-if (-not (Test-Path $ConvFile)) {
-    $Header = @"
----
-date: $Today
-project: $(Split-Path $ProjectRoot -Leaf)
-keywords: []
-summary: ""
----
-
-# $Today
-
-"@
-    [System.IO.File]::WriteAllText($ConvFile, $Header, $Utf8NoBom)
-}
-
-$ts = Get-Date -Format 'HH:mm:ss'
-$entry = ""
-
-# User 입력 기록
-if ($userText -and $userText.Length -ge 1) {
-    # 중복 방지: 같은 초에 동일 User 저장되어 있으면 스킵
-    if (Test-Path $ConvFile) {
-        $existing = Get-Content $ConvFile -Raw -Encoding UTF8
-        if ($existing -match [regex]::Escape("## [$ts] User") -and $existing -match [regex]::Escape($userText.Substring(0, [Math]::Min(50, $userText.Length)))) {
-            exit 0
-        }
-    }
-    $entry += "`n## [$ts] User`n`n$userText`n"
-}
-
-# Assistant 응답 처리
-# truncation 없음: lastAssistantMessage가 유일한 원문 소스이므로 온전히 저장.
-# (Grok 자체 transcript는 ~/.grok/sessions/ 내부 백업 취급 — 검색 대상 아님)
-if ($response -and $response.Length -ge 5) {
-    # 중복 방지: stop 재발화로 같은 초에 동일 Assistant 저장되어 있으면 스킵
-    if (Test-Path $ConvFile) {
-        $existing = Get-Content $ConvFile -Raw -Encoding UTF8
-        if ($existing -match [regex]::Escape("## [$ts] Assistant") -and $existing -match [regex]::Escape($response.Substring(0, [Math]::Min(50, $response.Length)))) {
-            exit 0
-        }
-    }
-    $entry += "`n## [$ts] Assistant`n`n$response`n"
-}
-
-# append (BOM 없는 UTF-8로 저장)
-if ($entry) {
-    try {
-        [System.IO.File]::AppendAllText($ConvFile, $entry, $Utf8NoBom)
-    } catch {
-        Exit-MnemoError -Context 'file-io' -Message "대화 파일 쓰기 실패: $($_.Exception.Message)"
-    }
-}
+# Node helper owns append + durable event identity under one lock.
+$appendHelper = Join-Path $PSScriptRoot 'append-event.js'
+if (-not (Test-Path $appendHelper)) { $appendHelper = Join-Path $PSScriptRoot 'grok-mnemo-append-event.js' }
+try {
+    $appendResult = ($payload | ConvertTo-Json -Compress -Depth 30) | & node $appendHelper $ProjectRoot
+    if ($LASTEXITCODE -ne 0) { Exit-MnemoError -Context 'append-event' -Message 'event persistence failed' }
+    if ("$appendResult".Trim() -ne 'saved') { exit 0 }
+} catch { Exit-MnemoError -Context 'append-event' -Message $_.Exception.Message }
 
 # ─────────────────────────────────────────────
 # Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)

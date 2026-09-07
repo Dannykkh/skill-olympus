@@ -275,39 +275,11 @@ ensure_memory_scaffold "$PROJECT_ROOT"
 # 폴더 생성
 mkdir -p "$CONV_DIR"
 
-# 파일 없으면 frontmatter 헤더 생성
-if [ ! -f "$CONV_FILE" ]; then
-    cat > "$CONV_FILE" << EOF
----
-date: $TODAY
-project: $PROJECT_NAME
-keywords: []
-summary: ""
----
-
-# $TODAY
-
-EOF
-fi
-
-TIMESTAMP=$(date +%H:%M:%S)
-
-# User 입력 기록 (같은 초 동일 User 중복 방지)
-if [ -n "$USER_TEXT" ]; then
-    if [ -f "$CONV_FILE" ] && grep -qF "## [$TIMESTAMP] User" "$CONV_FILE" 2>/dev/null; then
-        exit 0
-    fi
-    printf '\n## [%s] User\n\n%s\n' "$TIMESTAMP" "$USER_TEXT" >> "$CONV_FILE"
-fi
-
-# Assistant 응답 기록 (같은 초 동일 Assistant 중복 방지)
-# truncation 없음: lastAssistantMessage가 유일한 원문 소스이므로 온전히 저장.
-if [ -n "$RESPONSE" ] && [ ${#RESPONSE} -ge 5 ]; then
-    if [ -f "$CONV_FILE" ] && grep -qF "## [$TIMESTAMP] Assistant" "$CONV_FILE" 2>/dev/null; then
-        exit 0
-    fi
-    printf '\n## [%s] Assistant\n\n%s\n' "$TIMESTAMP" "$RESPONSE" >> "$CONV_FILE"
-fi
+# Keep persistence identical to the Windows adapter; stdout stays internal.
+APPEND_HELPER="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/append-event.js"
+if [ ! -f "$APPEND_HELPER" ]; then APPEND_HELPER="${APPEND_HELPER%/append-event.js}/grok-mnemo-append-event.js"; fi
+APPEND_RESULT=$(printf '%s' "$INPUT" | node "$APPEND_HELPER" "$PROJECT_ROOT") || exit_mnemo_error 'append-event' 'event persistence failed'
+[ "$APPEND_RESULT" = "saved" ] || exit 0
 
 # ─────────────────────────────────────────────
 # Gotchas/Learned 관찰 기록 (memory/gotchas/ + memory/learned/)
