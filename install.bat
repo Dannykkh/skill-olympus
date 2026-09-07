@@ -474,6 +474,15 @@ echo   LLM: !LLMS!
 echo   Bundles: !BUNDLES!
 echo.
 
+REM Back up rules and Codex notification configuration before managed changes.
+set "INSTALL_SNAPSHOT="
+for /f "delims=" %%B in ('node "%SCRIPT_DIR%scripts\install-state.js" begin "!LLMS!"') do set "INSTALL_SNAPSHOT=%%B"
+if not defined INSTALL_SNAPSHOT (
+    echo [ERROR] Installation backup failed; no managed changes started.
+    exit /b 1
+)
+echo   Installation snapshot: !INSTALL_SNAPSHOT!
+
 REM %CLAUDE_DIR%가 없으면 만들어서 설치한다.
 REM 예전에는 여기서 exit /b 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고
 REM 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Antigravity 자산까지
@@ -994,6 +1003,13 @@ if !errorlevel! equ 0 (
 )
 
 :install_done
+node "%SCRIPT_DIR%scripts\install-state.js" finish "!INSTALL_SNAPSHOT!"
+if errorlevel 1 exit /b 1
+node "%SCRIPT_DIR%scripts\verify-install.js" "!INSTALL_SNAPSHOT!"
+if errorlevel 1 (
+    echo [ERROR] Installation verification failed. Inspect the snapshot verification.json.
+    exit /b 1
+)
 REM Restore CLAUDECODE env var
 set "CLAUDECODE=!SAVE_CLAUDECODE!"
 

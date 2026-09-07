@@ -420,6 +420,14 @@ echo "  LLM: $LLMS"
 echo "  번들: $BUNDLES"
 echo ""
 
+# Back up rules and Codex notification configuration before managed changes.
+INSTALL_SNAPSHOT="$(node "$SCRIPT_DIR/scripts/install-state.js" begin "$LLMS")" || exit 1
+if [ -z "$INSTALL_SNAPSHOT" ]; then
+    echo "[오류] 설치 백업 실패. 관리 파일 변경을 시작하지 않았습니다."
+    exit 1
+fi
+echo "  Installation snapshot: $INSTALL_SNAPSHOT"
+
 # $CLAUDE_DIR가 없으면 만들어서 설치한다.
 # 예전에는 여기서 exit 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고 한 번도
 # 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Antigravity 자산까지 통째로
@@ -879,6 +887,12 @@ if [ "$HAS_HERMES" = "1" ]; then
         echo "      [오류] Hermes Skill 동기화 실패"
         exit 1
     fi
+fi
+
+node "$SCRIPT_DIR/scripts/install-state.js" finish "$INSTALL_SNAPSHOT" || exit 1
+if ! node "$SCRIPT_DIR/scripts/verify-install.js" "$INSTALL_SNAPSHOT"; then
+    echo "[오류] 설치 검증 실패. 백업 디렉터리의 verification.json을 확인하세요."
+    exit 1
 fi
 
 # CLAUDECODE 환경변수 복원

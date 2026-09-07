@@ -70,6 +70,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
   const {
     createGrokHome = false,
     failPrune = false,
+    failVerify = false,
     useCodexHomeOverride = false,
   } = options;
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-sh-test-"));
@@ -83,7 +84,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
     const realNode = shellPath(process.execPath).replaceAll("'", "'\\''");
     writeExecutable(
       path.join(shimDir, "node"),
-      `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
+      `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */install-state.js) [ "\${2:-}" = "begin" ] && echo '-' ;;\n  */verify-install.js) [ "\${FAIL_VERIFY:-0}" = "1" ] && exit 87 ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
     );
     for (const command of ["claude", "codex", "agy", "jq"]) {
       writeExecutable(path.join(shimDir, command), "#!/usr/bin/env bash\nexit 0\n");
@@ -105,6 +106,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
       ANTIGRAVITY_HOME: shellPath(path.join(tempHome, ".gemini")),
       GROK_HOME: shellPath(path.join(tempHome, ".grok")),
       FAIL_PRUNE: failPrune ? "1" : "0",
+      FAIL_VERIFY: failVerify ? "1" : "0",
       OLYMPUS_UPDATE_CHECK_DISABLE: "1",
       PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
     };
@@ -122,6 +124,14 @@ function runIsolatedInstaller(bash, args, options = {}) {
 }
 
 const bash = findBash();
+
+test("install.sh does not announce completion when final verification fails", { skip: !bash }, () => {
+  const result = runIsolatedInstaller(bash, ["--llm", "codex"], { failVerify: true });
+  const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+  assert.notEqual(result.status, 0, output);
+  assert.match(output, /설치 검증 실패/);
+  assert.doesNotMatch(output, /설치 완료!/);
+});
 
 test(
   "install.sh --help exits before changing runtime homes",
