@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-09-07
+
+### Features
+
+- **설치 백업·복원**: 통합 설치 전에 전역 규칙과 Codex 설정·알림 wrapper를 `~/.olympus/install-backups/`에 백업한다. `node scripts/install-state.js restore "<manifest.json>"`으로 복원 대상을 확인하고 `--apply`로 파일 전체를 되돌릴 수 있다. 설치 후 사용자 수정이 있으면 전체 복원을 중단한다. 개별 어댑터 설치·제거에는 이 통합 백업·자동 복원이 적용되지 않는다. (0d28ca3)
+- **설치 후 자동 검증**: 정본 일치·마커 개수·개인 규칙 보존·훅 등록과 설치된 훅의 실제 저장을 검사한다. 실패하면 설치 완료를 선언하지 않고 실패 코드로 종료하며, 결과는 `verification.json`에 남긴다. 임시 홈 또는 `MNEMO_DISABLE`로 건너뛴 실행 검사는 `NOT RUN`으로 표시한다. (0d28ca3)
+
+### Bug Fixes
+
+- **Grok 저장 중복·한글 인코딩**: PowerShell·Bash가 공통 이벤트 저장기를 사용한다. 식별자가 있는 지연 재전달을 걸러내고, 없는 경우 세션의 직전 입력·응답 상태로 연속 중복을 제거하며 같은 문장을 사용한 새 턴은 보존한다. 다중 프로세스 저장을 직렬화하고 PowerShell→Node의 중복 UTF-8 BOM을 처리한다. 식별자가 없는 과거 턴 전체의 재전달과 동일한 새 대화는 구분할 수 없다. (523b805)
+
+### Documentation
+
+- README 4개 언어와 전역 규칙 가이드에 백업 위치, Codex 설정 전체를 포함한 파일 단위 복원 범위, 충돌 처리, 개별 어댑터 및 제거의 차이, 자동 검증의 한계를 안내한다. (d8ed4b7)
+
+### Tests
+
+- Grok 저장 테스트 9개와 백업·복원·블록 검증 6개, 설치 실패 시 완료를 표시하지 않는 Bash 회귀 검사를 추가했다. Windows 실제 전체 설치에서 네 CLI의 자동 검사 12개가 모두 통과했으며, Git Bash 훅의 한글·중복·opt-out도 검증했다. CLI 자체의 이벤트 전달·모델의 지침 준수·모든 OS의 전체 설치까지 인증하는 검사는 아니다. (523b805, 0d28ca3)
+
 ## [6.1.2] - 2026-09-07
 
 ### Bug Fixes
