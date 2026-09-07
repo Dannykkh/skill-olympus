@@ -706,8 +706,8 @@ function check() {
   console.log("\n[4/4] Checking AGENTS.md rules...");
   const agentsMd = readText(agentsMdPath);
   const hasRules = agentsMd.includes(MARKER_START) && agentsMd.includes(MARKER_END);
-  const hasTags = /응답 키워드 규칙/.test(agentsMd);
-  const hasSearch = /과거 대화 검색 규칙/.test(agentsMd);
+  const hasTags = /#tags:\s*\S+/.test(agentsMd);
+  const hasSearch = /^## 과거 (?:대화 검색 규칙|작업·결정 검색)\s*$/m.test(agentsMd);
   console.log(`      mnemo block: ${hasRules ? "yes" : "no"}`);
   console.log(`      response tags: ${hasTags ? "yes" : "no"}`);
   console.log(`      past search: ${hasSearch ? "yes" : "no"}`);

@@ -30,7 +30,7 @@ specialist for a focused job, or let Zeus drive the full delivery loop.
 One request becomes persisted planning artifacts, implementation, inspection, executable tests, and an
 evidence report. Olympus treats running out of turns as incomplete, not success.
 
-[Quick start](#quick-start) · [Choose a workflow](#choose-a-workflow) · [CLI support](#cross-cli-support) · [Browse all skills](#whats-inside)
+[Installation impact](#before-installing-what-changes) · [Quick start](#quick-start) · [Choose a workflow](#choose-a-workflow) · [CLI support](#cross-cli-support) · [Browse all skills](#whats-inside)
 
 > Olympus is not a prompt dump. Eighteen focused entry points stay discoverable by default; lower-level
 > modules remain available through a source catalog, while each integrated CLI keeps its native agents,
@@ -50,6 +50,45 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Less prompt noise** | A small active registry routes into 76 source-only modules only when the work needs them |
 
 **100 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 76 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + 2 skills-only hosts · 1 mythology**
+
+---
+
+## Before installing: what changes
+
+The integrated installer updates your **global CLI environment**, so its rules also apply in your other projects. It installs workflow skills, catalogs, hooks, and MCP configuration as well as the rules below. OpenClaw and Hermes Agent remain skills-only hosts.
+
+| Runtime | Global rules updated | Saving/configuration surface |
+|---|---|---|
+| Claude Code | `~/.claude/CLAUDE.md` — `MNEMO` block | `~/.claude/settings.json` hooks |
+| Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md` — `CODEX-MNEMO` block | `config.toml` notify chain and managed skill settings |
+| Antigravity CLI | `~/.gemini/GEMINI.md` — `ANTIGRAVITY-MNEMO` block | `~/.gemini/config/hooks.json`; separate CLI/MCP settings |
+| Grok Build | `~/.grok/rules/grok-mnemo.md` plus Claude shared rules | `~/.grok/hooks/grok-mnemo.json`; Claude compatibility |
+
+**This release changes the default guidance:**
+
+- Reply in the request's language, add search tags to substantive responses, and proceed within the user's authorized scope. Read-only requests stay read-only.
+- Find code through `codemap/index.md` first. Recall past work through `MEMORY.md` → relevant memory → conversation links/tags → body text → scoped source-session parsing when needed.
+- Keep skill-catalog routing, documentation updates, memory limits, handoffs, and test evidence, with the appropriate native workflow and recovery limits for each CLI.
+
+**Reinstalling replaces the managed rule block, including edits inside it.** Text outside the Claude/Codex/Antigravity markers stays; the Grok rule file is replaced as a whole. Copy any custom edits you want to keep before updating. These rule installers do not provide a backup of every previous rule block.
+
+Mnemo hooks save conversation copies under your project's `conversations/`; memory and handoffs use `MEMORY.md`, `memory/`, and `docs/handoffs/`. `<private>...</private>` is redacted in supported Mnemo outputs, but does not erase native CLI session history. No additional model, reasoning-effort, language, or permission value is required for the new rules.
+
+The existing Codex installer also writes `notify` and sets `tui.notifications=false` in `config.toml`. Existing save-turn chains are retained; some desktop/IDE-only notification chains are replaced. See the [exact settings and removal behavior](docs/global-agent-rules.md) before changing or removing a custom notification setup.
+
+### Customize, disable, or remove
+
+| What you want | What to do |
+|---|---|
+| Keep a personal preference | Put it outside the managed block; for Grok use a separate personal rule file. Use project rules for project-specific choices. Resolve conflicting old preferences explicitly. |
+| Change Olympus defaults on future installs | Edit the [canonical templates](docs/global-agent-rules.md) in your maintained checkout, then reinstall. Editing only the installed block lasts until the next install. |
+| Stop automatic saving | Launch the CLI with `MNEMO_DISABLE=1`. This disables Mnemo saving hooks; it does not remove instructions, stop explicit agent writes, or disable native session storage. |
+| Remove only the injected rules | Remove the relevant marked block, or Grok's managed rule file. Hooks remain; use the saving opt-out if needed. A later install restores the rules. |
+| Remove the Mnemo adapter or Olympus | Follow the [removal commands and shared-runtime caveats](docs/global-agent-rules.md#customize-disable-remove). Existing conversation, memory, and handoff files are retained. |
+
+For a fixed Korean preference, write “Use honorifics when replying in Korean” if you still want replies in other request languages. The installer preserves your personal text; it does not rewrite that preference for you.
+
+[Detailed settings, verification, and recovery limits](docs/global-agent-rules.md) · [Skill collision recovery](docs/skill-registry-migration.md)
 
 ---
 
@@ -158,7 +197,6 @@ discovery directory**.
 .\install.bat --include-source-only-skills
 ```
 
-That's it. The 100 public sources split into a 24-skill default allowlist union (18 user-facing harnesses + 6 runtime adapters) and 76 source-only internal or optional modules. Runtime compatibility then removes adapters meant for other CLIs: Codex and Antigravity each expose 96 compatible entries (20 active + 76 source-only), while Claude exposes 97 (21 + 76). Grok's standalone policy is also 96 (20 + 76), but the installed Grok surface reads the shared Claude directory and therefore sees the same 21 active entries as Claude. OpenClaw and Hermes Agent deliberately exclude all six runtime adapters and expose 94 compatible entries (18 active + 76 source-only). The internal-only `deploymonitor` source remains local and is not part of the public distribution. Active harnesses resolve required source-only modules through the catalog and read them directly; those modules do not need independent registration. **No Olympus custom agent is registered by default**; all 42 agent references remain source-only, and each integrated CLI keeps its native subagents. New skill and agent sources are default-denied until deliberately allowlisted.
 
 > A missing CLI does not suppress asset preparation. Its skill catalog, source library, hooks, and
 > configuration files are prepared; only commands that require the executable are reported as skipped.
@@ -190,6 +228,9 @@ when needed, and returns to READ → FIND → FIX → VERIFY → LOG. Exhaustion
 is parked with an Owner Decision Brief instead of being reported as success.
 
 ---
+
+<details>
+<summary><strong>The names and mythology behind Olympus</strong></summary>
 
 ## The Pantheon of Olympus
 
@@ -312,13 +353,13 @@ and her remembering crosses every session, every CLI, every dawn.
 
 </details>
 
+</details>
+
 ---
 
 ## Recent changes
 
-- **Antigravity migration:** the retired personal Gemini CLI target is replaced by Google Antigravity CLI, including skills, hooks, Mnemo, MCP, and native-first routing.
-- **OpenClaw and Hermes Agent:** dedicated skills-only installers add 18 active entry points and the source catalog without claiming plugin or hook parity.
-- **Lean registry:** 18 common user entry points stay active while 76 lower-level modules load from the source catalog only when needed.
+**v6.1.2:** global rules now share request-language replies, memory-first lookup, and scoped source recovery across the four integrated CLIs. Installation guidance explains replacement boundaries and how to customize or remove the rules.
 
 See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Dannykkh/skill-olympus/releases) for the complete history.
 
@@ -523,12 +564,12 @@ The main context owns shared state and completion decisions. Workers get a uniqu
 
 ```
 Session A: work → #tags saved → automatic or explicit handoff → MEMORY.md updated
-Session B: MEMORY.md auto-loaded → past search → context restored
+Session B: check/read MEMORY.md → past search → context restored
 ```
 
 | Layer | Storage | Loaded |
 |-------|---------|--------|
-| **Index** | `MEMORY.md` | Always (< 100 lines) |
+| **Index** | `MEMORY.md` | Read first if not loaded (≤ 100 lines / 5 KB) |
 | **Semantic** | `memory/*.md` | On demand |
 | **Episodic** | `conversations/*.md` | On search |
 

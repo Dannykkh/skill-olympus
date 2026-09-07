@@ -53,6 +53,30 @@ skills-only 主机会启用 18 个，其余 76 个保持 source-only。
 
 ---
 
+## 安装前：哪些内容会改变
+
+集成安装器会更新全局 CLI 环境，因此规则也会影响其他项目。安装范围包括技能、目录、hooks、MCP 配置和下列规则；OpenClaw 与 Hermes Agent 仍然仅安装技能。
+
+| CLI | 更新的全局规则 |
+|---|---|
+| Claude Code | `~/.claude/CLAUDE.md` 中的 `MNEMO` 区块 |
+| Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md` 中的 `CODEX-MNEMO` 区块 |
+| Antigravity CLI | `~/.gemini/GEMINI.md` 中的 `ANTIGRAVITY-MNEMO` 区块 |
+| Grok Build | `~/.grok/rules/grok-mnemo.md` 和 Claude 共享规则 |
+
+v6.1.2 统一了按提问语言回复、优先查看 `codemap/index.md`、按记忆→对话链接与标签→正文→限定范围的原始会话查找历史工作的规则。只读请求不写文件；技能目录、文档、交接和验证流程按各 CLI 的原生机制处理。
+
+**重新安装会替换管理区块内的全部内容，包括你的修改。** Claude、Codex、Antigravity 保留标记外的个人规则；Grok 的管理规则文件则整体替换。更新前请另存需要保留的修改，安装器并不会自动备份每个旧规则区块。
+
+- 个人偏好写在管理标记之外，Grok 使用单独的个人规则文件。要让后续安装也采用自己的默认值，请修改自己维护的检出目录中的[规则源模板](docs/global-agent-rules.md)。
+- Mnemo 将对话副本保存到项目的 `conversations/`。以 `MNEMO_DISABLE=1` 环境变量启动 CLI 可停止保存 hooks，但不会停止显式文件写入或 CLI 自身的会话记录。
+- 只删除注入规则时，移除对应标记区块或 Grok 管理规则文件。hooks 仍在，重新安装也会恢复规则。[卸载适配器的步骤](docs/global-agent-rules.md#customize-disable-remove)会保留已有对话、记忆和交接文档。
+- 现有 Codex 安装器会配置 `config.toml` 的 `notify` 并设置 `tui.notifications=false`。通知链的保留条件和卸载后的恢复方式见[详细指南](docs/global-agent-rules.md)。
+
+本次规则整理不要求额外指定模型、推理强度或权限值。更新后启动新会话。更多设置条件与恢复工具限制见[全局规则指南（韩语）](docs/global-agent-rules.md)。
+
+---
+
 ## 快速开始
 
 需要 Git 和 Node.js LTS。目标 AI CLI 可以在 Olympus 之前或之后安装；如果稍后才安装 CLI，

@@ -30,7 +30,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 한 문장이 저장되는 설계 산출물, 구현, 감리, 실제 테스트, 근거 보고서로 이어집니다.
 턴이 다 떨어진 것은 완료가 아니라 미완료로 판정합니다.
 
-[빠른 시작](#빠른-시작) · [상황에 맞는 워크플로우](#상황에-맞는-워크플로우) · [CLI 지원](#크로스-cli-지원) · [전체 스킬](#구성-요소)
+[설치 변경 범위](#설치-전에-무엇이-바뀌나요) · [빠른 시작](#빠른-시작) · [상황에 맞는 워크플로우](#상황에-맞는-워크플로우) · [CLI 지원](#크로스-cli-지원) · [전체 스킬](#구성-요소)
 
 > Olympus는 프롬프트 100개를 한꺼번에 싣는 모음집이 아닙니다. 기본 탐색에는 집중된 진입점
 > 18개만 두고, 저수준 모듈은 필요할 때 source 카탈로그에서 읽습니다. 통합 CLI의 네이티브
@@ -50,6 +50,45 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 76개로 라우팅 |
 
 **공개 추적 스킬 소스 100개(기본 allowlist 합집합 24개 = 사용자 진입점 18개 + 런타임 어댑터 6개, 통합 표면별 활성 20개 또는 21개, skills-only 호스트 활성 18개, source-only 내부·선택 모듈 76개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + skills-only 호스트 2개 · 신화 1개**
+
+---
+
+## 설치 전에: 무엇이 바뀌나요?
+
+통합 설치기는 **CLI 전역 환경**을 갱신합니다. 따라서 설치된 규칙은 이 저장소뿐 아니라 다른 프로젝트에도 적용됩니다. 아래 규칙과 함께 스킬·카탈로그·훅·MCP 설정을 설치합니다. OpenClaw·Hermes Agent는 skills-only 대상입니다.
+
+| CLI | 갱신되는 전역 규칙 | 저장·설정 위치 |
+|---|---|---|
+| Claude Code | `~/.claude/CLAUDE.md`의 `MNEMO` 블록 | `~/.claude/settings.json`의 훅 |
+| Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md`의 `CODEX-MNEMO` 블록 | `config.toml`의 notify 연결과 관리 스킬 설정 |
+| Antigravity CLI | `~/.gemini/GEMINI.md`의 `ANTIGRAVITY-MNEMO` 블록 | `~/.gemini/config/hooks.json`; CLI·MCP 설정은 별도 |
+| Grok Build | `~/.grok/rules/grok-mnemo.md`와 Claude 공통 규칙 | `~/.grok/hooks/grok-mnemo.json`; Claude 호환 설정 |
+
+**이번 버전에서는 기본 지침이 다음과 같이 바뀝니다.**
+
+- 질문한 언어로 답하고 주요 응답에 검색 태그를 붙입니다. 사용자가 승인한 범위에서 진행하며, 읽기 전용 요청에서는 파일을 쓰지 않습니다.
+- 코드는 `codemap/index.md`부터 찾습니다. 과거 작업은 `MEMORY.md` → 관련 기억 → 대화 링크·태그 → 본문 → 필요한 범위의 원본 세션 파싱 순서로 확인합니다.
+- 스킬 카탈로그·문서 갱신·기억 크기 제한·핸드오프·실제 검증 기준을 유지하며, CLI별 네이티브 절차와 복구 도구의 한계를 구분합니다.
+
+**재설치하면 관리 블록 안의 내용은 직접 수정한 부분까지 교체됩니다.** Claude·Codex·Antigravity는 마커 밖의 개인 규칙을 보존하고, Grok의 관리 규칙 파일은 전체 교체합니다. 유지할 수정 내용은 업데이트 전에 별도로 복사하세요. 모든 이전 규칙 블록을 자동 백업하는 설치기는 아닙니다.
+
+Mnemo 훅은 프로젝트의 `conversations/`에 대화 사본을 저장합니다. 기억과 인계 문서는 `MEMORY.md`, `memory/`, `docs/handoffs/`를 사용합니다. `<private>...</private>`는 지원되는 Mnemo 저장본에서 가리지만 CLI 자체 세션 기록까지 지우지는 않습니다. 새 규칙을 위해 모델·추론 강도·언어·권한 값을 추가로 설정할 필요는 없습니다.
+
+기존 Codex 설치기는 `config.toml`의 `notify`를 구성하고 `tui.notifications=false`도 설정합니다. save-turn이 이미 연결된 체인은 유지하지만 일부 데스크톱·IDE 알림 전용 체인은 교체합니다. 알림을 직접 구성했다면 [설정 변경·제거 시 동작](docs/global-agent-rules.md)을 확인하세요.
+
+### 직접 수정하거나 끄고 싶다면
+
+| 원하는 작업 | 방법 |
+|---|---|
+| 개인 선호 유지 | 관리 블록 밖에 작성합니다. Grok은 별도 개인 규칙 파일을 사용하고, 프로젝트별 선택은 프로젝트 규칙에 둡니다. 기존 규칙과 충돌하면 어느 쪽을 따를지 명확히 적습니다. |
+| 다음 설치에도 다른 기본값 적용 | 관리 중인 체크아웃의 [정본 템플릿](docs/global-agent-rules.md)을 수정한 뒤 재설치합니다. 설치본 블록만 고치면 다음 설치 때 덮어씁니다. |
+| 자동 대화 저장 중지 | `MNEMO_DISABLE=1`인 환경에서 CLI를 실행합니다. Mnemo 저장 훅만 끄며, 규칙·에이전트의 명시적 파일 작성·CLI 자체 세션 저장은 별개입니다. |
+| 주입된 규칙만 제거 | 해당 마커 구간 또는 Grok 관리 규칙 파일을 제거합니다. 훅은 남으므로 필요하면 저장도 별도로 끕니다. 다음 설치에서는 규칙이 다시 생깁니다. |
+| Mnemo 어댑터 또는 Olympus 제거 | [제거 명령과 CLI 공유 범위](docs/global-agent-rules.md#customize-disable-remove)를 확인합니다. 기존 대화·기억·핸드오프 파일은 남습니다. |
+
+예를 들어 개인 규칙에 “항상 한국어로 답하기”가 있으면 질문 언어 규칙과 충돌합니다. 여러 언어를 쓰려면 “한국어로 답할 때는 존댓말 사용”처럼 조건을 붙이세요. 설치기가 개인 문장을 자동으로 고치지는 않습니다.
+
+[설정 조건·확인 방법·복구 한계](docs/global-agent-rules.md) · [스킬 충돌본 복구](docs/skill-registry-migration.md)
 
 ---
 
@@ -159,7 +198,6 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 .\install.bat --include-source-only-skills
 ```
 
-끝입니다. 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 런타임별로 호환되지 않는 어댑터를 다시 제외하므로 Codex와 Antigravity는 호환 항목 96개(활성 20 + source-only 76), Claude는 97개(활성 21 + source-only 76)를 노출합니다. Grok의 독립 정책도 96개(20 + 76)이지만 실제 설치 표면은 Claude 공유 디렉터리를 읽으므로 Claude와 같은 활성 21개를 봅니다. OpenClaw과 Hermes Agent는 런타임 어댑터 여섯 개를 모두 제외해 호환 항목 94개(활성 18 + source-only 76)를 설치합니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 활성 하네스는 필요한 source-only 모듈을 카탈로그에서 직접 읽으므로 별도 등록이 필요하지 않습니다. **Olympus 사용자 정의 에이전트는 기본으로 하나도 등록하지 않으며**, 참고 소스 42개는 모두 source-only입니다. 새 스킬과 에이전트도 allowlist 승인 전에는 자동 활성화되지 않습니다.
 
 > CLI가 없어도 자산 준비는 건너뛰지 않습니다. 실행 파일이 필요한 등록 명령만 `skipped`로
 > 보고하며, 설치된 자산은 해당 CLI를 처음 실행할 때 그대로 사용됩니다.
@@ -191,6 +229,9 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 막힌 작업은 성공으로 포장하지 않고 Owner Decision Brief와 함께 주차합니다.
 
 ---
+
+<details>
+<summary><strong>올림푸스 이름과 신화 이야기</strong></summary>
 
 ## 올림푸스의 신전 — The Pantheon of Olympus
 
@@ -314,13 +355,13 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 </details>
 
+</details>
+
 ---
 
 ## 최근 변경
 
-- **Antigravity 전환:** 로그인 종료된 개인용 Gemini CLI 대상을 Google Antigravity CLI로 교체하고 스킬, 훅, Mnemo, MCP, native-first 라우팅을 맞췄습니다.
-- **OpenClaw·Hermes Agent:** 전용 skills-only 설치기가 활성 진입점 18개와 source 카탈로그를 설치하며 플러그인·훅 parity는 주장하지 않습니다.
-- **가벼운 레지스트리:** 공통 사용자 진입점 18개만 활성화하고 저수준 모듈 76개는 필요할 때 source 카탈로그에서 읽습니다.
+**v6.1.2:** 통합 CLI 네 개의 전역 지침을 질문 언어 응답·메모리 우선 검색·범위를 좁힌 원본 확인으로 맞췄습니다. 설치 시 교체 범위와 개인 규칙 수정·저장 중지·제거 방법도 안내합니다.
 
 전체 이력은 [CHANGELOG.md](CHANGELOG.md)와 [GitHub Releases](https://github.com/Dannykkh/skill-olympus/releases)에서 확인할 수 있습니다.
 
@@ -519,12 +560,12 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 ```
 세션 A: 작업 → #tags 저장 → 자동 또는 명시적 핸드오프 → MEMORY.md 업데이트
-세션 B: MEMORY.md 자동 로드 → 과거 검색 → 컨텍스트 복원
+세션 B: MEMORY.md 로드 여부 확인·읽기 → 과거 검색 → 컨텍스트 복원
 ```
 
 | 계층 | 저장소 | 로딩 |
 |------|--------|------|
-| **인덱스** | `MEMORY.md` | 항상 (100줄 미만) |
+| **인덱스** | `MEMORY.md` | 미로딩 시 먼저 읽기 (100줄·5KB 이내) |
 | **의미기억** | `memory/*.md` | 필요 시 |
 | **일화기억** | `conversations/*.md` | 검색 시 |
 

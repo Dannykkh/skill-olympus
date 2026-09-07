@@ -695,9 +695,12 @@ test("video-maker routes one project to Remotion or HyperFrames without global s
 
 test("mnemo templates and hooks route memory maintenance without active slash assumptions", () => {
   for (const relativePath of MEMORY_TEMPLATES) {
-    const source = readRepoFile(relativePath);
+    const adapter = readRepoFile(relativePath);
+    const source = relativePath.includes("grok-mnemo")
+      ? readRepoFile("skills/mnemo/templates/claude-md-rules.md") + "\n" + adapter
+      : adapter;
     assert.match(source, /SKILLS-CATALOG\.md/, `${relativePath} lacks catalog routing`);
-    assert.match(source, /source-only 하위 모듈/, `${relativePath} lacks source-only module semantics`);
+    assert.match(source, /source-only 하위 모듈|내부 모듈은 source-only로 유지/, `${relativePath} lacks source-only module semantics`);
     assert.match(source, /정확한 `SKILL\.md`/, `${relativePath} does not require the exact entry point`);
     assert.match(source, /NOT RUN/, `${relativePath} does not fail closed for missing modules`);
     assert.doesNotMatch(

@@ -221,6 +221,8 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     `install.bat failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
   const dedupConfig = fs.readFileSync(path.join(env.CODEX_HOME, "config.toml"), "utf8");
+  assert.match(result.stdout, /Global rules and memory notice/);
+  assert.match(result.stdout, /MNEMO_DISABLE=1 disables saving hooks only/);
   assert.match(result.stdout, /\[codex-dedup\] disabled=1/);
   assert.ok(dedupConfig.includes(JSON.stringify(externalSkillPaths[1].replace(/\\/g, "/"))));
   assert.ok(externalSkillPaths.every((skillPath) => fs.existsSync(skillPath)));
@@ -237,12 +239,12 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   );
   assert.match(
     agentsMd,
-    /\/agent-team`, `\/poseidon`, `포세이돈`, `poseidon` → `agent-team-codex`/,
+    /^\| `\/agent-team`, `\/poseidon`, 포세이돈, poseidon \| `agent-team-codex` \|$/m,
     "Codex agent-team alias did not resolve to agent-team-codex",
   );
   assert.match(
     agentsMd,
-    /Native-First 구현 경계/,
+    /## 코드 탐색과 구현/,
     "Codex global instructions did not include the compact implementation boundary",
   );
   assert.equal(
@@ -292,7 +294,8 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     path.join(tempHome, ".claude", "CLAUDE.md"),
     "utf8",
   );
-  assert.match(grokCompatRules, /Native-First 구현 경계/);
+  assert.match(grokCompatRules, /## 코드 탐색과 구현/);
+  assert.match(grokCompatRules, /일반 구현은 프로젝트 코드·설정·테스트와 네이티브 기능을 우선/);
   const grokCompatCatalog = fs.readFileSync(
     path.join(tempHome, ".claude", "SKILLS-CATALOG.md"),
     "utf8",
@@ -1407,6 +1410,13 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
       .split("**우선 고정 alias:**")[1]
       ?.split(/^## /m)[0] || "";
     const targets = Array.from(aliasSection.matchAll(/→ `([a-z0-9-]+)`/g), (match) => match[1]);
+    {
+      targets.push(...Array.from(
+        templates[templateName].matchAll(/^\|[^\r\n]+\| `([a-z0-9-]+)` \|$/gm),
+        (match) => match[1],
+      ));
+      assert.ok(targets.length > 0, `${templateName} alias declarations were not checked`);
+    }
     const runtimeSkills = selectRuntimeSkills(
       DEFAULT_RUNTIME_SKILL_ALLOWLIST,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
@@ -1427,17 +1437,19 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
   assert.equal(grokSkills.includes("agent-team"), true);
 
   for (const name of ["claude", "codex", "antigravity"]) {
-    assert.match(templates[name], /## Native-First 구현 경계/);
-    assert.match(templates[name], /임의 프로젝트 cwd에서 상대경로를 그대로 실행하지 않(?:는다|습니다)/);
+    assert.match(templates[name], /## (?:Native-First 구현 경계|코드 탐색과 구현)/);
+    assert.match(templates[name], /임의 프로젝트 cwd에서 상대경로를 그대로 실행하지 않(?:는다|습니다)|모듈 경로는 실제 프로젝트 파일 → 현재 CLI 활성 스킬 루트 → 카탈로그의 정확한 원본 경로/);
     assert.doesNotMatch(templates[name], /web-preview-guide/);
   }
   assert.match(templates.grok, /카탈로그의 source-only 원본을 기준으로 절대경로/);
-  for (const template of Object.values(templates)) {
-    assert.match(template, /사용자 정의 에이전트는 기본 등록 0개/);
-    assert.match(template, /source-only `\.md`는 런타임 능력으로 간주하지 않는다/);
-    assert.match(template, /읽기 전용 작업자에게 쓰기 작업을 주지 않는다/);
-    assert.match(template, /메인 컨텍스트가 공유 태스크 장부·활동 로그·완료 판정을 소유한다/);
-    assert.match(template, /메인 컨텍스트에서 순차 실행한다/);
+  // Grok deliberately inherits common policy from Claude and adds only its adapter.
+  const effectiveTemplates = { ...templates, grok: templates.claude + "\n" + templates.grok };
+  for (const template of Object.values(effectiveTemplates)) {
+    assert.match(template, /사용자 정의 에이전트는 기본 등록(?: 0개|하지 않는다)/);
+    assert.match(template, /source-only `\.md`는 런타임 능력으로 간주하지 않는다|source-only는 해당 작업에서 직접 읽으며 별도 등록된 스킬·에이전트로 간주하지 않는다/);
+    assert.match(template, /읽기 전용 작업자에게 쓰기 작업을 주지 않는다|읽기 전용 탐색과 쓰기·실행 역할을 구분한다/);
+    assert.match(template, /메인 컨텍스트가 공유 태스크 장부·활동 로그·완료 판정을 소유한다|공유 장부·순차 결정·결과 검증·완료 판정은 메인이 맡는다/);
+    assert.match(template, /메인 컨텍스트에서 순차 실행한다|메인이 같은 책임을 순차 수행한다/);
     assert.doesNotMatch(template, /skills\/\*\/SKILL\.md`, `~\/\.[^/]+\/agents\/\*\.md/);
     assert.doesNotMatch(template, /특정 전문 분야.*에이전트 카탈로그/);
   }
@@ -1451,6 +1463,64 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
   );
   assert.match(templates.antigravity, /구 Gemini CLI의 `BeforeTool`/);
   assert.match(templates.grok, /글로벌 `~\/.claude\/CLAUDE\.md`를 rules 호환으로 이미 로드/);
+  for (const template of Object.values(effectiveTemplates)) {
+    assert.match(template, /현재 요청을 작성한 언어/);
+    assert.match(template, /codemap\/index\.md/);
+    assert.match(template, /태그가 없거나 부족하면 본문으로 검색을 확장/);
+    assert.match(template, /읽기 전용 요청에서는 파일을 복구·갱신하지 않/);
+    assert.doesNotMatch(template, /JSONL 직접 읽기 절대 금지|jsonl fallback 금지/);
+  }
+});
+
+test("Mnemo rule reinstall replaces managed content once and preserves user settings", () => {
+  const home = makeTempHome("ccc-mnemo-rules-reinstall-");
+  const env = {
+    ...process.env, HOME: home, USERPROFILE: home,
+    CODEX_HOME: path.join(home, ".codex"),
+    ANTIGRAVITY_HOME: path.join(home, ".gemini"),
+    GROK_HOME: path.join(home, ".grok"),
+  };
+  const cases = [
+    ["mnemo", ".claude/CLAUDE.md", "claude-md-rules.md", "MNEMO"],
+    ["codex-mnemo", ".codex/AGENTS.md", "agents-md-rules.md", "CODEX-MNEMO"],
+    ["antigravity-mnemo", ".gemini/GEMINI.md", "gemini-md-rules.md", "ANTIGRAVITY-MNEMO"],
+    ["grok-mnemo", ".grok/rules/grok-mnemo.md", "grok-rules.md", null],
+  ];
+  fs.mkdirSync(path.join(home, ".claude"), { recursive: true });
+  fs.writeFileSync(path.join(home, ".claude/settings.json"), JSON.stringify({
+    autoMemoryEnabled: false, userPreference: "keep",
+  }));
+  for (const [skill, relativeDest, templateName, marker] of cases) {
+    const dest = path.join(home, relativeDest);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    const start = `<!-- ${marker}:START -->`;
+    const end = `<!-- ${marker}:END -->`;
+    fs.writeFileSync(dest, marker
+      ? `personal-before\n${start}\nobsolete policy\n${end}\npersonal-after\n`
+      : "obsolete policy\n");
+    let installed;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const run = spawnSync(process.execPath, [path.join(repoRoot, "skills", skill, "install.js")], {
+        cwd: repoRoot, env, encoding: "utf8", timeout: 30000,
+      });
+      assert.equal(run.status, 0, `${skill}: ${run.stdout}\n${run.stderr}`);
+      const current = fs.readFileSync(dest, "utf8");
+      const template = fs.readFileSync(path.join(repoRoot, "skills", skill, "templates", templateName), "utf8").trim();
+      assert.ok(current.includes(template), `${skill} did not install the current template`);
+      assert.doesNotMatch(current, /obsolete policy/);
+      if (marker) {
+        assert.equal(current.split(start).length - 1, 1);
+        assert.equal(current.split(end).length - 1, 1);
+        assert.match(current, /personal-before/);
+        assert.match(current, /personal-after/);
+      }
+      if (attempt) assert.equal(current, installed, `${skill} reinstall is not idempotent`);
+      installed = current;
+    }
+  }
+  const settings = JSON.parse(fs.readFileSync(path.join(home, ".claude/settings.json"), "utf8"));
+  assert.equal(settings.autoMemoryEnabled, false);
+  assert.equal(settings.userPreference, "keep");
 });
 
 test("project instruction files keep native role ownership aligned", () => {
@@ -1497,6 +1567,10 @@ test("install surfaces disclose skill registry migration and recovery", () => {
   assert.match(readme, /current\s+Olympus `SKILL\.md`/);
   assert.match(readme, /does not restore an older modified copy/);
   for (const installer of [installBat, installSh]) {
+    assert.match(installer, /Global rules and memory notice/);
+    assert.match(installer, /Reinstall replaces managed rule blocks/);
+    assert.match(installer, /tui\.notifications=false/);
+    assert.match(installer, /docs[\\/]global-agent-rules\.md/);
     assert.match(installer, /Skill registry migration notice/);
     assert.match(installer, /_olympus-preserved/);
     assert.match(installer, /--include-source-only-skills/);
@@ -1513,6 +1587,9 @@ test("localized README surfaces stay connected and disclose portable hosts", () 
   );
 
   for (const [name, contents] of readmes) {
+    assert.match(contents, /docs\/global-agent-rules\.md/);
+    assert.match(contents, /MNEMO_DISABLE=1/);
+    assert.match(contents, /tui\.notifications=false/);
     for (const peer of readmes.keys()) {
       if (peer !== name) {
         assert.match(contents, new RegExp(peer.replaceAll(".", "\\.")), `${name} must link ${peer}`);

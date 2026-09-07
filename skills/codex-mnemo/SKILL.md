@@ -40,6 +40,13 @@ node skills/codex-mnemo/install.js --uninstall  # 제거
 | **단순하게** | 파일 기반, DB 없음 |
 | **검색 가능하게** | 키워드 + 동의어 확장 |
 
+전역 작업 규칙의 정본은 [templates/agents-md-rules.md](templates/agents-md-rules.md)이며,
+설치기가 `<CODEX_HOME>/AGENTS.md`의 `CODEX-MNEMO` 관리 블록에 반영합니다.
+요청 언어로 응답하고 코드맵을 우선 조회하며, 과거 검색은 메모리 → 대화 링크·태그 → 본문
+→ 원본 세션 파싱·복구 순서입니다. 정확한 검색·기억·핸드오프 정책이 필요할 때 정본을 읽습니다.
+읽기 전용 요청에서는 복구 파일을 쓰지 않습니다. `--dry-run`은 복구 후보의 집계를 확인하는
+옵션이며 대화 본문을 출력하는 검색 기능으로 간주하지 않습니다.
+
 ---
 
 ## 포함 파일

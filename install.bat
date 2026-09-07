@@ -164,6 +164,14 @@ echo ============================================
 echo.
 
 if "%MODE%" NEQ "uninstall" (
+    echo   Global rules and memory notice for integrated CLI targets:
+    echo   - Installs rules, hooks, catalogs, and MCP config in selected CLI homes.
+    echo   - Reinstall replaces managed rule blocks; keep personal rules outside markers.
+    echo   - Grok shares Claude rules; its grok-mnemo.md file is replaced in full.
+    echo   - Saving hooks write project conversations; MNEMO_DISABLE=1 disables saving hooks only.
+    echo   - Codex Mnemo configures notify and sets tui.notifications=false.
+    echo   - Review changes, edit or remove rules: docs\global-agent-rules.md
+    echo.
     echo   Skill registry migration notice:
     echo   - Unrelated third-party skill names are preserved.
     echo   - Modified same-name conflicts move to ^<CLI_HOME^>\_olympus-preserved\...

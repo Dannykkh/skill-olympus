@@ -12,9 +12,9 @@ Grok Build 세션 간 컨텍스트 유지를 위한 장기기억 시스템입니
 ## 설치
 
 ```bash
-node skills/grok-mnemo/install.js              # 설치 (Grok 미설치 시 자동 skip)
-node skills/grok-mnemo/install.js --uninstall  # 제거
-node skills/grok-mnemo/install.js --check      # 설치 상태 점검
+node "<module_root>/install.js"              # 설치 (Grok 미설치 시 자동 skip)
+node "<module_root>/install.js" --uninstall  # 제거
+node "<module_root>/install.js" --check      # 설치 상태 점검
 ```
 
 ---
@@ -25,9 +25,9 @@ node skills/grok-mnemo/install.js --check      # 설치 상태 점검
 |---|---|---|---|---|
 | 훅 | 2개 (Submit + Stop) | 1개 (notify) | 1개 (Stop) | **1스크립트 2이벤트** (UserPromptSubmit + Stop) |
 | 데이터 전달 | stdin + transcript JSONL | argv JSON | stdin JSON | **stdin JSON (camelCase)** |
-| 페이로드 | prompt / transcript 파싱 | input/last-assistant-message | prompt / prompt_response | **prompt(`<user_query>` 래핑) / lastAssistantMessage** |
-| 설정 형식 | settings.json | config.toml | settings.json | **hooks/*.json 자동 스캔** |
-| 규칙 파일 | CLAUDE.md | AGENTS.md | AGENTS.md | **~/.grok/rules/*.md (델타만)** |
+| 페이로드 | prompt / transcript 파싱 | input/last-assistant-message | transcriptPath / user·model 파싱 | **prompt(`<user_query>` 래핑) / lastAssistantMessage** |
+| 설정 형식 | settings.json | config.toml | config/hooks.json | **hooks/*.json 자동 스캔** |
+| 규칙 파일 | CLAUDE.md | AGENTS.md | GEMINI.md | **~/.grok/rules/*.md (델타만)** |
 | 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | `conversations/*-antigravity.md` | **`conversations/*-grok.md`** |
 | 중복 방지 | 타임스탬프 | turn-id | 타임스탬프 | **타임스탬프 + reason 필터** |
 
@@ -100,7 +100,8 @@ Grok Build 대화
 
 ## 검색 규칙 (Grok 세션에서)
 
-- 검색 대상은 **오직 프로젝트의 `conversations/*.md`** (4개 CLI 파일 통합 검색).
-- Grok 자체 transcript(`~/.grok/sessions/**/updates.jsonl`)는 내부 백업 취급 — 직접 읽기 금지.
-- 공통 규칙(키워드 확장, Progressive Disclosure, MEMORY.md 관리)은 글로벌 `~/.claude/CLAUDE.md`를
-  Grok이 rules 호환으로 직접 로드하므로 그대로 적용됩니다.
+- 공통 규칙은 글로벌 `~/.claude/CLAUDE.md`, Grok 전용 차이는 [templates/grok-rules.md](templates/grok-rules.md)가 정본입니다. `grok inspect`에서 Claude rules·skills 호환과 실제 로드 경로를 확인합니다.
+- `MEMORY.md` → 관련 기억 항목 → 연결 대화·`#tags:` → 대화 본문 순으로 검색합니다. 모든 CLI의 `conversations/*.md`를 함께 검색하고 태그가 없어도 본문을 확인합니다.
+- 그래도 부족하면 프로젝트·시기를 좁혀 `~/.grok/sessions/**/updates.jsonl` 등 실제 원본 경로·형식을 확인하고 필요한 사용자·응답 텍스트만 읽기 전용으로 파싱합니다. 원본 전체와 비밀값은 출력하지 않습니다.
+- 현재 이 모듈에는 세션 일괄 복구 CLI가 없습니다. Claude·Codex의 reconcile 도구를 Grok 원본에 적용하거나 Stop 훅을 복구 도구로 재실행하지 않습니다. 파싱할 수 없으면 확인 범위와 제한을 알립니다.
+- `module_root`는 이번에 읽은 정확한 `SKILL.md`의 디렉터리입니다. 참조·스크립트는 이 경로를 기준으로 실행합니다.

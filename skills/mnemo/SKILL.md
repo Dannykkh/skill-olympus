@@ -85,23 +85,31 @@ Claude 응답 (끝에 #tags 포함)
     → transcript에서 응답 추출 → <private> 블록 제거 → 대화 파일 append
 ```
 
-**내부 백업** (⚠️ 직접 읽기 금지, reconcile 전용): `~/.claude/projects/<encoded>/*.jsonl`
+**원본 세션** (마지막 단계에서 필요한 대화만 파싱·복구): `~/.claude/projects/<encoded>/*.jsonl`
 **검색 대상** (사람이 읽고 Claude가 grep): `conversations/YYYY-MM-DD-claude.md`
 **멱등 인덱스**: `conversations/.mnemo-index.json` (JSONL 줄 uuid 기반)
 
-> 과거 대화 검색은 **`conversations/*.md`만** 대상입니다. JSONL은 mnemo의 reconcile 스크립트만 만집니다. Read 도구로 jsonl을 직접 열면 안 됩니다.
+> 검색 순서는 `MEMORY.md` → 관련 기억 항목 → 연결 대화·`#tags:` → 대화 본문 → 범위를 좁힌 원본 세션입니다. 태그가 없어도 본문을 확인합니다. [전역 규칙 정본](templates/claude-md-rules.md)의 읽기 전용·카탈로그·핸드오프 기준을 함께 따릅니다. Claude 네이티브 auto memory는 프로젝트 Mnemo와 별개이며 이를 위해 설정을 바꾸지 않습니다.
 
 Stop 훅이 한 번이라도 실패하거나 Claude Code가 강제 종료되면 해당 턴의
 미러링이 누락됩니다. 다음 세션 시작 시 `reconcile-conversations`가 자동으로
 JSONL을 스캔하여 놓친 턴을 복구합니다. 수동 실행도 가능합니다:
 
 ```bash
-python skills/mnemo/scripts/reconcile_conversations.py              # 오늘자
-python skills/mnemo/scripts/reconcile_conversations.py --all        # 전체
-python skills/mnemo/scripts/reconcile_conversations.py --dry-run    # 시뮬레이션
+python "<module_root>/scripts/reconcile_conversations.py" --project-root "<project>" --date YYYY-MM-DD
+python "<module_root>/scripts/reconcile_conversations.py" --project-root "<project>" --days 30
+python "<module_root>/scripts/reconcile_conversations.py" --project-root "<project>" --date YYYY-MM-DD --dry-run
 ```
 
 ---
+
+`module_root`는 이번에 읽은 정확한 `SKILL.md`의 디렉터리입니다. 날짜 옵션을 생략하면 최근 7일이며,
+질문의 실제 시기에 맞춰 `--date` 또는 `--days`를 지정합니다. `--all`은 전체 기간이 필요할 때만 사용합니다.
+`--dry-run`은 쓰기 예정 요약이며 대화 전체 추출이 아닙니다. 원본 전체를 컨텍스트에 읽지 말고,
+읽기 전용 요청에서는 복구 쓰기를 하지 않습니다. 추가 근거는 실제 파서의 사용자·응답 텍스트만 제한해 추출하고,
+그 경로가 없으면 도구의 한계를 알립니다.
+현재 reconcile 파서는 assistant 텍스트를 복구합니다. 사용자 질문이 필요하면 해당 세션의 사용자 레코드를
+별도로 제한해 파싱하며, assistant 복구 성공을 전체 대화 복구로 보고하지 않습니다.
 
 ## 기능 2: MEMORY.md 관리
 
