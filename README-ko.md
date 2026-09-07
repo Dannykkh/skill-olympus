@@ -70,7 +70,9 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 - 코드는 `codemap/index.md`부터 찾습니다. 과거 작업은 `MEMORY.md` → 관련 기억 → 대화 링크·태그 → 본문 → 필요한 범위의 원본 세션 파싱 순서로 확인합니다.
 - 스킬 카탈로그·문서 갱신·기억 크기 제한·핸드오프·실제 검증 기준을 유지하며, CLI별 네이티브 절차와 복구 도구의 한계를 구분합니다.
 
-**재설치하면 관리 블록 안의 내용은 직접 수정한 부분까지 교체됩니다.** Claude·Codex·Antigravity는 마커 밖의 개인 규칙을 보존하고, Grok의 관리 규칙 파일은 전체 교체합니다. 유지할 수정 내용은 업데이트 전에 별도로 복사하세요. 모든 이전 규칙 블록을 자동 백업하는 설치기는 아닙니다.
+**재설치하면 관리 블록 안의 내용은 직접 수정한 부분까지 교체됩니다.** Claude·Codex·Antigravity는 마커 밖의 개인 규칙을 보존하고, Grok의 관리 규칙 파일은 전체 교체합니다. 통합 설치기는 변경 전에 해당 규칙 파일과 Codex 설정·알림 wrapper를 `~/.olympus/install-backups/`에 자동 백업합니다. 개별 어댑터 설치기에는 이 백업 단계가 적용되지 않습니다.
+
+설치 마지막에 규칙·등록 상태·설치된 훅 동작을 검사하고 `verification.json`을 남깁니다. 실행하지 못한 항목은 `NOT RUN`으로 표시합니다. 복원 대상은 `node scripts/install-state.js restore "<manifest.json>"`으로 먼저 확인하고, `--apply`를 붙여 적용합니다. Codex 설정 전체를 포함한 파일 단위 복원이며 설치 후 수정이 있으면 중단합니다. [백업 범위와 검증 한계](docs/global-agent-rules.md)를 확인하세요.
 
 Mnemo 훅은 프로젝트의 `conversations/`에 대화 사본을 저장합니다. 기억과 인계 문서는 `MEMORY.md`, `memory/`, `docs/handoffs/`를 사용합니다. `<private>...</private>`는 지원되는 Mnemo 저장본에서 가리지만 CLI 자체 세션 기록까지 지우지는 않습니다. 새 규칙을 위해 모델·추론 강도·언어·권한 값을 추가로 설정할 필요는 없습니다.
 

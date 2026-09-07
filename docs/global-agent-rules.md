@@ -13,7 +13,22 @@
 
 `CODEX_HOME` 미설정 시 `~/.codex`를 쓴다. `install.bat` 또는 `bash install.sh`는 각 Mnemo 설치기와 스킬 동기화를 호출한다. 재설치하면 관리 블록을 교체하고 블록 밖 개인 규칙은 유지한다. Grok 전용 규칙 파일은 설치기가 소유하며 전체 교체한다. 프로젝트 규칙 파일은 별도 범위다.
 
-관리 블록 안의 사용자 수정도 교체 대상이다. 네 규칙 설치기가 모든 이전 내용을 자동 백업하는 것은 아니므로 필요한 수정은 설치 전에 별도로 복사한다. 스킬 충돌본의 `_olympus-preserved` 보존 정책을 규칙 파일 전체에 적용되는 백업으로 오해하지 않는다.
+관리 블록 안의 사용자 수정도 교체 대상이다. 통합 설치기는 변경 전에 대상 규칙 파일과 Codex `config.toml`·Mnemo 알림 wrapper를 `~/.olympus/install-backups/`에 백업한다. 개별 Mnemo 설치기를 직접 실행하면 이 통합 백업 절차는 적용되지 않는다. 스킬 충돌본의 `_olympus-preserved` 보존 정책은 별도다.
+
+## 설치 백업과 명시적 복원
+
+`install.bat`·`bash install.sh`는 매 실행마다 고유 백업 디렉터리를 만들고 `manifest.json` 경로를 출력한다. 설치 전 파일은 `.before`, 설치 후 지문은 manifest, 검사 결과는 `verification.json`에 보관한다. 백업을 만들지 못하면 관리 파일 변경을 시작하지 않는다.
+
+```bash
+# 먼저 복원 대상 확인: 파일을 변경하지 않음
+node scripts/install-state.js restore "<출력된 manifest.json 경로>"
+# 확인한 스냅샷으로 복원
+node scripts/install-state.js restore "<출력된 manifest.json 경로>" --apply
+```
+
+복원은 규칙 파일·Codex 설정·알림 wrapper의 **파일 전체**를 설치 직전으로 되돌린다. Codex `config.toml` 안의 MCP·스킬 설정도 함께 되돌아간다. 설치 후 내용과 현재 내용이 다르면 나중에 한 사용자 수정을 보존하기 위해 전체 복원을 중단한다. 강제 덮어쓰기 옵션은 없다. 재설치가 여러 번 있었다면 가장 최근 스냅샷부터 역순으로 복원한다.
+
+이 명령은 전체 제거가 아니다. 스킬·일반 훅·Claude 및 Antigravity 설정 전체를 되돌리지 않으며, `--uninstall`도 이 스냅샷을 자동 복원하지 않는다. 설치 도중 실패해 완료 시점의 지문이 없는 `prepared` 스냅샷은 자동 복원하지 않는다. 해당 `.before` 파일을 현재 파일과 대조해 필요한 부분을 수동으로 복구한다. 백업에는 원래 설정값이 들어 있으므로 공유용 로그와 구분해 보관한다.
 
 ## v6.1.2에서 달라지는 지침
 
@@ -62,7 +77,7 @@ Antigravity 실행 정책은 `toolPermission`·`artifactReviewPolicy`·`enableTe
 - 기존 notify에 save-turn이 이미 연결돼 있으면 그 체인을 유지하고 필요한 셸 경로를 보정한다.
 - save-turn 없이 데스크톱·IDE 알림 전용으로 판정된 notify는 Mnemo notify로 교체한다.
 - 그 외 기존 notify는 생성한 Mnemo wrapper를 통해 함께 호출한다.
-- 제거 시 `notify` 항목은 삭제된다. 이전 사용자 notify를 자동 복원하지 않으며, `[tui]` 테이블 안의 `notifications=false`는 남을 수 있다. 기존 알림을 되살리려면 보관한 설정과 대조해 복원한다.
+- 제거 시 `notify` 항목은 삭제된다. 이전 사용자 notify를 자동 복원하지 않으며, `[tui]` 테이블 안의 `notifications=false`는 남을 수 있다. 위 스냅샷 복원은 설치 직후 상태를 기준으로 하므로, 제거 등으로 설정이 바뀐 뒤에는 `.before`와 대조해 필요한 알림 항목을 수동 복원한다.
 
 규칙 파일만 교체하는 작업과 전체 설치를 구분한다. 전체 설치는 훅·MCP·스킬 등록 설정도 관리하므로, 규칙 변경에 새 설정값이 필요 없다는 말이 기존 설정을 전혀 바꾸지 않는다는 뜻은 아니다.
 
@@ -112,6 +127,10 @@ node skills/grok-mnemo/install.js --uninstall
 제거 후에도 프로젝트의 `conversations/`, `MEMORY.md`, `memory/`, `docs/handoffs/`와 CLI 원본 세션은 남는다. 삭제는 사용자가 필요한 기록을 판단한 뒤 별도로 수행한다. 다시 설치하면 기본 규칙과 훅이 돌아오므로 영구적인 설치 opt-out으로 오해하지 않는다.
 
 ## 검증
+
+통합 설치 마지막에 관리 블록의 정본 일치·마커 1쌍·블록 밖 개인 내용 보존, 어댑터 등록, 설치 훅 파일 일치를 자동 검사한다. 별도 프로젝트에서 설치된 훅을 실행해 사용자·응답 저장, 비공개 태그 가림, 중복 방지, 기억 scaffold, `MNEMO_DISABLE`도 확인하고 임시 프로젝트는 정리한다. 필수 검사가 실패하면 설치 완료 문구를 출력하지 않고 실패 코드로 종료한다.
+
+`MNEMO_DISABLE`이 켜졌거나 설치 홈이 저장 훅에서 제외하는 OS 임시 디렉터리에 있으면 실행 검사는 `NOT RUN`으로 기록한다. Grok 홈이 없어 어댑터를 건너뛴 경우도 별도 표시한다. 이 검사는 설치 훅을 직접 호출하는 검증이며, CLI 자체의 이벤트 전달·모델의 규칙 준수·외부 MCP 연결을 인증하지 않는다.
 
 저장소 루트에서 설치 상태를 읽기 전용으로 점검한다.
 

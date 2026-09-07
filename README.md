@@ -70,7 +70,9 @@ The integrated installer updates your **global CLI environment**, so its rules a
 - Find code through `codemap/index.md` first. Recall past work through `MEMORY.md` → relevant memory → conversation links/tags → body text → scoped source-session parsing when needed.
 - Keep skill-catalog routing, documentation updates, memory limits, handoffs, and test evidence, with the appropriate native workflow and recovery limits for each CLI.
 
-**Reinstalling replaces the managed rule block, including edits inside it.** Text outside the Claude/Codex/Antigravity markers stays; the Grok rule file is replaced as a whole. Copy any custom edits you want to keep before updating. These rule installers do not provide a backup of every previous rule block.
+**Reinstalling replaces the managed rule block, including edits inside it.** Text outside the Claude/Codex/Antigravity markers stays; the Grok rule file is replaced as a whole. The integrated installer now backs up those files and Codex configuration/notification wrappers under `~/.olympus/install-backups/` before changes. Standalone adapter installers do not run this backup step.
+
+Installation ends with automatic rule, registration, and installed-hook checks. Results are saved as `verification.json`; skipped execution checks are marked `NOT RUN`. To preview recovery, run `node scripts/install-state.js restore "<manifest.json>"`; add `--apply` to restore. Recovery restores whole files, including all backed-up Codex configuration, and stops if anything was edited after installation. See the [backup scope and verification limits](docs/global-agent-rules.md).
 
 Mnemo hooks save conversation copies under your project's `conversations/`; memory and handoffs use `MEMORY.md`, `memory/`, and `docs/handoffs/`. `<private>...</private>` is redacted in supported Mnemo outputs, but does not erase native CLI session history. No additional model, reasoning-effort, language, or permission value is required for the new rules.
 

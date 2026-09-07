@@ -66,7 +66,9 @@ skills-only 主机会启用 18 个，其余 76 个保持 source-only。
 
 v6.1.2 统一了按提问语言回复、优先查看 `codemap/index.md`、按记忆→对话链接与标签→正文→限定范围的原始会话查找历史工作的规则。只读请求不写文件；技能目录、文档、交接和验证流程按各 CLI 的原生机制处理。
 
-**重新安装会替换管理区块内的全部内容，包括你的修改。** Claude、Codex、Antigravity 保留标记外的个人规则；Grok 的管理规则文件则整体替换。更新前请另存需要保留的修改，安装器并不会自动备份每个旧规则区块。
+**重新安装会替换管理区块内的全部内容，包括你的修改。** Claude、Codex、Antigravity 保留标记外的个人规则；Grok 的管理规则文件则整体替换。集成安装器会在修改前将这些规则文件及 Codex 配置、通知 wrapper 备份到 `~/.olympus/install-backups/`。单独运行适配器安装器不会执行这一步。
+
+安装结束时自动检查规则、注册状态和已安装的 hooks，并保存 `verification.json`；未执行的检查标为 `NOT RUN`。先运行 `node scripts/install-state.js restore "<manifest.json>"` 查看恢复范围，再添加 `--apply` 执行。恢复以整个文件为单位，包括完整的 Codex 配置；安装后有新修改则停止。详见[备份范围与验证限制](docs/global-agent-rules.md)。
 
 - 个人偏好写在管理标记之外，Grok 使用单独的个人规则文件。要让后续安装也采用自己的默认值，请修改自己维护的检出目录中的[规则源模板](docs/global-agent-rules.md)。
 - Mnemo 将对话副本保存到项目的 `conversations/`。以 `MNEMO_DISABLE=1` 环境变量启动 CLI 可停止保存 hooks，但不会停止显式文件写入或 CLI 自身的会话记录。
