@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.1] - 2026-09-08
+
+### Bug Fixes
+
+- **Windows 배치 인코딩**: `install.bat`이 `chcp 65001`과 함께 비ASCII 30줄(한국어 REM 주석, 박스 드로잉)을 담고 있었다. cmd.exe는 멀티바이트 문자에서 배치 파일의 바이트·문자 오프셋이 어긋나 줄 중간부터 실행을 재개하고, 주석 뒷토막을 명령으로 실행해 설치가 `ExitCode 255`로 실패했다(`'깔리는' is not recognized`, `. was unexpected at this time`). 진행 로그는 마지막 단계까지 출력되므로 성공 판정은 종료 코드로 해야 한다. 재현 여부가 콘솔 코드 페이지에 좌우돼 일부 PC에서만 나타난다. `chcp`는 출력 렌더링만 고치고 파서 오프셋은 고치지 못하므로 `.bat`·`.cmd`를 주석까지 ASCII 전용으로 바꿨다. (7a8af08)
+- **PowerShell 한국어 스크립트**: 훅은 `pwsh`가 아니라 `powershell`(5.1)로 실행되며 BOM 없는 UTF-8 파일을 CP949로 읽는다. `.ps1` 8개가 이 상태였고, `launch.ps1`은 파스 자체가 실패했으며(28건), `save-turn.ps1`은 MEMORY.md 템플릿을 깨진 문자로 기록했고, `spawn-worker.ps1`은 워커 프롬프트를 깨진 채 전달했다. UTF-8 BOM을 추가해 문자열과 생성 산출물을 그대로 유지하며 해결했다. (7a8af08)
+
+### Tests
+
+- `scripts/tests/windows-script-encoding.test.js`가 tracked `.bat`·`.cmd`의 ASCII 전용과 비ASCII `.ps1`의 UTF-8 BOM을 강제한다. Windows에서 테스트 46개, PowerShell 5.1 기준 `.ps1` 44개 파스, CP949 콘솔에서 `install.bat --all` 전체 설치(ExitCode 0)를 확인했다. 다른 PC의 실패 자체는 이 환경에서 재현되지 않았고, `installers.test.js`는 실행하지 않았다. (7a8af08)
+
 ## [6.2.0] - 2026-09-07
 
 ### Features
