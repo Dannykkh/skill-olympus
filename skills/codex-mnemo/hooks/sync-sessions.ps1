@@ -1,4 +1,4 @@
-# sync-sessions.ps1
+﻿# sync-sessions.ps1
 # Fallback autosave for Codex versions where notify hook is not fired reliably.
 # Scans Codex session JSONL files and appends new user/assistant messages
 # into per-project conversations/YYYY-MM-DD-codex.md files.

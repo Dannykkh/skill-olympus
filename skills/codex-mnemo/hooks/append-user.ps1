@@ -1,4 +1,4 @@
-function Add-CodexUserEntry {
+﻿function Add-CodexUserEntry {
     param(
         [Parameter(Mandatory = $true)][string]$ConvFile,
         [Parameter(Mandatory = $true)][string]$Timestamp,

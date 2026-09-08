@@ -1,4 +1,4 @@
-# spawn-worker.ps1
+﻿# spawn-worker.ps1
 # Orchestrator Worker를 새 터미널에서 실행하는 스크립트
 # 멀티AI 지원: Claude, Codex, Antigravity
 #

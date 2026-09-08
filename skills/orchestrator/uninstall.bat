@@ -2,26 +2,26 @@
 chcp 65001 >nul
 setlocal
 REM Orchestrator Global Uninstaller
-REM 사용법: uninstall.bat (더블클릭)
+REM Usage: uninstall.bat (double-click)
 
 cd /d "%~dp0"
 
-REM Node.js 확인
+REM Check Node.js
 where node >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Node.js가 설치되어 있지 않습니다.
+    echo [ERROR] Node.js is not installed.
     exit /b 1
 )
 
-echo [INFO] Orchestrator 전역 제거 중...
+echo [INFO] Removing Orchestrator globally...
 node install.js --global --uninstall
 
 if %ERRORLEVEL% EQU 0 (
     echo.
-    echo [SUCCESS] 제거 완료되었습니다.
+    echo [SUCCESS] Removal complete.
 ) else (
     echo.
-    echo [ERROR] 제거 중 오류가 발생했습니다.
+    echo [ERROR] Removal failed.
 )
 
 endlocal

@@ -71,10 +71,10 @@ set "SOURCE_ONLY_SKILL_FLAG="
 REM ============================================
 REM   Prerequisites check
 REM ============================================
-REM Node.js는 대체가 없다 - 설치 로직 전체가 node 스크립트(install-select.js,
-REM safe-copy.js, install-hooks-config.js 등)라 여기서 중단하는 것이 맞다.
-REM 자동 설치는 하지 않는다: winget으로 깔아도 현재 cmd 세션의 PATH는 갱신되지
-REM 않아 그 실행에서는 여전히 node를 못 찾는다. 대신 명령어를 그대로 알려준다.
+REM Node.js has no fallback - the entire install path is node scripts
+REM (install-select.js, safe-copy.js, install-hooks-config.js), so aborting here is correct.
+REM Do not auto-install: even after winget installs it, the current cmd session's PATH is
+REM not refreshed, so node still would not be found in this run. Print the command instead.
 where node >nul 2>nul || (
     echo [ERROR] Node.js is required but not found.
     echo.
@@ -124,10 +124,10 @@ where jq >nul 2>nul || (
         )
     )
 
-    REM jq가 없어도 중단하지 않는다. Windows에 등록되는 훅은 PowerShell(.ps1)이라
-    REM jq를 쓰지 않는다 - jq는 .sh 훅(Git Bash/WSL)의 JSON 파싱 전용이다.
-    REM 예전에는 여기서 exit /b 1로 끊어, 쓰지도 않는 의존성 때문에 설치 전체가
-    REM 실패했다(오프라인이거나 winget/choco가 없는 새 컴퓨터에서 재현).
+    REM A missing jq is not fatal. Hooks registered on Windows are PowerShell (.ps1)
+    REM and never call jq - jq only parses JSON for the .sh hooks (Git Bash / WSL).
+    REM This used to exit /b 1, failing the whole install over an unused dependency
+    REM (reproduced offline, or on a new PC without winget/choco).
     if "!JQ_INSTALLED!"=="0" (
         echo   [WARN] jq installation failed - continuing without it.
         echo          Windows hooks run on PowerShell ^(.ps1^) and do not need jq.
@@ -187,10 +187,10 @@ REM ============================================
 if "%MODE%" NEQ "uninstall" (
     for /f "tokens=1,2,3" %%A in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%scripts\update-check.ps1" 2^>nul') do (
         if "%%A"=="UPGRADE_AVAILABLE" (
-            echo   ╔══════════════════════════════════════════════╗
-            echo   ║  New version available: v%%B  -- v%%C          ║
-            echo   ║  Run: git pull ^&^& install.bat --all         ║
-            echo   ╚══════════════════════════════════════════════╝
+            echo   ================================================
+            echo     New version available: v%%B  -- v%%C
+            echo     Run: git pull ^&^& install.bat --all
+            echo   ================================================
             echo.
         )
     )
@@ -251,7 +251,7 @@ if "%MODE%"=="uninstall" (
     set "CLAUDECODE="
     where claude >nul 2>nul
     if !errorlevel! equ 0 (
-        REM `call` 필수 - npm shim(claude.cmd)을 call 없이 부르면 제어가 돌아오지 않는다.
+        REM "call" is required - invoking the npm shim (claude.cmd) without it never returns.
         call claude mcp remove orchestrator -s user >nul 2>nul
         echo       Done!
     ) else (
@@ -483,17 +483,18 @@ if not defined INSTALL_SNAPSHOT (
 )
 echo   Installation snapshot: !INSTALL_SNAPSHOT!
 
-REM %CLAUDE_DIR%가 없으면 만들어서 설치한다.
-REM 예전에는 여기서 exit /b 1로 중단했다. 그러면 Claude Code를 안 깔았거나 깔고
-REM 한 번도 실행하지 않아 ~/.claude가 아직 없는 컴퓨터에서 Codex/Antigravity 자산까지
-REM 통째로 설치되지 않았다. 자동 설치 모드는 LLM을 전부 선택하므로 새
-REM 컴퓨터에서 아무것도 안 깔리는 원인이 됐다.
+REM Create %CLAUDE_DIR% when it is missing instead of bailing out.
+REM This used to exit /b 1, which meant a PC that had not installed Claude Code
+REM (or never launched it, so ~/.claude did not exist yet) also skipped the
+REM Codex/Antigravity assets entirely. Auto mode selects every LLM, so that turned
+REM into nothing being installed at all on a fresh machine.
 REM
-REM skills/agents/hooks/CLAUDE.md/settings.json은 전부 파일 복사라 claude CLI 없이도
-REM 유효하다. Grok Build는 compat.claude로 이 디렉터리를 직접 읽으므로 Claude Code가
-REM 없어도 실제로 쓰이고, 나중에 Claude Code를 깔면 재설치 없이 그대로 적용된다.
-REM claude CLI가 실제로 필요한 것은 MCP 등록뿐이므로 그 단계만 따로 판정한다
-REM (아래 HAS_CLAUDE_CLI — Codex의 `where codex` 가드와 같은 방식).
+REM skills/agents/hooks/CLAUDE.md/settings.json are plain file copies and stay valid
+REM without the claude CLI. Grok Build reads this directory directly via compat.claude,
+REM so the assets are used even with no Claude Code present, and a later Claude Code
+REM install picks them up without reinstalling.
+REM Only MCP registration truly needs the claude CLI, so that step is gated separately
+REM (see HAS_CLAUDE_CLI below - same shape as the "where codex" guard used for Codex).
 if "!HAS_CLAUDE!"=="1" (
     if not exist "%CLAUDE_DIR%" (
         echo   [INFO] %CLAUDE_DIR% not found - creating it.
@@ -604,8 +605,8 @@ REM   Phase 1: Claude (settings.json + CLAUDE.md + MCP + Orchestrator)
 REM ============================================
 if "!HAS_CLAUDE!"=="0" goto :phase_codex
 
-REM MCP 등록은 claude CLI(`claude mcp add`)가 있어야 한다. 디렉터리 존재 여부와
-REM 무관하게 PATH로 판정한다 - Claude Code 미설치 상태에서 자산만 깐 경우가 있다.
+REM MCP registration needs the claude CLI ("claude mcp add"). Decide by PATH, not by
+REM directory presence - assets may be installed while Claude Code itself is absent.
 where claude >nul 2>nul && set "HAS_CLAUDE_CLI=1"
 
 REM Hook config for settings.json (component-based filtering)
@@ -641,7 +642,7 @@ REM Register Orchestrator MCP server (required)
 echo.
 echo [7/7] Registering Orchestrator MCP... - Claude [required]
 if 1==1 (
-    REM source-only 모듈 라이브러리는 discovery 밖에 있지만 MCP 런타임은 여기서 직접 사용한다.
+    REM The source-only module library sits outside discovery, but the MCP runtime uses it directly.
     set "ORCH_DIR=%CLAUDE_DIR%\.olympus\runtime-modules\orchestrator\mcp-server"
     set "ORCH_DIST=!ORCH_DIR!\dist\index.js"
     set "ORCH_SDK=!ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
@@ -660,11 +661,12 @@ if 1==1 (
     if not exist "!ORCH_SDK!" set "ORCH_READY=0"
     if not exist "!ORCH_SQLITE!" set "ORCH_READY=0"
     if "!ORCH_READY!"=="1" (
-        REM 빌드는 CLI 유무와 무관하게 해둔다 - Claude Code를 나중에 깔고 재실행하면
-        REM 등록만 하면 되도록. 등록 자체는 claude CLI가 있어야 한다.
+        REM Build regardless of CLI presence - installing Claude Code later and re-running
+        REM then only needs the registration step. Registration itself requires the claude CLI.
         if "!HAS_CLAUDE_CLI!"=="1" (
-            REM `call` 필수 - PATH의 claude가 npm shim(claude.cmd)이면 call 없이 부를 때
-            REM 제어가 돌아오지 않아 install.bat이 여기서 통째로 끝난다(Codex/Antigravity 미실행).
+            REM "call" is required - if claude on PATH is the npm shim (claude.cmd),
+            REM calling it without call never returns and install.bat ends here
+            REM (the Codex/Antigravity phases would never run).
             call claude mcp remove orchestrator -s user >nul 2>nul
             call claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
             set "CLAUDE_ORCH_RESULT=Registered"

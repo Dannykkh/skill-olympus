@@ -1,4 +1,4 @@
-# Claude Orchestrator Launch Script
+﻿# Claude Orchestrator Launch Script
 # PM + Worker 오케스트레이션 환경 설정 및 실행
 
 param(

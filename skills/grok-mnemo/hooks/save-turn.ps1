@@ -1,4 +1,4 @@
-# save-turn.ps1 - Grok Build 훅: User+Assistant 턴을 대화 파일에 저장
+﻿# save-turn.ps1 - Grok Build 훅: User+Assistant 턴을 대화 파일에 저장
 # 한 스크립트가 두 이벤트를 처리한다 (hookEventName으로 분기):
 #   - user_prompt_submit: payload.prompt (<user_query> 래퍼 제거) -> User 저장
 #   - stop (reason == end_turn): payload.lastAssistantMessage -> Assistant 저장

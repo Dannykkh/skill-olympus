@@ -1,4 +1,4 @@
-# cancel-loop.ps1 — Chronos 루프 중단
+﻿# cancel-loop.ps1 — Chronos 루프 중단
 # 상태 파일을 삭제하여 Stop 훅이 루프 재투입을 멈추도록 함
 # Claude가 Bash로 rm을 호출할 필요가 없도록, 사용자가 터미널에서 직접 실행합니다.
 

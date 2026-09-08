@@ -1,4 +1,4 @@
-# update-check.ps1 — 주기적 버전 체크
+﻿# update-check.ps1 — 주기적 버전 체크
 #
 # 출력 (한 줄 또는 없음):
 #   UPGRADE_AVAILABLE <old> <new>   — 원격 VERSION이 로컬과 다름

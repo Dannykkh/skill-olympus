@@ -1,4 +1,4 @@
-function Add-CodexAssistantEntry {
+﻿function Add-CodexAssistantEntry {
     param(
         [Parameter(Mandatory = $true)][string]$ConvFile,
         [Parameter(Mandatory = $true)][string]$Timestamp,
