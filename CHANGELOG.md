@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.2] - 2026-09-10
+
+### Bug Fixes
+
+- **Mnemo 프로젝트 저장 경계**: Claude·Codex·Antigravity·Grok에서 상위 `MEMORY.md`·`conversations/`를 프로젝트 루트로 오인하는 탐색과 실행 폴더 fallback을 제거했다. Git 루트를 우선하고 명시된 비-Git workspace를 보존하며, 하위 cwd는 이동 가능한 `.mnemo-root`로 연결한다. HOME·CLI 설정 폴더·무효 경로에는 기록하지 않는다. (fbb34b6)
+- **저장·복구 일관성**: Claude·Codex 복구 스크립트도 같은 경계를 사용한다. Codex 상태 메모리는 대화와 같은 프로젝트에 저장하며, 일치하는 세션을 찾지 못했을 때 다른 프로젝트의 최신 세션을 가져오지 않는다. PowerShell 5.1의 중복 UTF-8 BOM 입력도 처리한다. (fbb34b6)
+- **Claude 의미기억 분산 방지**: Mnemo 설치 시 `autoMemoryEnabled=false`로 새 의미기억을 프로젝트에 모은다. 기존 설정과 네이티브 기억 파일은 보존하고, 제거 시 이전 auto-memory 설정을 복원한다. 독립 설치에도 공유 경로 해석기와 SessionStart 복구 훅·스크립트를 포함한다. (fbb34b6)
+
+### Tests
+
+- 프로젝트 경계·실제 PowerShell/Git Bash 저장 훅 테스트 7개, 설치·제거 설정 복원 2개, Antigravity·Grok 경계 테스트 3개, 복구 테스트 13개가 통과했다. 실제 전역 Claude·Codex 훅으로 프로젝트 이동 후 과거·신규 기록의 연속성과 외부 폴더 오저장 방지를 확인했고 네 CLI 설치 검사도 통과했다. CLI 자체 이벤트 전달과 모든 OS의 전체 실행을 인증한 것은 아니다. (fbb34b6)
+
+### Upgrade Notes
+
+- 실행 중인 CLI는 재시작해 변경된 설정을 반영한다. 프로젝트와 함께 `MEMORY.md`, `memory/`, `conversations/`, `.mnemo-root`를 이동한다.
+- 신뢰할 프로젝트 경로가 없거나 차단된 경로이면 자동 저장을 건너뛴다. 과거에 상위 폴더·CLI 내부에 흩어진 기록은 자동 이전·삭제하지 않는다. 런타임 원본 세션은 CLI 고유 위치에 남고, 이동 가능한 기록은 프로젝트의 `conversations/` 사본이 담당한다.
+
 ## [6.2.1] - 2026-09-08
 
 ### Bug Fixes
