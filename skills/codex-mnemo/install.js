@@ -30,6 +30,12 @@ const codexDir = process.env.CODEX_HOME
   ? path.resolve(process.env.CODEX_HOME)
   : path.join(os.homedir(), ".codex");
 
+  const hookSource = (file) => {
+    const local = path.join(sourceDir, "hooks", file);
+    return file === "mnemo-project-root.js" && !fs.existsSync(local)
+      ? path.join(sourceDir, "..", "..", "hooks", file) : local;
+  };
+
 // ── Utility functions ──
 function normalizePath(p) {
   return p.replace(/\\/g, "/");
@@ -507,12 +513,14 @@ function install() {
         "append-user.ps1",
         "append-assistant.ps1",
         "codex-hook-bridge.js",
+        "mnemo-project-root.js",
       ]
     : [
         "save-turn.sh",
         "append-user.sh",
         "append-assistant.sh",
         "codex-hook-bridge.js",
+        "mnemo-project-root.js",
       ];
 
   // Verify every source file before writing anything. The loop below used to
@@ -520,7 +528,7 @@ function install() {
   // and the rest not — a partial install that looks like a successful one.
   // The hooks only work as a set, so all-or-nothing is the safe outcome.
   const missingHooks = hookFiles.filter(
-    (f) => !fs.existsSync(path.join(sourceDir, "hooks", f))
+    (f) => !fs.existsSync(hookSource(f))
   );
   if (missingHooks.length > 0) {
     console.error("      Error: hook source file(s) missing — nothing was installed:");
@@ -535,7 +543,7 @@ function install() {
   ensureDir(hooksDir);
 
   for (const hookFile of hookFiles) {
-    const src = path.join(sourceDir, "hooks", hookFile);
+    const src = hookSource(hookFile);
     const dest = path.join(hooksDir, hookFile);
 
     copyFile(src, dest);
@@ -627,15 +635,17 @@ function check() {
         "append-user.ps1",
         "append-assistant.ps1",
         "codex-hook-bridge.js",
+        "mnemo-project-root.js",
       ]
     : [
         "save-turn.sh",
         "append-user.sh",
         "append-assistant.sh",
         "codex-hook-bridge.js",
+        "mnemo-project-root.js",
       ];
   for (const hookFile of hookFiles) {
-    const sourcePath = path.join(sourceDir, "hooks", hookFile);
+    const sourcePath = hookSource(hookFile);
     const filePath = path.join(hooksDir, hookFile);
     if (!fs.existsSync(sourcePath)) {
       console.log(`      MISSING SOURCE ${hookFile}`);
@@ -744,6 +754,7 @@ function uninstall() {
     "append-user.ps1",
     "append-assistant.ps1",
     "codex-hook-bridge.js",
+        "mnemo-project-root.js",
     "sync-sessions.ps1",
     "codex-mnemo-notify-wrapper.ps1",
     "save-turn.sh",

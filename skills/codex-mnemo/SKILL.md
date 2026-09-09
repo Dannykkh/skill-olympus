@@ -132,3 +132,13 @@ Codex CLI 대화
 > 핸드오프 작성 시 Mnemo의 공통 품질 계약을 따른다: `Feature/Flow/Decision Snapshot`에 구현 기능 목록,
 > 구성도, 기능 경계, 입력→처리→저장→표시 흐름, 주요 결정/대안/근거를 남긴다. CodeMap은 TermSnap 산출물이므로
 > 핸드오프는 CodeMap을 대체하지 않고 현재 세션의 구현 근거와 구성도를 작성한다.
+
+## 프로젝트 저장 경계
+
+`MEMORY.md`, `memory/`, `conversations/`는 프로젝트 안에 보관한다. Git 루트를 우선하며,
+명시한 비-Git workspace는 그대로 사용한다. 하위 cwd에서는 `.mnemo-root`를 찾되,
+일반 `MEMORY.md`·`conversations/`가 있다는 이유로 상위 폴더를 채택하지 않는다.
+저장 시 생기는 `.mnemo-root`는 절대경로를 담지 않으므로 프로젝트와 함께 이동한다.
+HOME·CLI 설정 폴더·무효 경로에는 기록하지 않는다. workspace 정보가 없으면 프로세스
+cwd로 추측해 쓰지 않고 저장을 건너뛴다. 정상 payload와 쓰기 권한이 있어야 자동 저장된다.
+기존에 외부로 흩어진 기록은 이 변경만으로 이동되지 않으며 원본 세션으로 소속을 확인해야 한다.

@@ -17,10 +17,8 @@ case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
 log_mnemo_error() {
     local ctx="$1"
     local msg="$2"
-    local root="$PWD"
-    local git_root
-    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
-    if [ -n "$git_root" ]; then root="$git_root"; fi
+    [ -n "${PROJECT_ROOT:-}" ] || return 0
+    local root="$PROJECT_ROOT"
     local err_dir="$root/.claude"
     mkdir -p "$err_dir" 2>/dev/null || true
     local log_path="$err_dir/mnemo-errors.log"
@@ -37,113 +35,12 @@ exit_mnemo_error() {
     exit 0
 }
 
-# ── 프로젝트 루트 결정 (save-response.sh와 동일 로직) ──────────
-# ── 비-git 프로젝트 루트 보정 (gotcha 047) ──────────────────────
-# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
-# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
-# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
-# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
-# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
-# Temp에 스캐폴드를 만들면 그 마커가 이후 세션까지 끌어당긴다. Temp 루트면 저장 skip.
-is_mnemo_temp_path() {
-    local p="${1%/}"
-    case "$p" in
-        /tmp|/tmp/*|/private/tmp|/private/tmp/*|/var/tmp|/var/tmp/*) return 0 ;;
-        */AppData/Local/Temp|*/AppData/Local/Temp/*) return 0 ;;
-    esac
-    if [ -n "${TMPDIR:-}" ]; then
-        local t="${TMPDIR%/}"
-        case "$p" in "$t"|"$t"/*) return 0 ;; esac
-    fi
-    return 1
-}
-
-get_nongit_project_root() {
-    local start="$1"
-    if [ -z "$start" ]; then printf '%s\n' "$start"; return; fi
-    local home_dir="${HOME:-$USERPROFILE}"
-    home_dir="${home_dir%/}"
-    local cur="$start"
-    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
-        if [ -n "$home_dir" ] && [ "${cur%/}" = "$home_dir" ]; then break; fi
-        if is_mnemo_temp_path "$cur"; then break; fi
-        if [ -f "$cur/MEMORY.md" ] || [ -d "$cur/conversations" ]; then
-            printf '%s\n' "$cur"; return
-        fi
-        local parent
-        parent=$(dirname "$cur")
-        [ "$parent" = "$cur" ] && break
-        cur="$parent"
-    done
-    local stripped="$start"
-    while printf '%s' "$stripped" | grep -qE '[/\\](bin|obj|dist|build|out|target|node_modules)([/\\]|$)'; do
-        stripped=$(printf '%s' "$stripped" | sed -E 's#[/\\](bin|obj|dist|build|out|target|node_modules)([/\\].*)?$##')
-    done
-    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; } && ! is_mnemo_temp_path "$stripped"; then
-        printf '%s\n' "$stripped"
-    elif is_mnemo_temp_path "$start"; then
-        printf '%s\n' ""
-    else
-        printf '%s\n' "$start"
-    fi
-}
-
+# Shared resolver rejects runtime storage directories and untrusted fallback cwd.
 get_claude_project_root() {
-    local transcript_path="$1"
-    local home_dir="${HOME:-$USERPROFILE}"
-
-    _w2u() {
-        local p="$1"
-        if [[ "$p" =~ ^([A-Za-z]): ]]; then
-            local d="${BASH_REMATCH[1],,}"; p="/${d}/${p:3}"; p="${p//\\//}"
-        fi
-        printf '%s' "$p"
-    }
-
-    local first_cwd="" last_cwd="" decoded=""
-    if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-        first_cwd=$(grep -m 1 -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' "$transcript_path" 2>/dev/null \
-            | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' | sed 's|\\\\|\\|g')
-        last_cwd=$(tail -n 200 "$transcript_path" 2>/dev/null \
-            | grep -oE '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' \
-            | tail -n 1 | sed -E 's/"cwd"[[:space:]]*:[[:space:]]*"(.*)"/\1/' | sed 's|\\\\|\\|g')
-    fi
-    if [ -n "$transcript_path" ]; then
-        local parent; parent=$(basename "$(dirname "$transcript_path")")
-        if [[ "$parent" =~ ^([A-Za-z])--(.+)$ ]]; then
-            decoded="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]//-//}"
-        fi
-    fi
-
-    # 후보: launch cwd -> last cwd -> decoded -> PWD (HOME은 후보에서 제외)
-    local home_u; home_u=$(_w2u "$home_dir")
-    local -a candidates=()
-    local c
-    for c in "$first_cwd" "$last_cwd" "$decoded"; do
-        [ -z "$c" ] && continue
-        c=$(_w2u "$c")
-        [ "${c%/}" = "${home_u%/}" ] && continue
-        is_mnemo_temp_path "$c" && continue
-        candidates+=("$c")
-    done
-    is_mnemo_temp_path "$PWD" || candidates+=("$PWD")
-
-    # Pass 1: git 루트가 잡히는 첫 후보 (단, git 루트가 HOME이면 dotfiles repo로 간주해 제외)
-    local git_root gr_u
-    for c in "${candidates[@]}"; do
-        if [ -d "$c" ]; then
-            git_root=$(git -C "$c" rev-parse --show-toplevel 2>/dev/null)
-            if [ -n "$git_root" ]; then
-                gr_u=$(_w2u "$git_root")
-                if [ "${gr_u%/}" != "${home_u%/}" ] && ! is_mnemo_temp_path "$gr_u"; then echo "$git_root"; return 0; fi
-            fi
-        fi
-    done
-    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)를 비-git 루트 보정 후 반환
-    for c in "${candidates[@]}"; do
-        [ -d "$c" ] && { get_nongit_project_root "$c"; return 0; }
-    done
-    get_nongit_project_root "$PWD"
+    local helper
+    helper="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/mnemo-project-root.js"
+    [ -f "$helper" ] || return 0
+    printf '%s' "$INPUT_JSON" | node "$helper" --claude 2>/dev/null || true
 }
 
 ensure_memory_scaffold() {
@@ -264,13 +161,14 @@ if [ -z "$PROMPT" ]; then exit 0; fi
 # <private> 블록 제거 (민감 정보 보호)
 PROMPT=$(echo "$PROMPT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$PROMPT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
 
-# 프로젝트 루트 결정: JSONL cwd → transcript path 디코딩 → PWD fallback
+# 프로젝트 루트 결정: 명시 workspace → payload cwd → transcript metadata
 TRANSCRIPT_PATH=$(echo "$INPUT_JSON" | jq -r '.transcript_path // empty' 2>/dev/null)
 PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
 
 # Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
 if [ -z "$PROJECT_ROOT" ]; then exit 0; fi
 
+[ -f "$PROJECT_ROOT/.mnemo-root" ] || : > "$PROJECT_ROOT/.mnemo-root"
 CONV_DIR="$PROJECT_ROOT/conversations"
 TODAY=$(date +%Y-%m-%d)
 CONV_FILE="$CONV_DIR/$TODAY-claude.md"

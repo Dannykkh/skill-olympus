@@ -37,16 +37,8 @@ function Write-DebugLog([string]$message) {
 function Write-MnemoError {
     param([string]$Context, [string]$Message)
     try {
-        $root = $PWD.Path
-        $markerRoot = Get-MnemoMarkerRoot $root
-        if ($markerRoot) {
-            $root = $markerRoot
-        } else {
-            try {
-                $gitRoot = git rev-parse --show-toplevel 2>$null
-                if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
-            } catch {}
-        }
+        if (-not $baseDir) { return }
+        $root = $baseDir
         $errDir = Join-Path $root '.claude'
         if (-not (Test-Path $errDir)) {
             New-Item -ItemType Directory -Path $errDir -Force | Out-Null
@@ -102,17 +94,13 @@ function Normalize-PathSafe([string]$p) {
     }
 }
 
-function Get-MnemoMarkerRoot([string]$StartPath) {
-    if (-not $StartPath) { return $null }
+function Resolve-MnemoProjectRoot([string]$StartPath, [string]$Mode = '') {
+    $helper = Join-Path $PSScriptRoot 'mnemo-project-root.js'
+    if (-not (Test-Path -LiteralPath $helper)) { $helper = Join-Path $PSScriptRoot '../../../hooks/mnemo-project-root.js' }
+    if (-not (Test-Path -LiteralPath $helper)) { return $null }
     try {
-        $cur = New-Object System.IO.DirectoryInfo($StartPath)
-        if (-not $cur.Exists) { $cur = $cur.Parent }
-        while ($cur) {
-            if (Test-Path -LiteralPath (Join-Path $cur.FullName '.mnemo-root') -PathType Leaf) {
-                return $cur.FullName
-            }
-            $cur = $cur.Parent
-        }
+        $result = & node $helper $StartPath $Mode 2>$null
+        if ($LASTEXITCODE -eq 0 -and $result) { return "$result".Trim() }
     } catch {}
     return $null
 }
@@ -126,7 +114,7 @@ function Select-SessionFile([string]$preferredCwd) {
     if (-not $files -or $files.Count -eq 0) { return $null }
 
     $prefNorm = Normalize-PathSafe $preferredCwd
-    if (-not $prefNorm) { return $files[0].FullName }
+    if (-not $prefNorm) { return $null }
 
     foreach ($f in $files) {
         try {
@@ -144,7 +132,7 @@ function Select-SessionFile([string]$preferredCwd) {
         } catch {}
     }
 
-    return $files[0].FullName
+    return $null
 }
 
 function Read-SessionTailLines([string]$path, [int]$maxBytes = 2097152) {
@@ -484,7 +472,7 @@ if ((-not $userText -or $userText.Length -lt 1) -or (-not $response -or $respons
         if ($v) { $prefCwd = $v; break }
     }
     if (-not $prefCwd -and $env:CODEX_WORKSPACE_ROOT) { $prefCwd = $env:CODEX_WORKSPACE_ROOT }
-    if (-not $prefCwd) { $prefCwd = $PWD.Path }
+    if (-not $prefCwd) { exit 0 }
 
     $sessionData = Get-LatestSessionData $prefCwd
     if (-not $userText -or $userText.Length -lt 1) {
@@ -515,102 +503,27 @@ if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $respon
 }
 
 $baseDir = ""
-foreach ($k in @("cwd", "working-directory", "working_directory", "project-root", "project_root", "workspace-root", "workspace_root")) {
+$rootMode = ""
+foreach ($k in @("project-root", "project_root", "workspace-root", "workspace_root", "cwd", "working-directory", "working_directory")) {
     $v = ""
     try { $v = "$($payload.$k)".Trim() } catch {}
-    if ($v -and (Test-Path $v)) {
+    if ($v) {
         $baseDir = $v
+        if ($k -match '^(project|workspace)') { $rootMode = '--explicit' }
         break
     }
 }
-if (-not $baseDir -and $env:CODEX_WORKSPACE_ROOT -and (Test-Path $env:CODEX_WORKSPACE_ROOT)) {
+if (-not $baseDir -and $env:CODEX_WORKSPACE_ROOT) {
     $baseDir = $env:CODEX_WORKSPACE_ROOT
+    $rootMode = '--explicit'
 }
-if (-not $baseDir) {
-    $baseDir = $PWD.Path
+# Missing or invalid workspace metadata must never fall back to the hook cwd.
+if (-not $baseDir) { exit 0 }
+$baseDir = Resolve-MnemoProjectRoot $baseDir $rootMode
+if (-not $baseDir) { exit 0 }
+if (-not (Test-Path -LiteralPath (Join-Path $baseDir '.mnemo-root'))) {
+    [System.IO.File]::WriteAllText((Join-Path $baseDir '.mnemo-root'), '', $Utf8NoBom)
 }
-
-# Mnemo marker is the canonical workspace boundary and must win over a nested
-# product Git root. Sub-directory(예: bin/Debug)는 그 다음에 정규화한다.
-# Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
-# conversations/는 진짜 프로젝트 루트에 생기도록 한다.
-# git이 없는 디렉토리면 baseDir 그대로 유지 (fail-open).
-# ── 비-git 프로젝트 루트 보정 (gotcha 047) ─────────────────────
-# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
-# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
-# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
-# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
-# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
-# Temp에 스캐폴드를 만들면, 그 마커가 이후 세션의 walk-up까지 끌어당겨 대화가
-# 계속 Temp로 쌓인다. Temp 루트로 판정되면 호출부에서 저장을 skip한다 (fail-open).
-function Test-MnemoTempPath {
-    param([string]$Path)
-    if (-not $Path) { return $false }
-    $p = $Path.Replace('/', '\').TrimEnd('\')
-    foreach ($t in @($env:TEMP, $env:TMP)) {
-        if ($t) {
-            $tn = $t.Replace('/', '\').TrimEnd('\')
-            if ($p -eq $tn -or $p.StartsWith("$tn\", [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
-        }
-    }
-    return ($p -match '(?i)[\\/]AppData[\\/]Local[\\/]Temp([\\/]|$)' -or $p -match '(?i)^([A-Za-z]:)?[\\/]tmp([\\/]|$)')
-}
-
-function Get-NonGitProjectRoot {
-    param([string]$StartPath)
-    if (-not $StartPath) { return $StartPath }
-    $hn = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
-    try {
-        $cur = New-Object System.IO.DirectoryInfo($StartPath)
-        while ($cur) {
-            $curPath = $cur.FullName.TrimEnd('\')
-            if ($hn -and $curPath -eq $hn) { break }
-            if (Test-MnemoTempPath $curPath) { break }
-            if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
-                return $curPath
-            }
-            $cur = $cur.Parent
-        }
-    } catch {}
-    $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
-    if ($m.Success) {
-        $prefix = $m.Groups[1].Value
-        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn) -and (-not (Test-MnemoTempPath $prefix))) {
-            return $prefix
-        }
-    }
-    if (Test-MnemoTempPath $StartPath) { return $null }
-    return $StartPath
-}
-
-$gitRootAdopted = $false
-if ($baseDir) {
-    $markerRoot = Get-MnemoMarkerRoot $baseDir
-    if ($markerRoot) {
-        $baseDir = $markerRoot
-        $gitRootAdopted = $true
-    }
-}
-if ($baseDir -and -not $gitRootAdopted) {
-    try {
-        $gitRoot = & git -C $baseDir rev-parse --show-toplevel 2>$null
-        if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-            $win = $gitRoot.Replace('/', '\')
-            # HOME 자체가 git repo(dotfiles)면 git root 채택 금지 — HOME/conversations 오배치 방지 (gotcha 033)
-            $homeNorm = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
-            if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) {
-                $baseDir = $win
-                $gitRootAdopted = $true
-            }
-        }
-    } catch {}
-}
-# git 루트를 못 잡은 비-git 경로는 프로젝트 루트 보정 (gotcha 047)
-if ($baseDir -and -not $gitRootAdopted) {
-    $baseDir = Get-NonGitProjectRoot $baseDir
-}
-# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
-if ((-not $baseDir) -or (Test-MnemoTempPath $baseDir)) { exit 0 }
 
 Ensure-MemoryScaffold $baseDir
 
@@ -817,9 +730,4 @@ function Notify-MnemoStatus {
     }
 }
 
-$mnemoRoot = $PWD.Path
-try {
-    $gitRoot = git rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -eq 0 -and $gitRoot) { $mnemoRoot = $gitRoot.Replace('/', '\') }
-} catch {}
-Notify-MnemoStatus -Root $mnemoRoot
+Notify-MnemoStatus -Root $baseDir

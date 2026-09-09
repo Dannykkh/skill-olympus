@@ -21,10 +21,8 @@ case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
 log_mnemo_error() {
     local ctx="$1"
     local msg="$2"
-    local root="$PWD"
-    local git_root
-    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
-    if [ -n "$git_root" ]; then root="$git_root"; fi
+    [ -n "${PROJECT_ROOT:-}" ] && is_safe_project_path "$PROJECT_ROOT" || return
+    local root="$PROJECT_ROOT"
     local err_dir="$root/.claude"
     mkdir -p "$err_dir" 2>/dev/null || true
     local log_path="$err_dir/mnemo-errors.log"
@@ -207,62 +205,55 @@ if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; the
     exit 0
 fi
 
-# 프로젝트 루트 결정
-# Grok payload는 workspaceRoot/cwd(camelCase)를 제공한다. transcriptPath는
-# ~/.grok/sessions/ 내부 경로라 프로젝트 루트 추정에 쓰지 않는다.
+# Workspace payload is authoritative; never infer a project from the hook host cwd.
+is_safe_project_path() {
+    local candidate="$1" resolved blocked normalized
+    [ -n "$candidate" ] && [ -d "$candidate" ] || return 1
+    case "$candidate" in /*|[A-Za-z]:[\\/]*) ;; *) return 1 ;; esac
+    resolved=$(cd -- "$candidate" && pwd -P) || return 1
+    [ "$resolved" != / ] && [ "$resolved" != "${HOME%/}" ] || return 1
+    case "$resolved/" in */.claude/*|*/.codex/*|*/.gemini/*|*/.grok/*) return 1 ;; esac
+    for blocked in "${USERPROFILE:-}" "${CLAUDE_CONFIG_DIR:-}" "${CODEX_HOME:-}" "${GEMINI_CLI_HOME:-}" "${ANTIGRAVITY_HOME:-}" "${GROK_HOME:-}" "${GROK_CONFIG_DIR:-}"; do
+        [ -n "$blocked" ] && [ -d "$blocked" ] || continue
+        normalized=$(cd -- "$blocked" && pwd -P) || continue
+        if [ "$blocked" = "${USERPROFILE:-}" ]; then
+            [ "$resolved" != "$normalized" ] || return 1
+        else
+            case "$resolved/" in "$normalized/"*) return 1 ;; esac
+        fi
+    done
+    return 0
+}
+get_nongit_project_root() {
+    local start="$1" cur="$1" parent
+    while is_safe_project_path "$cur"; do
+        if [ -e "$cur/.git" ] || [ -f "$cur/.mnemo-root" ]; then printf '%s\n' "$cur"; return; fi
+        parent=$(dirname "$cur")
+        [ "$parent" != "$cur" ] || break
+        cur="$parent"
+    done
+    printf '%s\n' "$start"
+}
 PROJECT_ROOT=""
+EXPLICIT_PROJECT_ROOT=""
 for k in workspaceRoot cwd; do
     v=$(json_field "$k")
-    if [ -n "$v" ] && [ -d "$v" ]; then
-        PROJECT_ROOT="$v"
+    if is_safe_project_path "$v"; then
+        PROJECT_ROOT=$(cd -- "$v" && pwd -P)
+        [ "$k" = workspaceRoot ] && EXPLICIT_PROJECT_ROOT=1
         break
     fi
 done
-if [ -z "$PROJECT_ROOT" ]; then
-    PROJECT_ROOT="$PWD"
-fi
-# ── 비-git 프로젝트 루트 보정 (gotcha 047) ──────────────────────
-get_nongit_project_root() {
-    local start="$1"
-    if [ -z "$start" ]; then printf '%s\n' "$start"; return; fi
-    local home_dir="${HOME:-$USERPROFILE}"
-    home_dir="${home_dir%/}"
-    local cur="$start"
-    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
-        if [ -n "$home_dir" ] && [ "${cur%/}" = "$home_dir" ]; then break; fi
-        if [ -f "$cur/MEMORY.md" ] || [ -d "$cur/conversations" ]; then
-            printf '%s\n' "$cur"; return
-        fi
-        local parent
-        parent=$(dirname "$cur")
-        [ "$parent" = "$cur" ] && break
-        cur="$parent"
-    done
-    local stripped="$start"
-    while printf '%s' "$stripped" | grep -qE '[/\\](bin|obj|dist|build|out|target|node_modules)([/\\]|$)'; do
-        stripped=$(printf '%s' "$stripped" | sed -E 's#[/\\](bin|obj|dist|build|out|target|node_modules)([/\\].*)?$##')
-    done
-    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; }; then
-        printf '%s\n' "$stripped"
-    else
-        printf '%s\n' "$start"
-    fi
-}
-
-GIT_ROOT_ADOPTED=""
+[ -n "$PROJECT_ROOT" ] || exit 0
 GIT_ROOT_NORMALIZED=$(git -C "$PROJECT_ROOT" rev-parse --show-toplevel 2>/dev/null)
 if [ -n "$GIT_ROOT_NORMALIZED" ]; then
-    # HOME 자체가 git repo(dotfiles)면 채택 금지 — HOME 오배치 방지 (gotcha 033)
-    HOME_NORM="${HOME:-$USERPROFILE}"
-    HOME_NORM="${HOME_NORM%/}"
-    if [ -z "$HOME_NORM" ] || [ "${GIT_ROOT_NORMALIZED%/}" != "$HOME_NORM" ]; then
-        PROJECT_ROOT="$GIT_ROOT_NORMALIZED"
-        GIT_ROOT_ADOPTED=1
-    fi
+    is_safe_project_path "$GIT_ROOT_NORMALIZED" || exit 0
+    PROJECT_ROOT=$(cd -- "$GIT_ROOT_NORMALIZED" && pwd -P)
+elif [ -z "$EXPLICIT_PROJECT_ROOT" ]; then
+    PROJECT_ROOT=$(get_nongit_project_root "$PROJECT_ROOT")
 fi
-if [ -n "$PROJECT_ROOT" ] && [ -z "$GIT_ROOT_ADOPTED" ]; then
-    PROJECT_ROOT="$(get_nongit_project_root "$PROJECT_ROOT")"
-fi
+is_safe_project_path "$PROJECT_ROOT" || exit 0
+[ -e "$PROJECT_ROOT/.mnemo-root" ] || : > "$PROJECT_ROOT/.mnemo-root"
 
 # 대화 디렉토리 및 파일
 CONV_DIR="$PROJECT_ROOT/conversations"

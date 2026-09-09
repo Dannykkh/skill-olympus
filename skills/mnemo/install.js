@@ -122,6 +122,7 @@ function buildHooksConfig(hooksDir) {
       UserPromptSubmit: [entry(".*", cmd("save-conversation.ps1"))],
       PostToolUse: [entry(".*", cmd("save-tool-use.ps1"))],
       Stop: [entry("", cmd("save-response.ps1"))],
+      SessionStart: [entry("", cmd("reconcile-conversations.ps1"))],
     };
   } else {
     const cmd = (script) => `bash "${d}/${script}"`;
@@ -129,12 +130,21 @@ function buildHooksConfig(hooksDir) {
       UserPromptSubmit: [entry(".*", cmd("save-conversation.sh"))],
       PostToolUse: [entry(".*", cmd("save-tool-use.sh"))],
       Stop: [entry("", cmd("save-response.sh"))],
+      SessionStart: [entry("", cmd("reconcile-conversations.sh"))],
     };
   }
 }
 
 function mergeHooksConfig(settingsPath, hooksConfig) {
   const settings = readJson(settingsPath);
+  // Project-local Mnemo is the semantic memory authority. Keep the previous
+  // preference for uninstall, without deleting any native memory history.
+  const nativeState = path.join(claudeDir, ".mnemo-native-memory.json");
+  if (!fs.existsSync(nativeState)) writeJson(nativeState, {
+    present: Object.prototype.hasOwnProperty.call(settings, "autoMemoryEnabled"),
+    value: settings.autoMemoryEnabled,
+  });
+  settings.autoMemoryEnabled = false;
   settings.hooks = settings.hooks || {};
 
   // Add Mnemo hooks (preserve existing hooks)
@@ -148,7 +158,7 @@ function mergeHooksConfig(settingsPath, hooksConfig) {
       const hookId = newCmd.includes("save-conversation") ? "save-conversation"
                    : newCmd.includes("save-tool-use") ? "save-tool-use"
                    : newCmd.includes("save-response") ? "save-response"
-                   : newCmd;
+                   : newCmd.includes("reconcile-conversations") ? "reconcile-conversations" : newCmd;
 
       // Replace existing Mnemo hooks with the current platform command.
       // This repairs older Windows installs that still point at bash/*.sh.
@@ -170,13 +180,23 @@ function mergeHooksConfig(settingsPath, hooksConfig) {
 
 function removeHooksConfig(settingsPath) {
   const settings = readJson(settingsPath);
+  const nativeState = path.join(claudeDir, ".mnemo-native-memory.json");
+  if (fs.existsSync(nativeState)) {
+    const previous = readJson(nativeState);
+    if (settings.autoMemoryEnabled === false) {
+      if (previous.present) settings.autoMemoryEnabled = previous.value;
+      else delete settings.autoMemoryEnabled;
+    }
+    removeFile(nativeState);
+    writeJson(settingsPath, settings);
+  }
   if (!settings.hooks) return;
 
   for (const event of Object.keys(settings.hooks)) {
     settings.hooks[event] = settings.hooks[event].filter(h => {
       if (!h.hooks || !h.hooks[0] || !h.hooks[0].command) return true;
       const cmd = h.hooks[0].command;
-      return !cmd.includes("save-conversation") && !cmd.includes("save-tool-use") && !cmd.includes("save-response");
+      return !cmd.includes("save-conversation") && !cmd.includes("save-tool-use") && !cmd.includes("save-response") && !cmd.includes("reconcile-conversations");
     });
 
     if (settings.hooks[event].length === 0) {
@@ -209,8 +229,8 @@ function install() {
   ensureDir(hooksDir);
 
   const hookFiles = isWindows
-    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1"]
-    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh"];
+    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js"]
+    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js"];
 
   for (const file of hookFiles) {
     // Search for hook file source: skills/mnemo/hooks/ → root hooks/ fallback
@@ -229,6 +249,8 @@ function install() {
     }
   }
   console.log("      Done!");
+
+  copyFile(path.join(sourceDir, "scripts", "reconcile_conversations.py"), path.join(claudeDir, "scripts", "reconcile_conversations.py"));
 
   // [2/3] Configure settings.json hooks
   console.log("\n[2/3] Configuring settings.json hooks...");
@@ -350,8 +372,8 @@ function check() {
   // 1. Hook files exist
   console.log("[1/3] Checking hook files...");
   const hookFiles = isWindows
-    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1"]
-    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh"];
+    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js"]
+    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js"];
 
   for (const file of hookFiles) {
     const dest = path.join(hooksDir, file);
@@ -368,6 +390,7 @@ function check() {
   // 2. settings.json hook registration
   console.log("\n[2/3] Checking settings.json hook registration...");
   const settings = readJson(settingsPath);
+  if (settings.autoMemoryEnabled !== false) { console.log("      Project memory requires autoMemoryEnabled=false"); issues++; }
 
   const expectedExt = isWindows ? ".ps1" : ".sh";
   const expectedRunner = isWindows ? "powershell" : "bash";
@@ -460,7 +483,8 @@ function uninstall() {
   const hookFiles = [
     "save-conversation.ps1", "save-conversation.sh",
     "save-tool-use.ps1", "save-tool-use.sh",
-    "save-response.ps1", "save-response.sh"
+    "save-response.ps1", "save-response.sh",
+    "reconcile-conversations.ps1", "reconcile-conversations.sh", "mnemo-project-root.js"
   ];
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {

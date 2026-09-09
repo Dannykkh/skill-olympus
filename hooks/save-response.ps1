@@ -32,11 +32,8 @@ function Write-MnemoError {
         [Parameter(Mandatory = $true)][string]$Message
     )
     try {
-        $root = $PWD.Path
-        try {
-            $gitRoot = git rev-parse --show-toplevel 2>$null
-            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
-        } catch {}
+        if (-not $ProjectRoot) { return }
+        $root = $ProjectRoot
         $errDir = Join-Path $root '.claude'
         if (-not (Test-Path $errDir)) {
             New-Item -ItemType Directory -Path $errDir -Force | Out-Null
@@ -62,121 +59,16 @@ function Exit-MnemoError {
     exit 0
 }
 
-# ── 프로젝트 루트 결정 ────────────────────────────────────────
-# 문제: 마지막 cwd/PWD가 하위 폴더(bin/Debug, reference/1week 등)면
-#       비-git 프로젝트에서 conversations/가 프로젝트 루트가 아닌 하위 폴더에 생긴다.
-#       (전역 `cd`로 작업 디렉터리가 옮겨진 뒤 그대로 유지되는 경우)
-# 해결: 후보(세션 시작 cwd -> 마지막 cwd -> transcript 디코딩 -> PWD)를 2-pass로 평가.
-#       Pass 1 = git 루트가 잡히는 첫 후보, Pass 2 = 비-git이면 세션 시작(launch) cwd.
-# ── 비-git 프로젝트 루트 보정 (gotcha 047) ─────────────────────
-# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
-# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
-# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
-# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
-# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
-# Temp에 스캐폴드를 만들면, 그 마커가 이후 세션의 walk-up까지 끌어당겨 대화가
-# 계속 Temp로 쌓인다. Temp 루트로 판정되면 호출부에서 저장을 skip한다 (fail-open).
-function Test-MnemoTempPath {
-    param([string]$Path)
-    if (-not $Path) { return $false }
-    $p = $Path.Replace('/', '\').TrimEnd('\')
-    foreach ($t in @($env:TEMP, $env:TMP)) {
-        if ($t) {
-            $tn = $t.Replace('/', '\').TrimEnd('\')
-            if ($p -eq $tn -or $p.StartsWith("$tn\", [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
-        }
-    }
-    return ($p -match '(?i)[\\/]AppData[\\/]Local[\\/]Temp([\\/]|$)' -or $p -match '(?i)^([A-Za-z]:)?[\\/]tmp([\\/]|$)')
-}
-
-function Get-NonGitProjectRoot {
-    param([string]$StartPath)
-    if (-not $StartPath) { return $StartPath }
-    $hn = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
-    try {
-        $cur = New-Object System.IO.DirectoryInfo($StartPath)
-        while ($cur) {
-            $curPath = $cur.FullName.TrimEnd('\')
-            if ($hn -and $curPath -eq $hn) { break }
-            if (Test-MnemoTempPath $curPath) { break }
-            if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
-                return $curPath
-            }
-            $cur = $cur.Parent
-        }
-    } catch {}
-    $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
-    if ($m.Success) {
-        $prefix = $m.Groups[1].Value
-        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn) -and (-not (Test-MnemoTempPath $prefix))) {
-            return $prefix
-        }
-    }
-    if (Test-MnemoTempPath $StartPath) { return $null }
-    return $StartPath
-}
-
+# Resolve all storage through the shared project boundary contract.
 function Get-ClaudeProjectRoot {
-    param([string]$TranscriptPath)
-
-    $userHome = $env:USERPROFILE
-    $homeNorm = if ($userHome) { $userHome.TrimEnd('\') } else { $null }
-
-    $firstCwd = $null; $lastCwd = $null
-    if ($TranscriptPath -and (Test-Path $TranscriptPath)) {
-        try {
-            foreach ($line in [System.IO.File]::ReadLines($TranscriptPath, [System.Text.Encoding]::UTF8)) {
-                if ($line -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
-                    $firstCwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'; break
-                }
-            }
-        } catch {}
-        try {
-            $tail = Get-Content $TranscriptPath -Tail 200 -Encoding UTF8 -ErrorAction SilentlyContinue
-            for ($i = $tail.Count - 1; $i -ge 0; $i--) {
-                if ($tail[$i] -match '"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"') {
-                    $lastCwd = $Matches[1] -replace '\\\\', '\' -replace '\\"', '"'; break
-                }
-            }
-        } catch {}
-    }
-
-    $decoded = $null
-    if ($TranscriptPath) {
-        try {
-            $parent = Split-Path -Leaf (Split-Path $TranscriptPath -Parent)
-            if ($parent -match '^([A-Za-z])--(.+)$') {
-                $decoded = "$($Matches[1]):\$($Matches[2] -replace '-', '\')"
-            }
-        } catch {}
-    }
-
-    # 후보: launch cwd -> last cwd -> decoded -> PWD (HOME 제외, 중복 제거)
-    $candidates = New-Object System.Collections.Generic.List[string]
-    foreach ($c in @($firstCwd, $lastCwd, $decoded)) {
-        if ($c -and (-not $homeNorm -or $c.TrimEnd('\') -ne $homeNorm) -and (-not (Test-MnemoTempPath $c)) -and (-not $candidates.Contains($c))) {
-            $candidates.Add($c)
-        }
-    }
-    if ((-not $candidates.Contains($PWD.Path)) -and (-not (Test-MnemoTempPath $PWD.Path))) { $candidates.Add($PWD.Path) }
-
-    # Pass 1: git 루트가 잡히는 첫 후보 (git 루트가 HOME이면 dotfiles repo로 보고 제외)
-    foreach ($cand in $candidates) {
-        if (Test-Path $cand) {
-            try {
-                $gitRoot = & git -C $cand rev-parse --show-toplevel 2>$null
-                if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-                    $win = $gitRoot.Replace('/', '\')
-                    if ((-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) -and (-not (Test-MnemoTempPath $win))) { return $win }
-                }
-            } catch {}
-        }
-    }
-    # Pass 2: git 없음(비-git) -> 첫 유효 후보(= launch cwd)를 비-git 루트 보정 후 반환
-    foreach ($cand in $candidates) {
-        if (Test-Path $cand) { return (Get-NonGitProjectRoot $cand) }
-    }
-    return (Get-NonGitProjectRoot $PWD.Path)
+    param([string]$TranscriptPath, $Payload)
+    $helper = Join-Path $PSScriptRoot 'mnemo-project-root.js'
+    if (-not (Test-Path -LiteralPath $helper)) { return $null }
+    try {
+        $result = ($Payload | ConvertTo-Json -Compress -Depth 30) | & node $helper --claude 2>$null
+        if ($LASTEXITCODE -eq 0 -and $result) { return "$result".Trim() }
+    } catch {}
+    return $null
 }
 
 # ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
@@ -353,13 +245,14 @@ $transcriptPath = $json.transcript_path
 # transcript_path가 없거나 파일이 없는 경우는 정상 skip (로그 X)
 if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
 
-# 프로젝트 루트 결정: JSONL cwd → transcript path 디코딩 → PWD fallback
-$ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath
+# 프로젝트 루트 결정: 명시 workspace → payload cwd → transcript metadata
+$ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath -Payload $json
 
 # Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
 if (-not $ProjectRoot) { exit 0 }
 
 # 대화 파일 경로 결정
+if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot '.mnemo-root'))) { [System.IO.File]::WriteAllText((Join-Path $ProjectRoot '.mnemo-root'), '', (New-Object System.Text.UTF8Encoding $false)) }
 $ConvDir = Join-Path $ProjectRoot "conversations"
 $Today = Get-Date -Format "yyyy-MM-dd"
 $ConvFile = Join-Path $ConvDir "$Today-claude.md"

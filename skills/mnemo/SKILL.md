@@ -3,7 +3,7 @@ name: mnemo
 description: >
   과거 대화 검색, 장기기억 설정, 세션 핸드오프할 때 사용. 대화 자동 저장, 키워드 태깅,
   MEMORY.md 관리, 세션 전환. 관리 대상은 프로젝트 루트의 3계층(MEMORY.md + memory/ + conversations/)이며,
-  Claude 네이티브 auto-memory(~/.claude/projects/{project}/memory/)와는 별개 시스템 — 네이티브 쪽은 건드리지 않음.
+  프로젝트 이동 후에도 기록을 함께 사용할 수 있도록 저장 경계를 검증한다.
   /mnemo, 므네모, 장기기억, memory, 기억해, 이전에, handoff, 핸드오프, 핸즈오프, 세션 저장 요청에 사용한다.
 ---
 
@@ -89,7 +89,7 @@ Claude 응답 (끝에 #tags 포함)
 **검색 대상** (사람이 읽고 Claude가 grep): `conversations/YYYY-MM-DD-claude.md`
 **멱등 인덱스**: `conversations/.mnemo-index.json` (JSONL 줄 uuid 기반)
 
-> 검색 순서는 `MEMORY.md` → 관련 기억 항목 → 연결 대화·`#tags:` → 대화 본문 → 범위를 좁힌 원본 세션입니다. 태그가 없어도 본문을 확인합니다. [전역 규칙 정본](templates/claude-md-rules.md)의 읽기 전용·카탈로그·핸드오프 기준을 함께 따릅니다. Claude 네이티브 auto memory는 프로젝트 Mnemo와 별개이며 이를 위해 설정을 바꾸지 않습니다.
+> 검색 순서는 `MEMORY.md` → 관련 기억 항목 → 연결 대화·`#tags:` → 대화 본문 → 범위를 좁힌 원본 세션입니다. 태그가 없어도 본문을 확인합니다. [전역 규칙 정본](templates/claude-md-rules.md)의 읽기 전용·카탈로그·핸드오프 기준을 함께 따릅니다. 설치기는 `autoMemoryEnabled=false`로 설정해 새 의미기억을 프로젝트 Mnemo에 모읍니다. 기존 네이티브 기억과 원본 세션은 삭제하지 않습니다.
 
 Stop 훅이 한 번이라도 실패하거나 Claude Code가 강제 종료되면 해당 턴의
 미러링이 누락됩니다. 다음 세션 시작 시 `reconcile-conversations`가 자동으로
@@ -195,3 +195,13 @@ python scripts/check_staleness.py <handoff-file>
 | 핸드오프 | `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
 | 인덱스 | `MEMORY.md` (프로젝트 루트) |
 | 의미기억 | `memory/*.md` (카테고리별 상세) |
+
+## 프로젝트 저장 경계
+
+`MEMORY.md`, `memory/`, `conversations/`는 프로젝트 안에 보관한다. Git 루트를 우선하며,
+명시한 비-Git workspace는 그대로 사용한다. 하위 cwd에서는 `.mnemo-root`를 찾되,
+일반 `MEMORY.md`·`conversations/`가 있다는 이유로 상위 폴더를 채택하지 않는다.
+저장 시 생기는 `.mnemo-root`는 절대경로를 담지 않으므로 프로젝트와 함께 이동한다.
+HOME·CLI 설정 폴더·무효 경로에는 기록하지 않는다. workspace 정보가 없으면 프로세스
+cwd로 추측해 쓰지 않고 저장을 건너뛴다. 정상 payload와 쓰기 권한이 있어야 자동 저장된다.
+기존에 외부로 흩어진 기록은 이 변경만으로 이동되지 않으며 원본 세션으로 소속을 확인해야 한다.

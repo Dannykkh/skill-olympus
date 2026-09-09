@@ -212,56 +212,55 @@ def normalize_path(value: str | Path) -> str:
         return str(value).rstrip("\\/").casefold()
 
 
-def nearest_existing_directory(start: Path) -> Path | None:
-    candidate = start.resolve(strict=False)
-    if candidate.is_file():
-        candidate = candidate.parent
-    while not candidate.exists():
-        parent = candidate.parent
-        if parent == candidate:
-            return None
-        candidate = parent
-    return candidate if candidate.is_dir() else candidate.parent
+def validate_project_root(path: Path) -> Path:
+    """Refuse shared host locations before recovery can create project files."""
+    root = path.resolve(strict=False)
+    home = Path.home().resolve(strict=False)
+    forbidden = [home / name for name in (".claude", ".codex", ".gemini", ".grok")]
+    for name in ("CLAUDE_CONFIG_DIR", "CLAUDE_HOME", "CODEX_HOME", "GEMINI_CLI_HOME", "GEMINI_HOME", "ANTIGRAVITY_HOME", "GROK_HOME", "GROK_CONFIG_DIR"):
+        value = os.environ.get(name)
+        if value:
+            forbidden.append(Path(value).expanduser().resolve(strict=False))
+    if root == root.parent or root == home:
+        raise ValueError(f"unsafe Mnemo project root (filesystem root or home): {root}")
+    if any(part.casefold() in {".claude", ".codex", ".gemini", ".grok"} for part in root.parts):
+        raise ValueError(f"unsafe Mnemo project root (CLI internal directory): {root}")
+    if any(root == base or base in root.parents for base in forbidden):
+        raise ValueError(f"unsafe Mnemo project root (CLI configuration directory): {root}")
+    return root
 
 
-def find_mnemo_marker_root(start: Path) -> Path | None:
-    current = nearest_existing_directory(start)
-    while current is not None:
-        if (current / ".mnemo-root").is_file():
-            return current
-        parent = current.parent
-        if parent == current:
+def detect_project_root(start: Path, *, explicit: bool = False) -> Path:
+    """Git owns its tree; non-Git roots use an explicit path or portable marker.
+
+    MEMORY.md and conversations/ are outputs, never evidence of ownership.
+    A marker above a nested repository cannot capture that repository.
+    """
+    requested = validate_project_root(start)
+    if requested.is_file():
+        requested = validate_project_root(requested.parent)
+    if not requested.is_dir():
+        return requested  # Historical aliases may no longer exist after a move.
+    marker = None
+    current = requested
+    while True:
+        if (current / ".git").exists():
+            return validate_project_root(current)
+        if marker is None and (current / ".mnemo-root").is_file():
+            marker = current
+        if current == current.parent:
             break
-        current = parent
-    return None
-
-
-def detect_project_root(start: Path) -> Path:
-    """Resolve a canonical Mnemo root before considering a nested Git root."""
-    requested = start.resolve(strict=False)
-    marker_root = find_mnemo_marker_root(requested)
-    if marker_root is not None:
-        return marker_root
-
-    existing = nearest_existing_directory(requested)
-    if existing is None:
-        return requested
+        current = current.parent
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            cwd=existing,
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
+            ["git", "rev-parse", "--show-toplevel"], cwd=requested,
+            capture_output=True, text=True, timeout=5, check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
-            git_root = Path(result.stdout.strip()).resolve(strict=False)
-            marker_root = find_mnemo_marker_root(git_root)
-            return marker_root or git_root
-    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+            return validate_project_root(Path(result.stdout.strip()))
+    except (OSError, subprocess.TimeoutExpired):
         pass
-    return requested
+    return validate_project_root(requested if explicit else (marker or requested))
 
 
 def codex_sessions_root() -> Path:
@@ -583,11 +582,11 @@ def scan_rollouts(
 ) -> ScanResult:
     result = ScanResult()
     excluded_threads = excluded_threads or set()
-    accepted_roots = {normalize_path(detect_project_root(project_root))}
+    accepted_roots = {normalize_path(detect_project_root(project_root, explicit=True))}
     accepted_raw = {normalize_path(project_root)}
     for alias in aliases:
         accepted_raw.add(normalize_path(alias))
-        accepted_roots.add(normalize_path(detect_project_root(alias)))
+        accepted_roots.add(normalize_path(detect_project_root(alias, explicit=True)))
 
     def is_within_any(value: str, roots: set[str]) -> bool:
         return any(value == root or value.startswith(root + os.sep.casefold()) for root in roots if root)
@@ -1299,7 +1298,7 @@ def reconcile(
     days_lookback: int = 30,
 ) -> ScanResult:
     """Compatibility entry point used by older wrappers and tests."""
-    root = detect_project_root(project_root)
+    root = detect_project_root(project_root, explicit=True)
     result = scan_rollouts(
         root,
         date_filter=date_filter,
@@ -1333,7 +1332,10 @@ def main() -> int:
     args = parser.parse_args()
 
     requested = args.project_root.resolve(strict=False) if args.project_root else Path.cwd()
-    project_root = detect_project_root(requested)
+    try:
+        project_root = detect_project_root(requested, explicit=args.project_root is not None)
+    except ValueError as error:
+        parser.error(str(error))
     cutoff, cutoff_epoch = parse_cutoff(args.cutoff)
     if args.all:
         since_date = None

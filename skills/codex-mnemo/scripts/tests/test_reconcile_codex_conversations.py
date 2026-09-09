@@ -391,7 +391,7 @@ class LifecycleExtractionTests(unittest.TestCase):
 
 
 class RootAndSanitizationTests(unittest.TestCase):
-    def test_marker_root_wins_over_nested_git_root(self) -> None:
+    def test_nested_git_root_stops_parent_marker(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             outer = Path(temp) / "workspace"
             nested = outer / "public-product" / "src"
@@ -401,9 +401,9 @@ class RootAndSanitizationTests(unittest.TestCase):
 
             detected = reconciler.detect_project_root(nested)
 
-        self.assertEqual(outer.resolve(), detected)
+        self.assertEqual((outer / "public-product").resolve(), detected)
 
-    def test_marker_root_wins_for_canonical_root_and_nested_product_cwd(self) -> None:
+    def test_outer_marker_and_nested_repository_keep_separate_roots(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "claudecode"
             nested = root / "corelay-code" / "src"
@@ -415,7 +415,48 @@ class RootAndSanitizationTests(unittest.TestCase):
             from_nested = reconciler.detect_project_root(nested)
 
         self.assertEqual(root.resolve(), from_root)
-        self.assertEqual(root.resolve(), from_nested)
+        self.assertEqual((root / "corelay-code").resolve(), from_nested)
+
+
+    def test_recovery_root_contract_for_both_clis(self) -> None:
+        claude_path = SCRIPT_PATH.parents[2] / "mnemo" / "scripts" / "reconcile_conversations.py"
+        spec = importlib.util.spec_from_file_location("claude_recovery_root_test", claude_path)
+        claude = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = claude
+        spec.loader.exec_module(claude)
+        for module in (reconciler, claude):
+            with self.subTest(cli=module.__name__), tempfile.TemporaryDirectory() as temp:
+                outer = Path(temp)
+                project = outer / "project"
+                project.mkdir()
+                (outer / "MEMORY.md").touch()
+                (outer / "conversations").mkdir()
+                self.assertEqual(project.resolve(), module.detect_project_root(project))
+                (outer / ".mnemo-root").touch()
+                self.assertEqual(project.resolve(), module.detect_project_root(project, explicit=True))
+                self.assertEqual(outer.resolve(), module.detect_project_root(project))
+                (project / ".git").mkdir()
+                nested = project / "src"
+                nested.mkdir()
+                (nested / ".mnemo-root").touch()
+                self.assertEqual(project.resolve(), module.detect_project_root(nested))
+                self.assertEqual(project.resolve(), module.detect_project_root(nested, explicit=True))
+                moved = outer / "moved-project"
+                project.rename(moved)
+                self.assertEqual(moved.resolve(), module.detect_project_root(moved / "src"))
+                invalid = [Path.home(), Path(Path.home().anchor), outer / ".claude" / "projects" / "id", outer / ".codex" / "sessions", outer / ".gemini" / "config", outer / ".grok"]
+                for path in invalid:
+                    with self.assertRaisesRegex(ValueError, "unsafe Mnemo project root"):
+                        module.detect_project_root(path, explicit=True)
+                custom = outer / "custom-cli-config"
+                for variable in ("CLAUDE_CONFIG_DIR", "CODEX_HOME", "GEMINI_CLI_HOME", "GROK_HOME"):
+                    with mock.patch.dict(module.os.environ, {variable: str(custom)}):
+                        with self.assertRaisesRegex(ValueError, "CLI configuration"):
+                            module.detect_project_root(custom / "sessions", explicit=True)
+                with mock.patch.object(module, "detect_project_root", side_effect=ValueError("unsafe Mnemo project root")):
+                    with self.assertRaises(ValueError):
+                        module.reconcile(outer / "refused", date_filter=None)
+                self.assertFalse((outer / "refused").exists())
 
     def test_sanitization_redacts_private_secrets_controls_and_markdown_markers(self) -> None:
         raw = (

@@ -101,21 +101,55 @@ class ReconcileStats:
 
 # ---------- project root + transcript discovery ----------
 
-def detect_project_root(start: Path) -> Path:
-    """Prefer git root, fall back to start directory."""
+def validate_project_root(path: Path) -> Path:
+    """Refuse shared host locations before recovery can create project files."""
+    root = path.resolve(strict=False)
+    home = Path.home().resolve(strict=False)
+    forbidden = [home / name for name in (".claude", ".codex", ".gemini", ".grok")]
+    for name in ("CLAUDE_CONFIG_DIR", "CLAUDE_HOME", "CODEX_HOME", "GEMINI_CLI_HOME", "GEMINI_HOME", "ANTIGRAVITY_HOME", "GROK_HOME", "GROK_CONFIG_DIR"):
+        value = os.environ.get(name)
+        if value:
+            forbidden.append(Path(value).expanduser().resolve(strict=False))
+    if root == root.parent or root == home:
+        raise ValueError(f"unsafe Mnemo project root (filesystem root or home): {root}")
+    if any(part.casefold() in {".claude", ".codex", ".gemini", ".grok"} for part in root.parts):
+        raise ValueError(f"unsafe Mnemo project root (CLI internal directory): {root}")
+    if any(root == base or base in root.parents for base in forbidden):
+        raise ValueError(f"unsafe Mnemo project root (CLI configuration directory): {root}")
+    return root
+
+
+def detect_project_root(start: Path, *, explicit: bool = False) -> Path:
+    """Git owns its tree; non-Git roots use an explicit path or portable marker.
+
+    MEMORY.md and conversations/ are outputs, never evidence of ownership.
+    A marker above a nested repository cannot capture that repository.
+    """
+    requested = validate_project_root(start)
+    if requested.is_file():
+        requested = validate_project_root(requested.parent)
+    if not requested.is_dir():
+        return requested  # Historical aliases may no longer exist after a move.
+    marker = None
+    current = requested
+    while True:
+        if (current / ".git").exists():
+            return validate_project_root(current)
+        if marker is None and (current / ".mnemo-root").is_file():
+            marker = current
+        if current == current.parent:
+            break
+        current = current.parent
     try:
-        out = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            cwd=start,
-            capture_output=True,
-            text=True,
-            timeout=5,
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], cwd=requested,
+            capture_output=True, text=True, timeout=5, check=False,
         )
-        if out.returncode == 0 and out.stdout.strip():
-            return Path(out.stdout.strip())
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+        if result.returncode == 0 and result.stdout.strip():
+            return validate_project_root(Path(result.stdout.strip()))
+    except (OSError, subprocess.TimeoutExpired):
         pass
-    return start
+    return validate_project_root(requested if explicit else (marker or requested))
 
 
 def encode_project_path(project_root: Path) -> str:
@@ -348,6 +382,7 @@ def reconcile(
     dry_run: bool = False,
     verbose: bool = False,
 ) -> ReconcileStats:
+    project_root = detect_project_root(project_root, explicit=True)
     stats = ReconcileStats()
     conv_dir = project_root / "conversations"
 
@@ -479,7 +514,10 @@ def main() -> int:
     args = parser.parse_args()
 
     start = args.project_root.resolve() if args.project_root else Path.cwd()
-    project_root = detect_project_root(start)
+    try:
+        project_root = detect_project_root(start, explicit=args.project_root is not None)
+    except ValueError as error:
+        parser.error(str(error))
 
     # Filter resolution priority: --all > --date > --days > default(7 days)
     # Why default 7 days instead of "today only":

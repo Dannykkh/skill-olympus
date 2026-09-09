@@ -60,10 +60,10 @@ Grok은 Claude 규칙·스킬도 호환 로드한다. 그래서 공통 본문은
 | Grok 공통 규칙·스킬 | Claude rules·skills 호환이 활성 상태 | 기본 호환을 이용. `grok inspect`로 실제 상태 확인; 꺼진 사용자 선택을 임의로 변경하지 않음 |
 | 모델·추론 강도 | 현재 작업을 수행할 수 있는 설정 | 이 정리의 필수값이 아니므로 기존 선택 유지 |
 | 권한·샌드박스 | 현재 사용자 정책 준수 | 규칙 적용을 위해 우회 플래그나 전역 승인 해제를 추가하지 않음 |
-| Claude auto memory | 사용자 선택 | Mnemo와 별개. `autoMemoryEnabled` 변경 불필요 |
+| Claude auto memory | Mnemo 설치 시 비활성화 | `autoMemoryEnabled=false`; 새 기억은 프로젝트에 저장. 기존 기록은 보존 |
 | 스킬 opt-in | 기본 active/source-only 정책 | `--include-source-only-skills`는 선택. 모든 스킬 활성화는 필수 아님 |
 
-Claude 네이티브 auto memory와 프로젝트 `MEMORY.md`는 별도 저장소다. [Claude 기억 가이드](https://code.claude.com/docs/en/memory)
+Mnemo 설치기는 새 기억이 프로젝트 밖으로 분산되지 않도록 Claude 네이티브 auto memory를 비활성화한다. 이전 설정은 제거 시 복원하며, 기존 네이티브 기억과 CLI 원본 세션은 삭제하지 않는다. 프로젝트 설정이 이를 다시 활성화하지 않아야 한다. [Claude 기억 가이드](https://code.claude.com/docs/en/memory)
 Antigravity 실행 정책은 `toolPermission`·`artifactReviewPolicy`·`enableTerminalSandbox`이고, 훅의 실행 여부는 별도 설정이다. [설정](https://www.antigravity.google/docs/cli/settings), [훅](https://www.antigravity.google/docs/hooks/)
 
 `project_doc_max_bytes` 같은 Codex 로드 한도는 실제 누락·잘림을 확인했을 때 조정한다. `AGENTS.override.md`와 다른 `CODEX_HOME`도 확인 대상이며 무조건 한도를 올리지 않는다. [Codex 규칙 가이드](https://learn.chatgpt.com/docs/agent-configuration/agents-md)

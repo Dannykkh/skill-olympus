@@ -15,19 +15,13 @@ debug_log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$DEBUG_FILE" 2>/dev/null || true
 }
 
-find_mnemo_marker_root() {
-    local cur="$1"
-    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
-        if [ -f "$cur/.mnemo-root" ]; then
-            printf '%s\n' "$cur"
-            return 0
-        fi
-        local parent
-        parent=$(dirname "$cur")
-        [ "$parent" = "$cur" ] && break
-        cur="$parent"
-    done
-    return 1
+resolve_mnemo_project_root() {
+    local helper_dir helper
+    helper_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    helper="$helper_dir/mnemo-project-root.js"
+    [ -f "$helper" ] || helper="$helper_dir/../../../hooks/mnemo-project-root.js"
+    [ -f "$helper" ] || return 0
+    node "$helper" "$1" "${2:-}" 2>/dev/null || true
 }
 
 # P1 parity: Claude/Antigravity와 공유하는 .claude/mnemo-errors.log에 에러급 실패를 기록한다.
@@ -35,10 +29,8 @@ find_mnemo_marker_root() {
 log_mnemo_error() {
     local ctx="$1"
     local msg="$2"
-    local root="$PWD"
-    local git_root
-    git_root=$(git rev-parse --show-toplevel 2>/dev/null)
-    if [ -n "$git_root" ]; then root="$git_root"; fi
+    [ -n "${BASE_DIR:-}" ] || return 0
+    local root="$BASE_DIR"
     local err_dir="$root/.claude"
     mkdir -p "$err_dir" 2>/dev/null || true
     local log_path="$err_dir/mnemo-errors.log"
@@ -348,80 +340,23 @@ if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; the
 fi
 
 BASE_DIR=""
-for key in '."cwd"' '."working-directory"' '.working_directory' '."project-root"' '.project_root' '."workspace-root"' '.workspace_root'; do
+ROOT_MODE=""
+for key in '."project-root"' '.project_root' '."workspace-root"' '.workspace_root' '."cwd"' '."working-directory"' '.working_directory'; do
     v="$(json_get "$key")"
-    if [ -n "$v" ] && [ -d "$v" ]; then
+    if [ -n "$v" ]; then
         BASE_DIR="$v"
+        case "$key" in *project*|*workspace*) ROOT_MODE="--explicit" ;; esac
         break
     fi
 done
-if [ -z "$BASE_DIR" ] && [ -n "$CODEX_WORKSPACE_ROOT" ] && [ -d "$CODEX_WORKSPACE_ROOT" ]; then
+if [ -z "$BASE_DIR" ] && [ -n "$CODEX_WORKSPACE_ROOT" ]; then
     BASE_DIR="$CODEX_WORKSPACE_ROOT"
+    ROOT_MODE="--explicit"
 fi
-if [ -z "$BASE_DIR" ]; then
-    BASE_DIR="$PWD"
-fi
-
-# ── 비-git 프로젝트 루트 보정 (gotcha 047) ──────────────────────
-# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
-# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
-# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
-# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
-get_nongit_project_root() {
-    local start="$1"
-    if [ -z "$start" ]; then printf '%s\n' "$start"; return; fi
-    local home_dir="${HOME:-$USERPROFILE}"
-    home_dir="${home_dir%/}"
-    local cur="$start"
-    while [ -n "$cur" ] && [ "$cur" != "/" ] && [ "$cur" != "." ]; do
-        if [ -n "$home_dir" ] && [ "${cur%/}" = "$home_dir" ]; then break; fi
-        if [ -f "$cur/MEMORY.md" ] || [ -d "$cur/conversations" ]; then
-            printf '%s\n' "$cur"; return
-        fi
-        local parent
-        parent=$(dirname "$cur")
-        [ "$parent" = "$cur" ] && break
-        cur="$parent"
-    done
-    local stripped="$start"
-    while printf '%s' "$stripped" | grep -qE '[/\\](bin|obj|dist|build|out|target|node_modules)([/\\]|$)'; do
-        stripped=$(printf '%s' "$stripped" | sed -E 's#[/\\](bin|obj|dist|build|out|target|node_modules)([/\\].*)?$##')
-    done
-    if [ -n "$stripped" ] && [ "$stripped" != "$start" ] && [ -d "$stripped" ] && { [ -z "$home_dir" ] || [ "${stripped%/}" != "$home_dir" ]; }; then
-        printf '%s\n' "$stripped"
-    else
-        printf '%s\n' "$start"
-    fi
-}
-
-# Mnemo marker is the canonical workspace boundary and wins over a nested Git
-# root. Sub-directory(예: bin/Debug)는 그 다음에 정규화한다.
-# Visual Studio가 빌드 후 bin/Debug에서 실행되어 그 cwd가 payload로 들어와도
-# conversations/는 진짜 프로젝트 루트에 생기도록 한다.
-# git이 없는 디렉토리면 비-git 루트 보정(gotcha 047)으로 프로젝트 루트를 지킨다.
-GIT_ROOT_ADOPTED=""
-if [ -n "$BASE_DIR" ]; then
-    MNEMO_MARKER_ROOT="$(find_mnemo_marker_root "$BASE_DIR" || true)"
-    if [ -n "$MNEMO_MARKER_ROOT" ]; then
-        BASE_DIR="$MNEMO_MARKER_ROOT"
-        GIT_ROOT_ADOPTED=1
-    fi
-fi
-if [ -n "$BASE_DIR" ] && [ -z "$GIT_ROOT_ADOPTED" ]; then
-    GIT_ROOT_NORMALIZED=$(git -C "$BASE_DIR" rev-parse --show-toplevel 2>/dev/null)
-    if [ -n "$GIT_ROOT_NORMALIZED" ]; then
-        # HOME 자체가 git repo(dotfiles)면 채택 금지 — HOME 오배치 방지 (gotcha 033)
-        HOME_NORM="${HOME:-$USERPROFILE}"
-        HOME_NORM="${HOME_NORM%/}"
-        if [ -z "$HOME_NORM" ] || [ "${GIT_ROOT_NORMALIZED%/}" != "$HOME_NORM" ]; then
-            BASE_DIR="$GIT_ROOT_NORMALIZED"
-            GIT_ROOT_ADOPTED=1
-        fi
-    fi
-fi
-if [ -n "$BASE_DIR" ] && [ -z "$GIT_ROOT_ADOPTED" ]; then
-    BASE_DIR="$(get_nongit_project_root "$BASE_DIR")"
-fi
+[ -n "$BASE_DIR" ] || exit 0
+BASE_DIR="$(resolve_mnemo_project_root "$BASE_DIR" "$ROOT_MODE")"
+[ -n "$BASE_DIR" ] || exit 0
+[ -f "$BASE_DIR/.mnemo-root" ] || : > "$BASE_DIR/.mnemo-root"
 
 ensure_memory_scaffold "$BASE_DIR"
 
@@ -586,7 +521,4 @@ notify_mnemo_status() {
     } > "$status_file" 2>/dev/null || true
     echo "[mnemo] 새 관찰 ${delta}건(누적 ${total}) / 마지막 핸드오프 ${days}일 전 → source-only memory-distill 모듈을 직접 읽어 rebuild 권장" >&2
 }
-MNEMO_ROOT="$PWD"
-GIT_ROOT_TMP=$(git rev-parse --show-toplevel 2>/dev/null)
-[ -n "$GIT_ROOT_TMP" ] && MNEMO_ROOT="$GIT_ROOT_TMP"
-notify_mnemo_status "$MNEMO_ROOT"
+notify_mnemo_status "$BASE_DIR"

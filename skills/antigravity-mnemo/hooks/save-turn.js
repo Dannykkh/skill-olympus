@@ -32,11 +32,10 @@ function nearestMarkedRoot(start) {
   const home = path.resolve(os.homedir());
   let current = path.resolve(start);
   while (true) {
-    if (current === home || isTempPath(current)) break;
+    if (current === home || !isSafeProjectPath(current)) break;
     if (
       fs.existsSync(path.join(current, ".git")) ||
-      fs.existsSync(path.join(current, "MEMORY.md")) ||
-      fs.existsSync(path.join(current, "conversations"))
+      fs.existsSync(path.join(current, ".mnemo-root"))
     ) {
       return current;
     }
@@ -47,29 +46,44 @@ function nearestMarkedRoot(start) {
   return null;
 }
 
+function isSafeProjectPath(candidate) {
+  if (!candidate || !path.isAbsolute(candidate)) return false;
+  const resolved = fs.realpathSync(candidate);
+  const normalized = resolved.toLowerCase();
+  if (!fs.statSync(resolved).isDirectory() || isTempPath(resolved)) return false;
+  if (resolved === path.parse(resolved).root || normalized === path.resolve(os.homedir()).toLowerCase()) return false;
+  if (/(?:^|[\\/])\.(?:claude|codex|gemini|grok)(?:[\\/]|$)/i.test(resolved)) return false;
+  return ![process.env.CLAUDE_CONFIG_DIR, process.env.CODEX_HOME, process.env.GEMINI_CLI_HOME,
+    process.env.ANTIGRAVITY_HOME, process.env.GROK_HOME, process.env.GROK_CONFIG_DIR]
+    .filter(Boolean).some((root) => {
+      const blocked = path.resolve(root).toLowerCase();
+      return normalized === blocked || normalized.startsWith(blocked + path.sep);
+    });
+}
+
 function resolveProjectRoot(payload) {
   const candidates = [
-    ...(Array.isArray(payload.workspacePaths) ? payload.workspacePaths : []),
-    payload.workspacePath,
-    payload.cwd,
-    payload.workingDirectory,
-    process.cwd(),
-  ].filter((value) => typeof value === "string" && value.trim());
+    ...(Array.isArray(payload.workspacePaths) ? payload.workspacePaths : []).map((value) => ({ value, explicit: true })),
+    { value: payload.workspacePath, explicit: true },
+    { value: payload.cwd, explicit: false },
+    { value: payload.workingDirectory, explicit: false },
+  ].filter(({ value }) => typeof value === "string" && value.trim());
 
-  for (const candidate of candidates) {
-    const resolved = path.resolve(candidate);
-    if (!fs.existsSync(resolved) || isTempPath(resolved)) continue;
+  for (const { value: candidate, explicit } of candidates) {
+    if (!path.isAbsolute(candidate) || !fs.existsSync(candidate)) continue;
+    if (!isSafeProjectPath(candidate)) continue;
+    const resolved = fs.realpathSync(candidate);
     try {
       const gitRoot = execFileSync("git", ["-C", resolved, "rev-parse", "--show-toplevel"], {
         encoding: "utf8",
         stdio: ["ignore", "pipe", "ignore"],
         timeout: 3000,
       }).trim();
-      if (gitRoot && path.resolve(gitRoot) !== path.resolve(os.homedir())) return path.resolve(gitRoot);
+      if (gitRoot) return isSafeProjectPath(gitRoot) ? fs.realpathSync(gitRoot) : null;
     } catch {
       // Non-git workspaces are supported below.
     }
-    const marked = nearestMarkedRoot(resolved);
+    const marked = explicit ? null : nearestMarkedRoot(resolved);
     if (marked) return marked;
     return resolved;
   }
@@ -156,6 +170,7 @@ function ensureFile(filePath, content) {
 }
 
 function ensureScaffold(root, date) {
+  ensureFile(path.join(root, ".mnemo-root"), "");
   const project = path.basename(root);
   ensureFile(path.join(root, "MEMORY.md"), `# MEMORY.md - 프로젝트 장기기억\n\n## 프로젝트 목표\n\n| 목표 | 상태 |\n|------|------|\n| ${project} 핵심 작업 추적 | 진행 중 |\n\n## 키워드 인덱스\n\n| 키워드 | 상세 파일 |\n|--------|-----------|\n| 프로젝트, 생성일 | #meta |\n\n## architecture/\n- [memory/architecture.md](memory/architecture.md)\n\n## patterns/\n- [memory/patterns.md](memory/patterns.md)\n\n## tools/\n- [memory/tools.md](memory/tools.md)\n\n## gotchas/\n- [memory/gotchas.md](memory/gotchas.md)\n\n## meta/\n- **프로젝트**: ${project}\n- **생성일**: ${date}\n- **마지막 업데이트**: ${date}\n`);
   const memoryDir = path.join(root, "memory");

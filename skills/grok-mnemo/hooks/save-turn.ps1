@@ -30,11 +30,8 @@ $OutputEncoding = $Utf8NoBom
 function Write-MnemoError {
     param([string]$Context, [string]$Message)
     try {
-        $root = $PWD.Path
-        try {
-            $gitRoot = git rev-parse --show-toplevel 2>$null
-            if ($LASTEXITCODE -eq 0 -and $gitRoot) { $root = $gitRoot.Replace('/', '\') }
-        } catch {}
+        if (-not $ProjectRoot -or -not (Test-MnemoSafePath $ProjectRoot)) { return }
+        $root = $ProjectRoot
         $errDir = Join-Path $root '.claude'
         if (-not (Test-Path $errDir)) {
             New-Item -ItemType Directory -Path $errDir -Force | Out-Null
@@ -204,91 +201,62 @@ if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $respon
 }
 
 # 프로젝트 루트 결정
-# Grok payload는 workspaceRoot/cwd(camelCase)를 제공한다. transcriptPath는
-# ~/.grok/sessions/ 내부 경로라 프로젝트 루트 추정에 쓰지 않는다.
-# - 1순위: payload의 workspaceRoot / cwd
-# - 2순위: git -C rev-parse --show-toplevel
-# - 3순위: PWD
-$ProjectRoot = ""
-foreach ($k in @("workspaceRoot", "cwd")) {
-    $v = ""
-    try { $v = "$($payload.$k)".Trim() } catch {}
-    if ($v -and (Test-Path $v)) {
-        $ProjectRoot = $v
-        break
-    }
-}
-if (-not $ProjectRoot) { $ProjectRoot = $PWD.Path }
-# 8.3 단축경로(ADMINI~1 등) 정규화 — 단축경로가 HOME 가드 문자열 비교를 우회하는 것 방지
-try { $ProjectRoot = (Get-Item -LiteralPath $ProjectRoot -ErrorAction Stop).FullName } catch {}
-
-# ── 비-git 프로젝트 루트 보정 (gotcha 047) ─────────────────────
-# git이 없어도 프로젝트 루트를 지킨다. 빌드 출력 폴더(bin/Debug 등)에서 실행된
-# 세션이 그 폴더를 루트로 삼아 conversations/가 흩어지는 것을 방지.
-# Pass A: 상위로 걸어 올라가며 기존 mnemo 루트 마커(MEMORY.md 또는 conversations/) 탐색 (HOME 제외)
-# Pass B: 빌드 출력 세그먼트(bin|obj|dist|build|out|target|node_modules) 첫 등장 앞에서 절단
-# Temp 계열 경로는 프로젝트 루트로 승격 금지 (gotcha 065): Temp에서 뜬 세션이
-# Temp에 스캐폴드를 만들면, 그 마커가 이후 세션의 walk-up까지 끌어당겨 대화가
-# 계속 Temp로 쌓인다. Temp 루트로 판정되면 호출부에서 저장을 skip한다 (fail-open).
-function Test-MnemoTempPath {
+# Workspace payload is authoritative; never infer a project from the hook host cwd.
+function Test-MnemoSafePath {
     param([string]$Path)
-    if (-not $Path) { return $false }
-    $p = $Path.Replace('/', '\').TrimEnd('\')
-    foreach ($t in @($env:TEMP, $env:TMP)) {
-        if ($t) {
-            $tn = $t.Replace('/', '\').TrimEnd('\')
-            if ($p -eq $tn -or $p.StartsWith("$tn\", [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    if (-not $Path -or -not [System.IO.Path]::IsPathRooted($Path)) { return $false }
+    if ([System.IO.Path]::DirectorySeparatorChar -eq '\' -and $Path -notmatch '^(?:[A-Za-z]:[\\/]|[\\/]{2})') { return $false }
+    try {
+        $item = Get-Item -LiteralPath $Path -ErrorAction Stop
+        if (-not $item.PSIsContainer) { return $false }
+        $p = $item.FullName.Replace('/', '\').TrimEnd('\')
+        if ($p -eq [System.IO.Path]::GetPathRoot($item.FullName).TrimEnd('\')) { return $false }
+        foreach ($h in @($env:USERPROFILE, $env:HOME)) {
+            if ($h -and $p -eq $h.Replace('/', '\').TrimEnd('\')) { return $false }
         }
-    }
-    return ($p -match '(?i)[\\/]AppData[\\/]Local[\\/]Temp([\\/]|$)' -or $p -match '(?i)^([A-Za-z]:)?[\\/]tmp([\\/]|$)')
+        if ($p -match '(?i)(^|[\\/])\.(claude|codex|gemini|grok)([\\/]|$)') { return $false }
+        foreach ($blocked in @($env:TEMP, $env:TMP, $env:CLAUDE_CONFIG_DIR, $env:CODEX_HOME, $env:GEMINI_CLI_HOME, $env:ANTIGRAVITY_HOME, $env:GROK_HOME, $env:GROK_CONFIG_DIR)) {
+            if (-not $blocked) { continue }
+            $n = [System.IO.Path]::GetFullPath($blocked).Replace('/', '\').TrimEnd('\')
+            if ($p -eq $n -or $p.StartsWith("$n\", [System.StringComparison]::OrdinalIgnoreCase)) { return $false }
+        }
+        return $true
+    } catch { return $false }
 }
 
 function Get-NonGitProjectRoot {
     param([string]$StartPath)
-    if (-not $StartPath) { return $StartPath }
-    $hn = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
-    try {
-        $cur = New-Object System.IO.DirectoryInfo($StartPath)
-        while ($cur) {
-            $curPath = $cur.FullName.TrimEnd('\')
-            if ($hn -and $curPath -eq $hn) { break }
-            if (Test-MnemoTempPath $curPath) { break }
-            if ((Test-Path (Join-Path $curPath 'MEMORY.md')) -or (Test-Path (Join-Path $curPath 'conversations'))) {
-                return $curPath
-            }
-            $cur = $cur.Parent
-        }
-    } catch {}
-    $m = [regex]::Match($StartPath, '(?i)^(.+?)[\\/](?:bin|obj|dist|build|out|target|node_modules)(?:[\\/]|$)')
-    if ($m.Success) {
-        $prefix = $m.Groups[1].Value
-        if ($prefix -and (Test-Path $prefix) -and (-not $hn -or $prefix.TrimEnd('\') -ne $hn) -and (-not (Test-MnemoTempPath $prefix))) {
-            return $prefix
-        }
+    $cur = Get-Item -LiteralPath $StartPath
+    while ($cur -and (Test-MnemoSafePath $cur.FullName)) {
+        if ((Test-Path -LiteralPath (Join-Path $cur.FullName '.git')) -or
+            (Test-Path -LiteralPath (Join-Path $cur.FullName '.mnemo-root') -PathType Leaf)) { return $cur.FullName }
+        $cur = $cur.Parent
     }
-    if (Test-MnemoTempPath $StartPath) { return $null }
     return $StartPath
 }
 
-$gitRootAdopted = $false
-try {
-    $gitRoot = & git -C $ProjectRoot rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-        $win = $gitRoot.Replace('/', '\')
-        # HOME 자체가 git repo(dotfiles)면 git root 채택 금지 — HOME/conversations 오배치 방지 (gotcha 033)
-        $homeNorm = if ($env:USERPROFILE) { $env:USERPROFILE.TrimEnd('\') } else { $null }
-        if (-not $homeNorm -or $win.TrimEnd('\') -ne $homeNorm) {
-            $ProjectRoot = $win
-            $gitRootAdopted = $true
-        }
+$ProjectRoot = ''
+$ExplicitProjectRoot = $false
+foreach ($key in @('workspaceRoot', 'cwd')) {
+    $candidate = "$($payload.$key)".Trim()
+    if (Test-MnemoSafePath $candidate) {
+        $ProjectRoot = (Get-Item -LiteralPath $candidate).FullName
+        $ExplicitProjectRoot = $key -eq 'workspaceRoot'
+        break
     }
-} catch {}
-# git 루트를 못 잡은 비-git 경로는 프로젝트 루트 보정 (gotcha 047)
-if ($ProjectRoot -and -not $gitRootAdopted) {
+}
+if (-not $ProjectRoot) { exit 0 }
+$gitRoot = $null
+try { $gitRoot = & git -C $ProjectRoot rev-parse --show-toplevel 2>$null } catch {}
+if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+    if (-not (Test-MnemoSafePath $gitRoot)) { exit 0 }
+    $ProjectRoot = (Get-Item -LiteralPath $gitRoot).FullName
+} elseif (-not $ExplicitProjectRoot) {
     $ProjectRoot = Get-NonGitProjectRoot $ProjectRoot
 }
-# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
-if ((-not $ProjectRoot) -or (Test-MnemoTempPath $ProjectRoot)) { exit 0 }
+if (-not (Test-MnemoSafePath $ProjectRoot)) { exit 0 }
+$boundary = Join-Path $ProjectRoot '.mnemo-root'
+if (-not (Test-Path -LiteralPath $boundary)) { [System.IO.File]::WriteAllText($boundary, '', $Utf8NoBom) }
 
 # 대화 디렉토리 및 파일
 $ConvDir = Join-Path $ProjectRoot "conversations"

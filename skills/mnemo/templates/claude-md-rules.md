@@ -135,7 +135,7 @@
 ## Claude 런타임 적용
 
 - Claude Code에서는 `CLAUDE.md`를 기본 진입점으로 사용한다. 프로젝트 정본이 `AGENTS.md`라면 `CLAUDE.md`의 `@AGENTS.md` import가 실제로 연결되는지 확인하고 본문을 복제하지 않는다. import한 내용도 컨텍스트를 사용하므로 상세 절차는 필요한 때만 읽는 스킬·문서로 둔다.
-- Claude 네이티브 auto memory와 프로젝트 Mnemo의 `MEMORY.md`는 별개다. 네이티브 기억이 활성화돼 있어도 프로젝트 기억이 자동 로드됐다고 가정하지 않는다. 이 규칙을 위해 `autoMemoryEnabled`를 변경할 필요는 없다.
+- 새 의미기억은 프로젝트 루트의 `MEMORY.md`와 `memory/`에 기록한다. Mnemo 설치기는 `autoMemoryEnabled=false`로 네이티브 auto memory 분산을 막는다. 기존 네이티브 기억은 자동 이전·삭제하지 않으며, 필요할 때 프로젝트별로 검증해 가져온다. 프로젝트 설정에서 auto memory를 다시 활성화하면 이 저장 계약을 벗어난다.
 - 자동 저장은 `~/.claude/settings.json`의 `UserPromptSubmit`·`Stop`, 관찰은 `PostToolUse`, 누락 복구는 설치된 `SessionStart` 훅을 확인한다. 로드 상태는 `/context`·`/memory`, 설치 상태는 `mnemo`의 `install.js --check`로 확인한다.
 - 원본 복구는 `mnemo`의 `scripts/reconcile_conversations.py`에 프로젝트·시기를 지정해 수행한다. `--dry-run`은 쓰기 예정 요약이며 대화 전체 추출이 아니다. 도구의 현재 인수·출력을 확인하고 읽기 전용 요청에서는 복구 쓰기를 하지 않는다.
 - Grok이 이 파일을 호환 로드하면 공통 원칙을 재사용하고, 위 Claude 전용 경로·역할·훅·별칭은 `~/.grok/rules/grok-mnemo.md`의 Grok 어댑터를 따른다.
