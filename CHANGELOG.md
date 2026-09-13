@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **Codex 기본 애니메이션 유지**: 설치·재설치 시 `tui.animations=true`, `tui.whimsy=false`를 적용해 스피너 등 일반 애니메이션을 켜고 Astra 별 장식을 끈다. 이전 설치의 `animations=false`도 갱신하며 `tui.notifications=false`는 유지한다.
+
 ## [6.2.5] - 2026-09-13
 
 ### Bug Fixes

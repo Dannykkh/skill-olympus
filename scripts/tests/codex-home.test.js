@@ -151,10 +151,12 @@ test("Windows and Mnemo installers use CODEX_HOME before ~/.codex", () => {
   }
 });
 
-test("Mnemo installation disables Astra effects in global TOML and remains idempotent", () => {
+test("Mnemo installation enables animations and disables Astra stars across reinstalls", () => {
   const fixtures = [
     '',
+    'model = "gpt-6-astra"\ntui.animations = false\ntui.whimsy = false\n',
     'model = "gpt-6-astra"\ntui.animations = true\ntui.whimsy = true\n',
+    'model = "gpt-6-astra"\n[tui] # previous install\nanimations = false\nwhimsy = false\n',
     'model = "gpt-6-astra"\n[tui] # preferences\ntheme = "nord"\nanimations = true\nwhimsy = true\n',
     'model = "gpt-6-astra"\n[tui]\ntheme = "nord"\n[tui.model_availability_nux]\ngpt-6-astra = 4\n',
   ];
@@ -177,7 +179,9 @@ test("Mnemo installation disables Astra effects in global TOML and remains idemp
         });
         assert.equal(result.status, 0, result.stdout + result.stderr);
         const config = fs.readFileSync(configPath, "utf8");
-        for (const key of ["notifications", "animations", "whimsy"]) {
+        assert.equal([...config.matchAll(/^(?:tui\.)?animations = true$/gm)].length, 1);
+        assert.doesNotMatch(config, /^(?:tui\.)?animations = false$/m);
+        for (const key of ["notifications", "whimsy"]) {
           assert.equal([...config.matchAll(new RegExp(`^(?:tui\\.)?${key} = false$`, "gm"))].length, 1);
         }
         assert.ok(config.includes(unrelated));

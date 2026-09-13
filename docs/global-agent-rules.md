@@ -79,7 +79,7 @@ Antigravity 실행 정책은 `toolPermission`·`artifactReviewPolicy`·`enableTe
 
 이번 문서·규칙 정리 이전부터 [Codex Mnemo 설치기](../skills/codex-mnemo/install.js)는 `notify`를 구성하고 `tui.notifications=false`를 설정한다.
 
-설치·재설치 시 같은 전역 `config.toml`에 `tui.animations=false`와 `tui.whimsy=false`도 적용한다. `CODEX_HOME`이 있으면 해당 홈을 사용한다. 일반 터미널 애니메이션과 Astra 입력창의 별 효과를 끄며, Codex를 재시작해야 반영된다. 이 두 설정은 제거 후에도 유지된다. 다시 켜려면 두 값을 `true`로 바꾼다. 재설치하면 다시 `false`가 적용된다. `whimsy`의 의미는 [공식 설정 스키마](https://developers.openai.com/codex/config-schema.json)에서 확인할 수 있다.
+설치·재설치 시 같은 전역 `config.toml`에 `tui.animations=true`와 `tui.whimsy=false`도 적용한다. `CODEX_HOME`이 있으면 해당 홈을 사용한다. 스피너 등 일반 터미널 애니메이션을 켜고 Astra 입력창의 별 같은 장식 효과를 끄며, Codex를 재시작해야 반영된다. 이전 설치에서 `animations=false`였어도 재설치하면 `true`로 갱신한다. 이 두 설정은 제거 후에도 유지된다. 별 효과를 다시 켜려면 `animations=true`를 유지하고 `whimsy=true`로 바꾼다. 재설치하면 `animations=true`, `whimsy=false`가 다시 적용된다. `whimsy`의 의미는 [공식 설정 스키마](https://developers.openai.com/codex/config-schema.json)에서 확인할 수 있다.
 
 - 기존 notify에 save-turn이 이미 연결돼 있으면 그 체인을 유지하고 필요한 셸 경로를 보정한다.
 - save-turn 없이 데스크톱·IDE 알림 전용으로 판정된 notify는 Mnemo notify로 교체한다.

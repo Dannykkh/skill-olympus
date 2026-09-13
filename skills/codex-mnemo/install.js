@@ -178,6 +178,12 @@ function escapeRegex(str) {
 // ── TOML config.toml handling ──
 // Manage notify settings via simple string manipulation without external libraries
 
+const INSTALL_TUI_SETTINGS = {
+  notifications: false,
+  animations: true,
+  whimsy: false,
+};
+
 function buildNotifyCommand(hooksDir) {
   const d = normalizePath(hooksDir);
   if (isWindows) {
@@ -393,13 +399,13 @@ function writeNotifyWrapper(hooksDir, previousNotifyArgs) {
   return ["bash", normalizePath(wrapperPath)];
 }
 
-function disableTuiOption(content, key) {
+function setTuiOption(content, key, value) {
   const lines = stripLineEndings(content).split("\n");
   const rootEnd = lines.findIndex((line) => /^\s*\[/.test(line));
   const dottedKey = new RegExp(`^\\s*tui\\.${key}\\s*=`);
   for (let i = 0; i < (rootEnd < 0 ? lines.length : rootEnd); i++) {
     if (dottedKey.test(lines[i])) {
-      lines[i] = `tui.${key} = false`;
+      lines[i] = `tui.${key} = ${value}`;
       return lines.join("\n");
     }
   }
@@ -409,15 +415,15 @@ function disableTuiOption(content, key) {
     const optionKey = new RegExp(`^\\s*${key}\\s*=`);
     while (end < lines.length && !/^\s*\[/.test(lines[end])) {
       if (optionKey.test(lines[end])) {
-        lines[end] = `${key} = false`;
+        lines[end] = `${key} = ${value}`;
         return lines.join("\n");
       }
       end++;
     }
-    lines.splice(end, 0, `${key} = false`);
+    lines.splice(end, 0, `${key} = ${value}`);
     return lines.join("\n");
   }
-  return insertRootLine(content, `tui.${key} = false`);
+  return insertRootLine(content, `tui.${key} = ${value}`);
 }
 
 function stringifyNotify(args) {
@@ -467,9 +473,9 @@ function installTomlNotify(configPath, notifyArgs, hooksDir) {
 
   content = removeNotifyAssignmentsEverywhere(content);
   content = insertRootLine(content, newLine);
-  // Whimsy controls decorative effects including Astra composer stars.
-  for (const key of ["notifications", "animations", "whimsy"]) {
-    content = disableTuiOption(content, key);
+  // Keep spinners and general animations; disable decorative Astra stars.
+  for (const [key, value] of Object.entries(INSTALL_TUI_SETTINGS)) {
+    content = setTuiOption(content, key, value);
   }
 
   if (content.length > 0 && !content.endsWith("\n")) {
@@ -589,7 +595,8 @@ function install() {
     hooksDir,
   );
   console.log(`      ${stringifyNotify(installedNotifyArgs)}`);
-  console.log("      tui.notifications = false, tui.animations = false, tui.whimsy = false");
+  console.log(`      ${Object.entries(INSTALL_TUI_SETTINGS)
+    .map(([key, value]) => `tui.${key} = ${value}`).join(", ")}`);
   console.log("      Done!");
 
   // [3/3] Install AGENTS.md rules

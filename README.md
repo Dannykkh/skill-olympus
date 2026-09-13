@@ -78,7 +78,7 @@ Mnemo hooks save conversation copies under your project's `conversations/`; memo
 
 All Mnemo adapters and handoff/recovery tools share one [project-root contract](skills/mnemo/references/project-storage.md). Git roots and portable `.mnemo-root` markers keep subdirectory sessions together; unmarked `cwd` values cannot create a new storage root. Inherited Git settings and storage links cannot redirect writes outside the project. Non-Git workspaces need an explicit workspace declaration or an initial root marker.
 
-The existing Codex installer also writes `notify` and sets `tui.notifications=false`, `tui.animations=false`, `tui.whimsy=false` in `config.toml`. Existing save-turn chains are retained; some desktop/IDE-only notification chains are replaced. See the [exact settings and removal behavior](docs/global-agent-rules.md) before changing or removing a custom notification setup.
+The existing Codex installer also writes `notify` and sets `tui.notifications=false`, `tui.animations=true`, `tui.whimsy=false` in `config.toml`. Existing save-turn chains are retained; some desktop/IDE-only notification chains are replaced. See the [exact settings and removal behavior](docs/global-agent-rules.md) before changing or removing a custom notification setup.
 
 ### Turn Codex Astra's star effect off or on
 
@@ -86,17 +86,17 @@ When using an Astra model, Codex CLI can show sparkling stars behind the prompt 
 
 ![Stars behind the Codex Astra prompt input](docs/images/codex-astra-composer-stars.png)
 
-The Codex installation step in `install.bat` or `install.sh` **disables this effect and general terminal animations globally**. Edit `%USERPROFILE%\.codex\config.toml` on Windows or `~/.codex/config.toml` on macOS/Linux. If `CODEX_HOME` is set, edit `config.toml` in that directory instead.
+The Codex installation step in `install.bat` or `install.sh` **enables general terminal animations, including spinners, and disables decorative star effects globally**. Edit `%USERPROFILE%\.codex\config.toml` on Windows or `~/.codex/config.toml` on macOS/Linux. If `CODEX_HOME` is set, edit `config.toml` in that directory instead.
 
 ```toml
 # Update the existing root keys, before the first [table]
-tui.animations = false
+tui.animations = true
 tui.whimsy = false
 ```
 
 `tui.animations` controls general animations; `tui.whimsy` controls decorative effects such as Astra stars. If your file already has a `[tui]` table, edit `animations` and `whimsy` inside it instead of adding duplicate dotted keys.
 
-**To turn the stars back on, set both values to `true` and restart Codex.** For general animations without stars, use `animations=true` and `whimsy=false`. Installation and reinstallation reset both values to `false`; uninstalling Olympus leaves them in place. [Official configuration schema](https://developers.openai.com/codex/config-schema.json) · [Installation settings](docs/global-agent-rules.md)
+**To turn the stars back on, keep `animations=true`, set `whimsy=true`, and restart Codex.** Installation and reinstallation apply `animations=true` and `whimsy=false`, including when an earlier installation set `animations=false`. Uninstalling Olympus leaves these settings in place. [Official configuration schema](https://developers.openai.com/codex/config-schema.json) · [Installation settings](docs/global-agent-rules.md)
 
 ### Customize, disable, or remove
 
