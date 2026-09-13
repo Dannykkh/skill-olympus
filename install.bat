@@ -169,7 +169,7 @@ if "%MODE%" NEQ "uninstall" (
     echo   - Reinstall replaces managed rule blocks; keep personal rules outside markers.
     echo   - Grok shares Claude rules; its grok-mnemo.md file is replaced in full.
     echo   - Saving hooks write project conversations; MNEMO_DISABLE=1 disables saving hooks only.
-    echo   - Codex Mnemo configures notify and sets tui.notifications=false.
+    echo   - Codex Mnemo configures notify and sets tui.notifications=false, tui.animations=false, tui.whimsy=false.
     echo   - Review changes, edit or remove rules: docs\global-agent-rules.md
     echo.
     echo   Skill registry migration notice:

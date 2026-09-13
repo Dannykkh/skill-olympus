@@ -76,7 +76,25 @@ Installation ends with automatic rule, registration, and installed-hook checks. 
 
 Mnemo hooks save conversation copies under your project's `conversations/`; memory and handoffs use `MEMORY.md`, `memory/`, and `docs/handoffs/`. `<private>...</private>` is redacted in supported Mnemo outputs, but does not erase native CLI session history. No additional model, reasoning-effort, language, or permission value is required for the new rules.
 
-The existing Codex installer also writes `notify` and sets `tui.notifications=false` in `config.toml`. Existing save-turn chains are retained; some desktop/IDE-only notification chains are replaced. See the [exact settings and removal behavior](docs/global-agent-rules.md) before changing or removing a custom notification setup.
+The existing Codex installer also writes `notify` and sets `tui.notifications=false`, `tui.animations=false`, `tui.whimsy=false` in `config.toml`. Existing save-turn chains are retained; some desktop/IDE-only notification chains are replaced. See the [exact settings and removal behavior](docs/global-agent-rules.md) before changing or removing a custom notification setup.
+
+### Turn Codex Astra's star effect off or on
+
+When using an Astra model, Codex CLI can show sparkling stars behind the prompt input. This screenshot shows the effect enabled (a still image).
+
+![Stars behind the Codex Astra prompt input](docs/images/codex-astra-composer-stars.png)
+
+The Codex installation step in `install.bat` or `install.sh` **disables this effect and general terminal animations globally**. Edit `%USERPROFILE%\.codex\config.toml` on Windows or `~/.codex/config.toml` on macOS/Linux. If `CODEX_HOME` is set, edit `config.toml` in that directory instead.
+
+```toml
+# Update the existing root keys, before the first [table]
+tui.animations = false
+tui.whimsy = false
+```
+
+`tui.animations` controls general animations; `tui.whimsy` controls decorative effects such as Astra stars. If your file already has a `[tui]` table, edit `animations` and `whimsy` inside it instead of adding duplicate dotted keys.
+
+**To turn the stars back on, set both values to `true` and restart Codex.** For general animations without stars, use `animations=true` and `whimsy=false`. Installation and reinstallation reset both values to `false`; uninstalling Olympus leaves them in place. [Official configuration schema](https://developers.openai.com/codex/config-schema.json) · [Installation settings](docs/global-agent-rules.md)
 
 ### Customize, disable, or remove
 

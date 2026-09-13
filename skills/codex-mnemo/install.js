@@ -388,34 +388,31 @@ function writeNotifyWrapper(hooksDir, previousNotifyArgs) {
   return ["bash", normalizePath(wrapperPath)];
 }
 
-function disableTuiNotifications(content) {
+function disableTuiOption(content, key) {
   const lines = stripLineEndings(content).split("\n");
-  const tuiHeader = lines.findIndex((l) => /^\s*\[tui\]\s*$/.test(l));
+  const rootEnd = lines.findIndex((line) => /^\s*\[/.test(line));
+  const dottedKey = new RegExp(`^\\s*tui\\.${key}\\s*=`);
+  for (let i = 0; i < (rootEnd < 0 ? lines.length : rootEnd); i++) {
+    if (dottedKey.test(lines[i])) {
+      lines[i] = `tui.${key} = false`;
+      return lines.join("\n");
+    }
+  }
+  const tuiHeader = lines.findIndex((line) => /^\s*\[tui\]\s*(?:#.*)?$/.test(line));
   if (tuiHeader >= 0) {
-    let end = lines.length;
-    for (let i = tuiHeader + 1; i < lines.length; i++) {
-      if (/^\s*\[/.test(lines[i])) {
-        end = i;
-        break;
+    let end = tuiHeader + 1;
+    const optionKey = new RegExp(`^\\s*${key}\\s*=`);
+    while (end < lines.length && !/^\s*\[/.test(lines[end])) {
+      if (optionKey.test(lines[end])) {
+        lines[end] = `${key} = false`;
+        return lines.join("\n");
       }
+      end++;
     }
-    let found = false;
-    for (let i = tuiHeader + 1; i < end; i++) {
-      if (/^\s*notifications\s*=/.test(lines[i])) {
-        lines[i] = "notifications = false";
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      lines.splice(end, 0, "notifications = false");
-    }
+    lines.splice(end, 0, `${key} = false`);
     return lines.join("\n");
   }
-
-  let updated = removeLine(content, /^\s*tui\.notifications\s*=/);
-  updated = insertRootLine(updated, "tui.notifications = false");
-  return updated;
+  return insertRootLine(content, `tui.${key} = false`);
 }
 
 function stringifyNotify(args) {
@@ -465,7 +462,10 @@ function installTomlNotify(configPath, notifyArgs, hooksDir) {
 
   content = removeNotifyAssignmentsEverywhere(content);
   content = insertRootLine(content, newLine);
-  content = disableTuiNotifications(content);
+  // Whimsy controls decorative effects including Astra composer stars.
+  for (const key of ["notifications", "animations", "whimsy"]) {
+    content = disableTuiOption(content, key);
+  }
 
   if (content.length > 0 && !content.endsWith("\n")) {
     content += "\n";
@@ -584,7 +584,7 @@ function install() {
     hooksDir,
   );
   console.log(`      ${stringifyNotify(installedNotifyArgs)}`);
-  console.log("      tui.notifications = false");
+  console.log("      tui.notifications = false, tui.animations = false, tui.whimsy = false");
   console.log("      Done!");
 
   // [3/3] Install AGENTS.md rules

@@ -151,6 +151,51 @@ test("Windows and Mnemo installers use CODEX_HOME before ~/.codex", () => {
   }
 });
 
+test("Mnemo installation disables Astra effects in global TOML and remains idempotent", () => {
+  const fixtures = [
+    '',
+    'model = "gpt-6-astra"\ntui.animations = true\ntui.whimsy = true\n',
+    'model = "gpt-6-astra"\n[tui] # preferences\ntheme = "nord"\nanimations = true\nwhimsy = true\n',
+    'model = "gpt-6-astra"\n[tui]\ntheme = "nord"\n[tui.model_availability_nux]\ngpt-6-astra = 4\n',
+  ];
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "codex-astra-install-"));
+  try {
+    for (const [index, fixture] of fixtures.entries()) {
+      const fakeHome = path.join(tempRoot, `home-${index}`);
+      const codexHome = path.join(fakeHome, "custom-codex");
+      fs.mkdirSync(codexHome, { recursive: true });
+      const configPath = path.join(codexHome, "config.toml");
+      const unrelated = '\n[projects."D:/example"]\ntrust_level = "trusted"\n';
+      fs.writeFileSync(configPath, fixture + unrelated);
+      let first;
+      for (let run = 0; run < 2; run++) {
+        const result = spawnSync(process.execPath, [path.join(mnemoRoot, "install.js")], {
+          cwd: repoRoot,
+          env: isolatedEnv(fakeHome, codexHome),
+          encoding: "utf8",
+          windowsHide: true,
+        });
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        const config = fs.readFileSync(configPath, "utf8");
+        for (const key of ["notifications", "animations", "whimsy"]) {
+          assert.equal([...config.matchAll(new RegExp(`^(?:tui\\.)?${key} = false$`, "gm"))].length, 1);
+        }
+        assert.ok(config.includes(unrelated));
+        if (fixture.includes('theme')) assert.ok(config.includes('theme = "nord"'));
+        if (fixture.includes('gpt-6-astra = 4')) assert.ok(config.includes('gpt-6-astra = 4'));
+        if (run === 0) first = config;
+        else {
+          // The existing notify installer moves its root entry on reinstall.
+          assert.equal(config.match(/^notify = .*$/m)?.[0], first.match(/^notify = .*$/m)?.[0]);
+          assert.equal(config.replace(/^notify = .*\n/m, ""), first.replace(/^notify = .*\n/m, ""));
+        }
+      }
+    }
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test("Mnemo installer falls back to ~/.codex when CODEX_HOME is unset", () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "codex-home-fallback-"));
   const fakeHome = path.join(tempRoot, "user-home");

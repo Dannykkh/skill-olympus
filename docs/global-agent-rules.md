@@ -70,9 +70,11 @@ Antigravity 실행 정책은 `toolPermission`·`artifactReviewPolicy`·`enableTe
 
 커스텀 홈은 설치기와 CLI가 같은 디렉터리를 읽는지 확인한다. 현재 Claude 설치기는 `~/.claude`를 사용하므로 `CLAUDE_CONFIG_DIR`를 지정한 설치는 별도 대상 점검이 필요하다. `ANTIGRAVITY_HOME`·`GROK_HOME`은 이 저장소 설치기의 대체 경로이며 CLI 자체의 동일 변수 지원을 보장하지 않는다.
 
-## 기존 Codex 설치기가 바꾸는 알림 설정
+## Codex 설치기가 바꾸는 알림·애니메이션 설정
 
 이번 문서·규칙 정리 이전부터 [Codex Mnemo 설치기](../skills/codex-mnemo/install.js)는 `notify`를 구성하고 `tui.notifications=false`를 설정한다.
+
+설치·재설치 시 같은 전역 `config.toml`에 `tui.animations=false`와 `tui.whimsy=false`도 적용한다. `CODEX_HOME`이 있으면 해당 홈을 사용한다. 일반 터미널 애니메이션과 Astra 입력창의 별 효과를 끄며, Codex를 재시작해야 반영된다. 이 두 설정은 제거 후에도 유지된다. 다시 켜려면 두 값을 `true`로 바꾼다. 재설치하면 다시 `false`가 적용된다. `whimsy`의 의미는 [공식 설정 스키마](https://developers.openai.com/codex/config-schema.json)에서 확인할 수 있다.
 
 - 기존 notify에 save-turn이 이미 연결돼 있으면 그 체인을 유지하고 필요한 셸 경로를 보정한다.
 - save-turn 없이 데스크톱·IDE 알림 전용으로 판정된 notify는 Mnemo notify로 교체한다.

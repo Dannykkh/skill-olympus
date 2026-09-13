@@ -73,7 +73,25 @@ v6.1.2 统一了按提问语言回复、优先查看 `codemap/index.md`、按记
 - 个人偏好写在管理标记之外，Grok 使用单独的个人规则文件。要让后续安装也采用自己的默认值，请修改自己维护的检出目录中的[规则源模板](docs/global-agent-rules.md)。
 - Mnemo 将对话副本保存到项目的 `conversations/`。以 `MNEMO_DISABLE=1` 环境变量启动 CLI 可停止保存 hooks，但不会停止显式文件写入或 CLI 自身的会话记录。
 - 只删除注入规则时，移除对应标记区块或 Grok 管理规则文件。hooks 仍在，重新安装也会恢复规则。[卸载适配器的步骤](docs/global-agent-rules.md#customize-disable-remove)会保留已有对话、记忆和交接文档。
-- 现有 Codex 安装器会配置 `config.toml` 的 `notify` 并设置 `tui.notifications=false`。通知链的保留条件和卸载后的恢复方式见[详细指南](docs/global-agent-rules.md)。
+- 现有 Codex 安装器会配置 `config.toml` 的 `notify` 并设置 `tui.notifications=false`, `tui.animations=false`, `tui.whimsy=false`。通知链的保留条件和卸载后的恢复方式见[详细指南](docs/global-agent-rules.md)。
+
+### 开关 Codex Astra 输入框的星光效果
+
+Codex CLI 使用 Astra 模型时，输入框背景可能显示闪烁的星光。下图是效果开启时的截图（静态图片）。
+
+![Codex Astra 输入框背景的星光效果](docs/images/codex-astra-composer-stars.png)
+
+`install.bat` 或 `install.sh` 的 Codex 安装步骤会**在全局关闭此装饰效果和常规终端动画**。Windows 配置文件为 `%USERPROFILE%\.codex\config.toml`，macOS/Linux 为 `~/.codex/config.toml`。若设置了 `CODEX_HOME`，请编辑该目录下的 `config.toml`。
+
+```toml
+# 修改第一个 [表] 之前的现有配置项
+tui.animations = false
+tui.whimsy = false
+```
+
+`animations` 控制常规动画，`whimsy` 控制 Astra 星光等装饰效果。如果已有 `[tui]` 表，请修改其中的 `animations` 和 `whimsy`，不要重复添加上面的点分键。
+
+**要重新开启星光，请将两项都改为 `true` 并重启 Codex。** 只开启常规动画时，使用 `animations=true`、`whimsy=false`。安装或重新安装会把两项设回 `false`；卸载 Olympus 后这些设置仍会保留。[官方配置模式](https://developers.openai.com/codex/config-schema.json) · [配置详情](docs/global-agent-rules.md)
 
 本次规则整理不要求额外指定模型、推理强度或权限值。更新后启动新会话。更多设置条件与恢复工具限制见[全局规则指南（韩语）](docs/global-agent-rules.md)。
 

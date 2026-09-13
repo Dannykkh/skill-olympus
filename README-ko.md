@@ -76,7 +76,25 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 
 Mnemo 훅은 프로젝트의 `conversations/`에 대화 사본을 저장합니다. 기억과 인계 문서는 `MEMORY.md`, `memory/`, `docs/handoffs/`를 사용합니다. `<private>...</private>`는 지원되는 Mnemo 저장본에서 가리지만 CLI 자체 세션 기록까지 지우지는 않습니다. 새 규칙을 위해 모델·추론 강도·언어·권한 값을 추가로 설정할 필요는 없습니다.
 
-기존 Codex 설치기는 `config.toml`의 `notify`를 구성하고 `tui.notifications=false`도 설정합니다. save-turn이 이미 연결된 체인은 유지하지만 일부 데스크톱·IDE 알림 전용 체인은 교체합니다. 알림을 직접 구성했다면 [설정 변경·제거 시 동작](docs/global-agent-rules.md)을 확인하세요.
+기존 Codex 설치기는 `config.toml`의 `notify`를 구성하고 `tui.notifications=false`, `tui.animations=false`, `tui.whimsy=false`도 설정합니다. save-turn이 이미 연결된 체인은 유지하지만 일부 데스크톱·IDE 알림 전용 체인은 교체합니다. 알림을 직접 구성했다면 [설정 변경·제거 시 동작](docs/global-agent-rules.md)을 확인하세요.
+
+### Codex Astra 입력창의 별 효과 끄기·켜기
+
+Codex CLI에서 Astra 모델을 사용할 때 입력창 배경에 별이 반짝이는 장식 효과가 나타날 수 있습니다. 아래는 효과가 켜져 있을 때의 실제 캡처입니다(정지 이미지).
+
+![Codex Astra 입력창 배경에 표시되는 별 효과](docs/images/codex-astra-composer-stars.png)
+
+Olympus는 `install.bat` 또는 `install.sh`의 Codex 설치 단계에서 **이 효과와 일반 터미널 애니메이션을 전역으로 끕니다**. 설정 파일은 Windows의 `%USERPROFILE%\.codex\config.toml`, macOS/Linux의 `~/.codex/config.toml`입니다. `CODEX_HOME`을 지정했다면 그 디렉터리의 `config.toml`을 수정합니다.
+
+```toml
+# 전역 config.toml의 첫 번째 [테이블] 앞에 있는 기존 값을 수정
+tui.animations = false
+tui.whimsy = false
+```
+
+`tui.animations`는 일반 애니메이션을, `tui.whimsy`는 Astra 별 같은 장식 효과를 제어합니다. 이미 `[tui]` 테이블을 쓰고 있다면 그 안의 `animations`와 `whimsy`를 수정하고, 위 dotted key를 중복해서 추가하지 마세요.
+
+**다시 켜려면 두 값을 모두 `true`로 바꾸고 Codex를 재시작하세요.** 일반 애니메이션만 켜려면 `animations=true`, `whimsy=false`로 설정합니다. 설치·재설치 시 두 값은 다시 `false`가 되며, Olympus 제거 후에도 유지됩니다. [공식 설정 스키마](https://developers.openai.com/codex/config-schema.json) · [설치 설정 상세](docs/global-agent-rules.md)
 
 ### 직접 수정하거나 끄고 싶다면
 
