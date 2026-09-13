@@ -4,9 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.6] - 2026-09-13
+
 ### Bug Fixes
 
-- **Codex 기본 애니메이션 유지**: 설치·재설치 시 `tui.animations=true`, `tui.whimsy=false`를 적용해 스피너 등 일반 애니메이션을 켜고 Astra 별 장식을 끈다. 이전 설치의 `animations=false`도 갱신하며 `tui.notifications=false`는 유지한다.
+- **Codex 기본 애니메이션 유지**: 설치·재설치 시 `tui.animations=true`, `tui.whimsy=false`를 적용해 스피너 등 일반 애니메이션을 켜고 Astra 별 장식을 끈다. 이전 설치의 `animations=false`도 갱신하며 `tui.notifications=false`는 유지한다. (ceeaa65)
+
+### Documentation
+
+- README 4개 언어와 설치 안내를 새 기본값으로 갱신했다. 별 효과를 다시 켜는 방법, 이전 설정의 갱신과 제거 후 유지 동작을 설명한다. (ceeaa65)
+
+### Tests
+
+- 신규 설정·기존 dotted key·`[tui]`·재설치·기타 설정 보존을 포함한 관련 검사 12개 통과. 전역 설치본으로 생성한 TOML과 Codex 0.154.0의 설정 로드를 검증했다.
+- Windows에서 `install.bat` 기본 통합 설치를 실행했고, Claude·Codex·Antigravity·Grok의 규칙·훅 등록·설치된 훅 실행 검사 12개가 통과했다.
+
+### Upgrade Notes
+
+- `install.bat` 또는 `bash install.sh`로 재설치한 뒤 Codex를 재시작한다. 일반 애니메이션은 켜지고 별 장식은 꺼진다.
+- 실행 중 TUI를 재시작한 뒤의 시각 확인과 다른 운영체제의 전체 설치는 NOT RUN.
 
 ## [6.2.5] - 2026-09-13
 
