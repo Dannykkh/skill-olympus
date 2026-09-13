@@ -24,7 +24,13 @@ const isWindows = process.platform === "win32";
 const sourceDir = path.resolve(__dirname);
 
 // Claude global directory
-const claudeDir = path.join(os.homedir(), ".claude");
+const claudeDir = process.env.CLAUDE_CONFIG_DIR
+  ? path.resolve(process.env.CLAUDE_CONFIG_DIR) : path.join(os.homedir(), ".claude");
+
+function findHookSource(file) {
+  return [path.join(sourceDir, "hooks", file), path.join(sourceDir, "../../hooks", file)]
+    .find((candidate) => fs.existsSync(candidate));
+}
 
 // ── Utility Functions ──
 function normalizePath(p) {
@@ -234,9 +240,7 @@ function install() {
 
   for (const file of hookFiles) {
     // Search for hook file source: skills/mnemo/hooks/ → root hooks/ fallback
-    const srcLocal = path.join(sourceDir, "hooks", file);
-    const srcRoot = path.join(sourceDir, "..", "..", "hooks", file);
-    const src = fs.existsSync(srcLocal) ? srcLocal : fs.existsSync(srcRoot) ? srcRoot : null;
+    const src = findHookSource(file);
     const dest = path.join(hooksDir, file);
     if (src) {
       copyFile(src, dest);
@@ -251,6 +255,7 @@ function install() {
   console.log("      Done!");
 
   copyFile(path.join(sourceDir, "scripts", "reconcile_conversations.py"), path.join(claudeDir, "scripts", "reconcile_conversations.py"));
+  copyFile(path.join(sourceDir, "scripts", "mnemo_project_root.py"), path.join(claudeDir, "scripts", "mnemo_project_root.py"));
 
   // [2/3] Configure settings.json hooks
   console.log("\n[2/3] Configuring settings.json hooks...");
@@ -379,7 +384,13 @@ function check() {
     const dest = path.join(hooksDir, file);
     if (fs.existsSync(dest)) {
       const stat = fs.statSync(dest);
-      console.log(`      ✅ ${file} (${stat.size} bytes)`);
+      const source = findHookSource(file);
+      if (source && !fs.readFileSync(source).equals(fs.readFileSync(dest))) {
+        console.log(`      DRIFT ${file}`);
+        issues++;
+      } else {
+        console.log(`      ✅ ${file} (${stat.size} bytes)`);
+      }
     } else {
       console.log(`      ❌ ${file} - file missing!`);
       console.log(`         → Fix: node skills/mnemo/install.js  (reinstall)`);
@@ -388,6 +399,14 @@ function check() {
   }
 
   // 2. settings.json hook registration
+  for (const file of ["reconcile_conversations.py", "mnemo_project_root.py"]) {
+    const source = path.join(sourceDir, "scripts", file);
+    const installed = path.join(claudeDir, "scripts", file);
+    if (!fs.existsSync(installed) || !fs.readFileSync(source).equals(fs.readFileSync(installed))) {
+      console.log(`      MISSING or stale scripts/${file}`);
+      issues++;
+    }
+  }
   console.log("\n[2/3] Checking settings.json hook registration...");
   const settings = readJson(settingsPath);
   if (settings.autoMemoryEnabled !== false) { console.log("      Project memory requires autoMemoryEnabled=false"); issues++; }
@@ -494,6 +513,9 @@ function uninstall() {
   console.log("      Done!");
 
   // [2/3] Remove settings.json hook config
+  for (const file of ["reconcile_conversations.py", "mnemo_project_root.py"]) {
+    removeFile(path.join(claudeDir, "scripts", file));
+  }
   console.log("\n[2/3] Removing settings.json hook config...");
   removeHooksConfig(settingsPath);
   console.log("      Done!");

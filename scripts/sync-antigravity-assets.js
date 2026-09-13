@@ -9,7 +9,7 @@ const { writeAgentsCatalog } = require("./agent-catalog");
 const { collectAgentFiles } = require("./agent-files");
 const { DEFAULT_RUNTIME_AGENT_ALLOWLIST, selectRuntimeAgents } = require("./agent-install-policy");
 const { pruneStaleAssets } = require("./prune-stale-assets");
-const { collectSkillFiles, syncSkillSourceLibrary, writeSkillsCatalog } = require("./skill-catalog");
+const { collectSkillFiles, copyMnemoSupportFiles, syncSkillSourceLibrary, writeSkillsCatalog } = require("./skill-catalog");
 const { RUNTIME_SKILL_EXCLUSIONS, selectRuntimeSkills } = require("./skill-install-policy");
 
 const argv = process.argv.slice(2);
@@ -272,6 +272,7 @@ function syncNamedDirectories(names, previous, allSources) {
     const targetPath = path.join(targets.skills, name);
     prepareReplacement(sourcePath, targetPath, "skills", name, previous.hashes.skills[name]);
     copyDirectory(sourcePath, targetPath);
+    copyMnemoSupportFiles(sourcePath, targetPath);
   }
   for (const name of allSources) {
     if (names.includes(name)) continue;

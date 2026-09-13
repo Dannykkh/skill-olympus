@@ -18,6 +18,9 @@ const hooksConfigPath = path.join(configDir, "hooks.json");
 const rulesPath = path.join(googleHome, "GEMINI.md");
 const templatePath = path.join(sourceDir, "templates", "gemini-md-rules.md");
 const sourceHookPath = path.join(sourceDir, "hooks", "save-turn.js");
+const rootHelperName = "mnemo-project-root.js";
+const rootHelperSource = fs.existsSync(path.join(sourceDir, "hooks", rootHelperName))
+  ? path.join(sourceDir, "hooks", rootHelperName) : path.join(sourceDir, "../../hooks", rootHelperName);
 const hookId = "olympus-antigravity-mnemo";
 const markerStart = "<!-- ANTIGRAVITY-MNEMO:START -->";
 const markerEnd = "<!-- ANTIGRAVITY-MNEMO:END -->";
@@ -161,12 +164,13 @@ function migrateLegacy() {
 }
 
 function install() {
-  if (!fs.existsSync(sourceHookPath) || !fs.existsSync(templatePath)) {
+  if (!fs.existsSync(sourceHookPath) || !fs.existsSync(templatePath) || !fs.existsSync(rootHelperSource)) {
     throw new Error("Antigravity Mnemo package is incomplete");
   }
   migrateLegacy();
   ensureDir(hookDir);
   fs.copyFileSync(sourceHookPath, hookPath);
+  fs.copyFileSync(rootHelperSource, path.join(hookDir, rootHelperName));
   if (process.platform !== "win32") fs.chmodSync(hookPath, 0o755);
   installHookConfig();
   mergeRules();
@@ -176,6 +180,7 @@ function install() {
 function uninstall() {
   uninstallHookConfig();
   fs.rmSync(hookPath, { force: true });
+  fs.rmSync(path.join(hookDir, rootHelperName), { force: true });
   removeRules(rulesPath, false);
   migrateLegacy();
   console.log(`Antigravity Mnemo removed from ${googleHome}`);
@@ -186,6 +191,10 @@ function check() {
   const stop = config[hookId]?.Stop;
   const issues = [];
   if (!fs.existsSync(hookPath)) issues.push(`missing hook: ${hookPath}`);
+  const rootHelperInstalled = path.join(hookDir, rootHelperName);
+  if (!fs.existsSync(rootHelperInstalled) || sha256(rootHelperInstalled) !== sha256(rootHelperSource)) {
+    issues.push(`missing or stale root helper: ${rootHelperInstalled}`);
+  }
   if (!Array.isArray(stop) || !stop.some((entry) => String(entry.command || "").includes("olympus-save-turn.js"))) {
     issues.push(`missing ${hookId} Stop hook in ${hooksConfigPath}`);
   }

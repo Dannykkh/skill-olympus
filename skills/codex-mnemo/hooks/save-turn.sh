@@ -21,7 +21,7 @@ resolve_mnemo_project_root() {
     helper="$helper_dir/mnemo-project-root.js"
     [ -f "$helper" ] || helper="$helper_dir/../../../hooks/mnemo-project-root.js"
     [ -f "$helper" ] || return 0
-    node "$helper" "$1" "${2:-}" 2>/dev/null || true
+    printf '%s' "$1" | node "$helper" --codex 2>/dev/null || true
 }
 
 # P1 parity: Claude/Antigravity와 공유하는 .claude/mnemo-errors.log에 에러급 실패를 기록한다.
@@ -339,22 +339,7 @@ if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; the
     exit 0
 fi
 
-BASE_DIR=""
-ROOT_MODE=""
-for key in '."project-root"' '.project_root' '."workspace-root"' '.workspace_root' '."cwd"' '."working-directory"' '.working_directory'; do
-    v="$(json_get "$key")"
-    if [ -n "$v" ]; then
-        BASE_DIR="$v"
-        case "$key" in *project*|*workspace*) ROOT_MODE="--explicit" ;; esac
-        break
-    fi
-done
-if [ -z "$BASE_DIR" ] && [ -n "$CODEX_WORKSPACE_ROOT" ]; then
-    BASE_DIR="$CODEX_WORKSPACE_ROOT"
-    ROOT_MODE="--explicit"
-fi
-[ -n "$BASE_DIR" ] || exit 0
-BASE_DIR="$(resolve_mnemo_project_root "$BASE_DIR" "$ROOT_MODE")"
+BASE_DIR="$(resolve_mnemo_project_root "$PAYLOAD")"
 [ -n "$BASE_DIR" ] || exit 0
 [ -f "$BASE_DIR/.mnemo-root" ] || : > "$BASE_DIR/.mnemo-root"
 

@@ -6,8 +6,8 @@ const path = require("node:path");
 const { spawnSync, spawn } = require("node:child_process");
 const { appendEvent } = require("../../skills/grok-mnemo/hooks/append-event");
 
-function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "olympus-grok-events-test-"));
+function fixture(t, parent = os.tmpdir()) {
+  const root = fs.mkdtempSync(path.join(parent, "olympus-grok-events-test-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   return root;
 }
@@ -108,7 +108,7 @@ test("Grok event helper accepts PowerShell UTF-8 BOMs without corrupting Korean 
 
 const bash = process.env.BASH_PATH || (process.platform === "win32" ? path.join(process.env.ProgramFiles || "C:/Program Files", "Git/bin/bash.exe") : "/bin/bash");
 test("Grok Bash adapter saves Unicode, deduplicates replay, and keeps Stop stdout empty", { skip: !fs.existsSync(bash) }, (t) => {
-  const root = fixture(t);
+  const root = fixture(t, os.homedir());
   assert.equal(spawnSync("git", ["init", "--quiet", root]).status, 0);
   const script = path.resolve(__dirname, "../../skills/grok-mnemo/hooks/save-turn.sh").replaceAll("\\", "/");
   const invoke = (payload, disabled = false) => {

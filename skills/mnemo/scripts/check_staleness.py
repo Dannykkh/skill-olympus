@@ -20,6 +20,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from mnemo_project_root import detect_project_root
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -378,7 +379,7 @@ def print_report(result: dict):
 
 def find_all_handoffs(project_path: str = None) -> list[Path]:
     """현재 프로젝트의 docs/handoffs/ 안 모든 .md 파일 (날짜 내림차순)."""
-    base = Path(project_path) if project_path else Path.cwd()
+    base = detect_project_root(Path(project_path) if project_path else Path.cwd())
     handoffs_dir = base / "docs" / "handoffs"
     if not handoffs_dir.exists():
         return []
@@ -410,7 +411,11 @@ def main():
     if use_all:
         # 일괄 모드: docs/handoffs/ 전체 점검
         project_path = args[1] if len(args) > 1 else None
-        handoffs = find_all_handoffs(project_path)
+        try:
+            handoffs = find_all_handoffs(project_path)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            sys.exit(2)
         if not handoffs:
             print("No handoffs found in docs/handoffs/")
             sys.exit(0)

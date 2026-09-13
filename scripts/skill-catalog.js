@@ -9,6 +9,24 @@ const { extractFrontmatterDescription } = require("./agent-catalog");
 // caches such as node_modules across source updates.
 const EXECUTABLE_RUNTIME_MODULES = new Set(["orchestrator"]);
 
+// Mnemo adapters share executable assets, without registering another skill or
+// maintaining per-runtime source copies. Bundle these at the existing sync point.
+function copyMnemoSupportFiles(sourceDir, destDir) {
+  if (!["mnemo", "codex-mnemo", "antigravity-mnemo", "grok-mnemo"].includes(path.basename(sourceDir))) return;
+  const commonDir = path.join(path.dirname(sourceDir), "mnemo");
+  const files = [
+    [path.join(sourceDir, "../../hooks/mnemo-project-root.js"), "hooks/mnemo-project-root.js"],
+    ...["mnemo_project_root.py", "create_handoff.py", "list_handoffs.py", "check_staleness.py", "validate_handoff.py"]
+      .map((name) => [path.join(commonDir, "scripts", name), `scripts/${name}`]),
+    [path.join(commonDir, "references/project-storage.md"), "references/project-storage.md"],
+  ];
+  for (const [source, relative] of files) {
+    const target = path.join(destDir, relative);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(source, target);
+  }
+}
+
 function collectSkillFiles(skillsSrcDir) {
   const files = new Map();
   if (!fs.existsSync(skillsSrcDir)) return files;
@@ -174,6 +192,7 @@ function syncSkillSourceLibrary(destHome, skillFiles) {
         force: true,
         filter: (src) => !src.split(path.sep).includes("node_modules"),
       });
+      copyMnemoSupportFiles(srcDir, destDir);
     }
     validateSkillSourceLibrary(stagingRoot, skillFiles);
 
@@ -280,6 +299,7 @@ function writeSkillsCatalog(destHome, skillFiles, source = "installer", options 
 }
 
 module.exports = {
+  copyMnemoSupportFiles,
   collectSkillFiles,
   generateSkillsCatalog,
   syncExecutableRuntimeModule,

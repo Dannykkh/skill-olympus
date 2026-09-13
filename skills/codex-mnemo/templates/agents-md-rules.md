@@ -98,6 +98,7 @@
 
 ## 기억 관리
 
+- 기억·대화·핸드오프를 쓰기 전에 활성 Mnemo 모듈의 `references/project-storage.md`(소스 정본: `skills/mnemo/references/project-storage.md`)로 루트를 확정하고, 모든 출력 경로를 그 루트의 절대경로로 만든다.
 - 프로젝트 루트를 기준으로 `MEMORY.md`는 인덱스, `memory/*.md`는 정제 기억, `conversations/*.md`는 대화 기록으로 사용한다. Git 프로젝트에서는 하위 cwd를 Git 루트로 정규화한다.
 - 기억 저장이 필요한 쓰기 작업에서 파일이 없으면 최소 구조를 만든다. 검색만 하려고 빈 파일을 만들지 않는다.
 - `MEMORY.md`는 100줄·5KB 이내, 인덱스 항목은 3줄 이내로 유지한다. 긴 설명·로그·코드 블록은 넣지 않고 상세 파일에 연결한다.

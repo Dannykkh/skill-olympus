@@ -212,55 +212,12 @@ def normalize_path(value: str | Path) -> str:
         return str(value).rstrip("\\/").casefold()
 
 
-def validate_project_root(path: Path) -> Path:
-    """Refuse shared host locations before recovery can create project files."""
-    root = path.resolve(strict=False)
-    home = Path.home().resolve(strict=False)
-    forbidden = [home / name for name in (".claude", ".codex", ".gemini", ".grok")]
-    for name in ("CLAUDE_CONFIG_DIR", "CLAUDE_HOME", "CODEX_HOME", "GEMINI_CLI_HOME", "GEMINI_HOME", "ANTIGRAVITY_HOME", "GROK_HOME", "GROK_CONFIG_DIR"):
-        value = os.environ.get(name)
-        if value:
-            forbidden.append(Path(value).expanduser().resolve(strict=False))
-    if root == root.parent or root == home:
-        raise ValueError(f"unsafe Mnemo project root (filesystem root or home): {root}")
-    if any(part.casefold() in {".claude", ".codex", ".gemini", ".grok"} for part in root.parts):
-        raise ValueError(f"unsafe Mnemo project root (CLI internal directory): {root}")
-    if any(root == base or base in root.parents for base in forbidden):
-        raise ValueError(f"unsafe Mnemo project root (CLI configuration directory): {root}")
-    return root
-
-
-def detect_project_root(start: Path, *, explicit: bool = False) -> Path:
-    """Git owns its tree; non-Git roots use an explicit path or portable marker.
-
-    MEMORY.md and conversations/ are outputs, never evidence of ownership.
-    A marker above a nested repository cannot capture that repository.
-    """
-    requested = validate_project_root(start)
-    if requested.is_file():
-        requested = validate_project_root(requested.parent)
-    if not requested.is_dir():
-        return requested  # Historical aliases may no longer exist after a move.
-    marker = None
-    current = requested
-    while True:
-        if (current / ".git").exists():
-            return validate_project_root(current)
-        if marker is None and (current / ".mnemo-root").is_file():
-            marker = current
-        if current == current.parent:
-            break
-        current = current.parent
-    try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], cwd=requested,
-            capture_output=True, text=True, timeout=5, check=False,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            return validate_project_root(Path(result.stdout.strip()))
-    except (OSError, subprocess.TimeoutExpired):
-        pass
-    return validate_project_root(requested if explicit else (marker or requested))
+# Source checkouts and installed runtime scripts use the same Python bridge.
+_mnemo_module_dir = Path(__file__).resolve().parent
+if not (_mnemo_module_dir / "mnemo_project_root.py").is_file():
+    _mnemo_module_dir = Path(__file__).resolve().parents[2] / "mnemo" / "scripts"
+sys.path.insert(0, str(_mnemo_module_dir))
+from mnemo_project_root import detect_project_root, validate_project_root
 
 
 def codex_sessions_root() -> Path:

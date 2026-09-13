@@ -30,7 +30,7 @@ $OutputEncoding = $Utf8NoBom
 function Write-MnemoError {
     param([string]$Context, [string]$Message)
     try {
-        if (-not $ProjectRoot -or -not (Test-MnemoSafePath $ProjectRoot)) { return }
+        if (-not $ProjectRoot) { return }
         $root = $ProjectRoot
         $errDir = Join-Path $root '.claude'
         if (-not (Test-Path $errDir)) {
@@ -200,61 +200,15 @@ if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $respon
     exit 0
 }
 
-# 프로젝트 루트 결정
-# Workspace payload is authoritative; never infer a project from the hook host cwd.
-function Test-MnemoSafePath {
-    param([string]$Path)
-    if (-not $Path -or -not [System.IO.Path]::IsPathRooted($Path)) { return $false }
-    if ([System.IO.Path]::DirectorySeparatorChar -eq '\' -and $Path -notmatch '^(?:[A-Za-z]:[\\/]|[\\/]{2})') { return $false }
-    try {
-        $item = Get-Item -LiteralPath $Path -ErrorAction Stop
-        if (-not $item.PSIsContainer) { return $false }
-        $p = $item.FullName.Replace('/', '\').TrimEnd('\')
-        if ($p -eq [System.IO.Path]::GetPathRoot($item.FullName).TrimEnd('\')) { return $false }
-        foreach ($h in @($env:USERPROFILE, $env:HOME)) {
-            if ($h -and $p -eq $h.Replace('/', '\').TrimEnd('\')) { return $false }
-        }
-        if ($p -match '(?i)(^|[\\/])\.(claude|codex|gemini|grok)([\\/]|$)') { return $false }
-        foreach ($blocked in @($env:TEMP, $env:TMP, $env:CLAUDE_CONFIG_DIR, $env:CODEX_HOME, $env:GEMINI_CLI_HOME, $env:ANTIGRAVITY_HOME, $env:GROK_HOME, $env:GROK_CONFIG_DIR)) {
-            if (-not $blocked) { continue }
-            $n = [System.IO.Path]::GetFullPath($blocked).Replace('/', '\').TrimEnd('\')
-            if ($p -eq $n -or $p.StartsWith("$n\", [System.StringComparison]::OrdinalIgnoreCase)) { return $false }
-        }
-        return $true
-    } catch { return $false }
-}
-
-function Get-NonGitProjectRoot {
-    param([string]$StartPath)
-    $cur = Get-Item -LiteralPath $StartPath
-    while ($cur -and (Test-MnemoSafePath $cur.FullName)) {
-        if ((Test-Path -LiteralPath (Join-Path $cur.FullName '.git')) -or
-            (Test-Path -LiteralPath (Join-Path $cur.FullName '.mnemo-root') -PathType Leaf)) { return $cur.FullName }
-        $cur = $cur.Parent
-    }
-    return $StartPath
-}
-
-$ProjectRoot = ''
-$ExplicitProjectRoot = $false
-foreach ($key in @('workspaceRoot', 'cwd')) {
-    $candidate = "$($payload.$key)".Trim()
-    if (Test-MnemoSafePath $candidate) {
-        $ProjectRoot = (Get-Item -LiteralPath $candidate).FullName
-        $ExplicitProjectRoot = $key -eq 'workspaceRoot'
-        break
-    }
-}
-if (-not $ProjectRoot) { exit 0 }
-$gitRoot = $null
-try { $gitRoot = & git -C $ProjectRoot rev-parse --show-toplevel 2>$null } catch {}
-if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-    if (-not (Test-MnemoSafePath $gitRoot)) { exit 0 }
-    $ProjectRoot = (Get-Item -LiteralPath $gitRoot).FullName
-} elseif (-not $ExplicitProjectRoot) {
-    $ProjectRoot = Get-NonGitProjectRoot $ProjectRoot
-}
-if (-not (Test-MnemoSafePath $ProjectRoot)) { exit 0 }
+# All adapters share one boundary; invalid workspace metadata must not fall back.
+$rootHelper = Join-Path $PSScriptRoot 'mnemo-project-root.js'
+if (-not (Test-Path -LiteralPath $rootHelper)) { $rootHelper = Join-Path $PSScriptRoot '../../../hooks/mnemo-project-root.js' }
+$ProjectRoot = $null
+try {
+    $ProjectRoot = ($payload | ConvertTo-Json -Compress -Depth 30) | & node $rootHelper --grok 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $ProjectRoot) { exit 0 }
+    $ProjectRoot = "$ProjectRoot".Trim()
+} catch { exit 0 }
 $boundary = Join-Path $ProjectRoot '.mnemo-root'
 if (-not (Test-Path -LiteralPath $boundary)) { [System.IO.File]::WriteAllText($boundary, '', $Utf8NoBom) }
 

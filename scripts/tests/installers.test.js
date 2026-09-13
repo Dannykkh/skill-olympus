@@ -565,7 +565,7 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
       hooks["olympus-core"].PreToolUse[0].matcher,
       "write_to_file|replace_file_content|multi_replace_file_content",
     );
-    assert.match(hooks["olympus-core"].Stop[0].command, /antigravity-hook\.js" chronos/);
+    assert.match(hooks["olympus-core"].Stop[0].command, /antigravity-hook\.js"? chronos$/);
     assert.match(
       hooks["olympus-antigravity-mnemo"].Stop[0].command,
       /olympus-save-turn\.js/,
@@ -723,8 +723,8 @@ test("Antigravity hook config preserves unrelated groups and rejects the retired
     configured["olympus-core"].PreToolUse[0].matcher,
     "write_to_file|replace_file_content|multi_replace_file_content",
   );
-  assert.match(configured["olympus-core"].PreToolUse[0].hooks[0].command, /antigravity-hook\.js" safety/);
-  assert.match(configured["olympus-core"].Stop[0].command, /antigravity-hook\.js" chronos/);
+  assert.match(configured["olympus-core"].PreToolUse[0].hooks[0].command, /antigravity-hook\.js"? safety$/);
+  assert.match(configured["olympus-core"].Stop[0].command, /antigravity-hook\.js"? chronos$/);
 
   const retired = spawnSync(process.execPath, [
     installHooksConfig,

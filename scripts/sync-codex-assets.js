@@ -22,6 +22,7 @@ const {
 const { pruneStaleAssets } = require("./prune-stale-assets");
 const {
   collectSkillFiles,
+  copyMnemoSupportFiles,
   syncSkillSourceLibrary,
   writeSkillsCatalog,
 } = require("./skill-catalog");
@@ -542,6 +543,7 @@ function syncSkills(destDir, skillNames, mode) {
       copyFileIfChanged(skillMd, path.join(dest, "SKILL.md"));
     }
     installDir(src, dest, true);
+    copyMnemoSupportFiles(src, dest);
   }
 }
 

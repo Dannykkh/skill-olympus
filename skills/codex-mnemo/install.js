@@ -35,6 +35,11 @@ const codexDir = process.env.CODEX_HOME
     return file === "mnemo-project-root.js" && !fs.existsSync(local)
       ? path.join(sourceDir, "..", "..", "hooks", file) : local;
   };
+const scriptSource = (file) => {
+  const local = path.join(sourceDir, "scripts", file);
+  return file === "mnemo_project_root.py" && !fs.existsSync(local)
+    ? path.join(sourceDir, "../mnemo/scripts", file) : local;
+};
 
 // ── Utility functions ──
 function normalizePath(p) {
@@ -556,10 +561,10 @@ function install() {
   // Install reconcile script (used by Claude's SessionStart hook wrapper
   // to back-fill conversations from Codex rollout JSONL).
   const scriptsDir = path.join(codexDir, "scripts");
-  const scriptFiles = ["reconcile_codex_conversations.py"];
+  const scriptFiles = ["reconcile_codex_conversations.py", "mnemo_project_root.py"];
   let scriptsInstalled = 0;
   for (const scriptFile of scriptFiles) {
-    const src = path.join(sourceDir, "scripts", scriptFile);
+    const src = scriptSource(scriptFile);
     if (!fs.existsSync(src)) continue;
     ensureDir(scriptsDir);
     const dest = path.join(scriptsDir, scriptFile);
@@ -665,23 +670,23 @@ function check() {
   }
 
   console.log("\n[2/4] Checking reconcile parser and source parity...");
-  const reconcileFile = "reconcile_codex_conversations.py";
-  const reconcileSource = path.join(sourceDir, "scripts", reconcileFile);
-  const reconcileInstalled = path.join(codexDir, "scripts", reconcileFile);
-  if (!fs.existsSync(reconcileSource)) {
-    console.log(`      MISSING SOURCE scripts/${reconcileFile}`);
-    issues += 1;
-  } else if (!fs.existsSync(reconcileInstalled)) {
-    console.log(`      MISSING ${reconcileInstalled}`);
-    issues += 1;
-  } else if (!filesAreIdentical(reconcileSource, reconcileInstalled)) {
-    console.log(`      DRIFT scripts/${reconcileFile} (installed file differs from source)`);
-    issues += 1;
-  } else {
-    const stat = fs.statSync(reconcileInstalled);
-    console.log(`      OK scripts/${reconcileFile} (${stat.size} bytes, source parity)`);
+  for (const reconcileFile of ["reconcile_codex_conversations.py", "mnemo_project_root.py"]) {
+    const reconcileSource = scriptSource(reconcileFile);
+    const reconcileInstalled = path.join(codexDir, "scripts", reconcileFile);
+    if (!fs.existsSync(reconcileSource)) {
+      console.log(`      MISSING SOURCE scripts/${reconcileFile}`);
+      issues += 1;
+    } else if (!fs.existsSync(reconcileInstalled)) {
+      console.log(`      MISSING ${reconcileInstalled}`);
+      issues += 1;
+    } else if (!filesAreIdentical(reconcileSource, reconcileInstalled)) {
+      console.log(`      DRIFT scripts/${reconcileFile} (installed file differs from source)`);
+      issues += 1;
+    } else {
+      const stat = fs.statSync(reconcileInstalled);
+      console.log(`      OK scripts/${reconcileFile} (${stat.size} bytes, source parity)`);
+    }
   }
-
   console.log("\n[3/4] Checking config.toml notify...");
   const config = readText(configPath);
   if (!config) {
@@ -769,7 +774,7 @@ function uninstall() {
   }
   // Remove reconcile scripts installed under <CODEX_HOME>/scripts/.
   const scriptsDir = path.join(codexDir, "scripts");
-  const scriptFiles = ["reconcile_codex_conversations.py"];
+  const scriptFiles = ["reconcile_codex_conversations.py", "mnemo_project_root.py"];
   for (const file of scriptFiles) {
     if (removeFile(path.join(scriptsDir, file))) {
       console.log(`      - scripts/${file} removed`);

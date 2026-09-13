@@ -431,7 +431,8 @@ class RootAndSanitizationTests(unittest.TestCase):
                 project.mkdir()
                 (outer / "MEMORY.md").touch()
                 (outer / "conversations").mkdir()
-                self.assertEqual(project.resolve(), module.detect_project_root(project))
+                with self.assertRaisesRegex(ValueError, "unsafe Mnemo project root"):
+                    module.detect_project_root(project)
                 (outer / ".mnemo-root").touch()
                 self.assertEqual(project.resolve(), module.detect_project_root(project, explicit=True))
                 self.assertEqual(outer.resolve(), module.detect_project_root(project))

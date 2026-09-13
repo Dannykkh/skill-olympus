@@ -7,6 +7,7 @@ const os = require("os");
 const path = require("path");
 const {
   collectSkillFiles,
+  copyMnemoSupportFiles,
   syncSkillSourceLibrary,
   writeSkillsCatalog,
 } = require("./skill-catalog");
@@ -221,6 +222,7 @@ function copySkill(name, expectedHash) {
   removeDestEntriesMissingFromSource(src, dest);
   fs.cpSync(src, dest, { recursive: true, force: true });
   removeDestEntriesMissingFromSource(src, dest);
+  copyMnemoSupportFiles(src, dest);
 }
 
 function run() {

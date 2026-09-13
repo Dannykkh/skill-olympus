@@ -76,6 +76,8 @@ Installation ends with automatic rule, registration, and installed-hook checks. 
 
 Mnemo hooks save conversation copies under your project's `conversations/`; memory and handoffs use `MEMORY.md`, `memory/`, and `docs/handoffs/`. `<private>...</private>` is redacted in supported Mnemo outputs, but does not erase native CLI session history. No additional model, reasoning-effort, language, or permission value is required for the new rules.
 
+All Mnemo adapters and handoff/recovery tools share one [project-root contract](skills/mnemo/references/project-storage.md). Git roots and portable `.mnemo-root` markers keep subdirectory sessions together; unmarked `cwd` values cannot create a new storage root. Inherited Git settings and storage links cannot redirect writes outside the project. Non-Git workspaces need an explicit workspace declaration or an initial root marker.
+
 The existing Codex installer also writes `notify` and sets `tui.notifications=false`, `tui.animations=false`, `tui.whimsy=false` in `config.toml`. Existing save-turn chains are retained; some desktop/IDE-only notification chains are replaced. See the [exact settings and removal behavior](docs/global-agent-rules.md) before changing or removing a custom notification setup.
 
 ### Turn Codex Astra's star effect off or on

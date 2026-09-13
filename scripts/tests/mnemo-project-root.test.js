@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { resolveRoot, resolveClaude } = require('../../hooks/mnemo-project-root');
+const { resolveRoot, resolveClaude, resolveCodex, resolveGrok, resolveAntigravity } = require('../../hooks/mnemo-project-root');
 
 const repo = path.resolve(__dirname, '../..');
 const installedMode = process.env.MNEMO_TEST_INSTALLED === '1';
@@ -68,7 +68,8 @@ function assertNoPollution(base, launcher) {
 
 test('root selection ignores ancestor outputs, follows moved markers, and respects explicit and Git boundaries', t => {
   const { base, project } = fixture(t);
-  assert.equal(resolveRoot(project), project);
+  assert.equal(resolveRoot(project), null, 'an unmarked cwd is not a project declaration');
+  assert.equal(resolveRoot(project, true), project);
   fs.writeFileSync(path.join(base, '.mnemo-root'), '');
   assert.equal(resolveRoot(project, true), project);
   fs.writeFileSync(path.join(project, '.mnemo-root'), '');
@@ -88,6 +89,7 @@ test('root selection ignores ancestor outputs, follows moved markers, and respec
 test('root selection rejects host and runtime storage including custom configuration paths', t => {
   const { base } = fixture(t);
   assert.equal(resolveRoot(os.homedir()), null);
+  assert.equal(resolveRoot(os.tmpdir(), true), null);
   assert.equal(resolveRoot(path.parse(base).root), null);
   assert.equal(resolveRoot('relative-project'), null);
   for (const name of ['.claude', '.codex', '.gemini', '.grok']) {
@@ -105,6 +107,8 @@ test('root selection rejects host and runtime storage including custom configura
 test('Claude payload cwd wins stale transcript metadata and missing metadata never uses process cwd', t => {
   const { base, project, launcher } = fixture(t);
   const transcript = path.join(base, 'transcript.jsonl');
+  fs.writeFileSync(path.join(project, '.mnemo-root'), '');
+  fs.writeFileSync(path.join(launcher, '.mnemo-root'), '');
   fs.writeFileSync(transcript, JSON.stringify({ cwd: launcher }) + '\n');
   withEnv({ CLAUDE_PROJECT_DIR: undefined }, () => {
     assert.equal(resolveClaude({ cwd: project, transcript_path: transcript }), project);
@@ -141,7 +145,7 @@ for (const [cli, shell] of [['claude', 'PowerShell'], ['codex', 'PowerShell'], [
     const env = { ...process.env, CODEX_HOME: isBash ? runtime.replaceAll('\\', '/') : runtime, MNEMO_DISABLE: '0', MNEMO_STRICT: '1' };
     for (const key of ['CLAUDE_PROJECT_DIR', 'CODEX_WORKSPACE_ROOT', 'GROK_HOOK_EVENT']) delete env[key];
     let sequence = 0;
-    const invoke = (metadata, text) => {
+    const invoke = (metadata, text, extraEnv = {}) => {
       const payload = cli === 'claude'
         ? { prompt: text, session_id: 'project-root-test', ...metadata }
         : { 'turn-id': `project-root-test-${++sequence}`, 'input-messages': [text], 'last-assistant-message': 'Project root test response', ...metadata };
@@ -151,12 +155,13 @@ for (const [cli, shell] of [['claude', 'PowerShell'], ['codex', 'PowerShell'], [
         fs.writeFileSync(payloadFile, JSON.stringify(payload));
         args.push(isBash ? payloadFile.replaceAll('\\', '/') : payloadFile);
       }
-      const result = spawnSync(isBash ? bash : ps, args, { cwd: launcher, env, input: JSON.stringify(payload), encoding: 'utf8', timeout: 30000, windowsHide: true });
+      const result = spawnSync(isBash ? bash : ps, args, { cwd: launcher, env: { ...env, ...extraEnv }, input: JSON.stringify(payload), encoding: 'utf8', timeout: 30000, windowsHide: true });
       assert.equal(result.status, 0, result.stderr || String(result.error));
     };
     const staleTranscript = path.join(base, 'stale.jsonl');
     fs.writeFileSync(staleTranscript, JSON.stringify({ cwd: launcher }) + '\n');
-    invoke({ cwd: project, transcript_path: staleTranscript }, 'history before move');
+    invoke({ cwd: launcher }, 'unmarked launcher must not be saved');
+    invoke({ project_root: project, cwd: project, transcript_path: staleTranscript }, 'history before move');
     assertScaffold(project, cli, 'history before move');
     assertNoPollution(base, launcher);
     const moved = path.join(base, 'moved-project');
@@ -172,5 +177,53 @@ for (const [cli, shell] of [['claude', 'PowerShell'], ['codex', 'PowerShell'], [
     assertNoPollution(base, launcher);
     assert.ok(!fs.existsSync(path.join(runtime, 'MEMORY.md')));
     assert.ok(!fs.existsSync(path.join(runtime, 'conversations')));
+    const foreign = path.join(base, 'foreign'); fs.mkdirSync(foreign);
+    assert.equal(spawnSync('git', ['init', '--quiet', foreign], { windowsHide: true }).status, 0);
+    assert.equal(spawnSync('git', ['init', '--quiet', moved], { windowsHide: true }).status, 0);
+    invoke({ cwd: subdir }, 'history with inherited Git settings', {
+      GIT_DIR: path.join(foreign, '.git'), GIT_WORK_TREE: foreign,
+      CLAUDE_PROJECT_DIR: foreign, CODEX_WORKSPACE_ROOT: foreign,
+    });
+    assertScaffold(moved, cli, 'history with inherited Git settings');
+    assert.ok(!fs.existsSync(path.join(foreign, 'conversations')));
   });
 }
+
+test('all adapters reject unconfirmed cwd, invalid explicit workspaces and inherited Git redirection', t => {
+  const { base, project, launcher } = fixture(t);
+  const subdir = path.join(project, 'src'); fs.mkdirSync(subdir);
+  assert.equal(spawnSync('git', ['init', '--quiet', project], { windowsHide: true }).status, 0);
+  fs.writeFileSync(path.join(subdir, '.mnemo-root'), '');
+  const resolvers = [resolveClaude, resolveCodex, resolveGrok, resolveAntigravity];
+  withEnv({ GIT_DIR: path.join(launcher, '.git'), GIT_WORK_TREE: launcher, CLAUDE_PROJECT_DIR: undefined, CODEX_WORKSPACE_ROOT: undefined }, () => {
+    for (const resolve of resolvers) {
+      assert.equal(resolve({ cwd: subdir }), project);
+      assert.equal(resolve({ cwd: launcher }), null);
+    }
+    withEnv({ PATH: '' }, () => assert.equal(resolveRoot(subdir), project, 'Git executable is not required for the filesystem boundary'));
+  });
+  assert.equal(resolveGrok({ workspaceRoot: os.homedir(), cwd: project }), null);
+  assert.equal(resolveAntigravity({ workspacePath: os.homedir(), cwd: project }), null);
+  withEnv({ CLAUDE_PROJECT_DIR: launcher, CODEX_WORKSPACE_ROOT: launcher }, () => {
+    assert.equal(resolveClaude({ cwd: subdir }), project);
+    assert.equal(resolveCodex({ cwd: subdir }), project);
+    assert.equal(resolveClaude({}), null);
+    assert.equal(resolveCodex({}), null);
+  });
+  const second = path.join(base, 'second'); fs.mkdirSync(second);
+  assert.equal(resolveAntigravity({ workspacePaths: [second, project], cwd: subdir }), project);
+  assert.equal(resolveAntigravity({ workspacePaths: [project, second] }), null, 'ambiguous multi-root workspace must not pick the first entry');
+});
+
+test('root resolution rejects junctions that take managed storage outside the project', t => {
+  const { project, launcher } = fixture(t);
+  fs.writeFileSync(path.join(project, '.mnemo-root'), '');
+  const link = path.join(project, 'memory');
+  fs.symlinkSync(launcher, link, process.platform === 'win32' ? 'junction' : 'dir');
+  assert.equal(resolveRoot(project), null);
+  fs.unlinkSync(link);
+  fs.mkdirSync(path.join(project, 'docs'));
+  fs.symlinkSync(launcher, path.join(project, 'docs', 'handoffs'), process.platform === 'win32' ? 'junction' : 'dir');
+  assert.equal(resolveRoot(project), null);
+  assert.deepEqual(fs.readdirSync(launcher), []);
+});

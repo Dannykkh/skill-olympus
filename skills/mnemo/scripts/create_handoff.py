@@ -18,12 +18,12 @@ Usage:
 """
 
 import argparse
-import os
 import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from mnemo_project_root import detect_project_root
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -177,9 +177,15 @@ def get_previous_handoff_info(project_path: str, continues_from: str = None) -> 
 def generate_handoff(
     project_path: str,
     slug: str = None,
-    continues_from: str = None
+    continues_from: str = None,
+    *, explicit: bool = False,
 ) -> str:
     """Generate a handoff document with pre-filled metadata."""
+
+    project_root = detect_project_root(Path(project_path), explicit=explicit)
+    if not project_root.is_dir():
+        raise ValueError(f"project directory does not exist: {project_root}")
+    project_path = str(project_root)
 
     # Generate timestamp and filename
     now = datetime.now()
@@ -198,6 +204,7 @@ def generate_handoff(
     # Create handoffs directory
     handoffs_dir = Path(project_path) / "docs" / "handoffs"
     handoffs_dir.mkdir(parents=True, exist_ok=True)
+    (project_root / ".mnemo-root").touch(exist_ok=True)
 
     filepath = handoffs_dir / filename
 
@@ -419,10 +426,13 @@ def main():
         help="Filename of previous handoff this continues from"
     )
 
+    parser.add_argument("--project-root", type=Path, help="Explicit project workspace (required to initialize a non-Git project)")
     args = parser.parse_args()
 
-    # Get project path (current working directory)
-    project_path = os.getcwd()
+    try:
+        project_path = str(detect_project_root(args.project_root or Path.cwd(), explicit=args.project_root is not None))
+    except ValueError as error:
+        parser.error(str(error))
 
     # Check for existing handoffs to suggest chaining
     if not args.continues_from:
@@ -433,7 +443,10 @@ def main():
             print(f"Use --continues-from <filename> to link handoffs.\n")
 
     # Generate handoff
-    filepath = generate_handoff(project_path, args.slug, args.continues_from)
+    try:
+        filepath = generate_handoff(project_path, args.slug, args.continues_from, explicit=args.project_root is not None)
+    except ValueError as error:
+        parser.error(str(error))
 
     print(f"Created handoff document: {filepath}")
     print(f"\nNext steps:")

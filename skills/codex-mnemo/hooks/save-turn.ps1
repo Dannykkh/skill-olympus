@@ -94,12 +94,12 @@ function Normalize-PathSafe([string]$p) {
     }
 }
 
-function Resolve-MnemoProjectRoot([string]$StartPath, [string]$Mode = '') {
+function Resolve-MnemoProjectRoot($Payload) {
     $helper = Join-Path $PSScriptRoot 'mnemo-project-root.js'
     if (-not (Test-Path -LiteralPath $helper)) { $helper = Join-Path $PSScriptRoot '../../../hooks/mnemo-project-root.js' }
     if (-not (Test-Path -LiteralPath $helper)) { return $null }
     try {
-        $result = & node $helper $StartPath $Mode 2>$null
+        $result = ($Payload | ConvertTo-Json -Compress -Depth 40) | & node $helper --codex 2>$null
         if ($LASTEXITCODE -eq 0 -and $result) { return "$result".Trim() }
     } catch {}
     return $null
@@ -502,24 +502,7 @@ if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $respon
     exit 0
 }
 
-$baseDir = ""
-$rootMode = ""
-foreach ($k in @("project-root", "project_root", "workspace-root", "workspace_root", "cwd", "working-directory", "working_directory")) {
-    $v = ""
-    try { $v = "$($payload.$k)".Trim() } catch {}
-    if ($v) {
-        $baseDir = $v
-        if ($k -match '^(project|workspace)') { $rootMode = '--explicit' }
-        break
-    }
-}
-if (-not $baseDir -and $env:CODEX_WORKSPACE_ROOT) {
-    $baseDir = $env:CODEX_WORKSPACE_ROOT
-    $rootMode = '--explicit'
-}
-# Missing or invalid workspace metadata must never fall back to the hook cwd.
-if (-not $baseDir) { exit 0 }
-$baseDir = Resolve-MnemoProjectRoot $baseDir $rootMode
+$baseDir = Resolve-MnemoProjectRoot $payload
 if (-not $baseDir) { exit 0 }
 if (-not (Test-Path -LiteralPath (Join-Path $baseDir '.mnemo-root'))) {
     [System.IO.File]::WriteAllText((Join-Path $baseDir '.mnemo-root'), '', $Utf8NoBom)

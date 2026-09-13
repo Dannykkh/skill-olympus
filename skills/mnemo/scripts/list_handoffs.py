@@ -12,11 +12,11 @@ Usage:
     python list_handoffs.py /path     # List handoffs in specified path
 """
 
-import os
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from mnemo_project_root import detect_project_root
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -83,7 +83,7 @@ def parse_date_from_filename(filename: str) -> datetime | None:
 
 def list_handoffs(project_path: str) -> list[dict]:
     """List all handoff documents in a project."""
-    handoffs_dir = Path(project_path) / "docs" / "handoffs"
+    handoffs_dir = detect_project_root(Path(project_path)) / "docs" / "handoffs"
 
     if not handoffs_dir.exists():
         return []
@@ -115,7 +115,11 @@ def format_date(dt: datetime | None) -> str:
 
 def main():
     # Get project path
-    project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    try:
+        project_path = str(detect_project_root(Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd()))
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 2
 
     handoffs = list_handoffs(project_path)
 
@@ -139,4 +143,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

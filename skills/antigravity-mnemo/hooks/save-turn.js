@@ -3,9 +3,7 @@
 
 const crypto = require("crypto");
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
-const { execFileSync } = require("child_process");
 
 const ALLOW = { decision: "allow" };
 
@@ -18,77 +16,11 @@ function readPayload() {
   return input ? JSON.parse(input) : {};
 }
 
-function isTempPath(candidate) {
-  if (!candidate) return true;
-  const resolved = path.resolve(candidate).toLowerCase();
-  const roots = [os.tmpdir(), process.env.TEMP, process.env.TMP]
-    .filter(Boolean)
-    .map((value) => path.resolve(value).toLowerCase());
-  return roots.some((root) => resolved === root || resolved.startsWith(root + path.sep));
-}
-
-function nearestMarkedRoot(start) {
-  if (!start || !fs.existsSync(start)) return null;
-  const home = path.resolve(os.homedir());
-  let current = path.resolve(start);
-  while (true) {
-    if (current === home || !isSafeProjectPath(current)) break;
-    if (
-      fs.existsSync(path.join(current, ".git")) ||
-      fs.existsSync(path.join(current, ".mnemo-root"))
-    ) {
-      return current;
-    }
-    const parent = path.dirname(current);
-    if (parent === current) break;
-    current = parent;
-  }
-  return null;
-}
-
-function isSafeProjectPath(candidate) {
-  if (!candidate || !path.isAbsolute(candidate)) return false;
-  const resolved = fs.realpathSync(candidate);
-  const normalized = resolved.toLowerCase();
-  if (!fs.statSync(resolved).isDirectory() || isTempPath(resolved)) return false;
-  if (resolved === path.parse(resolved).root || normalized === path.resolve(os.homedir()).toLowerCase()) return false;
-  if (/(?:^|[\\/])\.(?:claude|codex|gemini|grok)(?:[\\/]|$)/i.test(resolved)) return false;
-  return ![process.env.CLAUDE_CONFIG_DIR, process.env.CODEX_HOME, process.env.GEMINI_CLI_HOME,
-    process.env.ANTIGRAVITY_HOME, process.env.GROK_HOME, process.env.GROK_CONFIG_DIR]
-    .filter(Boolean).some((root) => {
-      const blocked = path.resolve(root).toLowerCase();
-      return normalized === blocked || normalized.startsWith(blocked + path.sep);
-    });
-}
-
-function resolveProjectRoot(payload) {
-  const candidates = [
-    ...(Array.isArray(payload.workspacePaths) ? payload.workspacePaths : []).map((value) => ({ value, explicit: true })),
-    { value: payload.workspacePath, explicit: true },
-    { value: payload.cwd, explicit: false },
-    { value: payload.workingDirectory, explicit: false },
-  ].filter(({ value }) => typeof value === "string" && value.trim());
-
-  for (const { value: candidate, explicit } of candidates) {
-    if (!path.isAbsolute(candidate) || !fs.existsSync(candidate)) continue;
-    if (!isSafeProjectPath(candidate)) continue;
-    const resolved = fs.realpathSync(candidate);
-    try {
-      const gitRoot = execFileSync("git", ["-C", resolved, "rev-parse", "--show-toplevel"], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-        timeout: 3000,
-      }).trim();
-      if (gitRoot) return isSafeProjectPath(gitRoot) ? fs.realpathSync(gitRoot) : null;
-    } catch {
-      // Non-git workspaces are supported below.
-    }
-    const marked = explicit ? null : nearestMarkedRoot(resolved);
-    if (marked) return marked;
-    return resolved;
-  }
-  return null;
-}
+// The installed adapter carries the same helper as Claude, Codex and Grok.
+const rootHelper = fs.existsSync(path.join(__dirname, "mnemo-project-root.js"))
+  ? path.join(__dirname, "mnemo-project-root.js")
+  : path.join(__dirname, "../../../hooks/mnemo-project-root.js");
+const { resolveAntigravity: resolveProjectRoot } = require(rootHelper);
 
 function redact(value) {
   return String(value || "").replace(/<private>[\s\S]*?<\/private>/gi, "[PRIVATE]").trim();

@@ -135,10 +135,12 @@ Codex CLI 대화
 
 ## 프로젝트 저장 경계
 
-`MEMORY.md`, `memory/`, `conversations/`는 프로젝트 안에 보관한다. Git 루트를 우선하며,
-명시한 비-Git workspace는 그대로 사용한다. 하위 cwd에서는 `.mnemo-root`를 찾되,
-일반 `MEMORY.md`·`conversations/`가 있다는 이유로 상위 폴더를 채택하지 않는다.
-저장 시 생기는 `.mnemo-root`는 절대경로를 담지 않으므로 프로젝트와 함께 이동한다.
-HOME·CLI 설정 폴더·무효 경로에는 기록하지 않는다. workspace 정보가 없으면 프로세스
-cwd로 추측해 쓰지 않고 저장을 건너뛴다. 정상 payload와 쓰기 권한이 있어야 자동 저장된다.
-기존에 외부로 흩어진 기록은 이 변경만으로 이동되지 않으며 원본 세션으로 소속을 확인해야 한다.
+기억·대화·핸드오프는 확정된 프로젝트 루트에 저장한다. 공통 규약은 소스의
+`skills/mnemo/references/project-storage.md`, 설치 스킬의
+`<module_root>/references/project-storage.md`에서 읽는다.
+
+모든 어댑터와 핸드오프·복구 도구는 공통 `mnemo-project-root.js`를 사용한다.
+Git 환경변수·하위 cwd로 저장 위치를 바꾸지 않으며, Git도 `.mnemo-root`도 없는
+일반 cwd에는 자동 저장하지 않는다. 비-Git 프로젝트는 명시한 workspace에서
+초기화한다. 설치 패키지에는 공통 핸드오프 `scripts/`도 포함된다. 소스 checkout의
+핸드오프 도구 정본은 `skills/mnemo/scripts/`이다. 실행에는 Python 3와 Node.js가 필요하다.

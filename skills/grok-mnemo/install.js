@@ -29,6 +29,9 @@ const isWindows = process.platform === "win32";
 
 // Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
+const rootHelperName = "mnemo-project-root.js";
+const rootHelperSource = fs.existsSync(path.join(sourceDir, "hooks", rootHelperName))
+  ? path.join(sourceDir, "hooks", rootHelperName) : path.join(sourceDir, "../../hooks", rootHelperName);
 
 // Grok global directory ($GROK_HOME 지원)
 const grokDir = process.env.GROK_HOME
@@ -124,6 +127,11 @@ function check() {
     issues++;
   }
   const helperDest = path.join(hooksDir, "grok-mnemo-append-event.js");
+  const rootHelperInstalled = path.join(hooksDir, rootHelperName);
+  if (!fs.existsSync(rootHelperInstalled) || fs.readFileSync(rootHelperInstalled, "utf8") !== fs.readFileSync(rootHelperSource, "utf8")) {
+    console.log("      MISSING or stale mnemo-project-root.js");
+    issues++;
+  }
   if (!fs.existsSync(helperDest) || fs.readFileSync(helperDest, "utf8") !== fs.readFileSync(path.join(sourceDir, "hooks", "append-event.js"), "utf8")) {
     console.log("      MISSING or stale grok-mnemo-append-event.js");
     issues++;
@@ -187,7 +195,7 @@ function install() {
   // 만들기 전에 먼저 검증한다. 예전에는 ensureDir()가 앞에 있어, 소스가 없으면
   // 빈 hooks/ 디렉터리만 남기고 죽었다.
   const helperSrc = path.join(sourceDir, "hooks", "append-event.js");
-  if (!fs.existsSync(src) || !fs.existsSync(helperSrc)) {
+  if (!fs.existsSync(src) || !fs.existsSync(helperSrc) || !fs.existsSync(rootHelperSource)) {
     console.error(`      Error: hook source file missing — nothing was installed:`);
     console.error(`        - ${src}`);
     console.error("      레포가 온전하지 않습니다. 다시 clone 하거나");
@@ -198,6 +206,7 @@ function install() {
   ensureDir(hooksDir);
   copyFile(src, dest);
   copyFile(helperSrc, path.join(hooksDir, "grok-mnemo-append-event.js"));
+  copyFile(rootHelperSource, path.join(hooksDir, rootHelperName));
   if (!isWindows) {
     fs.chmodSync(dest, 0o755);
   }
@@ -250,7 +259,7 @@ function uninstall() {
 `);
 
   console.log("[1/3] Removing hook scripts...");
-  for (const file of ["grok-mnemo-save-turn.ps1", "grok-mnemo-save-turn.sh", "grok-mnemo-append-event.js"]) {
+  for (const file of ["grok-mnemo-save-turn.ps1", "grok-mnemo-save-turn.sh", "grok-mnemo-append-event.js", rootHelperName]) {
     if (removeFile(path.join(hooksDir, file))) {
       console.log(`      - ${file} removed`);
     }
