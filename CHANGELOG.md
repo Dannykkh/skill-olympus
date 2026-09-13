@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.5] - 2026-09-13
+
+### Bug Fixes
+
+- **네 CLI의 프로젝트 저장 경계 통일**: Claude·Codex·Antigravity·Grok의 Mnemo 훅이 같은 루트 해석기를 사용한다. 실제 파일 트리의 Git/worktree 경계를 확인해 상속된 `GIT_DIR`·`GIT_WORK_TREE`나 오래된 실행 경로가 대화·기억을 다른 프로젝트로 보내지 못하게 했다. 확인되지 않은 cwd, 모호한 다중 workspace, 프로젝트 밖으로 연결된 저장 junction/symlink에서는 자동 저장을 건너뛴다. (3ca4ebf)
+- **복구·핸드오프 경로 고정**: Python 복구와 핸드오프 생성·조회·점검도 공통 해석기를 사용한다. 하위 디렉터리에서 실행해도 프로젝트 루트에 모이며, 비-Git 프로젝트는 명시한 workspace와 이동 가능한 `.mnemo-root`로 유지한다. (3ca4ebf)
+- **설치본의 공통 도구 보존**: 활성·source-only Mnemo 패키지에 공통 경로 도구와 핸드오프 스크립트를 포함하고, Claude 재설치의 정리 단계가 공통 파일을 지우던 문제를 수정했다. 어댑터 설치 검사에 공통 도구의 누락·변경 확인을 추가했다. (3ca4ebf)
+
+### Documentation
+
+- 네 CLI가 참조하는 프로젝트 저장 규약을 한 문서로 통합하고 README·전역 규칙·스킬 안내를 연결했다. (3ca4ebf)
+
+### Tests
+
+- Windows에서 설치·정책·라우팅·인코딩 검사 45개와 Python 핸드오프·복구 테스트 17개가 통과했다. 기존 Antigravity 인용부호 형식을 고정하던 테스트도 현재 명령 형식에 맞췄다. 전역 설치본 검사 12개 및 프로젝트 이동·Git 환경 오염·네 어댑터 핸드오프 실행 회귀 검사 6개를 통과했다. (3ca4ebf)
+
+### Upgrade Notes
+
+- 실행 중인 CLI를 재시작한다. Git이 없는 프로젝트는 명시적 workspace 또는 루트의 빈 `.mnemo-root`가 필요하며, Python 복구·핸드오프 도구에는 Node.js도 필요하다.
+- 검증 범위는 Mnemo 훅과 제공 도구다. CLI가 관리하는 원본 세션은 고유 위치에 남으며, 기존에 흩어진 기록을 자동으로 이전·삭제하지 않는다. 대화형 CLI 자체의 이벤트 전달과 다른 운영체제의 전체 실행 검증은 NOT RUN.
+
 ## [6.2.4] - 2026-09-13
 
 ### Bug Fixes
