@@ -190,14 +190,15 @@ function configureAntigravity() {
 
   const group = {};
   const adapter = `${hooksDir}/antigravity-hook.js`;
+  const adapterCmd = /\s/.test(adapter) ? `"${adapter}"` : adapter;
   if (shouldInclude("check-new-file") || shouldInclude("protect-files")) {
     group.PreToolUse = [{
       matcher: "write_to_file|replace_file_content|multi_replace_file_content",
-      hooks: [{ type: "command", command: `node "${adapter}" safety`, timeout: timeoutSeconds }],
+      hooks: [{ type: "command", command: `node ${adapterCmd} safety`, timeout: timeoutSeconds }],
     }];
   }
   if (shouldInclude("loop-stop")) {
-    group.Stop = [{ type: "command", command: `node "${adapter}" chronos`, timeout: timeoutSeconds }];
+    group.Stop = [{ type: "command", command: `node ${adapterCmd} chronos`, timeout: timeoutSeconds }];
   }
   if (Object.keys(group).length > 0) config[groupId] = group;
   else delete config[groupId];

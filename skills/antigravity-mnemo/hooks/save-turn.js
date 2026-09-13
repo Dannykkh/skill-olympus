@@ -132,6 +132,7 @@ function isModelRecord(record) {
   const type = String(record.type || "").toUpperCase();
   if (source === "ASSISTANT") return true;
   if (source !== "MODEL") return false;
+  if (type === "GENERIC") return false;
   return !/(?:TOOL|COMMAND|FUNCTION|THOUGHT|REASONING)/.test(type);
 }
 
@@ -153,7 +154,9 @@ function latestTurn(payload) {
   if (user) {
     for (const record of records) {
       if (recordOrder(record) < user.order || !isModelRecord(record)) continue;
-      const content = redact(textFrom(record.content ?? record.message ?? record));
+      const raw = record.content ?? record.message;
+      if (!raw) continue;
+      const content = redact(textFrom(raw));
       if (content) assistant = { content, order: recordOrder(record) };
     }
   }

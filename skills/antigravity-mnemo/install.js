@@ -69,7 +69,8 @@ function removeRules(filePath, includeLegacy = false) {
 }
 
 function hookCommand() {
-  return `node "${hookPath.replace(/\\/g, "/")}"`;
+  const normalized = hookPath.replace(/\\/g, "/");
+  return /\s/.test(normalized) ? `node "${normalized}"` : `node ${normalized}`;
 }
 
 function installHookConfig() {
