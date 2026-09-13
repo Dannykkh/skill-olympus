@@ -4,8 +4,8 @@
     "name": "Dannykkh"
   },
   "metadata": {
-    "description": "Twelve Greek gods. One command. A working SaaS. 그리스 신들의 신전 — 설계부터 출항까지 한 마디로 끝내는 멀티 CLI 파이프라인.",
-    "version": "6.2.2"
+    "description": "Twelve Greek gods. One command. A working SaaS. \uadf8\ub9ac\uc2a4 \uc2e0\ub4e4\uc758 \uc2e0\uc804 \u2014 \uc124\uacc4\ubd80\ud130 \ucd9c\ud56d\uae4c\uc9c0 \ud55c \ub9c8\ub514\ub85c \ub05d\ub0b4\ub294 \uba40\ud2f0 CLI \ud30c\uc774\ud504\ub77c\uc778.",
+    "version": "6.2.3"
   },
   "plugins": [
     {
@@ -15,7 +15,7 @@
         "repo": "Dannykkh/skill-olympus"
       },
       "description": "100 public skill sources with a lightweight entrypoint-only registry, 42 optional agent references, and native-agent orchestration for Claude Code, Codex CLI, Google Antigravity CLI, and Grok Build. Twelve Greek gods form a full pipeline with cross-CLI memory and zero-interaction delivery.",
-      "version": "6.2.2",
+      "version": "6.2.3",
       "category": "productivity",
       "tags": [
         "claude-code",

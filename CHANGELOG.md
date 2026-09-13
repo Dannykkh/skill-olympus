@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.3] - 2026-09-13
+
+### Bug Fixes
+
+- **Codex Astra 애니메이션**: 통합 설치의 Codex 단계에서 전역 `config.toml`에 `tui.animations=false`와 `tui.whimsy=false`를 적용해 일반 애니메이션과 Astra 입력창 별 효과를 끈다. `CODEX_HOME`을 따르고 기존 dotted key·`[tui]` 설정을 갱신하며 재설치 시 중복을 만들지 않는다. (ac6c1b1)
+
+### Documentation
+
+- **설정 안내와 실제 캡처**: README 4개 언어에 별 효과의 실제 스크린샷, 운영체제별 전역 설정 위치, 두 옵션의 차이, 다시 켜는 방법과 Codex 재시작·재설치·제거 시 동작을 설명했다. (ac6c1b1)
+
+### Tests
+
+- **전역 설치 회귀 검사**: 격리 홈에서 신규 설정, 기존 dotted key, 주석이 붙은 `[tui]`, 하위 테이블, 재설치와 관련 없는 설정 보존을 검증한다. 실제 실행 중인 TUI의 재시작 후 시각 검증은 NOT RUN. (ac6c1b1)
+
 ## [6.2.2] - 2026-09-10
 
 ### Bug Fixes
