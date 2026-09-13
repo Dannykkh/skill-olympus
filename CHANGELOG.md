@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.2.4] - 2026-09-13
+
+### Bug Fixes
+
+- **Antigravity Mnemo 훅 실행 및 대화 파싱**: Windows `cmd /c` 환경에서 경로 인용부호 중첩으로 인한 모듈 로드 실패(`Cannot find module 'C:\'`)를 방지하기 위해 공백 없는 경로일 때 불필요한 큰따옴표를 제거했다. 또한 Antigravity 로그 파서(`isModelRecord`)에서 도구 실행 결과(`type: "GENERIC"`)를 어시스턴트 답변으로 오인식하던 결함을 수정하여 순수 모델 응답(`PLANNER_RESPONSE`)만 저장되도록 개선했다.
+- **Antigravity 코어 훅 인용부호 정규화**: `install-hooks-config.js`에서 생성하는 코어 훅(`PreToolUse safety`, `Stop chronos`) 역시 공백 없는 경로의 큰따옴표를 제거하여 Windows 환경 실행 안정성을 확보했다.
+
+### Tests
+
+- Antigravity Mnemo 설치 검사(`install.js --check`), Windows `cmd /c` 훅 직접 호출 및 전체 인스톨러 통합 테스트(`installers.test.js` 23개 항목, `mnemo-adapter-roots.test.js` 3개 항목)를 전원 통과했다. 오늘자 세션의 1~4번째 대화 내역을 정상 복원했다.
+
+
 ## [6.2.3] - 2026-09-13
 
 ### Bug Fixes
