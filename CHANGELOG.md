@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.7.0] - 2026-09-14
+
+### Features
+
+- Apply the minimal-implementation ladder - YAGNI, then codebase reuse, the standard library, native features, existing dependencies, and only then minimal new code - as an always-on rule in the four-CLI global instruction surfaces. It previously lived in an invoke-only reference and stopped applying once custom agents dropped to zero under the entrypoint-only runtime.
+- Record a deliberate shortcut with `// minimal: <cap> - <upgrade trigger>` under the same always-on rule, so the marker gets written without calling a skill. Claude, Codex and Antigravity carry the rule in their own canonical template; Grok inherits it through the shared Claude rules rather than a copied body.
+
+### Bug Fixes
+
+- Widen Hestia's minimal-marker harvest from `src/ app/ lib/` to the whole project with rg, so markers under `scripts/`, `services/`, `packages/` or a non-JS layout still reach the simplification-debt ledger. HTML comment markers are now matched by the file-type filter as well.
+
 ## [6.6.0] - 2026-09-14
 
 ### Features
