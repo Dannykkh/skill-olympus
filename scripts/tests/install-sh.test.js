@@ -116,7 +116,8 @@ function runIsolatedInstaller(bash, args, options = {}) {
     return spawnSync(
       bash,
       ["--noprofile", "--norc", "-u", shellPath(installSh), ...args],
-      { cwd: repoRoot, env, encoding: "utf8", timeout: 30_000 },
+      // Git Bash process startup varies on Windows; keep the installer assertions unchanged.
+      { cwd: repoRoot, env, encoding: "utf8", timeout: process.platform === "win32" ? 120_000 : 30_000 },
     );
   } finally {
     fs.rmSync(tempHome, { recursive: true, force: true });

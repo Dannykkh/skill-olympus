@@ -85,6 +85,18 @@ curl -s -w "\nHTTP Status: %{http_code}\n" \
 - 잘못된 토큰: 401 Unauthorized
 - 토큰 없음: 401 또는 403
 
+### 3-1. API 직접 호출·서버 검증 (관련 API 필수)
+
+상세 기준은 `skills/code-reviewer/references/security-audit.md`의 `API 직접 호출·서버 검증 계약`이다.
+프로젝트에 없으면 현재 CLI 활성 루트, 이어서 `SKILLS-CATALOG.md`의 code-reviewer 원본 경로로
+해석하고 그 모듈의 참조를 직접 읽는다. source-only를 slash 호출하거나 전역 활성화하지 않는다.
+참조 누락은 `NOT RUN`으로 남긴다. 대상 API에 계약 ID별 사례를 매핑하고 기존 QA의 누락을 보충한다.
+UI 입력만으로 끝내지 않고 독립 계정의 직접 HTTP 요청(기존 API 테스트 또는 Playwright request)을 실행한다.
+정상 대조군·거부 응답·저장/상태/부수 효과의 전후 비교와 실행 증거를 계약 형식으로 남긴다.
+기존 증거는 대상 버전·환경·조건이 같을 때 재사용한다. 서버·계정·관찰 수단 부족은 `NOT RUN`이며,
+필수 사례 미실행을 전체 PASS로 표시하지 않는다. 명시적 UI-only 범위에서는 API 시험을 확장하지 않고
+API 보안 검증 제외를 보고한다. 테스트를 통과시키려고 검증을 제거하거나 거부 기대값을 완화하지 않는다.
+
 ### 4. CRUD 엔드포인트 검증
 
 ```bash

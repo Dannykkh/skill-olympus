@@ -8,6 +8,14 @@ description: 준공검사 감리 스킬. 설계 산출물(spec, api-spec, qa-sce
 > **아르고스 판옵테스(Argus Panoptes)**: 100개의 눈을 가진 그리스 신화의 감시자.
 > 설계 도면과 스펙 대비 구현 상태를 빠짐없이 검증합니다.
 
+## GS 작업을 전달받은 경우에만
+
+GS 인증 사전점검에서 등급·기관 기준·run_dir을 전달받으면 `gs-certification` 모듈을
+프로젝트 실제 경로 → 현재 CLI 활성 루트 → SKILLS-CATALOG.md의 정확한 source-only 경로로 해석한다.
+그 SKILL.md를 읽고 부모 디렉터리의 `references/argos-gs-audit.md`를 적용한다.
+GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 누락은 NOT RUN으로 반환한다.
+사용자의 점검/수정 권한과 GS 출력 경로를 우선하고 기존 latest 보고서를 덮어쓰지 않는다.
+
 ## Quick Start
 
 ```
@@ -303,6 +311,17 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 - `validate-code` 훅보다 넓은 범위 (훅은 3개 패턴, 여기서는 전체 OWASP)
 - 인증/권한 체계 확인 (미인증 엔드포인트 탐지)
 - Rate Limiting 존재 여부
+
+#### 7-3a. API 직접 호출·서버 검증 (런타임 감리)
+
+`MODULE_ROOT[code-reviewer]/references/security-audit.md`의 `API 직접 호출·서버 검증 계약`을
+대상 API에 매핑한다. Phase 3/4 및 api-tester/Minos의 같은 버전·환경·조건 실행 증거를 재사용하고,
+누락 사례는 기존 API 테스트 하네스로 실행한다. 정적 패턴 검색·인증 여부·UI 테스트만으로 통과시키지 않는다.
+계약 ID별 정상 대조군, 계정 간 접근, 변조 요청, 거부 응답, 저장/상태/부수 효과 증거를 보고서에 포함한다.
+우회 또는 금지된 저장/효과 재현은 이 게이트 `FAIL`이며 최종 PASS를 금지한다. 미실행은 `NOT RUN`으로
+남겨 최종 결과를 최대 `CONDITIONAL`로 제한한다(다른 FAIL은 유지). 해당 API가 없으면 근거 있는 `N/A`다.
+이 제한은 점수 합산 및 Healer 재검증 후에도 적용한다. 참조 누락은 기존 fallback으로 확인 가능한
+증거만 수집하고 계약 전체를 검증했다고 주장하지 않는다.
 
 #### 7-4. STRIDE 위협 요약
 - Spoofing / Tampering / Repudiation / Info Disclosure / DoS / Elevation

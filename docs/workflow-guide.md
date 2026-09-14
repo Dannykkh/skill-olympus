@@ -477,3 +477,22 @@ Docker 배포 환경 만들어줘
 | [skills/orchestrator/](../skills/orchestrator/) | hard lock·외부 보드·cross-CLI용 MCP 정책 레이어 |
 | [skills/minos/](../skills/minos/) | QA 자동 테스트 + Healer |
 | [skills/docker-deploy/](../skills/docker-deploy/) | Docker 배포 환경 생성 |
+
+
+## GS 인증 사전점검 (선택 실행)
+
+`GS 인증 1등급 사전점검해줘` 또는 `GS 인증 2등급 검사해줘`라고 요청한다.
+[gs-certification](../skills/gs-certification/SKILL.md)은 source-only이며 기본 slash 등록을 추가하지 않는다.
+일반 개발·리뷰에서는 실행하지 않는다. 등급을 생략하면 먼저 확인한다.
+
+선택 등급·기관 기준 확정 → 제품/문서/시험 추적표 → 필요한 리뷰·API/QA 시험 → 결함·회귀 → 준비도 보고.
+1등급 품질평가와 2등급 품질/업무적합성을 별도 프로필·결과로 관리한다. 기본은 점검과 보고이며,
+`--check-only`는 응답만, `--fix`는 승인된 범위의 보완과 회귀까지 수행한다.
+기준이나 실제 실행 근거가 없으면 INCOMPLETE로 남기고 인증 합격을 주장하지 않는다.
+산출물은 제품 프로젝트 `docs/gs-certification/grade-{1|2}/{run-id}/`에 저장한다.
+
+GS 실제 실행은 [E1~E6 프로토콜](../skills/gs-certification/references/execution-protocol.md)을 따른다.
+검토한 프로젝트 assertion을 plan.json에 연결하고 Python 실행기로 execution.json을 수집한다.
+자동 EVIDENCE_COMPLETE 뒤에도 Clio 문서 검토·Argos 기준/증거 감리가 필요하다.
+재현 가능한 실행기 검증: `python skills/gs-certification/tests/test-evaluation.py`.
+이 샘플 검증은 실제 HTTP의 입력/인가/저장 효과와 집계 게이트 검증이며 전체 GS 품질 영역의 인증 시험이 아니다.

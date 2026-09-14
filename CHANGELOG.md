@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.3.0] - 2026-09-14
+
+### Features
+
+- Add optional Korean GS certification preflight with separate grade 1 and grade 2 profiles, official source references, and ISO/IEC 25023, 25041, and 25051 context.
+- Execute reviewed project assertions through a Python evidence runner; keep missing criteria, unexecuted cases, and open defects out of readiness claims.
+- Connect GS-specific Clio document review and Argos evidence audits only when GS preparation is requested.
+
+### Security and QA
+
+- Require direct API authorization, ownership/tenant, business-flow, input/boundary, and writable-field checks in relevant reviews and tests.
+- Check storage and side effects after denied requests; do not equate a rejection response or a successful command with verified security.
+- Add loopback HTTP defect/regression tests and evidence-gate tests. Crash recovery and database restore still need product-specific tests.
+- Allow Windows Git Bash installer regression tests up to 120 seconds while preserving all functional assertions.
+
+### Documentation and installation
+
+- Document Korean GS certification, ISO scope, grades, installation, invocation, outputs, and validation limits in the Korean and English READMEs; link translated READMEs.
+- Publish 101 public skill sources, with 77 source-only modules. Default active entry points are unchanged.
+- Install through `install.bat --all` or `bash install.sh`. GS remains source-only across Claude, Codex, Antigravity, and Grok's Claude compatibility surface.
+
+### Scope
+
+This is certification preparation tooling, not an official GS assessment or full ISO conformance certification. Product-specific criteria, tests, equipment, and evidence remain required.
+
 ## [6.2.6] - 2026-09-13
 
 ### Bug Fixes

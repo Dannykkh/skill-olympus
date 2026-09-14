@@ -41,8 +41,8 @@ const installAntigravityMnemo = path.join(repoRoot, "skills", "antigravity-mnemo
 const expectedSourceOnlySkillCount = fs.existsSync(
   path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
 )
-  ? 77
-  : 76;
+  ? 78
+  : 77;
 const expectedSourceOnlySkillPattern = new RegExp(
   `source-only 스킬: ${expectedSourceOnlySkillCount}개`,
 );

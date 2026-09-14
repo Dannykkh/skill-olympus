@@ -246,7 +246,7 @@ function stripNonOperationalContracts(source) {
     .replace(/^## (?:Related Files|관련 파일)[\s\S]*?(?=^## |\s*$)/gm, "");
 }
 
-test("entry-point default deny keeps 18 common entry points, six adapters, and 76 public source-only modules", () => {
+test("entry-point default deny keeps 18 common entry points, six adapters, and 77 public source-only modules", () => {
   assert.deepEqual(DEFAULT_COMMON_RUNTIME_SKILLS, EXPECTED_COMMON_RUNTIME_SKILLS);
   assert.deepEqual(
     DEFAULT_RUNTIME_SKILL_ALLOWLIST.filter(
@@ -257,7 +257,7 @@ test("entry-point default deny keeps 18 common entry points, six adapters, and 7
   assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 24);
 
   const allSkills = allRepoSkillNames();
-  assert.equal(allSkills.length, 100, "public repository skill inventory changed; revisit policy counts");
+  assert.equal(allSkills.length, 101, "public repository skill inventory changed; revisit policy counts");
 
   for (const runtime of ["claude", "codex", "antigravity", "grok", "openclaw", "hermes"]) {
     const selection = selectRuntimeSkills(
@@ -266,10 +266,10 @@ test("entry-point default deny keeps 18 common entry points, six adapters, and 7
     );
     const skillsOnly = runtime === "openclaw" || runtime === "hermes";
     const expectedActiveCount = skillsOnly ? 18 : runtime === "claude" ? 21 : 20;
-    const expectedAvailableCount = skillsOnly ? 94 : runtime === "claude" ? 97 : 96;
+    const expectedAvailableCount = skillsOnly ? 95 : runtime === "claude" ? 98 : 97;
 
     assert.equal(selection.skillNames.length, expectedActiveCount, `${runtime} active count`);
-    assert.equal(selection.defaultDisabledNames.length, 76, `${runtime} source-only count`);
+    assert.equal(selection.defaultDisabledNames.length, 77, `${runtime} source-only count`);
     assert.equal(
       selection.skillNames.length + selection.defaultDisabledNames.length,
       expectedAvailableCount,
@@ -298,12 +298,12 @@ test("all canonical skills use portable Agent Skills frontmatter", () => {
     "metadata",
   ]);
   const entries = allRepoSkillEntries();
-  // 공개 추적 스킬 100개에 git에 추적되지 않는 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
+  // 공개 추적 스킬 101개에 git에 추적되지 않는 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
   const expectedEntries = fs.existsSync(
     path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
   )
-    ? 101
-    : 100;
+    ? 102
+    : 101;
   assert.equal(
     entries.length,
     expectedEntries,
@@ -377,7 +377,7 @@ test("cross-CLI authoring rules and Antigravity compatibility boundaries stay ex
 
   const antigravityDocs = readRepoFile("docs/resources/antigravity-cli.md");
   assert.match(antigravityDocs, /기본 활성 \| 20/);
-  assert.match(antigravityDocs, /source-only \| 76/);
+  assert.match(antigravityDocs, /source-only \| 77/);
   assert.match(antigravityDocs, /런타임 제외 \| 4/);
   assert.match(antigravityDocs, /실제 `agy` 세션 검증/);
 

@@ -21,6 +21,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
 |Docker DB Backup|skills/docker-db-backup/SKILL.md|
 |API Testing|skills/api-tester/SKILL.md|
+|명시적 GS 인증 사전점검|skills/gs-certification/SKILL.md (source-only, 1·2등급 분리; 일반 개발에 자동 적용하지 않음)|
 |Documentation|네이티브 작성 + 목적별 skills/api-handoff, documentation-and-adrs, release-notes, crafting-effective-readmes|
 |FastAPI|프로젝트·공식 문서 우선; 명시 요청 시 skills/python-backend-fastapi/SKILL.md|
 |Spring Boot|프로젝트 build manifest·BOM·기존 계층·설정·테스트 우선; 버전 API는 공식 문서 확인|
@@ -68,9 +69,15 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |---|---|---|
 |Single responsibility|1 file = 1 role|Split by responsibility|
 |No circular deps|Unidirectional|Restructure dependency direction|
-|Security|OWASP Top 10|Check SQL injection, XSS, CSRF|
+|Security|OWASP Top 10 + API 직접 호출 검증|서버 인가·입력값·업무 상태 검증 및 거부 후 데이터 무변경 확인|
 |Type safety|Required|Add type hints (Python) / TypeScript|
 |DRY principle|No duplication|Extract reusable components|
+
+## API 직접 호출·서버 검증 (항상 적용)
+
+- 클라이언트는 UI를 건너뛰고 REST API를 직접 호출할 수 있다고 가정한다. 보호 API의 인증·인가와 모든 외부 입력의 형식·범위·업무 조건을 서버에서 검증한다. UI 제한과 CORS는 인가를 대신하지 않는다.
+- API·권한·입력 처리 변경의 개발 및 리뷰는 `skills/code-reviewer/references/security-audit.md`의 `API 직접 호출·서버 검증 계약`을 적용한다. 프로젝트에 없으면 현재 CLI 카탈로그의 code-reviewer 원본 디렉터리에서 읽는다.
+- 관련 QA는 정상 대조군과 API 직접 호출 거부 테스트를 실행하고 응답·저장·상태·부수 효과를 확인한다. 정적 확인이나 미실행을 런타임 PASS로 보고하지 않는다.
 
 ## Native-First 구현 경계 (항상 적용)
 
@@ -96,7 +103,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
   `~/.openclaw/skills`, `~/.hermes/skills`에 공통 진입점과 source-only 카탈로그만 설치하며,
   기존 네 CLI용 어댑터·훅·Mnemo·MCP·사용자 정의 에이전트 parity를 주장하지 않습니다.
 - Codex 스킬은 기본적으로 `~/.codex/skills/`에만 설치합니다. 이 저장소의 `.agents/skills` 미러는 격리 테스트용 `--include-project-skills` 옵션에서만 생성합니다.
-- 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(공통 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 97개(활성 21 + source-only 76), Codex와 Antigravity 각각 96개(활성 20 + source-only 76), OpenClaw과 Hermes Agent 각각 94개(활성 18 + source-only 76)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 96개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 21개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
+- 공개 추적 스킬 소스 101개는 기본 allowlist 합집합 24개(공통 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 77개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 98개(활성 21 + source-only 77), Codex와 Antigravity 각각 97개(활성 20 + source-only 77), OpenClaw과 Hermes Agent 각각 95개(활성 18 + source-only 77)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 97개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 21개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
 - 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
 - 사용자 정의 에이전트는 기본 거부 정책으로 0개를 등록합니다. 현재 소스 42종(패시브 9, 네이티브 중복 7, 중복 전문·스킬 래퍼 24, 워크플로 호환 프롬프트 2)은 source-only이며, 새 에이전트도 고유 런타임 계약을 입증해 allowlist에 넣기 전에는 자동 활성화되지 않습니다. 전체 소스 복사가 필요할 때만 `--include-source-only-agents`를 사용하고, Codex 프로젝트 에이전트 미러는 `--include-project-agents`에서만 생성합니다.
 - 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모), `/video-maker`(비디오메이커, 영상 요청 진입점)
@@ -123,7 +130,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skill sources (공개 추적 100개; 기본 allowlist 합집합 24개, 런타임별 활성 20개 또는 21개)
+### Skill sources (공개 추적 101개; 기본 allowlist 합집합 24개, 런타임별 활성 20개 또는 21개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|

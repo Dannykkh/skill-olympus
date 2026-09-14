@@ -32,7 +32,7 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 
 [快速开始](#快速开始) · [选择工作流](#选择工作流) · [CLI 支持](#cli-支持) · [English 详细版](README.md)
 
-> Olympus 不是把大量提示词全部塞进上下文。默认只公开 18 个清晰入口，底层 76 个
+> Olympus 不是把大量提示词全部塞进上下文。默认只公开 18 个清晰入口，底层 77 个
 > source-only 模块会在真正需要时通过目录读取。
 
 ---
@@ -48,8 +48,8 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 | **跨会话保留记忆** | `mnemo` 保存索引、语义记忆、可搜索对话和可恢复交接 |
 | **保持较小的启动上下文** | 少量入口只在需要时加载 source-only 模块 |
 
-仓库公开跟踪 100 个技能源。默认 allowlist 的并集为 24 个；集成 CLI 会启用 20 或 21 个，
-skills-only 主机会启用 18 个，其余 76 个保持 source-only。
+仓库公开跟踪 101 个技能源。默认 allowlist 的并集为 24 个；集成 CLI 会启用 20 或 21 个，
+skills-only 主机会启用 18 个，其余 77 个保持 source-only。
 
 ---
 
@@ -133,7 +133,7 @@ chmod +x install.sh && ./install.sh
 
 ### OpenClaw 和 Hermes Agent：skills-only 安装
 
-专用安装器会安装 18 个通用用户入口和 76 个 source-only 模块，不会安装插件、hooks、
+专用安装器会安装 18 个通用用户入口和 77 个 source-only 模块，不会安装插件、hooks、
 Mnemo、MCP、自定义智能体，也不会安装四个集成 CLI 的专用适配器。
 
 ```powershell
@@ -268,3 +268,5 @@ node --test scripts/tests/*.test.js
 ---
 
 **最后更新：** 2026-09-01
+
+[한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)

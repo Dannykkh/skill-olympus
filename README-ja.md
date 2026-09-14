@@ -33,7 +33,7 @@ Skill Olympusは、**Claude Code**、**Codex CLI**、**Antigravity CLI**、**Gro
 [クイックスタート](#クイックスタート) · [ワークフローを選ぶ](#ワークフローを選ぶ) · [CLI対応](#cli対応) · [Englishの詳細版](README.md)
 
 > Olympusは、大量のプロンプトを常時読み込む仕組みではありません。普段は18個の
-> 入口だけを公開し、下位モジュール76個は必要になった時点でカタログから読み込みます。
+> 入口だけを公開し、下位モジュール77個は必要になった時点でカタログから読み込みます。
 
 ---
 
@@ -48,8 +48,8 @@ Skill Olympusは、**Claude Code**、**Codex CLI**、**Antigravity CLI**、**Gro
 | **セッションをまたいで記憶する** | `mnemo`が索引、意味記憶、検索可能な会話、再開用ハンドオフを残す |
 | **開始時のコンテキストを軽くする** | 少数の入口から、必要なsource-onlyモジュールだけを読む |
 
-公開スキルソースは100個です。標準のallowlistは24個の和集合で、統合CLIでは20個または
-21個、skills-onlyホストでは18個が有効になります。残り76個はsource-onlyです。
+公開スキルソースは101個です。標準のallowlistは24個の和集合で、統合CLIでは20個または
+21個、skills-onlyホストでは18個が有効になります。残り77個はsource-onlyです。
 
 ---
 
@@ -134,7 +134,7 @@ chmod +x install.sh && ./install.sh
 
 ### OpenClawとHermes Agentはskills-only
 
-専用インストーラーは、共通のユーザー向けスキル18個とsource-onlyモジュール76個を
+専用インストーラーは、共通のユーザー向けスキル18個とsource-onlyモジュール77個を
 導入します。プラグイン、フック、Mnemo、MCP、カスタムエージェント、四つの統合CLI専用
 アダプターは導入しません。
 
@@ -276,3 +276,5 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 ---
 
 **最終更新:** 2026-09-01
+
+[한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)

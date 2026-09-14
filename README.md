@@ -47,9 +47,9 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Proof that code matches intent** | `/argos` compares the specification, code, APIs, scenarios, diagrams, and security boundaries |
 | **Browser tests that actually run** | `/minos` writes Playwright scenarios, executes them, and repairs failures within a bounded loop |
 | **Memory across sessions** | `mnemo` keeps an index, semantic memory, searchable conversations, and resumable handoffs |
-| **Less prompt noise** | A small active registry routes into 76 source-only modules only when the work needs them |
+| **Less prompt noise** | A small active registry routes into 77 source-only modules only when the work needs them |
 
-**100 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 76 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + 2 skills-only hosts · 1 mythology**
+**101 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 77 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + 2 skills-only hosts · 1 mythology**
 
 ---
 
@@ -153,7 +153,7 @@ workflow explicit.
 
 ### OpenClaw and Hermes Agent: skills-only install
 
-These entry points install the 18 portable user-facing skills plus the 76 source-only modules. They
+These entry points install the 18 portable user-facing skills plus the 77 source-only modules. They
 do not install plugins, hooks, Mnemo, MCP, custom agents, or the existing four-CLI runtime adapters.
 
 ```powershell
@@ -557,7 +557,7 @@ Codex skills install globally only by default, avoiding duplicate discovery from
 isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
 contains 24 skills: 18 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
 3 or 4 incompatible adapters, leaving Claude with 21 active skills and Codex/Antigravity/standalone Grok
-with 20; the installed Grok surface reads Claude's shared 21. The same 76 public non-allowlisted sources are
+with 20; the installed Grok surface reads Claude's shared 21. The same 77 public non-allowlisted sources are
 copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
 `SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
 `.olympus/runtime-modules/orchestrator`; MCP registration points there and dependency caches survive source refreshes. Activate every compatible source-only skill with `--include-source-only-skills`,
@@ -605,7 +605,7 @@ Includes deterministic gotcha/learned capture:
 
 ## What's Inside
 
-### Skill sources (100; default union 24, 20 or 21 active per installed surface)
+### Skill sources (101; default union 24, 20 or 21 active per installed surface)
 
 The table is the source inventory, not the startup registry. Low-frequency format tools, provider integrations, framework cookbooks, and generators remain source-only until explicitly invoked through the catalog or installed with the opt-in flag.
 
@@ -715,10 +715,75 @@ helps other solo builders find it.
 
 ---
 
+## Korean GS certification preflight
+
+`gs-certification` prepares a product for Korea's GS (Good Software) certification through an **explicit, optional workflow**.
+It separates grades 1 and 2 and connects requirements, product documentation, executable tests, defects, and regression evidence.
+It does not run automatically during ordinary development.
+
+### Install and invoke
+
+```powershell
+# Windows: synchronize Claude, Codex, Antigravity, and Grok
+install.bat --all
+```
+
+```bash
+# macOS/Linux/Git Bash
+bash install.sh
+```
+
+The default installation keeps this skill **source-only**, discoverable through each CLI's skill catalog.
+Grok shares Claude's installation surface. A default slash registration is not required or assumed.
+From the product project, request:
+
+```text
+Run a Korean GS grade 1 certification preflight.
+Check readiness for Korean GS grade 2; do not modify product code.
+Prepare for Korean GS grade 1, fix the findings, and run regression tests.
+```
+
+The workflow asks for a missing grade. Grade 1 quality evaluation and grade 2 quality/business-suitability evaluation
+use separate profiles and results. The selected institution, criteria revision, build, and environment are recorded.
+A check-only request does not authorize product changes or external submission.
+
+### ISO basis and execution
+
+The [TTA service description](https://cs.tta.or.kr/tta/introduce/introCont.do?tabMode=cont&tnc_cls_no=T000127&tnc_lab=T000003&up_tnc_cls_no=T000020)
+identifies ISO/IEC 25023 (quality measurement), 25041 (evaluation guidance), and 25051 (product/documentation requirements and testing).
+The workflow resolves actual criteria, measurement methods, and thresholds from the selected institution's current grade- and product-specific requirements.
+
+**Scope and criteria → measurement/test design → execution → defects and regression → documentation/evidence audit → readiness report**
+
+| Owner | Responsibility when GS preflight is requested |
+|---|---|
+| GS skill | Criteria mapping, grade-specific plans, evidence and defect ledgers, readiness decision |
+| Code reviewer | Server authorization, input/business validation, meaningful test assertions |
+| api-tester / Minos | Positive, negative, boundary, direct API, and regression tests |
+| Clio | Product description and user manual review, documented procedure reproduction |
+| Argos | Criteria, measurements, execution evidence, documentation, and defect closure audit |
+
+Only the required modules run. The workflow does not automatically run Hestia cleanup or every installed skill.
+A Python runner executes reviewed project test commands and records timestamps, exit codes, and output hashes.
+`EVIDENCE_COMPLETE` means automated evidence collection is complete; Argos must review it before READY.
+
+### Outputs and limits
+
+Artifacts go under `docs/gs-certification/grade-{1|2}/{run-id}/`: criteria, test plans, execution evidence,
+document reviews, defects, and audit results. READY / NEEDS_WORK / INCOMPLETE are internal preflight decisions,
+**not official certification or accredited test reports**. Missing criteria, equipment, accounts, or evidence remain unverified.
+
+The loopback HTTP fixture verifies authorization/input defects, denied-write side effects, grade gaps,
+grade-2 business assertions, timeouts, and preservation of previous evidence. It does not certify a real product or every ISO clause.
+Crash recovery, persistent data after restart, and database restoration **still require product-specific tests and are not covered by the sample**.
+
+[Skill](skills/gs-certification/SKILL.md) · [Execution protocol](skills/gs-certification/references/execution-protocol.md) ·
+[Sources](skills/gs-certification/references/sources.md)
+
 ## License
 
 [MIT](LICENSE)
 
 ---
 
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-14

@@ -14,6 +14,14 @@ description: >
 >
 > **마무리투수 → 기록자.** 점검 먼저, 문서는 그 다음.
 
+## GS 작업을 전달받은 경우에만
+
+GS 인증 사전점검에서 등급·기관 기준·run_dir을 전달받으면 `gs-certification` 모듈을
+프로젝트 실제 경로 → 현재 CLI 활성 루트 → SKILLS-CATALOG.md의 정확한 source-only 경로로 해석한다.
+그 SKILL.md를 읽고 부모 디렉터리의 `references/clio-gs-documents.md`를 적용한다.
+GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 누락은 NOT RUN으로 반환한다.
+사용자의 점검/수정 권한과 GS 출력 경로를 우선하고 기존 latest 보고서를 덮어쓰지 않는다.
+
 ## Quick Start
 
 ```
