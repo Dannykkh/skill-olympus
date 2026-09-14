@@ -122,6 +122,28 @@ Include all necessary background, requirements, and implementation details withi
 - Requires: {list of prior sections that must be complete}
 - Blocks: {list of sections that depend on this one}
 
+> 위는 **빌드 순서**입니다. 런타임 조립은 아래 Module Contract가 소유합니다.
+
+## Module Contract
+
+이 섹션이 독립 모듈로서 무엇을 약속하는지. 옆 모듈은 여기 적힌 것만 믿고 붙습니다.
+내부 구현 세부는 적지 않습니다 — 바뀌어도 계약이 유지되면 옆 모듈은 영향받지 않아야 합니다.
+
+- **Provides**: {이 모듈이 외부에 공개하는 것 — 인터페이스·타입·이벤트·라우트}
+  - `{이름}` — {시그니처 또는 페이로드}
+- **Consumes**: {이 모듈이 다른 모듈에서 가져다 쓰는 것. 출처 섹션을 함께 표기}
+  - `{이름}` — from section-NN
+- **Owns**: {이 모듈만 쓰는 파일·테이블·상태. 다른 섹션이 여기 쓰기 금지}
+- **Composition Point**: {index.md Harness의 조립 지점 + 이 모듈의 등록 코드 한 줄}
+  - 예: `src/app/routes.ts` — `registerModule(CouponIssueModule)`
+
+규칙:
+
+- Provides가 비어 있으면 이 섹션은 모듈이 아니라 다른 모듈의 내부 작업입니다. 해당 모듈로 합칩니다.
+- Consumes에 적히지 않은 것을 구현 중에 가져다 쓰면 **경계 위반**입니다. 계약을 먼저 고칩니다.
+- Owns가 다른 섹션의 Owns와 겹치면 병렬 구현에서 충돌합니다. 겹치면 공유 기반 섹션으로 올립니다.
+- 조립 지점이 없는 프로젝트는 `NOT APPLICABLE: single composition point`로 기록합니다.
+
 ## Flow Diagram Nodes
 
 > 이 섹션이 구현하는 프로세스 다이어그램 노드. workpm이 공정 점검 시 이 매핑을 기준으로 검증합니다.

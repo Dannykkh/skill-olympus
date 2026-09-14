@@ -581,6 +581,17 @@ See [section-index.md](references/section-index.md)
 Read `plan.md`. Identify natural section boundaries → create `<planning_dir>/sections/index.md`.
 **CRITICAL:** index.md MUST start with a SECTION_MANIFEST block.
 
+**경계 규칙** — 섹션은 **기능 수직 분할**이 기본입니다. 한 섹션이 그 기능의 데이터·API·화면·테스트를
+모두 소유해야 나중에 기능 하나를 열어서 고칠 수 있습니다. 레이어 분할(`api-layer`, `frontend`)은
+기능을 흩뿌리므로 금지하고, 기존 코드베이스가 이미 레이어로 강제된 경우에만 사유와 함께 허용합니다.
+공유 기반 섹션은 둘 이상의 기능 섹션이 실제로 공유하는 것만 만들고 `Shared Foundation Rationale`에
+공유 섹션 목록을 기록합니다. `spec.md` 시스템 역할 표에서 `화면` 열이 '별도 화면'인 역할은 독립 섹션입니다.
+
+**Harness** — index.md에 `## Harness` 절로 런타임 조립 지점을 기록합니다. 의존성 그래프는 빌드
+순서이고 하네스는 조립이라 서로 다릅니다. **기존 조립 지점(라우터·DI 컨테이너·플러그인 레지스트리·
+이벤트 버스)을 먼저 찾아 사용**하고, 없을 때만 새로 만들되 근거를 남깁니다. 각 기능 섹션은 정확히
+하나의 조립 지점에 등록합니다. 조립 지점이 없는 프로젝트는 `NOT APPLICABLE: single composition point`.
+
 **CPS Backfill:** SECTION_MANIFEST 생성 후, 반드시:
 1. **에코시스템 커버리지 체크** — spec.md의 Context Map → 에코시스템 맵의 모든 시스템이 섹션에서 커버되는지 확인. See [section-index.md](references/section-index.md) Ecosystem Coverage Check.
 2. **spec.md backfill** — Context Map의 '관련 섹션' 열과 Problem Statement의 '해결 섹션' 열을 실제 섹션명으로 업데이트.
@@ -598,7 +609,8 @@ See [section-splitting.md](references/section-splitting.md)
 1. Parse `sections/index.md`의 SECTION_MANIFEST
 2. 의존성 레이어별로 섹션을 묶고, 한 번에 최대 3개 `artifact-writer` 작업만 병렬 실행. 각 writer는 할당된 섹션 파일 하나만 쓰기
 3. `Overloaded`/timeout이 나면 실패한 섹션만 단일 writer 작업으로 재시도
-4. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, Reference Libraries, Implementation, Test Scenarios, Implementation Strategy, Quality Gate, Risk & Rollback, Acceptance Criteria, Files 포함)
+4. 각 섹션 파일은 **완전 자립형** (Background, Requirements, Dependencies, **Module Contract**, Reference Libraries, Implementation, Test Scenarios, Implementation Strategy, Quality Gate, Risk & Rollback, Acceptance Criteria, Files 포함)
+5. `Module Contract`는 Provides / Consumes / Owns / Composition Point를 채웁니다. Provides가 비면 모듈이 아니라 다른 섹션의 내부 작업이므로 합치고, Owns가 다른 섹션과 겹치면 공유 기반 섹션으로 올립니다
 
 Wait for each batch to complete before launching the next batch.
 
@@ -627,6 +639,7 @@ Verify all files were created successfully:
 - Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
 - `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 18 미실행)
 - **역할명 정합성** — `spec.md` 시스템 역할 표를 기준으로 `db-schema.md` roles/permissions, `api-spec.md` 허용 역할, `flow-diagrams` 역할 레인, `operation-scenarios.md` RBAC 매트릭스가 같은 역할 ID를 쓰는지. 하위 문서에만 있는 역할이 발견되면 **역할 누락 신호**이므로 `spec.md` 시스템 역할 표에 역으로 추가(backfill)하고 `integration-notes.md`에 기록. 시스템 역할 표가 `NOT APPLICABLE: single role`이면 이 검사를 건너뜀
+- **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
 - `api-spec.md` (API가 있는 프로젝트)
 - `db-schema.md` (DB가 있는 프로젝트)
 - `design-system.md` + `personas-and-journeys.md` (UI가 있는 프로젝트)
