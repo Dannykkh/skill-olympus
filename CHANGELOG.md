@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.7.1] - 2026-09-14
+
+### Bug Fixes
+
+- Scan the whole project in Hestia instead of `src/ app/ lib/`. Every phase was pinned to those three roots, so a `services/`, `packages/` or non-JS layout reported zero dead code, zero LOC and an empty simplification-debt ledger while looking like a clean result. One SCAN_ROOT - the path argument when given, the whole project otherwise - and shared ripgrep type and exclude sets now drive every phase.
+- Exclude `node_modules` explicitly, since ripgrep only skips it when a `.gitignore` says so, and pass file lists NUL-separated. ripgrep prints Windows paths with backslashes, xargs consumed them as escapes, and the suppressed error turned a total measurement failure into a plausible `0 total`.
+
 ## [6.7.0] - 2026-09-14
 
 ### Features
