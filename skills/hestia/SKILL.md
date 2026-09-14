@@ -46,17 +46,23 @@ description: >
 변경 전 현재 상태를 측정합니다. 측정 없는 정리는 감이지 사실이 아닙니다.
 
 ```bash
+# 스캔 범위 — 인수로 경로를 주면 그 경로만, 없으면 프로젝트 전체.
+# src/ app/ lib/로 고정하지 않는다: services/, packages/, apps/, 언어별 레이아웃에도 코드가 있다.
+# rg는 .gitignore를 존중하므로 node_modules와 빌드 산출물은 대부분 자동 제외된다.
+SCAN_ROOT="${1:-.}"
+SRC_TYPES="-t ts -t js -t py -t java -t csharp -t go -t rust -t kotlin -t swift -t php -t ruby"
+SKIP_BUILD="-g !**/node_modules/** -g !**/dist/** -g !**/build/** -g !**/out/** -g !**/vendor/** -g !**/.venv/** -g !**/*.min.*"
+SKIP_TEST="-g !**/*.test.* -g !**/*.spec.* -g !**/*_test.* -g !**/test_*.* -g !**/__tests__/** -g !**/tests/**"
+
 # 총 LOC (프로덕션 코드만, 테스트 제외)
-find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.java" -o -name "*.cs" \
-  | grep -v "__test__\|\.test\.\|\.spec\.\|_test\." \
-  | xargs wc -l 2>/dev/null | tail -1
+rg --files -0 "$SCAN_ROOT" $SRC_TYPES $SKIP_BUILD $SKIP_TEST | xargs -0 wc -l 2>/dev/null | tail -1
 
 # 파일 수
-find src/ app/ lib/ -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.py" \) | wc -l
+rg --files "$SCAN_ROOT" $SRC_TYPES $SKIP_BUILD $SKIP_TEST | wc -l
 
-# 책임 분리 검토용 대형 파일
-find src/ -type f \( -name "*.ts" -o -name "*.py" \) \
-  -exec awk 'END{print NR,FILENAME}' {} \; | sort -nr | head -20
+# 책임 분리 검토용 대형 파일 (wc 합계 줄은 제거)
+rg --files -0 "$SCAN_ROOT" $SRC_TYPES $SKIP_BUILD $SKIP_TEST | xargs -0 wc -l 2>/dev/null \
+  | sort -nr | sed '1d' | head -20
 ```
 
 ```
@@ -89,7 +95,7 @@ npx knip 2>/dev/null | head -40
 npx depcheck 2>/dev/null | head -20
 
 # Python
-pip-extra-reqs --ignore-requirement=dev src/ 2>/dev/null
+pip-extra-reqs --ignore-requirement=dev "$SCAN_ROOT" 2>/dev/null
 
 # 결과 예시:
 # Unused dependencies: lodash, moment, classnames
@@ -111,19 +117,20 @@ npx unimported 2>/dev/null | head -20
 
 ```bash
 # 삭제 예고된 코드
-grep -rn "@deprecated\|TODO.*remove\|TODO.*delete\|HACK\|FIXME\|XXX" \
-  --include="*.{ts,tsx,py,java,cs}" src/ app/ lib/ 2>/dev/null | head -20
+rg -n --no-heading "@deprecated|TODO.*remove|TODO.*delete|HACK|FIXME|XXX" \
+  "$SCAN_ROOT" $SRC_TYPES $SKIP_BUILD | head -20
 
 # 호환성 코드
-grep -rn "backwards.*compat\|legacy.*shim\|// old\|// deprecated" \
-  --include="*.{ts,tsx,py,java,cs}" src/ 2>/dev/null | head -20
+rg -n --no-heading -i "backwards.*compat|legacy.*shim|// old|// deprecated" \
+  "$SCAN_ROOT" $SRC_TYPES $SKIP_BUILD | head -20
 ```
 
 ### 2-5. 빈 파일/폴더
 
 ```bash
-find src/ app/ lib/ -empty -type f 2>/dev/null
-find src/ app/ lib/ -empty -type d 2>/dev/null
+# rg는 빈 파일을 나열하지 않으므로 find를 쓰되 스캔 루트와 제외 디렉터리를 맞춘다
+find "$SCAN_ROOT" \( -name node_modules -o -name .git -o -name dist -o -name build \) -prune -o -empty -type f -print 2>/dev/null
+find "$SCAN_ROOT" \( -name node_modules -o -name .git \) -prune -o -empty -type d -print 2>/dev/null
 ```
 
 ### 2-6. 사전 미등재 도메인 식별자 (도메인사전 있을 때만)
@@ -132,7 +139,8 @@ find src/ app/ lib/ -empty -type d 2>/dev/null
 
 ```bash
 # 대문자로 시작하는 식별자 추출 (도메인 명사 후보)
-grep -rE "^(export\s+)?(class|interface|type|enum)\s+[A-Z]\w+" --include="*.ts" --include="*.tsx" src/ \
+rg -n --no-heading "^(export\s+)?(class|interface|type|enum)\s+[A-Z]\w+" \
+  "$SCAN_ROOT" -t ts $SKIP_BUILD \
   | grep -oE "(class|interface|type|enum)\s+[A-Z]\w+" | sort -u
 ```
 
@@ -158,9 +166,8 @@ Hestia가 소유하는 `// minimal: <상한> — <업그레이드 시점>` 규�
 # 마커는 소스 루트 밖(scripts/, services/, packages/, 언어별 레이아웃)에도 달리므로
 # 데드코드 스캔과 달리 프로젝트 전체를 훑는다. rg는 .gitignore를 존중한다.
 rg -n --no-heading "(?://|#|--|<!--)\s*minimal:" \
-  -t ts -t js -t py -t java -t csharp -t sql -t go -t rust -t kotlin -t swift -t php -t ruby -t html \
-  -g '!**/dist/**' -g '!**/build/**' -g '!**/*.min.*' \
-  . 2>/dev/null | head -30
+  "$SCAN_ROOT" $SRC_TYPES -t sql -t html $SKIP_BUILD \
+  | head -30
 ```
 
 장부 형식으로 보고:
@@ -238,9 +245,7 @@ git checkout -- {삭제한 파일}
 
 ```bash
 # 동일 명령 재실행
-find src/ app/ lib/ -name "*.ts" -o -name "*.tsx" -o -name "*.py" -o -name "*.java" -o -name "*.cs" \
-  | grep -v "__test__\|\.test\.\|\.spec\.\|_test\." \
-  | xargs wc -l 2>/dev/null | tail -1
+rg --files -0 "$SCAN_ROOT" $SRC_TYPES $SKIP_BUILD $SKIP_TEST | xargs -0 wc -l 2>/dev/null | tail -1
 ```
 
 ### 최종 보고
