@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.6.0] - 2026-09-14
+
+### Features
+
+- Split Zephermine sections by feature rather than by layer, so one section owns that feature's data, API, screen and tests and can be opened and fixed on its own. Layer splits are rejected unless an existing codebase forces them, and the reason is recorded.
+- Allow shared-foundation sections only for what two or more feature sections genuinely share, recorded with the sharing list. A common module with a single consumer goes back into that feature.
+- Give each section a Module Contract stating Provides, Consumes, Owns and Composition Point. The existing Dependencies list is relabelled as build order, while the contract owns runtime composition.
+- Record the runtime harness in the section index: the composition point, how each module registers, the interface it satisfies, and where that contract is tested. Use the project's existing router, DI container, plugin registry or event bus, and build a new harness only when none exists.
+- Route roles whose screen column says "separate screen" into their own section, and replace the layer-based example index with a feature-based one in which every feature section is parallelizable.
+- Ask interview questions in the industry's own vocabulary rather than system terms, which is distinct from the existing rule about explaining jargon in plain words. Vocabulary comes from the user's own wording first, then research, then the global domain dictionary read-only, because domain experts and the dictionary only exist after the interview.
+
+### Verification
+
+- Verify at step 23 that the harness exists, every feature section filled all four contract fields, no two sections claim the same Owns, and any layer split has a recorded rationale.
+- Confirmed by running a plan through steps 19 and 20: six feature-vertical sections registering into the existing router. The contract check surfaced a consumed symbol that no section declared in Provides, which a dependency list alone cannot detect, and three planted defects were each caught: overlapping Owns, emptied Provides, and one module registered from two sections.
+
 ## [6.5.0] - 2026-09-14
 
 ### Features
