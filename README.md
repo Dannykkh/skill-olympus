@@ -68,6 +68,7 @@ The integrated installer updates your **global CLI environment**, so its rules a
 
 - Reply in the request's language, add search tags to substantive responses, and proceed within the user's authorized scope. Read-only requests stay read-only.
 - Find code through `codemap/index.md` first. Recall past work through `MEMORY.md` → relevant memory → conversation links/tags → body text → scoped source-session parsing when needed.
+- Climb the ladder YAGNI → codebase reuse → standard library → native features → existing dependencies → minimal new code, and mark a deliberate shortcut with `// minimal: <cap> - <upgrade trigger>` so `/hestia` can harvest it into a simplification-debt ledger.
 - Keep skill-catalog routing, documentation updates, memory limits, handoffs, and test evidence, with the appropriate native workflow and recovery limits for each CLI.
 
 **Reinstalling replaces the managed rule block, including edits inside it.** Text outside the Claude/Codex/Antigravity markers stays; the Grok rule file is replaced as a whole. The integrated installer now backs up those files and Codex configuration/notification wrappers under `~/.olympus/install-backups/` before changes. Standalone adapter installers do not run this backup step.

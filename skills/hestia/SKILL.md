@@ -155,10 +155,12 @@ Hestia가 소유하는 `// minimal: <상한> — <업그레이드 시점>` 규�
 
 ```bash
 # 주석 스타일별 minimal 마커 수확 (// # -- <!--)
-grep -rn "// minimal:\|# minimal:\|-- minimal:\|<!-- minimal:" \
-  --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
-  --include="*.py" --include="*.java" --include="*.cs" --include="*.sql" \
-  src/ app/ lib/ 2>/dev/null | head -30
+# 마커는 소스 루트 밖(scripts/, services/, packages/, 언어별 레이아웃)에도 달리므로
+# 데드코드 스캔과 달리 프로젝트 전체를 훑는다. rg는 .gitignore를 존중한다.
+rg -n --no-heading "(?://|#|--|<!--)\s*minimal:" \
+  -t ts -t js -t py -t java -t csharp -t sql -t go -t rust -t kotlin -t swift -t php -t ruby -t html \
+  -g '!**/dist/**' -g '!**/build/**' -g '!**/*.min.*' \
+  . 2>/dev/null | head -30
 ```
 
 장부 형식으로 보고:
