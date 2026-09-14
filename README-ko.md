@@ -396,7 +396,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 |---|---|---|
 | 한 문장으로 제품 만들기 | `/zeus` | 설계, 구현, 감리, 테스트를 마친 프로젝트와 근거 보고서 |
 | 만들 가치가 있는지 먼저 판단하기 | `/hermes` → `/athena` | 사업성 분석과 Go/No-Go·스코프 판정 |
-| 모호한 기능을 구현 가능한 설계로 바꾸기 | `/zephermine` | 명세, 계획, 스키마, API 계약, 흐름도, QA 시나리오 |
+| 모호한 기능을 구현 가능한 설계로 바꾸기 | `/zephermine` | 명세, 계획, 스키마, API 계약, 역할 레인 흐름도, RBAC 매트릭스, QA 시나리오 |
 | 기존 계획을 의존성 순서대로 병렬 구현하기 | `/agent-team` 또는 `/poseidon` | 네이티브 작업자 구현과 통합 게이트 |
 | 설계 없이 바로 구현 시작하기 | `/workpm` 또는 `/daedalus` | 조사한 제안안, 구현, 검증 로그 |
 | 실제 화면을 설계하거나 다시 만들기 | `/aphrodite` | Experience Contract, `DESIGN.md`, 렌더 방향, 구현 |
@@ -435,8 +435,10 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 **`/zephermine` — 심층 설계 (젭마인)**
 - **언제:** 구현 전 기능/제품에 충실한 설계 산출물이 필요할 때.
 - **사용:** `/zephermine [spec경로]` (별칭: 젭마인, 제퍼마인)
-- **처리:** 리서치 → 26단계 인터뷰 → 스펙 합성 → 6전문가 팀 리뷰 → 전략 후보 채점(ToT) → plan → DB 스키마 / API 명세 / 공정 도면 → 섹션 분할 → 운영·QA 시나리오.
+- **처리:** 26단계 파이프라인 — 리서치 → 인터뷰 → 스펙 합성(이후 모든 역할명을 고정하는 **시스템 역할 표** 포함) → 6전문가 팀 리뷰 → 전략 후보 채점(ToT) → plan → DB 스키마 / API 명세 / 공정 도면 → 섹션 분할 → 운영·QA 시나리오 → 역할명 정합성 검증.
 - **결과물:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
+- **역할(RBAC):** `spec.md`의 시스템 역할 표가 역할 ID 정본입니다. `api-spec.md`는 엔드포인트별 허용 역할, `flow-diagrams/`는 역할 레인과 권한 거부 경로, `operation-scenarios.md`는 RBAC 매트릭스(역할 x 리소스 x CRUD)와 거부 동작을 담습니다. 역할이 1개이거나 인증이 없으면 `NOT APPLICABLE: single role`로 전부 생략합니다.
+- **도면 타입:** `flowchart` 기본, 엔티티 상태 전이 3개 이상이면 `stateDiagram-v2`, 에코시스템 맵에 외부 시스템이 있으면 `sequenceDiagram`을 추가 생성.
 - **다음:** `/agent-team`(구현) 또는 `/argos`(감리).
 
 **`/aphrodite` — 디자인 시스템 (아프로디테)**

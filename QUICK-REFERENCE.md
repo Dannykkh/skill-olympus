@@ -274,7 +274,7 @@ claude plugin install voltagent-qa-sec
 | 경로 | 설명 |
 |------|------|
 | `skills/zeus/` | 전자동 7단계 — 설명 파싱→젭마인→agent-team/workpm→아르고스→Docker→미노스→증거 보고 (`/zeus`; Hermes/Athena/Clio는 암묵 호출하지 않음) |
-| `skills/zephermine/` | 저장형 설계 자동화 — Antigravity의 가벼운 `/plan`·`/grill-me`보다 큰 spec→API/DB→flow→QA→sections 묶음 |
+| `skills/zephermine/` | 저장형 설계 자동화 — Antigravity의 가벼운 `/plan`·`/grill-me`보다 큰 spec(시스템 역할 표)→API/DB→역할 레인 flow→RBAC·QA→sections 묶음 |
 | `skills/domain-dictionary/` | 도메인 용어사전(DDD Ubiquitous Language) — 영-한 매핑, 동의어/이의어/과부하 탐지, zephermine 자동 호출 |
 | `skills/minos/` | QA 시나리오 → Playwright 테스트 + fix-until-pass 루프. `/browser` 관찰은 Playwright로 재현한 뒤 판정 증거로 승격 |
 | `skills/argos/` | 감리/검증 — Phase 0~7에서 정적·런타임·API·QA·도면·디자인·보안 검증 (아르고스) |

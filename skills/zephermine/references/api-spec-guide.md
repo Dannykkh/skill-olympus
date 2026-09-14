@@ -35,6 +35,16 @@
 |------|------|
 | {Bearer Token / Session / API Key} | {상세 설명} |
 
+### Roles
+
+| 역할 | 설명 |
+|------|------|
+| {admin} | {설명} |
+| {operator} | {설명} |
+| {user} | {설명} |
+
+역할명은 `spec.md` Context Map의 **시스템 역할 표(Role Inventory)** 역할 ID를 그대로 사용합니다. 인증이 없거나 역할이 1개뿐이면 이 표를 생략하고 `NOT APPLICABLE: single role`을 기록합니다.
+
 인증이 필요한 엔드포인트는 🔒 표시.
 
 ---
@@ -82,7 +92,7 @@
 
 | 항목 | 내용 |
 |------|------|
-| Auth | Bearer Token |
+| Auth | 🔒 Bearer Token — `admin`, `operator`, `user`(본인 한정) |
 | Frontend Caller | `UserProfilePage` → `useUser(id)` |
 
 **Request:**
@@ -104,19 +114,20 @@
 | Status | Condition | Body |
 |--------|-----------|------|
 | 401 | 인증 없음 | `{ "error": "인증이 필요합니다" }` |
+| 403 | 역할 권한 없음 (타인 정보 조회) | `{ "error": "권한이 없습니다" }` |
 | 404 | 사용자 없음 | `{ "error": "사용자를 찾을 수 없습니다" }` |
 
 ---
 
 ## Summary
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| POST | /api/users | 사용자 생성 | - |
-| GET | /api/users/:id | 사용자 조회 | 🔒 |
-| PUT | /api/users/:id | 사용자 수정 | 🔒 |
-| DELETE | /api/users/:id | 사용자 삭제 | 🔒 |
-| GET | /api/users | 사용자 목록 | 🔒 |
+| Method | Path | Description | Auth | 허용 역할 |
+|--------|------|-------------|------|-----------|
+| POST | /api/users | 사용자 생성 | - | 전체 |
+| GET | /api/users/:id | 사용자 조회 | 🔒 | admin, operator, user(본인) |
+| PUT | /api/users/:id | 사용자 수정 | 🔒 | admin, user(본인) |
+| DELETE | /api/users/:id | 사용자 삭제 | 🔒 | admin |
+| GET | /api/users | 사용자 목록 | 🔒 | admin, operator |
 ```
 
 ## 핵심 포함 항목
@@ -126,7 +137,7 @@
 | 항목 | 설명 |
 |------|------|
 | **Method + Path** | `POST /api/users` |
-| **Auth** | 인증 필요 여부 + 방식 |
+| **Auth** | 인증 필요 여부 + 방식 + **허용 역할 목록** (역할이 둘 이상인 프로젝트). 조건부 허용은 `user(본인)`처럼 조건을 괄호로 명시 |
 | **Frontend Caller** | 어떤 페이지/컴포넌트에서 호출하는지 |
 | **Request** | headers, params, body (타입 + 필수 여부) |
 | **Response** | 성공 응답 스키마 (JSON 예시) |

@@ -333,6 +333,18 @@ Combine into `<planning_dir>/spec.md`:
 |------|------|-----------|
 | {역할} | {설명} | (Step 19에서 backfill) |
 
+### 시스템 역할 (Role Inventory) — 이후 모든 산출물의 역할명 정본
+이해관계자와 **다른 표**입니다. 이해관계자에는 시스템에 로그인하지 않는 의사결정자(구매 결정자, 스폰서)가 포함되고, 반대로 시스템에만 존재하는 주체(배치 서비스 계정, 슈퍼관리자, 비로그인 방문자)는 이해관계자에 안 잡힙니다. 여기에는 **인증 주체로 시스템에 존재하는 역할만** 적습니다.
+
+| 역할 ID | 표시명 | 설명 | 인증 주체 | 상위 역할 |
+|---------|--------|------|-----------|-----------|
+| {admin} | {관리자} | {설명} | 사람/서비스계정 | - |
+| {guest} | {비로그인} | {설명} | 익명 | - |
+
+- `역할 ID`는 영문 소문자 식별자이며 Step 16~21의 DB·API·도면·운영 시나리오가 **이 값을 그대로** 사용합니다. 어느 하위 문서에서도 새 역할을 만들지 않습니다.
+- 도메인사전 v3에 역할 용어가 등재되면 표기(한글 표시명)는 사전을 따르되, **식별자 정본은 이 표**입니다. 사전이 `NOT APPLICABLE`(핵심 용어 5개 미만)이어도 이 표는 독립적으로 유효합니다.
+- 인증이 없거나 역할이 1개뿐이면 `NOT APPLICABLE: single role`로 기록하고 이후 RBAC 산출물을 모두 생략합니다.
+
 ### 에코시스템 맵
 | 시스템 | 대상 | 연동 방식 | 관련 섹션 |
 |--------|------|-----------|-----------|
@@ -526,7 +538,8 @@ DB가 없는 프로젝트(CLI, 라이브러리, 정적사이트)는 자동 건�
 See [api-spec-guide.md](references/api-spec-guide.md)
 
 `plan.md` + `db-schema.md`에서 API 엔드포인트 추출 → `<planning_dir>/api-spec.md` 생성.
-각 엔드포인트: Method + Path, Request/Response 스키마, Auth, Frontend Caller 포함.
+각 엔드포인트: Method + Path, Request/Response 스키마, Auth(방식 + **허용 역할 목록**), Frontend Caller 포함.
+역할이 둘 이상이면 Authentication에 Roles 표를 두고 Summary 표에도 허용 역할 열을 포함합니다. 역할명은 `spec.md`의 시스템 역할 표(Role Inventory) 역할 ID를 그대로 씁니다.
 API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀.
 
 ### 18. Generate Process Flow Diagrams (공정 도면) — MANDATORY
@@ -539,9 +552,20 @@ Step 18 진입 시 위 resolver로 `flow-verifier`와 `mermaid-diagrams`의 정�
 모두 읽습니다. plan 모드와 Mermaid 문법 계약을 직접 적용하며 등록 스킬이나 slash command를
 호출하지 않습니다. 어느 모듈도 읽지 못하면 Step 18은 `BLOCKED`이고 Step 19로 진행하지 않습니다.
 
-`plan.md` + `api-spec.md` + `domain-process-analysis.md`에서 핵심 프로세스 추출 → Mermaid flowchart 작성.
+`plan.md` + `api-spec.md` + `domain-process-analysis.md`에서 핵심 프로세스 추출 → Mermaid 다이어그램 작성.
 각 프로세스를 별도 `artifact-writer` 작업으로 생성 → `<planning_dir>/flow-diagrams/{process-name}.mmd`에 저장. Main/Lead만 `flow-diagrams/index.md`를 작성합니다.
-**출력:** `{process-name}.mmd` 파일들 + `flow-diagrams/index.md`
+
+**타입 3종** (가이드 1-1 참조) — flowchart는 기본, 나머지 둘은 조건 충족 시 추가:
+
+| 타입 | 조건 |
+|------|------|
+| `flowchart` | 모든 완결 흐름 (기본, 필수) |
+| `stateDiagram-v2` | 엔티티 상태 필드 + 전이 3개 이상 |
+| `sequenceDiagram` | 에코시스템 맵에 외부 시스템 + 호출 순서가 설계에 영향 |
+
+**역할 레인** — 관여 역할이 둘 이상인 flowchart는 `subgraph {역할명}`으로 레인을 나누고, 권한 분기와 거부 경로(숨김/비활성/읽기전용/403/404 위장)를 종료 노드까지 그립니다. 역할명은 `spec.md`의 시스템 역할 표(Role Inventory) 역할 ID를 그대로 쓰며 여기서 새로 만들지 않습니다.
+
+**출력:** `{process-name}.mmd` 파일들 + `flow-diagrams/index.md` (타입·역할 레인·미생성 타입 사유 포함)
 
 ### 19. Create Section Index
 
@@ -578,7 +602,8 @@ Wait for each batch to complete before launching the next batch.
 
 See [operation-qa-guide.md](references/operation-qa-guide.md)
 
-**출력:** `<planning_dir>/operation-scenarios.md` (역할 정의 + 메뉴별 시나리오 + E2E 시나리오 + 화면 흐름도)
+**출력:** `<planning_dir>/operation-scenarios.md` (역할 정의 + **RBAC 매트릭스**(역할 x 리소스 x CRUD) + **거부 동작 표** + 메뉴별 시나리오 + E2E 시나리오 + 화면 흐름도)
+역할이 1개뿐이거나 인증이 없으면 매트릭스와 거부 동작을 `NOT APPLICABLE: single role`로 기록합니다.
 이 파일만 쓰는 `artifact-writer`로 실행하고, 위임 불가 시 메인 컨텍스트에서 순차 작성합니다.
 
 ### 22. Generate QA Scenarios Document — Artifact Writer
@@ -597,6 +622,7 @@ Verify all files were created successfully:
 - `spec.md`에 `## Context Map`과 `## Problem Statement` 섹션이 있는지 확인
 - Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
 - `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 18 미실행)
+- **역할명 정합성** — `spec.md` 시스템 역할 표를 기준으로 `db-schema.md` roles/permissions, `api-spec.md` 허용 역할, `flow-diagrams` 역할 레인, `operation-scenarios.md` RBAC 매트릭스가 같은 역할 ID를 쓰는지. 하위 문서에만 있는 역할이 발견되면 **역할 누락 신호**이므로 `spec.md` 시스템 역할 표에 역으로 추가(backfill)하고 `integration-notes.md`에 기록. 시스템 역할 표가 `NOT APPLICABLE: single role`이면 이 검사를 건너뜀
 - `api-spec.md` (API가 있는 프로젝트)
 - `db-schema.md` (DB가 있는 프로젝트)
 - `design-system.md` + `personas-and-journeys.md` (UI가 있는 프로젝트)

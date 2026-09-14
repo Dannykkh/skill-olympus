@@ -396,7 +396,7 @@ without silently adding the optional business, CEO, or documentation stages.
 |---|---|---|
 | Build a product from one sentence | `/zeus` | Planned, implemented, inspected, tested project plus an evidence report |
 | Decide whether an idea is worth building | `/hermes` → `/athena` | Business case followed by a Go/No-Go and scope verdict |
-| Turn an unclear feature into an implementation-ready plan | `/zephermine` | Spec, plan, schema, API contract, flows, and QA scenarios |
+| Turn an unclear feature into an implementation-ready plan | `/zephermine` | Spec, plan, schema, API contract, role-laned flows, RBAC matrix, and QA scenarios |
 | Implement an existing plan in dependency-safe waves | `/agent-team` or `/poseidon` | Native-worker implementation plus an integration gate |
 | Start coding without a prior spec | `/workpm` or `/daedalus` | Researched proposal, implementation, and verification log |
 | Design or redesign a real interface | `/aphrodite` | Experience Contract, `DESIGN.md`, rendered directions, and implementation |
@@ -435,8 +435,10 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/zephermine` — Deep design (Architect)**
 - **When:** a feature/product needs a thorough spec before implementation.
 - **Use:** `/zephermine [spec-path]` (aliases: 젭마인, 제퍼마인)
-- **Process:** research → 26-step interview → spec synthesis → 6-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios.
+- **Process:** 26-step pipeline — research → interview → spec synthesis (incl. the Role Inventory that fixes every downstream role ID) → 6-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios → role-name consistency check.
 - **Output:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
+- **Roles:** the Role Inventory in `spec.md` is the single source of role IDs. `api-spec.md` lists allowed roles per endpoint, `flow-diagrams/` splits role lanes with permission-denial paths, and `operation-scenarios.md` carries the RBAC matrix (role x resource x CRUD) plus denial behaviour. Single-role or unauthenticated projects record `NOT APPLICABLE: single role` and skip all of it.
+- **Diagrams:** `flowchart` always; `stateDiagram-v2` when an entity has 3+ state transitions; `sequenceDiagram` when the ecosystem map has external systems.
 - **Next:** `/agent-team` (build) or `/argos` (inspect).
 
 **`/aphrodite` — Design system (Beauty)**
