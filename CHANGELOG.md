@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.4.0] - 2026-09-14
+
+### Features
+
+- Add a Role Inventory table to the Zephermine spec Context Map as the single source of role IDs for every downstream artifact. It is kept separate from the stakeholder table, which includes people who never sign in and omits system-only principals such as anonymous visitors, batch service accounts and superadmins.
+- Replace the single role table in operation scenarios with role definitions, an RBAC matrix (role x resource x CRUD) and a denial-behaviour table covering hidden, disabled, read-only, 403 and 404-masked outcomes.
+- Draw role lanes in process flow diagrams with permission branches and denial paths carried through to a terminal node.
+- Generate two conditional diagram types alongside the mandatory flowchart: stateDiagram-v2 for entities with three or more transitions, with the acting role named on each transition label, and sequenceDiagram for external ecosystem integrations.
+- List allowed roles per API endpoint, add a Roles table and an allowed-role column to the endpoint summary, and document the 403 response.
+- Ask in the interview which stakeholders actually authenticate, and probe for system-only principals, so the Role Inventory is not left empty.
+
+### Verification
+
+- Check role-name consistency at Zephermine step 23 across spec, DB schema, API spec, flow diagrams and operation scenarios. A role found only in a downstream document is treated as a missing-role signal and backfilled into the spec, so the check still holds when the domain dictionary is NOT APPLICABLE.
+- Skip every RBAC artifact for single-role or unauthenticated projects by recording NOT APPLICABLE: single role, leaving CLI and library plans unchanged.
+
 ## [6.3.0] - 2026-09-14
 
 ### Features
