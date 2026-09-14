@@ -437,6 +437,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 - **사용:** `/zephermine [spec경로]` (별칭: 젭마인, 제퍼마인)
 - **처리:** 26단계 파이프라인 — 리서치 → 인터뷰 → 스펙 합성(이후 모든 역할명을 고정하는 **시스템 역할 표** 포함) → 6전문가 팀 리뷰 → 전략 후보 채점(ToT) → plan → DB 스키마 / API 명세 / 공정 도면 → 섹션 분할 → 운영·QA 시나리오 → 역할명 정합성 검증.
 - **결과물:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
+- **역할 인터뷰:** Step 6에서 로그인하는 주체, 역할별 업무, 금지 행동, 그리고 **별도 화면이 필요한지 공용 화면 권한차등인지**를 묻습니다. 화면 분리 답변은 Critical 질문으로 승격합니다. 전권 슈퍼관리자, 상위 역할의 하위 권한 포함, 본인 데이터 접근은 묻지 않고 기본 적용합니다.
 - **역할(RBAC):** `spec.md`의 시스템 역할 표가 역할 ID 정본입니다. `api-spec.md`는 엔드포인트별 허용 역할, `flow-diagrams/`는 역할 레인과 권한 거부 경로, `operation-scenarios.md`는 RBAC 매트릭스(역할 x 리소스 x CRUD)와 거부 동작을 담습니다. 역할이 1개이거나 인증이 없으면 `NOT APPLICABLE: single role`로 전부 생략합니다.
 - **도면 타입:** `flowchart` 기본, 엔티티 상태 전이 3개 이상이면 `stateDiagram-v2`, 에코시스템 맵에 외부 시스템이 있으면 `sequenceDiagram`을 추가 생성.
 - **다음:** `/agent-team`(구현) 또는 `/argos`(감리).
@@ -446,6 +447,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 - **사용:** `/aphrodite` (별칭: 아프로디테)
 - **처리:** 소스 모드 판별 → exact Codex Product Design marketplace selector 확인(설치 가능이 검증된 경우만 1회 추천, 확인 불가는 UNKNOWN+로컬 진행) → 사이트 벤치마크 증거 수집 → Product Facts·Content Integrity·Asset Provenance → Adopt/Adapt/Avoid → 실제 렌더 방향 3안 → Experience Contract → 구현 또는 동일 계약 adapter 대조 → 렌더 UX·접근성·성능 게이트 → 학습 환류.
 - **결과물:** `DESIGN.md`(비주얼 토큰) + Experience Contract(위계·행동·반응형·품질 결정) + 레이아웃 청사진 + 벤치마크 증거 + 프론트 구현.
+- **역할별 화면:** 젭마인 설계가 있으면 시스템 역할 표와 RBAC 매트릭스를 읽어 역할명을 물려받습니다(새로 만들지 않음). `공용 권한차등` 역할은 요소 x 역할 변형표(`표시`/`숨김`/`비활성`/`읽기전용`)를, `별도 화면` 역할은 전용 레이아웃 청사진을 각각 생성합니다. **숨김과 비활성을 구분**합니다 — 숨김은 권한 존재를 감추고, 비활성은 알리되 막습니다. 역할을 선언하면 계약 검증기가 변형표를 필수로 요구합니다.
 - **경계:** 아프로디테는 경험 구조, 시각적 행동, 반응형 변환, 상태, 품질 게이트를 담당합니다. API 연결, 영속 상태, 비즈니스 로직은 `/agent-team` 또는 `/workpm`이 담당합니다.
 - **다음:** 아프로디테가 source-only `frontend-design`·감사 모듈을 직접 읽습니다. 설치된 Codex 프로토타입 어댑터를 우선하려면 `--product-design`, Stitch가 필요하면 `--stitch`를 지정하고, 이후 `/agent-team` / `/workpm`으로 애플리케이션 로직을 구현합니다.
 

@@ -44,6 +44,21 @@ BENCHMARK_SECTIONS = (
     "avoid",
 )
 
+# Required only when the contract declares system roles. Single-role or
+# unauthenticated products record NOT APPLICABLE and skip these.
+ROLE_SECTIONS = ("role variants",)
+
+ROLE_VISIBILITY_OPERATIONS = (
+    "표시",
+    "숨김",
+    "비활성",
+    "읽기전용",
+    "visible",
+    "hidden",
+    "disabled",
+    "read-only",
+)
+
 MOBILE_OPERATIONS = (
     "retain",
     "reorder",
@@ -165,6 +180,23 @@ def validate_contract(path: Path) -> dict[str, object]:
         result["errors"].append(
             "Source Mode must declare 'Mode: benchmark' or 'Mode: product-derived'."
         )
+
+    roles = sections.get("system roles", "")
+    if roles and "not applicable" not in normalize(roles):
+        missing.extend(name for name in ROLE_SECTIONS if name not in sections)
+        empty.extend(
+            name for name in ROLE_SECTIONS if name in sections and not sections[name]
+        )
+        placeholders.extend(
+            name
+            for name in ROLE_SECTIONS
+            if name in sections and sections[name] and has_placeholder(sections[name])
+        )
+        variants = sections.get("role variants", "")
+        if variants and not contains_any(variants, ROLE_VISIBILITY_OPERATIONS):
+            result["errors"].append(
+                "Role Variants must state per-role visibility (visible / hidden / disabled / read-only)."
+            )
 
     mobile = sections.get("mobile transformations", "")
     if mobile and not contains_any(mobile, MOBILE_OPERATIONS):

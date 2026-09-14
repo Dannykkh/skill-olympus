@@ -177,7 +177,12 @@ docs/design-refs/*-direction-*.md
 docs/design-refs/*-layout-*.md
 design-system.md / design-tokens.json
 tailwind.config.* / theme.* / CSS variables
+docs/plan/*/spec.md                     (시스템 역할 표 = 역할 ID 정본)
+docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
 ```
+
+젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고 여기서 새 역할명을 만들지 않습니다.
+없으면 역할 구분 없는 단일 화면으로 진행하되, 화면에 관리 기능이 보이면 역할 존재 여부를 한 번 확인합니다.
 
 `DESIGN.md`가 있다는 이유만으로 Phase 1~5를 건너뛰지 않습니다. 다음을 분류합니다.
 
@@ -320,6 +325,33 @@ Adopt·Adapt·Avoid를 포함합니다.
 
 산출물: `docs/design-refs/YYYY-MM-DD-layout-{slug}.md`
 
+### 4-1-1. 역할별 화면 (Role Variants)
+
+역할이 둘 이상이면 기본 와이어프레임 하나로 끝내지 않습니다. `spec.md` 시스템 역할 표의 `화면` 열이 처리 방식을 결정합니다.
+
+| `화면` 열 | 산출물 | 내용 |
+|---|---|---|
+| 공용 권한차등 | 기본 Blueprint + **역할별 변형표** | 같은 블록 순서 위에서 요소별로 역할에 따른 노출을 고정 |
+| 별도 화면 | **역할 전용 Blueprint** 별도 파일 | `docs/design-refs/YYYY-MM-DD-layout-{slug}-{role}.md`. 블록 순서·첫 뷰포트·과업을 처음부터 다시 설계 |
+
+역할별 변형표는 요소 x 역할 격자이며, 값은 `operation-scenarios.md` 거부 동작과 같은 어휘를 씁니다.
+
+| 요소 | superadmin | admin | operator | user | guest |
+|---|---|---|---|---|---|
+| 주문 삭제 버튼 | 표시 | 표시 | 숨김 | 숨김 | 숨김 |
+| 금액 입력란 | 표시 | 읽기전용 | 읽기전용 | 숨김 | 숨김 |
+| 관리 메뉴 | 표시 | 표시 | 표시 | 숨김 | 숨김 |
+
+규칙:
+
+- 값은 `표시` / `숨김` / `비활성` / `읽기전용` 중 하나입니다. `403`·`404 위장`은 화면이 아니라 라우팅 결과이므로 진입 차단 항목에만 씁니다.
+- **숨김과 비활성을 구분합니다.** 숨김은 권한이 있다는 사실 자체를 감추고, 비활성은 존재를 알리되 막습니다. 어느 쪽인지 정하지 않으면 구현자가 임의로 고릅니다.
+- 전권 역할(superadmin)은 모든 요소가 `표시`인 기준 화면이며 별도 변형표를 만들지 않습니다.
+- 역할을 지웠을 때 **화면이 텅 비거나 CTA가 사라지는 경우**를 확인합니다. 그 역할에는 다른 진입점이나 빈 상태 문안이 필요하다는 신호입니다.
+- 역할이 1개이거나 인증이 없으면 `NOT APPLICABLE: single role`로 기록하고 이 절을 생략합니다.
+
+Experience Contract에는 `## System Roles`와 `## Role Variants` 절로 옮겨 적어 Phase 4-4 검증이 잡을 수 있게 합니다.
+
 ### 4-2. Responsive Transformation
 
 데스크톱 요소마다 `retain/reorder/compress/collapse/defer/replace/sticky/remove` 중 하나와 이유를
@@ -347,7 +379,8 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 ```
 
 검증 실패 시 구현으로 넘어가지 않습니다. 이 스크립트는 완성도를 검사하며 아름다움과 사용성은
-Phase 5~6의 실제 렌더로 검증합니다.
+Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT APPLICABLE`이 아니면
+`## Role Variants`도 함께 요구하며, 변형표가 `표시/숨김/비활성/읽기전용` 어휘를 쓰지 않으면 실패합니다.
 
 ## Phase 5: Build and Critique
 
