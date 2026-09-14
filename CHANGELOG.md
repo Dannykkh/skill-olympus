@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.5.0] - 2026-09-14
+
+### Features
+
+- Ask for system roles during the Zephermine interview (block C-R): which principals sign in, what each one does, what it must never do, and whether a role needs a separate screen or only different permissions on a shared one.
+- Treat the screen-separation answer as a critical question, because separate screens change section count and implementation scope.
+- Apply role defaults without asking and mark them inferred: one full-access superadmin, higher roles inheriting lower permissions, owners reading and editing their own data, a guest role when public pages exist, and a service account when scheduled work exists.
+- Record the answers in the Soft Gate 1 summary and the interview transcript with an answered/inferred column, and widen the spec Role Inventory to main duties, forbidden actions and screen handling.
+- Route roles marked "separate screen" into their own section during section splitting.
+- Read the Zephermine Role Inventory and RBAC matrix from Aphrodite phase 0-1 so role IDs and denial behaviour are inherited instead of invented. The two skills previously shared no path reference.
+- Draw per-role wireframes in Aphrodite phase 4-1-1: shared-screen roles get an element by role variant grid valued visible, hidden, disabled or read-only, and separate-screen roles get their own layout blueprint file.
+- Keep hidden and disabled distinct, since hidden conceals that a permission exists while disabled admits it and blocks, and check whether removing a role empties the screen or removes its CTA.
+
+### Verification
+
+- Require a Role Variants section in the experience contract validator whenever System Roles is declared and not NOT APPLICABLE, and reject a variant grid that states no visibility operation. Verified against five fixtures covering no roles, missing variants, wrong vocabulary, a correct grid, and NOT APPLICABLE.
+
 ## [6.4.0] - 2026-09-14
 
 ### Features
