@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.8.0] - 2026-09-17
+
+### Features
+
+- Add the Mnemo memory-hygiene tools under `skills/mnemo/scripts/`: `mnemo_doctor.py` (12 checks; `--fix` repairs only the distill baseline and tag-name lifecycle links rewritten to `[[NNN-slug]]` when exactly one entry matches), `harvest_lineage.py` (per-file when/why/how derived from handoffs - the file path is the lineage key), `check_memory_anchors.py` (anchor existence with CodeMap move candidates and structural context classes), `split_memory_file.py` (an oversized `memory/X.md` becomes `X/NNN-slug.md` plus `index.md`, with backups and link rewiring) and `reclassify_observations.py` (moves observations the old hook misfiled while preserving the distill delta). Memory rots silently because `memory/`, `docs/` and `codemap/` sit outside git; these turn that rot into visible, mostly mechanical work.
+- Add an `Origin` section to the handoff contract - why the work started - required for feature-bearing sessions like the composition diagram and pre-filled from `--continues-from`. `create_handoff.py` now runs the doctor conditionally when no architecture memory exists; the shared procedure lives in `references/handoff-memory.md`.
+- Restructure `skills/mnemo/SKILL.md` into four functions (store, index, handoff, hygiene), move tool details to `docs/memory-hygiene.md`, add a "what runs when" workflow table to the README, and make `install.js` report Python as an optional runtime instead of treating its absence as a failed install.
+
+### Bug Fixes
+
+- Classify tool observations by error shape at the start of a line instead of any `error|fail` word anywhere in the output. Edit and Write responses echo the edited file and Bash output carries whatever `cat` printed, so a successful edit touching a `Failed(` call or an `Error` enum was filed as a failure - 98-99% of recorded errors in two projects. Replayed on 4,736 observations, the old rule flagged 1,049 and the new one 27.
+- Preserve the distill baseline across observation-log rotation in all six Claude, Codex and Grok hooks (negative baselines are valid), so a rotation no longer silences the distillation reminder by pushing the delta below zero.
+- Stop the save hooks from recreating a flat `memory/X.md` scaffold when the split `X/index.md` already exists; the stub and the split copy were coexisting with no canonical version.
+
 ## [6.7.1] - 2026-09-14
 
 ### Bug Fixes
