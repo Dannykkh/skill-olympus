@@ -309,6 +309,7 @@ claude plugin install voltagent-qa-sec
 | `agents/ai-ml.md` | 정적 LLM API·RAG 참고자료 (기본 미설치); 실제 구현은 프로젝트 SDK와 공급자 공식 문서 우선 |
 | `skills/memory-compact/` | source-only 내부 모듈 — 활성 mnemo 규칙이 카탈로그에서 직접 읽어 MEMORY.md 크기 점검·압축 |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
+| `skills/mnemo/scripts/` | 기억 위생 도구 — `mnemo_doctor.py`(12점검, `--fix`는 정제 기준값·번호 링크만), `harvest_lineage.py`(파일별 변경 계보), `check_memory_anchors.py`(앵커 실재+CodeMap 이동 후보), `split_memory_file.py`(항목별 분할), `reclassify_observations.py`(오분류 관찰 복구); 상세 `skills/mnemo/docs/memory-hygiene.md` |
 | `skills/project-gotchas/` | 오답노트 자동 수집 — 2계층(글로벌+프로젝트) 관찰 저장 + delta 알림; 정제는 memory-distill/핸드오프가 명시 실행 |
 | `skills/memory-distill/` | source-only 내부 모듈 — mnemo 훅의 안내 또는 명시 요청 시 카탈로그에서 직접 읽어 raw observations.jsonl 정제·rebuild |
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |

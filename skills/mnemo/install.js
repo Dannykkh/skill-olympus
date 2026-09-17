@@ -13,6 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { spawnSync } = require("child_process");
 
 // ── Config ──
 const args = process.argv.slice(2);
@@ -26,6 +27,43 @@ const sourceDir = path.resolve(__dirname);
 // Claude global directory
 const claudeDir = process.env.CLAUDE_CONFIG_DIR
   ? path.resolve(process.env.CLAUDE_CONFIG_DIR) : path.join(os.homedir(), ".claude");
+
+// Python은 선택 의존성이다. 대화 저장·관찰 로그 훅은 전부 PowerShell/셸이라 Python 없이
+// 돌아가고, 핸드오프·계보·앵커 스크립트만 Python을 쓴다. 그래서 없다고 설치를 막지 않고
+// 무엇이 되고 무엇이 안 되는지만 알린다 — 없는 줄 모르고 쓰다 중요한 순간에 실패하는 것이
+// 진짜 사고이기 때문이다.
+function detectPython() {
+  // Windows 스토어의 python3 stub는 실행하면 스토어로 리다이렉트하므로
+  // --version이 실제로 성공하는지까지 확인한다 (reconcile 훅과 같은 판정).
+  for (const cmd of ["python", "py", "python3"]) {
+    try {
+      const probe = spawnSync(cmd, ["--version"], { encoding: "utf8", timeout: 5000 });
+      if (probe.status === 0) {
+        const version = `${probe.stdout || ""}${probe.stderr || ""}`.trim();
+        const major = /Python (\d+)\./.exec(version);
+        if (major && Number(major[1]) >= 3) return { cmd, version };
+      }
+    } catch {
+      // 다음 후보로 넘어간다
+    }
+  }
+  return null;
+}
+
+// Python이 없을 때 무엇이 멈추는지 한 곳에서 설명한다.
+function reportPythonStatus(python, { asIssue = false } = {}) {
+  if (python) {
+    console.log(`      ✅ ${python.version} (${python.cmd}) — 핸드오프 도구 사용 가능`);
+    return 0;
+  }
+  console.log("      ⚠️  Python 3을 찾지 못했습니다 (설치 실패 아님)");
+  console.log("         동작함  : 대화 자동 저장, 도구 관찰 로그, MEMORY.md 규칙");
+  console.log("         안 됨   : create_handoff / validate_handoff / list_handoffs /");
+  console.log("                   check_staleness / harvest_lineage / check_memory_anchors");
+  console.log("         대안    : 핸드오프는 skills/mnemo/references/handoff-template.md 를");
+  console.log("                   보고 docs/handoffs/ 에 직접 작성하면 됩니다.");
+  return asIssue ? 1 : 0;
+}
 
 function findHookSource(file) {
   return [path.join(sourceDir, "hooks", file), path.join(sourceDir, "../../hooks", file)]
@@ -342,6 +380,9 @@ function install() {
     console.log("      Using install.bat or install.sh may provide a more reliable install.");
   }
 
+  console.log("\n[런타임] 핸드오프 도구용 Python 확인...");
+  reportPythonStatus(detectPython());
+
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║  MNEMO Install Complete!                                      ║
@@ -375,7 +416,7 @@ function check() {
   let issues = 0;
 
   // 1. Hook files exist
-  console.log("[1/3] Checking hook files...");
+  console.log("[1/4] Checking hook files...");
   const hookFiles = isWindows
     ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js"]
     : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js"];
@@ -407,7 +448,7 @@ function check() {
       issues++;
     }
   }
-  console.log("\n[2/3] Checking settings.json hook registration...");
+  console.log("\n[2/4] Checking settings.json hook registration...");
   const settings = readJson(settingsPath);
   if (settings.autoMemoryEnabled !== false) { console.log("      Project memory requires autoMemoryEnabled=false"); issues++; }
 
@@ -457,7 +498,7 @@ function check() {
   validateRegisteredHook("UserPromptSubmit", settings.hooks?.UserPromptSubmit || [], "save-conversation");
 
   // 3. CLAUDE.md rules
-  console.log("\n[3/3] Checking CLAUDE.md long-term memory rules...");
+  console.log("\n[3/4] Checking CLAUDE.md long-term memory rules...");
   try {
     const claudeMdContent = fs.readFileSync(claudeMdPath, "utf8");
     if (claudeMdContent.includes(MARKER_START) && claudeMdContent.includes(MARKER_END)) {
@@ -470,6 +511,10 @@ function check() {
     console.log("      ❌ CLAUDE.md file missing");
     issues++;
   }
+
+  // 4. 선택 런타임 — 없어도 저장은 계속되므로 issues로 올리지 않는다.
+  console.log("\n[4/4] Checking optional runtime (Python 3 for handoff tools)...");
+  reportPythonStatus(detectPython());
 
   // Results
   console.log("");

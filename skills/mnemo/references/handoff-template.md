@@ -5,6 +5,7 @@ Use this template structure when creating handoff documents. The smart scaffold 
 ## Table of Contents
 
 - [Session Metadata](#session-metadata)
+- [Origin](#origin)
 - [Current State Summary](#current-state-summary)
 - [Feature/Flow/Decision Snapshot](#featureflowdecision-snapshot)
   - [Implemented Features](#implemented-features)
@@ -43,9 +44,31 @@ Use this template structure when creating handoff documents. The smart scaffold 
 - Branch: [GIT_BRANCH]
 - Session duration: [APPROX_DURATION]
 
+## Origin
+
+이 작업이 시작된 이유. 세션이 끝나면 "무엇을 했나"는 남지만 "왜 만들기로 했나"는
+사라지기 때문에, **기능을 구현·변경한 세션에서만** 요구한다. 이어지는 세션은 최초
+핸드오프를 링크하고 바뀐 부분만 적는다. 탐색·문서·설정만 한 세션은 각 칸을
+`N/A — <이유>`로 채운다 (다이어그램과 같은 규칙).
+
+| 항목 | 내용 |
+|------|------|
+| 요구 | [TODO: 요청받은 것 — 가능하면 원문에 가깝게] |
+| 출처 | [TODO: 사용자 요청 / 이슈 / spec·설계 문서 경로 / 이전 핸드오프] |
+| 해결할 문제 | [TODO: 이 요구가 없애려는 불편·위험. "왜 지금인가"] |
+
 ## Current State Summary
 
 [One paragraph: What was being worked on, current status, and where things left off]
+
+## Session Memory Review
+
+- Architecture preflight: [기억 본문 확인으로 SKIPPED / 없어서 닥터 RAN / NOT RUN·ERROR와 이유]
+- Memory/index updates: [실제 변경 경로 또는 변경 불필요·보완 불가 근거]
+- Retrieval verification: [검색어 → 인덱스 → 상세 항목 재검색 결과]
+- Observations: [세션 ID·시작 시각으로 한정한 정제 결과; 기존 백로그 제외]
+
+작성 전에 [핸드오프 기억 점검](handoff-memory.md)을 적용한다.
 
 ## Feature/Flow/Decision Snapshot
 

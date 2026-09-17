@@ -95,6 +95,14 @@ ensure_memory_scaffold() {
     mkdir -p "$memory_dir"
 
     if [ ! -f "$base_dir/MEMORY.md" ]; then
+        local category architecture_path patterns_path tools_path gotchas_path
+        for category in architecture patterns tools gotchas; do
+            if [ -f "$memory_dir/$category/index.md" ]; then
+                printf -v "${category}_path" 'memory/%s/index.md' "$category"
+            else
+                printf -v "${category}_path" 'memory/%s.md' "$category"
+            fi
+        done
         cat > "$base_dir/MEMORY.md" << EOF
 # MEMORY.md - 프로젝트 장기기억
 
@@ -115,16 +123,16 @@ ensure_memory_scaffold() {
 ---
 
 ## architecture/
-- [memory/architecture.md](memory/architecture.md)
+- [$architecture_path]($architecture_path)
 
 ## patterns/
-- [memory/patterns.md](memory/patterns.md)
+- [$patterns_path]($patterns_path)
 
 ## tools/
-- [memory/tools.md](memory/tools.md)
+- [$tools_path]($tools_path)
 
 ## gotchas/
-- [memory/gotchas.md](memory/gotchas.md)
+- [$gotchas_path]($gotchas_path)
 
 ---
 
@@ -135,7 +143,7 @@ ensure_memory_scaffold() {
 EOF
     fi
 
-    if [ ! -f "$memory_dir/architecture.md" ]; then
+    if [ ! -f "$memory_dir/architecture.md" ] && [ ! -f "$memory_dir/architecture/index.md" ]; then
         cat > "$memory_dir/architecture.md" << 'EOF'
 # Architecture - 설계 결정
 
@@ -145,7 +153,7 @@ EOF
 EOF
     fi
 
-    if [ ! -f "$memory_dir/patterns.md" ]; then
+    if [ ! -f "$memory_dir/patterns.md" ] && [ ! -f "$memory_dir/patterns/index.md" ]; then
         cat > "$memory_dir/patterns.md" << 'EOF'
 # Patterns - 작업 패턴, 워크플로우
 
@@ -155,7 +163,7 @@ EOF
 EOF
     fi
 
-    if [ ! -f "$memory_dir/tools.md" ]; then
+    if [ ! -f "$memory_dir/tools.md" ] && [ ! -f "$memory_dir/tools/index.md" ]; then
         cat > "$memory_dir/tools.md" << 'EOF'
 # Tools - MCP 서버, 외부 도구, 라이브러리
 
@@ -165,7 +173,7 @@ EOF
 EOF
     fi
 
-    if [ ! -f "$memory_dir/gotchas.md" ]; then
+    if [ ! -f "$memory_dir/gotchas.md" ] && [ ! -f "$memory_dir/gotchas/index.md" ]; then
         cat > "$memory_dir/gotchas.md" << 'EOF'
 # Gotchas - 주의사항, 함정
 
@@ -329,14 +337,13 @@ notify_mnemo_status() {
             [ "$e" -gt "$ref_epoch" ] && ref_epoch=$e
         done
     done
-    local base_g=-1 base_l=-1 marker_ref=-1
-    if [ -f "$marker" ]; then
-        read -r base_g base_l marker_ref < "$marker" 2>/dev/null
-        [ -z "$base_g" ] && base_g=-1
-        [ -z "$base_l" ] && base_l=-1
-        [ -z "$marker_ref" ] && marker_ref=-1
+    local base_g=0 base_l=0 marker_ref=-1 marker_valid=0 marker_text
+    marker_text=$(cat "$marker" 2>/dev/null || true)
+    if [[ "$marker_text" =~ ^(-?[0-9]+)[[:space:]]+(-?[0-9]+)[[:space:]]+([0-9]+)$ ]]; then
+        base_g=${BASH_REMATCH[1]}; base_l=${BASH_REMATCH[2]}; marker_ref=${BASH_REMATCH[3]}
+        marker_valid=1
     fi
-    if [ "$base_g" -lt 0 ] || [ "$ref_epoch" -gt "$marker_ref" ]; then
+    if [ "$marker_valid" -eq 0 ] || [ "$ref_epoch" -gt "$marker_ref" ]; then
         base_g=$g_count; base_l=$l_count
         echo "$g_count $l_count $ref_epoch" > "$marker" 2>/dev/null || true
     fi

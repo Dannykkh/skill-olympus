@@ -107,12 +107,23 @@ function ensureFile(filePath, content) {
 function ensureScaffold(root, date) {
   ensureFile(path.join(root, ".mnemo-root"), "");
   const project = path.basename(root);
-  ensureFile(path.join(root, "MEMORY.md"), `# MEMORY.md - 프로젝트 장기기억\n\n## 프로젝트 목표\n\n| 목표 | 상태 |\n|------|------|\n| ${project} 핵심 작업 추적 | 진행 중 |\n\n## 키워드 인덱스\n\n| 키워드 | 상세 파일 |\n|--------|-----------|\n| 프로젝트, 생성일 | #meta |\n\n## architecture/\n- [memory/architecture.md](memory/architecture.md)\n\n## patterns/\n- [memory/patterns.md](memory/patterns.md)\n\n## tools/\n- [memory/tools.md](memory/tools.md)\n\n## gotchas/\n- [memory/gotchas.md](memory/gotchas.md)\n\n## meta/\n- **프로젝트**: ${project}\n- **생성일**: ${date}\n- **마지막 업데이트**: ${date}\n`);
+  const splitCategories = new Set(["architecture", "patterns", "tools", "gotchas"]
+    .filter(category => fs.existsSync(path.join(root, "memory", category, "index.md"))));
+  // Preserve split canonical files and route a newly created root index to them.
+  const ensureScaffoldFile = (filePath, content) => {
+    if (path.basename(filePath) === "MEMORY.md") {
+      for (const category of splitCategories) {
+        content = content.replaceAll(`memory/${category}.md`, `memory/${category}/index.md`);
+      }
+    } else if (splitCategories.has(path.basename(filePath, ".md"))) return;
+    ensureFile(filePath, content);
+  };
+  ensureScaffoldFile(path.join(root, "MEMORY.md"), `# MEMORY.md - 프로젝트 장기기억\n\n## 프로젝트 목표\n\n| 목표 | 상태 |\n|------|------|\n| ${project} 핵심 작업 추적 | 진행 중 |\n\n## 키워드 인덱스\n\n| 키워드 | 상세 파일 |\n|--------|-----------|\n| 프로젝트, 생성일 | #meta |\n\n## architecture/\n- [memory/architecture.md](memory/architecture.md)\n\n## patterns/\n- [memory/patterns.md](memory/patterns.md)\n\n## tools/\n- [memory/tools.md](memory/tools.md)\n\n## gotchas/\n- [memory/gotchas.md](memory/gotchas.md)\n\n## meta/\n- **프로젝트**: ${project}\n- **생성일**: ${date}\n- **마지막 업데이트**: ${date}\n`);
   const memoryDir = path.join(root, "memory");
-  ensureFile(path.join(memoryDir, "architecture.md"), "# Architecture - 설계 결정\n\n---\n");
-  ensureFile(path.join(memoryDir, "patterns.md"), "# Patterns - 작업 패턴, 워크플로우\n\n---\n");
-  ensureFile(path.join(memoryDir, "tools.md"), "# Tools - 외부 도구, 라이브러리\n\n---\n");
-  ensureFile(path.join(memoryDir, "gotchas.md"), "# Gotchas - 주의사항, 함정\n\n---\n");
+  ensureScaffoldFile(path.join(memoryDir, "architecture.md"), "# Architecture - 설계 결정\n\n---\n");
+  ensureScaffoldFile(path.join(memoryDir, "patterns.md"), "# Patterns - 작업 패턴, 워크플로우\n\n---\n");
+  ensureScaffoldFile(path.join(memoryDir, "tools.md"), "# Tools - 외부 도구, 라이브러리\n\n---\n");
+  ensureScaffoldFile(path.join(memoryDir, "gotchas.md"), "# Gotchas - 주의사항, 함정\n\n---\n");
 }
 
 function appendTurn(root, payload, turn) {

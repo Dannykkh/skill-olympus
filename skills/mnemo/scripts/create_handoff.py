@@ -23,6 +23,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 from mnemo_project_root import detect_project_root
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
@@ -174,6 +175,90 @@ def get_previous_handoff_info(project_path: str, continues_from: str = None) -> 
     return {"exists": False}
 
 
+def architecture_memory_present(root: Path) -> bool:
+    """Find substantive architecture memory, including linked split entries.
+
+    This is a presence check, not an assessment of architectural completeness.
+    Never follow links outside this project's memory directory.
+    """
+    memory = (root / "memory").resolve()
+    pending = [memory / "architecture.md", memory / "architecture" / "index.md"]
+    index = root / "MEMORY.md"
+    links = re.compile(r'\[([^\]]*)\]\(([^)]+)\)')
+
+    def local_target(base: Path, target: str):
+        parsed = urlsplit(target.strip().strip("<>"))
+        if parsed.scheme or parsed.netloc or not parsed.path:
+            return None
+        candidate = (base / unquote(parsed.path)).resolve()
+        if candidate.is_relative_to(memory) and candidate.suffix == ".md":
+            return candidate
+        return None
+
+    if index.is_file():
+        for label, target in links.findall(index.read_text(encoding="utf-8-sig")):
+            if re.search(r'architecture|아키텍처|설계|구조', label + " " + target, re.I):
+                candidate = local_target(root, target)
+                if candidate:
+                    pending.append(candidate)
+    visited = set()
+    while pending:
+        path = pending.pop()
+        if path in visited or not path.is_file() or not path.resolve().is_relative_to(memory):
+            continue
+        visited.add(path)
+        text = path.read_text(encoding="utf-8-sig")
+        for _, target in links.findall(text):
+            candidate = local_target(path.parent, target)
+            if candidate:
+                pending.append(candidate)
+        # Index tables/headings and empty hook scaffolds are not remembered decisions.
+        if path.name == "index.md":
+            continue
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith(("#", "<!--", "```", "~~~")):
+                continue
+            if "MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다." in line:
+                continue
+            if re.fullmatch(r'[-*_\s]+', line):
+                continue
+            if re.match(r'(?:[-*>]\s*)?[`*]*(tags|date|source|status)[`*]*\s*:', line, re.I):
+                continue
+            if re.search(r'\bTODO\b|\[placeholder\]', line, re.I):
+                continue
+            if links.sub("", line).strip(" -*>"):
+                return True
+    return False
+
+
+def memory_preflight(root: Path) -> str:
+    """Run Doctor once per handoff only when architecture memory is absent."""
+    try:
+        if architecture_memory_present(root):
+            return "SKIPPED — 아키텍처 기억 본문 확인; 조건부 닥터 실행 불필요"
+    except (OSError, UnicodeError, ValueError) as error:
+        print(f"[Mnemo] ERROR: 아키텍처 기억 검사 실패: {error}")
+        return "ERROR — 아키텍처 기억을 읽지 못함; 수동 진단 및 기억 보완 필요"
+    script = Path(__file__).with_name("mnemo_doctor.py")
+    print("[Mnemo] 아키텍처 기억 없음/빈 상태 — 닥터 진단 자동 실행 (수정 없음)")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-B", str(script), "--project-root", str(root)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        print(f"[Mnemo] NOT RUN/ERROR: {error}")
+        return "ERROR — 닥터 실행 불가/시간 초과; 수동 진단 및 기억 보완 필요"
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr, file=sys.stderr)
+    if result.returncode not in (0, 1):
+        return f"ERROR — 닥터 종료 코드 {result.returncode}; 수동 확인 필요"
+    return (f"RAN — 닥터 종료 코드 {result.returncode} (진단만). "
+            "기존 기억·대화·핸드오프·소스 근거로 아키텍처 기억과 인덱스를 보완할 것; 보완 완료를 뜻하지 않음")
+
+
 def generate_handoff(
     project_path: str,
     slug: str = None,
@@ -206,6 +291,8 @@ def generate_handoff(
     handoffs_dir.mkdir(parents=True, exist_ok=True)
     (project_root / ".mnemo-root").touch(exist_ok=True)
 
+    memory_check = memory_preflight(project_root)
+
     filepath = handoffs_dir / filename
 
     # Gather git info
@@ -231,6 +318,23 @@ def generate_handoff(
             modified_section += f"\n| ... and {len(all_modified) - 10} more files | | |"
     else:
         modified_section = "| [no modified files detected] | | |"
+
+    # Origin section — 이어받는 세션은 출처를 선행 핸드오프로 미리 채운다.
+    # 최초 요구는 한 번만 적고, 이후 세션은 그 링크를 따라가면 되게 한다.
+    if prev_handoff.get("exists"):
+        origin_source = (f"[{prev_handoff['filename']}](./{prev_handoff['filename']}) 에서 이어짐 "
+                         f"— 최초 요구가 거기에 없으면 그 핸드오프의 Origin을 따라 올라갈 것")
+    else:
+        origin_source = "[TODO: 사용자 요청 / 이슈 / spec·설계 문서 경로]"
+    origin_section = f"""## Origin
+
+기능을 구현·변경한 세션은 채운다. 탐색·문서·설정만 한 세션은 각 칸을 `N/A — <이유>`로 둔다.
+
+| 항목 | 내용 |
+|------|------|
+| 요구 | [TODO: 요청받은 것 — 가능하면 원문에 가깝게] |
+| 출처 | {origin_source} |
+| 해결할 문제 | [TODO: 이 요구가 없애려는 불편·위험. "왜 지금인가"] |"""
 
     # Handoff chain section
     if prev_handoff.get("exists"):
@@ -263,9 +367,18 @@ def generate_handoff(
 
 {chain_section}
 
+{origin_section}
+
 ## Current State Summary
 
 [TODO: Write one paragraph describing what was being worked on, current status, and where things left off]
+
+## Session Memory Review
+
+- Architecture preflight: {memory_check}
+- Memory/index updates: [TODO: 실제 갱신한 기억·인덱스 링크 또는 변경 불필요 근거]
+- Retrieval verification: [TODO: 기록한 검색어로 MEMORY.md → 해당 항목을 다시 찾은 결과]
+- Observations: [TODO: 세션 ID·시작 시각으로 한정한 정제 결과; 기존 백로그 제외]
 
 ## Feature/Flow/Decision Snapshot
 
@@ -452,7 +565,7 @@ def main():
     print(f"\nNext steps:")
     print(f"1. Open {filepath}")
     print(f"2. Replace [TODO: ...] placeholders with actual content")
-    print(f"3. Focus especially on 'Feature/Flow/Decision Snapshot', 'Important Context', and 'Immediate Next Steps'")
+    print(f"3. Focus especially on 'Origin', 'Feature/Flow/Decision Snapshot', 'Important Context', and 'Immediate Next Steps'")
     print(f"4. Run: python validate_handoff.py {filepath}")
     print(f"   (Checks for completeness and accidental secrets)")
 

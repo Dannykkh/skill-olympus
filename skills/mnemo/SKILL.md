@@ -22,6 +22,26 @@ node skills/mnemo/install.js --uninstall  # 제거
 
 ---
 
+## 실행 요건
+
+| 기능 | 런타임 | Python이 없으면 |
+|------|--------|-----------------|
+| 대화 자동 저장 · 도구 관찰 로그 · MEMORY.md 규칙 | PowerShell / bash | **정상 동작** |
+| 누락 턴 복구 (SessionStart) | 셸 → Python | **조용히 건너뜀** (`exit 0`) |
+| 핸드오프 생성·검증·목록·staleness | Python 3 | 실행 불가 → 아래 대안 |
+| 변경 계보 수확 · 기억 앵커 검사 | Python 3 + Node | 실행 불가 |
+
+**Python이 없어도 기억은 계속 쌓입니다.** 저장 훅은 전부 셸 스크립트이고, Python은
+쌓인 것을 읽고 분석하는 도구에만 필요합니다. `install.js --check`의 `[4/4]`가 현재
+상태를 알려주며, **Python 없음은 설치 실패로 치지 않습니다.**
+
+> **Python 없이 핸드오프 쓰기**: `references/handoff-template.md`를 읽고
+> `docs/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 직접 작성합니다. 스캐폴드와 검증만
+> 없을 뿐 핸드오프 계약은 동일합니다. 컨텍스트가 차오르는 순간에 스크립트가 없다고
+> 핸드오프를 포기하지 마세요 — 그게 가장 큰 손실입니다.
+
+---
+
 ## 핵심 원칙
 
 | 원칙 | 설명 |
@@ -47,17 +67,27 @@ mnemo/
 │   └── reconcile-conversations.ps1/.sh # 누락 턴 복구 (SessionStart)
 ├── templates/                  # CLAUDE.md 규칙
 │   └── claude-md-rules.md
-├── scripts/                    # 핸드오프 + reconcile 스크립트
-│   ├── create_handoff.py
-│   ├── validate_handoff.py
-│   ├── list_handoffs.py
-│   ├── check_staleness.py
-│   └── reconcile_conversations.py  # JSONL → conversations/ 복구
+├── scripts/                    # Python 3 (+ 루트 판정에 Node)
+│   │   # ── 핸드오프 (세션 경계) ──
+│   ├── create_handoff.py       # 스캐폴드 (Origin·체인 자동 채움)
+│   ├── validate_handoff.py     # 게이트 (feature-bearing: Origin+Diagram 필수)
+│   ├── list_handoffs.py        # 목록
+│   ├── check_staleness.py      # 핸드오프가 현재 코드 대비 얼마나 낡았나 (git 기준)
+│   │   # ── 기억 위생 (진단 전부 · 수정 최소) ──
+│   ├── mnemo_doctor.py         # 진입점: 12개 점검, --fix는 정제 기준값만
+│   ├── harvest_lineage.py      # 착수 전 조회: 파일별 "언제·왜·어떻게" (핸드오프 파생)
+│   ├── check_memory_anchors.py  # 기억이 가리키는 파일이 실재하는가 (CodeMap 이동 힌트)
+│   ├── split_memory_file.py    # 복구: 비대한 memory/X.md → X/NNN-*.md + index.md
+│   ├── reclassify_observations.py  # 복구: 옛 훅이 오분류한 관찰을 learned로
+│   │   # ── 공통 ──
+│   ├── reconcile_conversations.py  # JSONL → conversations/ 누락 턴 복구
+│   └── mnemo_project_root.py   # 프로젝트 루트 판정 (훅과 같은 경계)
 ├── references/                 # 핸드오프 템플릿
 │   ├── handoff-template.md
 │   └── resume-checklist.md
 ├── docs/                       # 상세 문서
-│   └── memory-system.md        # 인지 모델 설명
+│   ├── memory-system.md        # 인지 모델 설명
+│   └── memory-hygiene.md       # 기능 4 도구별 상세 (SKILL.md 경량화로 분리)
 └── evals/                      # 평가
 ```
 
@@ -132,6 +162,12 @@ CLAUDE.md 규칙으로 자동 동작:
 
 컨텍스트가 차거나 작업을 중단할 때 핸드오프 문서를 생성합니다.
 
+**핸드오프는 기억의 입력구입니다.** 아키텍처 결정이 `memory/`에 들어온 경로를 추적하면
+전부 핸드오프 세션이고(실측 69회/69회), 계보 수확·역사 복원도 핸드오프를 원천으로 씁니다.
+설계 파이프라인(`specs/`·`adr/`)은 설계할 때만 생기지만 핸드오프는 즉흥 작업에도 남기
+때문입니다. 그래서 핸드오프의 `Origin`·`Files Modified`·`Decisions Made` 세 표가 채워져
+있어야 나중에 "왜 시작했고, 어디를, 왜 고쳤나"를 되살릴 수 있습니다.
+
 핸드오프는 구현한 기능 목록과 구성도/흐름도를 작성하는 산출물입니다.
 항상 **Feature/Flow/Decision Snapshot**에 구현 기능, 기능 경계, 구성도, 입력→처리→저장→표시 흐름,
 주요 결정/대안/근거를 남깁니다. CodeMap은 TermSnap이 만드는 별도 산출물이므로,
@@ -139,9 +175,14 @@ CLAUDE.md 규칙으로 자동 동작:
 
 ### 핸드오프 생성
 
+먼저 [핸드오프 기억 점검](references/handoff-memory.md)을 읽습니다. 생성 도구는
+아키텍처 기억의 단일본·분할본·인덱스 연결을 확인하고, 본문이 없으면 닥터를
+자동으로 한 번 실행합니다(진단만). 에이전트가 근거 기반 보완과 재검색을 마쳐야 합니다.
+컨텍스트 압축/한계 시 자동 핸드오프는 전역 규칙이며 고정 20턴 타이머가 아닙니다.
+
 ```bash
-python scripts/create_handoff.py [task-slug]
-python scripts/create_handoff.py "auth-part-2" --continues-from previous.md
+python "<module_root>/scripts/create_handoff.py" [task-slug]
+python "<module_root>/scripts/create_handoff.py" "auth-part-2" --continues-from previous.md
 ```
 
 ### 핸드오프 검증
@@ -149,6 +190,18 @@ python scripts/create_handoff.py "auth-part-2" --continues-from previous.md
 ```bash
 python scripts/validate_handoff.py <handoff-file>
 ```
+
+**기능을 구현·변경한 세션(feature-bearing)만** `Composition Diagram`과 `Origin`을
+필수로 요구합니다. 탐색·문서·설정만 한 세션은 면제됩니다 — typo 수정에 구성도를
+강요하는 것은 신호가 아니라 의례이고, 같은 판단을 Origin에도 적용합니다.
+
+`Origin`은 **"왜 이 작업이 시작됐나"**를 남기는 자리입니다. 세션이 끝나면 "무엇을
+했나"는 `Files Modified`에 남지만 최초 요구는 사라집니다. 이어받는 세션은
+`--continues-from`을 쓰면 출처가 선행 핸드오프 링크로 자동 채워지므로, 최초 요구는
+체인당 한 번만 적으면 됩니다.
+
+> 규칙 도입 이전 핸드오프에는 `Origin`이 없습니다. 검증기는 새로 작성한 핸드오프를
+> 검사하는 게이트이므로 과거 문서를 소급 수정할 필요는 없습니다.
 
 ### 핸드오프 목록
 
@@ -170,19 +223,48 @@ python scripts/check_staleness.py <handoff-file>
 
 ---
 
+## 기능 4: 기억 위생
+
+기억은 쓰는 쪽(훅·핸드오프)만 있으면 조용히 썩습니다. `memory/`·`docs/`·`codemap/`는
+관례상 git 추적 밖이라 **diff로는 썩음을 볼 수 없고**, 인덱스에만 예산이 있어 상세 파일은
+무제한으로 자라며, 항목이 가리키는 파일은 이름이 바뀌어도 아무도 모릅니다. 기능 4는 그
+썩음을 **드러나는 문제로 바꾸는** 도구 묶음입니다.
+
+| 시점 | 도구 | 하는 일 |
+|------|------|---------|
+| 구현 착수 전 | `harvest_lineage.py --file X` | 그 파일이 언제·왜·어떻게 바뀌어왔나 (없음 확인도 결과) |
+| 주기적 / 이상할 때 | `mnemo_doctor.py` | 12개 점검 한 번에. FAIL·WARN과 근거 |
+| 닥터가 가리킬 때 | `check_memory_anchors.py` | 사라진 파일을 가리키는 기억 목록 + 이동 후보 |
+| 닥터가 가리킬 때 | `split_memory_file.py` | 비대한 상세 파일을 항목별로 (백업·링크 갱신) |
+| 닥터가 가리킬 때 | `reclassify_observations.py` | 옛 훅의 오분류 관찰 복구 (백업·delta 보존) |
+
+원칙 넷 — **진단은 전부, 수정은 기계적인 것만**(닥터 `--fix`는 정제 기준값과, 정확히 하나에 맞는 `#slug` 링크의 `[[NNN-slug]]` 번호화 둘) /
+**판정 로직은 한 곳**(닥터는 형제 스크립트를 호출, 과거 재분류는 명시적 성공 근거가 있을 때만) /
+**"없음 확인"도 결과**(입력 부재는 exit 0 + 이유 + 대안, 실패 2는 루트 판정 불가뿐) /
+**되돌릴 수 있게**(dry-run 기본, `--apply`에 백업 강제).
+
+도구별 상세 — 닥터의 12개 점검 표, 앵커 판정 규칙(문맥 분류·이동 후보), 재분류 절차,
+분할 규칙, 계보 이유 폴백과 각 종료 코드 — 는 **[`docs/memory-hygiene.md`](docs/memory-hygiene.md)**에
+있습니다. 위 시점 표와 원칙 넷이 계약이고, 상세는 해당 도구를 쓸 때 읽습니다.
+
+---
+
 ## 사용법 요약
 
-| 상황 | 방법 |
-|------|------|
-| 대화 저장 | 자동 (훅) |
-| 도구 사용 기록 | 자동 (PostToolUse 훅 → toollog) |
-| 키워드 태깅 | Claude가 `#tags:` 추가 |
-| 과거 검색 | "이전에 ~했었지?" (Progressive Disclosure) |
-| 민감 정보 제외 | `<private>API키</private>` → `[PRIVATE]` |
-| 저장 전체 끄기 (opt-out) | 환경변수 `MNEMO_DISABLE=1` — 모든 mnemo 훅(대화/도구 기록/backfill)이 즉시 종료, 기존 저장분은 유지 |
-| 지식 축적 | 중요 결정 시 자동 |
-| 세션 전환 | `python scripts/create_handoff.py` |
-| 세션 재개 | 핸드오프 파일 읽고 이어서 |
+| 시점 | 상황 | 방법 |
+|------|------|------|
+| 항상 (자동) | 대화·응답 저장 | 훅 (Python 불필요) |
+| 항상 (자동) | 도구 관찰 기록 | PostToolUse 훅 → toollog + `gotchas/learned observations.jsonl` (에러 형태만 실패) |
+| 항상 (자동) | 키워드 태깅 | Claude가 응답 끝에 `#tags:` 추가 |
+| 항상 (자동) | 지식 축적 | 중요 결정 시 `memory/`·`MEMORY.md` 갱신 |
+| 항상 | 민감 정보 제외 | `<private>API키</private>` → `[PRIVATE]` |
+| 항상 | 저장 전체 끄기 | `MNEMO_DISABLE=1` — 모든 훅 즉시 종료, 기존 저장분 유지 |
+| 착수 전 | 과거 검색 | "이전에 ~했었지?" — `MEMORY.md` 코드(`g:072`, `a:147`)가 항목을 직접 지정 |
+| 착수 전 | 이 파일 왜 이렇게 됐나 | `python scripts/harvest_lineage.py --file <파일>` |
+| 세션 끝 | 세션 전환 | `python scripts/create_handoff.py` → `validate_handoff.py` |
+| 세션 시작 | 세션 재개 | 최신 핸드오프 읽기, 낡았으면 `check_staleness.py` |
+| 주기적 | 기억 건강 진단 | `python scripts/mnemo_doctor.py` (`--fix`는 정제 기준값만) |
+| 닥터가 가리킬 때 | 앵커 · 분할 · 재분류 | `check_memory_anchors.py` · `split_memory_file.py` · `reclassify_observations.py` |
 
 ---
 
@@ -193,8 +275,9 @@ python scripts/check_staleness.py <handoff-file>
 | 대화 로그 | `conversations/YYYY-MM-DD-claude.md` |
 | 도구 사용 로그 | `conversations/YYYY-MM-DD-toollog.md` |
 | 핸드오프 | `docs/handoffs/YYYY-MM-DD-HHMMSS-slug.md` |
-| 인덱스 | `MEMORY.md` (프로젝트 루트) |
-| 의미기억 | `memory/*.md` (카테고리별 상세) |
+| 인덱스 | `MEMORY.md` (프로젝트 루트, 100줄·5KB, 코드 `a:N g:N l:N h:`로 항목 직접 지정) |
+| 의미기억 | `memory/<카테고리>/NNN-slug.md` + `index.md` (항목별 분할). 작은 카테고리는 `memory/X.md` 단일 |
+| 관찰 로그 | `memory/{gotchas,learned}/observations.jsonl` (10MB에서 `archive/`로 회전), 정제 기준값 `memory/.mnemo-distill-offset` |
 
 ## 프로젝트 저장 경계
 

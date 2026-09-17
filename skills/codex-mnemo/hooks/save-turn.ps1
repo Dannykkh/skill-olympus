@@ -339,6 +339,11 @@ function Ensure-MemoryScaffold([string]$BaseDir) {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
+        foreach ($category in @("architecture", "patterns", "tools", "gotchas")) {
+            if (Test-Path (Join-Path $memoryDir "$category/index.md") -PathType Leaf) {
+                $memoryContent = $memoryContent.Replace("memory/$category.md", "memory/$category/index.md")
+            }
+        }
         [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
@@ -375,6 +380,8 @@ function Ensure-MemoryScaffold([string]$BaseDir) {
 
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
+        $splitDir = Join-Path $memoryDir ([System.IO.Path]::GetFileNameWithoutExtension($fileName))
+        if (Test-Path (Join-Path $splitDir "index.md") -PathType Leaf) { continue }
         if (-not (Test-Path $filePath)) {
             [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }
@@ -577,7 +584,13 @@ $hookSummary = Invoke-CodexHookBridge -BaseDir $baseDir -PayloadObject $payload
 # 응답 텍스트에서 에러/성공 패턴을 감지하여 observations.jsonl에 기록
 # ─────────────────────────────────────────────
 if ($response -and $baseDir) {
-    $hasError = $response -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_|실패|오류)'
+    # 턴 텍스트에 error라는 단어가 있다는 이유로 실패로 보면, 에러를 '설명한' 응답까지
+    # gotchas로 들어간다. 줄 머리의 에러 형태만 실패로 본다 (Claude 훅과 같은 규칙).
+    $errorShape = '(?im)^\s*(?:(?:fatal|error|err)\s*:|Traceback \(most recent call last\)|' +
+                  '[A-Za-z_.]*(?:Error|Exception)\s*:|' +
+                  '(?:bash|sh|cmd|zsh)?:?[^\n]{0,40}(?:command not found|No such file or directory|Permission denied)|' +
+                  'ENOENT|ERR_[A-Z_]+|npm ERR!|error TS\d+|error CS\d+)'
+    $hasError = $response -match $errorShape
     $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["''\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
     $safeResponse = $response
     if ($safeResponse.Length -gt 3000) { $safeResponse = $safeResponse.Substring(0, 3000) + "...[truncated]" }
@@ -609,12 +622,33 @@ if ($response -and $baseDir) {
     } | ConvertTo-Json -Compress
     [System.IO.File]::AppendAllText($obsFile, "$obs`n", $Utf8NoBom)
 
-    # 파일 크기 제한 (10MB)
-    if ((Test-Path $obsFile) -and ((Get-Item $obsFile).Length / 1MB) -ge 10) {
-        $archiveDir = Join-Path $obsTargetDir "archive"
-        if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
-        Move-Item $obsFile (Join-Path $archiveDir "observations-$(Get-Date -Format 'yyyy-MM-dd-HHmmss').jsonl") -Force
+    # MNEMO_ROTATION_START
+    # 기준값이 없거나 잘못됐으면 상태 알림의 초기화 이후에 회전한다.
+    if ((Test-Path -LiteralPath $obsFile) -and (Get-Item -LiteralPath $obsFile).Length -ge 10MB) {
+        $rotationMarker = Join-Path (Split-Path $obsTargetDir -Parent) ".mnemo-distill-offset"
+        $rotationText = if (Test-Path -LiteralPath $rotationMarker) { [IO.File]::ReadAllText($rotationMarker).Trim() } else { "" }
+        if ($rotationText -match '^(-?\d+)\s+(-?\d+)\s+(\d+)$') {
+            $rotationG = [long]$Matches[1]; $rotationL = [long]$Matches[2]; $rotationRef = $Matches[3]
+            $rotationCount = [long]0
+            foreach ($line in [IO.File]::ReadLines($obsFile)) { $rotationCount++ }
+            if ((Split-Path $obsTargetDir -Leaf) -eq "gotchas") { $rotationG -= $rotationCount } else { $rotationL -= $rotationCount }
+            $archiveDir = Join-Path $obsTargetDir "archive"
+            [IO.Directory]::CreateDirectory($archiveDir) | Out-Null
+           $archiveFile = Join-Path $archiveDir ("observations-" + (Get-Date -Format "yyyyMMdd-HHmmss") + "-" + [guid]::NewGuid().ToString("N") + ".jsonl")
+            $rotationTemp = $rotationMarker + "." + [guid]::NewGuid().ToString("N") + ".tmp"
+           Move-Item -LiteralPath $obsFile -Destination $archiveFile -ErrorAction Stop
+           try {
+                [IO.File]::WriteAllText($rotationTemp, "$rotationG $rotationL $rotationRef", $Utf8NoBom)
+                Move-Item -LiteralPath $rotationTemp -Destination $rotationMarker -Force -ErrorAction Stop
+           } catch {
+               Move-Item -LiteralPath $archiveFile -Destination $obsFile -ErrorAction Stop
+               throw
+            } finally {
+                if (Test-Path -LiteralPath $rotationTemp) { Remove-Item -LiteralPath $rotationTemp -Force }
+           }
+        }
     }
+    # MNEMO_ROTATION_END
 }
 
 $chronosContinue = Join-Path $CodexHome "skills\auto-continue-loop\scripts\continue-loop.ps1"
@@ -679,14 +713,14 @@ function Notify-MnemoStatus {
                 }
             }
         }
-        $baseG = -1; $baseL = -1; $markerRef = -1
+        $baseG = 0; $baseL = 0; $markerRef = -1; $markerValid = $false
         if (Test-Path $markerFile) {
             try {
                 $parts = ((Get-Content $markerFile -Raw -ErrorAction SilentlyContinue).Trim() -split '\s+')
-                if ($parts.Count -ge 3) { $baseG = [int64]$parts[0]; $baseL = [int64]$parts[1]; $markerRef = [int64]$parts[2] }
-            } catch { $baseG = -1 }
+                if ($parts.Count -eq 3) { $baseG = [int64]$parts[0]; $baseL = [int64]$parts[1]; $markerRef = [int64]$parts[2]; $markerValid = $markerRef -ge 0 }
+            } catch { $markerValid = $false }
         }
-        if ($baseG -lt 0 -or $refEpoch -gt $markerRef) {
+        if (-not $markerValid -or $refEpoch -gt $markerRef) {
             $baseG = $gCount; $baseL = $lCount
             try { [System.IO.File]::WriteAllText($markerFile, "$gCount $lCount $refEpoch", (New-Object System.Text.UTF8Encoding $false)) } catch {}
         }

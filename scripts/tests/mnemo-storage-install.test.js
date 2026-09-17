@@ -127,9 +127,30 @@ test(`all ${installedMode ? 'installed' : 'packaged'} Mnemo adapters can create 
       copyMnemoSupportFiles(source, installed);
     }
     assert.deepEqual(fs.readFileSync(path.join(installed, 'hooks/mnemo-project-root.js')), fs.readFileSync(path.join(repo, 'hooks/mnemo-project-root.js')));
+    for (const tool of ['mnemo_doctor.py', 'check_memory_anchors.py', 'harvest_lineage.py', 'reclassify_observations.py', 'split_memory_file.py']) {
+      const script = path.join(installed, 'scripts', tool);
+      assert.ok(fs.readFileSync(script).equals(fs.readFileSync(path.join(repo, 'skills/mnemo/scripts', tool))), `${name}: ${tool} must match the shared source`);
+      const help = spawnSync('python', [script, '--help'], { cwd: child, encoding: 'utf8', timeout: 30000, windowsHide: true });
+      assert.equal(help.status, 0, `${name}/${tool}: ${help.stderr}`);
+    }
+    const doctor = spawnSync('python', [path.join(installed, 'scripts/mnemo_doctor.py'), '--project-root', project], { cwd: child, encoding: 'utf8', timeout: 30000, windowsHide: true });
+    assert.ok([0, 1].includes(doctor.status), `${name}/mnemo_doctor.py: ${doctor.stderr}`);
+    assert.doesNotMatch(doctor.stderr, /Traceback|can't open file|ModuleNotFoundError/);
+    fs.mkdirSync(path.join(project, 'memory'), { recursive: true });
+    fs.writeFileSync(path.join(project, 'memory/architecture.md'), '# Architecture - 설계 결정\n\n> MEMORY.md 키워드 인덱스에서 이 파일로 연결됩니다.\n\n---\n');
     const result = spawnSync('python', [path.join(installed, 'scripts/create_handoff.py'), name], { cwd: child, encoding: 'utf8', timeout: 30000, windowsHide: true });
     assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Mnemo Doctor/, `${name}: missing architecture must invoke real Doctor`);
+    assert.ok(fs.existsSync(path.join(installed, 'references/handoff-memory.md')));
     assert.ok(fs.readdirSync(path.join(project, 'docs/handoffs')).some(file => file.endsWith(`-${name}.md`)));
+    fs.mkdirSync(path.join(project, 'memory/architecture'), { recursive: true });
+    fs.writeFileSync(path.join(project, 'memory/architecture/index.md'), '# Architecture\n[Decision](001-storage.md)\n');
+    fs.writeFileSync(path.join(project, 'memory/architecture/001-storage.md'), '# Storage\nPersist events before publication.\n');
+    const second = spawnSync('python', [path.join(installed, 'scripts/create_handoff.py'), `${name}-existing`], { cwd: child, encoding: 'utf8', timeout: 30000, windowsHide: true });
+    assert.equal(second.status, 0, second.stderr);
+    assert.doesNotMatch(second.stdout, /Mnemo Doctor/, `${name}: existing architecture must skip Doctor`);
+    // Leave an empty scaffold for the next adapter's absence scenario.
+    fs.writeFileSync(path.join(project, 'memory/architecture/001-storage.md'), '# Storage\n');
     assert.ok(!fs.existsSync(path.join(child, 'docs')));
   }
 });

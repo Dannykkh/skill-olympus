@@ -56,8 +56,12 @@ REQUIRED_SECTIONS = [
 # Required ONLY for feature-bearing sessions (Implemented Features lists real features).
 # Non-feature handoffs (docs/config/refactor/exploration) need not draw diagrams —
 # forcing a composition diagram on a typo fix is ceremony, not signal.
+# Origin joins this list for the same reason a diagram does: a session that builds a
+# feature is the only place the requirement behind it is still known. Sessions that
+# merely explore or tidy have no origin worth recording.
 FEATURE_SESSION_REQUIRED_SECTIONS = [
     "Composition Diagram",
+    "Origin",
 ]
 
 # Recommended sections
@@ -262,7 +266,7 @@ def validate_handoff(filepath: str) -> dict:
     content = path.read_text(encoding="utf-8")
     base_path = path.parent.parent.parent  # Go up from docs/handoffs/
 
-    # Feature-bearing sessions must also draw the composition diagram; others need not.
+    # Feature-bearing sessions must also draw the diagram and record the origin; others need not.
     feature_session = is_feature_session(content)
     required_sections = list(REQUIRED_SECTIONS)
     if feature_session:
@@ -321,7 +325,7 @@ def print_report(result: dict):
 
     # Feature-session classification (drives whether diagrams are required)
     if result.get('feature_session'):
-        print("\n[INFO] Feature-bearing session - Composition Diagram required")
+        print("\n[INFO] Feature-bearing session - Composition Diagram and Origin required")
     else:
         print("\n[INFO] Non-feature session - diagrams optional (Implemented Features lists no real feature)")
 

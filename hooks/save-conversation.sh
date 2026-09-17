@@ -55,6 +55,14 @@ ensure_memory_scaffold() {
     mkdir -p "$memory_dir"
 
     if [ ! -f "$base_dir/MEMORY.md" ]; then
+        local category architecture_path patterns_path tools_path gotchas_path
+        for category in architecture patterns tools gotchas; do
+            if [ -f "$memory_dir/$category/index.md" ]; then
+                printf -v "${category}_path" 'memory/%s/index.md' "$category"
+            else
+                printf -v "${category}_path" 'memory/%s.md' "$category"
+            fi
+        done
         cat > "$base_dir/MEMORY.md" << EOF
 # MEMORY.md - 프로젝트 장기기억
 
@@ -75,16 +83,16 @@ ensure_memory_scaffold() {
 ---
 
 ## architecture/
-- [memory/architecture.md](memory/architecture.md)
+- [$architecture_path]($architecture_path)
 
 ## patterns/
-- [memory/patterns.md](memory/patterns.md)
+- [$patterns_path]($patterns_path)
 
 ## tools/
-- [memory/tools.md](memory/tools.md)
+- [$tools_path]($tools_path)
 
 ## gotchas/
-- [memory/gotchas.md](memory/gotchas.md)
+- [$gotchas_path]($gotchas_path)
 
 ---
 
@@ -95,7 +103,7 @@ ensure_memory_scaffold() {
 EOF
     fi
 
-    if [ ! -f "$memory_dir/architecture.md" ]; then
+    if [ ! -f "$memory_dir/architecture.md" ] && [ ! -f "$memory_dir/architecture/index.md" ]; then
         cat > "$memory_dir/architecture.md" << 'EOF'
 # Architecture - 설계 결정
 
@@ -105,7 +113,7 @@ EOF
 EOF
     fi
 
-    if [ ! -f "$memory_dir/patterns.md" ]; then
+    if [ ! -f "$memory_dir/patterns.md" ] && [ ! -f "$memory_dir/patterns/index.md" ]; then
         cat > "$memory_dir/patterns.md" << 'EOF'
 # Patterns - 작업 패턴, 워크플로우
 
@@ -115,7 +123,7 @@ EOF
 EOF
     fi
 
-    if [ ! -f "$memory_dir/tools.md" ]; then
+    if [ ! -f "$memory_dir/tools.md" ] && [ ! -f "$memory_dir/tools/index.md" ]; then
         cat > "$memory_dir/tools.md" << 'EOF'
 # Tools - MCP 서버, 외부 도구, 라이브러리
 
@@ -125,7 +133,7 @@ EOF
 EOF
     fi
 
-    if [ ! -f "$memory_dir/gotchas.md" ]; then
+    if [ ! -f "$memory_dir/gotchas.md" ] && [ ! -f "$memory_dir/gotchas/index.md" ]; then
         cat > "$memory_dir/gotchas.md" << 'EOF'
 # Gotchas - 주의사항, 함정
 

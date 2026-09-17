@@ -16,9 +16,12 @@ function copyMnemoSupportFiles(sourceDir, destDir) {
   const commonDir = path.join(path.dirname(sourceDir), "mnemo");
   const files = [
     [path.join(sourceDir, "../../hooks/mnemo-project-root.js"), "hooks/mnemo-project-root.js"],
-    ...["mnemo_project_root.py", "create_handoff.py", "list_handoffs.py", "check_staleness.py", "validate_handoff.py"]
+    ...["mnemo_project_root.py", "create_handoff.py", "list_handoffs.py", "check_staleness.py", "validate_handoff.py",
+      "mnemo_doctor.py", "check_memory_anchors.py", "harvest_lineage.py", "reclassify_observations.py", "split_memory_file.py"]
       .map((name) => [path.join(commonDir, "scripts", name), `scripts/${name}`]),
     [path.join(commonDir, "references/project-storage.md"), "references/project-storage.md"],
+    [path.join(commonDir, "references/handoff-memory.md"), "references/handoff-memory.md"],
+    [path.join(commonDir, "references/handoff-template.md"), "references/handoff-template.md"],
   ];
   for (const [source, relative] of files) {
     const target = path.join(destDir, relative);

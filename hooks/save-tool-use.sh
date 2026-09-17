@@ -140,7 +140,20 @@ TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT" | head -c 3000)
 TARGET_DIR=""
 EVENT_TYPE=""
 
-if echo "$TOOL_OUTPUT" | grep -qiE '(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)' 2>/dev/null; then
+# 실패 판정은 '출력 어딘가에 error라는 단어가 있는가'가 아니라 '출력이 에러 형태인가'로 본다.
+# 예전 규칙은 편집한 소스에 Failed( 나 Error enum이 있다는 이유로 성공을 gotchas에 넣었다.
+# Edit/Write/Read는 응답이 파일 내용을 그대로 되돌려주므로 본문 매칭 자체를 하지 않는다.
+HAS_ERROR=0
+case "$TOOL_NAME" in
+    Edit|Write|NotebookEdit|Read|NotebookRead) ;;
+    *)
+        if echo "$TOOL_OUTPUT" | grep -qE '^[[:space:]]*(([Ff]atal|[Ee]rror|ERR)[[:space:]]*:|Traceback \(most recent call last\)|[A-Za-z_.]*(Error|Exception)[[:space:]]*:|.{0,40}(command not found|No such file or directory|Permission denied)|ENOENT|ERR_[A-Z_]+|npm ERR!|error TS[0-9]+|error CS[0-9]+)' 2>/dev/null; then
+            HAS_ERROR=1
+        fi
+        ;;
+esac
+
+if [ "$HAS_ERROR" -eq 1 ]; then
     # 실패 → memory/gotchas/
     TARGET_DIR="$PROJECT_ROOT/memory/gotchas"
     EVENT_TYPE="tool_error"
@@ -177,12 +190,33 @@ jq -n -c \
     '{timestamp:$ts, event:$ev, tool:$tl, input:$inp, output:$out, session:$sess}' \
     >> "$OBS_FILE" 2>/dev/null
 
-# 파일 크기 제한 (10MB 초과 시 아카이브)
-if [ -f "$OBS_FILE" ]; then
-    FILE_SIZE_MB=$(du -m "$OBS_FILE" 2>/dev/null | cut -f1)
-    if [ "${FILE_SIZE_MB:-0}" -ge 10 ]; then
-        ARCHIVE_DIR="$TARGET_DIR/archive"
-        mkdir -p "$ARCHIVE_DIR"
-        mv "$OBS_FILE" "$ARCHIVE_DIR/observations-$(date +%Y%m%d-%H%M%S).jsonl" 2>/dev/null || true
+# MNEMO_ROTATION_START
+# 기준값이 없거나 잘못됐으면 상태 알림의 초기화 이후에 회전한다.
+if [ -f "$OBS_FILE" ] && [ "$(wc -c < "$OBS_FILE")" -ge 10485760 ]; then
+    ROTATION_MARKER="$(dirname "$TARGET_DIR")/.mnemo-distill-offset"
+    ROTATION_TEXT=$(cat "$ROTATION_MARKER" 2>/dev/null || true)
+    if [[ "$ROTATION_TEXT" =~ ^(-?[0-9]+)[[:space:]]+(-?[0-9]+)[[:space:]]+([0-9]+)$ ]]; then
+        ROTATION_G=${BASH_REMATCH[1]}; ROTATION_L=${BASH_REMATCH[2]}; ROTATION_REF=${BASH_REMATCH[3]}
+        ROTATION_COUNT=$(awk 'END { print NR }' "$OBS_FILE")
+        if [ "$(basename "$TARGET_DIR")" = gotchas ]; then
+            ROTATION_G=$((ROTATION_G - ROTATION_COUNT))
+        else
+            ROTATION_L=$((ROTATION_L - ROTATION_COUNT))
+        fi
+        ROTATION_ARCHIVE="$TARGET_DIR/archive"
+        if mkdir -p "$ROTATION_ARCHIVE"; then
+            ROTATION_DEST=$(mktemp "$ROTATION_ARCHIVE/observations-$(date +%Y%m%d-%H%M%S)-XXXXXXXX") || ROTATION_DEST=""
+            if [ -n "$ROTATION_DEST" ]; then
+               if mv "$OBS_FILE" "$ROTATION_DEST.jsonl"; then
+                    ROTATION_TEMP=$(mktemp "$ROTATION_MARKER.XXXXXXXX") || ROTATION_TEMP=""
+                    if [ -z "$ROTATION_TEMP" ] || ! { printf '%s %s %s\n' "$ROTATION_G" "$ROTATION_L" "$ROTATION_REF" > "$ROTATION_TEMP" && mv "$ROTATION_TEMP" "$ROTATION_MARKER"; }; then
+                       mv "$ROTATION_DEST.jsonl" "$OBS_FILE"
+                   fi
+                    [ -z "$ROTATION_TEMP" ] || rm -f "$ROTATION_TEMP"
+               fi
+                rm -f "$ROTATION_DEST"
+            fi
+        fi
     fi
 fi
+# MNEMO_ROTATION_END

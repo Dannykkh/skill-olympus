@@ -175,6 +175,11 @@ function Ensure-MemoryScaffold {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
+        foreach ($category in @("architecture", "patterns", "tools", "gotchas")) {
+            if (Test-Path (Join-Path $memoryDir "$category/index.md") -PathType Leaf) {
+                $memoryContent = $memoryContent.Replace("memory/$category.md", "memory/$category/index.md")
+            }
+        }
         [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
@@ -211,6 +216,9 @@ function Ensure-MemoryScaffold {
 
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
+        # 분할 디렉터리(memory/architecture/)가 정본이면 평평한 파일을 만들지 않는다.
+        $splitDir = Join-Path $memoryDir ([System.IO.Path]::GetFileNameWithoutExtension($fileName))
+        if (Test-Path (Join-Path $splitDir "index.md")) { continue }
         if (-not (Test-Path $filePath)) {
             [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }
@@ -396,14 +404,14 @@ function Notify-MnemoStatus {
                 }
             }
         }
-        $baseG = -1; $baseL = -1; $markerRef = -1
+        $baseG = 0; $baseL = 0; $markerRef = -1; $markerValid = $false
         if (Test-Path $markerFile) {
             try {
                 $parts = ((Get-Content $markerFile -Raw -ErrorAction SilentlyContinue).Trim() -split '\s+')
-                if ($parts.Count -ge 3) { $baseG = [int64]$parts[0]; $baseL = [int64]$parts[1]; $markerRef = [int64]$parts[2] }
-            } catch { $baseG = -1 }
+                if ($parts.Count -eq 3) { $baseG = [int64]$parts[0]; $baseL = [int64]$parts[1]; $markerRef = [int64]$parts[2]; $markerValid = $markerRef -ge 0 }
+            } catch { $markerValid = $false }
         }
-        if ($baseG -lt 0 -or $refEpoch -gt $markerRef) {
+        if (-not $markerValid -or $refEpoch -gt $markerRef) {
             $baseG = $gCount; $baseL = $lCount
             try { [System.IO.File]::WriteAllText($markerFile, "$gCount $lCount $refEpoch", (New-Object System.Text.UTF8Encoding $false)) } catch {}
         }

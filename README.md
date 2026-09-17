@@ -515,8 +515,20 @@ without silently adding the optional business, CEO, or documentation stages.
 - **When:** always — and whenever you ask "what did we do before?"
 - **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks. Opt-out: `MNEMO_DISABLE=1` (version check: `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
 - **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Antigravity/Grok; past-conversation search; auto handoff near the context limit.
-- **Output:** `MEMORY.md` (index) + `memory/*.md` (semantic) + `conversations/*.md` (episodic).
-- **Next:** —
+- **Output:** `MEMORY.md` (index, ≤100 lines) + `memory/<category>/NNN-slug.md` with an `index.md` per category (semantic, one file per entry) + `conversations/*.md` (episodic) + `docs/handoffs/*.md` (session boundary — the input port for memory).
+- **Next:** when memory feels stale, run `mnemo_doctor.py`; the workflow below says what runs when.
+
+**Mnemo workflow — what runs when**
+
+| When | What happens | Tool | Needs Python |
+|------|--------------|------|--------------|
+| Every turn (automatic) | Save the prompt, the reply, and tool observations; classify observations by error *shape*, not by the word "error"; rotate logs at 10 MB while preserving the distill baseline | hooks (PowerShell / bash) | no |
+| Before touching a file | "When, why, and how did this file change?" — derived from handoffs, keyed by file path. "Nothing found" is a valid answer | `harvest_lineage.py --file X` | yes |
+| End of session | Scaffold → fill `Origin` (why the work started), `Files Modified`, `Decisions Made` → validate. Feature sessions must carry `Origin` and a composition diagram; the doctor runs automatically only when no architecture memory exists | `create_handoff.py` → `validate_handoff.py` | yes |
+| Periodically, or when in doubt | 12 checks: index budget and links, entry metadata, oversized files, lifecycle links, distill baseline, misclassified observations, stale code anchors, handoffs, history recoverability, record coverage. `--fix` repairs only two mechanical things — the distill baseline, and tag-name lifecycle links rewritten to `[[NNN-slug]]` when exactly one entry matches | `mnemo_doctor.py [--fix]` | yes |
+| When the doctor points at it | Stale anchors with CodeMap move candidates; split an oversized `memory/X.md` into `X/NNN-slug.md` + `index.md`; move observations the old hook misfiled | `check_memory_anchors.py`, `split_memory_file.py`, `reclassify_observations.py` | yes |
+
+Rules that hold it together: memory is **project-local** (nothing lives under `~/.claude`); links between entries use **entry numbers** (`[[041-…]]`, `g:072`) while tags stay for search; the doctor **diagnoses everything and fixes almost nothing** — path repairs and `SUPERSEDED` decisions are human calls; every writer is dry-run by default and backs up on `--apply`. Without Python the hooks still save every turn; write the handoff by hand from `skills/mnemo/references/handoff-template.md`. Details: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
 
 </details>
 

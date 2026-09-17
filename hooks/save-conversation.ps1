@@ -111,6 +111,11 @@ function Ensure-MemoryScaffold {
 - **생성일**: $today
 - **마지막 업데이트**: $today
 "@
+        foreach ($category in @("architecture", "patterns", "tools", "gotchas")) {
+            if (Test-Path (Join-Path $memoryDir "$category/index.md") -PathType Leaf) {
+                $memoryContent = $memoryContent.Replace("memory/$category.md", "memory/$category/index.md")
+            }
+        }
         [System.IO.File]::WriteAllText($memoryFile, $memoryContent.TrimStart(), $Utf8NoBom)
     }
 
@@ -147,6 +152,11 @@ function Ensure-MemoryScaffold {
 
     foreach ($fileName in $categoryFiles.Keys) {
         $filePath = Join-Path $memoryDir $fileName
+        # 같은 이름의 분할 디렉터리(memory/architecture/)가 있으면 그쪽이 정본이다.
+        # 스캐폴드가 평평한 architecture.md를 다시 만들면 분할본과 단일본이 함께 남아
+        # 어느 쪽이 정본인지 알 수 없게 된다.
+        $splitDir = Join-Path $memoryDir ([System.IO.Path]::GetFileNameWithoutExtension($fileName))
+        if (Test-Path (Join-Path $splitDir "index.md")) { continue }
         if (-not (Test-Path $filePath)) {
             [System.IO.File]::WriteAllText($filePath, $categoryFiles[$fileName].TrimStart(), $Utf8NoBom)
         }

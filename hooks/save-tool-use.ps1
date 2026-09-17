@@ -149,7 +149,15 @@ try {
     $outputStr = ""
     if ($toolOutput) { $outputStr = "$toolOutput" }
 
-    $hasError = $outputStr -match '(?i)(error|fail|exception|denied|not found|cannot|unable|ENOENT|ERR_)'
+    # 실패 판정은 '출력 어딘가에 error라는 단어가 있는가'가 아니라 '출력이 에러 형태인가'로 본다.
+    # 예전 규칙은 편집한 소스에 Failed( 나 Error enum이 있다는 이유로 성공을 gotchas에 넣었다.
+    # Edit/Write/Read는 응답이 파일 내용을 그대로 되돌려주므로 본문 매칭 자체를 하지 않는다.
+    $echoesContent = $toolName -in @("Edit", "Write", "NotebookEdit", "Read", "NotebookRead")
+    $errorShape = '(?im)^\s*(?:(?:fatal|error|err)\s*:|Traceback \(most recent call last\)|' +
+                  '[A-Za-z_.]*(?:Error|Exception)\s*:|' +
+                  '(?:bash|sh|cmd|zsh)?:?[^\n]{0,40}(?:command not found|No such file or directory|Permission denied)|' +
+                  'ENOENT|ERR_[A-Z_]+|npm ERR!|error TS\d+|error CS\d+)'
+    $hasError = (-not $echoesContent) -and ($outputStr -match $errorShape)
 
     $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
     $inputStr = ""
@@ -193,13 +201,33 @@ try {
 
         [System.IO.File]::AppendAllText($obsFile, "$obs`n", $Utf8NoBom)
 
-        # 파일 크기 제한 (10MB 초과 시 아카이브)
-        if ((Get-Item $obsFile -ErrorAction SilentlyContinue).Length / 1MB -ge 10) {
-            $archiveDir = Join-Path $targetDir "archive"
-            if (-not (Test-Path $archiveDir)) { New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null }
-            $archiveTs = Get-Date -Format "yyyy-MM-dd-HHmmss"
-            Move-Item $obsFile (Join-Path $archiveDir "observations-$archiveTs.jsonl") -Force
+        # MNEMO_ROTATION_START
+        # 기준값이 없거나 잘못됐으면 상태 알림의 초기화 이후에 회전한다.
+        if ((Test-Path -LiteralPath $obsFile) -and (Get-Item -LiteralPath $obsFile).Length -ge 10MB) {
+            $rotationMarker = Join-Path (Split-Path $targetDir -Parent) ".mnemo-distill-offset"
+            $rotationText = if (Test-Path -LiteralPath $rotationMarker) { [IO.File]::ReadAllText($rotationMarker).Trim() } else { "" }
+            if ($rotationText -match '^(-?\d+)\s+(-?\d+)\s+(\d+)$') {
+                $rotationG = [long]$Matches[1]; $rotationL = [long]$Matches[2]; $rotationRef = $Matches[3]
+                $rotationCount = [long]0
+                foreach ($line in [IO.File]::ReadLines($obsFile)) { $rotationCount++ }
+                if ((Split-Path $targetDir -Leaf) -eq "gotchas") { $rotationG -= $rotationCount } else { $rotationL -= $rotationCount }
+                $archiveDir = Join-Path $targetDir "archive"
+                [IO.Directory]::CreateDirectory($archiveDir) | Out-Null
+               $archiveFile = Join-Path $archiveDir ("observations-" + (Get-Date -Format "yyyyMMdd-HHmmss") + "-" + [guid]::NewGuid().ToString("N") + ".jsonl")
+                $rotationTemp = $rotationMarker + "." + [guid]::NewGuid().ToString("N") + ".tmp"
+               Move-Item -LiteralPath $obsFile -Destination $archiveFile -ErrorAction Stop
+               try {
+                    [IO.File]::WriteAllText($rotationTemp, "$rotationG $rotationL $rotationRef", $Utf8NoBom)
+                    Move-Item -LiteralPath $rotationTemp -Destination $rotationMarker -Force -ErrorAction Stop
+               } catch {
+                   Move-Item -LiteralPath $archiveFile -Destination $obsFile -ErrorAction Stop
+                   throw
+                } finally {
+                    if (Test-Path -LiteralPath $rotationTemp) { Remove-Item -LiteralPath $rotationTemp -Force }
+               }
+            }
         }
+        # MNEMO_ROTATION_END
     }
 } catch {
     # 관찰 기록 실패해도 메인 기능에 영향 없음 — 그러나 로그에는 남김

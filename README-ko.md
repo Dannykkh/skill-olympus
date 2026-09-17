@@ -515,8 +515,20 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 - **언제:** 항상 — 그리고 "이전에 뭐 했더라?" 물을 때마다.
 - **사용:** `mnemo` (별칭: 므네모); 매 턴 훅이 자동 저장. opt-out: `MNEMO_DISABLE=1` (버전 체크는 `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
 - **처리:** 세션과 Claude/Codex/Antigravity/Grok을 가로지르는 3계층 메모리; 과거 대화 검색; 컨텍스트 한도 근처에서 자동 핸드오프.
-- **결과물:** `MEMORY.md`(인덱스) + `memory/*.md`(의미) + `conversations/*.md`(일화).
-- **다음:** —
+- **결과물:** `MEMORY.md`(인덱스, 100줄 이내) + `memory/<카테고리>/NNN-slug.md`와 카테고리별 `index.md`(의미, 항목당 파일 하나) + `conversations/*.md`(일화) + `docs/handoffs/*.md`(세션 경계 — 기억의 입력구).
+- **다음:** 기억이 낡았다 싶으면 `mnemo_doctor.py`. 아래 표가 언제 무엇이 도는지입니다.
+
+**므네모 절차 — 언제 무엇이 도나**
+
+| 시점 | 하는 일 | 도구 | Python 필요 |
+|------|---------|------|-------------|
+| 매 턴 (자동) | 프롬프트·응답·도구 관찰 저장. 관찰 실패 판정은 "error"라는 단어가 아니라 **에러 형태**로. 10 MB에서 로그 회전, 정제 기준값은 보존 | 훅 (PowerShell / bash) | 아니오 |
+| 파일에 손대기 전 | "이 파일이 언제·왜·어떻게 바뀌었나" — 핸드오프에서 파일 경로 기준으로 파생. **"없음 확인"도 결과** | `harvest_lineage.py --file X` | 예 |
+| 세션 끝 | 스캐폴드 → `Origin`(왜 시작했나)·`Files Modified`·`Decisions Made` 채움 → 검증. 기능 세션은 `Origin`과 구성도 필수. 아키텍처 기억이 없을 때만 닥터가 자동 실행 | `create_handoff.py` → `validate_handoff.py` | 예 |
+| 주기적 · 이상할 때 | 12개 점검: 인덱스 예산·링크, 항목 메타데이터, 비대 파일, 수명주기 링크, 정제 기준값, 오분류 관찰, 사라진 앵커, 핸드오프, 역사 복원, 기록 커버리지. `--fix`는 기계적인 둘만 — 정제 기준값, 그리고 태그 이름 lifecycle 링크를 **정확히 하나**에 맞을 때 `[[NNN-slug]]`로 | `mnemo_doctor.py [--fix]` | 예 |
+| 닥터가 가리킬 때 | 사라진 앵커 + CodeMap 이동 후보; 비대한 `memory/X.md`를 `X/NNN-slug.md` + `index.md`로 분할; 옛 훅이 오분류한 관찰 이동 | `check_memory_anchors.py`, `split_memory_file.py`, `reclassify_observations.py` | 예 |
+
+이 체계를 지탱하는 규칙: 기억은 **프로젝트 로컬**(`~/.claude`에는 없음); 항목 간 링크는 **번호**(`[[041-…]]`, `g:072`)로, 태그는 검색용; 닥터는 **진단은 전부, 수정은 거의 안 함** — 경로 수정과 `SUPERSEDED` 판단은 사람 몫; 쓰는 도구는 전부 dry-run 기본에 `--apply` 시 백업. Python이 없어도 훅은 매 턴 저장하며, 핸드오프는 `skills/mnemo/references/handoff-template.md`를 보고 직접 씁니다. 상세: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
 
 </details>
 
