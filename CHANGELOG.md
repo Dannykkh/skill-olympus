@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.9.0] - 2026-09-18
+
+### Features
+
+- Record paths inside Mnemo records relative to the project root. Storage *location* was already re-resolved on every hook call, but the stored *content* copied tool input verbatim, so files inside the project were logged as `D:\git\...` and handoff headers carried the machine-specific root. `hooks/save-tool-use.sh|ps1` now relativize `file_path`/`notebook_path`/`path` before writing the tool log and observation input (paths outside the root and `command`/`content` bodies stay untouched), `create_handoff.py` writes `Project: <folder name>`, and `check_staleness.py` derives the root from the handoff file location instead of the header. Only Claude hooks record path fields; Codex, Antigravity and Grok hooks never did.
+- `mnemo_doctor.py` gains a 13th check, "absolute paths inside records", and a third mechanical `--fix`: handoff `Project:` headers, tool-log Edit/Write lines and observation path fields under the current root are rewritten relative (per-file `.bak-<stamp>`, observation line count preserved). The root is the current root only - headers that point elsewhere (a nested repo split out later, a predecessor project inherited by folder copy, a discarded worktree) are reported and kept, and annotation text after the path survives. Memory prose is reported, never rewritten.
+- Tests: `scripts/tests/mnemo-relative-paths.test.js` runs the shipped bash and PowerShell blocks (roots are passed via stdin JSON because Git Bash rewrites POSIX-looking arguments), plus handoff-root and doctor cases; docs updated in `memory-hygiene.md`, `SKILL.md`, `README*.md`.
+
 ## [6.8.0] - 2026-09-17
 
 ### Features
