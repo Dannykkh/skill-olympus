@@ -92,6 +92,20 @@ def parse_handoff_metadata(filepath: str) -> dict:
     return metadata
 
 
+def resolve_project_path(handoff: Path, declared: str | None) -> str:
+    """핸드오프는 항상 <root>/docs/handoffs/ 아래에 만들어지므로 파일 위치가 루트의 근거다.
+
+    헤더의 Project:는 폴더 이름만 담아(다른 컴퓨터에서도 유효) 루트 판별에 쓰지 않는다.
+    옛 형식의 절대경로는 파일이 docs/handoffs/ 밖에 있을 때만 호환용으로 본다.
+    """
+    resolved = handoff.resolve()
+    if resolved.parent.name == "handoffs" and resolved.parent.parent.name == "docs":
+        return str(resolved.parent.parent.parent)
+    if declared and Path(declared).is_absolute() and Path(declared).is_dir():
+        return declared
+    return str(resolved.parent)
+
+
 def get_commits_since(timestamp: datetime, project_path: str) -> list[str]:
     """Get list of commits since a given timestamp."""
     if not timestamp:
@@ -245,11 +259,8 @@ def check_staleness(handoff_path: str) -> dict:
     # Parse handoff
     metadata = parse_handoff_metadata(handoff_path)
 
-    # Determine project path
-    project_path = metadata.get("project_path")
-    if not project_path or not Path(project_path).exists():
-        # Fallback: assume handoff is in docs/handoffs/ within project
-        project_path = str(path.parent.parent.parent)
+    # Determine project path (핸드오프 파일 위치 기준, 헤더의 Project:는 표시용)
+    project_path = resolve_project_path(path, metadata.get("project_path"))
 
     # Check if git repo
     success, _ = run_cmd(["git", "rev-parse", "--git-dir"], cwd=project_path)

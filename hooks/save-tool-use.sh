@@ -43,6 +43,31 @@ get_claude_project_root() {
     printf '%s' "$INPUT" | node "$helper" --claude 2>/dev/null || true
 }
 
+# MNEMO_RELPATH_START
+# 기록에 남기는 경로는 프로젝트 루트 기준 상대경로(슬래시 구분)로 쓴다. 루트 밖 경로는 그대로 둔다.
+# 절대경로를 그대로 남기면 프로젝트를 옮기거나 다른 컴퓨터에서 열었을 때 기록이 옛 위치를 가리킨다.
+# 대상은 file_path·notebook_path·path 필드뿐이다. command·content 같은 본문은 내용이므로 손대지 않는다.
+mnemo_relpath_defs() {
+    cat << 'EOF'
+def mnemo_relpath($root):
+  if type != "string" or $root == "" then . else
+    gsub("\\\\"; "/") as $p
+    | ($root | gsub("\\\\"; "/") | sub("/+$"; "")) as $r
+    | ($r | test("^[A-Za-z]:/")) as $windows
+    | (if $windows then ($p | ascii_downcase) else $p end) as $pc
+    | (if $windows then ($r | ascii_downcase) else $r end) as $rc
+    | if $pc == $rc then "."
+      elif ($pc | startswith($rc + "/")) then $p[($r | length) + 1:]
+      else . end
+  end;
+def mnemo_relativize($root):
+  if type == "object" then
+    with_entries(if (.key == "file_path" or .key == "notebook_path" or .key == "path") then .value |= mnemo_relpath($root) else . end)
+  else . end;
+EOF
+}
+# MNEMO_RELPATH_END
+
 INPUT=$(cat)
 if [ -z "$INPUT" ]; then exit 0; fi
 
@@ -70,6 +95,10 @@ PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
 # Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
 if [ -z "$PROJECT_ROOT" ]; then exit 0; fi
 
+# 기록용 도구 입력: 경로 필드를 루트 기준 상대경로로 바꾼 사본 (toollog·관찰 로그 공용)
+TOOL_INPUT_JSON=$(echo "$INPUT" | jq -c --arg root "$PROJECT_ROOT" "$(mnemo_relpath_defs)"' (.tool_input // {}) | mnemo_relativize($root)' 2>/dev/null)
+[ -n "$TOOL_INPUT_JSON" ] || TOOL_INPUT_JSON='{}'
+
 # 대화 로그 경로
 [ -f "$PROJECT_ROOT/.mnemo-root" ] || : > "$PROJECT_ROOT/.mnemo-root"
 CONV_DIR="$PROJECT_ROOT/conversations"
@@ -96,26 +125,26 @@ fi
 DETAIL=""
 case "$TOOL_NAME" in
     Edit|Write)
-        DETAIL=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
+        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.file_path // empty' 2>/dev/null)
         ;;
     Bash)
-        CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+        CMD=$(echo "$TOOL_INPUT_JSON" | jq -r '.command // empty' 2>/dev/null)
         DETAIL="${CMD:0:80}"
         [ ${#CMD} -gt 80 ] && DETAIL="${DETAIL}..."
         ;;
     Agent)
-        SUBTYPE=$(echo "$INPUT" | jq -r '.tool_input.subagent_type // empty' 2>/dev/null)
-        DESC=$(echo "$INPUT" | jq -r '.tool_input.description // empty' 2>/dev/null)
+        SUBTYPE=$(echo "$TOOL_INPUT_JSON" | jq -r '.subagent_type // empty' 2>/dev/null)
+        DESC=$(echo "$TOOL_INPUT_JSON" | jq -r '.description // empty' 2>/dev/null)
         DETAIL="$SUBTYPE: $DESC"
         ;;
     Skill)
-        DETAIL=$(echo "$INPUT" | jq -r '.tool_input.skill // empty' 2>/dev/null)
+        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.skill // empty' 2>/dev/null)
         ;;
     WebFetch)
-        DETAIL=$(echo "$INPUT" | jq -r '.tool_input.url // empty' 2>/dev/null)
+        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.url // empty' 2>/dev/null)
         ;;
     WebSearch)
-        DETAIL=$(echo "$INPUT" | jq -r '.tool_input.query // empty' 2>/dev/null)
+        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.query // empty' 2>/dev/null)
         ;;
 esac
 
@@ -172,7 +201,7 @@ mkdir -p "$TARGET_DIR"
 OBS_FILE="$TARGET_DIR/observations.jsonl"
 
 # 입력/출력 truncate + 시크릿 스크러빙
-TOOL_INPUT_STR=$(echo "$INPUT" | jq -c '.tool_input // {}' 2>/dev/null | head -c 3000)
+TOOL_INPUT_STR=$(printf '%s' "$TOOL_INPUT_JSON" | head -c 3000)
 TOOL_INPUT_STR=$(echo "$TOOL_INPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_INPUT_STR")
 TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_OUTPUT_STR")
 

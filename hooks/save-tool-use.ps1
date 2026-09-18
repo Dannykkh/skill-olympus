@@ -58,6 +58,32 @@ function Get-ClaudeProjectRoot {
     return $null
 }
 
+# MNEMO_RELPATH_START
+# 기록에 남기는 경로는 프로젝트 루트 기준 상대경로(슬래시 구분)로 쓴다. 루트 밖 경로는 그대로 둔다.
+# 절대경로를 그대로 남기면 프로젝트를 옮기거나 다른 컴퓨터에서 열었을 때 기록이 옛 위치를 가리킨다.
+# 대상은 file_path·notebook_path·path 필드뿐이다. command·content 같은 본문은 내용이므로 손대지 않는다.
+function ConvertTo-MnemoRelativePath {
+    param([string]$Path, [string]$Root)
+    if (-not $Path -or -not $Root) { return $Path }
+    $p = $Path -replace '\\', '/'
+    $r = ($Root -replace '\\', '/').TrimEnd('/')
+    # Windows 드라이브 경로만 대소문자를 무시한다. POSIX 경로는 대소문자가 다른 파일이다.
+    $comparison = if ($r -match '^[A-Za-z]:/') { [System.StringComparison]::OrdinalIgnoreCase } else { [System.StringComparison]::Ordinal }
+    if ($p.Equals($r, $comparison)) { return '.' }
+    if ($p.StartsWith($r + '/', $comparison)) { return $p.Substring($r.Length + 1) }
+    return $Path
+}
+function ConvertTo-MnemoRelativeInput {
+    param($ToolInput, [string]$Root)
+    if ($null -eq $ToolInput -or -not $Root) { return $ToolInput }
+    foreach ($key in @('file_path', 'notebook_path', 'path')) {
+        $prop = $ToolInput.PSObject.Properties[$key]
+        if ($prop -and ($prop.Value -is [string])) { $prop.Value = ConvertTo-MnemoRelativePath -Path $prop.Value -Root $Root }
+    }
+    return $ToolInput
+}
+# MNEMO_RELPATH_END
+
 try {
     $rawInput = [Console]::In.ReadToEnd()
     if (-not $rawInput) { exit 0 }
@@ -80,6 +106,9 @@ $ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath -Payload $j
 
 # Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
 if (-not $ProjectRoot) { exit 0 }
+
+# 기록용 도구 입력: 경로 필드를 루트 기준 상대경로로 바꾼다 (toollog·관찰 로그 공용)
+$toolInput = ConvertTo-MnemoRelativeInput -ToolInput $toolInput -Root $ProjectRoot
 
 # 대화 로그 경로
 if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot '.mnemo-root'))) { [System.IO.File]::WriteAllText((Join-Path $ProjectRoot '.mnemo-root'), '', (New-Object System.Text.UTF8Encoding $false)) }

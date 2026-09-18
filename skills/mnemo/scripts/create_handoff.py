@@ -353,12 +353,14 @@ def generate_handoff(
 
 > This is the first handoff for this task."""
 
+    # Project:에는 절대경로가 아니라 폴더 이름만 적는다. 다른 컴퓨터·다른 드라이브에서 열어도
+    # 같은 프로젝트임을 알 수 있고, 루트 판별은 항상 핸드오프 파일 위치(docs/handoffs/)로 한다.
     # Generate the document
     content = f"""# Handoff: [TASK_TITLE - replace this]
 
 ## Session Metadata
 - Created: {timestamp}
-- Project: {project_path}
+- Project: {project_root.name}
 - Branch: {branch_line}
 - Session duration: [estimate how long you worked]
 

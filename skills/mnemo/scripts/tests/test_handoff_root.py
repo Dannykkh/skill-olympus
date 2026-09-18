@@ -28,13 +28,37 @@ class HandoffRootTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stderr)
             handoffs = list((project / "docs" / "handoffs").glob("*.md"))
             self.assertEqual(1, len(handoffs))
-            self.assertIn(str(project.resolve()), handoffs[0].read_text(encoding="utf-8"))
+            text = handoffs[0].read_text(encoding="utf-8")
+            self.assertIn(f"- Project: {project.name}\n", text)
+            # 절대경로는 다른 컴퓨터에서 무효하므로 핸드오프에 남기지 않는다.
+            self.assertNotIn(str(project.resolve()), text)
             self.assertFalse((child / "docs").exists())
             listed = self.invoke("list_handoffs.py", child)
             self.assertEqual(0, listed.returncode, listed.stderr)
             self.assertIn(handoffs[0].name, listed.stdout)
             checked = self.invoke("check_staleness.py", child)
             self.assertIn(handoffs[0].name, checked.stdout)
+
+    def test_staleness_uses_handoff_location_not_project_header(self):
+        # 다른 컴퓨터에서 만든 핸드오프는 헤더 경로가 존재하지 않는다. 옛 절대경로가 우연히
+        # 존재하더라도 루트는 파일 위치(docs/handoffs/)에서 잡아야 한다.
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp) / "project"
+            handoffs = project / "docs" / "handoffs"
+            handoffs.mkdir(parents=True)
+            (project / ".git").mkdir()
+            elsewhere = Path(temp) / "elsewhere"
+            elsewhere.mkdir()
+            for declared in ("Z:\\other-machine\\project", str(elsewhere.resolve()), "project"):
+                handoff = handoffs / "2026-01-01-000000-portable.md"
+                handoff.write_text("# Handoff: portable\n\n## Session Metadata\n"
+                                   f"- Created: 2026-01-01 00:00:00\n- Project: {declared}\n- Branch: main\n",
+                                   encoding="utf-8")
+                checked = self.invoke("check_staleness.py", elsewhere, handoff)
+                # 빈 .git 폴더는 git 저장소가 아니라 UNKNOWN(exit 2)이 정상. 루트 판별만 본다.
+                self.assertEqual("", checked.stderr)
+                self.assertIn(f"Project: {project.resolve()}", checked.stdout)
+                self.assertNotIn(f"Project: {declared}\n", checked.stdout.replace(str(project.resolve()), ""))
 
     def test_unknown_cwd_requires_explicit_project_and_marker_survives_move(self):
         with tempfile.TemporaryDirectory() as temp:

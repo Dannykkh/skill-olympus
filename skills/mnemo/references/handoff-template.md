@@ -40,7 +40,7 @@ Use this template structure when creating handoff documents. The smart scaffold 
 
 ## Session Metadata
 - Created: [TIMESTAMP]
-- Project: [PROJECT_PATH]
+- Project: [PROJECT_NAME]
 - Branch: [GIT_BRANCH]
 - Session duration: [APPROX_DURATION]
 

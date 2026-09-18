@@ -11,8 +11,10 @@ memory/ is normally outside version control.
 Scope is ONE PROJECT — memory lives in <project>/memory/, never in ~/.claude.
 
 Judgement stays with the human. --fix only repairs what is purely mechanical: a
-distillation baseline that no longer matches the files it counts. Everything else is
-reported with the evidence needed to decide.
+distillation baseline that no longer matches the files it counts, a `#slug` lifecycle
+link that matches exactly one entry, and absolute in-project paths inside fixed-format
+records (handoff `Project:` headers, tool-log Edit/Write lines, observation path fields).
+Everything else is reported with the evidence needed to decide.
 
 Usage:
     python mnemo_doctor.py                        # 진단만
@@ -21,6 +23,9 @@ Usage:
 """
 
 import argparse
+import functools
+import json
+import os
 import re
 import subprocess
 import sys
@@ -420,6 +425,221 @@ def check_distill_offset(root: Path, report: Report, fix: bool) -> None:
                    "--fix 로 현재 줄 수에 맞춥니다.")
 
 
+# 기록 안의 경로 필드. 훅(save-tool-use)이 상대화하는 필드와 같다.
+HANDOFF_PROJECT_LINE = re.compile(r'^(-\s*Project:\s*)(.*?)\s*$')
+TOOLLOG_PATH_LINE = re.compile(r'^(- `\[\d\d:\d\d:\d\d\]` \*\*(?:Edit|Write|NotebookEdit)\*\* )(\S.*?)\s*$')
+OBSERVATION_PATH_FIELD = re.compile(r'("(?:file_path|notebook_path|path)"\s*:\s*")((?:[^"\\]|\\.)*)(")')
+ABSOLUTE_PATH_TOKEN = re.compile(r'(?<![\w/.\\-])(?:[A-Za-z]:[\\/]|/)[^\s`"\'()<>|,;]+')
+
+
+def _is_absolute_text(value: str) -> bool:
+    return bool(re.match(r'^(?:[A-Za-z]:[\\/]|/)', value))
+
+
+def relativize_record_path(value, roots):
+    """루트 안의 절대경로면 슬래시 구분 상대경로, 아니면 None. 훅과 같은 규칙이다.
+
+    Windows 드라이브 경로만 대소문자를 무시한다. POSIX에서는 대소문자가 다른 파일이다.
+    루트 밖 경로는 다른 곳을 건드렸다는 정보 자체이므로 None을 돌려 그대로 두게 한다.
+    """
+    if not isinstance(value, str) or not _is_absolute_text(value):
+        return None
+    candidate = _canonical(value)
+    for base in roots:
+        fold = str.lower if re.match(r'^[A-Za-z]:/', base) else str
+        if fold(candidate) == fold(base):
+            return "."
+        if fold(candidate).startswith(fold(base) + "/"):
+            return candidate[len(base) + 1:]
+    return None
+
+
+@functools.lru_cache(maxsize=None)
+def _canonical(value: str) -> str:
+    """구분자를 슬래시로 통일하고, 존재하는 가장 긴 앞부분을 실제 경로로 푼다.
+
+    Windows 8.3 짧은 이름(ADMINI~1)이 일부 구성요소에만 섞인 기록도 같은 루트로 본다.
+    존재하지 않는 뒷부분(지워진 파일, 헤더 뒤 설명 텍스트)은 그대로 이어 붙인다.
+    """
+    # 디렉터리 단위로 재귀·캐시한다. 기록 수천 줄이 수백 개 디렉터리를 공유하므로 존재 검사는
+    # 디렉터리마다 한 번이면 된다(줄마다 조상 전체를 검사하면 프로젝트 하나에 몇 분이 걸린다).
+    text = value.replace("\\", "/")
+    head, sep, tail = text.rpartition("/")
+    if not sep or not tail or head.endswith(":") and not head[:-1]:
+        return text
+    parent = head if (not head or head.endswith(":")) else _canonical(head)
+    candidate = f"{parent}/{tail}"
+    try:
+        if os.path.exists(candidate):
+            return os.path.realpath(candidate).replace("\\", "/")
+    except (OSError, ValueError):
+        pass
+    return candidate
+
+
+def record_roots(root: Path):
+    """현재 루트의 정규화된 형태 하나.
+
+    옛 루트를 핸드오프 헤더에서 추론하지 않는다. 한 프로젝트의 docs/handoffs/에는 중첩됐다가
+    분리된 저장소, 전신 프로젝트, 워크트리의 핸드오프가 섞여 있어(2026-09-18 실측: claudecode 안의
+    aniclew, milpfms 안의 pfms) 그 경로를 루트로 삼으면 남의 파일 경로가 이 프로젝트의 상대경로로
+    둔갑한다. 다른 위치를 가리키는 기록은 그대로 두고 개수만 보고한다.
+    """
+    return [_canonical(str(root)).rstrip("/")]
+
+
+def _root_prefix_length(value: str, form: str) -> tuple:
+    """value가 루트 form으로 시작하면 (정규화한 value, 루트 길이), 아니면 (정규화한 value, 0)."""
+    candidate = _canonical(value)
+    fold = str.lower if re.match(r'^[A-Za-z]:/', form) else str
+    matched = fold(candidate[:len(form)]) == fold(form)
+    return candidate, (len(form) if matched else 0)
+
+
+def _rewrite_lines(text: str, rewrite):
+    """줄 단위로 바꾸되 줄 수와 CRLF를 보존한다. rewrite는 바뀐 줄 또는 None을 돌려준다."""
+    out, hits = [], 0
+    for line in text.split("\n"):
+        body = line[:-1] if line.endswith("\r") else line
+        changed = rewrite(body)
+        if changed is None:
+            out.append(line)
+        else:
+            hits += 1
+            out.append(changed + ("\r" if line.endswith("\r") else ""))
+    return "\n".join(out), hits
+
+
+def check_record_paths(root: Path, report: Report, fix: bool = False) -> None:
+    """기록 안의 경로는 루트 기준 상대경로여야 프로젝트를 옮기거나 다른 컴퓨터에서 열어도 유효하다.
+
+    훅은 이제 상대경로로 쓰지만 그 전에 쌓인 핸드오프 헤더(`Project:`), 도구 로그(Edit/Write 줄),
+    관찰 로그(`file_path` 같은 경로 필드)에는 절대경로가 남아 있다. 이 셋은 형식이 고정돼 있어
+    기계적으로 안전하게 바꿀 수 있으므로 --fix 대상이다. 기억 본문의 절대경로는 명령 예시나
+    설명일 수 있어 보고만 한다. 기준은 현재 루트뿐이다 — 다른 위치를 가리키는 헤더·경로는
+    중첩됐다가 분리된 저장소, 폴더 복사로 물려받은 전신 프로젝트, 워크트리의 흔적일 수 있어
+    그대로 두고 개수만 보고한다. 관찰 로그는 줄 수를 보존한다 — 정제 기준값이 줄 수에 기댄다.
+    """
+    roots = record_roots(root)
+    name = root.name
+    counts = {"핸드오프 헤더": 0, "도구 로그": 0, "관찰 로그": 0}
+    changes = []  # (path, 원본 텍스트, 바뀐 텍스트)
+    elsewhere = 0  # 다른 위치를 가리키는 헤더 — 중첩·분리·전신 프로젝트일 수 있어 그대로 둔다
+
+    def read(path: Path) -> str:
+        return path.read_bytes().decode("utf-8", errors="surrogateescape")
+
+    def header(line):
+        nonlocal elsewhere
+        match = HANDOFF_PROJECT_LINE.match(line)
+        if not match:
+            return None
+        rest = match.group(2)
+        ticked = rest.startswith("`")
+        body = rest[1:] if ticked else rest
+        if not _is_absolute_text(body):
+            return None
+        for form in roots:
+            canonical, length = _root_prefix_length(body, form)
+            if not length:
+                continue
+            tail = canonical[length:]
+            if ticked and tail.startswith("`"):
+                tail = tail[1:]
+            # 루트 바로 뒤가 끝·공백·괄호일 때만 루트 자체다. 하위 경로는 중첩 프로젝트의 선언이다.
+            if tail == "" or tail[0] in " \t(":
+                return f"{match.group(1)}{name}{tail}"
+            break
+        elsewhere += 1
+        return None
+
+    def toollog(line):
+        match = TOOLLOG_PATH_LINE.match(line)
+        relative = match and relativize_record_path(match.group(2), roots)
+        return None if relative is None else match.group(1) + relative
+
+    def observation(line):
+        if not line.strip():
+            return None
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(record, dict) or not isinstance(record.get("input"), str):
+            return None
+
+        def field(match):
+            try:
+                value = json.loads('"' + match.group(2) + '"')
+            except json.JSONDecodeError:
+                return match.group(0)
+            relative = relativize_record_path(value, roots)
+            if relative is None:
+                return match.group(0)
+            return match.group(1) + json.dumps(relative, ensure_ascii=False)[1:-1] + match.group(3)
+
+        rewritten = OBSERVATION_PATH_FIELD.sub(field, record["input"])
+        if rewritten == record["input"]:
+            return None
+        record["input"] = rewritten
+        return json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+
+    handoffs = root / "docs" / "handoffs"
+    conversations = root / "conversations"
+    targets = [
+        ("핸드오프 헤더", header, sorted(handoffs.glob("*.md")) if handoffs.is_dir() else []),
+        ("도구 로그", toollog, sorted(conversations.glob("*-toollog.md")) if conversations.is_dir() else []),
+        ("관찰 로그", observation, [p for p in (root / "memory" / kind / "observations.jsonl"
+                                              for kind in ("gotchas", "learned")) if p.is_file()]),
+    ]
+    for kind, rewrite, paths in targets:
+        for path in paths:
+            raw = read(path)
+            new, hits = _rewrite_lines(raw, rewrite)
+            if hits:
+                counts[kind] += hits
+                changes.append((path, raw, new))
+
+    # 기억 본문은 보고만 한다. 명령 예시·설명 속 경로를 바꾸는 것은 사람의 판단이다.
+    prose = 0
+    for path in memory_files(root):
+        if path.name.startswith("."):
+            continue
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if any(relativize_record_path(token, roots) is not None
+                   for token in ABSOLUTE_PATH_TOKEN.findall(line)):
+                prose += 1
+
+    mechanical = sum(counts.values())
+    summary = " / ".join(f"{kind} {count}{'개' if kind == '핸드오프 헤더' else '줄'}"
+                         for kind, count in counts.items())
+    notes = []
+    if elsewhere:
+        notes.append(f"다른 위치를 가리키는 헤더 {elsewhere}개는 그대로 둠 (중첩·분리·전신 프로젝트일 수 있음)")
+    if prose:
+        notes.append(f"기억 본문 {prose}줄은 보고만 (명령 예시·설명일 수 있어 사람이 판단)")
+    suffix = "".join(f" / {note}" for note in notes)
+
+    if not mechanical:
+        report.add("WARN" if prose else "OK", "기록 안의 절대경로",
+                   "핸드오프 헤더·도구 로그·관찰 로그의 루트 안 경로는 모두 상대경로" + suffix)
+        return
+
+    if fix:
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        for path, raw, new in changes:
+            path.with_name(f"{path.name}.bak-{stamp}").write_bytes(raw.encode("utf-8", errors="surrogateescape"))
+            path.write_bytes(new.encode("utf-8", errors="surrogateescape"))
+        report.add("WARN" if prose else "OK", "기록 안의 절대경로",
+                   f"보정함: {summary} → 루트 기준 상대경로 (원본은 .bak-{stamp})" + suffix,
+                   "루트 밖 경로는 다른 곳을 건드렸다는 정보이므로 그대로 두었습니다.")
+        return
+
+    report.add("WARN", "기록 안의 절대경로", summary + suffix,
+               "프로젝트를 옮기거나 다른 컴퓨터에서 열면 옛 위치를 가리킵니다. "
+               "--fix 로 루트 기준 상대경로로 바꿉니다 (파일별 .bak-<시각>, 줄 수 보존, 루트 밖 경로는 그대로).")
+
+
 def run_sibling(script: str, root: Path, extra=()) -> tuple:
     """옆 스크립트를 그대로 호출한다. 판정 로직을 닥터가 복제하면 둘이 갈라진다."""
     path = SCRIPTS / script
@@ -635,7 +855,7 @@ def main():
         description="프로젝트 기억을 현재 구조 기준으로 진단한다 (수정은 --fix, 기계적인 것만)")
     parser.add_argument("--project-root", default=".", help="프로젝트 경로 (기본: 현재 디렉터리)")
     parser.add_argument("--fix", action="store_true",
-                        help="기계적으로 안전한 것만 고친다 (현재: 정제 기준값)")
+                        help="기계적으로 안전한 것만 고친다 (정제 기준값, #slug 링크 번호화, 기록 안의 루트 내부 절대경로)")
     args = parser.parse_args()
 
     try:
@@ -652,6 +872,7 @@ def main():
     check_detail_file_size(root, report)
     check_lifecycle_links(root, report, args.fix)
     check_distill_offset(root, report, args.fix)
+    check_record_paths(root, report, args.fix)
     check_observation_classification(root, report)
     check_anchors(root, report)
     check_handoffs(root, report)

@@ -6,6 +6,7 @@ means "fix the path" or "this decision is SUPERSEDED" is a judgement, not arithm
 Only the distillation baseline is purely mechanical, so only it is touched by --fix.
 """
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -377,6 +378,103 @@ class MnemoDoctorTests(unittest.TestCase):
             after = {p.relative_to(project).as_posix(): p.read_bytes()
                      for p in project.rglob("*") if p.is_file() and ".git" not in p.parts}
             self.assertEqual(snapshot, after)
+
+    def make_records_project(self, temp):
+        """절대경로가 남은 옛 기록: 핸드오프 헤더, 도구 로그, 관찰 로그, 기억 본문.
+
+        old_root는 다른 위치(분리된 저장소·전신 프로젝트·워크트리처럼 이 루트가 아닌 곳),
+        outside는 루트 밖 파일이다. 둘 다 그대로 남아야 한다.
+        """
+        project = self.make_project(temp)
+        old_root = Path(temp) / "old-location"
+        outside = Path(temp).parent / "outside" / "settings.json"
+        handoffs = project / "docs" / "handoffs"
+        (handoffs / "2026-01-01-000000-a.md").write_text(
+            "# Handoff: a\n\n## Session Metadata\n- Created: 2026-01-01 00:00:00\n"
+            f"- Project: {project}\n- Branch: main\n", encoding="utf-8")
+        (handoffs / "2026-02-01-000000-b.md").write_text(
+            f"# Handoff: b\n\n## Session Metadata\n- Project: `{old_root}` (skill-olympus)\n", encoding="utf-8")
+        (handoffs / "2026-03-01-000000-c.md").write_text(
+            f"# Handoff: c\n\n## Session Metadata\n- Project: `{project}` (개발 PC) → 서버로 이관\n", encoding="utf-8")
+        (handoffs / "2026-04-01-000000-d.md").write_text(
+            f"# Handoff: d\n\n## Session Metadata\n- Project: {project / 'nested' / 'repo'}\n", encoding="utf-8")
+        (project / "conversations" / "2026-01-01-toollog.md").write_text(
+            "---\ntype: tool-log\n---\n"
+            f"- `[10:00:00]` **Edit** {project / 'src' / 'Relay.cs'}\n"
+            f"- `[10:00:01]` **Write** {old_root / 'docs' / 'a.md'}\n"
+            f"- `[10:00:02]` **Edit** {outside}\n"
+            f"- `[10:00:03]` **Bash** cat {project / 'src' / 'Relay.cs'}\n"
+            "- `[10:00:04]` **Edit** src/already.cs\n", encoding="utf-8")
+        learned = project / "memory" / "learned"
+        learned.mkdir()
+        rows = [
+            {"timestamp": "t", "event": "tool_success", "tool": "Edit", "session": "s", "output": "",
+             "input": json.dumps({"file_path": str(project / "src" / "Relay.cs"), "content": "x"})},
+            {"timestamp": "t", "event": "tool_success", "tool": "Write", "session": "s", "output": "",
+             "input": json.dumps({"file_path": str(outside)})},
+            {"timestamp": "t", "event": "tool_success", "tool": "Bash", "session": "s", "output": "",
+             "input": json.dumps({"command": f"cat {project / 'x'}"})},
+        ]
+        (learned / "observations.jsonl").write_text(
+            "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        (project / "memory" / "architecture.md").write_text(
+            ENTRY + f"\n예시: `{project / 'src' / 'Relay.cs'}` 를 연다.\n", encoding="utf-8")
+        return project, old_root, outside
+
+    def snapshot(self, project):
+        return {p: p.read_bytes() for p in project.rglob("*") if p.is_file() and ".git" not in p.parts}
+
+    def test_absolute_record_paths_are_reported_but_untouched_without_fix(self):
+        with tempfile.TemporaryDirectory() as temp:
+            project, _, _ = self.make_records_project(temp)
+            before = self.snapshot(project)
+            report = doctor.Report()
+            doctor.check_record_paths(project, report)
+            row = report.rows[0]
+            self.assertEqual(row["level"], "WARN")
+            for expected in ("핸드오프 헤더 2개", "도구 로그 1줄", "관찰 로그 1줄", "기억 본문 1줄",
+                             "다른 위치를 가리키는 헤더 2개"):
+                self.assertIn(expected, row["detail"])
+            self.assertIn("--fix", row["hint"])
+            self.assertEqual(before, self.snapshot(project), "진단만으로는 아무것도 쓰지 않는다")
+
+    def test_fix_relativizes_records_with_backups_and_preserves_line_counts(self):
+        with tempfile.TemporaryDirectory() as temp:
+            project, old_root, outside = self.make_records_project(temp)
+            prose_before = (project / "memory" / "architecture.md").read_bytes()
+            b_before = (project / "docs" / "handoffs" / "2026-02-01-000000-b.md").read_bytes()
+            d_before = (project / "docs" / "handoffs" / "2026-04-01-000000-d.md").read_bytes()
+            result = self.run_doctor(project, "--fix")
+            self.assertEqual(result.returncode, 0, result.stdout)
+            self.assertIn("보정함: 핸드오프 헤더 2개 / 도구 로그 1줄 / 관찰 로그 1줄", result.stdout)
+            handoffs = project / "docs" / "handoffs"
+            self.assertIn("- Project: project\n", (handoffs / "2026-01-01-000000-a.md").read_text(encoding="utf-8"))
+            self.assertEqual((handoffs / "2026-02-01-000000-b.md").read_bytes(), b_before,
+                             "다른 위치를 가리키는 헤더는 분리된 프로젝트의 흔적일 수 있어 그대로 둔다")
+            self.assertIn("- Project: project (개발 PC) → 서버로 이관\n",
+                          (handoffs / "2026-03-01-000000-c.md").read_text(encoding="utf-8"),
+                          "루트 뒤에 붙은 설명은 보존한다")
+            self.assertEqual((handoffs / "2026-04-01-000000-d.md").read_bytes(), d_before,
+                             "루트의 하위 경로는 중첩 프로젝트 선언이라 그대로 둔다")
+            toollog = (project / "conversations" / "2026-01-01-toollog.md").read_text(encoding="utf-8")
+            self.assertIn("**Edit** src/Relay.cs\n", toollog)
+            self.assertIn(f"**Write** {old_root / 'docs' / 'a.md'}\n", toollog, "다른 위치의 경로는 그대로")
+            self.assertIn(f"**Edit** {outside}\n", toollog, "루트 밖 경로는 그대로")
+            self.assertIn(f"**Bash** cat {project / 'src' / 'Relay.cs'}\n", toollog, "명령 본문은 그대로")
+            lines = (project / "memory" / "learned" / "observations.jsonl").read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(lines), 3, "관찰 로그 줄 수는 정제 기준값의 근거라 보존한다")
+            records = [json.loads(line) for line in lines]
+            self.assertEqual(json.loads(records[0]["input"])["file_path"], "src/Relay.cs")
+            self.assertEqual(json.loads(records[1]["input"])["file_path"], str(outside))
+            self.assertEqual(json.loads(records[2]["input"])["command"], f"cat {project / 'x'}")
+            self.assertEqual((project / "memory" / "architecture.md").read_bytes(), prose_before, "기억 본문은 보고만")
+            backups = [p for p in project.rglob("*.bak-*") if ".git" not in p.parts]
+            self.assertEqual(len(backups), 4, "바뀐 파일마다 백업이 남는다")
+            # 두 번째 실행은 고칠 것이 없고 백업도 늘지 않는다.
+            again = self.run_doctor(project, "--fix")
+            self.assertEqual(again.returncode, 0, again.stdout)
+            self.assertNotIn("보정함: 핸드오프", again.stdout)
+            self.assertEqual(len([p for p in project.rglob("*.bak-*") if ".git" not in p.parts]), 4)
 
     def write_handoffs(self, project, count, *, chained=False, with_changes=True):
         """날짜가 다른 핸드오프를 만든다. chained면 앞 문서를 가리키는 체인을 잇는다."""
