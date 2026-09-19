@@ -200,6 +200,11 @@ function configureAntigravity() {
   if (shouldInclude("loop-stop")) {
     group.Stop = [{ type: "command", command: `node ${adapterCmd} chronos`, timeout: timeoutSeconds }];
   }
+  // 앵커 조회 뒷단: PostInvocation만 injectSteps로 모델에게 말할 수 있다 (PostToolUse 출력은 빈 객체).
+  // matcher는 이 이벤트에서 무시되므로 핸들러만 직접 둔다.
+  if (shouldInclude("check-new-file") || shouldInclude("protect-files")) {
+    group.PostInvocation = [{ type: "command", command: `node ${adapterCmd} anchor`, timeout: timeoutSeconds }];
+  }
   if (Object.keys(group).length > 0) config[groupId] = group;
   else delete config[groupId];
   writeJson(configPath, config);

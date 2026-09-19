@@ -8,8 +8,11 @@
 # - 진짜 실패(파싱 에러): .claude/mnemo-errors.log 기록 후 exit 0
 # - $MNEMO_STRICT='1' 이면 실패 시 exit 1
 
-# Grok 세션 가드: Grok envelope는 camelCase(toolName)라 오동작 가능 -> grok-mnemo가 전담.
-[ -n "${GROK_HOOK_EVENT:-}" ] && exit 0
+# Grok 세션 가드: Grok envelope는 camelCase(toolName)라 이 스크립트의 저장 경로가 오동작한다
+# -> 대화·관찰 저장은 grok-mnemo가 전담. 다만 post_tool_use에서는 앵커 조회만 수행한다:
+# Grok은 Claude와 같은 hookSpecificOutput.additionalContext 스키마를 받아들이고
+# 모델에게 도구 결과 옆에 전달한다 (~/.grok/docs/user-guide/10-hooks.md "PostToolUse Output").
+if [ -n "${GROK_HOOK_EVENT:-}" ] && [ "${GROK_HOOK_EVENT}" != "post_tool_use" ]; then exit 0; fi
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
 case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
@@ -80,6 +83,107 @@ if ! echo "$INPUT" | jq -e . >/dev/null 2>&1; then
     exit_mnemo_error 'stdin-json' 'stdin JSON 파싱 실패'
 fi
 
+# MNEMO_ANCHOR_START
+# 방금 고친 파일에 기대는 결정을 모델에게 알린다 (PostToolUse additionalContext).
+#
+# 왜 여기인가: PostToolUse만 additionalContext를 지원한다(PreToolUse는 deny로만 말할 수 있어 조회에 못 쓴다).
+# 왜 Read에는 안 붙이나: 루트 판정이 node를 띄우고 Windows에서 프로세스 하나가 172ms다. Read는 이 훅에서
+# 일찍 빠지므로 그 비용을 안 내고 있는데, 조회를 위해 되살리면 도구 호출마다 세금이 붙는다.
+# Edit/Write는 이미 node·jq를 띄운 뒤라, 미리 만든 색인을 bash 내장으로 읽는 6ms만 추가된다.
+# 근거와 실측: memory/architecture/057-hook-budget-llm-never-process-rarely-constant-time-per-tool.md
+mnemo_anchor_notify() {
+    case "$TOOL_NAME" in Edit|Write|NotebookEdit) ;; *) return 0 ;; esac
+    local index="$PROJECT_ROOT/memory/.mnemo-anchor-index.md"
+    [ -f "$index" ] || return 0
+
+    local target
+    target=$(echo "$TOOL_INPUT_JSON" | jq -r '.file_path // .notebook_path // empty' 2>/dev/null)
+    target=${target//\\//}
+    [ -n "$target" ] || return 0
+    case "$target" in /*|[A-Za-z]:/*) return 0 ;; esac
+
+    # 기억 항목을 고쳤으면 색인이 낡았다. 재생성은 비싸므로(파이썬 400ms) 떼어내 돌리고 기다리지 않는다.
+    case "$target" in
+        memory/*/[0-9]*.md)
+            local builder="$PROJECT_ROOT/skills/mnemo/scripts/build_anchor_index.py"
+            [ -f "$builder" ] || builder="$HOME/.claude/skills/mnemo/scripts/build_anchor_index.py"
+            if [ -f "$builder" ] && command -v python >/dev/null 2>&1; then
+                ( python "$builder" --project-root "$PROJECT_ROOT" --out >/dev/null 2>&1 & ) >/dev/null 2>&1
+            fi
+            return 0
+            ;;
+        memory/*|conversations/*|docs/handoffs/*) return 0 ;;
+    esac
+
+    mnemo_anchor_emit "$PROJECT_ROOT" "$target" "$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null)"
+}
+
+# 조회·중복 억제·출력. Claude와 Grok이 공유한다 — 두 런타임의 출력 스키마가 같다.
+mnemo_anchor_emit() {
+    local root="$1" target="$2" session="$3"
+    local index="$root/memory/.mnemo-anchor-index.md"
+    [ -f "$index" ] || return 0
+
+    # 같은 파일을 한 세션에서 반복 주입하지 않는다. 세션이 바뀌면 표시를 비운다.
+    local seen="$root/memory/.mnemo-anchor-seen"
+    if [ -f "$seen" ]; then
+        local head_line=""
+        IFS= read -r head_line < "$seen" 2>/dev/null || head_line=""
+        [ "$head_line" = "$session" ] || : > "$seen"
+    fi
+    if [ ! -s "$seen" ]; then printf '%s\n' "$session" > "$seen" 2>/dev/null || return 0; fi
+    local line
+    while IFS= read -r line; do
+        [ "$line" = "$target" ] && return 0
+    done < "$seen"
+
+    # 색인에서 해당 파일 절만 읽는다 (bash 내장 — 새 프로세스 없음).
+    local found="" collecting=0
+    while IFS= read -r line; do
+        if [ "$collecting" = 1 ]; then
+            case "$line" in
+                "## "*) break ;;
+                "- "*) found="$found${found:+$'\n'}$line" ;;
+            esac
+        elif [ "$line" = "## $target" ]; then
+            collecting=1
+        fi
+    done < "$index"
+    [ -n "$found" ] || return 0
+
+    printf '%s\n' "$target" >> "$seen" 2>/dev/null
+    jq -n -c --arg ctx "이 파일에 기대는 결정입니다. 뒤집는다면 해당 기억 항목에 SUPERSEDED와 바꾼 이유를 남기세요.
+$found" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}' 2>/dev/null
+}
+
+# Grok 경로: 봉투가 camelCase(toolName/toolInput)이고 transcript_path가 없다.
+# 저장은 grok-mnemo가 전담하므로 여기서는 조회만 하고 바로 끝낸다.
+# 루트는 payload의 workspaceRoot/cwd를 그대로 쓴다 — 읽기와 seen 표시뿐이고,
+# 색인이 없으면 아무것도 하지 않으므로 루트 판정에 node를 띄울 이유가 없다.
+mnemo_grok_anchor() {
+    local root target session
+    root=$(echo "$INPUT" | jq -r '.workspaceRoot // .cwd // empty' 2>/dev/null)
+    [ -n "$root" ] || return 0
+    root=${root%/}
+    [ -f "$root/memory/.mnemo-anchor-index.md" ] || return 0
+    target=$(echo "$INPUT" | jq -r '(.toolInput // .tool_input // {}) | (.file_path // .filePath // .notebook_path // .path // empty) | gsub("\\\\"; "/")' 2>/dev/null)
+    [ -n "$target" ] || return 0
+    case "$target" in
+        "$root"/*) target=${target#"$root"/} ;;
+        /*|[A-Za-z]:/*) return 0 ;;
+    esac
+    case "$target" in memory/*|conversations/*|docs/handoffs/*) return 0 ;; esac
+    session=$(echo "$INPUT" | jq -r '.sessionId // .session_id // "unknown"' 2>/dev/null)
+    mnemo_anchor_emit "$root" "$target" "$session"
+}
+
+if [ -n "${GROK_HOOK_EVENT:-}" ]; then
+    mnemo_grok_anchor
+    exit 0
+fi
+
+# MNEMO_ANCHOR_END
+
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
 if [ -z "$TOOL_NAME" ]; then exit 0; fi
 
@@ -98,6 +202,9 @@ if [ -z "$PROJECT_ROOT" ]; then exit 0; fi
 # 기록용 도구 입력: 경로 필드를 루트 기준 상대경로로 바꾼 사본 (toollog·관찰 로그 공용)
 TOOL_INPUT_JSON=$(echo "$INPUT" | jq -c --arg root "$PROJECT_ROOT" "$(mnemo_relpath_defs)"' (.tool_input // {}) | mnemo_relativize($root)' 2>/dev/null)
 [ -n "$TOOL_INPUT_JSON" ] || TOOL_INPUT_JSON='{}'
+
+mnemo_anchor_notify
+
 
 # 대화 로그 경로
 [ -f "$PROJECT_ROOT/.mnemo-root" ] || : > "$PROJECT_ROOT/.mnemo-root"

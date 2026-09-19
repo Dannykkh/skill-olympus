@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.10.0] - 2026-09-20
+
+### Features
+
+- Give memory a thread back to its evidence. A memory entry is a claim and the conversation is its evidence, but nothing linked them: across 260 entries only 2 carried an evidence line, 45 links no longer opened, and 97 named their code anchors in prose that no index can read. Entries now hold `evidence:` (conversation file + turn time), `alternatives:` (what lost, on what argument, and what would bring it back), `depends-on:`, `sources:` and `files:`, written at the moment a decision crystallizes rather than afterwards - the moment you know both the old and the new state is the only one. The rule lands in the Claude, Codex and Antigravity rule templates; Grok inherits it through Claude compatibility.
+- Answer the far more common opening move. Memory is indexed by meaning, which serves "didn't we do this before?" but not "this broke, fix it" - that request carries no words to search with, only a target. `build_anchor_index.py` derives the reverse index from `files:` lines (falling back to prose anchors, so entries written before the contract still resolve) and answers `--file <path>` by rebuilding live, so the lookup itself can never be stale.
+- Deliver that lookup without being asked. Right after a file is edited, a hook hands the model the decisions resting on it, once per file per session. Three runtimes, three mechanisms, one experience: Claude uses `PostToolUse` `additionalContext`; Grok loads the same Claude hook and accepts the same schema, so the `GROK_HOOK_EVENT` guard was narrowed to let `post_tool_use` through while conversation saving stays with `grok-mnemo`; Antigravity cannot inject from `PostToolUse` (its output must be an empty object), so the existing `PreToolUse` safety hook records the path and a new `PostInvocation` mode replays it through `injectSteps`. Codex has only a turn-level `notify` and keeps the rule and the scaffold instead.
+- Fill the handoff fields nobody could remember. `Origin` is taken from the session's first user turn (marked as an estimate - 4 of 37 handoffs had ever carried one), `Files Modified` from the observation log as well as git so it survives in a repository without git, and the entries resting on the files you touched are offered as supersede candidates - the scaffold proposes, it never claims. The scaffold also rebuilds the anchor index, which is what keeps the lookup fresh on the CLIs that have no per-tool hook.
+- Make the doctor a returning physician rather than a first visit. `--chart` appends the visit to `memory/.mnemo-doctor-chart.md` and the next one reports only what changed; days judged irrelevant can be closed there and are not raised again. Three checks join: entry evidence, decision lineage (a `SUPERSEDED` with no reason, a `CURRENT` entry resting on a superseded one) and unattached conversations - of 145 recorded days, 98 reach no trunk at all and the 31 richest in decision vocabulary are ranked for review. A handoff now runs the doctor when the last visit is over 30 days old, not only when architecture memory is missing, because on a mature project that condition never fired.
+- Gate what belongs to this session at the handoff and leave the backlog to the doctor. `validate_handoff.py` blocks a supersede target that does not exist and warns when a session recorded decisions but touched no memory entry that day.
+
+### Notes
+
+- A plain diagnosis still writes nothing and `--fix` still repairs only the same three mechanical things; recording a visit and promoting prose anchors into `files:` lines are separate flags (`--chart`, `--promote-structure`), and promotion preserves each file's line endings and never infers a lifecycle from a `SUPERSEDED` marker in the body.
+- Hook budget, measured on Windows: an empty process costs 172 ms, the same work inside an already-running hook costs 6 ms, and a full index rebuild costs 400 ms. So the lookup rides hooks that already run, rebuilds only when an entry changes, and never calls a model - `memory/architecture/057` carries the numbers and the conditions that would reverse the decision.
+
 ## [6.9.0] - 2026-09-18
 
 ### Features

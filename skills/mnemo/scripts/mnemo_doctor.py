@@ -19,6 +19,8 @@ Everything else is reported with the evidence needed to decide.
 Usage:
     python mnemo_doctor.py                        # 진단만
     python mnemo_doctor.py --fix                  # 기계적으로 안전한 것만 수정
+    python mnemo_doctor.py --chart                # 이번 방문을 진료 기록에 남긴다
+    python mnemo_doctor.py --promote-structure    # 산문 앵커·암묵적 수명을 구조 줄로 (기억 본문 수정)
     python mnemo_doctor.py --project-root <path>
 """
 
@@ -31,6 +33,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote
 
 from mnemo_project_root import detect_project_root
 
@@ -316,7 +319,7 @@ def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None
 
     def resolvable(source: Path, target: str) -> bool:
         # [[NNN-slug]]는 항목 번호로 가리키는 형식이다. 파일명(stem)과 정확히 같아야 한다.
-        wiki = re.fullmatch(r'\[\[([^\]|#]+)\]\]', target.strip('`,'))
+        wiki = re.fullmatch(r'\[\[([^\]|#]+)\]\]', target.strip('`,.;:'))
         if wiki:
             return any(p.stem == wiki.group(1) for p in identifiers)
         markdown = re.search(r'\[[^]]*\]\(([^)]+)\)', target)
@@ -850,12 +853,405 @@ def check_handoffs(root: Path, report: Report) -> None:
                f"{len(files)}개 / 최신 {newest.name}" + ("" if has_origin else " (Origin 없음 — 규칙 도입 이전)"))
 
 
+# ── 줄기와 증거 ────────────────────────────────────────────────────────
+# 기억은 주장이고 대화는 증거인데, 둘을 잇는 링크를 아무도 검사하지 않았다.
+# 아래 세 검사는 그 링크의 유무·유효성과, 링크가 없어 흙으로 남은 대화를 본다.
+
+STRUCTURE_KEYS = ("evidence", "alternatives", "depends-on", "sources", "files")
+ANCHOR_RE = re.compile(
+    r'(?<![\w/])((?:skills|hooks|scripts|src|lib|app|tests?|docs)/[A-Za-z0-9_./\-]+\.[A-Za-z0-9]{1,6})')
+DECISION_WORDS = re.compile(r'결정|폐기|기각|대신|탈락|채택|바꾸|방침|원칙|superseded', re.I)
+
+
+def structured_lines(block: str) -> dict:
+    """항목이 들고 있는 구조 줄. `files:`처럼 백틱으로 감싼 형태도 같이 읽는다."""
+    found = {}
+    for key in STRUCTURE_KEYS:
+        match = re.search(rf'(?im)^\s*(?:[-*]\s*)?[`*]*{re.escape(key)}[`*]*\s*:\s*(.*)$', block)
+        if match:
+            found[key] = match.group(1).strip()
+    return found
+
+
+def entry_status(block: str) -> str | None:
+    """항목의 수명. 명시된 `status:` 줄만 인정한다.
+
+    본문 어딘가의 SUPERSEDED는 하위 결정 하나가 바뀐 것일 수 있어 항목의 상태가 아니다.
+    추측으로 상태를 정하면 살아 있는 결정을 죽은 것으로 보고하게 된다.
+    """
+    match = re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*status[`*]*\s*:\s*(.*)$', block)
+    if not match:
+        return None
+    value = match.group(1).upper()
+    if "SUPERSEDED" in value:
+        return "SUPERSEDED"
+    if "CURRENT" in value:
+        return "CURRENT"
+    return None
+
+
+def local_link_targets(block: str):
+    """같은 저장소 안을 가리키는 링크만. 외부 URL과 문서 내 앵커는 검사 대상이 아니다."""
+    for _, target in re.findall(r'\[([^\]]*)\]\(([^)]+)\)', block):
+        text = target.strip().strip("<>")
+        if not text or text.startswith("#") or re.match(r'^[A-Za-z][A-Za-z0-9+.-]*:', text):
+            continue
+        yield text
+
+
+def check_entry_evidence(root: Path, report: Report) -> dict:
+    """주장에는 증거로 가는 문이 있어야 한다.
+
+    항목만 읽고 "그렇게 정했구나"까지는 가도, 의심이 들 때 내려갈 곳이 없으면 같은 논쟁을
+    처음부터 다시 한다. 링크가 열리는지, 코드 앵커가 산문에만 있는지를 본다.
+    산문 앵커는 사람은 읽지만 역색인은 못 읽는다 — 파일에서 결정으로 되짚는 문이 닫힌다.
+    """
+    entries = list(iter_entry_blocks(root))
+    metrics = {"entries": len(entries), "evidence": 0, "dead_links": 0, "prose_only": 0}
+    if not entries:
+        report.add("WARN", "항목 증거", "정제 기억 항목이 없습니다")
+        return metrics
+
+    dead_examples, prose_examples = [], []
+    for path, block in entries:
+        clean = without_fences(block)
+        keys = structured_lines(clean)
+        if "evidence" in keys:
+            metrics["evidence"] += 1
+        for target in local_link_targets(clean):
+            resolved = (path.parent / unquote(target.split("#")[0])).resolve()
+            if not resolved.exists():
+                metrics["dead_links"] += 1
+                if len(dead_examples) < 5:
+                    dead_examples.append(f"{path.name} → {target}")
+        if "files" not in keys and ANCHOR_RE.search(clean):
+            metrics["prose_only"] += 1
+            if len(prose_examples) < 3:
+                prose_examples.append(path.name)
+
+    detail = (f"항목 {metrics['entries']}개 / evidence 줄 {metrics['evidence']} · "
+              f"열리지 않는 링크 {metrics['dead_links']} · 앵커가 산문에만 {metrics['prose_only']}")
+    if dead_examples:
+        detail += " / " + ", ".join(dead_examples)
+    hint = None
+    if metrics["dead_links"]:
+        hint = ("링크 대상이 옮겨졌거나 사라졌습니다. 항목은 지우지 말고 경로를 고치거나 "
+                "`소실`로 표시하세요 — 판정은 사람이 합니다.")
+    elif metrics["prose_only"]:
+        hint = (f"`files:` 줄이 없으면 파일에서 결정으로 되짚을 수 없습니다 "
+                f"(예: {', '.join(prose_examples)}). --fix 가 산문 앵커를 구조 줄로 올립니다.")
+    report.add("FAIL" if metrics["dead_links"] else ("WARN" if metrics["prose_only"] else "OK"),
+               "항목 증거", detail, hint)
+    return metrics
+
+
+def check_decision_reasons(root: Path, report: Report) -> dict:
+    """무엇으로 바뀌었나는 링크가 답하지만, 왜 바뀌었나는 아무도 검사하지 않았다.
+
+    이유 없는 교체는 다음 세션이 "그냥 그렇게 정했나 보다"로 읽고, 조건이 바뀌어도
+    알아차리지 못한다. 그리고 기대던 결정이 뒤집히면 그 위에 선 결정도 흔들리는데,
+    지금은 조용히 CURRENT인 채 낡는다.
+    """
+    entries = list(iter_entry_blocks(root))
+    metrics = {"status_missing": 0, "supersede_total": 0, "supersede_no_reason": 0, "stale_depends": 0}
+    if not entries:
+        return metrics
+
+    status_of, no_reason, shaky = {}, [], []
+    for path, block in entries:
+        clean = without_fences(block)
+        status = entry_status(clean)
+        if status is None:
+            metrics["status_missing"] += 1
+        status_of[path.stem] = status
+        # 교체 '사건'은 본문의 표시다. `status:` 줄은 그 결과를 선언할 뿐이라 따로 세지 않는다
+        # (둘 다 세면 항목 하나가 두 건으로 보인다). 본문에 표시가 없을 때만 선언을 사건으로 본다.
+        lines = clean.splitlines()
+        is_status = [bool(re.match(r'(?im)^\s*(?:[-*]\s*)?[`*]*status[`*]*\s*:', line)) for line in lines]
+        events = [i for i, line in enumerate(lines) if "SUPERSEDED" in line and not is_status[i]]
+        if not events:
+            events = [i for i, line in enumerate(lines) if "SUPERSEDED" in line]
+        for index in events:
+            metrics["supersede_total"] += 1
+            context = " ".join(lines[index:index + 3])
+            if not _has_reason(context):
+                metrics["supersede_no_reason"] += 1
+                if len(no_reason) < 5:
+                    no_reason.append(f"{path.name}:{index + 1}")
+
+    for path, block in entries:
+        clean = without_fences(block)
+        if entry_status(clean) != "CURRENT":
+            continue
+        for target in re.findall(r'(?i)depends-on[`*]*\s*:([^\n]*)', clean):
+            for stem in re.findall(r'\[\[([^\]|#]+)\]\]', target):
+                if status_of.get(stem) == "SUPERSEDED":
+                    metrics["stale_depends"] += 1
+                    if len(shaky) < 5:
+                        shaky.append(f"{path.name} → {stem}")
+
+    detail = (f"SUPERSEDED {metrics['supersede_total']}건 중 이유 없음 {metrics['supersede_no_reason']} · "
+              f"status 줄 없음 {metrics['status_missing']}/{len(entries)} · "
+              f"기대던 결정이 뒤집힌 CURRENT {metrics['stale_depends']}")
+    if no_reason:
+        detail += " / 이유 없음: " + ", ".join(no_reason)
+    if shaky:
+        detail += " / 재검토: " + ", ".join(shaky)
+    hint = None
+    if metrics["stale_depends"]:
+        hint = "기대던 항목이 바뀌었습니다. 위 CURRENT 항목이 아직 유효한지 확인하세요."
+    elif metrics["supersede_no_reason"]:
+        hint = ("바꾼 이유는 되살릴 수 없습니다 — 그 결정을 내린 세션의 대화가 유일한 근거입니다. "
+                "닥터는 이유를 지어내지 않습니다; 위 위치를 사람이 채워야 합니다.")
+    level = "WARN" if (metrics["supersede_no_reason"] or metrics["stale_depends"]) else "OK"
+    report.add(level, "결정 계보", detail, hint)
+    return metrics
+
+
+def _has_reason(context: str) -> bool:
+    """교체 표시 옆에 이유가 남아 있는가. 표시·링크·날짜를 걷어낸 나머지로 본다."""
+    text = re.sub(r'~~.*?~~', ' ', context)
+    text = re.sub(r'\[\[[^\]]*\]\]|\[[^\]]*\]\([^)]*\)|\[[^\]]*\]', ' ', text)
+    text = re.sub(r'(?i)superseded-by|supersedes|superseded|current', ' ', text)
+    text = re.sub(r'#[\w-]+|20\d\d-\d\d-\d\d', ' ', text)
+    text = re.sub(r'[^\w가-힣]+', '', text)
+    return len(text) >= 12
+
+
+def check_unattached_conversations(root: Path, report: Report, ignored: set) -> dict:
+    """어느 줄기에도 안 붙은 대화.
+
+    핸드오프도 없고, 어느 항목의 증거로도 인용되지 않았고, 그날 고친 파일이 어느 앵커와도
+    겹치지 않는 날이다. 전부 캐내라는 뜻이 아니다 — 결정 어휘가 많은 날부터 보라는 목록이다.
+    놓치는 날은 한가한 날이 아니라 바쁜 날이라서, 가장 중요한 결정이 여기 숨는다.
+    """
+    conversations = root / "conversations"
+    metrics = {"conv_days": 0, "unattached_days": 0, "signal_days": 0}
+    if not conversations.is_dir():
+        report.add("OK", "미부착 대화", "conversations/ 없음 (검사 대상 없음)")
+        return metrics
+
+    days = sorted({p.name[:10] for p in conversations.glob("*.md")
+                   if re.match(r'\d{4}-\d{2}-\d{2}', p.name)})
+    metrics["conv_days"] = len(days)
+    if not days:
+        report.add("OK", "미부착 대화", "대화 기록이 없습니다")
+        return metrics
+
+    attached = {p.name[:10] for p in (root / "docs" / "handoffs").glob("*.md")} \
+        if (root / "docs" / "handoffs").is_dir() else set()
+    anchors = set()
+    for path, block in iter_entry_blocks(root):
+        clean = without_fences(block)
+        attached |= set(re.findall(r'conversations[/\\](\d{4}-\d{2}-\d{2})', clean))
+        for line in clean.splitlines():
+            if re.search(r'(?i)^\s*(?:[-*]\s*)?[`*]*evidence', line):
+                attached |= set(re.findall(r'(\d{4}-\d{2}-\d{2})', line))
+        anchors |= {m.lower() for m in ANCHOR_RE.findall(clean)}
+
+    if anchors:
+        for log in sorted((root / "memory").glob("*/observations.jsonl")):
+            for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+                if '"Edit"' not in line and '"Write"' not in line:
+                    continue
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                day = str(record.get("timestamp", ""))[:10]
+                if day in attached or not day:
+                    continue
+                payload = record.get("input")
+                if isinstance(payload, str):
+                    try:
+                        payload = json.loads(payload)
+                    except ValueError:
+                        continue
+                if not isinstance(payload, dict):
+                    continue
+                raw = str(payload.get("file_path") or "").replace("\\", "/").lower()
+                if raw and any(raw.endswith(anchor) for anchor in anchors):
+                    attached.add(day)
+
+    unattached = [d for d in days if d not in attached and d not in ignored]
+    metrics["unattached_days"] = len(unattached)
+
+    scored = []
+    for day in unattached:
+        signal = 0
+        for path in conversations.glob(f"{day}-*.md"):
+            try:
+                if path.stat().st_size > 4 * 1024 * 1024:
+                    continue
+                signal += len(DECISION_WORDS.findall(path.read_text(encoding="utf-8", errors="replace")))
+            except OSError:
+                continue
+        if signal >= 10:
+            scored.append((signal, day))
+    scored.sort(reverse=True)
+    metrics["signal_days"] = len(scored)
+
+    detail = (f"대화 {len(days)}일 중 미부착 {len(unattached)}일 · 결정 어휘가 많은 날 {len(scored)}")
+    if ignored:
+        detail += f" (무관 판정 {len(ignored)}일 제외)"
+    if scored:
+        detail += " / 우선: " + ", ".join(f"{day}({signal})" for signal, day in scored[:5])
+    hint = None
+    if scored:
+        hint = ("이 날들부터 되짚으세요. 일괄 분류하지 말고, 붙은 결과는 해당 항목의 `evidence:`에 "
+                "적으세요. 무관하다고 판정한 날은 차트에 `- 무관: <날짜>`로 남기면 다시 묻지 않습니다.")
+    report.add("WARN" if scored else "OK", "미부착 대화", detail, hint)
+    return metrics
+
+
+def promote_structure(root: Path, report: Report) -> list:
+    """산문에만 있던 앵커와 암묵적 수명을 구조 줄로 올린다 (--fix).
+
+    텍스트에 이미 있는 것을 기계가 읽을 수 있는 자리로 옮길 뿐, 없는 것을 지어내지 않는다.
+    두 가지만 건드린다:
+      - `files:` — 본문이 이미 가리키는 코드 경로. 파일에서 결정으로 되짚는 역색인의 재료다.
+      - `status:` — 교체 표시가 **어디에도 없으면** CURRENT, **메타데이터 줄에 있으면** SUPERSEDED.
+        본문 중간의 SUPERSEDED는 하위 결정 하나가 바뀐 것일 수 있으므로 사람에게 남긴다.
+    한 파일에 항목이 여럿인 단일본은 손대지 않는다 — 삽입 위치가 기계적으로 확정되지 않는다.
+    """
+    blocks_by_path = {}
+    for path, block in iter_entry_blocks(root):
+        blocks_by_path.setdefault(path, []).append(block)
+
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    changed, skipped = [], 0
+    for path, blocks in sorted(blocks_by_path.items()):
+        if len(blocks) != 1:
+            skipped += 1
+            continue
+        raw = path.read_text(encoding="utf-8", errors="replace")
+        clean = without_fences(raw)
+        keys = structured_lines(clean)
+        additions = []
+
+        if "files" not in keys:
+            anchors = []
+            for anchor in ANCHOR_RE.findall(clean):
+                if anchor not in anchors and (root / anchor).exists():
+                    anchors.append(anchor)
+            if anchors:
+                additions.append(f"`files:` {', '.join(anchors[:12])}")
+
+        if entry_status(clean) is None:
+            lines = clean.splitlines()
+            meta = [i for i, line in enumerate(lines)
+                    if re.match(r'(?im)^\s*(?:[-*]\s*)?[`*]*(tags|date|source)[`*]*\s*:', line)]
+            head = "\n".join(lines[:(max(meta) + 1) if meta else 0])
+            if "SUPERSEDED" in head:
+                additions.append("`status: ❌ SUPERSEDED`")
+            elif "SUPERSEDED" not in clean:
+                additions.append("`status: ✅ CURRENT`")
+
+        if not additions:
+            continue
+        source_lines = raw.splitlines()
+        meta = [i for i, line in enumerate(source_lines)
+                if re.match(r'(?im)^\s*(?:[-*]\s*)?[`*]*(tags|date|source|status)[`*]*\s*:', line)]
+        if not meta:
+            skipped += 1
+            continue
+        at = max(meta) + 1
+        path.with_name(f"{path.name}.bak-{stamp}").write_text(raw, encoding="utf-8", newline="\n")
+        merged = source_lines[:at] + additions + source_lines[at:]
+        path.write_text("\n".join(merged) + "\n", encoding="utf-8", newline="\n")
+        changed.append(f"{path.name}({len(additions)}줄)")
+
+    if changed:
+        note = f"구조 줄 승격 {len(changed)}개 항목"
+        if skipped:
+            note += f" / 단일본·메타데이터 없음 {skipped}개는 사람 판단"
+        report.add("OK", "구조 줄 승격", note + " — 파일별 .bak-" + stamp)
+        return [note]
+    return []
+
+
+# ── 진료 기록 ──────────────────────────────────────────────────────────
+# 지금까지 닥터는 매번 초진이었다. 진단을 어디에도 남기지 않으니 두 번째 방문이
+# 첫 방문보다 나을 수 없었다. 차트는 기록에 대한 '판단'만 담는다 — 프로젝트에 대한
+# 사실은 항목과 대화에 있고, 차트를 지워도 기억은 온전하다. 잃는 것은 차이를 아는 능력뿐.
+
+CHART_NAME = ".mnemo-doctor-chart.md"
+
+
+def read_chart(root: Path) -> dict:
+    """지난 방문의 수치와, 사람이 '무관'으로 판정해 둔 날짜."""
+    path = root / "memory" / CHART_NAME
+    state = {"metrics": None, "when": None, "ignored": set()}
+    if not path.is_file():
+        return state
+    text = path.read_text(encoding="utf-8", errors="replace")
+    for match in re.finditer(r'<!--\s*metrics\s+(\{.*?\})\s*-->', text):
+        try:
+            state["metrics"] = json.loads(match.group(1))
+        except ValueError:
+            continue
+    visits = re.findall(r'^##\s+(\S+ \S+)', text, re.M)
+    if visits:
+        state["when"] = visits[-1]
+    for line in text.splitlines():
+        marked = re.match(r'^\s*[-*]\s*무관\s*:\s*(.+)$', line)
+        if marked:
+            state["ignored"] |= {d for d in re.findall(r'\d{4}-\d{2}-\d{2}', marked.group(1))}
+    return state
+
+
+def append_chart(root: Path, metrics: dict, fixed: list, fix: bool) -> None:
+    path = root / "memory" / CHART_NAME
+    path.parent.mkdir(parents=True, exist_ok=True)
+    new = not path.is_file()
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    lines = []
+    if new:
+        lines += ["# Mnemo 진료 기록", "",
+                  "> 닥터가 방문마다 덧붙이는 판단 기록입니다. 고치지 말고 덧붙이세요.",
+                  "> 기록에 대한 판단만 담습니다 — 프로젝트에 대한 사실은 항목과 대화에 있습니다.",
+                  "> 무관하다고 판정한 날은 `- 무관: 2026-03-18, 2026-04-07`처럼 적으면 다시 묻지 않습니다.", ""]
+    lines.append(f"## {stamp} · {'--fix' if fix else '진단만'}")
+    lines.append(f"<!-- metrics {json.dumps(metrics, ensure_ascii=False, sort_keys=True)} -->")
+    lines.append("- 수치: " + " · ".join(f"{key} {value}" for key, value in sorted(metrics.items())))
+    lines.append("- 고친 것: " + ("; ".join(fixed) if fixed else "없음"))
+    lines.append("- 미룸: 이유 없는 SUPERSEDED {0}건 · 앵커가 산문에만 {1}건 · 신호 있는 미부착 {2}일".format(
+        metrics.get("supersede_no_reason", 0), metrics.get("prose_only", 0), metrics.get("signal_days", 0)))
+    lines.append("")
+    with path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write("\n".join(lines))
+
+
+def report_chart_delta(previous: dict, metrics: dict, report: Report) -> None:
+    """같은 것을 다시 세지 않고, 지난 방문 이후 무엇이 달라졌는지만 말한다."""
+    old = previous.get("metrics")
+    if not old:
+        report.add("OK", "진료 기록", "첫 방문입니다 (이번 수치를 차트에 남깁니다)")
+        return
+    labels = {"dead_links": "열리지 않는 링크", "prose_only": "앵커가 산문에만",
+              "supersede_no_reason": "이유 없는 SUPERSEDED", "stale_depends": "흔들리는 CURRENT",
+              "unattached_days": "미부착 날", "evidence": "evidence 줄", "entries": "항목",
+              "status_missing": "status 줄 없음", "signal_days": "신호 있는 미부착"}
+    moved = [f"{labels.get(key, key)} {old[key]}→{metrics[key]}"
+             for key in metrics if key in old and old[key] != metrics[key]]
+    detail = f"지난 방문 {previous.get('when') or '시각 미상'} 대비 — "
+    detail += ", ".join(moved) if moved else "달라진 수치 없음"
+    if previous.get("ignored"):
+        detail += f" / 무관 판정 {len(previous['ignored'])}일은 목록에서 제외"
+    report.add("OK", "진료 기록", detail)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="프로젝트 기억을 현재 구조 기준으로 진단한다 (수정은 --fix, 기계적인 것만)")
     parser.add_argument("--project-root", default=".", help="프로젝트 경로 (기본: 현재 디렉터리)")
     parser.add_argument("--fix", action="store_true",
                         help="기계적으로 안전한 것만 고친다 (정제 기준값, #slug 링크 번호화, 기록 안의 루트 내부 절대경로)")
+    parser.add_argument("--chart", action="store_true",
+                        help="이번 방문을 진료 기록(memory/.mnemo-doctor-chart.md)에 남긴다. "
+                             "--fix는 이미 포함한다. 진단만 할 때는 쓰지 않는다 — 읽기 전용 진단은 파일을 만들지 않는다")
+    parser.add_argument("--promote-structure", action="store_true",
+                        help="산문에만 있던 코드 앵커와 암묵적 수명을 `files:`·`status:` 구조 줄로 올린다 (기억 본문을 고치므로 --fix와 분리, 파일별 백업)")
     args = parser.parse_args()
 
     try:
@@ -864,6 +1260,8 @@ def main():
         print(f"[ERROR] 프로젝트 루트를 확인하지 못했습니다: {error}")
         print("        Git 저장소가 아니거나 mnemo 마커가 없는 경로입니다.")
         sys.exit(2)
+
+    chart = read_chart(root)
 
     report = Report()
     check_structure(root, report)
@@ -878,6 +1276,13 @@ def main():
     check_handoffs(root, report)
     check_history_recoverability(root, report)
     check_record_coverage(root, report)
+
+    metrics = {}
+    metrics.update(check_entry_evidence(root, report))
+    metrics.update(check_decision_reasons(root, report))
+    fixed = promote_structure(root, report) if args.promote_structure else []
+    metrics.update(check_unattached_conversations(root, report, chart["ignored"]))
+    report_chart_delta(chart, metrics, report)
 
     print(f"\nMnemo Doctor — {root}")
     print("=" * 64)
@@ -896,6 +1301,15 @@ def main():
         print("  이상 없음.")
     if not args.fix and report.failures:
         print("  기계적으로 고칠 수 있는 항목은 --fix 로 처리합니다.")
+
+    if args.chart or args.fix or args.promote_structure:
+        try:
+            append_chart(root, metrics, fixed, args.fix)
+            print(f"  진료 기록: memory/{CHART_NAME} 에 이번 방문을 남겼습니다.")
+        except OSError as error:
+            print(f"  진료 기록을 남기지 못했습니다: {error}")
+    elif not (root / "memory" / CHART_NAME).is_file():
+        print("  진료 기록이 없습니다 — --chart 로 시작하면 다음 방문이 차이만 말합니다.")
     print()
 
     sys.exit(1 if report.failures else 0)

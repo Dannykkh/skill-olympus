@@ -62,19 +62,20 @@ mnemo/
 ├── install.js                  # 설치 스크립트
 ├── hooks/                      # 대화 저장 훅 (root hooks/에 위치)
 │   ├── save-conversation.ps1/.sh       # User 입력 저장
-│   ├── save-tool-use.ps1/.sh           # 도구 호출 관찰 로그
+│   ├── save-tool-use.ps1/.sh           # 도구 호출 관찰 로그 + 앵커 조회 주입 (Claude·Grok 공용)
 │   ├── save-response.ps1/.sh           # Assistant 응답 저장 (Stop)
 │   └── reconcile-conversations.ps1/.sh # 누락 턴 복구 (SessionStart)
 ├── templates/                  # CLAUDE.md 규칙
 │   └── claude-md-rules.md
 ├── scripts/                    # Python 3 (+ 루트 판정에 Node)
 │   │   # ── 핸드오프 (세션 경계) ──
-│   ├── create_handoff.py       # 스캐폴드 (Origin·체인 자동 채움)
+│   ├── create_handoff.py       # 스캐폴드 (Origin=첫 사용자 턴, Files=관찰, 대체 후보 제시)
 │   ├── validate_handoff.py     # 게이트 (feature-bearing: Origin+Diagram 필수)
 │   ├── list_handoffs.py        # 목록
 │   ├── check_staleness.py      # 핸드오프가 현재 코드 대비 얼마나 낡았나 (git 기준)
 │   │   # ── 기억 위생 (진단 전부 · 수정 최소) ──
-│   ├── mnemo_doctor.py         # 진입점: 13개 점검, --fix는 기계적인 셋만
+│   ├── mnemo_doctor.py         # 진입점: 16개 점검, --fix는 기계적인 셋만
+│   ├── build_anchor_index.py   # 착수 전 조회: 이 파일에 기대는 결정 (기억 파생)
 │   ├── harvest_lineage.py      # 착수 전 조회: 파일별 "언제·왜·어떻게" (핸드오프 파생)
 │   ├── check_memory_anchors.py  # 기억이 가리키는 파일이 실재하는가 (CodeMap 이동 힌트)
 │   ├── split_memory_file.py    # 복구: 비대한 memory/X.md → X/NNN-*.md + index.md
@@ -156,6 +157,57 @@ CLAUDE.md 규칙으로 자동 동작:
 | **의미기억** | memory/*.md | 카테고리별 상세 항목 (필요 시 Read) |
 | **일화기억** | conversations/*.md | 상세 대화 원본 (검색 시에만) |
 
+### 줄기와 증거 — 항목이 태어날 때 들고 오는 것
+
+**기억은 주장이고 대화는 증거인데, 둘을 잇는 링크가 없었습니다.** 항목만 읽은 다음 세션은
+"그렇게 정했구나"까지는 가도 의심이 들 때 내려갈 곳이 없어서, 같은 논쟁을 처음부터 다시 합니다.
+그래서 **결정이 굳는 순간에** 항목이 다음을 들고 태어납니다. 나중에 붙이지 않습니다 —
+옛 것과 새 것을 동시에 아는 순간은 그때뿐이고, 세션 끝에는 이미 절반을 잊습니다.
+
+| 줄 | 담는 것 | 없으면 생기는 일 |
+|----|---------|------------------|
+| `evidence:` | 대화 파일 + 턴 시각, 핸드오프 경로 | 의심이 들 때 15만 줄에서 다시 찾아야 한다 |
+| `alternatives:` | 탈락 대안 · 그 대안의 가장 강한 논거 · 왜 졌나 · 복귀 조건 | 나중에 그 논거를 들고 오는 사람과 논쟁을 0에서 다시 한다 |
+| `depends-on:` | 기대는 항목 `[[NNN-slug]]` | 기댄 결정이 뒤집혀도 이 항목은 CURRENT인 채 조용히 낡는다 |
+| `sources:` | 원천 문서·URL·설계 산출물 | 외부 사실이 바뀌어도 다시 볼 줄 모른다 |
+| `files:` | 근거 코드 경로 (루트 기준 상대) | 파일에서 결정으로 되짚는 문이 닫힌다 |
+
+이유는 **조건 형태**로 적습니다. "MCP는 별로였다"가 아니라 "이 세 결함 때문에"라고 적어야
+그 결함이 고쳐졌을 때 항목이 스스로 재검토 대상임을 압니다. 고뇌 과정과 버린 논의 **자체**는
+대화에 남기고 항목은 `evidence:`로 가리킵니다 — 항목은 서사가 아닙니다.
+
+### 파일에서 결정으로 — 앵커 역색인
+
+기억은 제목·태그·`MEMORY.md`로, 즉 **의미로** 색인되어 있습니다. 그것은 "지난번에 이런 거
+했던 것 같은데"에 답합니다. 훨씬 흔한 시작인 **"이 기능 오류났어, 고치자"에는 답하지 못합니다** —
+그 요청에는 검색할 단어가 없고 대상만 있기 때문입니다. 그래서 조회 키를 파일로 뒤집습니다.
+
+```bash
+python scripts/build_anchor_index.py --file hooks/save-turn.sh   # 이 파일에 기대는 결정
+python scripts/build_anchor_index.py --out                        # memory/.mnemo-anchor-index.md
+```
+
+`--file` 조회는 저장된 색인을 읽지 않고 기억에서 매번 다시 만들므로 **낡을 수가 없습니다**.
+`files:` 줄이 있으면 그것이 정본이고 없으면 본문의 코드 경로를 읽으므로, 계약 적용 전 항목도
+지금 당장 걸립니다. 파생 색인이라 점 접두 이름을 쓰고(기억 항목으로 오인되면 진단 수치가 오염된다),
+원본을 고치지 않고 매번 처음부터 다시 만듭니다. 색인 재생성은 핸드오프가 소유합니다 —
+도구 단위 훅이 없는 CLI에서도 네 CLI가 모두 지나는 자리이기 때문입니다.
+
+**훅이 이 조회를 대신 불러 줍니다.** 파일을 고친 직후, 그 파일에 기대는 결정이 모델의 컨텍스트로
+들어옵니다. 세션당 파일당 한 번입니다. 어느 줄기 위에 있는지가 **판단이 아니라 읽기**가 됩니다.
+
+| CLI | 수단 | 비고 |
+|-----|------|------|
+| Claude | `PostToolUse` → `additionalContext` | `PreToolUse`는 `deny`로만 말할 수 있어 조회에 못 쓴다 |
+| Grok | 같은 Claude 훅·같은 스키마 | `GROK_HOOK_EVENT` 가드를 `post_tool_use`만 통과하도록 좁혔다. 저장은 계속 `grok-mnemo` 전담 |
+| Antigravity | `PreToolUse` 기록 → `PostInvocation` `injectSteps` | `PostToolUse` 출력이 빈 객체라 한 훅으로 안 된다 |
+| Codex | 없음 (`notify` 하나) | 규칙과 핸드오프 스캐폴드로 대신한다 |
+
+parity 우선순위는 **포착 > 연결 > 주입**입니다. 네 CLI가 같은 프로젝트의 같은 `conversations/`에
+쓰므로, Codex 세션이 남긴 대화를 나중에 다른 CLI가 읽고 줄기에 붙일 수 있습니다. Codex에 없는
+것은 주입뿐이고 **지연이 생길 뿐 유실은 없습니다**. 근거·실측·되돌릴 조건은
+`memory/architecture/057-hook-budget-llm-never-process-rarely-constant-time-per-tool.md`에 있습니다.
+
 ---
 
 ## 기능 3: 세션 핸드오프
@@ -175,9 +227,11 @@ CLAUDE.md 규칙으로 자동 동작:
 
 ### 핸드오프 생성
 
-먼저 [핸드오프 기억 점검](references/handoff-memory.md)을 읽습니다. 생성 도구는
-아키텍처 기억의 단일본·분할본·인덱스 연결을 확인하고, 본문이 없으면 닥터를
-자동으로 한 번 실행합니다(진단만). 에이전트가 근거 기반 보완과 재검색을 마쳐야 합니다.
+먼저 [핸드오프 기억 점검](references/handoff-memory.md)을 읽습니다. 생성 도구는 두 경우에
+닥터를 자동으로 한 번 실행합니다(진단만, 방문을 차트에 기록) — **아키텍처 기억이 없을 때**와
+**마지막 닥터 방문이 30일을 넘었을 때**입니다. 후자가 없으면 기억이 있는 프로젝트에서는
+조건부 진단이 영원히 건너뛰어, 점검이 사람의 기억에만 의존하게 됩니다.
+에이전트가 근거 기반 보완과 재검색을 마쳐야 합니다.
 컨텍스트 압축/한계 시 자동 핸드오프는 전역 규칙이며 고정 20턴 타이머가 아닙니다.
 
 ```bash
@@ -186,6 +240,10 @@ python "<module_root>/scripts/create_handoff.py" "auth-part-2" --continues-from 
 ```
 
 ### 핸드오프 검증
+
+검증기는 **이번 세션 범위**만 봅니다 — 결정 표의 `대체 대상`이 실재하는지(없으면 게이트),
+결정을 적었는데 그날 기억 항목이 하나도 갱신되지 않았는지(경고). 프로젝트 전체 백로그
+(미부착 날·죽은 링크·이유 없는 교체)는 닥터의 몫이고, 인계 순간에 펼치면 읽히지 않습니다.
 
 ```bash
 python scripts/validate_handoff.py <handoff-file>
@@ -232,18 +290,21 @@ python scripts/check_staleness.py <handoff-file>
 
 | 시점 | 도구 | 하는 일 |
 |------|------|---------|
+| **파일에 손대기 전** | `build_anchor_index.py --file X` | **그 파일에 기대는 결정**. 어느 줄기인가는 판단이 아니라 읽기다 |
 | 구현 착수 전 | `harvest_lineage.py --file X` | 그 파일이 언제·왜·어떻게 바뀌어왔나 (없음 확인도 결과) |
-| 주기적 / 이상할 때 | `mnemo_doctor.py` | 13개 점검 한 번에. FAIL·WARN과 근거 |
+| 주기적 / 이상할 때 | `mnemo_doctor.py` | 16개 점검 한 번에. FAIL·WARN과 근거 |
+| 방문 기록을 남길 때 | `mnemo_doctor.py --chart` | 이번 판단을 차트에 남긴다. 다음 방문은 차이만 말한다 |
+| 닥터가 가리킬 때 | `mnemo_doctor.py --promote-structure` | 산문 앵커·암묵적 수명을 `files:`·`status:` 줄로 (기억 본문 수정, 백업) |
 | 닥터가 가리킬 때 | `check_memory_anchors.py` | 사라진 파일을 가리키는 기억 목록 + 이동 후보 |
 | 닥터가 가리킬 때 | `split_memory_file.py` | 비대한 상세 파일을 항목별로 (백업·링크 갱신) |
 | 닥터가 가리킬 때 | `reclassify_observations.py` | 옛 훅의 오분류 관찰 복구 (백업·delta 보존) |
 
-원칙 넷 — **진단은 전부, 수정은 기계적인 것만**(닥터 `--fix`는 정제 기준값, 정확히 하나에 맞는 `#slug` 링크의 `[[NNN-slug]]` 번호화, 기록 안의 루트 내부 절대경로 상대화 셋) /
+원칙 넷 — **진단은 전부, 수정은 기계적인 것만**(닥터 `--fix`는 정제 기준값, 정확히 하나에 맞는 `#slug` 링크의 `[[NNN-slug]]` 번호화, 기록 안의 루트 내부 절대경로 상대화 셋. 기억 본문을 고치는 `--promote-structure`와 차트를 쓰는 `--chart`는 별도 플래그이고, **진단만 할 때는 아무 파일도 쓰지 않는다**) /
 **판정 로직은 한 곳**(닥터는 형제 스크립트를 호출, 과거 재분류는 명시적 성공 근거가 있을 때만) /
 **"없음 확인"도 결과**(입력 부재는 exit 0 + 이유 + 대안, 실패 2는 루트 판정 불가뿐) /
 **되돌릴 수 있게**(dry-run 기본, `--apply`에 백업 강제).
 
-도구별 상세 — 닥터의 13개 점검 표, 앵커 판정 규칙(문맥 분류·이동 후보), 재분류 절차,
+도구별 상세 — 닥터의 16개 점검 표, 앵커 판정 규칙(문맥 분류·이동 후보), 재분류 절차,
 분할 규칙, 계보 이유 폴백과 각 종료 코드 — 는 **[`docs/memory-hygiene.md`](docs/memory-hygiene.md)**에
 있습니다. 위 시점 표와 원칙 넷이 계약이고, 상세는 해당 도구를 쓸 때 읽습니다.
 

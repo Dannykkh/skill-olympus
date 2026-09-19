@@ -18,6 +18,8 @@ Usage:
 """
 
 import argparse
+import json
+import os
 import re
 import subprocess
 import sys
@@ -232,20 +234,183 @@ def architecture_memory_present(root: Path) -> bool:
     return False
 
 
-def memory_preflight(root: Path) -> str:
-    """Run Doctor once per handoff only when architecture memory is absent."""
+def _today_conversations(root: Path) -> list[Path]:
+    """오늘 날짜의 대화 기록. 훅이 CLI별로 나눠 쓰므로 여러 개일 수 있다."""
+    directory = root / "conversations"
+    if not directory.is_dir():
+        return []
+    today = datetime.now().strftime("%Y-%m-%d")
+    return sorted(directory.glob(f"{today}-*.md"))
+
+
+def first_user_prompt(root: Path) -> str | None:
+    """오늘 첫 사용자 턴.
+
+    Origin의 '요구'는 세션이 끝나면 되살릴 수 없는 유일한 칸인데, 대화 훅이 원문을 이미
+    저장해 두었다. 사람이 기억해서 옮겨 적기를 기다리는 대신 그 원문을 가져온다.
+    하루에 세션이 여럿일 수 있으므로 단정하지 않고 `추정`으로 표시한다.
+    """
+    for path in _today_conversations(root):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        match = re.search(r'^## \[[0-9:]+\] User\s*$\n+(.+?)(?=^## \[|\Z)', text, re.M | re.S)
+        if not match:
+            continue
+        body = " ".join(match.group(1).split())
+        if not body:
+            continue
+        if len(body) > 160:
+            body = body[:160].rstrip() + "…"
+        return f"{body} — 추정: {path.name} 첫 사용자 턴"
+    return None
+
+
+def _relativize(raw, root: Path) -> str | None:
+    """기록 안의 경로를 루트 기준 상대경로로. 루트 밖이면 계보 대상이 아니므로 버린다."""
+    if not raw:
+        return None
+    text = str(raw).replace("\\", "/").strip()
+    prefix = str(root).replace("\\", "/").rstrip("/") + "/"
+    if text.lower().startswith(prefix.lower()):
+        text = text[len(prefix):]
+    elif text.startswith("/") or re.match(r'^[A-Za-z]:/', text):
+        # 같은 루트를 다른 표기로 적은 옛 기록(Windows 8.3 단축 경로, 심볼릭 링크)도 붙여야 한다.
+        try:
+            text = Path(raw).resolve().relative_to(root.resolve()).as_posix()
+        except (ValueError, OSError):
+            return None  # 루트 밖 — 계보 대상이 아니다
+    return text.lstrip("./") or None
+
+
+def observed_files(root: Path) -> list[str]:
+    """오늘 관찰 로그가 기록한 편집·생성 파일.
+
+    git이 없는 프로젝트에서도 "이 세션이 무엇을 고쳤나"가 남는 유일한 자리다.
+    회전된 `.bak`은 읽지 않는다 — 오늘 것은 현재 로그에 있다.
+    """
+    today = datetime.now().strftime("%Y-%m-%d")
+    found: list[str] = []
+    for log in sorted((root / "memory").glob("*/observations.jsonl")):
+        for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line or '"Edit"' not in line and '"Write"' not in line:
+                continue
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            if record.get("tool") not in ("Edit", "Write", "NotebookEdit"):
+                continue
+            if not str(record.get("timestamp", "")).startswith(today):
+                continue
+            payload = record.get("input")
+            if isinstance(payload, str):
+                try:
+                    payload = json.loads(payload)
+                except ValueError:
+                    payload = None
+            if not isinstance(payload, dict):
+                continue
+            path = _relativize(payload.get("file_path") or payload.get("notebook_path"), root)
+            if path and path not in found:
+                found.append(path)
+    return found
+
+
+def anchored_entries(root: Path, files: list[str]) -> list[tuple[str, str]]:
+    """이번 세션이 고친 파일을 근거로 삼는 기존 기억 항목.
+
+    결정을 뒤집는 순간은 옛 것과 새 것을 동시에 아는 유일한 순간인데, 그때 쓰는 사람은
+    이미 절반을 잊었다. 그래서 "무엇을 대체하나"를 기억해내라고 요구하는 대신 후보로 내민다.
+    판정은 사람이 한다 — 이 목록은 대체를 주장하지 않는다.
+    """
+    if not files:
+        return []
+    interesting = [f for f in files if not f.startswith(("memory/", "conversations/", "docs/handoffs/"))]
+    if not interesting:
+        return []
+    hits: list[tuple[str, str]] = []
+    for entry in sorted((root / "memory").glob("*/[0-9]*.md")):
+        text = entry.read_text(encoding="utf-8", errors="replace")
+        matched = [f for f in interesting if f in text]
+        if not matched:
+            continue
+        title = next((line.lstrip("# ").strip() for line in text.splitlines()
+                      if line.startswith("# ")), entry.stem)
+        hits.append((f"{entry.parent.name}/{entry.stem}", f"{title} — {', '.join(matched[:3])}"))
+    return hits
+
+
+# 기억이 있는 프로젝트에서는 아래 조건부 진단이 언제나 건너뛴다. 그러면 닥터의 점검은
+# 사람이 따로 기억해서 부를 때만 도는데, 그건 오늘 우리가 실패로 측정한 규율 의존이다.
+# 그래서 두 번째 방아쇠를 둔다 — 마지막 방문이 이만큼 지났으면 이번 핸드오프에 한 번 본다.
+# 핸드오프는 사람이 프로젝트를 생각하고 있는 순간이라 자리가 맞고, 한 달에 한 번이면
+# 백로그가 의식이 되지 않는다. 지난 방문 시각은 닥터가 차트에 남긴 것을 그대로 읽는다.
+DOCTOR_VISIT_DAYS = 30
+DOCTOR_CHART = "memory/.mnemo-doctor-chart.md"
+
+
+def days_since_doctor_visit(root: Path):
+    """차트의 마지막 방문 이후 지난 날. 차트가 없으면 None (= 한 번도 안 봄)."""
+    chart = root / DOCTOR_CHART
+    if not chart.is_file():
+        return None
+    # 형식의 주인은 mnemo_doctor.append_chart 다: `## YYYY-MM-DD HH:MM · <모드>`
+    visits = re.findall(r'^##\s+(\d{4}-\d{2}-\d{2})\s', chart.read_text(encoding="utf-8", errors="replace"), re.M)
+    if not visits:
+        return None
     try:
-        if architecture_memory_present(root):
-            return "SKIPPED — 아키텍처 기억 본문 확인; 조건부 닥터 실행 불필요"
+        last = datetime.strptime(max(visits), "%Y-%m-%d")
+    except ValueError:
+        return None
+    return (datetime.now() - last).days
+
+
+def refresh_anchor_index(root: Path) -> str:
+    """앵커 역색인을 다시 만든다.
+
+    색인을 갱신하는 주체가 Claude의 PostToolUse 훅 하나뿐이면, 도구 단위 훅이 없는 CLI
+    (Codex의 notify, 턴 단위만 받는 어댑터)에서는 색인이 영원히 낡는다. 핸드오프는 네 CLI가
+    모두 지나는 자리이고 이미 파이썬이 떠 있으므로, 여기서 한 번 다시 만들면 조회가 어디서나 산다.
+    실패해도 핸드오프는 계속 쓴다 — 색인은 파생물이고 없으면 조회만 못 할 뿐이다.
+    """
+    try:
+        import build_anchor_index as anchors
+    except ImportError:
+        return "SKIPPED — build_anchor_index 없음"
+    try:
+        index = anchors.build(root)
+        if not index:
+            return "SKIPPED — 앵커를 가진 항목 없음"
+        target = root / "memory" / ".mnemo-anchor-index.md"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_name(f"{target.name}.tmp-{os.getpid()}")
+        temporary.write_text(anchors.render(root, index), encoding="utf-8", newline="\n")
+        os.replace(temporary, target)
+        return f"RAN — 파일 {len(index)}개"
+    except (OSError, UnicodeError, ValueError) as error:
+        return f"ERROR — {error}"
+
+
+def memory_preflight(root: Path) -> str:
+    """Run Doctor when architecture memory is absent, or when the last visit is old enough."""
+    overdue = days_since_doctor_visit(root)
+    periodic = overdue is None or overdue >= DOCTOR_VISIT_DAYS
+    try:
+        if architecture_memory_present(root) and not periodic:
+            return (f"SKIPPED — 아키텍처 기억 본문 확인; 마지막 닥터 방문 {overdue}일 전 "
+                    f"(주기 {DOCTOR_VISIT_DAYS}일 미도래)")
+        reason = ("아키텍처 기억 없음/빈 상태" if not architecture_memory_present(root)
+                  else (f"마지막 닥터 방문이 {overdue}일 전" if overdue is not None else "닥터 방문 기록 없음"))
     except (OSError, UnicodeError, ValueError) as error:
         print(f"[Mnemo] ERROR: 아키텍처 기억 검사 실패: {error}")
         return "ERROR — 아키텍처 기억을 읽지 못함; 수동 진단 및 기억 보완 필요"
     script = Path(__file__).with_name("mnemo_doctor.py")
-    print("[Mnemo] 아키텍처 기억 없음/빈 상태 — 닥터 진단 자동 실행 (수정 없음)")
+    print(f"[Mnemo] {reason} — 닥터 진단 자동 실행 (수정 없음, 이번 방문을 차트에 기록)")
     try:
         result = subprocess.run(
-            [sys.executable, "-B", str(script), "--project-root", str(root)],
-            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
+            # --chart: 방문을 남겨야 다음 핸드오프가 차이만 보고하고 주기 타이머가 다시 시작된다.
+            [sys.executable, "-B", str(script), "--project-root", str(root), "--chart"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         print(f"[Mnemo] NOT RUN/ERROR: {error}")
@@ -255,8 +420,9 @@ def memory_preflight(root: Path) -> str:
         print(result.stderr, file=sys.stderr)
     if result.returncode not in (0, 1):
         return f"ERROR — 닥터 종료 코드 {result.returncode}; 수동 확인 필요"
-    return (f"RAN — 닥터 종료 코드 {result.returncode} (진단만). "
-            "기존 기억·대화·핸드오프·소스 근거로 아키텍처 기억과 인덱스를 보완할 것; 보완 완료를 뜻하지 않음")
+    return (f"RAN ({reason}) — 닥터 종료 코드 {result.returncode} (진단만, 방문을 차트에 기록). "
+            "작업목록은 프로젝트 전체 백로그다; 위에서부터 골라 처리하고, 무관한 날은 차트에 "
+            "`- 무관: <날짜>`로 닫을 것. 종료 코드 0은 기억 보완 완료를 뜻하지 않음")
 
 
 def generate_handoff(
@@ -291,6 +457,7 @@ def generate_handoff(
     handoffs_dir.mkdir(parents=True, exist_ok=True)
     (project_root / ".mnemo-root").touch(exist_ok=True)
 
+    anchor_check = refresh_anchor_index(project_root)
     memory_check = memory_preflight(project_root)
 
     filepath = handoffs_dir / filename
@@ -311,13 +478,32 @@ def generate_handoff(
         commits_section = "  - [no recent commits or not a git repo]"
 
     # Modified files section
-    all_modified = list(set(git_info["modified_files"] + git_info["staged_files"]))
+    # git과 관찰 로그를 합친다. git이 없는 프로젝트에서는 관찰이 유일한 근거이고,
+    # git이 있어도 커밋 전 편집은 관찰에만 남는다.
+    observed = observed_files(project_root)
+    all_modified = sorted(set(git_info["modified_files"] + git_info["staged_files"]) | set(observed))
     if all_modified:
         modified_section = "\n".join(f"| {f} | [describe changes] | [why changed] |" for f in all_modified[:10])
         if len(all_modified) > 10:
             modified_section += f"\n| ... and {len(all_modified) - 10} more files | | |"
+        if observed:
+            modified_section += f"\n\n<!-- 관찰 로그에서 {len(observed)}개 자동 수집 (오늘 Edit/Write) -->"
     else:
         modified_section = "| [no modified files detected] | | |"
+
+    # 대체 후보 — 이번에 고친 파일을 근거로 삼는 기존 항목. 판정은 사람이 한다.
+    candidates = anchored_entries(project_root, all_modified)
+    if candidates:
+        listed = "\n".join(f"> - `[[{stem.split('/')[-1]}]]` ({stem.split('/')[0]}) — {why}"
+                           for stem, why in candidates[:8])
+        supersede_note = f"""
+> **이번에 고친 파일을 근거로 삼는 기존 항목입니다.** 뒤집은 것이 있으면 위 표의 `대체 대상`에
+> 적고, 그 기억 항목에 `SUPERSEDED`·`superseded-by`·바꾼 이유를 남기세요. 무관하면 그대로 둡니다.
+>
+{listed}
+"""
+    else:
+        supersede_note = ""
 
     # Origin section — 이어받는 세션은 출처를 선행 핸드오프로 미리 채운다.
     # 최초 요구는 한 번만 적고, 이후 세션은 그 링크를 따라가면 되게 한다.
@@ -326,13 +512,15 @@ def generate_handoff(
                          f"— 최초 요구가 거기에 없으면 그 핸드오프의 Origin을 따라 올라갈 것")
     else:
         origin_source = "[TODO: 사용자 요청 / 이슈 / spec·설계 문서 경로]"
+    # 요구는 세션이 끝나면 되살릴 수 없는 칸이다. 대화 훅이 저장해 둔 첫 사용자 턴을 가져온다.
+    origin_requirement = first_user_prompt(project_root) or "[TODO: 요청받은 것 — 가능하면 원문에 가깝게]"
     origin_section = f"""## Origin
 
 기능을 구현·변경한 세션은 채운다. 탐색·문서·설정만 한 세션은 각 칸을 `N/A — <이유>`로 둔다.
 
 | 항목 | 내용 |
 |------|------|
-| 요구 | [TODO: 요청받은 것 — 가능하면 원문에 가깝게] |
+| 요구 | {origin_requirement} |
 | 출처 | {origin_source} |
 | 해결할 문제 | [TODO: 이 요구가 없애려는 불편·위험. "왜 지금인가"] |"""
 
@@ -378,6 +566,7 @@ def generate_handoff(
 ## Session Memory Review
 
 - Architecture preflight: {memory_check}
+- Anchor index: {anchor_check} — 파일에서 결정으로 되짚는 역색인 (build_anchor_index.py --file <경로>)
 - Memory/index updates: [TODO: 실제 갱신한 기억·인덱스 링크 또는 변경 불필요 근거]
 - Retrieval verification: [TODO: 기록한 검색어로 MEMORY.md → 해당 항목을 다시 찾은 결과]
 - Observations: [TODO: 세션 ID·시작 시각으로 한정한 정제 결과; 기존 백로그 제외]
@@ -390,7 +579,7 @@ This is the session's implemented-feature map. Always fill **Implemented Feature
 
 | Feature/Change | Visible Behavior | Entry Point | Implementation Anchors | Verification |
 |----------------|------------------|-------------|------------------------|--------------|
-| [TODO: Feature or change name] | [TODO: What user/agent can now do or observe] | [TODO: UI/API/command/hook/file] | [TODO: files/classes/methods] | [TODO: test/log/manual check] |
+| [TODO: Feature or change name] | [TODO: What user/agent can now do or observe] | [TODO: UI/API/command/hook/file] | [TODO: files/classes/methods] | [검증함: 근거 / NOT RUN: 이유 / 기록 없음] |
 
 ### Feature Boundary
 
@@ -462,9 +651,13 @@ flowchart LR
 
 ### Decisions Made
 
-| Decision | Options Considered | Rationale |
-|----------|-------------------|-----------|
-| [TODO: Document key decisions] | | |
+`대체 대상`은 이 결정이 뒤집은 기존 기억 항목이다. 없으면 `none`. 있으면 그 항목에도
+`SUPERSEDED`·`superseded-by`·바꾼 이유를 남긴다 — 옛 것과 새 것을 동시에 아는 순간은 지금뿐이다.
+
+| Decision | Options Considered | Rationale | 대체 대상 |
+|----------|-------------------|-----------|-----------|
+| [TODO: Document key decisions] | [TODO: 탈락 대안과 그 논거 — 없으면 none] | | [none 또는 [[NNN-slug]]] |
+{supersede_note}
 
 ## Pending Work
 

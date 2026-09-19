@@ -150,7 +150,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown, youtube-transcript | 유틸리티 + YouTube 자막 추출/요약 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
-| 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프) + CLI별 어댑터 (Codex notify / Antigravity Stop / Grok camelCase envelope) + 메모리 크기 점검 및 압축 |
+| 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프 + 파일→결정 앵커 조회) + CLI별 어댑터 (Codex notify / Antigravity PreToolUse+PostInvocation / Grok camelCase envelope·post_tool_use) + 메모리 크기 점검 및 압축 |
 
 ### Agents (참고 소스 42개: 최상위 40개 + 스킬 소유 2개, 기본 등록 0개)
 

@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -48,11 +49,29 @@ class HandoffMemoryTests(unittest.TestCase):
         self.write("MEMORY.md", "[Architecture](../outside.md)\n[Architecture](https://example.org/design.md)\n")
         self.assertFalse(handoff.architecture_memory_present(self.root))
 
-    def test_existing_memory_skips_process(self):
+    def test_existing_memory_and_recent_visit_skip_process(self):
+        """기억이 있고 최근에 봤으면 프로세스를 띄우지 않는다.
+
+        기억만으로 건너뛰던 옛 규칙은 기억이 있는 프로젝트에서 닥터를 영원히 재웠다.
+        그러면 점검이 사람의 기억에만 의존한다 — 이 레포가 실패로 측정한 바로 그 의존이다.
+        이제 주기 타이머가 두 번째 방아쇠이고, 최근 방문만이 프로세스를 아낀다.
+        """
         self.write("memory/architecture.md", "# Design\nPersist before publish.\n")
+        self.write("memory/.mnemo-doctor-chart.md",
+                   f"# Mnemo 진료 기록\n\n## {datetime.now():%Y-%m-%d} 10:00 · 진단만\n")
         with patch.object(handoff.subprocess, "run") as run:
             self.assertIn("SKIPPED", handoff.memory_preflight(self.root))
         run.assert_not_called()
+
+    def test_existing_memory_but_stale_visit_still_runs(self):
+        self.write("memory/architecture.md", "# Design\nPersist before publish.\n")
+        self.write("memory/.mnemo-doctor-chart.md",
+                   f"# Mnemo 진료 기록\n\n## {datetime.now() - timedelta(days=40):%Y-%m-%d} 10:00 · 진단만\n")
+        with patch.object(handoff.subprocess, "run",
+                          return_value=subprocess.CompletedProcess([], 0, "", "")) as run, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertIn("RAN", handoff.memory_preflight(self.root))
+        run.assert_called_once()
 
     def test_shipped_scaffold_and_backtick_metadata_are_empty(self):
         for body in (
@@ -70,7 +89,7 @@ class HandoffMemoryTests(unittest.TestCase):
         with patch.object(handoff, 'architecture_memory_present', side_effect=OSError('read failed')), contextlib.redirect_stdout(io.StringIO()):
             self.assertIn('ERROR', handoff.memory_preflight(self.root))
 
-    def test_missing_memory_runs_once_readonly_and_preserves_files(self):
+    def test_missing_memory_runs_once_without_fix_and_preserves_memory(self):
         self.write("memory/architecture.md", "# Architecture\n")
         before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
         result = subprocess.CompletedProcess([], 1, "FAIL: broken link", "")
@@ -80,7 +99,10 @@ class HandoffMemoryTests(unittest.TestCase):
         run.assert_called_once()
         args = run.call_args.args[0]
         self.assertNotIn("--fix", args)
-        self.assertEqual(args[-1], str(self.root))
+        self.assertNotIn("--promote-structure", args)
+        self.assertIn(str(self.root), args)
+        # 방문을 차트에 남겨야 다음 핸드오프가 차이만 보고하고 주기 타이머가 다시 시작된다.
+        self.assertIn("--chart", args)
         self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()})
 
     def test_timeout_and_tool_failure_are_not_success(self):

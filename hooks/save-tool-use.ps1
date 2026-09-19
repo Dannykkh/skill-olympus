@@ -7,9 +7,11 @@
 # - 진짜 실패(파싱 에러): .claude/mnemo-errors.log 기록 후 exit 0
 # - $env:MNEMO_STRICT='1' 이면 실패 시 exit 1
 
-# Grok 세션 가드: Grok envelope는 camelCase(toolName)라 이 스크립트가 오동작할 수 있음.
-# Grok에서는 grok-mnemo가 턴 단위 관찰을 전담하므로 즉시 종료.
-if ($env:GROK_HOOK_EVENT) { exit 0 }
+# Grok 세션 가드: Grok envelope는 camelCase(toolName)라 이 스크립트의 저장 경로가 오동작한다.
+# 대화·관찰 저장은 grok-mnemo가 전담. 다만 post_tool_use에서는 앵커 조회만 수행한다 —
+# Grok은 Claude와 같은 hookSpecificOutput.additionalContext 스키마를 받아들이고
+# 모델에게 도구 결과 옆에 전달한다 (~/.grok/docs/user-guide/10-hooks.md "PostToolUse Output").
+if ($env:GROK_HOOK_EVENT -and $env:GROK_HOOK_EVENT -ne "post_tool_use") { exit 0 }
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
 if ($env:MNEMO_DISABLE -match '^(1|true|yes)$') { exit 0 }
@@ -93,6 +95,119 @@ try {
 }
 if (-not $json) { exit 0 }
 
+# MNEMO_ANCHOR_START
+# 방금 고친 파일에 기대는 결정을 모델에게 알린다 (PostToolUse additionalContext).
+#
+# 왜 여기인가: PostToolUse만 additionalContext를 지원한다(PreToolUse는 deny로만 말할 수 있어 조회에 못 쓴다).
+# 왜 Read에는 안 붙이나: 루트 판정이 node를 띄우고 Windows에서 프로세스 하나가 172ms다. Read는 위 skipTools에서
+# 이미 빠져 그 비용을 안 내고 있는데, 조회를 위해 되살리면 도구 호출마다 세금이 붙는다.
+# Edit/Write는 이미 node를 띄운 뒤라, 미리 만든 색인을 읽는 6ms만 추가된다.
+# 근거와 실측: memory/architecture/057-hook-budget-llm-never-process-rarely-constant-time-per-tool.md
+function Invoke-MnemoAnchorNotify {
+    param([string]$Root, [string]$Tool, $ToolInput, [string]$Session)
+    if (@("Edit", "Write", "NotebookEdit") -notcontains $Tool) { return }
+    $index = Join-Path $Root "memory/.mnemo-anchor-index.md"
+    if (-not (Test-Path -LiteralPath $index)) { return }
+
+    $target = $null
+    foreach ($key in @("file_path", "notebook_path")) {
+        $prop = $ToolInput.PSObject.Properties[$key]
+        if ($prop -and $prop.Value) { $target = "$($prop.Value)".Replace('\', '/'); break }
+    }
+    if (-not $target) { return }
+    if ($target -match '^(/|[A-Za-z]:/)') { return }
+
+    # 기억 항목을 고쳤으면 색인이 낡았다. 재생성은 비싸므로(파이썬 400ms) 떼어내 돌리고 기다리지 않는다.
+    if ($target -match '^memory/[^/]+/[0-9].*\.md$') {
+        $builder = Join-Path $Root "skills/mnemo/scripts/build_anchor_index.py"
+        if (-not (Test-Path -LiteralPath $builder)) {
+            $builder = Join-Path $HOME ".claude/skills/mnemo/scripts/build_anchor_index.py"
+        }
+        if ((Test-Path -LiteralPath $builder) -and (Get-Command python -ErrorAction SilentlyContinue)) {
+            try {
+                Start-Process -FilePath "python" -ArgumentList @($builder, "--project-root", $Root, "--out") `
+                    -WindowStyle Hidden -ErrorAction Stop | Out-Null
+            } catch { }
+        }
+        return
+    }
+    if ($target -match '^(memory/|conversations/|docs/handoffs/)') { return }
+
+    Invoke-MnemoAnchorEmit -Root $Root -Target $target -Session $Session
+}
+
+# 조회·중복 억제·출력. Claude와 Grok이 공유한다 — 두 런타임의 출력 스키마가 같다.
+function Invoke-MnemoAnchorEmit {
+    param([string]$Root, [string]$Target, [string]$Session)
+    $target = $Target
+    $index = Join-Path $Root "memory/.mnemo-anchor-index.md"
+    if (-not (Test-Path -LiteralPath $index)) { return }
+
+    # 같은 파일을 한 세션에서 반복 주입하지 않는다. 세션이 바뀌면 표시를 비운다.
+    $seen = Join-Path $Root "memory/.mnemo-anchor-seen"
+    $lines = @()
+    if (Test-Path -LiteralPath $seen) {
+        $lines = @(Get-Content -LiteralPath $seen -Encoding UTF8 -ErrorAction SilentlyContinue)
+    }
+    if ($lines.Count -eq 0 -or $lines[0] -ne $Session) { $lines = @($Session) }
+    elseif ($lines -contains $target) { return }
+
+    # 색인에서 해당 파일 절만 읽는다.
+    $found = @()
+    $collecting = $false
+    foreach ($line in (Get-Content -LiteralPath $index -Encoding UTF8 -ErrorAction SilentlyContinue)) {
+        if ($collecting) {
+            if ($line.StartsWith("## ")) { break }
+            if ($line.StartsWith("- ")) { $found += $line }
+        } elseif ($line -eq "## $target") { $collecting = $true }
+    }
+    if ($found.Count -eq 0) { return }
+
+    $lines += $target
+    try {
+        [System.IO.File]::WriteAllLines($seen, $lines, (New-Object System.Text.UTF8Encoding $false))
+    } catch { return }
+
+    $context = "이 파일에 기대는 결정입니다. 뒤집는다면 해당 기억 항목에 SUPERSEDED와 바꾼 이유를 남기세요.`n" +
+               ($found -join "`n")
+    $payload = @{ hookSpecificOutput = @{ hookEventName = "PostToolUse"; additionalContext = $context } }
+    $payload | ConvertTo-Json -Compress -Depth 5
+}
+# Grok 경로: 봉투가 camelCase(toolName/toolInput)이고 transcript_path가 없다.
+# 저장은 grok-mnemo가 전담하므로 조회만 하고 끝낸다. 루트는 payload의 workspaceRoot/cwd를
+# 그대로 쓴다 — 읽기와 seen 표시뿐이고 색인이 없으면 아무것도 하지 않는다.
+function Invoke-MnemoGrokAnchor {
+    param($Payload)
+    $root = if ($Payload.workspaceRoot) { "$($Payload.workspaceRoot)" } elseif ($Payload.cwd) { "$($Payload.cwd)" } else { $null }
+    if (-not $root) { return }
+    $root = $root.TrimEnd([char]'/', [char]'\')
+    if (-not (Test-Path -LiteralPath (Join-Path $root "memory/.mnemo-anchor-index.md"))) { return }
+
+    $toolArgs = if ($null -ne $Payload.toolInput) { $Payload.toolInput } else { $Payload.tool_input }
+    if ($null -eq $toolArgs) { return }
+    $target = $null
+    foreach ($key in @("file_path", "filePath", "notebook_path", "path")) {
+        $prop = $toolArgs.PSObject.Properties[$key]
+        if ($prop -and $prop.Value) { $target = ("$($prop.Value)" -replace '\\', '/'); break }
+    }
+    if (-not $target) { return }
+    $base = ($root -replace '\\', '/').TrimEnd('/')
+    if ($target.StartsWith($base + '/', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $target = $target.Substring($base.Length + 1)
+    } elseif ($target -match '^(/|[A-Za-z]:/)') { return }
+    if ($target -match '^(memory/|conversations/|docs/handoffs/)') { return }
+
+    $session = if ($Payload.sessionId) { "$($Payload.sessionId)" } elseif ($Payload.session_id) { "$($Payload.session_id)" } else { "unknown" }
+    Invoke-MnemoAnchorEmit -Root $root -Target $target -Session $session
+}
+
+if ($env:GROK_HOOK_EVENT) {
+    Invoke-MnemoGrokAnchor -Payload $json
+    exit 0
+}
+
+# MNEMO_ANCHOR_END
+
 $toolName = $json.tool_name
 $toolInput = $json.tool_input
 
@@ -109,6 +224,10 @@ if (-not $ProjectRoot) { exit 0 }
 
 # 기록용 도구 입력: 경로 필드를 루트 기준 상대경로로 바꾼다 (toollog·관찰 로그 공용)
 $toolInput = ConvertTo-MnemoRelativeInput -ToolInput $toolInput -Root $ProjectRoot
+
+$sessionForAnchor = if ($json.session_id) { "$($json.session_id)" } else { "unknown" }
+Invoke-MnemoAnchorNotify -Root $ProjectRoot -Tool $toolName -ToolInput $toolInput -Session $sessionForAnchor
+
 
 # 대화 로그 경로
 if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot '.mnemo-root'))) { [System.IO.File]::WriteAllText((Join-Path $ProjectRoot '.mnemo-root'), '', (New-Object System.Text.UTF8Encoding $false)) }

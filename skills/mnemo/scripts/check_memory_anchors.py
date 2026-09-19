@@ -131,7 +131,9 @@ CLI_HOME_BASENAMES = {
     ".codex-sync-manifest.json", "claude.cmd", "claude.md", "agents.md", "gemini.md",
 }
 # 훅·정제가 만들었다 지우는 일시 파일. 없는 순간이 정상 상태다.
-TRANSIENT_BASENAMES = {".mnemo-status.md", ".mnemo-distill-offset", ".mnemo-root", ".mnemo-index.json"}
+TRANSIENT_BASENAMES = {".mnemo-status.md", ".mnemo-distill-offset", ".mnemo-root", ".mnemo-index.json",
+                       ".mnemo-anchor-index.md", ".mnemo-anchor-seen", ".mnemo-anchor-pending",
+                       ".mnemo-doctor-chart.md"}
 
 
 def build_filesystem_index(root: Path) -> dict:

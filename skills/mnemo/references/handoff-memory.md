@@ -8,8 +8,14 @@
 1. 확정된 프로젝트 루트의 `memory/architecture.md`, `memory/architecture/index.md`와
    연결 항목, `MEMORY.md`가 연결한 아키텍처·설계 기억의 실제 본문을 확인한다.
    제목·메타데이터·빈 scaffold·끊긴 링크만 있으면 기억이 있다고 보지 않는다.
-2. 본문이 없을 때만 `python "<module_root>/scripts/mnemo_doctor.py" --project-root "<root>"`를
-   한 번 실행한다. `--fix`, 분할·재분류 `--apply`는 이 자동 절차에 포함하지 않는다.
+2. 본문이 없을 때, **또는 마지막 닥터 방문이 30일을 넘었을 때** 한 번 실행한다:
+   `python "<module_root>/scripts/mnemo_doctor.py" --project-root "<root>" --chart`.
+   주기 방아쇠가 없으면 기억이 있는 프로젝트에서는 조건부 진단이 영원히 건너뛰어, 점검이
+   사람의 기억에만 의존한다. 방문 시각은 차트(`memory/.mnemo-doctor-chart.md`)에서 읽고
+   `--chart`로 이번 방문을 남겨야 다음 핸드오프가 차이만 보고하고 타이머가 다시 시작된다.
+   `--fix`, `--promote-structure`, 분할·재분류 `--apply`는 이 자동 절차에 포함하지 않는다.
+   주기 실행이 내미는 작업목록은 **프로젝트 전체 백로그**다. 이번 세션 범위의 점검(결정이
+   기억까지 갔는가, 대체 대상이 실재하는가)은 `validate_handoff.py`가 따로 본다.
    `create_handoff.py`는 이 조건 검사와 진단을 수행하므로 같은 핸드오프에서 중복 실행하지 않는다.
 3. Python/Node 또는 도구가 없거나 실행이 실패하면 `NOT RUN/ERROR`와 이유를 남긴다.
    핸드오프는 계속 작성하되 검사 성공·기억 복구 완료로 보고하지 않는다.

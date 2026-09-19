@@ -17,6 +17,7 @@ Usage:
 import os
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
@@ -255,6 +256,61 @@ def calculate_quality_score(
     return score, rating
 
 
+def decision_rows(content: str) -> list[dict]:
+    """Decisions Made 표의 실제 행. 스캐폴드 플레이스홀더는 행이 아니다."""
+    section = re.search(r'#{2,4}\s*Decisions Made\s*\n(.*?)(?=\n#{2,4}\s|\Z)', content, re.S | re.I)
+    if not section:
+        return []
+    rows = []
+    for line in section.group(1).splitlines():
+        if not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 2 or not cells[0]:
+            continue
+        if re.match(r'^[-: ]+$', cells[0]) or cells[0].lower() == "decision":
+            continue
+        if cells[0].startswith("[TODO") or cells[0] in ("-", "—", "N/A", "없음"):
+            continue
+        rows.append({"decision": cells[0], "supersedes": cells[3] if len(cells) > 3 else ""})
+    return rows
+
+
+def check_decisions_reached_memory(content: str, root: Path) -> tuple[list[str], list[str]]:
+    """이 세션의 결정이 기억까지 갔는가 — 이번 세션 범위의 점검.
+
+    닥터는 프로젝트 전체 백로그를 본다. 인계하려는 사람 앞에 그것을 펼치면 읽지 않게 되고,
+    핸드오프가 "기존 백로그는 처리하지 않는다"고 정한 것과도 어긋난다. 여기서 보는 것은
+    이번 핸드오프가 적은 결정뿐이다: 기억으로 갔는가, 대체 대상이 실재하는가.
+
+    핸드오프는 사건의 기록이라 곧 과거가 되고, 항목은 모든 미래 세션이 읽는 줄기다.
+    결정이 핸드오프에만 남으면 다음 세션은 그것을 찾지 못한다.
+    """
+    problems, notes = [], []
+    rows = decision_rows(content)
+    if not rows:
+        return problems, notes
+
+    created = re.search(r'-\s*Created:\s*(\d{4}-\d{2}-\d{2})', content)
+    day = created.group(1) if created else None
+
+    # 대체 대상으로 적은 항목이 실재하는가 (기계적 확인)
+    for row in rows:
+        for stem in re.findall(r'\[\[([^\]|#]+)\]\]', row["supersedes"]):
+            if not list((root / "memory").glob(f"*/{stem}.md")):
+                problems.append(f"대체 대상 [[{stem}]] 을(를) memory/ 에서 찾지 못했습니다")
+
+    # 결정을 적었는데 그날 기억 항목이 하나도 손대지 않았다면, 그 결정은 핸드오프에만 있다.
+    if day:
+        touched = [p for p in (root / "memory").glob("*/[0-9]*.md")
+                   if ".bak-" not in p.name
+                   and datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d") == day]
+        if not touched:
+            notes.append(f"결정 {len(rows)}건을 적었지만 {day}에 기억 항목이 갱신되지 않았습니다 — "
+                         "핸드오프는 이 세션과 함께 과거가 됩니다. 재사용할 결정은 memory/ 항목으로 옮기세요")
+    return problems, notes
+
+
 def validate_handoff(filepath: str) -> dict:
     """Run all validations on a handoff file."""
     path = Path(filepath)
@@ -278,6 +334,7 @@ def validate_handoff(filepath: str) -> dict:
     missing_recommended = check_recommended_sections(content)
     secrets_found = scan_for_secrets(content)
     existing_files, missing_files = check_file_references(content, str(base_path))
+    memory_problems, memory_notes = check_decisions_reached_memory(content, Path(base_path))
 
     # Calculate score
     score, rating = calculate_quality_score(
@@ -299,6 +356,8 @@ def validate_handoff(filepath: str) -> dict:
         "secrets_found": secrets_found,
         "files_verified": len(existing_files),
         "files_missing": missing_files[:5],  # Limit output
+        "memory_problems": memory_problems,
+        "memory_notes": memory_notes,
     }
 
 
@@ -353,6 +412,16 @@ def print_report(result: dict):
     else:
         print(f"\n[INFO] {result['files_verified']} file reference(s) verified")
 
+    # 이 세션의 결정이 기억까지 갔는가 (이번 세션 범위 — 프로젝트 전체 백로그는 닥터의 몫)
+    if result.get('memory_problems'):
+        print("\n[FAIL] 결정이 가리키는 기억 항목을 찾지 못했습니다:")
+        for problem in result['memory_problems']:
+            print(f"       - {problem}")
+    if result.get('memory_notes'):
+        print("\n[WARN] 결정이 기억으로 가지 않았습니다:")
+        for note in result['memory_notes']:
+            print(f"       - {note}")
+
     # Recommended sections
     if result['missing_recommended']:
         print(f"\n[INFO] Consider adding these sections:")
@@ -364,6 +433,10 @@ def print_report(result: dict):
     # Final verdict
     if result['secrets_found']:
         print("Verdict: BLOCKED - Remove secrets before handoff")
+        return False
+    elif result.get('memory_problems'):
+        # 대체 대상이 실재하지 않으면 계보가 끊긴다. 기계적으로 확인되는 문제라 게이트로 막는다.
+        print("Verdict: NEEDS WORK - 대체 대상 기억 항목을 만들거나 참조를 고치세요")
         return False
     elif not result['todos_clear'] or not result['required_complete']:
         print("Verdict: NEEDS WORK - Complete required sections")

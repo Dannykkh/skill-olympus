@@ -61,9 +61,115 @@ function safety(payload) {
       warnings.push(`New utility-like file: ${candidate}. Check whether an existing composition point should own the logic.`);
     }
   }
+  recordAnchorTargets(payload);
   return warnings.length > 0
     ? { decision: "allow", reason: warnings.join("\n") }
     : { decision: "allow" };
+}
+
+// ── 앵커 조회 (Antigravity 어댑터) ─────────────────────────────────────
+// Claude는 PostToolUse 하나로 끝난다 — 도구 인자를 받고 additionalContext로 주입한다.
+// Antigravity는 그 둘이 다른 이벤트에 나뉘어 있다:
+//   PostToolUse  → toolCall.args 를 받지만 출력이 빈 객체라 주입할 수 없다
+//   PostInvocation → injectSteps 로 주입할 수 있지만 어떤 도구였는지 모른다
+// 그래서 두 단이다. 앞단이 경로만 적고, 뒷단이 그걸 읽어 넘긴다.
+//
+// 앞단은 새 프로세스를 띄우지 않는다. 이미 편집 도구에만 걸려 도는 safety 훅에 얹는다
+// (matcher: write_to_file|replace_file_content|multi_replace_file_content).
+// 근거: memory/architecture/057-hook-budget-llm-never-process-rarely-constant-time-per-tool.md
+const ANCHOR_INDEX = "memory/.mnemo-anchor-index.md";
+const ANCHOR_PENDING = "memory/.mnemo-anchor-pending";
+const ANCHOR_SEEN = "memory/.mnemo-anchor-seen";
+
+function relativeToRoot(candidate, root) {
+  const normalized = String(candidate || "").replace(/\\/g, "/").trim();
+  if (!normalized) return null;
+  const base = root.replace(/\\/g, "/").replace(/\/+$/, "");
+  if (normalized.toLowerCase().startsWith(`${base.toLowerCase()}/`)) {
+    return normalized.slice(base.length + 1);
+  }
+  if (/^(?:\/|[A-Za-z]:\/)/.test(normalized)) return null; // 루트 밖
+  return normalized.replace(/^\.\//, "");
+}
+
+function recordAnchorTargets(payload) {
+  try {
+    const root = workspaceRoot(payload);
+    if (!fs.existsSync(path.join(root, ANCHOR_INDEX))) return; // 색인이 없으면 할 일도 없다
+    const pending = path.join(root, ANCHOR_PENDING);
+    const existing = fs.existsSync(pending)
+      ? fs.readFileSync(pending, "utf8").split(/\r?\n/).filter(Boolean)
+      : [];
+    const added = [];
+    for (const candidate of toolPaths(payload)) {
+      const target = relativeToRoot(candidate, root);
+      if (!target) continue;
+      if (/^(?:memory|conversations|docs\/handoffs)\//.test(target)) continue;
+      if (existing.includes(target) || added.includes(target)) continue;
+      added.push(target);
+    }
+    if (added.length === 0) return;
+    fs.appendFileSync(pending, `${added.join("\n")}\n`, "utf8");
+  } catch {
+    // 안전 훅의 판정을 앵커 기록 실패로 막지 않는다.
+  }
+}
+
+function anchorSection(indexText, target) {
+  const lines = indexText.split(/\r?\n/);
+  const found = [];
+  let collecting = false;
+  for (const line of lines) {
+    if (collecting) {
+      if (line.startsWith("## ")) break;
+      if (line.startsWith("- ")) found.push(line);
+    } else if (line === `## ${target}`) {
+      collecting = true;
+    }
+  }
+  return found;
+}
+
+function anchor(payload) {
+  // PostInvocation: 앞단이 적어 둔 경로를 읽어 대화 흐름에 한 줄 끼워 넣는다.
+  // 같은 파일은 한 대화에서 한 번만 — 매 호출 반복하면 잡음이 된다.
+  const empty = {};
+  try {
+    const root = workspaceRoot(payload);
+    const pending = path.join(root, ANCHOR_PENDING);
+    if (!fs.existsSync(pending)) return empty;
+    const targets = fs.readFileSync(pending, "utf8").split(/\r?\n/).filter(Boolean);
+    fs.rmSync(pending, { force: true });
+    if (targets.length === 0) return empty;
+
+    const indexPath = path.join(root, ANCHOR_INDEX);
+    if (!fs.existsSync(indexPath)) return empty;
+    const indexText = fs.readFileSync(indexPath, "utf8");
+
+    const seenPath = path.join(root, ANCHOR_SEEN);
+    const conversation = String(payload.conversationId || "unknown");
+    let seen = [];
+    if (fs.existsSync(seenPath)) {
+      seen = fs.readFileSync(seenPath, "utf8").split(/\r?\n/).filter(Boolean);
+    }
+    if (seen[0] !== conversation) seen = [conversation];
+
+    const blocks = [];
+    for (const target of targets) {
+      if (seen.includes(target)) continue;
+      const found = anchorSection(indexText, target);
+      if (found.length === 0) continue;
+      seen.push(target);
+      blocks.push(`${target}\n${found.join("\n")}`);
+    }
+    if (blocks.length === 0) return empty;
+    fs.writeFileSync(seenPath, `${seen.join("\n")}\n`, "utf8");
+    const message = "이 파일에 기대는 결정입니다. 뒤집는다면 해당 기억 항목에 SUPERSEDED와 바꾼 이유를 남기세요.\n"
+      + blocks.join("\n\n");
+    return { injectSteps: [{ ephemeralMessage: message }] };
+  } catch {
+    return empty; // 주입 실패가 실행을 막지 않는다
+  }
 }
 
 function parseFrontmatter(content) {
@@ -169,8 +275,10 @@ function chronos(payload) {
 try {
   const operation = process.argv[2] || "safety";
   const payload = readPayload();
-  emit(operation === "chronos" ? chronos(payload) : safety(payload));
+  // anchor(PostInvocation)는 판정 훅이 아니다 — 실패해도 빈 객체를 내고 실행을 막지 않는다.
+  if (operation === "anchor") emit(anchor(payload));
+  else emit(operation === "chronos" ? chronos(payload) : safety(payload));
 } catch (error) {
   console.error(`[antigravity-hook] ${error.message || error}`);
-  emit({ decision: "allow" });
+  emit(process.argv[2] === "anchor" ? {} : { decision: "allow" });
 }
