@@ -51,6 +51,10 @@ SCRIPTS = Path(__file__).resolve().parent
 MEMORY_INDEX_MAX_LINES = 100
 MEMORY_INDEX_MAX_BYTES = 5 * 1024
 
+# 외부 사실(다른 런타임의 동작, 공식 문서)에 기댄 결정의 재확인 주기.
+# 만료가 아니라 '다시 재 볼 때'다 — 013은 틀린 줄을 달고 165일을 CURRENT로 있었다.
+EXTERNAL_VERIFY_DAYS = 90
+
 
 class Report:
     """진단 결과. OK/WARN/FAIL과 근거를 함께 들고 있는다."""
@@ -1008,6 +1012,72 @@ def check_decision_reasons(root: Path, report: Report) -> dict:
     return metrics
 
 
+def check_open_decisions(root: Path, report: Report) -> dict:
+    """살아 있는 결정이 자기를 뒤집을 조건을 말하는가.
+
+    `CURRENT`는 "아직 맞다"가 아니라 "아직 대체되지 않았다"는 뜻이다. 반박할 수 없는 결정은
+    아무도 반박하지 않는 한 영원히 현재로 남고, 그러면 결정이 아니라 관습이 된다.
+    그래서 각 항목은 **무엇이 바뀌면 다시 보는지**를 말해야 한다. 만료일이 아니다 —
+    오래됐다고 무효가 되는 것이 아니라, 되돌릴 조건을 남겨 논쟁이 0이 아니라
+    중간에서 다시 시작되게 하는 것이다. 말할 조건이 정말 없으면 `none — <이유>`로 적는다.
+
+    외부 사실(공식 문서·다른 런타임의 동작)에 기댄 결정은 우리가 아무것도 안 해도 낡는다.
+    그런 항목에는 `last_verified:`를 함께 본다 — 실측으로 확인한 마지막 날이다.
+    """
+    entries = list(iter_entry_blocks(root))
+    metrics = {"live": 0, "reopen_missing": 0, "external": 0, "verify_stale": 0}
+    if not entries:
+        return metrics
+
+    closed, stale = [], []
+    today = datetime.now()
+    for path, block in entries:
+        clean = without_fences(block)
+        if entry_status(clean) == "SUPERSEDED":
+            continue
+        metrics["live"] += 1
+        if not re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*reopen-when[`*]*\s*:', clean):
+            metrics["reopen_missing"] += 1
+            if len(closed) < 5:
+                closed.append(path.name)
+        # 외부 사실에 기댄 결정만 재확인 대상이다. 우리 설계는 시간으로 낡지 않는다.
+        if not re.search(r'(?im)https?://|^\s*(?:[-*]\s*)?[`*]*sources[`*]*\s*:', clean):
+            continue
+        metrics["external"] += 1
+        # `last_verified:` 2026-09-20 처럼 콜론 뒤에 백틱이 남는 표기를 함께 받는다.
+        verified = re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*last_verified[`*]*\s*:[`*\s]*(\d{4}-\d{2}-\d{2})', clean)
+        if not verified:
+            metrics["verify_stale"] += 1
+            if len(stale) < 5:
+                stale.append(f"{path.name}(미확인)")
+            continue
+        try:
+            age = (today - datetime.strptime(verified.group(1), "%Y-%m-%d")).days
+        except ValueError:
+            continue
+        if age > EXTERNAL_VERIFY_DAYS:
+            metrics["verify_stale"] += 1
+            if len(stale) < 5:
+                stale.append(f"{path.name}({age}일)")
+
+    detail = (f"살아 있는 결정 {metrics['live']}개 중 되돌릴 조건 없음 {metrics['reopen_missing']} · "
+              f"외부 사실에 기댄 것 {metrics['external']} 중 재확인 필요 {metrics['verify_stale']}")
+    if closed:
+        detail += " / 조건 없음: " + ", ".join(closed)
+    if stale:
+        detail += " / 재확인: " + ", ".join(stale)
+    hint = None
+    if metrics["reopen_missing"]:
+        hint = ("`reopen-when:`은 만료일이 아니라 **되돌릴 조건**입니다. 무엇이 바뀌면 다시 보는지 적으면 "
+                "다음 사람이 0이 아니라 그 지점에서 논쟁을 시작합니다. 정말 없으면 `none — <이유>`로 적으세요.")
+    elif metrics["verify_stale"]:
+        hint = (f"외부 사실은 우리가 아무것도 안 해도 낡습니다. 실측으로 다시 확인하고 "
+                f"`last_verified:`를 갱신하세요 (기준 {EXTERNAL_VERIFY_DAYS}일).")
+    level = "WARN" if (metrics["reopen_missing"] or metrics["verify_stale"]) else "OK"
+    report.add(level, "열린 결정", detail, hint)
+    return metrics
+
+
 def _has_reason(context: str) -> bool:
     """교체 표시 옆에 이유가 남아 있는가. 표시·링크·날짜를 걷어낸 나머지로 본다."""
     text = re.sub(r'~~.*?~~', ' ', context)
@@ -1215,8 +1285,10 @@ def append_chart(root: Path, metrics: dict, fixed: list, fix: bool) -> None:
     lines.append(f"<!-- metrics {json.dumps(metrics, ensure_ascii=False, sort_keys=True)} -->")
     lines.append("- 수치: " + " · ".join(f"{key} {value}" for key, value in sorted(metrics.items())))
     lines.append("- 고친 것: " + ("; ".join(fixed) if fixed else "없음"))
-    lines.append("- 미룸: 이유 없는 SUPERSEDED {0}건 · 앵커가 산문에만 {1}건 · 신호 있는 미부착 {2}일".format(
-        metrics.get("supersede_no_reason", 0), metrics.get("prose_only", 0), metrics.get("signal_days", 0)))
+    lines.append("- 미룸: 이유 없는 SUPERSEDED {0}건 · 앵커가 산문에만 {1}건 · 신호 있는 미부착 {2}일 · "
+                 "되돌릴 조건 없음 {3}건 · 외부 사실 재확인 {4}건".format(
+        metrics.get("supersede_no_reason", 0), metrics.get("prose_only", 0), metrics.get("signal_days", 0),
+        metrics.get("reopen_missing", 0), metrics.get("verify_stale", 0)))
     lines.append("")
     with path.open("a", encoding="utf-8", newline="\n") as handle:
         handle.write("\n".join(lines))
@@ -1231,7 +1303,8 @@ def report_chart_delta(previous: dict, metrics: dict, report: Report) -> None:
     labels = {"dead_links": "열리지 않는 링크", "prose_only": "앵커가 산문에만",
               "supersede_no_reason": "이유 없는 SUPERSEDED", "stale_depends": "흔들리는 CURRENT",
               "unattached_days": "미부착 날", "evidence": "evidence 줄", "entries": "항목",
-              "status_missing": "status 줄 없음", "signal_days": "신호 있는 미부착"}
+              "status_missing": "status 줄 없음", "signal_days": "신호 있는 미부착", "reopen_missing": "되돌릴 조건 없음",
+              "verify_stale": "외부 사실 재확인 필요", "live": "살아 있는 결정", "external": "외부 사실에 기댄 결정"}
     moved = [f"{labels.get(key, key)} {old[key]}→{metrics[key]}"
              for key in metrics if key in old and old[key] != metrics[key]]
     detail = f"지난 방문 {previous.get('when') or '시각 미상'} 대비 — "
@@ -1280,6 +1353,7 @@ def main():
     metrics = {}
     metrics.update(check_entry_evidence(root, report))
     metrics.update(check_decision_reasons(root, report))
+    metrics.update(check_open_decisions(root, report))
     fixed = promote_structure(root, report) if args.promote_structure else []
     metrics.update(check_unattached_conversations(root, report, chart["ignored"]))
     report_chart_delta(chart, metrics, report)

@@ -14,7 +14,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -166,3 +166,79 @@ class DoctorThreadTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OpenDecisionTests(DoctorThreadTests):
+    """살아 있는 결정이 자기를 뒤집을 조건을 말하는가.
+
+    `CURRENT`는 "아직 맞다"가 아니라 "아직 대체되지 않았다"는 뜻이다. 되돌릴 조건이 없으면
+    아무도 반박하지 않는 한 영원히 현재로 남고, 그러면 결정이 아니라 관습이 된다.
+    실측: 이 레포의 아키텍처 항목 56개 중 조건을 적은 것은 4개(7%)였고, 013은 틀린 줄을 달고
+    165일을 CURRENT로 있었다. 만료일이 아니라 논쟁을 0이 아닌 지점에서 재개하기 위한 장치다.
+    """
+
+    def test_live_entry_without_a_reopening_condition_is_flagged(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            self.entry(root, "060-closed.md", "- 결정: 네이티브 전용\n`status: ✅ CURRENT`")
+            self.assertIn("되돌릴 조건 없음 1", self.run_doctor(root))
+
+            self.entry(root, "060-closed.md",
+                       "- 결정: 네이티브 전용\n`status: ✅ CURRENT`\n"
+                       "`reopen-when:` 세 결함(경합·spawn 실패 무감지·복원 미구현)이 고쳐지면 다시 본다")
+            self.assertIn("되돌릴 조건 없음 0", self.run_doctor(root))
+
+    def test_none_with_a_reason_counts_as_stated(self):
+        """조건이 정말 없을 수도 있다. 그때는 그렇게 적는 것이 열린 기록이다."""
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            self.entry(root, "061-permanent.md",
+                       "- 결정: 기억은 프로젝트 로컬\n`status: ✅ CURRENT`\n"
+                       "`reopen-when:` none — 저장 경계는 이 시스템의 정의이고 외부 사실에 기대지 않는다")
+            self.assertIn("되돌릴 조건 없음 0", self.run_doctor(root))
+
+    def test_superseded_entries_are_not_asked_for_a_condition(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            self.entry(root, "062-old.md", "- 옛 결정\n`status: ❌ SUPERSEDED`")
+            out = self.run_doctor(root)
+            self.assertIn("살아 있는 결정 0개", out)
+
+    def test_external_facts_need_a_verification_date(self):
+        """우리 설계는 시간으로 낡지 않지만 다른 런타임의 동작은 낡는다."""
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            self.entry(root, "063-external.md",
+                       "- 결정: 저쪽 런타임은 PostToolUse가 없다\n`status: ✅ CURRENT`\n"
+                       "`reopen-when:` 저쪽이 이벤트를 추가하면\n"
+                       "`sources:` https://example.org/docs/hooks")
+            self.assertIn("재확인 필요 1", self.run_doctor(root))
+
+            fresh = datetime.now().strftime("%Y-%m-%d")
+            self.entry(root, "063-external.md",
+                       "- 결정: 저쪽 런타임은 PostToolUse가 없다\n`status: ✅ CURRENT`\n"
+                       "`reopen-when:` 저쪽이 이벤트를 추가하면\n"
+                       "`sources:` https://example.org/docs/hooks\n"
+                       f"`last_verified:` {fresh}")
+            self.assertIn("재확인 필요 0", self.run_doctor(root))
+
+    def test_a_stale_verification_date_is_raised_again(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            old = (datetime.now() - timedelta(days=200)).strftime("%Y-%m-%d")
+            self.entry(root, "064-stale.md",
+                       "- 결정: 외부 사실에 기댄다\n`status: ✅ CURRENT`\n"
+                       "`reopen-when:` 저쪽이 바뀌면\n"
+                       "`sources:` https://example.org/docs\n"
+                       f"`last_verified:` {old}")
+            out = self.run_doctor(root)
+            self.assertIn("재확인 필요 1", out)
+            self.assertIn("200일", out)
+
+    def test_internal_decisions_are_not_asked_to_re_verify(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            self.entry(root, "065-internal.md",
+                       "- 결정: 항목 ID가 키다\n`status: ✅ CURRENT`\n`reopen-when:` 번호가 의미를 잃으면")
+            out = self.run_doctor(root)
+            self.assertIn("외부 사실에 기댄 것 0", out)

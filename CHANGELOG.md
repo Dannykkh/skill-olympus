@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.11.0] - 2026-09-20
+
+### Features
+
+- Keep decisions open. `CURRENT` only ever meant "not yet replaced", never "still true", so a decision nobody thinks to refute quietly becomes a habit: of 56 live architecture entries only 4 stated what would change their mind, and one carried a claim contradicted by its own runtime's documentation for 165 days without anything noticing. Entries now carry `reopen-when:` - not an expiry date, but the condition that would reopen the argument, so the next person starts from that point instead of from zero. `none - <reason>` is a valid answer and is itself an open record.
+- Separate the two ways a decision decays. Our own design ages when its stated condition changes, which `reopen-when:` already covers. A decision resting on an external fact - another runtime's behaviour, a vendor's documentation - ages while we do nothing at all, so entries citing external sources also carry `last_verified:`, the day the fact was last measured. `mnemo_doctor.py` gains a 17th check that lists live entries with no reopening condition and external entries whose verification is missing or older than 90 days.
+- Correct the record the new check was built to catch: entry 013's line "neither Codex nor Gemini has PostToolUse" is superseded by measurement - Antigravity documents `PostToolUse` and Grok loads Claude's `post_tool_use` hook directly. Only that line is replaced; Codex's structural limit (a single turn-level `notify`) remains current, and today's entries carry their own reopening conditions and verification dates.
+
 ## [6.10.0] - 2026-09-20
 
 ### Features
