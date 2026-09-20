@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.11.1] - 2026-09-20
+
+### Bug Fixes
+
+- Prevent Windows SMB network timeout on UNC and protocol-relative paths in `mnemo_doctor.py`. When inspecting memory entries, tokens starting with `//` (such as `//github.com/...` or `//developers.openai.com/...`) and `\\` were treated as absolute file paths and triggered `os.path.exists()` calls, causing Windows to attempt SMB network resource lookups with severe connection timeouts (30-60 seconds per token) and hanging doctor diagnosis. Early guards in `_is_absolute_text` and `_canonical` bypass UNC lookups, reducing diagnosis run time from minutes to 3 seconds on Windows while keeping all 39 tests green.
+
 ## [6.11.0] - 2026-09-20
 
 ### Features

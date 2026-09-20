@@ -440,6 +440,8 @@ ABSOLUTE_PATH_TOKEN = re.compile(r'(?<![\w/.\\-])(?:[A-Za-z]:[\\/]|/)[^\s`"\'()<
 
 
 def _is_absolute_text(value: str) -> bool:
+    if value.startswith("//") or value.startswith(r"\\"):
+        return False
     return bool(re.match(r'^(?:[A-Za-z]:[\\/]|/)', value))
 
 
@@ -471,6 +473,8 @@ def _canonical(value: str) -> str:
     # 디렉터리 단위로 재귀·캐시한다. 기록 수천 줄이 수백 개 디렉터리를 공유하므로 존재 검사는
     # 디렉터리마다 한 번이면 된다(줄마다 조상 전체를 검사하면 프로젝트 하나에 몇 분이 걸린다).
     text = value.replace("\\", "/")
+    if text.startswith("//"):
+        return text
     head, sep, tail = text.rpartition("/")
     if not sep or not tail or head.endswith(":") and not head[:-1]:
         return text
