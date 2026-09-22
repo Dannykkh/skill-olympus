@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.12.0] - 2026-09-22
+
+### Features
+
+- **mnemo**: Bundle Mnemo-owned session learning, project-local skill candidate selection, and bounded comparative evaluation in all four adapters. Standalone installation no longer needs the shared skill-evolve, autoresearch, or memory-distill procedures; their existing callers remain unchanged. Handoffs record candidates without starting an optimization loop. (eb31dc7)
+
+### Bug Fixes
+
+- **mnemo**: Require paired `--origin` and `--origin-source` evidence for handoff origins. Leave unconfirmed origins as TODO and link previous handoffs only through explicit `--continues-from`, avoiding unrelated prompts from combined daily conversations. (eb31dc7)
+- **installer**: Load the improvement bundler only when synchronizing a Mnemo adapter, preserving minimal skill libraries that do not include Mnemo. (eb31dc7)
+
+### Documentation
+
+- Update English, Korean, Japanese, and Chinese README guidance with installation, the dedicated improvement workflow, and remaining implementation boundaries. (eb31dc7)
+
+### Validation and Scope
+
+- 29 installer, routing, policy, and version tests passed; all four skill frontmatter checks passed. Handoff Origin regression tests passed (21 tests).
+- All four actual local Mnemo installations passed installation diagnostics; 40 key files matched their canonical sources. Installed-tool checks passed (4 tests), including handoff generation from all four adapters without a source checkout.
+- Project instruction-block auto-initialization and doctor integration for improvement candidates remain unimplemented. Live LLM improvement quality has not been measured. No Jev API is used.
+
 ## [6.11.1] - 2026-09-20
 
 ### Bug Fixes
