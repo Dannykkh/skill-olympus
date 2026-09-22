@@ -270,3 +270,9 @@ node --test scripts/tests/*.test.js
 **最后更新：** 2026-09-01
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v6.12.0 — Mnemo 更新
+
+Claude Code、Codex、Antigravity 和 Grok 的 Mnemo 适配器现已包含专用的会话学习、项目本地技能改进及对比评估流程。单独安装无需共享的 `skill-evolve`、`autoresearch` 或 `memory-distill` 技能。交接时通过 `--origin` 和 `--origin-source` 成对传入已确认的需求与证据，不再推测来源。Windows 使用 `install.bat` 更新，macOS/Linux 使用 `bash install.sh`。项目规则自动初始化和 doctor 候选改进集成尚未实现，LLM 改进判断质量尚未测量。
+
+[专用流程](skills/mnemo/references/self-improvement.md) · [更新日志](CHANGELOG.md)

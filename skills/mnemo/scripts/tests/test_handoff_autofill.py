@@ -2,10 +2,10 @@
 
 핸드오프에서 가장 비어 있던 칸은 Origin의 '요구'(37건 중 4건)와 '무엇을 대체하나'였다.
 둘 다 쓰는 사람이 기억해내야 하는데, 쓰는 시점은 컨텍스트가 찬 세션 끝이다.
-근거는 이미 기록에 있다 — 요구는 대화 훅의 첫 사용자 턴에, 바뀐 파일은 관찰 로그에,
+요구는 현재 CLI가 세션 문맥에서 명시적으로 전달하고, 바뀐 파일은 관찰 로그에서,
 대체 후보는 그 파일을 근거로 삼는 기존 기억 항목에. 스캐폴드가 그것을 가져온다.
 
-판정은 여전히 사람이 한다. 후보는 대체를 주장하지 않고, 요구는 `추정`으로 표시한다.
+판정은 여전히 에이전트가 한다. 후보는 대체를 주장하지 않고, 미확인 요구는 빈칸으로 둔다.
 """
 
 import json
@@ -38,19 +38,50 @@ class HandoffAutofillTests(unittest.TestCase):
         (root / "conversations").mkdir()
         return root
 
-    def test_origin_requirement_comes_from_the_first_user_turn(self):
+    def test_unscoped_daily_requests_are_not_used_as_origin(self):
         with tempfile.TemporaryDirectory() as temp:
             root = self.project(temp)
-            (root / "conversations" / f"{TODAY}-claude.md").write_text(
-                "# 대화\n\n## [09:12] User\n\n관찰 로그가 회전할 때 오프셋이 음수가 되는 문제를 고쳐줘\n\n"
-                "## [09:13:02] Assistant\n\n확인하겠습니다.\n\n## [09:40] User\n\n계속해\n",
-                encoding="utf-8")
-            text = self.scaffold(root, "offset-fix")
-            self.assertIn("관찰 로그가 회전할 때 오프셋이 음수가 되는 문제를 고쳐줘", text)
-            # 하루에 세션이 여럿일 수 있으므로 단정하지 않는다.
-            self.assertIn("추정", text)
-            # 두 번째 턴("계속해")이 아니라 첫 턴이어야 한다.
-            self.assertNotIn("| 요구 | 계속해", text)
+            for cli in ["claude", "codex"]:
+                (root / "conversations" / f"{TODAY}-{cli}.md").write_text(
+                    "## [09:12] User\n\nGenerate a concise, single-line task title\n"
+                    "## [12:00] User\n\n다른 세션의 요청\n", encoding="utf-8")
+            text = self.scaffold(root, "no-guess")
+            self.assertIn("[TODO: 요청받은 것", text)
+            self.assertNotIn("single-line task title", text)
+            self.assertNotIn("다른 세션의 요청", text)
+
+    def test_explicit_current_origin_wins_over_other_sessions(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            (root / "conversations" / f"{TODAY}-codex.md").write_text(
+                "## [09:12] User\n\nGenerate a concise, single-line task title\n"
+                "## [10:12] User\n\n이전 세션의 버그 수정\n", encoding="utf-8")
+            text = self.scaffold(root, "current", "--origin", "현재 세션: Mnemo | 개선\n검증",
+                                 "--origin-source", "session current-123, user request")
+            self.assertIn("| 요구 | 현재 세션: Mnemo &#124; 개선 검증 |", text)
+            self.assertIn("session current-123", text)
+            self.assertNotIn("single-line task title", text)
+            self.assertNotIn("이전 세션의 버그 수정", text)
+
+    def test_latest_handoff_is_not_implicitly_the_origin(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            old = root / "docs/handoffs/2020-01-01-120000-unrelated.md"
+            old.parent.mkdir(parents=True)
+            old.write_text("# Handoff: unrelated\n", encoding="utf-8")
+            text = self.scaffold(root, "new-task")
+            self.assertNotIn("unrelated", text)
+            self.assertIn("[TODO: 사용자 요청", text)
+
+    def test_partial_or_blank_origin_fails_before_writes(self):
+        for args in [("--origin", "request"), ("--origin-source", "session"),
+                     ("--origin", " ", "--origin-source", "session")]:
+            with self.subTest(args=args), tempfile.TemporaryDirectory() as temp:
+                root = self.project(temp)
+                result = subprocess.run([sys.executable, str(CREATE), "bad", "--project-root", str(root), *args],
+                                        capture_output=True, text=True, encoding="utf-8", timeout=30)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((root / "docs/handoffs").exists())
 
     def test_requirement_stays_a_todo_when_no_conversation_exists(self):
         with tempfile.TemporaryDirectory() as temp:

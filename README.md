@@ -382,7 +382,7 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
-**v6.1.2:** global rules now share request-language replies, memory-first lookup, and scoped source recovery across the four integrated CLIs. Installation guidance explains replacement boundaries and how to customize or remove the rules.
+**v6.12.0:** Mnemo now bundles its own session-learning and project-skill improvement procedures for standalone installation across Claude Code, Codex, Antigravity, and Grok. Handoffs use explicitly supplied request evidence instead of guessing the session origin.
 
 See [CHANGELOG.md](CHANGELOG.md) and [GitHub Releases](https://github.com/Dannykkh/skill-olympus/releases) for the complete history.
 
@@ -512,6 +512,11 @@ without silently adding the optional business, CEO, or documentation stages.
 - **Next:** —
 
 **`mnemo` — Cross-CLI memory (Keeper)**
+
+**Project-skill improvement (v6.12.0).** At handoff, Mnemo reviews current-session lessons and failures, then records candidates only for confirmed project-local skills. A separate evaluation compares a bounded change against the original with held-out inputs and regression checks, recording accepted, rejected, deferred, or not-run outcomes. The current LLM supplies short judgments; no Jev API is required.
+
+The four Mnemo adapters bundle these [dedicated procedures](skills/mnemo/references/self-improvement.md), so standalone installation does not require the shared `skill-evolve`, `autoresearch`, or `memory-distill` skills. Those shared skills remain available to their other callers. Run `install.bat` on Windows or `bash install.sh` on macOS/Linux to update the library; installation locations are listed above. Project instruction-block auto-initialization and doctor integration for improvement candidates are not implemented yet. Installed handoff tools have been tested on all four adapters; LLM improvement quality has not been measured.
+
 - **When:** always — and whenever you ask "what did we do before?"
 - **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks. Opt-out: `MNEMO_DISABLE=1` (version check: `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
 - **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Antigravity/Grok; past-conversation search; auto handoff near the context limit.
@@ -526,7 +531,7 @@ without silently adding the optional business, CEO, or documentation stages.
 | **Right after you edit a file (automatic)** | **"Which decisions rest on this file?" is delivered to the model as hook context, once per file per session.** No lookup is requested and none is typed — knowing which trunk you are on becomes reading, not judgement | `save-tool-use` (Claude, Grok) · `antigravity-hook` (Antigravity) | no |
 | Before touching a file (manual) | The same question on demand, plus "when, why, and how did this file change?" from handoffs. "Nothing found" is a valid answer — it may be a new trunk | `build_anchor_index.py --file X`, `harvest_lineage.py --file X` | yes |
 | When a decision crystallizes | The entry is born holding its evidence: `evidence:` (conversation file + turn time), `alternatives:` (what lost and why, and what would bring it back), `depends-on:`, `sources:`, `files:`. Written then, not later — the moment you know both the old and the new state is the only one | agent, by rule | no |
-| End of session | Scaffold fills `Origin` from the session's first prompt, `Files Modified` from the observation log, and offers the existing entries that rest on the files you touched as supersede candidates; it also rebuilds the anchor index for every CLI. Then validate: a supersede target that does not exist is a gate, and decisions that never reached memory are a warning | `create_handoff.py` → `validate_handoff.py` | yes |
+| End of session | The agent supplies the verified request and evidence with `--origin` and `--origin-source` (both required together); absent evidence stays TODO, and previous handoffs are linked only with `--continues-from`. The scaffold fills `Files Modified` from the observation log, and offers the existing entries that rest on the files you touched as supersede candidates; it also rebuilds the anchor index for every CLI. Then validate: a supersede target that does not exist is a gate, and decisions that never reached memory are a warning | `create_handoff.py` → `validate_handoff.py` | yes |
 | Periodically — and automatically at the first handoff after 30 days | 17 checks; the four added here are entry evidence (links that do not open, anchors living only in prose), decision lineage (`SUPERSEDED` without a reason, a `CURRENT` entry resting on a superseded one) unattached conversations (days no trunk reaches, ranked by decision vocabulary), and open decisions - a live entry that cannot say what would change its mind, because `CURRENT` means "not yet replaced", not "still true", and a decision nobody can refute quietly becomes a habit. `--chart` records the visit so the next one reports only what changed; `--fix` still repairs only the same three mechanical things, and entry bodies are touched only by the separate `--promote-structure` | `mnemo_doctor.py [--chart] [--fix]` | yes |
 | When the doctor points at it | Stale anchors with CodeMap move candidates; promote prose anchors to `files:` lines; split an oversized `memory/X.md`; move observations the old hook misfiled | `check_memory_anchors.py`, `mnemo_doctor.py --promote-structure`, `split_memory_file.py`, `reclassify_observations.py` | yes |
 
@@ -623,7 +628,7 @@ Session B: check/read MEMORY.md → past search → context restored
 Includes deterministic gotcha/learned capture:
 - **Errors** → hooks append scrubbed events to `memory/gotchas/observations.jsonl`
 - **Successes** → hooks append scrubbed events to `memory/learned/observations.jsonl`
-- **Distillation** → the active mnemo adapter reads the source-only `memory-distill` module from the catalog, or a session handoff applies the same contract; there is no always-on analyzer agent
+- **Distillation** → session handoffs use the bundled Mnemo `session-learning.md` procedure for new observations from the current session; explicit backlog rebuilds use the source-only `memory-distill` module. There is no always-on analyzer agent
 - **Backlog diagnosis** → observation logs are append-only and never truncated; backlog is judged by delta against the `.mnemo-distill-offset` marker (hooks handle this via `.mnemo-status.md`), never by cumulative line count
 
 ---

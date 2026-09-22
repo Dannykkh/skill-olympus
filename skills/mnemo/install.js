@@ -256,7 +256,14 @@ function removeHooksConfig(settingsPath) {
 }
 
 // ── Install ──
+function installImprovementModules() {
+  const local = path.join(sourceDir, "scripts/bundle-improvement.js");
+  const helper = fs.existsSync(local) ? local : path.join(sourceDir, "../mnemo/scripts/bundle-improvement.js");
+  require(helper).bundleImprovement(sourceDir, path.join(claudeDir, "skills", "mnemo"));
+}
+
 function install() {
+  installImprovementModules();
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║  MNEMO: Long-Term Memory System Install                       ║

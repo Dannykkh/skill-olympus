@@ -278,3 +278,9 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 **最終更新:** 2026-09-01
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v6.12.0 — Mnemo 更新
+
+Mnemo 専用のセッション学習・プロジェクト内スキル改善・比較評価の手順を、Claude Code、Codex、Antigravity、Grok の各アダプターに同梱しました。単独導入に共有スキル `skill-evolve`、`autoresearch`、`memory-distill` は不要です。引き継ぎは確認した依頼と根拠を `--origin` と `--origin-source` の組で渡し、未指定の出所を推測しません。更新は Windows で `install.bat`、macOS/Linux で `bash install.sh` を実行します。プロジェクト規則の自動初期化と doctor 連携は未実装で、LLM の改善判断品質は未測定です。
+
+[専用手順](skills/mnemo/references/self-improvement.md) · [変更履歴](CHANGELOG.md)

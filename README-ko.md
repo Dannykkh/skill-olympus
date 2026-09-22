@@ -382,7 +382,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
-**v6.1.2:** 통합 CLI 네 개의 전역 지침을 질문 언어 응답·메모리 우선 검색·범위를 좁힌 원본 확인으로 맞췄습니다. 설치 시 교체 범위와 개인 규칙 수정·저장 중지·제거 방법도 안내합니다.
+**v6.12.0:** Mnemo 전용 세션 학습·프로젝트 스킬 개선 절차를 Claude Code·Codex·Antigravity·Grok의 단독 설치에 포함했습니다. 핸드오프 출처는 세션을 추측하지 않고 확인한 요구와 근거를 명시적으로 전달합니다.
 
 전체 이력은 [CHANGELOG.md](CHANGELOG.md)와 [GitHub Releases](https://github.com/Dannykkh/skill-olympus/releases)에서 확인할 수 있습니다.
 
@@ -512,6 +512,11 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 - **다음:** —
 
 **`mnemo` — 크로스-CLI 메모리 (므네모)**
+
+**프로젝트 스킬 개선(v6.12.0).** 핸드오프에서 현재 세션의 교훈과 실패를 검토하고, 프로젝트 전용임이 확인된 로컬 스킬에 대해서만 개선 후보를 기록합니다. 별도 평가 단계에서 제한된 변경을 원본과 비교하고, 별도 검증 입력과 회귀 검사로 채택·기각·보류·미실행을 기록합니다. 현재 LLM이 짧은 판단을 제공하며 Jev API는 필요하지 않습니다.
+
+네 Mnemo 어댑터가 이 [전용 절차](skills/mnemo/references/self-improvement.md)를 함께 설치하므로, Mnemo 단독 사용에 공용 `skill-evolve`·`autoresearch`·`memory-distill` 설치가 필요하지 않습니다. 공용 스킬은 다른 호출처를 위해 유지합니다. 라이브러리 업데이트는 Windows에서 `install.bat`, macOS/Linux에서 `bash install.sh`로 실행합니다. 프로젝트 지침 블록 자동 초기화와 닥터의 개선 후보 연계는 아직 미구현입니다. 네 어댑터의 실제 설치본 핸드오프 도구는 검증했으며, LLM의 개선 판단 품질은 별도 측정이 필요합니다.
+
 - **언제:** 항상 — 그리고 "이전에 뭐 했더라?" 물을 때마다.
 - **사용:** `mnemo` (별칭: 므네모); 매 턴 훅이 자동 저장. opt-out: `MNEMO_DISABLE=1` (버전 체크는 `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
 - **처리:** 세션과 Claude/Codex/Antigravity/Grok을 가로지르는 3계층 메모리; 과거 대화 검색; 컨텍스트 한도 근처에서 자동 핸드오프.
@@ -526,7 +531,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 | **파일을 고친 직후 (자동)** | **"이 파일에 기대는 결정"이 훅 컨텍스트로 모델에게 전달된다. 세션당 파일당 한 번.** 아무도 조회를 요청하지 않는다 — 어느 줄기 위에 있는지가 판단이 아니라 읽기가 된다 | `save-tool-use`(Claude·Grok) · `antigravity-hook`(Antigravity) | 아니오 |
 | 파일에 손대기 전 (수동) | 같은 질문을 직접, 그리고 "이 파일이 언제·왜·어떻게 바뀌었나". **"없음 확인"도 결과** — 새 줄기일 수 있다 | `build_anchor_index.py --file X`, `harvest_lineage.py --file X` | 예 |
 | 결정이 굳는 순간 | 항목이 증거를 들고 태어난다: `evidence:`(대화 파일+턴 시각), `alternatives:`(탈락 대안·왜 졌나·복귀 조건), `depends-on:`, `sources:`, `files:`. **나중이 아니라 그때** — 옛 것과 새 것을 동시에 아는 순간은 그때뿐 | 에이전트, 규칙으로 | 아니오 |
-| 세션 끝 | 스캐폴드가 `Origin`을 그 세션 첫 프롬프트에서, `Files Modified`를 관찰 로그에서 채우고, 고친 파일에 기대는 기존 항목을 **대체 후보**로 내민다. 앵커 색인도 이때 다시 만든다(네 CLI 공용). 검증은 실재하지 않는 대체 대상을 막고, 기억까지 가지 않은 결정을 경고한다 | `create_handoff.py` → `validate_handoff.py` | 예 |
+| 세션 끝 | 에이전트가 확인한 요구와 근거를 `--origin`·`--origin-source` 쌍으로 전달한다. 미입력 출처는 TODO로 남기고 이전 인계는 `--continues-from`으로만 연결한다. 스캐폴드는 `Files Modified`를 관찰 로그에서 채우고, 고친 파일에 기대는 기존 항목을 **대체 후보**로 내민다. 앵커 색인도 이때 다시 만든다(네 CLI 공용). 검증은 실재하지 않는 대체 대상을 막고, 기억까지 가지 않은 결정을 경고한다 | `create_handoff.py` → `validate_handoff.py` | 예 |
 | 주기적 — 그리고 **30일 지난 첫 핸드오프에 자동** | 17개 점검. 새로 더한 넷은 항목 증거(열리지 않는 링크, 산문에만 있는 앵커), 결정 계보(이유 없는 `SUPERSEDED`, 뒤집힌 결정에 기댄 `CURRENT`), 미부착 대화(어느 줄기에도 안 닿는 날을 결정 어휘 순으로), **열린 결정**(무엇이 바뀌면 다시 볼지 말하지 못하는 CURRENT — `CURRENT`는 "아직 맞다"가 아니라 "아직 대체되지 않았다"는 뜻이고, 반박할 수 없는 결정은 관습이 된다). `--chart`가 방문을 남겨 다음 방문이 차이만 말하고, `--fix`는 여전히 같은 기계적인 셋만 고치며 기억 본문은 별도 `--promote-structure`로만 건드린다 | `mnemo_doctor.py [--chart] [--fix]` | 예 |
 | 닥터가 가리킬 때 | 사라진 앵커 + CodeMap 이동 후보; 산문 앵커를 `files:` 줄로 승격; 비대한 `memory/X.md` 분할; 옛 훅이 오분류한 관찰 이동 | `check_memory_anchors.py`, `mnemo_doctor.py --promote-structure`, `split_memory_file.py`, `reclassify_observations.py` | 예 |
 
@@ -617,7 +622,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 오답노트/학습 패턴 결정론적 수집 포함:
 - **에러** → 훅이 민감값을 제거한 이벤트를 `memory/gotchas/observations.jsonl`에 추가
 - **성공** → 훅이 민감값을 제거한 이벤트를 `memory/learned/observations.jsonl`에 추가
-- **정제** → 활성 mnemo 어댑터가 카탈로그의 source-only `memory-distill` 모듈을 직접 읽거나 세션 핸드오프가 같은 계약으로 신규 관찰을 정제하며, 상시 분석 에이전트는 없음
+- **정제** → 세션 핸드오프는 Mnemo에 포함된 `session-learning.md`로 현재 세션의 신규 관찰을 정제한다. 명시적인 백로그 재정제는 source-only `memory-distill`을 사용하며, 상시 분석 에이전트는 없음
 - **백로그 진단** → 관찰 로그는 append-only로 절대 비워지지 않으므로, 백로그 판정은 누적 줄 수가 아니라 `.mnemo-distill-offset` 마커 대비 증분(delta)으로 (훅이 `.mnemo-status.md`로 대행)
 
 ---

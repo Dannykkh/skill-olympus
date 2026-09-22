@@ -497,3 +497,17 @@ GS 실제 실행은 [E1~E6 프로토콜](../skills/gs-certification/references/e
 자동 EVIDENCE_COMPLETE 뒤에도 Clio 문서 검토·Argos 기준/증거 감리가 필요하다.
 재현 가능한 실행기 검증: `python skills/gs-certification/tests/test-evaluation.py`.
 이 샘플 검증은 실제 HTTP의 입력/인가/저장 효과와 집계 게이트 검증이며 전체 GS 품질 영역의 인증 시험이 아니다.
+
+## Mnemo 프로젝트 스킬 개선
+
+Mnemo의 핸드오프는 이번 세션의 교훈에서 프로젝트 스킬 개선 후보를 판별한다.
+전용 내부 모듈은 `project-skill-improvement`이며 별도 slash 등록은 하지 않는다.
+공용 `skill-evolve`는 Aphrodite 등의 기존 호출을 위해 유지한다.
+
+승인된 개선 작업은 Mnemo 전용 `project-skill-evaluation`으로 기준점·별도 평가·회귀·비용을 비교하고,
+채택·기각·보류 결과를 프로젝트 기억에 연결한다. 현재 CLI의 LLM을 사용하며 Jev API는 필요 없다.
+스킬이 설치된 전역 경로와 개선할 프로젝트 로컬 스킬의 경로를 구분한다.
+
+Mnemo 및 세 어댑터의 단독 설치와 공통 동기화는 공용 `memory-distill`, `skill-evolve`, `autoresearch`를
+찾거나 복사하지 않고 전용 정제·개선·검증 절차를 포함한다. 계약 정본은 [자기개선 진입점](../skills/mnemo/references/self-improvement.md)이다.
+프로젝트 지침 관리 블록 자동 초기화와 닥터의 개선 후보 진단은 아직 후속 작업이다.

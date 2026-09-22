@@ -503,6 +503,12 @@ function removeTomlNotify(configPath) {
 }
 
 // ── Install ──
+function installImprovementModules() {
+  const local = path.join(sourceDir, "scripts/bundle-improvement.js");
+  const helper = fs.existsSync(local) ? local : path.join(sourceDir, "../mnemo/scripts/bundle-improvement.js");
+  require(helper).bundleImprovement(sourceDir, path.join(codexDir, "skills", "codex-mnemo"));
+}
+
 function install() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
@@ -550,6 +556,7 @@ function install() {
     console.error("      the skills/ directory (git checkout -- skills/).");
     process.exit(1);
   }
+  installImprovementModules();
 
   ensureDir(hooksDir);
 

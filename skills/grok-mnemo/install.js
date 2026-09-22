@@ -179,6 +179,12 @@ function check() {
 }
 
 // ── Install ──
+function installImprovementModules() {
+  const local = path.join(sourceDir, "scripts/bundle-improvement.js");
+  const helper = fs.existsSync(local) ? local : path.join(sourceDir, "../mnemo/scripts/bundle-improvement.js");
+  require(helper).bundleImprovement(sourceDir, path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), ".claude"), "skills", "grok-mnemo"));
+}
+
 function install() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
@@ -202,6 +208,7 @@ function install() {
     console.error("      skills/ 디렉터리를 복구하세요 (git checkout -- skills/).");
     process.exit(1);
   }
+  installImprovementModules();
 
   ensureDir(hooksDir);
   copyFile(src, dest);

@@ -46,6 +46,9 @@ Use this template structure when creating handoff documents. The smart scaffold 
 
 ## Origin
 
+자동 생성 시 `--origin`과 `--origin-source`로 현재 세션에서 확인한 요구·근거를 함께 전달한다.
+생략하면 빈칸이며 일별 첫 대화나 최신 핸드오프를 자동 출처로 사용하지 않는다.
+
 이 작업이 시작된 이유. 세션이 끝나면 "무엇을 했나"는 남지만 "왜 만들기로 했나"는
 사라지기 때문에, **기능을 구현·변경한 세션에서만** 요구한다. 이어지는 세션은 최초
 핸드오프를 링크하고 바뀐 부분만 적는다. 탐색·문서·설정만 한 세션은 각 칸을

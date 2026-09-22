@@ -163,10 +163,17 @@ function migrateLegacy() {
   }
 }
 
+function installImprovementModules() {
+  const local = path.join(sourceDir, "scripts/bundle-improvement.js");
+  const helper = fs.existsSync(local) ? local : path.join(sourceDir, "../mnemo/scripts/bundle-improvement.js");
+  require(helper).bundleImprovement(sourceDir, path.join(googleHome, "antigravity-cli", "skills", "antigravity-mnemo"));
+}
+
 function install() {
   if (!fs.existsSync(sourceHookPath) || !fs.existsSync(templatePath) || !fs.existsSync(rootHelperSource)) {
     throw new Error("Antigravity Mnemo package is incomplete");
   }
+  installImprovementModules();
   migrateLegacy();
   ensureDir(hookDir);
   fs.copyFileSync(sourceHookPath, hookPath);

@@ -234,34 +234,9 @@ def architecture_memory_present(root: Path) -> bool:
     return False
 
 
-def _today_conversations(root: Path) -> list[Path]:
-    """오늘 날짜의 대화 기록. 훅이 CLI별로 나눠 쓰므로 여러 개일 수 있다."""
-    directory = root / "conversations"
-    if not directory.is_dir():
-        return []
-    today = datetime.now().strftime("%Y-%m-%d")
-    return sorted(directory.glob(f"{today}-*.md"))
-
-
-def first_user_prompt(root: Path) -> str | None:
-    """오늘 첫 사용자 턴.
-
-    Origin의 '요구'는 세션이 끝나면 되살릴 수 없는 유일한 칸인데, 대화 훅이 원문을 이미
-    저장해 두었다. 사람이 기억해서 옮겨 적기를 기다리는 대신 그 원문을 가져온다.
-    하루에 세션이 여럿일 수 있으므로 단정하지 않고 `추정`으로 표시한다.
-    """
-    for path in _today_conversations(root):
-        text = path.read_text(encoding="utf-8", errors="replace")
-        match = re.search(r'^## \[[0-9:]+\] User\s*$\n+(.+?)(?=^## \[|\Z)', text, re.M | re.S)
-        if not match:
-            continue
-        body = " ".join(match.group(1).split())
-        if not body:
-            continue
-        if len(body) > 160:
-            body = body[:160].rstrip() + "…"
-        return f"{body} — 추정: {path.name} 첫 사용자 턴"
-    return None
+def origin_cell(value: str) -> str:
+    """Keep explicitly supplied origin text inside one Markdown table cell."""
+    return " ".join(value.split()).replace("|", "&#124;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _relativize(raw, root: Path) -> str | None:
@@ -429,10 +404,14 @@ def generate_handoff(
     project_path: str,
     slug: str = None,
     continues_from: str = None,
-    *, explicit: bool = False,
+    *, explicit: bool = False, origin: str | None = None, origin_source: str | None = None,
 ) -> str:
     """Generate a handoff document with pre-filled metadata."""
 
+    if (origin is None) != (origin_source is None):
+        raise ValueError("--origin and --origin-source must be provided together")
+    if origin is not None and (not origin.strip() or not origin_source.strip()):
+        raise ValueError("--origin and --origin-source must not be empty")
     project_root = detect_project_root(Path(project_path), explicit=explicit)
     if not project_root.is_dir():
         raise ValueError(f"project directory does not exist: {project_root}")
@@ -466,7 +445,7 @@ def generate_handoff(
     git_info = get_git_info(project_path)
 
     # Get previous handoff info for chaining
-    prev_handoff = get_previous_handoff_info(project_path, continues_from)
+    prev_handoff = get_previous_handoff_info(project_path, continues_from) if continues_from else {}
 
     # Build pre-filled sections
     branch_line = git_info["branch"] if git_info["branch"] else "[not a git repo or detached HEAD]"
@@ -507,13 +486,17 @@ def generate_handoff(
 
     # Origin section — 이어받는 세션은 출처를 선행 핸드오프로 미리 채운다.
     # 최초 요구는 한 번만 적고, 이후 세션은 그 링크를 따라가면 되게 한다.
-    if prev_handoff.get("exists"):
+    if origin is not None:
+        origin_requirement = origin_cell(origin)
+        origin_source = origin_cell(origin_source)
+    elif prev_handoff.get("exists"):
+        origin_requirement = "[TODO: 요청받은 것 — 현재 세션에서 확인]"
         origin_source = (f"[{prev_handoff['filename']}](./{prev_handoff['filename']}) 에서 이어짐 "
                          f"— 최초 요구가 거기에 없으면 그 핸드오프의 Origin을 따라 올라갈 것")
     else:
+        origin_requirement = "[TODO: 요청받은 것 — 현재 세션에서 확인]"
         origin_source = "[TODO: 사용자 요청 / 이슈 / spec·설계 문서 경로]"
-    # 요구는 세션이 끝나면 되살릴 수 없는 칸이다. 대화 훅이 저장해 둔 첫 사용자 턴을 가져온다.
-    origin_requirement = first_user_prompt(project_root) or "[TODO: 요청받은 것 — 가능하면 원문에 가깝게]"
+    # 일별 대화에는 세션 경계가 없어 최초 요구를 추측하지 않는다.
     origin_section = f"""## Origin
 
 기능을 구현·변경한 세션은 채운다. 탐색·문서·설정만 한 세션은 각 칸을 `N/A — <이유>`로 둔다.
@@ -735,6 +718,8 @@ def main():
     )
 
     parser.add_argument("--project-root", type=Path, help="Explicit project workspace (required to initialize a non-Git project)")
+    parser.add_argument("--origin", help="User request confirmed in the current session (paired with --origin-source)")
+    parser.add_argument("--origin-source", help="Evidence for the request: session ID, issue, or specification")
     args = parser.parse_args()
 
     try:
@@ -752,7 +737,8 @@ def main():
 
     # Generate handoff
     try:
-        filepath = generate_handoff(project_path, args.slug, args.continues_from, explicit=args.project_root is not None)
+        filepath = generate_handoff(project_path, args.slug, args.continues_from, explicit=args.project_root is not None,
+                                    origin=args.origin, origin_source=args.origin_source)
     except ValueError as error:
         parser.error(str(error))
 

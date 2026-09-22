@@ -13,6 +13,8 @@ const EXECUTABLE_RUNTIME_MODULES = new Set(["orchestrator"]);
 // maintaining per-runtime source copies. Bundle these at the existing sync point.
 function copyMnemoSupportFiles(sourceDir, destDir) {
   if (!["mnemo", "codex-mnemo", "antigravity-mnemo", "grok-mnemo"].includes(path.basename(sourceDir))) return;
+  const { bundleImprovement } = require("../skills/mnemo/scripts/bundle-improvement");
+  bundleImprovement(sourceDir, destDir);
   const commonDir = path.join(path.dirname(sourceDir), "mnemo");
   const files = [
     [path.join(sourceDir, "../../hooks/mnemo-project-root.js"), "hooks/mnemo-project-root.js"],

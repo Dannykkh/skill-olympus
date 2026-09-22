@@ -69,7 +69,7 @@ mnemo/
 │   └── claude-md-rules.md
 ├── scripts/                    # Python 3 (+ 루트 판정에 Node)
 │   │   # ── 핸드오프 (세션 경계) ──
-│   ├── create_handoff.py       # 스캐폴드 (Origin=첫 사용자 턴, Files=관찰, 대체 후보 제시)
+│   ├── create_handoff.py       # 스캐폴드 (Origin=현재 CLI가 확인한 요구·출처, Files=관찰, 대체 후보 제시)
 │   ├── validate_handoff.py     # 게이트 (feature-bearing: Origin+Diagram 필수)
 │   ├── list_handoffs.py        # 목록
 │   ├── check_staleness.py      # 핸드오프가 현재 코드 대비 얼마나 낡았나 (git 기준)
@@ -353,3 +353,9 @@ Git 환경변수·하위 cwd로 저장 위치를 바꾸지 않으며, Git도 `.m
 일반 cwd에는 자동 저장하지 않는다. 비-Git 프로젝트는 명시한 workspace에서
 초기화한다. 설치 패키지에는 공통 핸드오프 `scripts/`도 포함된다. 소스 checkout의
 핸드오프 도구 정본은 `skills/mnemo/scripts/`이다. 실행에는 Python 3와 Node.js가 필요하다.
+
+## 프로젝트 스킬 자기개선
+
+핸드오프 정제 또는 명시적 개선 작업에서는 [자기개선 계약](references/self-improvement.md)을 읽는다.
+동봉된 내부 모듈을 직접 읽으며 별도 slash 등록이나 Jev API는 필요하지 않다.
+핸드오프에서는 후보만 남기고, 승인된 개선 작업에서 실제 비교 검증을 수행한다.
