@@ -138,6 +138,12 @@ chmod +x install.sh && ./install.sh
 해당 홈의 스킬·카탈로그·source-only 라이브러리·훅·설정 파일은 준비하고, MCP 등록처럼
 실행 파일이 필요한 명령만 건너뜁니다. 나중에 CLI를 설치한 뒤 같은 설치기를 다시 실행하면 됩니다.
 
+Claude·Codex·Antigravity의 기본 MCP는 `context7`과 `playwright`입니다. Chrome DevTools MCP는
+선택 설치로 바뀌었습니다. 필요할 때 Claude는 `node install-mcp.js chrome-devtools`, Codex는
+`node install-mcp-codex.js chrome-devtools`, Antigravity는
+`node install-mcp-antigravity.js chrome-devtools`를 실행하세요. 자세한 내용은
+[MCP 설정 안내](mcp-configs/README.md)를 참고하세요. 일반 재설치는 기존 Chrome DevTools 등록을 제거하지 않습니다.
+
 ### 먼저 써볼 워크플로우
 
 ```text

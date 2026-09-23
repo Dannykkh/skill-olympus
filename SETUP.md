@@ -10,6 +10,8 @@
 
 설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 TermSnap 기본 대상인 Claude, Codex, Antigravity, Grok용 자산을 함께 준비합니다. OpenClaw과 Hermes Agent는 명시 선택 또는 호스트별 설치기로 스킬만 설치합니다. 선택한 통합 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비하며, MCP 설정처럼 해당 런타임에 필요한 구성도 직접 병합합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 실행 상태를 확인합니다.
 
+기본 MCP 등록은 Claude·Codex·Antigravity에 `context7`과 `playwright`만 적용합니다. Chrome DevTools MCP는 [MCP 설정 안내](mcp-configs/README.md)에 따라 필요할 때 수동 설치합니다. 기존 등록은 일반 재설치로 제거되지 않습니다.
+
 ```bash
 # 모든 CLI
 .\install.bat

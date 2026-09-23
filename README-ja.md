@@ -119,6 +119,12 @@ chmod +x install.sh && ./install.sh
 します。CLIの実行ファイルが`PATH`になくてもファイルは配置され、MCP登録など実行
 ファイルを必要とする処理だけがスキップされます。
 
+Claude、Codex、Antigravityで標準登録されるMCPは`context7`と`playwright`です。
+Chrome DevTools MCPは必要な場合だけ、Claudeでは`node install-mcp.js chrome-devtools`、
+Codexでは`node install-mcp-codex.js chrome-devtools`、Antigravityでは
+`node install-mcp-antigravity.js chrome-devtools`で追加できます。
+[MCP設定ガイド](mcp-configs/README.md)も参照してください。通常の再インストールでは既存のChrome DevTools登録は削除されません。
+
 ### 最初に試すワークフロー
 
 ```text

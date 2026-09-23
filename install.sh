@@ -561,7 +561,7 @@ if [ "$HAS_CLAUDE_CLI" = "1" ]; then
     echo ""
     echo "      무료 MCP 자동 설치를 시작합니다..."
     echo ""
-    node "$SCRIPT_DIR/install-mcp.js" context7 playwright chrome-devtools
+    node "$SCRIPT_DIR/install-mcp.js" context7 playwright
     echo ""
     echo "      완료! (추가: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
     CLAUDE_MCP_RESULT="설치 완료"
@@ -669,7 +669,7 @@ echo "  Codex MCP 설치 중... [코어]"
 if true; then
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-codex.js" context7 playwright chrome-devtools && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
+            node "$SCRIPT_DIR/install-mcp-codex.js" context7 playwright && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
         else
             CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
         fi
@@ -772,7 +772,7 @@ fi
 echo ""
 echo "  Antigravity MCP 설치 중..."
 if [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
-    if node "$SCRIPT_DIR/install-mcp-antigravity.js" context7 playwright chrome-devtools; then
+    if node "$SCRIPT_DIR/install-mcp-antigravity.js" context7 playwright; then
         ANTIGRAVITY_MCP_RESULT="설치 완료"
     else
         ANTIGRAVITY_MCP_RESULT="설치 실패"

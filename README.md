@@ -139,6 +139,13 @@ Running without arguments is the default full installation for Claude, Codex, An
 CLI's files even when that CLI executable is not on `PATH`; only CLI-dependent commands such as MCP
 registration are skipped. Install the missing CLI and rerun the same installer to finish those commands.
 
+The default MCP set for Claude, Codex, and Antigravity is `context7` and `playwright`.
+Chrome DevTools MCP is optional; install it with `node install-mcp.js chrome-devtools`
+(Claude), `node install-mcp-codex.js chrome-devtools` (Codex), or
+`node install-mcp-antigravity.js chrome-devtools` (Antigravity). See the
+[MCP setup guide](mcp-configs/README.md). A normal reinstall leaves an existing Chrome DevTools
+registration in place.
+
 ### Try a workflow
 
 ```text

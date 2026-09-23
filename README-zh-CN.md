@@ -119,6 +119,12 @@ chmod +x install.sh && ./install.sh
 可执行文件不在 `PATH` 中，安装器也会准备相关文件；只有 MCP 注册等必须调用 CLI 的步骤
 会被跳过。
 
+Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `context7` 和 `playwright`。
+如需 Chrome DevTools MCP，可分别运行 `node install-mcp.js chrome-devtools`（Claude）、
+`node install-mcp-codex.js chrome-devtools`（Codex）或
+`node install-mcp-antigravity.js chrome-devtools`（Antigravity）。详见
+[MCP 设置指南](mcp-configs/README.md)。正常重新安装不会删除已有的 Chrome DevTools 注册。
+
 ### 先试试这些工作流
 
 ```text
