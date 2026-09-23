@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.12.1] - 2026-09-23
+
+### Bug Fixes
+
+- **installer**: Install only `context7` and `playwright` by default for Claude, Codex, and Antigravity. Chrome DevTools MCP remains available by explicit request; uninstall still recognizes older installer registrations. (dcd3376)
+
+### Documentation
+
+- Update the four language READMEs, setup guide, and MCP guide with the new default and per-CLI optional installation commands. Correct the Chrome DevTools package name and Claude scope example. (dcd3376)
+
+### Validation and Scope
+
+- Windows full installation completed with 12 installed-runtime checks passing. Chrome DevTools MCP remained absent from Claude, Codex, and Antigravity after reinstall. Installer and version tests passed (30 tests); `install.sh` syntax and `git diff --check` passed.
+- Existing Chrome DevTools registrations are not removed by a normal reinstall. Explicit `install-mcp*.js --all` still includes the optional server.
+
 ## [6.12.0] - 2026-09-22
 
 ### Features
