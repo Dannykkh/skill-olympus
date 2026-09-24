@@ -256,13 +256,19 @@ def _relativize(raw, root: Path) -> str | None:
     return text.lstrip("./") or None
 
 
-def observed_files(root: Path) -> list[str]:
-    """오늘 관찰 로그가 기록한 편집·생성 파일.
+# 핸드오프는 한 세션의 인계다. 같은 날 다른 세션이 섞이지 않게 세션 ID로 거른다 (gotcha 091).
+# `session <uuid>`(Origin 출처)와 `Session ID: <uuid>`(메타데이터) 두 표기를 받는다.
+SESSION_ID = re.compile(
+    r'\bsession(?:[\s_-]*id)?[\s:]+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', re.I)
+
+
+def observed_files(root: Path, day: str | None = None, session: str | None = None) -> list[str]:
+    """관찰 로그가 기록한 편집·생성 파일. 기본은 오늘 전체, session을 주면 그 세션만.
 
     git이 없는 프로젝트에서도 "이 세션이 무엇을 고쳤나"가 남는 유일한 자리다.
     회전된 `.bak`은 읽지 않는다 — 오늘 것은 현재 로그에 있다.
     """
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = day or datetime.now().strftime("%Y-%m-%d")
     found: list[str] = []
     for log in sorted((root / "memory").glob("*/observations.jsonl")):
         for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -276,6 +282,8 @@ def observed_files(root: Path) -> list[str]:
             if record.get("tool") not in ("Edit", "Write", "NotebookEdit"):
                 continue
             if not str(record.get("timestamp", "")).startswith(today):
+                continue
+            if session and record.get("session") != session:
                 continue
             payload = record.get("input")
             if isinstance(payload, str):
@@ -459,14 +467,18 @@ def generate_handoff(
     # Modified files section
     # git과 관찰 로그를 합친다. git이 없는 프로젝트에서는 관찰이 유일한 근거이고,
     # git이 있어도 커밋 전 편집은 관찰에만 남는다.
-    observed = observed_files(project_root)
+    # 출처에 세션 ID가 있으면 그 세션의 관찰만 모은다. 없으면 오늘 전체(다른 세션이 섞일 수 있다).
+    session_match = SESSION_ID.search(origin_source or "")
+    session = session_match.group(1) if session_match else None
+    observed = observed_files(project_root, session=session)
     all_modified = sorted(set(git_info["modified_files"] + git_info["staged_files"]) | set(observed))
     if all_modified:
         modified_section = "\n".join(f"| {f} | [describe changes] | [why changed] |" for f in all_modified[:10])
         if len(all_modified) > 10:
             modified_section += f"\n| ... and {len(all_modified) - 10} more files | | |"
         if observed:
-            modified_section += f"\n\n<!-- 관찰 로그에서 {len(observed)}개 자동 수집 (오늘 Edit/Write) -->"
+            scope = f"세션 {session[:8]}" if session else "오늘 전체 세션"
+            modified_section += f"\n\n<!-- 관찰 로그에서 {len(observed)}개 자동 수집 ({scope} Edit/Write) -->"
     else:
         modified_section = "| [no modified files detected] | | |"
 

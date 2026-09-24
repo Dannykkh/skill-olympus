@@ -7,6 +7,7 @@ Checks:
 - Required sections present and populated
 - No potential secrets detected
 - Referenced files exist
+- Memory entries this session touched carry their reserved tag fields (warning only)
 - Quality scoring
 
 Usage:
@@ -14,11 +15,14 @@ Usage:
     python validate_handoff.py docs/handoffs/2024-01-15-143022-auth.md
 """
 
+import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
+
+from create_handoff import SESSION_ID, observed_files
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -311,6 +315,165 @@ def check_decisions_reached_memory(content: str, root: Path) -> tuple[list[str],
     return problems, notes
 
 
+# 태그 줄 예약 필드 — 기억 항목을 건드린 응답은 그 번호를 태그 줄에 든다 (architecture 055).
+# 폴더 → 예약 접두어. 콜론 형식만 예약 필드이고, 하이픈·약어는 자유 검색어로 읽힌다.
+RESERVED_PREFIXES = {"architecture": "arch", "learned": "learned", "gotchas": "gotcha"}
+RESERVED_FIELD = re.compile(r'\b(arch|learned|gotcha):(\d{3})\b')
+LOOSE_FIELD = re.compile(r'\b(arch|learned|gotchas?|a|l|g)([-:])(\d{3})\b')
+CANONICAL_PREFIX = {"arch": "arch", "a": "arch", "learned": "learned", "l": "learned",
+                    "gotcha": "gotcha", "gotchas": "gotcha", "g": "gotcha"}
+
+
+def _listed(items: list[str], limit: int = 8) -> str:
+    shown = ", ".join(items[:limit])
+    return shown + (f" 외 {len(items) - limit}건" if len(items) > limit else "")
+
+
+TURN_HEADER = re.compile(r'^##\s*\[(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(User|Assistant)\b')
+CLOCK = re.compile(r'\b\d{1,2}:\d{2}(?::\d{2})?\b')
+ENTRY_PATH = re.compile(r'^memory/(architecture|learned|gotchas)/(\d{3})-[^/]+\.md$')
+
+
+def _clock(text: str) -> str:
+    """"9:05" → "09:05:00". 같은 날 안에서 문자열 비교로 시각을 견준다."""
+    parts = [int(p) for p in text.split(":")]
+    return f"{parts[0]:02d}:{parts[1]:02d}:{parts[2] if len(parts) > 2 else 0:02d}"
+
+
+def session_scope(content: str, root: Path, day: str) -> tuple[str | None, str | None, str | None, bool]:
+    """이 핸드오프가 넘기는 세션: (세션 ID, 시작 시각, 마지막 관찰 시각, 관찰 기록 유무).
+
+    핸드오프는 한 세션의 인계다. 같은 날 다른 세션이 건드린 항목을 이 세션의 누락으로 적으면
+    gotcha 091(Origin을 날짜 단위로 골라 남의 요청이 섞임)을 검증기에서 되풀이하게 된다.
+    세션 ID는 Origin 출처(`session <uuid>, user turns 19:15·19:27`)에서, 시작 시각은 그 줄의
+    가장 이른 턴과 관찰 로그의 첫 기록 중 이른 쪽이다. 모르면 None — 짐작하지 않는다.
+    """
+    # 본문이 이전 핸드오프나 gotcha의 세션을 인용할 수 있으니 이 핸드오프의 Origin 절을 먼저 본다.
+    origin = re.search(r'(?ms)^#{2,4}\s*Origin\b(.*?)(?=^#{1,4}\s|\Z)', content)
+    source = origin.group(1) if origin and SESSION_ID.search(origin.group(1)) else content
+    match = SESSION_ID.search(source)
+    if not match:
+        return None, None, None, False
+    session = match.group(1)
+    line_end = source.find("\n", match.end())
+    starts = [_clock(t) for t in CLOCK.findall(source[match.end():line_end if line_end >= 0 else None])]
+    seen, last = False, None
+    for log in sorted((root / "memory").glob("*/observations.jsonl")):
+        for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+            if session not in line:
+                continue
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            stamp = str(record.get("timestamp", ""))
+            if record.get("session") == session and stamp.startswith(day):
+                seen = True
+                starts.append(stamp[11:19])
+                last = max(last or stamp[11:19], stamp[11:19])
+    return session, (min(starts) if starts else None), last, seen
+
+
+def check_tag_reserved_fields(content: str, root: Path) -> list[str]:
+    """이 세션이 건드린 기억 항목의 번호가 이 세션의 태그 줄에 있는가 — 경고만, 게이트 아님.
+
+    예약 필드는 쓰는 규칙만 있고 읽는 도구가 없어서, 결정 사흘 만에 누락과 `arch-057` 같은
+    형식 오류가 섞여도 아무도 몰랐다. 결정 표가 없는 세션(gotcha만 쓴 날)도 대상이라
+    check_decisions_reached_memory와 따로 돈다. 대화는 뿌리라 지난 태그 줄은 고치지 않는다 —
+    그래서 경고는 "인계 응답의 태그 줄에 붙이라"는 출구를 함께 준다.
+    세션을 특정하지 못하면(출처에 세션 ID가 없거나, 관찰 훅이 없는 Codex) 하루 전체로 보되
+    그 사실을 경고 앞에 밝힌다 — 다른 세션의 항목이 섞였을 수 있다.
+    """
+    created = re.search(r'-\s*Created:\s*(\d{4}-\d{2}-\d{2})(?:\s+(\d{1,2}:\d{2}(?::\d{2})?))?', content)
+    if not created:
+        return []
+    day = created.group(1)
+    end = _clock(created.group(2)) if created.group(2) else None
+    conversations = [p for p in sorted((root / "conversations").glob(f"{day}-*.md"))
+                     if not p.name.endswith("-toollog.md")]
+    if not conversations:
+        return []  # 그날 대화 기록이 없으면 판단할 근거가 없다
+
+    session, start, last, seen = session_scope(content, root, day)
+    if end:
+        # 인계 응답은 핸드오프를 만든 뒤, 마지막 도구 호출 뒤에 저장된다. 경고가 붙이라고 하는 곳이
+        # 바로 그 응답이므로 창 끝을 max(생성, 마지막 관찰) + 15분으로 늘린다.
+        tail = datetime.strptime(max(end, last or end), "%H:%M:%S") + timedelta(minutes=15)
+        end = tail.strftime("%H:%M:%S") if tail.day == 1 else "23:59:59"  # 자정을 넘기면 그날 끝까지
+    windowed = bool(start and end)
+
+    # minimal: 태그 줄은 시간 창(세션 시작~인계 응답)으로만 세션에 붙인다 — Claude 대화 파일의 턴에
+    # 세션 표시가 없어 같은 시각에 겹친 다른 세션은 섞인다. 저장 훅이 턴마다 세션 ID를 적으면 그것으로 거른다.
+    tag_lines = []
+    for conv in conversations:
+        clock, speaker = None, None
+        for line in conv.read_text(encoding="utf-8", errors="replace").splitlines():
+            header = TURN_HEADER.match(line)
+            if header:
+                clock, speaker = _clock(header.group(1)), header.group(2)
+                continue
+            if not line.lstrip().startswith("#tags:"):
+                continue
+            if windowed and not (speaker == "Assistant" and clock and start <= clock <= end):
+                continue
+            tag_lines.append(line)
+    tags_text = "\n".join(tag_lines)
+    carried = {f"{p}:{n}" for p, n in RESERVED_FIELD.findall(tags_text)}
+
+    changed_today = [(e, datetime.fromtimestamp(e.stat().st_mtime))
+                     for folder in RESERVED_PREFIXES
+                     for e in sorted((root / "memory" / folder).glob("[0-9][0-9][0-9]-*.md"))
+                     if ".bak-" not in e.name]
+    changed_today = [(e, m.strftime("%H:%M:%S")) for e, m in changed_today if m.strftime("%Y-%m-%d") == day]
+    if session and seen:
+        # 관찰 로그의 Edit/Write는 세션 ID를 들고 있어 이 세션이 고친 항목만 정확히 나온다.
+        paths = [p for p in observed_files(root, day=day, session=session) if ENTRY_PATH.match(p)]
+        entries = [root / p for p in paths if (root / p).is_file()]
+        # Bash·스크립트로 고친 항목은 관찰 로그에 Edit/Write로 남지 않는다 — 세션 시간 창 안의 mtime으로 보탠다.
+        # (태그 줄과 같은 창이라 같은 시각에 겹친 다른 세션은 섞일 수 있다 — 위 minimal 주석)
+        if windowed:
+            entries += [e for e, clock in changed_today if start <= clock <= end]
+        scope = f"(세션 {session[:8]}) "
+    else:
+        # minimal: 세션을 특정 못 하면 파일 mtime으로 그날 전체를 본다 — 다른 세션·닥터 --fix 일괄 수정이 섞인다.
+        # Codex에도 도구 단위 관찰이 생기거나 출처에 세션 ID가 적히면 위 경로로 좁혀진다.
+        entries = [e for e, _ in changed_today]
+        why = "출처에 세션 ID가 없어" if not session else "이 세션의 관찰 기록이 없어"
+        scope = f"({why} {day} 하루 전체로 판단 — 다른 세션 항목이 섞였을 수 있습니다) "
+
+    touched, superseding = [], []
+    for entry in entries:
+        field = f"{RESERVED_PREFIXES[entry.parent.name]}:{entry.name[:3]}"
+        if field in touched:
+            continue
+        touched.append(field)
+        text = entry.read_text(encoding="utf-8", errors="replace")
+        if (re.search(rf'^`?date:\s*{day}', text, re.M)
+                and re.search(r'^`?supersedes:', text, re.M)):
+            superseding.append(field)
+
+    notes = []
+    missing = [field for field in touched if field not in carried]
+    if missing:
+        notes.append(f"{scope}건드린 항목 {_listed(missing)} 의 번호가 태그 줄에 없습니다 — "
+                     "지난 태그 줄은 고치지 않으니, 인계 응답의 #tags:에 붙이세요")
+
+    loose = {}
+    for prefix, sep, number in LOOSE_FIELD.findall(tags_text):
+        written = f"{prefix}{sep}{number}"
+        canonical = f"{CANONICAL_PREFIX[prefix]}:{number}"
+        if written != canonical:
+            loose[written] = canonical
+    if loose:
+        pairs = [f"{bad} → {good}" for bad, good in loose.items()]
+        notes.append(f"예약 필드로 읽히지 않는 표기: {_listed(pairs)} — 하이픈·약어는 자유 검색어가 됩니다")
+
+    if superseding and "supersedes:" not in tags_text:
+        notes.append(f"{scope}{_listed(superseding)} 은(는) 다른 결정을 대체했지만 "
+                     "태그 줄에 `supersedes:#slug`가 없습니다")
+    return notes
+
+
 def validate_handoff(filepath: str) -> dict:
     """Run all validations on a handoff file."""
     path = Path(filepath)
@@ -335,6 +498,7 @@ def validate_handoff(filepath: str) -> dict:
     secrets_found = scan_for_secrets(content)
     existing_files, missing_files = check_file_references(content, str(base_path))
     memory_problems, memory_notes = check_decisions_reached_memory(content, Path(base_path))
+    tag_notes = check_tag_reserved_fields(content, Path(base_path))
 
     # Calculate score
     score, rating = calculate_quality_score(
@@ -358,6 +522,7 @@ def validate_handoff(filepath: str) -> dict:
         "files_missing": missing_files[:5],  # Limit output
         "memory_problems": memory_problems,
         "memory_notes": memory_notes,
+        "tag_notes": tag_notes,
     }
 
 
@@ -420,6 +585,10 @@ def print_report(result: dict):
     if result.get('memory_notes'):
         print("\n[WARN] 결정이 기억으로 가지 않았습니다:")
         for note in result['memory_notes']:
+            print(f"       - {note}")
+    if result.get('tag_notes'):
+        print("\n[WARN] 건드린 기억 항목이 태그 줄 예약 필드로 이어지지 않았습니다:")
+        for note in result['tag_notes']:
             print(f"       - {note}")
 
     # Recommended sections

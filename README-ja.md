@@ -285,6 +285,12 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v6.13.0 — Mnemo タグ予約フィールド
+
+タグ行の予約フィールドに `arch:NNN` に加えて `learned:NNN`・`gotcha:NNN` を追加しました。`validate_handoff.py` は、**現在のセッション**が触れた記憶エントリーの番号がタグ行にない場合や、`arch-057` のようにハイフンで書かれた場合に警告します。セッションは引き継ぎの出所にある `session <uuid>` で特定するため、同じ日の別セッションの項目は混ざりません。更新は Windows で `install.bat`、macOS/Linux で `bash install.sh` を実行します。
+
+[変更履歴](CHANGELOG.md)
+
 ## v6.12.0 — Mnemo 更新
 
 Mnemo 専用のセッション学習・プロジェクト内スキル改善・比較評価の手順を、Claude Code、Codex、Antigravity、Grok の各アダプターに同梱しました。単独導入に共有スキル `skill-evolve`、`autoresearch`、`memory-distill` は不要です。引き継ぎは確認した依頼と根拠を `--origin` と `--origin-source` の組で渡し、未指定の出所を推測しません。更新は Windows で `install.bat`、macOS/Linux で `bash install.sh` を実行します。プロジェクト規則の自動初期化と doctor 連携は未実装で、LLM の改善判断品質は未測定です。
