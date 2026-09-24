@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.13.0] - 2026-09-24
+
+### Features
+
+- **mnemo**: Warn at handoff validation when a memory entry the current session touched never reached that session's tag lines, or was written as `arch-057` instead of the colon form. Reserved fields now include `learned:NNN` and `gotcha:NNN` alongside `arch:NNN`, and entry files are named `NNN-slug.md` so every entry has a key. The warning never blocks a handoff. (49dc8f6)
+- **mnemo**: Scope the check to the handoff's own session. The session ID comes from the origin evidence (`session <uuid>` or `Session ID: <uuid>`); touched entries come from that session's observed Edit/Write plus entry files changed inside its time window (Bash-made edits included); tag lines come from the same window. Without a session ID, or without observations (Codex), the whole day is used and the warning says so. `create_handoff.py` likewise fills Files Modified from only that session's observations when the origin evidence names a session. (49dc8f6)
+
+### Documentation
+
+- Update the Claude, Codex, and Antigravity rule templates, the handoff memory reference, and the four language READMEs. (49dc8f6)
+
+### Validation and Scope
+
+- Mnemo Python tests passed (178), including a two-session same-day reproduction; routing and Mnemo Node tests passed (66). Windows full installation completed with 12 installed-runtime checks passing, and all four installed validator copies match the source.
+- Against real handoffs: the 2026-09-23 handoff reports its missing `learned:031` and the `arch-057`/`arch-056`/`learned-031` spellings; an earlier same-day session is not blamed for this session's entries.
+- Known limits: Claude conversation files carry no per-turn session marker, so sessions that overlap in time can mix tag lines. Codex has no per-tool observation and falls back to file modification times.
+
 ## [6.12.1] - 2026-09-23
 
 ### Bug Fixes
