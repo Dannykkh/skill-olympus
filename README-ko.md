@@ -388,6 +388,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v6.14.0:** TermSnap 부품 지도(`codemap/component-map.json`)가 있는 프로젝트에서 `create_handoff.py`가 `Component map:` 줄을 씁니다. TermSnap이 만든 `codemap/components/owners.json`을 읽어 이번 세션 파일 중 주인 부품이 없는 것(미배정), 지도 재생성이 필요한 것, 지도 오류를 알립니다. `validate_handoff.py`는 이 결과에 `→ 배정함:`이나 `→ 보류:`가 없으면 경고합니다. 지도가 없는 프로젝트에는 줄이 없습니다. 스킬은 계약 파일만 읽고 지도를 고치거나 TermSnap의 소스 판정 규칙을 재구현하지 않습니다.
+
 **v6.13.0:** Mnemo 태그 줄의 예약 필드에 `arch:NNN`과 함께 `learned:NNN`·`gotcha:NNN`을 추가했습니다. `validate_handoff.py`는 **현재 세션**이 건드린 기억 항목의 번호가 태그 줄에 없거나 `arch-057`처럼 하이픈으로 적혔으면 경고합니다. 세션은 핸드오프 출처의 `session <uuid>`로 특정하므로 같은 날 다른 세션의 항목은 섞이지 않습니다.
 
 **v6.12.0:** Mnemo 전용 세션 학습·프로젝트 스킬 개선 절차를 Claude Code·Codex·Antigravity·Grok의 단독 설치에 포함했습니다. 핸드오프 출처는 세션을 추측하지 않고 확인한 요구와 근거를 명시적으로 전달합니다.
@@ -539,7 +541,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 | **파일을 고친 직후 (자동)** | **"이 파일에 기대는 결정"이 훅 컨텍스트로 모델에게 전달된다. 세션당 파일당 한 번.** 아무도 조회를 요청하지 않는다 — 어느 줄기 위에 있는지가 판단이 아니라 읽기가 된다 | `save-tool-use`(Claude·Grok) · `antigravity-hook`(Antigravity) | 아니오 |
 | 파일에 손대기 전 (수동) | 같은 질문을 직접, 그리고 "이 파일이 언제·왜·어떻게 바뀌었나". **"없음 확인"도 결과** — 새 줄기일 수 있다 | `build_anchor_index.py --file X`, `harvest_lineage.py --file X` | 예 |
 | 결정이 굳는 순간 | 항목이 증거를 들고 태어난다: `evidence:`(대화 파일+턴 시각), `alternatives:`(탈락 대안·왜 졌나·복귀 조건), `depends-on:`, `sources:`, `files:`. **나중이 아니라 그때** — 옛 것과 새 것을 동시에 아는 순간은 그때뿐 | 에이전트, 규칙으로 | 아니오 |
-| 세션 끝 | 에이전트가 확인한 요구와 근거를 `--origin`·`--origin-source` 쌍으로 전달한다. 미입력 출처는 TODO로 남기고 이전 인계는 `--continues-from`으로만 연결한다. 스캐폴드는 `Files Modified`를 관찰 로그에서 채우고(출처에 `session <uuid>`가 있으면 그 세션 것만), 고친 파일에 기대는 기존 항목을 **대체 후보**로 내민다. 앵커 색인도 이때 다시 만든다(네 CLI 공용). 검증은 실재하지 않는 대체 대상을 막고, 기억까지 가지 않은 결정과 이 세션이 건드린 항목 번호가 태그 줄(`arch:NNN`·`learned:NNN`·`gotcha:NNN`, 콜론 형식만)에 없는 것을 경고한다 | `create_handoff.py` → `validate_handoff.py` | 예 |
+| 세션 끝 | 에이전트가 확인한 요구와 근거를 `--origin`·`--origin-source` 쌍으로 전달한다. 미입력 출처는 TODO로 남기고 이전 인계는 `--continues-from`으로만 연결한다. 스캐폴드는 `Files Modified`를 관찰 로그에서 채우고(출처에 `session <uuid>`가 있으면 그 세션 것만), 고친 파일에 기대는 기존 항목을 **대체 후보**로 내민다. 앵커 색인도 이때 다시 만든다(네 CLI 공용). TermSnap 부품 지도가 있는 프로젝트면 이번 세션의 미배정 파일도 알린다. 검증은 실재하지 않는 대체 대상을 막고, 기억까지 가지 않은 결정과 이 세션이 건드린 항목 번호가 태그 줄(`arch:NNN`·`learned:NNN`·`gotcha:NNN`, 콜론 형식만)에 없는 것, 배정도 보류도 하지 않은 부품 지도 결과를 경고한다 | `create_handoff.py` → `validate_handoff.py` | 예 |
 | 주기적 — 그리고 **30일 지난 첫 핸드오프에 자동** | 17개 점검. 새로 더한 넷은 항목 증거(열리지 않는 링크, 산문에만 있는 앵커), 결정 계보(이유 없는 `SUPERSEDED`, 뒤집힌 결정에 기댄 `CURRENT`), 미부착 대화(어느 줄기에도 안 닿는 날을 결정 어휘 순으로), **열린 결정**(무엇이 바뀌면 다시 볼지 말하지 못하는 CURRENT — `CURRENT`는 "아직 맞다"가 아니라 "아직 대체되지 않았다"는 뜻이고, 반박할 수 없는 결정은 관습이 된다). `--chart`가 방문을 남겨 다음 방문이 차이만 말하고, `--fix`는 여전히 같은 기계적인 셋만 고치며 기억 본문은 별도 `--promote-structure`로만 건드린다 | `mnemo_doctor.py [--chart] [--fix]` | 예 |
 | 닥터가 가리킬 때 | 사라진 앵커 + CodeMap 이동 후보; 산문 앵커를 `files:` 줄로 승격; 비대한 `memory/X.md` 분할; 옛 훅이 오분류한 관찰 이동 | `check_memory_anchors.py`, `mnemo_doctor.py --promote-structure`, `split_memory_file.py`, `reclassify_observations.py` | 예 |
 

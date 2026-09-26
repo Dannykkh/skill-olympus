@@ -67,6 +67,7 @@ Use this template structure when creating handoff documents. The smart scaffold 
 ## Session Memory Review
 
 - Architecture preflight: [기억 본문 확인으로 SKIPPED / 없어서 닥터 RAN / NOT RUN·ERROR와 이유]
+- Component map: [codemap/component-map.json이 있는 프로젝트만 — owners.json으로 판정한 이번 세션 미배정 N · 재생성 필요 M · 지도 오류 E와 `→ 배정함:`/`→ 보류:`; 지도가 없으면 이 줄 삭제]
 - Memory/index updates: [실제 변경 경로 또는 변경 불필요·보완 불가 근거]
 - Retrieval verification: [검색어 → 인덱스 → 상세 항목 재검색 결과]
 - Observations: [세션 ID·시작 시각으로 한정한 정제 결과; 기존 백로그 제외]

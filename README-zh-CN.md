@@ -277,6 +277,12 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v6.14.0 — Mnemo 交接中的组件地图检查
+
+在存在 TermSnap 组件地图（`codemap/component-map.json`）的项目中，`create_handoff.py` 会写入一行 `Component map:`。它读取 TermSnap 生成的 `codemap/components/owners.json`，报告本次会话的文件中没有归属组件的文件、需要重新生成地图的文件以及地图错误。若这些结果既没有 `→ 배정함:`（已分配）也没有 `→ 보류:`（暂缓），`validate_handoff.py` 会发出警告。没有地图的项目不会出现该行。技能只读取契约文件，不修改地图，也不重新实现 TermSnap 的源文件判定规则。
+
+[更新日志](CHANGELOG.md)
+
 ## v6.13.0 — Mnemo 标签保留字段
 
 标签行的保留字段在 `arch:NNN` 之外新增 `learned:NNN` 和 `gotcha:NNN`。当**当前会话**修改过的记忆条目编号未出现在标签行中，或被写成 `arch-057` 这样的连字符形式时，`validate_handoff.py` 会发出警告。会话通过交接来源中的 `session <uuid>` 确定，因此不会混入同一天其他会话的条目。Windows 使用 `install.bat` 更新，macOS/Linux 使用 `bash install.sh`。

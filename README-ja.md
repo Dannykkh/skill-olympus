@@ -285,6 +285,12 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v6.14.0 — Mnemo 引き継ぎのコンポーネントマップ点検
+
+TermSnap のコンポーネントマップ（`codemap/component-map.json`）があるプロジェクトでは、`create_handoff.py` が `Component map:` 行を書きます。TermSnap が生成する `codemap/components/owners.json` を読み、今回のセッションのファイルのうち担当コンポーネントがないもの、マップの再生成が必要なもの、マップのエラーを知らせます。`validate_handoff.py` は、その結果に `→ 배정함:`（割り当て済み）も `→ 보류:`（保留）もない場合に警告します。マップのないプロジェクトには行が付きません。スキルは契約ファイルを読むだけで、マップの修正や TermSnap のソース判定規則の再実装は行いません。
+
+[変更履歴](CHANGELOG.md)
+
 ## v6.13.0 — Mnemo タグ予約フィールド
 
 タグ行の予約フィールドに `arch:NNN` に加えて `learned:NNN`・`gotcha:NNN` を追加しました。`validate_handoff.py` は、**現在のセッション**が触れた記憶エントリーの番号がタグ行にない場合や、`arch-057` のようにハイフンで書かれた場合に警告します。セッションは引き継ぎの出所にある `session <uuid>` で特定するため、同じ日の別セッションの項目は混ざりません。更新は Windows で `install.bat`、macOS/Linux で `bash install.sh` を実行します。

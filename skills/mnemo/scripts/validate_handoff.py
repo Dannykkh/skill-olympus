@@ -8,6 +8,7 @@ Checks:
 - No potential secrets detected
 - Referenced files exist
 - Memory entries this session touched carry their reserved tag fields (warning only)
+- Component map findings were assigned or deferred (warning only)
 - Quality scoring
 
 Usage:
@@ -474,6 +475,36 @@ def check_tag_reserved_fields(content: str, root: Path) -> list[str]:
     return notes
 
 
+# 생성기가 쓰는 `- Component map:` 줄과, 에이전트가 같은 줄(또는 들여쓴 이어지는 줄)에 붙이는 해소 표식.
+COMPONENT_LINE = re.compile(r'^[ \t]*[-*][ \t]*Component map:(.*(?:\n[ \t]{2,}\S.*)*)', re.M)
+COMPONENT_RESOLVED = re.compile(r'배정함|보류:|NOT RUN')
+
+
+def check_component_map_line(content: str) -> list[str]:
+    """부품 지도 점검이 보고한 미배정·재생성·오류가 해소됐는가 — 경고만, 게이트 아님.
+
+    지도는 LLM이 쓰고 TermSnap이 검증한다. 생성기는 상기만 하고 고치지 않으므로, 줄이 문제를
+    보고했는데 에이전트가 배정하지도 보류 사유를 적지도 않았으면 그 상기가 지나간 것이다.
+    줄이 없으면(지도 없는 프로젝트) 조용히 통과한다 — 생성기가 생략하는 조건과 짝이다.
+    """
+    match = COMPONENT_LINE.search(content)
+    if not match or COMPONENT_RESOLVED.search(match.group(1)):
+        return []
+    text = match.group(1)
+    open_items = []
+    for label in ("미배정", "재생성 필요", "지도 오류"):
+        count = re.search(rf'{label}\s+(\d+)', text)
+        if count and int(count.group(1)) > 0:
+            open_items.append(f"{label} {count.group(1)}")
+    if "오래됨" in text:
+        open_items.append("산출물이 지도보다 오래됨")
+    if not open_items:
+        return []
+    return [f"{' · '.join(open_items)} — codemap/component-map.json에 배정하고 MCP "
+            "codemap_component_map으로 검증한 뒤 같은 줄에 `→ 배정함: <부품>` 또는 "
+            "`→ 보류: <이유>`를 적으세요"]
+
+
 def validate_handoff(filepath: str) -> dict:
     """Run all validations on a handoff file."""
     path = Path(filepath)
@@ -499,6 +530,7 @@ def validate_handoff(filepath: str) -> dict:
     existing_files, missing_files = check_file_references(content, str(base_path))
     memory_problems, memory_notes = check_decisions_reached_memory(content, Path(base_path))
     tag_notes = check_tag_reserved_fields(content, Path(base_path))
+    component_notes = check_component_map_line(content)
 
     # Calculate score
     score, rating = calculate_quality_score(
@@ -523,6 +555,7 @@ def validate_handoff(filepath: str) -> dict:
         "memory_problems": memory_problems,
         "memory_notes": memory_notes,
         "tag_notes": tag_notes,
+        "component_notes": component_notes,
     }
 
 
@@ -589,6 +622,10 @@ def print_report(result: dict):
     if result.get('tag_notes'):
         print("\n[WARN] 건드린 기억 항목이 태그 줄 예약 필드로 이어지지 않았습니다:")
         for note in result['tag_notes']:
+            print(f"       - {note}")
+    if result.get('component_notes'):
+        print("\n[WARN] 부품 지도 미배정이 해소되지 않았습니다:")
+        for note in result['component_notes']:
             print(f"       - {note}")
 
     # Recommended sections

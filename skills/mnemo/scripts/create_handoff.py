@@ -23,7 +23,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 from mnemo_project_root import detect_project_root
@@ -66,6 +66,8 @@ def get_git_info(project_path: str) -> dict:
         "recent_commits": [],
         "modified_files": [],
         "staged_files": [],
+        "untracked_files": [],
+        "renamed_files": [],
     }
 
     # Check if git repo
@@ -104,7 +106,41 @@ def get_git_info(project_path: str) -> dict:
     if success and staged:
         info["staged_files"] = staged.split("\n")
 
+    # 새 파일과 이름 변경 — 부품 지도 점검용이며 Files Modified에는 넣지 않는다.
+    # -z: 한글 경로가 8진 이스케이프로 따옴표에 싸이지 않고 원문 그대로 나온다.
+    success, untracked = run_cmd(
+        ["git", "ls-files", "-z", "--others", "--exclude-standard"],
+        cwd=project_path
+    )
+    if success and untracked:
+        info["untracked_files"] = [p for p in untracked.split("\0") if p]
+
+    for extra in ([], ["--cached"]):
+        success, status = run_cmd(
+            ["git", "diff", "--name-status", "-M", "-z", "--relative", *extra],
+            cwd=project_path
+        )
+        if success and status:
+            info["renamed_files"] += _renames(status.split("\0"))
+
     return info
+
+
+def _renames(tokens: list[str]) -> list[tuple[str, str]]:
+    """`git diff --name-status -z` 토큰열에서 (옛 경로, 새 경로). R·C는 경로 둘, 나머지는 하나."""
+    found, i = [], 0
+    while i < len(tokens):
+        status = tokens[i]
+        if not status:
+            i += 1
+            continue
+        if status[0] in "RC" and i + 2 < len(tokens):
+            if status[0] == "R":
+                found.append((tokens[i + 1], tokens[i + 2]))
+            i += 3
+        else:
+            i += 2
+    return found
 
 
 def find_previous_handoffs(project_path: str) -> list[dict]:
@@ -408,6 +444,102 @@ def memory_preflight(root: Path) -> str:
             "`- 무관: <날짜>`로 닫을 것. 종료 코드 0은 기억 보완 완료를 뜻하지 않음")
 
 
+# 부품 지도(TermSnap 선택 기능). 지도는 LLM이 쓰고 TermSnap이 검증해 owners.json을 낸다.
+# 코드는 "미분류다"까지만 알고 고치지 못하므로, 변경 맥락을 쥔 에이전트가 인계하는 지금 상기시킨다.
+# 판정 규칙(소스 확장자·제외 폴더·glob)은 복제하지 않는다 — 두 곳에 생기면 어긋난다.
+# 닥터와 섞지 않는다: 닥터는 기억 구조를 30일 주기로, 이것은 코드 구조를 세션 변경으로 본다.
+COMPONENT_MAP = "codemap/component-map.json"
+COMPONENT_OWNERS = "codemap/components/owners.json"
+OWNERS_FORMAT = "termsnap-component-owners/"
+# mnemo 기록과 TermSnap 산출물 — 핸드오프 세션이 늘 고치는 자리라 소스 판정에서 뺀다.
+NOT_SOURCE_PREFIXES = ("memory/", "conversations/", "docs/handoffs/", "codemap/")
+# generatedAt은 초 단위, mtime은 소수 초다. 지도 저장 직후 재생성하면 같은 초 안에서 역전된다.
+CLOCK_SLACK = timedelta(seconds=2)
+
+
+def _shown(paths: list[str], limit: int = 5) -> str:
+    return ", ".join(paths[:limit]) + (f" 외 {len(paths) - limit}건" if len(paths) > limit else "")
+
+
+def component_map_check(root: Path, observed: list[str], git_info: dict) -> str | None:
+    """이번 세션 파일을 owners.json으로 판정한다. 지도가 없는 프로젝트는 None(줄 생략).
+
+    owners.json의 약속: TermSnap이 소스로 본 파일은 전부 owners나 uncovered 한쪽에 있다.
+    둘 다에 없는 파일은 생성 뒤에 생겼거나 소스가 아니다. 다만 "생성 뒤 수정"과 "생성 뒤 생성"은
+    mtime으로 구분되지 않으므로, 계약 데이터에 나온 최상위 폴더·확장자일 때만 재생성 필요로 본다.
+    """
+    source_map = root / COMPONENT_MAP
+    if not source_map.is_file():
+        return None
+    owners_file = root / COMPONENT_OWNERS
+    rerun = "MCP codemap_component_map 호출 후 다시 확인"
+    if not owners_file.is_file():
+        return f"NOT RUN — owners.json 없음(TermSnap 구버전 또는 생성 전); {rerun}"
+    try:
+        contract = json.loads(owners_file.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError) as error:
+        return f"ERROR — owners.json을 읽지 못함({error}); {rerun}"
+    try:
+        if not str(contract.get("format", "")).startswith(OWNERS_FORMAT):
+            raise ValueError(contract.get("format"))
+        generated = datetime.fromisoformat(str(contract["generatedAt"]))
+        if generated.tzinfo is None:
+            generated = generated.astimezone()  # 오프셋 없는 옛 표기는 로컬 시각으로 본다
+        generated += CLOCK_SLACK
+        owners = {str(k).replace("\\", "/").casefold() for k in contract.get("owners", {})}
+        uncovered = {str(p).replace("\\", "/").casefold() for p in contract.get("uncovered", [])}
+        errors = int((contract.get("status") or {}).get("errors", 0))
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return f"NOT RUN — owners.json 형식이 다름({OWNERS_FORMAT}* 아님); {rerun}"
+
+    def newer(path: Path) -> bool:
+        return datetime.fromtimestamp(path.stat().st_mtime, timezone.utc) > generated
+
+    if contract.get("mapExists") is False:
+        # 지도 없이 만든 스텁이라 owners가 비어 있다 — 파일별 판정은 모두 미배정으로 틀리게 나온다.
+        return f"RAN — 산출물이 지도보다 오래됨(지도 없이 만든 스텁) — {rerun}"
+    stale = newer(source_map)
+
+    # 관찰(Edit/Write)이 없는 CLI는 git 새 파일로 대신한다 — untracked에는 다른 세션 작업도 섞인다.
+    fallback = not observed
+    candidates = list(observed or git_info.get("untracked_files", []))
+    renamed_from = {}
+    for old, new in git_info.get("renamed_files", []):
+        renamed_from[new.replace("\\", "/").casefold()] = old.replace("\\", "/").casefold()
+        candidates.append(new)
+
+    known = owners | uncovered
+    known_tops = {p.split("/", 1)[0] if "/" in p else "" for p in known}
+    known_suffixes = {Path(p).suffix for p in known}
+    unassigned, regenerate, assigned, seen = [], [], 0, set()
+    for raw in candidates:
+        path = raw.replace("\\", "/")
+        key = path.casefold()
+        if key in seen or key.startswith(NOT_SOURCE_PREFIXES) or not (root / path).is_file():
+            continue
+        seen.add(key)
+        if key in owners:
+            assigned += 1
+        elif key in uncovered:
+            unassigned.append(path)
+        elif renamed_from.get(key) in known:
+            regenerate.append(path)  # git mv는 mtime을 보존하므로 옛 경로가 소스였는지로 판정한다
+        elif ((key.split("/", 1)[0] if "/" in key else "") in known_tops
+              and Path(key).suffix in known_suffixes and newer(root / path)):
+            regenerate.append(path)
+
+    note = " [관찰 없음 — git 새 파일로 판정, 다른 세션 것이 섞일 수 있음]" if fallback else ""
+    if not (unassigned or regenerate or stale or errors):
+        scope = f"이번 세션 소스 {assigned}개 모두 배정" if assigned else "이번 세션 소스 변경 없음"
+        return f"RAN — OK({scope} · 지도 오류 0 · 전체 미분류 {len(uncovered)}){note}"
+    parts = [f"이번 세션 미배정 {len(unassigned)}" + (f" ({_shown(unassigned)})" if unassigned else ""),
+             f"재생성 필요 {len(regenerate)}" + (f" ({_shown(regenerate)})" if regenerate else "")]
+    if stale:
+        parts.append("산출물이 지도보다 오래됨")
+    parts += [f"전체 미분류 {len(uncovered)}", f"지도 오류 {errors}"]
+    return f"RAN — {' · '.join(parts)} — 배정 후 MCP codemap_component_map으로 검증{note}"
+
+
 def generate_handoff(
     project_path: str,
     slug: str = None,
@@ -472,6 +604,16 @@ def generate_handoff(
     session = session_match.group(1) if session_match else None
     observed = observed_files(project_root, session=session)
     all_modified = sorted(set(git_info["modified_files"] + git_info["staged_files"]) | set(observed))
+
+    # 부품 지도가 있는 프로젝트만 줄을 둔다 — 선택 기능이라 모든 핸드오프를 늘리지 않는다.
+    try:
+        component_check = component_map_check(project_root, observed, git_info)
+    except (OSError, UnicodeError, ValueError) as error:
+        component_check = f"ERROR — {error}; 수동 확인 필요"
+    component_line = ""
+    if component_check:
+        print(f"[Mnemo] 부품 지도: {component_check}")
+        component_line = f"\n- Component map: {component_check}"
     if all_modified:
         modified_section = "\n".join(f"| {f} | [describe changes] | [why changed] |" for f in all_modified[:10])
         if len(all_modified) > 10:
@@ -561,7 +703,7 @@ def generate_handoff(
 ## Session Memory Review
 
 - Architecture preflight: {memory_check}
-- Anchor index: {anchor_check} — 파일에서 결정으로 되짚는 역색인 (build_anchor_index.py --file <경로>)
+- Anchor index: {anchor_check} — 파일에서 결정으로 되짚는 역색인 (build_anchor_index.py --file <경로>){component_line}
 - Memory/index updates: [TODO: 실제 갱신한 기억·인덱스 링크 또는 변경 불필요 근거]
 - Retrieval verification: [TODO: 기록한 검색어로 MEMORY.md → 해당 항목을 다시 찾은 결과]
 - Observations: [TODO: 세션 ID·시작 시각으로 한정한 정제 결과; 기존 백로그 제외]
