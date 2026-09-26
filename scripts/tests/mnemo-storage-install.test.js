@@ -127,7 +127,7 @@ test(`all ${installedMode ? 'installed' : 'packaged'} Mnemo adapters can create 
       copyMnemoSupportFiles(source, installed);
     }
     assert.deepEqual(fs.readFileSync(path.join(installed, 'hooks/mnemo-project-root.js')), fs.readFileSync(path.join(repo, 'hooks/mnemo-project-root.js')));
-    for (const tool of ['mnemo_doctor.py', 'check_memory_anchors.py', 'harvest_lineage.py', 'reclassify_observations.py', 'split_memory_file.py']) {
+    for (const tool of ['mnemo_doctor.py', 'check_memory_anchors.py', 'harvest_lineage.py', 'build_anchor_index.py', 'reclassify_observations.py', 'split_memory_file.py']) {
       const script = path.join(installed, 'scripts', tool);
       assert.ok(fs.readFileSync(script).equals(fs.readFileSync(path.join(repo, 'skills/mnemo/scripts', tool))), `${name}: ${tool} must match the shared source`);
       const help = spawnSync('python', [script, '--help'], { cwd: child, encoding: 'utf8', timeout: 30000, windowsHide: true });
@@ -145,10 +145,13 @@ test(`all ${installedMode ? 'installed' : 'packaged'} Mnemo adapters can create 
     assert.ok(fs.readdirSync(path.join(project, 'docs/handoffs')).some(file => file.endsWith(`-${name}.md`)));
     fs.mkdirSync(path.join(project, 'memory/architecture'), { recursive: true });
     fs.writeFileSync(path.join(project, 'memory/architecture/index.md'), '# Architecture\n[Decision](001-storage.md)\n');
-    fs.writeFileSync(path.join(project, 'memory/architecture/001-storage.md'), '# Storage\nPersist events before publication.\n');
+    fs.writeFileSync(path.join(project, 'memory/architecture/001-storage.md'), '# Storage\nPersist events before publication.\n`files:` src/events.py\n');
     const second = spawnSync('python', [path.join(installed, 'scripts/create_handoff.py'), `${name}-existing`], { cwd: child, encoding: 'utf8', timeout: 30000, windowsHide: true });
     assert.equal(second.status, 0, second.stderr);
     assert.doesNotMatch(second.stdout, /Mnemo Doctor/, `${name}: existing architecture must skip Doctor`);
+    // 앵커 색인 갱신은 네 CLI 공용이다 — 어댑터에 build_anchor_index.py가 빠지면 SKIPPED로 조용히 넘어간다.
+    const existing = fs.readdirSync(path.join(project, 'docs/handoffs')).find(file => file.endsWith(`-${name}-existing.md`));
+    assert.match(fs.readFileSync(path.join(project, 'docs/handoffs', existing), 'utf8'), /Anchor index: RAN/, `${name}: handoff must rebuild the anchor index`);
     // Leave an empty scaffold for the next adapter's absence scenario.
     fs.writeFileSync(path.join(project, 'memory/architecture/001-storage.md'), '# Storage\n');
     assert.ok(!fs.existsSync(path.join(child, 'docs')));
