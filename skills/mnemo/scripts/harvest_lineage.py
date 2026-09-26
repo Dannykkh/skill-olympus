@@ -133,7 +133,8 @@ def normalize_path(raw: str) -> str:
     path = re.sub(r'[`*]', '', raw).strip()
     path = path.split('(')[0].strip()
     path = re.sub(r':\d+.*$', '', path)                    # Relay.cs:276 → Relay.cs
-    path = path.replace(chr(92), '/').lstrip('./')
+    # 접두어 `./`·`/`만 뗀다 — lstrip('./')는 `.github/ci.yml`을 `github/ci.yml`로 만들었다.
+    path = re.sub(r'^(?:\.?/)+', '', path.replace(chr(92), '/'))
     # 글롭(codemap/*, tests/**)은 디렉터리 범위 기록이다. 슬래시를 남겨 경로로 인정한다.
     return path if path.endswith('/') else path.rstrip('/')
 

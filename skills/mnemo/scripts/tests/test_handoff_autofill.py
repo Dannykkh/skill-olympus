@@ -314,5 +314,23 @@ class PeriodicDoctorVisitTests(unittest.TestCase):
             self.assertIn("RAN", text)
             self.assertIn("아키텍처 기억 없음", text)
 
+
+class RelativizeTests(unittest.TestCase):
+    """관찰 로그의 경로를 프로젝트 루트 기준 상대경로로. Windows·macOS 표기 모두 같은 결과여야 한다."""
+
+    def test_windows_and_mac_paths_keep_dot_folders(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from create_handoff import _relativize
+        cases = [
+            (Path("D:/git/proj"), "D:\\git\\proj\\.github\\workflows\\ci.yml", ".github/workflows/ci.yml"),
+            (Path("D:/git/proj"), "d:/git/proj/src/app.py", "src/app.py"),  # 드라이브 문자 대소문자
+            (Path("/Users/me/proj"), "/Users/me/proj/.claude/settings.json", ".claude/settings.json"),
+            (Path("/Users/me/proj"), "./src/app.py", "src/app.py"),
+            (Path("/Users/me/proj"), "../other/app.py", None),  # 루트 밖을 루트의 파일로 만들지 않는다
+        ]
+        for root, raw, expected in cases:
+            self.assertEqual(_relativize(raw, root), expected, raw)
+
+
 if __name__ == "__main__":
     unittest.main()

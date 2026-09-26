@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -49,17 +50,17 @@ def extract_paths(plugin: dict) -> list[tuple[str, str]]:
 
     for skill_path in plugin.get("skills", []):
         # "./skills/mermaid-diagrams" -> "skills/mermaid-diagrams"
-        clean = skill_path.lstrip("./")
+        clean = re.sub(r'^(?:\.?/)+', '', skill_path)
         paths.append((clean, "skill_dir"))
 
     for agent_path in plugin.get("agents", []):
         # "./agents/ui-ux-designer.md" -> "agents/ui-ux-designer.md"
-        clean = agent_path.lstrip("./")
+        clean = re.sub(r'^(?:\.?/)+', '', agent_path)
         paths.append((clean, "agent_file"))
 
     for command_path in plugin.get("commands", []):
         # "./commands/sync-branch.md" -> "commands/sync-branch.md"
-        clean = command_path.lstrip("./")
+        clean = re.sub(r'^(?:\.?/)+', '', command_path)
         paths.append((clean, "command_file"))
 
     return paths

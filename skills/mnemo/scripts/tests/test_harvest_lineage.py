@@ -33,6 +33,15 @@ class HarvestLineageTests(unittest.TestCase):
                 (directory / name).write_text(body, encoding="utf-8")
         return project
 
+    def test_normalize_strips_only_a_leading_dot_slash(self):
+        """lstrip('./')는 `.github/ci.yml`을 `github/ci.yml`로 만들었다 — 접두어만 뗀다."""
+        sys.path.insert(0, str(SCRIPTS))
+        import harvest_lineage
+        for raw, expected in [(".github/ci.yml", ".github/ci.yml"), ("./src/a.py", "src/a.py"),
+                              ("/src/a.py", "src/a.py"), ("src\\a.py:12", "src/a.py"),
+                              ("../other/a.py", "../other/a.py")]:
+            self.assertEqual(harvest_lineage.normalize_path(raw), expected, raw)
+
     def test_missing_handoff_directory_is_not_an_error(self):
         with tempfile.TemporaryDirectory() as temp:
             result = self.run_harvest(self.make_project(temp))

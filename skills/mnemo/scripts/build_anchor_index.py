@@ -92,7 +92,7 @@ def describe(entry: dict) -> str:
 
 def lookup(root: Path, index: dict, target: str) -> int:
     """한 파일에 기대는 결정. 하위 경로·파일명 끝자리 일치까지 받아준다."""
-    wanted = target.replace("\\", "/").strip().lstrip("./")
+    wanted = re.sub(r'^(?:\.?/)+', '', target.replace("\\", "/").strip())
     hits = []
     for anchor, entries in index.items():
         if anchor == wanted or anchor.endswith("/" + wanted) or wanted.endswith("/" + anchor):

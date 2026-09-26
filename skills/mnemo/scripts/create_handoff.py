@@ -289,7 +289,12 @@ def _relativize(raw, root: Path) -> str | None:
             text = Path(raw).resolve().relative_to(root.resolve()).as_posix()
         except (ValueError, OSError):
             return None  # 루트 밖 — 계보 대상이 아니다
-    return text.lstrip("./") or None
+    # 접두어 `./`·`/`만 뗀다. lstrip("./")는 글자 집합을 지워 `.github/`를 `github/`로,
+    # `../x`를 루트의 `x`로 바꿨다.
+    text = re.sub(r'^(?:\.?/)+', '', text)
+    if text == ".." or text.startswith("../"):
+        return None  # 루트 밖
+    return text or None
 
 
 # 핸드오프는 한 세션의 인계다. 같은 날 다른 세션이 섞이지 않게 세션 ID로 거른다 (gotcha 091).

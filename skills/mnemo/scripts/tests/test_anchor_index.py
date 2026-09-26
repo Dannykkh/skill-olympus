@@ -48,6 +48,14 @@ class AnchorIndexTests(unittest.TestCase):
             self.assertIn("CURRENT", out)
             self.assertIn("기대는 결정 1건", out)
 
+    def test_lookup_keeps_the_dot_of_dot_folders(self):
+        """`./` 접두어만 뗀다 — 글자 집합으로 지우면 `.github/`가 `github/`가 되어 조회가 빗나간다."""
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            self.entry(root, "architecture", "061-ci.md", "`files:` .github/workflows/ci.yml")
+            self.assertIn("061-ci", self.index(root, "--file", ".github/workflows/ci.yml"))
+            self.assertIn("061-ci", self.index(root, "--file", "./.github/workflows/ci.yml"))
+
     def test_lookup_also_finds_entries_that_only_name_the_path_in_prose(self):
         """계약 적용 전 항목이 대부분이다. 그것들이 안 걸리면 조회를 지금 켤 수 없다."""
         with tempfile.TemporaryDirectory() as temp:
