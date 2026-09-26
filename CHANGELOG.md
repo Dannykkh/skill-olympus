@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.14.0] - 2026-09-27
+
+### Features
+
+- **mnemo**: In projects with a TermSnap component map (`codemap/component-map.json`), `create_handoff.py` adds a `Component map:` line to Session Memory Review. It reads only TermSnap's `codemap/components/owners.json` contract and reports this session's files with no owning component, files that need the map regenerated, a contract older than the map, and map errors. Projects without a map get no line; a map without a readable contract gets `NOT RUN`. The skill never edits the map or re-implements TermSnap's source rules. (e58271e)
+- **mnemo**: A file in neither `owners` nor `uncovered` counts as needing regeneration only when its top-level folder and extension appear in the contract, and mnemo records (`memory/`, `conversations/`, `docs/handoffs/`) and `codemap/` are excluded, so a handoff's own edits do not trip it. Renames are judged by the old path because `git mv` keeps the modification time. Session files come from observed Edit/Write; git untracked files are the fallback when there are no observations, and the line says so. (e58271e)
+- **mnemo**: `validate_handoff.py` warns, without blocking, when the line's findings carry neither `→ 배정함:` (assigned) nor `→ 보류:` (deferred). (e58271e)
+
+### Bug Fixes
+
+- **mnemo**: Record paths lost the dot of dot folders. `lstrip("./")` removes a character set, so `.github/ci.yml` became `github/ci.yml` and `../x` became the root file `x`; observed edits under dot folders dropped out of Files Modified and anchor lookups for them never matched. Only leading `./` and `/` segments are stripped now, and paths that climb out of the root are dropped. The same fix applies to `scripts/build_plugins.py`. (28b13e1)
+- **mnemo**: `python -m unittest tests.x` failed on machines where another package had installed a top-level `tests` package into site-packages. The Mnemo and Codex Mnemo test folders are now regular packages; running from the project root with `discover -s` works as before. (270258e)
+- **mnemo**: Handoffs created from the Codex and Antigravity installs skipped the anchor index rebuild (`SKIPPED — build_anchor_index 없음`) because `build_anchor_index.py` was never in the shared adapter file list. It now ships to every adapter, and the adapter install test checks that a handoff reports `Anchor index: RAN`. (7816815)
+
+### Documentation
+
+- Update the handoff memory reference with the agent's assign-or-defer procedure, the manual handoff template, `SKILL.md`, and the four language READMEs. (e58271e)
+
+### Validation and Scope
+
+- Mnemo Python tests passed (199, 21 new), including a git rename fixture, a case where memory, handoff, and map edits made in the same session are not reported, and Windows and macOS path forms for the dot-folder fix (the three path tests fail on the previous code). Both `discover -s` from the root and `python -m unittest tests.x` from `scripts/` pass on a machine with a shadowing site-packages `tests`. Routing, sync-policy, and Mnemo Node tests passed (90). Windows full installation completed with 12 installed-runtime checks passing; the installed Claude, Codex, and Antigravity copies of the generator, validator, and references match the source, and Grok reads the Claude copy.
+- Against the real linuxserverai `owners.json` (2,829 owners, 0 uncovered), both the observation path and the git fallback report OK with no false regeneration.
+- Known limits: end-to-end use needs a TermSnap release that writes `owners.json`; until then such projects show `NOT RUN`. A brand-new top-level source folder is not flagged until the map is regenerated, which then reports it as unowned.
+
 ## [6.13.0] - 2026-09-24
 
 ### Features

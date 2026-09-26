@@ -389,7 +389,7 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
-**v6.14.0:** In projects with a TermSnap component map (`codemap/component-map.json`), `create_handoff.py` adds a `Component map:` line that reads TermSnap's `codemap/components/owners.json` and reports this session's files that have no owning component, files that need the map regenerated, and map errors. `validate_handoff.py` warns when those findings carry neither `→ 배정함:` (assigned) nor `→ 보류:` (deferred). Projects without a map get no line. The skill only reads the contract; it never edits the map or re-implements TermSnap's source rules.
+**v6.14.0:** In projects with a TermSnap component map (`codemap/component-map.json`), `create_handoff.py` adds a `Component map:` line that reads TermSnap's `codemap/components/owners.json` and reports this session's files that have no owning component, files that need the map regenerated, and map errors. `validate_handoff.py` warns when those findings carry neither `→ 배정함:` (assigned) nor `→ 보류:` (deferred). Projects without a map get no line. The skill only reads the contract; it never edits the map or re-implements TermSnap's source rules. This release also stops record paths under dot folders (`.github/…`) from losing their leading dot, which had dropped them from Files Modified and anchor lookups.
 
 **v6.13.0:** Mnemo tag lines now carry `learned:NNN` and `gotcha:NNN` alongside `arch:NNN`, and `validate_handoff.py` warns when a memory entry the *current session* touched never reached its tag line, or was written as `arch-057` instead of the colon form. The session comes from the handoff's `session <uuid>` evidence, so other sessions on the same day are not blamed.
 
