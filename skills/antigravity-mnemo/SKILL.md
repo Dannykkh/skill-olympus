@@ -51,6 +51,8 @@ Git 환경변수·하위 cwd로 저장 위치를 바꾸지 않으며, Git도 `.m
 일반 cwd에는 자동 저장하지 않는다. 비-Git 프로젝트는 명시한 workspace에서
 초기화한다. 설치 패키지에는 공통 핸드오프 `scripts/`도 포함된다. 소스 checkout의
 핸드오프 도구 정본은 `skills/mnemo/scripts/`이다. 실행에는 Python 3와 Node.js가 필요하다.
+Python 명령은 `python`·`py`·`python3` 중 `--version`이 되는 첫 것을 쓴다 — `python`만 실패했다고
+Python 없음으로 판정하지 않는다(Windows 스토어 별칭, `references/handoff-memory.md` 3항).
 
 ## 프로젝트 스킬 자기개선
 

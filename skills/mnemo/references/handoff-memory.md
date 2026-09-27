@@ -19,7 +19,11 @@
    `validate_handoff.py`가 따로 본다. 세션은 Origin 출처의 `session <uuid>`로 특정하므로 `--origin-source`에
    세션 ID를 적는다 — 없으면 하루 전체로 판단하고 그렇다고 밝힌다.
    `create_handoff.py`는 이 조건 검사와 진단을 수행하므로 같은 핸드오프에서 중복 실행하지 않는다.
-3. Python/Node 또는 도구가 없거나 실행이 실패하면 `NOT RUN/ERROR`와 이유를 남긴다.
+3. Python 명령은 `python --version` → `py --version` → `python3 --version` 순으로 처음 성공하는 것을 쓴다.
+   Windows 스토어 별칭(WindowsApps의 `python.exe`·`python3.exe`)은 이름만 있고 실행이 실패하므로 여기서
+   걸러지고, python.org 설치에서 PATH를 안 켜면 `py` 런처만 있다. `python` 하나가 실패했다고 Python 없음으로
+   판정하지 않는다 — 셋 다 실패할 때만 `NOT RUN — Python 없음`이고, 설치·별칭 끄기 안내는 `install.js --check`가 준다.
+   Python/Node 또는 도구가 없거나 실행이 실패하면 `NOT RUN/ERROR`와 이유를 남긴다.
    핸드오프는 계속 작성하되 검사 성공·기억 복구 완료로 보고하지 않는다.
    직접 작성할 때도 같은 조건을 확인하고, 도구가 없으면 수동 점검으로 보완한다.
 

@@ -33,7 +33,9 @@ node skills/mnemo/install.js --uninstall  # 제거
 
 **Python이 없어도 기억은 계속 쌓입니다.** 저장 훅은 전부 셸 스크립트이고, Python은
 쌓인 것을 읽고 분석하는 도구에만 필요합니다. `install.js --check`의 `[4/4]`가 현재
-상태를 알려주며, **Python 없음은 설치 실패로 치지 않습니다.**
+상태를 알려주며, **Python 없음은 설치 실패로 치지 않습니다.** 명령은 `python`·`py`·`python3` 중
+`--version`이 되는 첫 것을 씁니다 — Windows 스토어 별칭 때문에 `python`만 실패하고 `py`는 되는 PC가 있습니다
+([판정 규칙](references/handoff-memory.md)).
 
 > **Python 없이 핸드오프 쓰기**: `references/handoff-template.md`를 읽고
 > `docs/handoffs/YYYY-MM-DD-HHMMSS-{slug}.md`에 직접 작성합니다. 스캐폴드와 검증만
