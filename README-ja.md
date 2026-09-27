@@ -285,6 +285,12 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v6.14.1 — Python の判定を名前ではなく実行で行う
+
+フックとインストール点検が、名前だけの Python を本物と取り違えなくなりました。Windows の `python`・`python3` は PATH にあっても実行できないストアのエイリアスの場合があり、macOS には `python3` しかありません。アンカー索引の再生成フックと API 検証フックは、`python`・`py`・`python3` のうち実際に実行できる最初のコマンドを使うため、再生成を飛ばしたり偽の構文エラーを出したりせず、空白を含むプロジェクトパスでも動作します。`install.js --check` は Python のインストール方法とエイリアスの無効化方法を案内し、エージェントは 3 つすべてが失敗したときだけ引き継ぎツールを使えないと報告します。
+
+[変更履歴](CHANGELOG.md)
+
 ## v6.14.0 — Mnemo 引き継ぎのコンポーネントマップ点検
 
 TermSnap のコンポーネントマップ（`codemap/component-map.json`）があるプロジェクトでは、`create_handoff.py` が `Component map:` 行を書きます。TermSnap が生成する `codemap/components/owners.json` を読み、今回のセッションのファイルのうち担当コンポーネントがないもの、マップの再生成が必要なもの、マップのエラーを知らせます。`validate_handoff.py` は、その結果に `→ 배정함:`（割り当て済み）も `→ 보류:`（保留）もない場合に警告します。マップのないプロジェクトには行が付きません。スキルは契約ファイルを読むだけで、マップの修正や TermSnap のソース判定規則の再実装は行いません。あわせて、ドットで始まるフォルダー（`.github/…`）のパスが先頭のドットを失い、Files Modified とアンカー照会から漏れていた問題も修正しました。

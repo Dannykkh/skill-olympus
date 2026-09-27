@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.14.1] - 2026-09-27
+
+### Bug Fixes
+
+- **hooks**: The edit-time anchor index rebuild in `save-tool-use.ps1`/`.sh` looked only for `python`, so it never ran where `python` is the Windows Store alias (a name that exits 9009), and likely not on macOS, which ships only `python3` by default (not measured on a Mac). It now uses the first of `python`, `py`, `python3` whose `--version` succeeds, the same rule the reconcile hook and `install.js` already used. The PowerShell hook also quotes its arguments; `Start-Process` split project roots with spaces such as `Visual Studio 2022`. (a11c81e)
+- **hooks**: `validate-api.ps1`/`.sh` picked `python3` first, so on a PC with the Store alias every `.py` file under `api/` or `routes/` was reported as a syntax error. The same probe now chooses a working interpreter. (a11c81e)
+- **mnemo**: `install.js --check` now names the commands it tried, points out names that exist but do not run (likely Store aliases, with where to turn them off), and gives install commands for Windows, macOS, and Linux. Python is still optional and never counted as an install failure. (c2b6183)
+
+### Documentation
+
+- **mnemo**: The handoff memory reference and the four Mnemo `SKILL.md` files tell the agent to try `python`, `py`, then `python3`, and to report `NOT RUN — Python 없음` only when all three fail. A session that tested only `python` reported the handoff tools as unavailable on a PC where `py` may have worked. (cc2c89f)
+
+### Validation and Scope
+
+- New `mnemo-python-stub.test.js` puts failing `python`/`python3` stubs first on PATH and checks both anchor hooks rebuild the index for a root with spaces and both API hooks accept a valid file and still reject a broken one; all four fail on the previous hooks. `mnemo-optional-runtime.test.js` runs the health check with the real Store alias folder first on PATH (finds `py`) and alone (prints the guidance). Node tests passed (155 plus the Codex Mnemo install check). Windows full installation completed with 12 installed-runtime checks passing, and `install.js --check` reports no drift.
+- Not run: `installers.test.js` (no skill count change), a macOS run of the anchor hook, and an end-to-end check on the PC that reported the Store alias.
+
 ## [6.14.0] - 2026-09-27
 
 ### Features

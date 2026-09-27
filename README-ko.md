@@ -388,6 +388,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v6.14.1:** 훅과 설치 점검이 이름만 있는 Python을 진짜로 오인하지 않습니다. Windows의 `python`·`python3`는 PATH에 있어도 실행되지 않는 스토어 별칭일 수 있고, macOS에는 `python3`만 있습니다. 앵커 색인 재생성 훅과 API 검증 훅은 이제 `python`·`py`·`python3` 중 실제로 실행되는 첫 명령을 써서, 재생성을 건너뛰거나 가짜 구문 오류를 내지 않고 공백 있는 프로젝트 경로에서도 동작합니다. `install.js --check`는 Python 설치 방법과 별칭 끄는 방법을 알려주고, 에이전트는 셋 다 실패할 때만 핸드오프 도구를 쓸 수 없다고 보고합니다.
+
 **v6.14.0:** TermSnap 부품 지도(`codemap/component-map.json`)가 있는 프로젝트에서 `create_handoff.py`가 `Component map:` 줄을 씁니다. TermSnap이 만든 `codemap/components/owners.json`을 읽어 이번 세션 파일 중 주인 부품이 없는 것(미배정), 지도 재생성이 필요한 것, 지도 오류를 알립니다. `validate_handoff.py`는 이 결과에 `→ 배정함:`이나 `→ 보류:`가 없으면 경고합니다. 지도가 없는 프로젝트에는 줄이 없습니다. 스킬은 계약 파일만 읽고 지도를 고치거나 TermSnap의 소스 판정 규칙을 재구현하지 않습니다. 점으로 시작하는 폴더(`.github/…`)의 경로가 앞의 점을 잃어 Files Modified와 앵커 조회에서 빠지던 문제도 고쳤습니다.
 
 **v6.13.0:** Mnemo 태그 줄의 예약 필드에 `arch:NNN`과 함께 `learned:NNN`·`gotcha:NNN`을 추가했습니다. `validate_handoff.py`는 **현재 세션**이 건드린 기억 항목의 번호가 태그 줄에 없거나 `arch-057`처럼 하이픈으로 적혔으면 경고합니다. 세션은 핸드오프 출처의 `session <uuid>`로 특정하므로 같은 날 다른 세션의 항목은 섞이지 않습니다.

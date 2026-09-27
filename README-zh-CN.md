@@ -277,6 +277,12 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v6.14.1 — 按能否运行而非名称判断 Python
+
+钩子和安装检查不再把只有名称的 Python 误认为可用的解释器。Windows 上的 `python`、`python3` 可能是出现在 PATH 中却无法运行的应用商店别名，而 macOS 默认只有 `python3`。锚点索引重建钩子和 API 校验钩子现在使用 `python`、`py`、`python3` 中第一个真正能运行的命令，因此不再跳过重建或报告虚假的语法错误，在包含空格的项目路径下也能正常工作。`install.js --check` 会说明如何安装 Python 或关闭这些别名；只有三者都失败时，代理才会报告交接工具不可用。
+
+[更新日志](CHANGELOG.md)
+
 ## v6.14.0 — Mnemo 交接中的组件地图检查
 
 在存在 TermSnap 组件地图（`codemap/component-map.json`）的项目中，`create_handoff.py` 会写入一行 `Component map:`。它读取 TermSnap 生成的 `codemap/components/owners.json`，报告本次会话的文件中没有归属组件的文件、需要重新生成地图的文件以及地图错误。若这些结果既没有 `→ 배정함:`（已分配）也没有 `→ 보류:`（暂缓），`validate_handoff.py` 会发出警告。没有地图的项目不会出现该行。技能只读取契约文件，不修改地图，也不重新实现 TermSnap 的源文件判定规则。此外还修复了以点开头的文件夹（`.github/…`）路径丢失开头的点、从而被 Files Modified 和锚点查询遗漏的问题。
