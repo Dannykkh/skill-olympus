@@ -26,9 +26,13 @@ $Extension = [System.IO.Path]::GetExtension($FilePath)
 # Python 파일 검증
 if ($Extension -eq ".py") {
     # 구문 검사
-    $python = Get-Command python3 -ErrorAction SilentlyContinue
-    if (-not $python) {
-        $python = Get-Command python -ErrorAction SilentlyContinue
+    # 스토어 스텁(WindowsApps의 python3.exe)은 실행이 실패해 가짜 구문 오류를 낸다 — --version이 되는 첫 명령을 쓴다.
+    $python = $null
+    foreach ($cmd in @('python', 'py', 'python3')) {
+        $resolved = Get-Command $cmd -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $resolved) { continue }
+        try { $null = & $resolved.Source --version 2>&1 } catch { continue }
+        if ($LASTEXITCODE -eq 0) { $python = $resolved; break }
     }
 
     if ($python) {

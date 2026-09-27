@@ -123,9 +123,21 @@ function Invoke-MnemoAnchorNotify {
         if (-not (Test-Path -LiteralPath $builder)) {
             $builder = Join-Path $HOME ".claude/skills/mnemo/scripts/build_anchor_index.py"
         }
-        if ((Test-Path -LiteralPath $builder) -and (Get-Command python -ErrorAction SilentlyContinue)) {
+        # 스토어 스텁(WindowsApps의 python.exe·python3.exe)은 --version이 실패한다 — 되는 첫 명령을 쓴다
+        # (reconcile 훅·install.js와 같은 판정). 기억 항목을 고칠 때만 도는 경로라 확인 프로세스 하나는 예산 안이다 (architecture 057).
+        $python = $null
+        if (Test-Path -LiteralPath $builder) {
+            foreach ($cmd in @('python', 'py', 'python3')) {
+                $resolved = Get-Command $cmd -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+                if (-not $resolved) { continue }
+                try { $null = & $resolved.Source --version 2>&1 } catch { continue }
+                if ($LASTEXITCODE -eq 0) { $python = $resolved.Source; break }
+            }
+        }
+        if ($python) {
             try {
-                Start-Process -FilePath "python" -ArgumentList @($builder, "--project-root", $Root, "--out") `
+                # Start-Process는 인자를 따옴표로 감싸지 않는다 — 공백 있는 루트(Visual Studio 2022 등)가 쪼개지지 않게 직접 감싼다.
+                Start-Process -FilePath $python -ArgumentList ('"{0}" --project-root "{1}" --out' -f $builder, $Root) `
                     -WindowStyle Hidden -ErrorAction Stop | Out-Null
             } catch { }
         }

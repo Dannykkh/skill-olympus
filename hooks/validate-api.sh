@@ -23,8 +23,16 @@ echo "[Hook] Validating API file: $FILE_PATH"
 # Python 파일 검증
 if [[ "$FILE_PATH" == *.py ]]; then
     # 구문 검사
-    if command -v python3 &> /dev/null; then
-        python3 -m py_compile "$FILE_PATH" 2>&1 || {
+    # Windows 스토어 스텁 python3는 실행이 실패해 가짜 구문 오류를 낸다 — --version이 되는 첫 명령을 쓴다.
+    PY=""
+    for cmd in python3 python py; do
+        if command -v "$cmd" &> /dev/null && "$cmd" --version &> /dev/null; then
+            PY="$cmd"
+            break
+        fi
+    done
+    if [ -n "$PY" ]; then
+        "$PY" -m py_compile "$FILE_PATH" 2>&1 || {
             echo "[Hook] ERROR: Python syntax error in $FILE_PATH"
             exit 1
         }

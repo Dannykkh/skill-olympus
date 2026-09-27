@@ -107,8 +107,19 @@ mnemo_anchor_notify() {
         memory/*/[0-9]*.md)
             local builder="$PROJECT_ROOT/skills/mnemo/scripts/build_anchor_index.py"
             [ -f "$builder" ] || builder="$HOME/.claude/skills/mnemo/scripts/build_anchor_index.py"
-            if [ -f "$builder" ] && command -v python >/dev/null 2>&1; then
-                ( python "$builder" --project-root "$PROJECT_ROOT" --out >/dev/null 2>&1 & ) >/dev/null 2>&1
+            # macOS·Homebrew에는 python3만 있고, Windows 스토어 스텁은 --version이 실패한다 — 되는 첫 명령을 쓴다
+            # (reconcile 훅과 같은 판정). 기억 항목을 고칠 때만 도는 경로라 확인 프로세스 하나는 예산 안이다.
+            local py=""
+            if [ -f "$builder" ]; then
+                for cmd in python python3 py; do
+                    if command -v "$cmd" >/dev/null 2>&1 && "$cmd" --version >/dev/null 2>&1; then
+                        py="$cmd"
+                        break
+                    fi
+                done
+            fi
+            if [ -n "$py" ]; then
+                ( "$py" "$builder" --project-root "$PROJECT_ROOT" --out >/dev/null 2>&1 & ) >/dev/null 2>&1
             fi
             return 0
             ;;
