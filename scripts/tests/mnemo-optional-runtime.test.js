@@ -58,6 +58,35 @@ test("Python 부재 자체는 health check 실패로 세지 않는다", () => {
   }
 });
 
+// 이름만 Python인 스토어 별칭(WindowsApps\python.exe)이 있는 PC에서만 의미가 있다.
+// 스토어에서 진짜 Python을 설치했으면 별칭이 실제로 돌므로 스텁 시나리오가 아니다.
+function storeAliasDir() {
+  if (process.platform !== "win32") return null;
+  const dir = path.join(process.env.LOCALAPPDATA || "", "Microsoft", "WindowsApps");
+  const alias = path.join(dir, "python.exe");
+  // 별칭은 재분석 지점이라 fs.existsSync가 false를 낸다 — 폴더 목록으로 본다.
+  if (!fs.readdirSync(dir).includes("python.exe")) return null;
+  return spawnSync(alias, ["--version"], { encoding: "utf8", windowsHide: true }).status === 0 ? null : dir;
+}
+const aliasDir = storeAliasDir();
+const pyLauncher = spawnSync("py", ["--version"], { encoding: "utf8", windowsHide: true }).status === 0;
+
+test("스토어 별칭이 PATH 앞에 있어도 py 런처를 찾는다", { skip: !aliasDir || !pyLauncher }, () => {
+  const key = Object.keys(process.env).find((k) => k.toUpperCase() === "PATH") || "PATH";
+  const front = `${aliasDir}${path.delimiter}${process.env[key]}`;
+  const out = `${runCheck({ PATH: front, Path: front }).stdout || ""}`;
+  assert.match(out, /Python 3\.\d+[^\n]*\(py\)/, "별칭 뒤의 py 런처를 찾지 못했습니다");
+  assert.doesNotMatch(out, /Python 3을 찾지 못했습니다/);
+});
+
+test("스토어 별칭만 있으면 설치와 별칭 끄기를 안내한다", { skip: !aliasDir }, () => {
+  const out = `${runCheck({ PATH: aliasDir, Path: aliasDir }).stdout || ""}`;
+  assert.match(out, /Python 3을 찾지 못했습니다/);
+  assert.match(out, /실행 안 됨: python/, "찾히지만 실행되지 않는 별칭을 구분하지 않습니다");
+  assert.match(out, /앱 실행 별칭/);
+  assert.match(out, /winget install -e --id Python\.Python/);
+});
+
 test("Python이 있으면 버전과 함께 사용 가능하다고 보고한다", () => {
   const out = `${runCheck({}).stdout || ""}`;
   const hasPython = spawnSync("python", ["--version"], { encoding: "utf8" }).status === 0

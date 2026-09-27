@@ -33,30 +33,39 @@ const claudeDir = process.env.CLAUDE_CONFIG_DIR
 // 무엇이 되고 무엇이 안 되는지만 알린다 — 없는 줄 모르고 쓰다 중요한 순간에 실패하는 것이
 // 진짜 사고이기 때문이다.
 function detectPython() {
-  // Windows 스토어의 python3 stub는 실행하면 스토어로 리다이렉트하므로
+  // Windows 스토어의 python·python3 stub는 실행하면 스토어로 리다이렉트하므로
   // --version이 실제로 성공하는지까지 확인한다 (reconcile 훅과 같은 판정).
+  // 찾히지만 실행되지 않은 이름은 stub일 가능성이 높아 따로 알린다.
+  const broken = [];
   for (const cmd of ["python", "py", "python3"]) {
     try {
-      const probe = spawnSync(cmd, ["--version"], { encoding: "utf8", timeout: 5000 });
-      if (probe.status === 0) {
-        const version = `${probe.stdout || ""}${probe.stderr || ""}`.trim();
-        const major = /Python (\d+)\./.exec(version);
-        if (major && Number(major[1]) >= 3) return { cmd, version };
-      }
+      const probe = spawnSync(cmd, ["--version"], { encoding: "utf8", timeout: 5000, windowsHide: true });
+      if (probe.error) continue;
+      const version = `${probe.stdout || ""}${probe.stderr || ""}`.trim();
+      const major = /Python (\d+)\./.exec(version);
+      if (probe.status === 0 && major && Number(major[1]) >= 3) return { cmd, version };
+      if (probe.status !== 0) broken.push(cmd);  // Python 2처럼 실행은 되는 이름은 별칭이 아니다
     } catch {
       // 다음 후보로 넘어간다
     }
   }
-  return null;
+  return { broken };
 }
 
 // Python이 없을 때 무엇이 멈추는지 한 곳에서 설명한다.
 function reportPythonStatus(python, { asIssue = false } = {}) {
-  if (python) {
+  if (python && python.cmd) {
     console.log(`      ✅ ${python.version} (${python.cmd}) — 핸드오프 도구 사용 가능`);
     return 0;
   }
   console.log("      ⚠️  Python 3을 찾지 못했습니다 (설치 실패 아님)");
+  console.log("         확인함  : python → py → python3 중 --version이 되는 첫 명령");
+  if (python && python.broken && python.broken.length) {
+    console.log(`         실행 안 됨: ${python.broken.join(", ")} — 이름만 있는 Windows 스토어 별칭일 수 있음.`);
+    console.log("                   설정 > 앱 > 고급 앱 설정 > 앱 실행 별칭에서 python.exe·python3.exe 끄기");
+  }
+  console.log("         설치    : Windows  winget install -e --id Python.Python.3.12 (새 터미널에서 다시 확인)");
+  console.log("                   macOS    brew install python · Linux  배포판의 python3 패키지");
   console.log("         동작함  : 대화 자동 저장, 도구 관찰 로그, MEMORY.md 규칙");
   console.log("         안 됨   : create_handoff / validate_handoff / list_handoffs /");
   console.log("                   check_staleness / harvest_lineage / check_memory_anchors");
