@@ -41,8 +41,8 @@ const installAntigravityMnemo = path.join(repoRoot, "skills", "antigravity-mnemo
 const expectedSourceOnlySkillCount = fs.existsSync(
   path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
 )
-  ? 78
-  : 77;
+  ? 79
+  : 78;
 const expectedSourceOnlySkillPattern = new RegExp(
   `source-only 스킬: ${expectedSourceOnlySkillCount}개`,
 );
@@ -1598,6 +1598,8 @@ test("localized README surfaces stay connected and disclose portable hosts", () 
     assert.match(contents, /install-openclaw\.(?:bat|sh)/);
     assert.match(contents, /install-hermes\.(?:bat|sh)/);
     assert.match(contents, /skills-only/i);
+    assert.match(contents, /Devin CLI/);
+    assert.match(contents, /skills\/devin-mnemo\/SKILL\.md/);
     assert.match(contents, /docs\/skill-registry-migration\.md/);
   }
 

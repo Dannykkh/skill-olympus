@@ -16,12 +16,13 @@
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
 ![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
+![Devin CLI](https://img.shields.io/badge/Devin_CLI-Claude_skills%2BMnemo-6A5ACD)
 ![OpenClaw](https://img.shields.io/badge/OpenClaw-skills--only-5B4B8A)
 ![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-skills--only-8A5A44)
 
 Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Build**를 쓰는 개인
-개발자를 위한 프로덕션 지향 하네스입니다. 여러 CLI에 같은 워크플로우를 설치하고, 필요한
-전문가 하나만 부르거나 제우스에게 전체 전달 루프를 맡길 수 있습니다.
+개발자를 위한 프로덕션 지향 하네스입니다. Devin CLI도 Claude 스킬을 읽고 자체 Mnemo 훅으로
+대화를 저장할 수 있습니다. 필요한 전문가를 부르거나 제우스에게 전체 전달 루프를 맡길 수 있습니다.
 
 ```bash
 /zeus "쇼핑몰 만들어줘. React + Spring Boot + PostgreSQL"
@@ -47,9 +48,9 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | **의도대로 구현됐다는 증거** | `/argos`가 명세, 코드, API, 시나리오, 다이어그램, 보안 경계를 대조 |
 | **실제로 실행되는 브라우저 테스트** | `/minos`가 Playwright 시나리오를 만들고 실행하며 제한된 반복 안에서 실패를 수정 |
 | **세션을 넘어가는 기억** | `mnemo`가 인덱스, 의미기억, 검색 가능한 대화, 재개 가능한 핸드오프를 유지 |
-| **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 77개로 라우팅 |
+| **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 78개로 라우팅 |
 
-**공개 추적 스킬 소스 101개(기본 allowlist 합집합 24개 = 사용자 진입점 18개 + 런타임 어댑터 6개, 통합 표면별 활성 20개 또는 21개, skills-only 호스트 활성 18개, source-only 내부·선택 모듈 77개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + skills-only 호스트 2개 · 신화 1개**
+**공개 추적 스킬 소스 102개(기본 allowlist 합집합 24개 = 사용자 진입점 18개 + 런타임 어댑터 6개, 통합 표면별 활성 20개 또는 21개, skills-only 호스트 활성 18개, source-only 내부·선택 모듈 78개) · 에이전트 참고 소스 42개(최상위 40개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
 
 ---
 
@@ -63,6 +64,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md`의 `CODEX-MNEMO` 블록 | `config.toml`의 notify 연결과 관리 스킬 설정 |
 | Antigravity CLI | `~/.gemini/GEMINI.md`의 `ANTIGRAVITY-MNEMO` 블록 | `~/.gemini/config/hooks.json`; CLI·MCP 설정은 별도 |
 | Grok Build | `~/.grok/rules/grok-mnemo.md`와 Claude 공통 규칙 | `~/.grok/hooks/grok-mnemo.json`; Claude 호환 설정 |
+| Devin CLI | Windows `%APPDATA%/devin/AGENTS.md`, macOS/Linux `~/.config/devin/AGENTS.md`의 `DEVIN-MNEMO` 블록 | `config.json`의 네이티브 훅; Claude 스킬 `~/.claude/skills/` 공유 |
 
 **이번 버전에서는 기본 지침이 다음과 같이 바뀝니다.**
 
@@ -138,6 +140,13 @@ chmod +x install.sh && ./install.sh
 해당 홈의 스킬·카탈로그·source-only 라이브러리·훅·설정 파일은 준비하고, MCP 등록처럼
 실행 파일이 필요한 명령만 건너뜁니다. 나중에 CLI를 설치한 뒤 같은 설치기를 다시 실행하면 됩니다.
 
+Devin CLI가 감지되면 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)도 설치합니다. Devin은
+Claude 스킬을 읽고, 자체 `UserPromptSubmit`·`Stop`·`SessionEnd` 훅으로 대화를
+`conversations/*-devin.md`에 저장합니다. 어댑터만 설치하거나 확인하려면
+`node skills/devin-mnemo/install.js`, `node skills/devin-mnemo/install.js --check`를 실행하세요.
+응답 저장에는 Python 3와 Devin 로컬 세션 DB 접근이 필요합니다. Windows 실제 턴에서 검증했고,
+macOS·Linux 런타임 저장은 아직 검증하지 않았습니다.
+
 Claude·Codex·Antigravity의 기본 MCP는 `context7`과 `playwright`입니다. Chrome DevTools MCP는
 선택 설치로 바뀌었습니다. 필요할 때 Claude는 `node install-mcp.js chrome-devtools`, Codex는
 `node install-mcp-codex.js chrome-devtools`, Antigravity는
@@ -159,7 +168,7 @@ Claude·Codex·Antigravity의 기본 MCP는 `context7`과 `playwright`입니다.
 
 ### OpenClaw·Hermes Agent skills-only 설치
 
-아래 진입점은 사용자용 공통 스킬 18개와 source-only 모듈 77개를 설치합니다. 플러그인,
+아래 진입점은 사용자용 공통 스킬 18개와 source-only 모듈 78개를 설치합니다. 플러그인,
 훅, Mnemo, MCP, 사용자 정의 에이전트, 기존 네 CLI용 런타임 어댑터는 설치하지 않습니다.
 
 ```powershell
@@ -573,6 +582,15 @@ Python이 없어도 훅은 매 턴 저장하며, 핸드오프는 `skills/mnemo/r
 | 오케스트레이션 | 네이티브 작업자; 선택 MCP | 네이티브 작업자; 선택 MCP | 네이티브 작업자; 선택 MCP | 네이티브 작업자; MCP PM host만 |
 | 설치 | 인수 없는 설치기가 자산 준비, `claude`가 있을 때 CLI 명령 실행 | 같은 설치기가 자산 준비, `codex`가 있을 때 MCP 명령 실행 | 같은 설치기가 스킬·훅·`mcp_config.json`을 직접 구성; Antigravity 실행에만 `agy` 필요 | Claude 공유 자산, Grok 홈 존재 시 grok-mnemo 실행 |
 
+### Devin CLI: Claude 스킬과 자체 Mnemo 훅
+
+Devin은 Claude Code 스킬 디렉터리의 `/mnemo`를 읽습니다. 설치기는 Devin이 감지될 때
+전용 대화 저장 훅과 짧은 규칙 블록을 추가합니다. 별도의 다섯 번째 전체 동기화 대상이나
+MCP·에이전트·워크플로우 동등 지원으로 간주하지 않습니다. 훅은 사용자 입력과 응답을 네 통합 CLI와
+같은 프로젝트 `conversations/`에 저장하고, Python 3로 Devin 로컬 세션 DB에서 응답을 읽습니다.
+Devin CLI 3000.11.3의 Windows 실제 턴으로 확인했으며 macOS·Linux 런타임 저장은 미검증입니다.
+[설치·검증 절차](skills/devin-mnemo/SKILL.md)를 참고하세요.
+
 ### Agent Skills 이식 가능 호스트
 
 아래 호스트도 Agent Skills를 구현하지만, Olympus는 아직 이들에 대해 종단 간 런타임 지원을
@@ -589,7 +607,8 @@ Python이 없어도 훅은 매 턴 저장하며, 핸드오프는 `skills/mnemo/r
 | [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*`가 `~/.openclaw`에 활성 스킬 18개와 source 카탈로그 설치 | 플러그인 패키징·Olympus 별칭·훅/Mnemo·MCP·네이티브 서브에이전트 검증 없음 |
 
 따라서 정확한 짧은 문구는 **Claude Code, Codex CLI, Antigravity CLI, Grok Build에서 통합 지원;
-OpenClaw과 Hermes Agent에서 skills-only 설치 지원; 그 밖의 Agent Skills 호스트에는 스킬 본문 이식 가능**입니다. [Paperthin](https://github.com/LilMGenius/paperthin)의 "on any agent"는
+Devin CLI에서 Claude 스킬 호환과 자체 Mnemo 대화 저장; OpenClaw과 Hermes Agent에서 skills-only
+설치 지원; 그 밖의 Agent Skills 호스트에는 스킬 본문 이식 가능**입니다. [Paperthin](https://github.com/LilMGenius/paperthin)의 "on any agent"는
 가벼운 스킬 형식 표면을 설명하는 문구라서, 훅과 상태를 가진 Olympus에 그대로 쓰면 과장입니다.
 
 크로스 CLI 동기화는 `sync-claude-skills.js`, `sync-codex-assets.js`, `sync-antigravity-assets.js`와
@@ -600,7 +619,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 18개와
 `agent-team`·`mnemo` 어댑터 6개를 합친 24개입니다. 각 런타임은 호환되지 않는 어댑터
 3개 또는 4개를 제외해 Claude 21개, Codex/Antigravity/독립 Grok 20개를 활성화하며,
-실제 Grok 설치 표면은 Claude의 공유 21개를 읽습니다. allowlist 밖의 같은 77개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
+실제 Grok 설치 표면은 Claude의 공유 21개를 읽습니다. allowlist 밖의 같은 78개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
 `SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
 `--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
 이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
@@ -642,7 +661,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 ## 구성 요소
 
-### 스킬 소스 (101개, 기본 합집합 24개, 설치 표면별 활성 20개 또는 21개)
+### 스킬 소스 (102개, 기본 합집합 24개, 설치 표면별 활성 20개 또는 21개)
 
 아래 표는 시작 시 레지스트리가 아니라 소스 목록입니다. 저빈도 문서 형식 도구, 서비스 통합, 프레임워크 레시피, 생성기는 명시 호출하거나 opt-in 설치하기 전까지 source-only로 남습니다.
 
@@ -654,7 +673,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | minos, auto-continue-loop, flow-verifier, themis + 3개 | 크로노스 루프, Playwright QA, 개인정보처리방침 생성(테미스) |
-| **메모리** | mnemo, memory-compact, project-gotchas, memory-distill | 3계층 메모리, 자동 학습, raw 정제(rebuild) |
+| **메모리** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill | 3계층 메모리, Devin 대화 저장 훅, raw 정제(rebuild) |
 | **문서** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3개 | 다이어그램, 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG, cathrynlavery/diagram-design MIT 벤더링), 프레젠테이션, 문서, 도메인 용어사전 |
 | **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing), 관리, 릴리즈 |
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |

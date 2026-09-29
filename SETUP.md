@@ -10,6 +10,8 @@
 
 설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 TermSnap 기본 대상인 Claude, Codex, Antigravity, Grok용 자산을 함께 준비합니다. OpenClaw과 Hermes Agent는 명시 선택 또는 호스트별 설치기로 스킬만 설치합니다. 선택한 통합 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비하며, MCP 설정처럼 해당 런타임에 필요한 구성도 직접 병합합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 실행 상태를 확인합니다.
 
+Devin CLI가 감지되면 Claude 스킬을 공유하는 상태에서 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)의 전용 대화 저장 훅도 설치합니다. 이 어댑터만 별도로 설치·점검하려면 `node skills/devin-mnemo/install.js`와 `node skills/devin-mnemo/install.js --check`를 사용하세요. 응답 저장에는 Python 3가 필요하며, Windows 실제 Devin 턴만 검증했습니다. Devin은 `--llm devin` 선택 대상이나 네 통합 CLI와 같은 전체 동기화 대상이 아닙니다.
+
 기본 MCP 등록은 Claude·Codex·Antigravity에 `context7`과 `playwright`만 적용합니다. Chrome DevTools MCP는 [MCP 설정 안내](mcp-configs/README.md)에 따라 필요할 때 수동 설치합니다. 기존 등록은 일반 재설치로 제거되지 않습니다.
 
 ```bash
@@ -36,7 +38,7 @@ bash ./install-hermes.sh
 ./install.sh --llm openclaw,hermes
 ```
 
-skills-only 설치는 공통 활성 스킬 18개와 공개 source-only 모듈 76개를 배치합니다. 기존 네
+skills-only 설치는 공통 활성 스킬 18개와 공개 source-only 모듈 78개를 배치합니다. 기존 네
 CLI용 `agent-team`·Mnemo 어댑터, 플러그인, 훅, MCP, 사용자 정의 에이전트는 설치하지 않습니다.
 호스트별 제거는 `install-openclaw.* --uninstall` 또는 `install-hermes.* --uninstall`을 사용합니다.
 
@@ -783,7 +785,7 @@ claude plugin install pg-aiguide
 
 ### 글로벌 스킬 소스 (직접 제작, 주요 항목)
 
-공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 97개(활성 21 + source-only 76), Codex와 Antigravity 각각 96개(활성 20 + source-only 76), OpenClaw과 Hermes Agent 각각 94개(활성 18 + source-only 76)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
+공개 추적 스킬 소스 102개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 99개(활성 21 + source-only 78), Codex와 Antigravity 각각 98개(활성 20 + source-only 78), OpenClaw과 Hermes Agent 각각 96개(활성 18 + source-only 78)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 21개를 공유합니다. Devin CLI는 Claude 스킬을 읽고 `devin-mnemo`가 자체 훅으로 대화를 저장하며, 네 통합 CLI의 전체 지원 수치에는 포함하지 않습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
 
 | 이름 | 기본 상태 | 용도 |
 |------|-----------|------|

@@ -11,6 +11,7 @@
 # 대화·관찰 저장은 grok-mnemo가 전담. 다만 post_tool_use에서는 앵커 조회만 수행한다 —
 # Grok은 Claude와 같은 hookSpecificOutput.additionalContext 스키마를 받아들이고
 # 모델에게 도구 결과 옆에 전달한다 (~/.grok/docs/user-guide/10-hooks.md "PostToolUse Output").
+if ($env:DEVIN_PROJECT_DIR) { exit 0 }
 if ($env:GROK_HOOK_EVENT -and $env:GROK_HOOK_EVENT -ne "post_tool_use") { exit 0 }
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)

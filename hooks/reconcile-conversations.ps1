@@ -9,6 +9,7 @@
 
 # Grok 세션 가드: Grok SessionStart마다 Claude/Codex reconcile 비용을 지불하지 않도록 즉시 종료.
 if ($env:GROK_HOOK_EVENT) { exit 0 }
+if ($env:DEVIN_PROJECT_DIR) { exit 0 }
 
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

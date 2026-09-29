@@ -16,12 +16,13 @@ CLIが備えるネイティブエージェントは、そのまま活用しま�
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-supported-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
 ![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
+![Devin CLI](https://img.shields.io/badge/Devin_CLI-Claude_skills%2BMnemo-6A5ACD)
 ![OpenClaw](https://img.shields.io/badge/OpenClaw-skills--only-5B4B8A)
 ![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-skills--only-8A5A44)
 
 Skill Olympusは、**Claude Code**、**Codex CLI**、**Antigravity CLI**、**Grok Build**を使う
-個人開発者向けの実践的なハーネスです。複数のCLIに同じワークフローを導入し、必要な
-専門機能だけを呼び出すことも、Zeusに開発全体を任せることもできます。
+個人開発者向けの実践的なハーネスです。Devin CLIはClaudeのスキルを読み込み、専用の
+Mnemoフックで会話を保存できます。必要な専門機能やZeusの一括ワークフローを利用できます。
 
 ```text
 /zeus "React、Spring Boot、PostgreSQLで小規模な在庫管理SaaSを作って"
@@ -33,7 +34,7 @@ Skill Olympusは、**Claude Code**、**Codex CLI**、**Antigravity CLI**、**Gro
 [クイックスタート](#クイックスタート) · [ワークフローを選ぶ](#ワークフローを選ぶ) · [CLI対応](#cli対応) · [Englishの詳細版](README.md)
 
 > Olympusは、大量のプロンプトを常時読み込む仕組みではありません。普段は18個の
-> 入口だけを公開し、下位モジュール77個は必要になった時点でカタログから読み込みます。
+> 入口だけを公開し、下位モジュール78個は必要になった時点でカタログから読み込みます。
 
 ---
 
@@ -48,8 +49,8 @@ Skill Olympusは、**Claude Code**、**Codex CLI**、**Antigravity CLI**、**Gro
 | **セッションをまたいで記憶する** | `mnemo`が索引、意味記憶、検索可能な会話、再開用ハンドオフを残す |
 | **開始時のコンテキストを軽くする** | 少数の入口から、必要なsource-onlyモジュールだけを読む |
 
-公開スキルソースは101個です。標準のallowlistは24個の和集合で、統合CLIでは20個または
-21個、skills-onlyホストでは18個が有効になります。残り77個はsource-onlyです。
+公開スキルソースは102個です。標準のallowlistは24個の和集合で、統合CLIでは20個または
+21個、skills-onlyホストでは18個が有効になります。残り78個はsource-onlyです。
 
 ---
 
@@ -63,6 +64,7 @@ Skill Olympusは、**Claude Code**、**Codex CLI**、**Antigravity CLI**、**Gro
 | Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md` の `CODEX-MNEMO` ブロック |
 | Antigravity CLI | `~/.gemini/GEMINI.md` の `ANTIGRAVITY-MNEMO` ブロック |
 | Grok Build | `~/.grok/rules/grok-mnemo.md` とClaudeの共有ルール |
+| Devin CLI | Windowsでは`%APPDATA%/devin/AGENTS.md`、macOS/Linuxでは`~/.config/devin/AGENTS.md`の`DEVIN-MNEMO`ブロック。フックは`config.json`に登録 |
 
 v6.1.2では、依頼と同じ言語での応答、`codemap/index.md`を先に確認するコード探索、記憶→会話リンク・タグ→本文→範囲を絞った元セッションの確認を共通化しました。読み取り専用の依頼ではファイルを書きません。カタログ、文書、引き継ぎ、検証は各CLIの仕組みに合わせます。
 
@@ -119,6 +121,13 @@ chmod +x install.sh && ./install.sh
 します。CLIの実行ファイルが`PATH`になくてもファイルは配置され、MCP登録など実行
 ファイルを必要とする処理だけがスキップされます。
 
+Devin CLIが検出されると、[Devin-Mnemo](skills/devin-mnemo/SKILL.md)もインストールされます。
+DevinはClaudeのスキル（`/mnemo`を含む）を読み、専用の`UserPromptSubmit`・`Stop`・
+`SessionEnd`フックで`conversations/*-devin.md`に会話を保存します。単独で導入・確認するには
+`node skills/devin-mnemo/install.js`と`node skills/devin-mnemo/install.js --check`を使います。
+応答本文の取得にはPython 3とローカルセッションDBが必要です。Windowsの実際のDevinターンで
+動作を確認済みで、macOS・Linuxでの実行検証は未実施です。
+
 Claude、Codex、Antigravityで標準登録されるMCPは`context7`と`playwright`です。
 Chrome DevTools MCPは必要な場合だけ、Claudeでは`node install-mcp.js chrome-devtools`、
 Codexでは`node install-mcp-codex.js chrome-devtools`、Antigravityでは
@@ -140,7 +149,7 @@ Codexでは`node install-mcp-codex.js chrome-devtools`、Antigravityでは
 
 ### OpenClawとHermes Agentはskills-only
 
-専用インストーラーは、共通のユーザー向けスキル18個とsource-onlyモジュール77個を
+専用インストーラーは、共通のユーザー向けスキル18個とsource-onlyモジュール78個を
 導入します。プラグイン、フック、Mnemo、MCP、カスタムエージェント、四つの統合CLI専用
 アダプターは導入しません。
 
@@ -239,6 +248,7 @@ SUCCESSを返しません。
 | Codex CLI | 統合 | skills、notifyベースMnemo、MCP、ネイティブサブエージェント |
 | Antigravity CLI | 統合 | skills、native hooks、Mnemo、MCP、ネイティブワークフロー |
 | Grok Build | 統合 | Claude共有skill表面、hooks、Mnemo、ネイティブワーカー |
+| Devin CLI | Claudeスキル互換＋Mnemo | Claudeスキル共有、Devinネイティブフックによる会話保存。MCP・エージェントの統合サポートは未検証 |
 | OpenClaw | skills-only | 移植可能なスキルとsource-onlyカタログ |
 | Hermes Agent | skills-only | 移植可能なスキルとsource-onlyカタログ |
 

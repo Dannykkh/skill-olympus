@@ -45,6 +45,7 @@ ANTIGRAVITY_MCP_RESULT="미실행"
 ANTIGRAVITY_ORCH_RESULT="미실행"
 ANTIGRAVITY_HOOKS_RESULT="미실행"
 GROK_MNEMO_RESULT="미실행"
+DEVIN_MNEMO_RESULT="미실행"
 OPENCLAW_SYNC_RESULT="미실행"
 HERMES_SYNC_RESULT="미실행"
 CREATED_CLAUDE_DIR=0
@@ -319,6 +320,14 @@ if [ "$MODE" = "uninstall" ]; then
         fi
     else
         GROK_MNEMO_RESULT="스킵(install.js 없음)"
+    fi
+
+    if { [ -d "${DEVIN_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/devin}" ] || command -v devin >/dev/null 2>&1; } && [ -f "$SCRIPT_DIR/skills/devin-mnemo/install.js" ]; then
+        if node "$SCRIPT_DIR/skills/devin-mnemo/install.js" --uninstall; then
+            DEVIN_MNEMO_RESULT="제거 완료"
+        else
+            DEVIN_MNEMO_RESULT="제거 실패"
+        fi
     fi
 
     echo ""
@@ -859,6 +868,18 @@ fi
 echo "      $GROK_MNEMO_RESULT"
 fi # HAS_GROK
 
+# Devin CLI loads Claude-compatible rules and hooks, with its own Mnemo writer.
+if { [ -d "${DEVIN_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/devin}" ] || command -v devin >/dev/null 2>&1; } && [ -f "$SCRIPT_DIR/skills/devin-mnemo/install.js" ]; then
+    echo ""
+    echo "  Devin-Mnemo 설치 중..."
+    if node "$SCRIPT_DIR/skills/devin-mnemo/install.js"; then
+        DEVIN_MNEMO_RESULT="설치 완료"
+    else
+        DEVIN_MNEMO_RESULT="설치 실패"
+    fi
+    echo "      $DEVIN_MNEMO_RESULT"
+fi
+
 # ============================================
 #   OpenClaw skills-only host
 # ============================================
@@ -937,6 +958,10 @@ if [ "$HAS_GROK" = "1" ] || [ -d "$HOME/.grok" ]; then
     echo "  [Grok]"
     echo "  - Mnemo: $GROK_MNEMO_RESULT"
     echo "  - Skills/Agents/MCP: compat.claude 직접 읽기 (sync 불필요)"
+fi
+if [ -d "${DEVIN_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/devin}" ] || command -v devin >/dev/null 2>&1; then
+    echo "  [Devin]"
+    echo "  - Mnemo: $DEVIN_MNEMO_RESULT"
 fi
 if [ "$HAS_OPENCLAW" = "1" ]; then
     echo "  [OpenClaw - skills only]"

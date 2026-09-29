@@ -58,6 +58,7 @@ set "ANTIGRAVITY_MCP_RESULT=not-run"
 set "ANTIGRAVITY_ORCH_RESULT=not-run"
 set "ANTIGRAVITY_HOOKS_RESULT=not-run"
 set "GROK_MNEMO_RESULT=not-run"
+set "DEVIN_MNEMO_RESULT=not-run"
 set "OPENCLAW_SYNC_RESULT=not-run"
 set "HERMES_SYNC_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 playwright"
@@ -361,6 +362,11 @@ if "%MODE%"=="uninstall" (
         )
     ) else (
         set "GROK_MNEMO_RESULT=Skip: no install.js"
+    )
+
+    if exist "%APPDATA%\devin\cli" if exist "%SCRIPT_DIR%skills\devin-mnemo\install.js" (
+        node "%SCRIPT_DIR%skills\devin-mnemo\install.js" --uninstall
+        if !errorlevel! equ 0 (set "DEVIN_MNEMO_RESULT=Removed") else (set "DEVIN_MNEMO_RESULT=Remove failed")
     )
 
     echo.
@@ -918,7 +924,7 @@ REM ============================================
 REM   Grok Build
 REM ============================================
 :phase_grok
-if "!HAS_GROK!"=="0" if not exist "%USERPROFILE%\.grok" goto :phase_openclaw
+if "!HAS_GROK!"=="0" if not exist "%USERPROFILE%\.grok" goto :phase_devin
 REM Grok reads skills/agents/MCP/rules from ~/.claude/ via [compat.claude].
 REM When Claude was not selected, prepare the minimal shared compatibility home
 REM here; Grok's conversation hook still uses its own grok-mnemo adapter.
@@ -971,6 +977,18 @@ if exist "%SCRIPT_DIR%skills\grok-mnemo\install.js" (
     set "GROK_MNEMO_RESULT=Skip: no install.js"
 )
 echo       !GROK_MNEMO_RESULT!
+
+REM ============================================
+REM   Devin CLI Mnemo (when Devin is installed)
+REM ============================================
+:phase_devin
+if exist "%APPDATA%\devin\cli" if exist "%SCRIPT_DIR%skills\devin-mnemo\install.js" (
+    echo.
+    echo   Installing Devin-Mnemo...
+    node "%SCRIPT_DIR%skills\devin-mnemo\install.js"
+    if !errorlevel! equ 0 (set "DEVIN_MNEMO_RESULT=Installed") else (set "DEVIN_MNEMO_RESULT=Install failed")
+    echo       !DEVIN_MNEMO_RESULT!
+)
 
 REM ============================================
 REM   OpenClaw skills-only host
@@ -1052,6 +1070,10 @@ if exist "%USERPROFILE%\.grok" (
     echo   [Grok]
     echo   - Mnemo: !GROK_MNEMO_RESULT!
     echo   - Skills/Agents/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
+)
+if exist "%APPDATA%\devin\cli" (
+    echo   [Devin]
+    echo   - Mnemo: !DEVIN_MNEMO_RESULT!
 )
 if "!HAS_OPENCLAW!"=="1" (
     echo   [OpenClaw - skills only]

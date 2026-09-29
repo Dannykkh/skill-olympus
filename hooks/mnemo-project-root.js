@@ -11,11 +11,12 @@ function forbidden(candidate, { allowTemp = false } = {}) {
   const root = path.resolve(candidate);
   const key = root.toLowerCase();
   if (root === path.parse(root).root || key === path.resolve(os.homedir()).toLowerCase()) return true;
-  if (/(?:^|[\\/])\.(?:claude|codex|gemini|grok)(?:[\\/]|$)/i.test(root)) return true;
+  if (/(?:^|[\\/])\.(?:claude|codex|gemini|grok|devin)(?:[\\/]|$)/i.test(root)) return true;
   const excluded = [...(allowTemp ? [] : [os.tmpdir(), process.env.TEMP, process.env.TMP]),
     process.env.CLAUDE_CONFIG_DIR, process.env.CLAUDE_HOME, process.env.CODEX_HOME,
     process.env.ANTIGRAVITY_HOME, process.env.GEMINI_HOME, process.env.GEMINI_CLI_HOME,
-    process.env.GROK_HOME, process.env.GROK_CONFIG_DIR].filter(Boolean);
+    process.env.GROK_HOME, process.env.GROK_CONFIG_DIR,
+    process.env.DEVIN_HOME, process.env.DEVIN_CONFIG_DIR].filter(Boolean);
   return excluded.some((value) => {
     const absolute = path.resolve(value);
     const base = (fs.existsSync(absolute) ? fs.realpathSync.native(absolute) : absolute).toLowerCase();
@@ -127,6 +128,10 @@ function resolveGrok(payload) {
   return resolveWorkspace(payload, ["workspaceRoot"], ["cwd"]);
 }
 
+function resolveDevin(payload) {
+  return resolveWorkspace(payload, ["project_root", "workspace_root"], ["cwd"], process.env.DEVIN_PROJECT_DIR);
+}
+
 function resolveAntigravity(payload) {
   if (payload.workspacePath) return resolveRoot(payload.workspacePath, true);
   if (Array.isArray(payload.workspacePaths) && payload.workspacePaths.length) {
@@ -143,7 +148,7 @@ if (require.main === module) {
   let resolved = null;
   try {
     const mode = process.argv[2];
-    const adapters = { "--claude": resolveClaude, "--codex": resolveCodex, "--grok": resolveGrok, "--antigravity": resolveAntigravity };
+    const adapters = { "--claude": resolveClaude, "--codex": resolveCodex, "--grok": resolveGrok, "--devin": resolveDevin, "--antigravity": resolveAntigravity };
     const recovery = process.argv.includes("--recovery");
     const options = { allowTemp: recovery, allowMissing: recovery };
     resolved = adapters[mode]
@@ -154,4 +159,4 @@ if (require.main === module) {
   if (resolved) process.stdout.write(resolved);
   else process.exitCode = 2;
 }
-module.exports = { resolveRoot, resolveClaude, resolveCodex, resolveGrok, resolveAntigravity, validatePath, storageSafe, forbidden };
+module.exports = { resolveRoot, resolveClaude, resolveCodex, resolveGrok, resolveDevin, resolveAntigravity, validatePath, storageSafe, forbidden };

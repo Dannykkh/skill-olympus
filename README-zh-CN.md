@@ -16,12 +16,13 @@
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-supported-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
 ![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
+![Devin CLI](https://img.shields.io/badge/Devin_CLI-Claude_skills%2BMnemo-6A5ACD)
 ![OpenClaw](https://img.shields.io/badge/OpenClaw-skills--only-5B4B8A)
 ![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-skills--only-8A5A44)
 
 Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI** 或
-**Grok Build** 的独立开发者。你可以在多个 CLI 中安装同一套工作流，按需调用一个
-专门能力，也可以让 Zeus 推进完整的交付流程。
+**Grok Build** 的独立开发者。Devin CLI 也能读取 Claude 技能，并用专用 Mnemo hooks
+保存对话。你可以按需调用专门能力，也可以让 Zeus 推进完整的交付流程。
 
 ```text
 /zeus "用 React、Spring Boot 和 PostgreSQL 构建一个小型库存管理 SaaS"
@@ -32,7 +33,7 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 
 [快速开始](#快速开始) · [选择工作流](#选择工作流) · [CLI 支持](#cli-支持) · [English 详细版](README.md)
 
-> Olympus 不是把大量提示词全部塞进上下文。默认只公开 18 个清晰入口，底层 77 个
+> Olympus 不是把大量提示词全部塞进上下文。默认只公开 18 个清晰入口，底层 78 个
 > source-only 模块会在真正需要时通过目录读取。
 
 ---
@@ -48,8 +49,8 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 | **跨会话保留记忆** | `mnemo` 保存索引、语义记忆、可搜索对话和可恢复交接 |
 | **保持较小的启动上下文** | 少量入口只在需要时加载 source-only 模块 |
 
-仓库公开跟踪 101 个技能源。默认 allowlist 的并集为 24 个；集成 CLI 会启用 20 或 21 个，
-skills-only 主机会启用 18 个，其余 77 个保持 source-only。
+仓库公开跟踪 102 个技能源。默认 allowlist 的并集为 24 个；集成 CLI 会启用 20 或 21 个，
+skills-only 主机会启用 18 个，其余 78 个保持 source-only。
 
 ---
 
@@ -63,6 +64,7 @@ skills-only 主机会启用 18 个，其余 77 个保持 source-only。
 | Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md` 中的 `CODEX-MNEMO` 区块 |
 | Antigravity CLI | `~/.gemini/GEMINI.md` 中的 `ANTIGRAVITY-MNEMO` 区块 |
 | Grok Build | `~/.grok/rules/grok-mnemo.md` 和 Claude 共享规则 |
+| Devin CLI | Windows 下 `%APPDATA%/devin/AGENTS.md`，macOS/Linux 下 `~/.config/devin/AGENTS.md` 的 `DEVIN-MNEMO` 区块；hooks 注册在 `config.json` |
 
 v6.1.2 统一了按提问语言回复、优先查看 `codemap/index.md`、按记忆→对话链接与标签→正文→限定范围的原始会话查找历史工作的规则。只读请求不写文件；技能目录、文档、交接和验证流程按各 CLI 的原生机制处理。
 
@@ -119,6 +121,13 @@ chmod +x install.sh && ./install.sh
 可执行文件不在 `PATH` 中，安装器也会准备相关文件；只有 MCP 注册等必须调用 CLI 的步骤
 会被跳过。
 
+检测到 Devin CLI 时，安装器还会安装 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)。Devin
+读取 Claude 技能（包括 `/mnemo`），原生 `UserPromptSubmit`、`Stop`、`SessionEnd` hooks
+将对话保存到 `conversations/*-devin.md`。单独安装和检查可运行
+`node skills/devin-mnemo/install.js` 与 `node skills/devin-mnemo/install.js --check`。
+读取助手回复需要 Python 3 和本地会话数据库。已通过 Windows 上的真实 Devin 回合验证；
+macOS 和 Linux 的运行时保存尚未验证。
+
 Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `context7` 和 `playwright`。
 如需 Chrome DevTools MCP，可分别运行 `node install-mcp.js chrome-devtools`（Claude）、
 `node install-mcp-codex.js chrome-devtools`（Codex）或
@@ -139,7 +148,7 @@ Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `context7` 和 `playwr
 
 ### OpenClaw 和 Hermes Agent：skills-only 安装
 
-专用安装器会安装 18 个通用用户入口和 77 个 source-only 模块，不会安装插件、hooks、
+专用安装器会安装 18 个通用用户入口和 78 个 source-only 模块，不会安装插件、hooks、
 Mnemo、MCP、自定义智能体，也不会安装四个集成 CLI 的专用适配器。
 
 ```powershell
@@ -233,6 +242,7 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
 | Codex CLI | 集成 | skills、基于 notify 的 Mnemo、MCP、原生子智能体 |
 | Antigravity CLI | 集成 | skills、原生 hooks、Mnemo、MCP、原生工作流 |
 | Grok Build | 集成 | 与 Claude 共享的 skill 表面、hooks、Mnemo、原生工作者 |
+| Devin CLI | Claude 技能兼容 + Mnemo | 共享 Claude 技能，Devin 原生 hooks 保存对话；MCP 和智能体集成尚未验证 |
 | OpenClaw | skills-only | 可移植技能和 source-only 目录 |
 | Hermes Agent | skills-only | 可移植技能和 source-only 目录 |
 

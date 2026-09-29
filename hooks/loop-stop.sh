@@ -5,6 +5,7 @@
 
 # Grok 세션 가드: Grok Stop 페이로드는 camelCase라 재투입 판단 불가 -> Grok 네이티브 기능 사용.
 [ -n "${GROK_HOOK_EVENT:-}" ] && exit 0
+[ -n "${DEVIN_PROJECT_DIR:-}" ] && exit 0
 
 set -euo pipefail
 

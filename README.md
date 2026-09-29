@@ -16,12 +16,13 @@ workers already built into your CLI.
 ![Codex CLI](https://img.shields.io/badge/Codex_CLI-✓-412991?logo=openai&logoColor=white)
 ![Antigravity CLI](https://img.shields.io/badge/Antigravity_CLI-supported-4285F4?logo=google&logoColor=white)
 ![Grok Build](https://img.shields.io/badge/Grok_Build-supported-000000)
+![Devin CLI](https://img.shields.io/badge/Devin_CLI-Claude_skills%2BMnemo-6A5ACD)
 ![OpenClaw](https://img.shields.io/badge/OpenClaw-skills--only-5B4B8A)
 ![Hermes Agent](https://img.shields.io/badge/Hermes_Agent-skills--only-8A5A44)
 
 Skill Olympus is a production-oriented harness for solo builders using **Claude Code**, **Codex CLI**,
-**Antigravity CLI**, or **Grok Build**. Install the same workflow surface across your CLIs, call one
-specialist for a focused job, or let Zeus drive the full delivery loop.
+**Antigravity CLI**, or **Grok Build**. Devin CLI can also use the Claude skill surface with its own
+Mnemo conversation hooks. Call one specialist for a focused job, or let Zeus drive the full delivery loop.
 
 ```bash
 /zeus "Build a shopping mall. React + Spring Boot + PostgreSQL"
@@ -47,9 +48,9 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Proof that code matches intent** | `/argos` compares the specification, code, APIs, scenarios, diagrams, and security boundaries |
 | **Browser tests that actually run** | `/minos` writes Playwright scenarios, executes them, and repairs failures within a bounded loop |
 | **Memory across sessions** | `mnemo` keeps an index, semantic memory, searchable conversations, and resumable handoffs |
-| **Less prompt noise** | A small active registry routes into 77 source-only modules only when the work needs them |
+| **Less prompt noise** | A small active registry routes into 78 source-only modules only when the work needs them |
 
-**101 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 77 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + 2 skills-only hosts · 1 mythology**
+**102 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 78 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
 
 ---
 
@@ -63,6 +64,7 @@ The integrated installer updates your **global CLI environment**, so its rules a
 | Codex | `${CODEX_HOME:-~/.codex}/AGENTS.md` — `CODEX-MNEMO` block | `config.toml` notify chain and managed skill settings |
 | Antigravity CLI | `~/.gemini/GEMINI.md` — `ANTIGRAVITY-MNEMO` block | `~/.gemini/config/hooks.json`; separate CLI/MCP settings |
 | Grok Build | `~/.grok/rules/grok-mnemo.md` plus Claude shared rules | `~/.grok/hooks/grok-mnemo.json`; Claude compatibility |
+| Devin CLI | `%APPDATA%/devin/AGENTS.md` on Windows; `~/.config/devin/AGENTS.md` on macOS/Linux — `DEVIN-MNEMO` block | Native hooks in `config.json`; reads Claude skills from `~/.claude/skills/` |
 
 **This release changes the default guidance:**
 
@@ -139,6 +141,13 @@ Running without arguments is the default full installation for Claude, Codex, An
 CLI's files even when that CLI executable is not on `PATH`; only CLI-dependent commands such as MCP
 registration are skipped. Install the missing CLI and rerun the same installer to finish those commands.
 
+When Devin CLI is detected, the installer also adds [Devin-Mnemo](skills/devin-mnemo/SKILL.md):
+Devin reads the shared Claude skills, while native `UserPromptSubmit`, `Stop`, and `SessionEnd` hooks
+save its turns to `conversations/*-devin.md`. To install or inspect only this adapter, run
+`node skills/devin-mnemo/install.js` or `node skills/devin-mnemo/install.js --check`.
+Assistant capture requires Python 3 and access to Devin's local session database; a live Windows
+Devin turn has been verified. macOS and Linux runtime capture still needs verification.
+
 The default MCP set for Claude, Codex, and Antigravity is `context7` and `playwright`.
 Chrome DevTools MCP is optional; install it with `node install-mcp.js chrome-devtools`
 (Claude), `node install-mcp-codex.js chrome-devtools` (Codex), or
@@ -161,7 +170,7 @@ workflow explicit.
 
 ### OpenClaw and Hermes Agent: skills-only install
 
-These entry points install the 18 portable user-facing skills plus the 77 source-only modules. They
+These entry points install the 18 portable user-facing skills plus the 78 source-only modules. They
 do not install plugins, hooks, Mnemo, MCP, custom agents, or the existing four-CLI runtime adapters.
 
 ```powershell
@@ -574,6 +583,16 @@ runtime-specific policy or adapters, not merely a readable `SKILL.md`.
 | Orchestration | native workers; optional MCP | native workers; optional MCP | native workers; optional MCP | native workers; MCP PM host only |
 | Install | no-argument installer prepares assets; CLI commands run when `claude` exists | same installer prepares assets; MCP commands run when `codex` exists | same installer writes skills, hooks, and `mcp_config.json`; `agy` is needed only to run Antigravity | shared Claude assets; grok-mnemo runs when Grok home exists |
 
+### Devin CLI: Claude skills with native Mnemo hooks
+
+Devin reads the Claude Code skill directory, including `/mnemo`. The detected-CLI install adds only
+Devin-specific conversation capture and a small rule block; it does not add a fifth full Olympus
+sync target or claim MCP, agent, or workflow parity. Native hooks save user prompts and assistant
+replies under the same project `conversations/` store used by the four integrated CLIs. Python 3
+reads assistant text from Devin's local session database. This capture was verified with Devin CLI
+3000.11.3 on Windows; macOS and Linux runtime capture is not yet verified. See the
+[adapter and verification steps](skills/devin-mnemo/SKILL.md).
+
 ### Portable Agent Skills hosts
 
 The hosts below implement Agent Skills, but Olympus does not yet claim end-to-end runtime support
@@ -590,7 +609,8 @@ permissions, subagent delegation, or completion loop behave the same way.
 | [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*` installs 18 active skills and the source catalog under `~/.openclaw` | Plugin packaging, Olympus aliases, hooks/Mnemo, MCP, and native-subagent verification are absent |
 
 The accurate short claim is therefore: **integrated on Claude Code, Codex CLI, Antigravity CLI, and
-Grok Build; skills-only installation on OpenClaw and Hermes Agent; portable skill bodies for other Agent Skills hosts.** [Paperthin](https://github.com/LilMGenius/paperthin)'s broader
+Grok Build; Claude skill compatibility and native Mnemo conversation capture on Devin CLI; skills-only
+installation on OpenClaw and Hermes Agent; portable skill bodies for other Agent Skills hosts.** [Paperthin](https://github.com/LilMGenius/paperthin)'s broader
 "on any agent" wording describes a lightweight skill-format surface; it would overstate Olympus's
 hooked, stateful harness today.
 
@@ -601,7 +621,7 @@ Codex skills install globally only by default, avoiding duplicate discovery from
 isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
 contains 24 skills: 18 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
 3 or 4 incompatible adapters, leaving Claude with 21 active skills and Codex/Antigravity/standalone Grok
-with 20; the installed Grok surface reads Claude's shared 21. The same 77 public non-allowlisted sources are
+with 20; the installed Grok surface reads Claude's shared 21. The same 78 public non-allowlisted sources are
 copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
 `SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
 `.olympus/runtime-modules/orchestrator`; MCP registration points there and dependency caches survive source refreshes. Activate every compatible source-only skill with `--include-source-only-skills`,
@@ -649,7 +669,7 @@ Includes deterministic gotcha/learned capture:
 
 ## What's Inside
 
-### Skill sources (101; default union 24, 20 or 21 active per installed surface)
+### Skill sources (102; default union 24, 20 or 21 active per installed surface)
 
 The table is the source inventory, not the startup registry. Low-frequency format tools, provider integrations, framework cookbooks, and generators remain source-only until explicitly invoked through the catalog or installed with the opt-in flag.
 
@@ -661,7 +681,7 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier, themis + 3 more | Chronos loop, Playwright QA, privacy-policy generator (Themis) |
-| **Memory** | mnemo, memory-compact, project-gotchas, memory-distill | 3-layer memory, auto learning, raw distillation (rebuild) |
+| **Memory** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill | 3-layer memory, Devin conversation hooks, raw distillation (rebuild) |
 | **Docs** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, editorial diagram rendering (.mmd → branded HTML+SVG, vendored from cathrynlavery/diagram-design MIT), presentations, documents, domain dictionary (DDD UL) |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |

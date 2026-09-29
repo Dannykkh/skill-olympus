@@ -5,6 +5,7 @@
 # Grok 세션 가드: Grok Stop 페이로드는 camelCase라 이 스크립트가 재투입을 판단할 수 없음.
 # Grok의 stop 게이트/루프는 Grok 네이티브 기능을 사용하므로 즉시 종료.
 if ($env:GROK_HOOK_EVENT) { exit 0 }
+if ($env:DEVIN_PROJECT_DIR) { exit 0 }
 
 $ErrorActionPreference = "Stop"
 
