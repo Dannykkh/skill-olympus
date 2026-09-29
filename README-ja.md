@@ -220,7 +220,7 @@ SUCCESSを返しません。
 | 実装前に要件を固める | `/zephermine` | 要求仕様、API、QAシナリオ、フロー図 |
 | 複数ワーカーで実装する | `/agent-team` | 所有権を分けた並列実装と統合結果 |
 | 設計なしで実装を進める | `workpm` / `/daedalus` | 調査、タスク分割、実装、検証 |
-| UIを再設計する | `/aphrodite` | Experience Contract、デザイン方針、実装、視覚検証 |
+| UIを再設計する | `/aphrodite` | 視覚表現より先にワイヤーフレームを描画・検証し、Experience Contract、デザイン方針、実装へ進む |
 | 実装を仕様と照合する | `/argos` | 根拠付きの適合・不適合判定 |
 | QAが通るまで直す | `/minos` | Playwrightテストと修正ログ |
 | 一件ずつ修正を続ける | `/chronos` | 監査ログ、検証結果、再開可能な状態 |

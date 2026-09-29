@@ -215,7 +215,7 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
 | 实现前明确需求 | `/zephermine` | 规格、API、QA 场景、流程图 |
 | 多个工作者并行实现 | `/agent-team` | 明确文件归属的并行实现和集成结果 |
 | 没有预先设计就直接推进 | `workpm` / `/daedalus` | 调研、任务拆分、实现、验证 |
-| 重新设计 UI | `/aphrodite` | Experience Contract、设计方向、实现、视觉验证 |
+| 重新设计 UI | `/aphrodite` | 先渲染并检验线框图，再完成 Experience Contract、视觉方向与实现 |
 | 对照设计验收实现 | `/argos` | 基于证据的符合或不符合判定 |
 | 修复直到 QA 通过 | `/minos` | Playwright 测试和修复日志 |
 | 持续逐项修复 | `/chronos` | 审计日志、验证结果、可恢复状态 |

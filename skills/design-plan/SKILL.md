@@ -95,7 +95,7 @@ fallback도 실행할 수 없는 검사는 `NOT RUN`,
 |---|---|
 | `DESIGN.md` | 색, 타이포, 간격, 표면, 컴포넌트 외관, 모션 원칙 |
 | Experience Contract | 과업, 메시지, CTA, 신뢰, 상태, 모바일 변환 |
-| Layout Blueprint | 페이지별 블록 순서, 그리드, anatomy, 첫 뷰포트 |
+| Layout Blueprint | 시각 탐색 전에 검증한 저충실도 와이어프레임, 페이지별 블록 순서, 그리드, anatomy, 첫 뷰포트 |
 | Aphrodite | UX 행동 명세, 상태 표현, 시각 구현, 렌더 비평 |
 | 앱 구현 파이프라인 | 라우팅, 상태 관리, 데이터, API, 비즈니스 로직 |
 | Product Design | 승인된 계약을 인터랙티브 프로토타입으로 실행하는 선택적 Codex 어댑터 |
@@ -109,9 +109,9 @@ fallback도 실행할 수 없는 검사는 `NOT RUN`,
 ```text
 Phase 0  Route        입력·기존 자산·벤치마크 유무 판별
 Phase 1  Discover     사용자·과업·근거·레퍼런스 확보
-Phase 2  Architect    IA + 과업 흐름 + 메시지·CTA·신뢰 + 상태
+Phase 2  Architect    IA + 과업 흐름 + 메시지·CTA·신뢰 + 상태 + 와이어프레임 판단 게이트
 Phase 3  Explore      실제 렌더 3방향 탐색 + 시각 시스템 확정
-Phase 4  Contract     레이아웃·모바일 변환·Experience Contract 고정
+Phase 4  Contract     검증된 레이아웃 정교화·모바일 변환·Experience Contract 고정
 Phase 5  Build        계약 컴파일 → 구현 → 렌더 비평 → 구조/변형 수정
 Phase 6  Validate     미학·과업·벤치마크·접근성·성능 검증
 Phase 7  Evolve       성공·실패 근거 적립과 검증된 원리 승격
@@ -264,9 +264,7 @@ docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
 `docs/design-refs/YYYY-MM-DD-experience-{slug}.md`를 작성합니다. 벤치마크 모드면 근거 파일과
 Adopt·Adapt·Avoid를 포함합니다.
 
-## Phase 3: Explore Direction and System
-
-### 3-1. Interface Mode
+### 2-4. Interface Mode
 
 핵심 행동을 기준으로 다음 중 하나를 고릅니다.
 
@@ -283,10 +281,49 @@ Adopt·Adapt·Avoid를 포함합니다.
 `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`를
 읽고 정보 구조와 효과 예산을 먼저 고정합니다.
 
-### 3-2. 실제 렌더 방향 탐색
+### 2-5. 저충실도 와이어프레임 판단 게이트
+
+새 화면을 설계하거나 주 과업·정보 구조를 바꿀 때, Phase 3의 색·이미지·그림자·재질·모션을 고르기 전에
+`MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md`를 읽고
+`docs/design-refs/YYYY-MM-DD-layout-{slug}.md`에 블록 순서와 판단 근거를 남기고, 대표 화면의
+데스크톱·모바일 와이어프레임을 **실제 볼 수 있는 파일**로 만듭니다. 정적 화면은 SVG,
+상태·화면 전환을 확인할 때는 HTML/CSS로 그립니다. HTML이면 각 뷰포트의 스크린샷을 남기고,
+캡처 도구가 없으면 직접 볼 수 있는 SVG를 산출합니다. ASCII는 빠른 초안으로 쓸 수 있지만
+최종 와이어프레임을 대신하지 않습니다. 산출물 경로를 Layout Blueprint에 연결합니다.
+브랜드 색·사진·그림자·장식으로 미완성 구조를 가리지 않습니다.
+이미지 자리만 빈 상자로 표시할 수 있으며, 핵심 메시지·탐색 라벨·CTA·가격처럼 사용자의 판단에
+필요한 내용은 실제 문구나 검증 가능한 샘플로 적습니다.
+검색창·버튼·카드·내비게이션·미디어 자리 등은 텍스트와 단색 도형을 조합해 그립니다.
+요소마다 별도 그림 파일을 준비하지 않습니다. 실제 사진과 브랜드 자산은 시각 디자인 단계에서
+근거와 출처를 확인해 적용합니다.
+이미 검증한 화면의 국소 변경은 영향받는 부분만 다시 판단하고 그 근거를 기존 Blueprint에 덧붙입니다.
+
+와이어프레임은 보기 좋은 화면을 고르는 자료가 아니라 다음 결정을 내리는 자료입니다.
+
+| 기준 | 통과 질문 |
+|---|---|
+| 위계 (Hierarchy) | 색 없이도 처음 볼 정보와 주 행동이 분명한가? |
+| 구조 (Structure) | 묶음과 순서가 사용자의 과업·사고 순서와 맞는가? |
+| 흐름 (Flow) | 진입→행동→완료와 실패→복구를 화면 사이에서 따라갈 수 있는가? |
+| 일관성 (Consistency) | 같은 의미의 요소와 행동을 같은 방식으로 표현하는가? |
+| 명료성 (Clarity) | 설명을 듣지 않아도 라벨, 상태, 다음 행동을 이해하는가? |
+
+각 기준에 대해 화면에서 관찰한 근거와 수정할 결정을 Layout Blueprint에 남깁니다. 하나라도
+불명확하면 과업 흐름·정보 순서·문구·CTA를 고쳐 다시 확인합니다. 시각 시안에서 주 행동이
+처음 생겼다면 와이어프레임의 흐름이 아직 완성되지 않은 것입니다.
+역할이 둘 이상이면 `spec.md` 시스템 역할 표의 `화면` 열에 따라 공용 화면의 권한 차이 또는 별도
+역할 화면을 이 단계부터 그립니다. 주요 상태도 같은 구조 판단에 포함합니다. 이 게이트를 통과한
+뒤에만 Phase 3의 시각 방향을 탐색합니다.
+
+## Phase 3: Explore Direction and System
+
+### 3-1. 실제 렌더 방향 탐색
 
 [render-critique-loop.md](references/render-critique-loop.md)의 필수 조건에 해당하면 텍스트 카드만
 제시하지 않고 서로 다른 실제 화면 3안을 렌더합니다.
+
+후보는 통과한 와이어프레임의 과업·주 행동·정보 순서를 입력으로 사용합니다. 후보가 그 결정을
+바꾸면 해당 후보의 와이어프레임을 다시 검토하고 Phase 2-5 게이트를 통과시킵니다.
 
 - 동일한 실제 카피·데이터·상태 사용
 - 구성·위계·명도·타입·재질·모션 중 최소 4축 차이
@@ -296,7 +333,7 @@ Adopt·Adapt·Avoid를 포함합니다.
 선택 결과와 탈락 이유를 각각 `direction`과 `critique` 파일에 저장합니다. 실제 렌더를 만들지 않은
 경우 생략 근거를 기록합니다.
 
-### 3-3. 시각 시스템
+### 3-2. 시각 시스템
 
 `MODULE_SKILL[frontend-design]`을 직접 읽고 다음 순서로 확정합니다.
 
@@ -314,8 +351,8 @@ Adopt·Adapt·Avoid를 포함합니다.
 
 ### 4-1. Layout Blueprint
 
-`MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md`를 사용해 페이지별로
-다음을 고정합니다.
+Phase 2-5에서 검증한 Layout Blueprint를 선택된 시각 방향과 대조하고 페이지별로 다음을
+정교화합니다. 구조·주 행동이 바뀌면 Phase 2-5 게이트를 다시 실행합니다.
 
 - 블록 순서와 각 블록이 답하는 사용자 질문
 - 필수 요소, 잉크 위계, 강조 1개, CTA 문법
@@ -327,7 +364,7 @@ Adopt·Adapt·Avoid를 포함합니다.
 
 ### 4-1-1. 역할별 화면 (Role Variants)
 
-역할이 둘 이상이면 기본 와이어프레임 하나로 끝내지 않습니다. `spec.md` 시스템 역할 표의 `화면` 열이 처리 방식을 결정합니다.
+역할이 둘 이상이면 Phase 2-5에서 결정한 화면 처리를 아래 형식으로 상세화합니다. `spec.md` 시스템 역할 표의 `화면` 열이 처리 방식을 결정합니다.
 
 | `화면` 열 | 산출물 | 내용 |
 |---|---|---|
@@ -509,6 +546,7 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 - brief와 Source Mode
 - 벤치마크가 있으면 캡처 근거와 Adopt·Adapt·Avoid
 - Experience Contract 검증 통과
+- 새 화면·구조 변경이면 시각 탐색 전에 만든 데스크톱·모바일 와이어프레임 파일과 다섯 기준의 판단 근거
 - 선택된 방향의 실제 렌더 또는 생략 근거
 - `DESIGN.md`와 Layout Blueprint
 - 데스크톱·모바일 구현 스크린샷

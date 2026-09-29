@@ -29,7 +29,10 @@
 
 ## 2. 작성 시점과 파일명
 
-Phase 1~2에서 작성하고 Phase 4에서 화면별 구조와 상태를 보강합니다.
+Phase 1~2에서 작성합니다. Phase 2-5에서는 이 계약의 과업·메시지·CTA·상태를 저충실도
+와이어프레임으로 확인하고, 결과를 `docs/design-refs/YYYY-MM-DD-layout-{slug}.md`에 남깁니다.
+Phase 4에서는 통과한 구조의 화면별 세부와 모바일 변환을 보강합니다. 시각 시안에서 처음 생긴
+주 행동이나 정보 묶음은 이 단계의 미해결 결정으로 되돌려 검토합니다.
 
 ```text
 docs/design-refs/YYYY-MM-DD-experience-{slug}.md

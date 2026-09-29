@@ -412,7 +412,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 | 모호한 기능을 구현 가능한 설계로 바꾸기 | `/zephermine` | 명세, 계획, 스키마, API 계약, 역할 레인 흐름도, RBAC 매트릭스, QA 시나리오 |
 | 기존 계획을 의존성 순서대로 병렬 구현하기 | `/agent-team` 또는 `/poseidon` | 네이티브 작업자 구현과 통합 게이트 |
 | 설계 없이 바로 구현 시작하기 | `/workpm` 또는 `/daedalus` | 조사한 제안안, 구현, 검증 로그 |
-| 실제 화면을 설계하거나 다시 만들기 | `/aphrodite` | Experience Contract, `DESIGN.md`, 렌더 방향, 구현 |
+| 실제 화면을 설계하거나 다시 만들기 | `/aphrodite` | 시각 탐색 전 와이어프레임 렌더와 판단 기록, `DESIGN.md`, 구현 |
 | 코드가 설계와 맞는지 검사하기 | `/argos` | 근거가 연결된 준공검사 보고서 |
 | 브라우저·API 테스트를 통과시키기 | `/minos` | Playwright 테스트와 제한된 수정 반복 |
 | 측정 가능한 조건까지 계속 고치기 | `/chronos` | 재개 가능한 감사 로그, 검증된 수정 또는 정직한 막힘 브리프 |
@@ -460,8 +460,9 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 **`/aphrodite` — 디자인 시스템 (아프로디테)**
 - **언제:** UI 프로젝트에서 프론트 구현 전 의도된 경험, 벤치마크 해석, 일관된 구현 기준이 필요할 때.
 - **사용:** `/aphrodite` (별칭: 아프로디테)
-- **처리:** 소스 모드 판별 → exact Codex Product Design marketplace selector 확인(설치 가능이 검증된 경우만 1회 추천, 확인 불가는 UNKNOWN+로컬 진행) → 사이트 벤치마크 증거 수집 → Product Facts·Content Integrity·Asset Provenance → Adopt/Adapt/Avoid → 실제 렌더 방향 3안 → Experience Contract → 구현 또는 동일 계약 adapter 대조 → 렌더 UX·접근성·성능 게이트 → 학습 환류.
-- **결과물:** `DESIGN.md`(비주얼 토큰) + Experience Contract(위계·행동·반응형·품질 결정) + 레이아웃 청사진 + 벤치마크 증거 + 프론트 구현.
+- **처리:** 소스 모드와 exact Codex Product Design 가용성 확인(검증된 경우만 1회 추천, 불명확하면 로컬 진행) → 벤치마크와 Product Facts·Content Integrity·Asset Provenance 확보 → Experience Contract 초안 → 데스크톱·모바일의 단색 와이어프레임 렌더 → 위계·구조·흐름·일관성·명료성 판단 → 시각 방향 3안 → 계약·`DESIGN.md` 정교화 → 구현 또는 동일 계약 어댑터 대조 → 렌더 UX·접근성·성능 검증. 시각 시안에서 주 행동이나 정보 순서가 바뀌면 와이어프레임 판단으로 돌아갑니다.
+- **결과물:** 실제 볼 수 있는 와이어프레임과 판단 근거를 담은 레이아웃 청사진 + Experience Contract + `DESIGN.md`(비주얼 토큰) + 벤치마크 증거 + 프론트 구현. 문구·행동은 실제 샘플로 적고 미디어만 자리 표시합니다. UI 요소마다 별도 그림 파일을 준비하지 않습니다.
+- **예시:** [모바일 커피 주문 흐름](docs/design-refs/2026-09-29-wireframe-coffee-mobile.png), [데스크톱 홈](docs/design-refs/2026-09-29-wireframe-coffee-desktop.png), [판단 기록](docs/design-refs/2026-09-29-layout-coffee-demo.md).
 - **역할별 화면:** 젭마인 설계가 있으면 시스템 역할 표와 RBAC 매트릭스를 읽어 역할명을 물려받습니다(새로 만들지 않음). `공용 권한차등` 역할은 요소 x 역할 변형표(`표시`/`숨김`/`비활성`/`읽기전용`)를, `별도 화면` 역할은 전용 레이아웃 청사진을 각각 생성합니다. **숨김과 비활성을 구분**합니다 — 숨김은 권한 존재를 감추고, 비활성은 알리되 막습니다. 역할을 선언하면 계약 검증기가 변형표를 필수로 요구합니다.
 - **경계:** 아프로디테는 경험 구조, 시각적 행동, 반응형 변환, 상태, 품질 게이트를 담당합니다. API 연결, 영속 상태, 비즈니스 로직은 `/agent-team` 또는 `/workpm`이 담당합니다.
 - **다음:** 아프로디테가 source-only `frontend-design`·감사 모듈을 직접 읽습니다. 설치된 Codex 프로토타입 어댑터를 우선하려면 `--product-design`, Stitch가 필요하면 `--stitch`를 지정하고, 이후 `/agent-team` / `/workpm`으로 애플리케이션 로직을 구현합니다.

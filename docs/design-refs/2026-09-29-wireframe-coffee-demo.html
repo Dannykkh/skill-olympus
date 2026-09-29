@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>커피 주문 흐름 — 저충실도 와이어프레임</title>
+  <style>
+    :root { color-scheme: light; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f2f2f2; color: #171717; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    .sheet { width: 1390px; margin: 0 auto; padding: 32px 24px 44px; }
+    .sheet > h1 { margin: 0 0 5px; font-size: 24px; }
+    .sheet > p { margin: 0; font-size: 13px; color: #555; }
+    .section-label { margin: 27px 0 12px; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+    .mobile-flow { display: flex; align-items: center; gap: 18px; }
+    .step { width: 395px; flex: none; }
+    .step-title { height: 27px; font-size: 13px; font-weight: 700; }
+    .step-title span { margin-left: 8px; color: #555; font-weight: 400; }
+    .arrow { margin-top: 28px; font-size: 32px; color: #555; }
+    .phone { position: relative; width: 395px; height: 795px; border: 2px solid #333; border-radius: 20px; background: #fff; overflow: hidden; }
+    .phone-inner { padding: 20px 20px 80px; height: 100%; }
+    .topline { display: flex; justify-content: space-between; align-items: center; height: 36px; font-size: 12px; border-bottom: 1px solid #c8c8c8; }
+    .topline strong { font-size: 15px; }
+    .page-title { margin: 20px 0 13px; font-size: 25px; line-height: 1.3; letter-spacing: -.03em; }
+    .eyebrow { font-size: 11px; color: #555; }
+    .search { display: block; width: 100%; padding: 0 14px; height: 43px; border: 1px solid #777; border-radius: 5px; background: #fff; font: inherit; font-size: 13px; color: #171717; }
+    .search::placeholder { color: #555; opacity: 1; }
+    .hero { display: grid; grid-template-columns: 1.3fr 1fr; min-height: 158px; margin-top: 17px; border: 1px solid #777; }
+    .hero-copy { padding: 15px 11px 14px 14px; }
+    .hero h3 { margin: 0 0 7px; font-size: 17px; line-height: 1.35; }
+    .hero p { margin: 0 0 12px; font-size: 11px; line-height: 1.45; color: #444; }
+    .media { display: grid; place-items: center; background: #d5d5d5; color: #555; font-size: 11px; text-align: center; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 39px; padding: 0 14px; border: 1px solid #252525; border-radius: 4px; font-size: 12px; font-weight: 700; }
+    .button.primary { color: #fff; background: #252525; }
+    .button.secondary { color: #252525; background: #fff; }
+    .button.small { min-height: 32px; min-width: 55px; padding: 0 8px; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin: 21px 0 10px; }
+    .section-head h3 { margin: 0; font-size: 15px; }
+    .section-head a { font-size: 12px; text-decoration: underline; }
+    .categories { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .category { display: grid; align-items: end; min-height: 62px; padding: 8px; border: 1px solid #aaa; background: #eee; font-size: 11px; font-weight: 700; }
+    .product { display: grid; grid-template-columns: 61px 1fr auto; align-items: center; gap: 10px; min-height: 76px; border-top: 1px solid #ccc; }
+    .product .media { width: 61px; height: 56px; }
+    .product strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .product small { display: block; margin-bottom: 5px; font-size: 10px; color: #555; }
+    .product .price { font-size: 12px; font-weight: 700; }
+    .product.soldout { color: #666; }
+    .product.soldout .media { background: #e5e5e5; }
+    .product.soldout .button { color: #444; border-color: #777; font-size: 10px; }
+    .product:target { outline: 2px solid #555; outline-offset: -2px; }
+    .tabs { display: flex; gap: 7px; margin: 17px 0 20px; }
+    .tab { flex: 1; padding: 9px 0; border: 1px solid #aaa; border-radius: 4px; text-align: center; font-size: 11px; }
+    .tab.active { background: #252525; border-color: #252525; color: #fff; font-weight: 700; }
+    .note { margin: 17px 0 10px; padding: 12px; border: 1px solid #999; background: #f6f6f6; font-size: 12px; }
+    .cart-item { display: grid; grid-template-columns: 70px 1fr auto; align-items: center; gap: 11px; padding: 13px 0; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+    .cart-item .media { width: 70px; height: 70px; }
+    .cart-item strong { display: block; font-size: 13px; }
+    .cart-item small { display: block; margin-top: 6px; font-size: 11px; color: #555; }
+    .cart-item .price { align-self: end; font-size: 12px; font-weight: 700; }
+    .summary { margin: 20px 0 13px; }
+    .summary div { display: flex; justify-content: space-between; margin: 12px 0; font-size: 12px; }
+    .summary .total { padding-top: 12px; border-top: 1px solid #777; font-size: 15px; font-weight: 700; }
+    .full { display: flex; width: 100%; }
+    .text-link { display: block; margin-top: 14px; text-align: center; text-decoration: underline; font-size: 12px; }
+    .bottom-nav { position: absolute; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(3, 1fr); height: 69px; border-top: 1px solid #777; background: #fff; }
+    .bottom-nav a { display: grid; place-items: center; font-size: 11px; }
+    .bottom-nav a.active { border-top: 3px solid #252525; font-weight: 700; }
+    .desktop { width: 1320px; height: 720px; border: 2px solid #333; background: #fff; overflow: hidden; }
+    .desktop-header { display: flex; align-items: center; justify-content: space-between; height: 65px; padding: 0 35px; border-bottom: 1px solid #aaa; }
+    .desktop-header strong { font-size: 19px; }
+    .desktop-header nav { display: flex; gap: 28px; font-size: 13px; }
+    .desktop-main { padding: 28px 35px; }
+    .desktop-main .search { width: 420px; }
+    .desktop-hero { display: grid; grid-template-columns: 1.1fr 1fr; height: 240px; margin: 22px 0 25px; border: 1px solid #777; }
+    .desktop-hero .hero-copy { display: flex; flex-direction: column; align-items: start; justify-content: center; padding: 27px; }
+    .desktop-hero h2 { margin: 4px 0 8px; font-size: 29px; }
+    .desktop-hero p { margin: 0 0 21px; font-size: 13px; color: #444; }
+    .desktop-columns { display: grid; grid-template-columns: 290px 1fr; gap: 32px; }
+    .desktop-columns h3 { margin: 0 0 13px; font-size: 17px; }
+    .desktop-columns .categories { grid-template-columns: 1fr; }
+    .desktop-columns .category { min-height: 49px; }
+    .desktop-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .desktop-product { border: 1px solid #aaa; }
+    .desktop-product .media { height: 94px; }
+    .desktop-product .details { padding: 11px; }
+    .desktop-product strong { display: block; margin-bottom: 6px; font-size: 13px; }
+    .desktop-product .details div { display: flex; justify-content: space-between; align-items: center; }
+    .desktop-product .price { font-size: 13px; font-weight: 700; }
+    .annotation { margin-top: 12px; font-size: 12px; color: #444; }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <h1>커피 주문 흐름 — 와이어프레임 검증</h1>
+    <p>목표: 근처 카페의 커피를 찾아 장바구니에 담기 · 실제 문구는 시연용 샘플 · 색·사진·그림자 없음</p>
+
+    <h2 class="section-label">모바일 · 홈 → 메뉴 → 장바구니</h2>
+    <div class="mobile-flow">
+      <section class="step" id="home-screen" aria-labelledby="home-title">
+        <div class="step-title" id="home-title">01 홈 <span>무엇을 할 수 있는지 바로 알기</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="topline"><strong>COFFEE</strong><span>배달 위치: 강남역 주변</span></div>
+            <h2 class="page-title">지금 마실 커피를 고르세요</h2>
+            <input class="search" type="search" aria-label="커피 또는 카페 검색" placeholder="커피 또는 카페 검색">
+            <div class="hero">
+              <div class="hero-copy">
+                <h3>근처 카페 메뉴를<br>한눈에</h3>
+                <p>원하는 음료를 찾아 장바구니에 담으세요.</p>
+                <a class="button primary" href="#menu-screen">메뉴 보기 →</a>
+              </div>
+              <div class="media" aria-label="커피 이미지 자리">이미지 자리</div>
+            </div>
+            <div class="section-head"><h3>종류별 보기</h3><a href="#menu-screen">전체 보기</a></div>
+            <div class="categories">
+              <a class="category" href="#menu-screen">따뜻한 커피</a>
+              <a class="category" href="#menu-screen">아이스 커피</a>
+              <a class="category" href="#menu-screen">디저트</a>
+            </div>
+            <div class="section-head"><h3>빠르게 담기</h3><a href="#menu-screen">메뉴 더 보기</a></div>
+            <div class="product"><div class="media">이미지</div><div><strong>카푸치노</strong><small>우유 거품이 부드러운 커피</small><span class="price">₩4,500</span></div><a class="button secondary small" data-item="cappuccino" href="#cart-screen">담기</a></div>
+            <div class="product"><div class="media">이미지</div><div><strong>아이스 라테</strong><small>에스프레소와 차가운 우유</small><span class="price">₩4,800</span></div><a class="button secondary small" data-item="iced-latte" href="#cart-screen">담기</a></div>
+          </div>
+          <nav class="bottom-nav" aria-label="모바일 주요 탐색"><a class="active" href="#home-screen">홈</a><a href="#menu-screen">메뉴</a><a href="#cart-screen">장바구니</a></nav>
+        </div>
+      </section>
+      <div class="arrow" aria-hidden="true">→</div>
+      <section class="step" id="menu-screen" aria-labelledby="menu-title">
+        <div class="step-title" id="menu-title">02 메뉴 <span>선택·품절 복구</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="topline"><strong>COFFEE</strong><a href="#cart-screen">장바구니 보기</a></div>
+            <h2 class="page-title">메뉴</h2>
+            <input class="search" type="search" aria-label="메뉴 검색" placeholder="메뉴 검색">
+            <div class="tabs" aria-label="카테고리"><span class="tab active">전체</span><span class="tab">따뜻한 커피</span><span class="tab">아이스</span></div>
+            <div class="section-head"><h3>근처 카페의 커피</h3><span class="eyebrow">가격순</span></div>
+            <div class="product"><div class="media">이미지</div><div><strong>카푸치노</strong><small>카페 A · 우유 포함</small><span class="price">₩4,500</span></div><a class="button secondary small" data-item="cappuccino" href="#cart-screen">담기</a></div>
+            <div class="product" id="iced-latte-option"><div class="media">이미지</div><div><strong>아이스 라테</strong><small>카페 B · 차가운 음료</small><span class="price">₩4,800</span></div><a class="button secondary small" data-item="iced-latte" href="#cart-screen">담기</a></div>
+            <div class="product soldout"><div class="media">이미지</div><div><strong>콜드브루 · 품절</strong><small>지금 주문할 수 없어요</small><span class="price">₩4,300</span></div><a class="button secondary small" href="#iced-latte-option">비슷한 메뉴</a></div>
+            <p class="note">품절 메뉴는 담기 대신 대체 탐색을 제공합니다.</p>
+          </div>
+          <nav class="bottom-nav" aria-label="모바일 주요 탐색"><a href="#home-screen">홈</a><a class="active" href="#menu-screen">메뉴</a><a href="#cart-screen">장바구니</a></nav>
+        </div>
+      </section>
+      <div class="arrow" aria-hidden="true">→</div>
+      <section class="step" id="cart-screen" aria-labelledby="cart-title">
+        <div class="step-title" id="cart-title">03 장바구니 <span>담기 완료 확인</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="topline"><strong>COFFEE</strong><span>배달 위치: 강남역 주변</span></div>
+            <h2 class="page-title">장바구니</h2>
+            <div class="note" role="status" id="cart-status">카푸치노 1개를 담았어요.</div>
+            <div class="cart-item"><div class="media">이미지</div><div><strong id="cart-name">카푸치노</strong><small id="cart-detail">카페 A · 수량 1 · 변경</small></div><span class="price" id="cart-price">₩4,500</span></div>
+            <div class="summary"><div><span>상품 금액</span><strong id="summary-price">₩4,500</strong></div><div><span>배달비</span><span>주문 확인에서 안내</span></div><div class="total"><span>현재 합계</span><span id="summary-total">₩4,500</span></div></div>
+            <span class="button primary full">주문 확인으로 →</span>
+            <a class="text-link" href="#menu-screen">메뉴로 돌아가기</a>
+          </div>
+          <nav class="bottom-nav" aria-label="모바일 주요 탐색"><a href="#home-screen">홈</a><a href="#menu-screen">메뉴</a><a class="active" href="#cart-screen">장바구니</a></nav>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="section-label">데스크톱 · 같은 우선순위를 넓은 화면으로 변환</h2>
+    <section class="desktop" id="desktop-preview" aria-label="데스크톱 홈 와이어프레임">
+      <header class="desktop-header"><strong>COFFEE</strong><nav aria-label="데스크톱 주요 탐색"><a href="#home-screen">홈</a><a href="#menu-screen">메뉴</a></nav><a class="button secondary" href="#cart-screen">장바구니 보기</a></header>
+      <div class="desktop-main">
+        <input class="search" type="search" aria-label="커피 또는 카페 검색" placeholder="커피 또는 카페 검색">
+        <div class="desktop-hero"><div class="hero-copy"><span class="eyebrow">배달 위치: 강남역 주변</span><h2>지금 마실 커피를 고르세요</h2><p>근처 카페의 메뉴를 살펴보고 원하는 음료를 장바구니에 담으세요.</p><a class="button primary" href="#menu-screen">메뉴 보기 →</a></div><div class="media">커피 이미지 자리</div></div>
+        <div class="desktop-columns"><div><h3>종류별 보기</h3><div class="categories"><a class="category" href="#menu-screen">따뜻한 커피</a><a class="category" href="#menu-screen">아이스 커피</a><a class="category" href="#menu-screen">디저트</a></div></div><div><h3>빠르게 담기</h3><div class="desktop-products"><div class="desktop-product"><div class="media">이미지 자리</div><div class="details"><strong>카푸치노</strong><div><span class="price">₩4,500</span><a class="button secondary small" data-item="cappuccino" href="#cart-screen">담기</a></div></div></div><div class="desktop-product"><div class="media">이미지 자리</div><div class="details"><strong>아이스 라테</strong><div><span class="price">₩4,800</span><a class="button secondary small" data-item="iced-latte" href="#cart-screen">담기</a></div></div></div><div class="desktop-product"><div class="media">이미지 자리</div><div class="details"><strong>에스프레소</strong><div><span class="price">₩3,900</span><a class="button secondary small" data-item="espresso" href="#cart-screen">담기</a></div></div></div></div></div></div>
+      </div>
+    </section>
+    <p class="annotation">회색 블록은 사진 자리만 뜻합니다. 메시지·가격·행동은 가리지 않았습니다. 모든 상품·가격·카페는 와이어프레임 시연용 샘플입니다.</p>
+  </main>
+  <script>
+    const sampleItems = {
+      cappuccino: { name: "카푸치노", cafe: "카페 A", price: "₩4,500" },
+      "iced-latte": { name: "아이스 라테", cafe: "카페 B", price: "₩4,800" },
+      espresso: { name: "에스프레소", cafe: "카페 C", price: "₩3,900" }
+    };
+    for (const link of document.querySelectorAll("[data-item]")) {
+      link.addEventListener("click", () => {
+        const item = sampleItems[link.dataset.item];
+        document.getElementById("cart-status").textContent = `${item.name} 1개를 담았어요.`;
+        document.getElementById("cart-name").textContent = item.name;
+        document.getElementById("cart-detail").textContent = `${item.cafe} · 수량 1 · 변경`;
+        for (const id of ["cart-price", "summary-price", "summary-total"]) {
+          document.getElementById(id).textContent = item.price;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
