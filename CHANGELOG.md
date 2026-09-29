@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.16.0] - 2026-09-29
+
+### Features
+
+- **devin**: Add native `UserPromptSubmit`, `Stop`, and `SessionEnd` Mnemo hooks for Devin CLI. Reuse Claude skills, save project conversations to `conversations/*-devin.md`, read assistant replies from Devin's local session database, and avoid duplicate Claude hook writes. The default installer configures the adapter when Devin is detected. (ce4bf05)
+
+### Documentation
+
+- Document Devin's Claude skill compatibility, Mnemo installation and verification, and the limits of its support tier in the four language READMEs and setup guide. Update the public skill inventory to 102 sources, including 78 source-only modules. (ce4bf05)
+
+### Validation and Scope
+
+- A live Devin CLI 3000.11.3 turn on Windows saved one user prompt and one assistant reply without a duplicate Claude record. The related Devin, source-only policy, and portable-host tests passed (21); installer tests passed (29). `node skills/devin-mnemo/install.js --check`, `bash -n install.sh`, and `git diff --check` passed.
+- macOS and Linux runtime capture is not yet verified. Existing unrelated local rule edits and skill zip files are excluded from this release.
+
 ## [6.15.0] - 2026-09-29
 
 ### Features
