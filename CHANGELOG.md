@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.15.0] - 2026-09-29
+
+### Features
+
+- **aphrodite**: Add a low fidelity wireframe decision gate before visual exploration. Render desktop and mobile screens, then record evidence for hierarchy, structure, flow, consistency, and clarity. Visual candidates that change the primary action or information order return to this gate. Wireframes use readable sample content and simple shapes, without requiring a separate image for each element. (2474807)
+
+### Documentation
+
+- Update the four language READMEs and workflow guide. Add a coffee ordering example with a decision record, interactive HTML wireframe, and mobile and desktop captures. (2474807)
+
+### Validation and Scope
+
+- Windows full installation passed all 12 installed runtime checks. The Aphrodite skill passed validation, six Experience Contract tests and ten source only routing tests passed, and browser interaction checks confirmed adding a product and navigating from a sold out item to an alternative. `git diff --check` passed.
+- The coffee example is a wireframe demonstration; search, category filters, and final checkout are layout only. Existing unrelated local changes were excluded from this release.
+
 ## [6.14.1] - 2026-09-27
 
 ### Bug Fixes
