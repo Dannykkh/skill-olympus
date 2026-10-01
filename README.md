@@ -50,7 +50,7 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Memory across sessions** | `mnemo` keeps an index, semantic memory, searchable conversations, and resumable handoffs |
 | **Less prompt noise** | A small active registry routes into 78 source-only modules only when the work needs them |
 
-**102 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 78 source-only internal/optional modules) · 42 agent source references (40 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
+**102 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 78 source-only internal/optional modules) · 36 agent source references (34 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
 
 ---
 
@@ -631,7 +631,7 @@ menu entry is required, because some CLIs reject unknown slash names before mode
 Directories whose names match this repository's skill sources are installer-managed and may be
 replaced or removed on sync; unrelated local skill names are preserved. Customize the repository
 source or use a distinct local name instead of editing an installed Olympus copy in place.
-All four runtime surfaces keep all 42 custom-agent source references source-only by default. `--include-source-only-agents` copies those legacy prompts for deliberate compatibility testing; it does not make Markdown an active Codex agent definition. (`--include-passive-agents` and `--include-broad-coding-agents` remain legacy aliases.) Codex also keeps `.agents/agents` absent unless both a project mirror and source-only opt-in are requested.
+All four runtime surfaces keep all 36 custom-agent source references source-only by default. `--include-source-only-agents` copies those legacy prompts for deliberate compatibility testing; it does not make Markdown an active Codex agent definition. (`--include-passive-agents` and `--include-broad-coding-agents` remain legacy aliases.) Codex also keeps `.agents/agents` absent unless both a project mirror and source-only opt-in are requested.
 
 Agent-using skills keep their orchestration logic and map semantic roles to each CLI's built-ins:
 
@@ -690,16 +690,16 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
 
-### Agent source references (42 files: 40 top-level + 2 skill-owned; 0 registered by default)
+### Agent source references (36 files: 34 top-level + 2 skill-owned; 0 registered by default)
 
 These are retained compatibility/reference prompts, not always-on runtime personas. Normal delegation uses each CLI's native subagents; procedural behavior lives in skills.
 
-All 42 remain source-only under a default-deny policy and can be copied for explicit compatibility testing with `--include-source-only-agents`.
+All 36 remain source-only under a default-deny policy and can be copied for explicit compatibility testing with `--include-source-only-agents`.
 
 | Area | Agents |
 |------|--------|
 | **Skill-owned compatibility prompts** | chronos-worker, gotcha-analyzer |
-| **Optional source-only agents** | architect, documentation, mermaid-diagram-specialist, typescript-spec, python-spec, ui-ux-designer, frontend-react, backend-spring, database-mysql, database-postgresql, react-best-practices, python-fastapi-guidelines, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, naming-conventions, writing-guidelines, bilingual-dev, web-preview-guide, codebase-pattern-finder, explore-agent, debugger, feature-tracker, tdd-coach, migration-helper, spec-interviewer, api-comparator, api-tester, ascii-ui-mockup-generator, backend-dotnet, database-schema-designer, desktop-wpf, performance-engineer, stitch-developer, writing-specialist, ai-ml, qa-engineer, qa-writer, code-reviewer, security-reviewer |
+| **Optional source-only agents** | architect, documentation, mermaid-diagram-specialist, typescript-spec, python-spec, ui-ux-designer, frontend-react, backend-spring, database-mysql, database-postgresql, react-best-practices, python-fastapi-guidelines, naming-conventions, writing-guidelines, bilingual-dev, web-preview-guide, codebase-pattern-finder, explore-agent, debugger, feature-tracker, tdd-coach, migration-helper, spec-interviewer, api-comparator, ascii-ui-mockup-generator, backend-dotnet, desktop-wpf, performance-engineer, stitch-developer, writing-specialist, ai-ml, qa-engineer, qa-writer, security-reviewer |
 
 ### Hooks (9)
 

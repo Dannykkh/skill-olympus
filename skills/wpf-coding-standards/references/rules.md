@@ -1,12 +1,7 @@
----
-name: wpf-coding-standards
-description: "WPF 데스크톱 참고 표준. MVVM, 스레딩, 메모리 관리, GPU 렌더링. 명시적으로 요청할 때만 적용."
----
-
 # WPF Coding Standards (Optional Reference)
 
 WPF 데스크톱 애플리케이션 작업에서 명시적으로 불러 쓰는 참고 규칙.
-상세 코드 예시 → `/wpf-coding-standards` 스킬 참조.
+상세 코드 예시 → `../SKILL.md`, `../templates/` 참조.
 
 ---
 

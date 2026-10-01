@@ -1038,13 +1038,12 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
 });
 
 test("shared runtime agent policy keeps every custom agent source-only by default", () => {
-  assert.equal(DEFAULT_DISABLED_PASSIVE_AGENTS.length, 9);
+  assert.equal(DEFAULT_DISABLED_PASSIVE_AGENTS.length, 6);
   assert.equal(DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS.length, 7);
-  assert.equal(DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS.length, 24);
+  assert.equal(DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS.length, 21);
   assert.equal(DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS.length, 2);
   assert.equal(DEFAULT_RUNTIME_AGENT_ALLOWLIST.length, 0);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 42);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("code-reviewer.md"), true);
+  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 36);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("security-reviewer.md"), true);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("chronos-worker.md"), true);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("gotcha-analyzer.md"), true);
@@ -1054,7 +1053,6 @@ test("shared runtime agent policy keeps every custom agent source-only by defaul
     ["frontend-react.md", "frontend"],
     ["chronos-worker.md", "chronos-worker"],
     ["gotcha-analyzer.md", "gotcha-analyzer"],
-    ["code-reviewer.md", "source-review-wrapper"],
     ["security-reviewer.md", "source-security-wrapper"],
     ["react-best-practices.md", "react-guide"],
     ["python-fastapi-guidelines.md", "python-guide"],
@@ -1065,8 +1063,6 @@ test("shared runtime agent policy keeps every custom agent source-only by defaul
     ["debugger.md", "debugger"],
     ["spec-interviewer.md", "spec-interviewer"],
     ["backend-dotnet.md", "backend-dotnet"],
-    ["api-tester.md", "api-tester"],
-    ["database-schema-designer.md", "database-schema-designer"],
     ["stitch-developer.md", "stitch-developer"],
     ["architect.md", "architect"],
     ["documentation.md", "documentation"],
@@ -1605,6 +1601,30 @@ test("localized README surfaces stay connected and disclose portable hosts", () 
 
   assert.match(readmes.get("README-ja.md"), /通常の更新では、先にアンインストールする必要はありません/);
   assert.match(readmes.get("README-zh-CN.md"), /正常更新前\s*不需要先卸载/);
+});
+
+test("custom agent sources match the source-only policy and never reuse a skill name", () => {
+  const agentFiles = collectAgentFiles(
+    path.join(repoRoot, "agents"),
+    path.join(repoRoot, "skills"),
+  );
+  assert.deepEqual(
+    Array.from(agentFiles.keys()).sort(),
+    [...DEFAULT_SOURCE_ONLY_AGENTS].sort(),
+  );
+
+  // 같은 이름의 스킬과 에이전트가 함께 있으면 opt-in 설치 시 라우팅이 갈리고
+  // 한쪽만 갱신되어 낡는다. 스킬 안 규칙 본문은 agents/가 아닌 references/에 둔다.
+  const skillNames = new Set(
+    fs
+      .readdirSync(path.join(repoRoot, "skills"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name),
+  );
+  const overlaps = Array.from(agentFiles.keys())
+    .map((name) => name.replace(/\.md$/i, ""))
+    .filter((name) => skillNames.has(name));
+  assert.deepEqual(overlaps, []);
 });
 
 test("agent descriptions avoid YAML plain-scalar colon ambiguity", () => {

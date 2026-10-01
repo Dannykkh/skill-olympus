@@ -809,7 +809,6 @@ claude plugin install pg-aiguide
 | architect | 소스 참고용; 실제 설계는 네이티브 계획·검토 + documentation-and-adrs 사용 |
 | security-reviewer | 소스 참고용; 실제 검증은 code-reviewer 보안 감사 모드 또는 argos Phase 7 사용 |
 | stitch-developer | 소스 참고용; 실제 실행은 design-plan이 조건부 source-only stitch 어댑터를 직접 읽어 수행 |
-| code-reviewer | 소스 참고용; 실제 리뷰는 CLI 네이티브 review + 동명 스킬 사용 |
 | qa-engineer | 소스 참고용; 실제 QA는 프로젝트 테스트 실행·minos·argos 사용 |
 | documentation | 소스 참고용; 실제 작성은 네이티브 작업자 + 목적별 문서 스킬 사용 |
 | spec-interviewer | 소스 참고용; 실제 인터뷰는 zephermine 사용 |

@@ -57,6 +57,12 @@ These exact-name overlaps are not immediate deletion candidates because the agen
 
 > **정정 노트 (2026-06-09)**: 위 표의 `api-tester` 근거가 부정확했음. 실제로 api-tester 에이전트는 passive가 아니고(`auto_apply` 없음), 2,910 세션 중 spawn 0회이며, 동명 스킬이 내용상 상위호환임 — "역할 분리"가 성립하지 않음. 재조사 결과 **유지 결정 자체는 유효**(제거 시 repo ~10곳 + 크로스-CLI 전파 churn 대비 이득이 메뉴 한 줄로 작음). 나머지 5개 행(code-reviewer, database-schema-designer, dotnet/fullstack/wpf-coding-standards)의 근거는 정확함. 상세: 2026-06 에이전트/스킬 정리 조사.
 
+> **후속 결정 (2026-10-02) — 위 6쌍 정리 완료, 이 표의 "유지"는 대체됨.** 유지 근거였던 "패시브 에이전트 + 명시형 스킬" 이중 역할은 에이전트가 런타임에 올라간다는 전제에 기댔는데, `afc9950`(2026-08-13, entrypoint-only) 이후 사용자 정의 에이전트 기본 등록이 0개라 전제가 사라졌다. 양쪽 내용을 다시 대조한 결과:
+> - `api-tester`, `code-reviewer`: 에이전트가 동명 스킬의 하위 집합(서버 검증 계약·v4 정책 레이어 없음) → 에이전트 삭제.
+> - `database-schema-designer`: 에이전트에만 있던 DB-First 원칙·DB별 매트릭스·엔티티 추출·ERD 표기·출력 형식을 `skills/database-schema-designer/references/db-first-design.md`로 옮기고 에이전트 삭제. 출력 파일명은 하류(agent-team·workpm·estimate)가 읽는 `db-schema.md`로 맞춤.
+> - `dotnet`/`fullstack`/`wpf-coding-standards`: 루트 사본 삭제 + 스킬 내장본을 `skills/<이름>/references/rules.md`로 이동. `skills/<이름>/agents/*.md`는 `collectAgentFiles`가 에이전트로 수집하므로 루트만 지우면 같은 이름이 남는다. 아래 "Embedded duplicates" 표의 세 행도 이 이동으로 해소됨.
+> - 결과: 에이전트 소스 42 → 36(최상위 34 + 스킬 소유 2), 스킬과 같은 이름 0. 재발 방지 가드는 `scripts/tests/installers.test.js`의 "never reuse a skill name" 테스트.
+
 Embedded duplicates retained for self-contained skill packaging:
 
 | Embedded file | Status |

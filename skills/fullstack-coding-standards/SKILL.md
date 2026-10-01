@@ -10,8 +10,8 @@ description: 명시적 `/fullstack-coding-standards` 호출 전용 풀스택 참
 ```
 fullstack-coding-standards/
 ├── SKILL.md                    # 이 파일 (상세 코드 예시)
-├── agents/                     # source-only 규칙 참고 (명시적 로드)
-│   └── fullstack-coding-standards.md   # 런타임 에이전트로 등록하지 않음
+├── references/                 # 핵심 규칙 (명시적 로드)
+│   └── rules.md                # 스킬 호출 시 읽는 규칙 본문
 └── templates/                  # 코드 템플릿
 ```
 
@@ -20,10 +20,10 @@ fullstack-coding-standards/
 ## 참조 로딩 규칙
 
 1. 이 `SKILL.md`를 워크플로와 예시의 소유자로 사용합니다.
-2. 스킬을 명시적으로 호출했을 때 `agents/fullstack-coding-standards.md`를 읽고 현재 프로젝트에 필요한 규칙만 적용합니다.
+2. 스킬을 명시적으로 호출했을 때 `references/rules.md`를 읽고 현재 프로젝트에 필요한 규칙만 적용합니다.
 3. Java/Spring Boot 또는 DB 연동 상세가 필요할 때만 해당 `templates/` 파일을 추가로 읽습니다.
 
-`agents/` 파일이 자동 로드되거나 커스텀 에이전트로 등록되어 있다고 가정하지 마세요.
+이 규칙 본문은 스킬 안의 참조 문서이며 커스텀 에이전트로 등록되지 않습니다.
 
 ---
 

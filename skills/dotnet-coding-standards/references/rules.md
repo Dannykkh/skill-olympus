@@ -1,12 +1,7 @@
----
-name: dotnet-coding-standards
-description: ".NET 개발 참고 표준. Clean Architecture 계층, NRT, async/await, DI 규칙. 명시적으로 요청할 때만 적용."
----
-
 # .NET Coding Standards (Optional Reference)
 
 C# / ASP.NET Core / EF Core 작업에서 명시적으로 불러 쓰는 참고 규칙.
-상세 코드 예시 → `/dotnet-coding-standards` 스킬 참조.
+상세 코드 예시 → `../SKILL.md`, `../templates/` 참조.
 
 ---
 

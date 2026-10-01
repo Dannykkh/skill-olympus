@@ -95,6 +95,8 @@ CREATE INDEX idx_orders_user ON orders(user_id);
 
 ## Process Overview
 
+**DB-First:** 대상 DB를 먼저 정하고 그 DB의 강점으로 구조를 정한다(PostgreSQL JSONB·RLS, MySQL 정규화, MongoDB 임베딩). DB 감지 순서, DB별 설계 매트릭스, 엔티티 추출 규칙, ERD 표기, `db-schema.md` 출력 형식은 [references/db-first-design.md](references/db-first-design.md)를 따른다.
+
 ```
 Your Data Requirements
     |
@@ -200,6 +202,7 @@ After designing a schema:
 
 | 주제 | 파일 |
 |------|------|
+| DB-First Design (DB별 설계·출력 형식) | [references/db-first-design.md](references/db-first-design.md) |
 | Normalization (SQL 정규화) | [references/normalization.md](references/normalization.md) |
 | Data Types (타입 선택) | [references/data-types.md](references/data-types.md) |
 | Indexing Strategy (인덱스 전략) | [references/indexing-strategy.md](references/indexing-strategy.md) |

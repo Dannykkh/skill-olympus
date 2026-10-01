@@ -290,14 +290,11 @@
     { "id": "react-best-practices", "tags": ["react", "nextjs"], "priority": "optional" },
     { "id": "backend-spring", "tags": ["java", "spring"], "priority": "optional" },
     { "id": "backend-dotnet", "tags": ["dotnet", "aspnet", "csharp"], "priority": "optional" },
-    { "id": "database-schema-designer", "tags": ["mysql", "postgresql", "supabase", "sqlite", "mongodb"], "priority": "optional" },
     { "id": "database-mysql", "tags": ["mysql"], "priority": "optional" },
     { "id": "database-postgresql", "tags": ["postgresql", "supabase"], "priority": "optional" },
     { "id": "python-fastapi-guidelines", "tags": ["python", "fastapi"], "priority": "optional" },
     { "id": "ai-ml", "tags": ["python", "openai", "anthropic", "gemini", "ollama"], "priority": "optional" },
-    { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
     { "id": "api-comparator", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
-    { "id": "code-reviewer", "tags": ["*"], "priority": "optional" },
     { "id": "qa-engineer", "tags": ["*"], "priority": "optional" },
     { "id": "qa-writer", "tags": ["*"], "priority": "optional" },
     { "id": "documentation", "tags": ["*"], "priority": "optional" },
@@ -320,12 +317,9 @@
     { "id": "typescript-spec", "tags": ["react", "nextjs", "typescript"], "priority": "optional" },
     { "id": "python-spec", "tags": ["python", "fastapi", "django"], "priority": "optional" },
     { "id": "codebase-pattern-finder", "tags": ["*"], "priority": "optional" },
-    { "id": "fullstack-coding-standards", "tags": ["react", "spring", "nestjs", "fullstack"], "priority": "optional" },
-    { "id": "dotnet-coding-standards", "tags": ["dotnet", "aspnet", "csharp", "blazor"], "priority": "optional" },
     { "id": "desktop-wpf", "tags": ["dotnet", "wpf", "csharp"], "priority": "optional" },
     { "id": "web-preview-guide", "tags": ["react", "nextjs", "vue", "angular", "svelte"], "priority": "optional" },
-    { "id": "bilingual-dev", "tags": ["*"], "priority": "optional" },
-    { "id": "wpf-coding-standards", "tags": ["dotnet", "wpf", "csharp"], "priority": "optional" }
+    { "id": "bilingual-dev", "tags": ["*"], "priority": "optional" }
   ],
 
   "excluded": {

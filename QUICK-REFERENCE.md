@@ -55,9 +55,9 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **backend-dotnet (소스 참고)** | ASP.NET Core 참고 패턴 (기본 미설치) | 이 저장소의 `agents/backend-dotnet.md` |
-| **dotnet-coding-standards (스킬)** | .NET 코딩 표준 통합 패키지 (패시브 에이전트 + C#/ASP.NET/EF Core 템플릿) | 이 저장소의 `skills/dotnet-coding-standards/` |
+| **dotnet-coding-standards (스킬)** | .NET 코딩 표준 통합 패키지 (규칙 본문 `references/rules.md` + C#/ASP.NET/EF Core 템플릿) | 이 저장소의 `skills/dotnet-coding-standards/` |
 | **desktop-wpf (소스 참고)** | WPF 참고 패턴 (기본 미설치) | 이 저장소의 `agents/desktop-wpf.md` |
-| **wpf-coding-standards (스킬)** | WPF 코딩 표준 통합 패키지 (패시브 에이전트 + MVVM/스레딩/메모리 템플릿) | 이 저장소의 `skills/wpf-coding-standards/` |
+| **wpf-coding-standards (스킬)** | WPF 코딩 표준 통합 패키지 (규칙 본문 `references/rules.md` + MVVM/스레딩/메모리 템플릿) | 이 저장소의 `skills/wpf-coding-standards/` |
 | **claude-code-dotnet** | 25개 스킬, 5개 에이전트 | `npx add-skill Aaronontheweb/claude-code-dotnet -a claude-code` |
 
 ### PostgreSQL
@@ -70,7 +70,6 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **database-schema-designer (소스 참고)** | 이전 에이전트 구현 (기본 미설치) | 이 저장소의 `agents/database-schema-designer.md` |
 | **database-schema-designer (source-only 스킬)** | DB-First 설계 + 타입, 인덱스, 제약조건, 마이그레이션 | 카탈로그의 원본 경로 |
 | **database-mysql (소스 참고)** | 고정 MySQL 패턴 참고자료 (기본 미설치) | 이 저장소의 `agents/database-mysql.md` |
 | **database-postgresql (소스 참고)** | 고정 PostgreSQL/Supabase 패턴 참고자료 (기본 미설치) | 이 저장소의 `agents/database-postgresql.md` |
@@ -302,10 +301,8 @@ claude plugin install voltagent-qa-sec
 | `agents/backend-spring.md` | Java 21 + Spring Boot 3.x 참고자료 (기본 미설치) |
 | `agents/backend-dotnet.md` | ASP.NET Core + Clean Architecture + EF Core 참고자료 (기본 미설치) |
 | `agents/desktop-wpf.md` | WPF 데스크톱 참고자료 (기본 미설치) |
-| `agents/database-schema-designer.md` | DB-First 스키마 설계 참고자료 (기본 미설치) |
 | `agents/database-mysql.md` | MySQL 8.0 + Flyway 참고자료 (기본 미설치) |
 | `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS 참고자료 (기본 미설치) |
-| `agents/fullstack-coding-standards.md` | 풀스택 코딩 표준 참고자료 (기본 미설치) |
 | `agents/ai-ml.md` | 정적 LLM API·RAG 참고자료 (기본 미설치); 실제 구현은 프로젝트 SDK와 공급자 공식 문서 우선 |
 | `skills/memory-compact/` | source-only 내부 모듈 — 활성 mnemo 규칙이 카탈로그에서 직접 읽어 MEMORY.md 크기 점검·압축 |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
