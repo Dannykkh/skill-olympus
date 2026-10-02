@@ -106,6 +106,11 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 템플릿은 `references/prompt-templates.md`를 사용합니다.
 
+스폰 전 한 번: 소유권 기준점을 기록합니다. `git stash create` 출력 SHA(빈 출력이면 `git rev-parse HEAD`)와
+`git ls-files --others --exclude-standard`의 기존 untracked 목록을 Lead가 activity log의 `## Ownership baseline`에 적습니다.
+작업 중에는 커밋하지 않으므로 Step 7의 충돌 확인은 커밋 이력이 아니라 이 기준점과 비교합니다.
+`git stash create`는 작업 트리를 바꾸지 않고, 작업 전부터 있던 미커밋 수정을 기준점에 포함합니다.
+
 핵심 규칙:
 
 - 각 worker는 파일 소유권 범위를 벗어나지 않음
@@ -153,7 +158,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 > **I-1**: 병렬 구현 후 "함수가 존재하는가"를 Grep/Read로 확인하는 코드-존재 검증은 자기 판단이며,
 > 컴파일/통합되지 않는 코드도 통과시킬 수 있다. 빌드/타입체크는 선택이 아니다.
 
-1. 파일 충돌 여부 확인
+1. 파일 충돌 여부 확인 — 변경 파일 = `git diff --name-only {기준점 SHA}` ∪ (`git ls-files --others --exclude-standard` − 기준점의 기존 untracked). 각 파일을 담당 worker 소유와 worker가 반환한 변경 파일에 대조해, 둘 이상이 소유하면 `CONFLICT`, 소유자가 없으면 `UNOWNED`(조립 지점에서 기준점 대비 diff에 `-` 줄 없이 등록 줄만 추가된 경우 제외), 아무도 보고하지 않았으면 `UNREPORTED`로 표시합니다. 근거 없는 변경은 revert하고, 필요한 변경은 소유에 추가해 activity log에 기록합니다
 2. **사전 점검(PRE-CHECK, 완료 권한 아님):** 코드-존재 / Acceptance Criteria grep 대조 — 빠뜨린 작업 식별용일 뿐, 이것만으로 완료 선언 금지. AC는 proved/weak/missing으로 채점(028 완료 계약) — 코드는 있으나 동작 증거가 약하면 `weak`로 분리(존재=완료 둔갑 방지). 또한 **경계면 정합성 교차 비교**(웹앱: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) — 빌드 통과가 숨기는 런타임 mismatch를 게이트 전에 정적으로 거른다(양쪽 동시 읽기)
 3. **병합 결과에 대해 통합 게이트를 1회 실행 (이 게이트만이 완료 권한):**
    1. 빌드 / 타입체크

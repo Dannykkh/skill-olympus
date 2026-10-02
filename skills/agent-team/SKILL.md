@@ -177,7 +177,7 @@ Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니
 
 | 상황 | 조치 |
 |------|------|
-| 팀원이 잘못된 파일 수정 | `git diff` 확인 → revert 지시 |
+| 팀원이 잘못된 파일 수정 | 소유권 기준점 대비 변경 목록(verification-protocol.md 3단계)으로 확인 → revert 지시 |
 | 테스트 3회 연속 실패 | 작업자 중단 → 새 general-write 작업자로 교체 → 원인 분석부터 |
 | 자재검사 2회 미통과 | 구현 팀원 교체 → 리뷰 지적사항 포함 재구현 |
 | 팀원 무응답 (1분+) | shutdown → 재스폰 (최대 2회) |
@@ -357,6 +357,8 @@ Wave 단위로 spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 
 
 See [wave-executor.md](references/wave-executor.md)
 
+Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEAD + 기존 untracked 목록)을 activity log에 기록 — [verification-protocol.md](references/verification-protocol.md) 0단계.
+
 각 Wave별 실행 사이클:
 1. 선행 Task의 blockedBy 해소 여부 확인
 2. teammate/agent에게 지시 (담당 파일, 도면 노드, 파일 소유권 규칙 포함)
@@ -400,7 +402,7 @@ while (마스터 체크리스트 미통과 항목 존재):
   1. 파일 존재 검증 (Files to Create/Modify 전수 확인)        ← 사전 점검
   2. Acceptance Criteria 대조 (코드 존재 여부 확인)            ← 사전 점검
   3. 도면 노드 검증 (flow-diagrams 존재 시)                   ← 사전 점검
-  4. 파일 소유권 검증                                        ← 사전 점검
+  4. 파일 소유권 검증 (0단계 기준점 대비 변경 ↔ 섹션 소유 ↔ 작업자 보고) ← 사전 점검
   4b. 경계면 정합성 교차 비교 (웹앱: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) ← 사전 점검, verification-protocol.md 4.5단계
   5. 통합 게이트 (유일한 완료 권한): 병합 결과에 빌드/타입체크 + 전체 테스트 1회 — 1~4b는 사전 점검일 뿐, 이 게이트 통과로만 완료 (자동 PASS 금지). 상세 verification-protocol.md 5단계
 

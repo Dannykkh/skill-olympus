@@ -1,6 +1,21 @@
 # Verification Protocol
 
-모든 Wave 완료 후 결과를 검증하는 프로토콜.
+모든 Wave 완료 후 결과를 검증하는 프로토콜. 0단계만 Wave 1 시작 전에 실행합니다.
+
+## 0단계: 소유권 기준점 기록 (Wave 1 시작 전)
+
+작업 중에는 커밋하지 않으므로, 끝난 뒤 "무엇이 바뀌었나"를 커밋 이력으로 알 수 없습니다.
+시작 시점의 작업 트리를 기준점으로 남겨 두고 3단계에서 그 기준점과 비교합니다.
+
+```bash
+git stash create                            # 출력된 SHA = 기준점 (작업 트리가 깨끗하면 빈 출력 → 아래 HEAD 사용)
+git rev-parse HEAD                          # 빈 출력일 때의 기준점
+git ls-files --others --exclude-standard    # 이미 있던 새 파일(untracked) 목록
+```
+
+- `git stash create`는 작업 트리를 건드리지 않고, 이미 있던 미커밋 수정을 포함한 상태를 커밋 객체로만 만듭니다. 그래서 사용자가 작업 전부터 고치던 파일이 오탐되지 않습니다.
+- 기준점 SHA와 기존 untracked 목록은 Lead가 activity log(`conversations/{YYYY-MM-DD}-team-poseidon.md`)의 `## Ownership baseline`에 적습니다. 컨텍스트가 압축돼도 3단계에서 다시 읽기 위해서입니다.
+- git 저장소가 아니면 `ownership baseline: NOT APPLICABLE (no git)`으로 적고, 3단계는 작업자가 반환한 변경 파일 목록만으로 수행합니다.
 
 ## 검증 절차
 
@@ -40,22 +55,30 @@ for each section:
 
 ### 3단계: 파일 소유권 검증
 
-다른 teammate가 수정하면 안 되는 파일을 수정했는지 확인:
+0단계 기준점 대비 실제로 바뀐 파일을 구한 뒤, 섹션 소유와 작업자 보고에 대조합니다.
 
-```
-for each section A:
-  for each other_section B (where B != A):
-    for each file in A.files:
-      if file was modified and file is in B.files:
-        CONFLICT: "파일 충돌: {file}이 section-A와 section-B 모두에서 수정됨"
-```
-
-**git diff 활용:**
+**변경 파일 = 아래 둘의 합집합:**
 ```bash
-git diff --name-only HEAD~{N}  # 변경된 파일 목록
+git diff --name-only {기준점 SHA}             # 추적 파일: 커밋 여부와 무관하게 기준점 이후 바뀐 파일
+git ls-files --others --exclude-standard     # 새 파일 — 0단계 기존 untracked 목록에 있던 것은 제외
 ```
 
-각 변경 파일이 어떤 섹션의 소유인지 매핑하여 교차 수정 감지.
+**대조:**
+```
+for each changed_file:
+  owners = file이 들어 있는 섹션의 Files to Create/Modify (자유 모드: 태스크 담당 파일)
+  if len(owners) >= 2:
+    CONFLICT: "파일 충돌: {file}이 여러 섹션에 걸쳐 있음 — {owners}"
+  if len(owners) == 0:
+    if file이 sections/index.md Harness의 조립 지점이고 변경이 등록 줄뿐: 허용
+      # 등록 줄뿐 = `git diff {기준점 SHA} -- {file}`에 '-'로 시작하는 줄(삭제·수정)이 없고 추가 줄만 있음
+    else: UNOWNED: "소유 섹션 없는 변경: {file}"
+  if file이 어느 작업자의 반환 '변경 파일'에도 없음:
+    UNREPORTED: "보고되지 않은 변경: {file}"
+```
+
+- `UNOWNED`·`UNREPORTED`는 해당 Wave 작업자의 반환 내용과 diff를 보고 원인을 판단합니다. 근거 없는 변경이면 revert를 지시하고, 필요한 변경이면 섹션 소유에 추가한 뒤 activity log에 기록합니다.
+- 기존 untracked 파일을 작업 중에 수정한 경우는 이 방식으로 잡히지 않습니다. 해당 파일이 있으면 0단계에서 이름을 적어 두고 3단계에서 직접 diff를 확인합니다.
 
 ### 4단계: 도면 노드 검증 (flow-diagrams 존재 시)
 
