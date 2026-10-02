@@ -83,7 +83,7 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
    - `api-spec.md` → API 관련 worker에게 전달
    - `db-schema.md` → DB 관련 worker에게 전달
    - `design-system.md` → 프론트엔드 worker에게 전달
-5. 각 section의 **Acceptance Criteria** 추출 → 마스터 체크리스트로 통합
+5. 완료 기준 계약 — `checklist.md` 확인(없으면 섹션 AC에서 기계적으로 생성), `checklist-status.md` 장부 생성 또는 재개. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`
 
 **자유 모드에서는 건너뜀.**
 
@@ -116,7 +116,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 - 각 worker는 파일 소유권 범위를 벗어나지 않음
 - explorer는 코드 수정 금지
 - 충돌 가능성이 있으면 즉시 `default`가 재분배
-- 각 worker는 변경 파일·테스트·계획 이탈·남은 위험을 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`와 공유 `implementation-notes.md`를 기록
+- 각 worker는 담당 AC ID 목록을 받고, 변경 파일·테스트·계획 이탈·남은 위험과 AC별 `ID | 증거 | 상태 제안`을 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`와 공유 `implementation-notes.md`를 기록
 
 ### Step 4: 모니터링
 
@@ -158,14 +158,14 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 > **I-1**: 병렬 구현 후 "함수가 존재하는가"를 Grep/Read로 확인하는 코드-존재 검증은 자기 판단이며,
 > 컴파일/통합되지 않는 코드도 통과시킬 수 있다. 빌드/타입체크는 선택이 아니다.
 
-1. 파일 충돌 여부 확인 — 변경 파일 = `git diff --name-only {기준점 SHA}` ∪ (`git ls-files --others --exclude-standard` − 기준점의 기존 untracked). 각 파일을 담당 worker 소유와 worker가 반환한 변경 파일에 대조해, 둘 이상이 소유하면 `CONFLICT`, 소유자가 없으면 `UNOWNED`(조립 지점에서 기준점 대비 diff에 `-` 줄 없이 등록 줄만 추가된 경우 제외), 아무도 보고하지 않았으면 `UNREPORTED`로 표시합니다. 근거 없는 변경은 revert하고, 필요한 변경은 소유에 추가해 activity log에 기록합니다
-2. **사전 점검(PRE-CHECK, 완료 권한 아님):** 코드-존재 / Acceptance Criteria grep 대조 — 빠뜨린 작업 식별용일 뿐, 이것만으로 완료 선언 금지. AC는 proved/weak/missing으로 채점(028 완료 계약) — 코드는 있으나 동작 증거가 약하면 `weak`로 분리(존재=완료 둔갑 방지). 또한 **경계면 정합성 교차 비교**(웹앱: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) — 빌드 통과가 숨기는 런타임 mismatch를 게이트 전에 정적으로 거른다(양쪽 동시 읽기)
+1. 파일 충돌 여부 확인 — 변경 파일 = `git diff --name-only {기준점 SHA}` ∪ (`git ls-files --others --exclude-standard` − 기준점의 기존 untracked). 각 파일을 담당 worker 소유와 worker가 반환한 변경 파일에 대조해, 같은 Wave의 둘 이상이 소유하면 `CONFLICT`(다른 Wave가 순차로 고친 공유 파일은 `SHARED` — 각자 맡은 부분만 바꿨는지 diff 확인), Lead 기록(activity log·`checklist-status.md`·`implementation-notes.md`)은 제외하고, 소유자가 없으면 `UNOWNED`(조립 지점에서 기준점 대비 diff에 `-` 줄 없이 등록 줄만 추가된 경우 제외), 아무도 보고하지 않았으면 `UNREPORTED`로 표시합니다. 근거 없는 변경은 revert하고, 필요한 변경은 소유에 추가해 activity log에 기록합니다
+2. **사전 점검(PRE-CHECK, 완료 권한 아님):** 코드-존재 / Acceptance Criteria grep 대조 — 빠뜨린 작업 식별용일 뿐, 이것만으로 완료 선언 금지. AC는 proved/weak/missing/contradicted로 채점(028 완료 계약)해 Lead가 `checklist-status.md`에 증거와 함께 기록 — 코드는 있으나 동작 증거가 약하면 `weak`로 분리(존재=완료 둔갑 방지). 또한 **경계면 정합성 교차 비교**(웹앱: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) — 빌드 통과가 숨기는 런타임 mismatch를 게이트 전에 정적으로 거른다(양쪽 동시 읽기)
 3. **병합 결과에 대해 통합 게이트를 1회 실행 (이 게이트만이 완료 권한):**
    1. 빌드 / 타입체크
    2. 전체 테스트 스위트 1회 실행 (병합된 결과 대상)
    3. (가능하면) 통합/E2E 1회 실행
 4. 게이트 결과에 따라:
-   - 전부 통과 → 완료 선언 가능
+   - 전부 통과하고 `checklist-status.md`의 모든 행이 `proved`(게이트 뒤 재확인) → 완료 선언 가능. 아니면 "M/N proved, 남은 ID"로 보고
    - 실패 → 해당 worker 재spawn하여 수정 후 게이트 재실행
    - **빌드/테스트 도구가 없으면** 그 사실을 명시하고 사용자에게 수동 확인을 요청 (자동 PASS 금지)
 5. 남은 리스크/미해결 항목 정리

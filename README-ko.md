@@ -458,9 +458,10 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 - **언제:** 구현 전 기능/제품에 충실한 설계 산출물이 필요할 때.
 - **사용:** `/zephermine [spec경로]` (별칭: 젭마인, 제퍼마인)
 - **처리:** 26단계 파이프라인 — 리서치 → 인터뷰 → 스펙 합성(이후 모든 역할명을 고정하는 **시스템 역할 표** 포함) → 6전문가 팀 리뷰 → 전략 후보 채점(ToT) → plan → DB 스키마 / API 명세 / 공정 도면 → 섹션 분할 → 운영·QA 시나리오 → 역할명 정합성 검증.
-- **결과물:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`.
+- **결과물:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`, `checklist.md`.
 - **역할 인터뷰:** Step 6에서 로그인하는 주체, 역할별 업무, 금지 행동, 그리고 **별도 화면이 필요한지 공용 화면 권한차등인지**를 묻습니다. 화면 분리 답변은 Critical 질문으로 승격합니다. 전권 슈퍼관리자, 상위 역할의 하위 권한 포함, 본인 데이터 접근은 묻지 않고 기본 적용합니다.
 - **역할(RBAC):** `spec.md`의 시스템 역할 표가 역할 ID 정본입니다. `api-spec.md`는 엔드포인트별 허용 역할, `flow-diagrams/`는 역할 레인과 권한 거부 경로, `operation-scenarios.md`는 RBAC 매트릭스(역할 x 리소스 x CRUD)와 거부 동작을 담습니다. 역할이 1개이거나 인증이 없으면 `NOT APPLICABLE: single role`로 전부 생략합니다.
+- **완료 기준 체크리스트:** 섹션마다 Acceptance Criteria에 고정 ID(`AC-NN-k`), 관찰 가능한 동작, 근거(문제·화면·엔드포인트·역할), 검증(테스트·QA 케이스·명령)을 붙입니다. Step 22A가 이를 설계와 구현의 약속인 `checklist.md`로 모으고, 최종 점검에서 모든 문제에 AC가 있고 모든 AC를 검증할 수 있는지 확인합니다. 포세이돈·다이달로스·크로노스는 같은 `checklist-status.md` 장부에 이행을 기록하고(`proved`/`weak`/`missing`/`contradicted`, `proved`는 실행 증거 필수), 아르고스가 증거를 다시 확인하며, 클리오는 미이행 AC를 NO-GO 사유로 셉니다.
 - **API 계약:** `api-spec.md`는 **화면 데이터 요구 표**(화면마다 무엇을 보여 주고, 무엇을 하고, 무엇으로 거르고 정렬하는지)에서 출발해 DB CRUD와 함께 엔드포인트를 도출합니다. 다른 테이블 값이나 집계가 필요한 화면 때문에 구현 도중 백엔드를 다시 만들지 않기 위해서입니다. 규약도 먼저 정합니다 — 모든 목록 API는 페이지네이션 필수(기본 offset `page`/`size` + `total`, 피드류는 cursor, 크기 상한·정렬 허용 컬럼), 모든 에러는 `{ "error": 코드, "message", "details" }`, 목록의 필터·정렬 컬럼은 `db-schema.md` 인덱스 표에 역반영. 섹션 파일이 이 규약을 구현자에게 옮기고, 최종 점검에서 화면↔API 대응을 검사합니다.
 - **도면 타입:** `flowchart` 기본, 엔티티 상태 전이 3개 이상이면 `stateDiagram-v2`, 에코시스템 맵에 외부 시스템이 있으면 `sequenceDiagram`을 추가 생성.
 - **모듈화와 하네스:** 섹션을 레이어가 아니라 **기능 수직**으로 자릅니다. 한 기능이 데이터·API·화면·테스트를 모두 소유해야 나중에 그 기능만 열어서 고칠 수 있습니다. 레이어 분할(`api-layer`, `frontend`)은 기능을 흩뿌리므로 기존 코드베이스가 강제할 때만 허용합니다. 각 섹션은 **Module Contract**(Provides·Consumes·Owns·Composition Point)를 선언하고, `sections/index.md`가 런타임 **하네스**(기존 라우터·DI 컨테이너·플러그인 레지스트리)를 기록합니다. Provides가 비면 모듈이 아니라 내부 작업이므로 합치고, Owns가 겹치면 병렬 구현 충돌이므로 공유 기반으로 올립니다.

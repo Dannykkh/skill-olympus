@@ -216,8 +216,9 @@ Job:
 6. 답에 따라 아키텍처가 바뀌는 질문이 있으면 가장 큰 것부터 사용자에게 확인 (한 번에 한 질문)
 7. 종합 분석 후 **서로 다른** 3가지 제안서 작성 (동일안의 변주 금지)
 8. **루브릭 채점** — 각 제안서를 적합성(fit)/리스크(risk)/노력(effort) 1-5점으로 채점하고 근거 한 줄씩. 채점 없이 제안만 나열하지 않는다 (생성만 하고 평가 안 하면 후보 폭이 낭비됨)
-9. **채점표와 함께** 제안서를 제시하고 한 문장으로 선택을 요청 — 추천안(최고점)과 근거를 명시하고, 사용자는 추천 승인/다른 안 선택/조정 중 하나를 답함
+9. **채점표와 함께** 제안서를 제시하고(각 제안서에 관찰 가능한 완료 기준 목록 포함) 한 문장으로 선택을 요청 — 추천안(최고점)과 근거를 명시하고, 사용자는 추천 승인/다른 안 선택/조정 중 하나를 답함
 10. 승인 결과 + 기각한 대안을 activity log에 decision으로 기록
+11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고, `checklist-status.md` 장부를 모든 행 `missing`으로 만든다. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
@@ -303,10 +304,10 @@ Job:
 
 **Phase 4 리더 체크리스트:**
 1. 현재 CLI의 구현 역할로 작업자 spawn. 런타임 모델·effort 설정을 상속
-2. 승인된 제안서 + **도면 경로** + 태스크 배분 (SendMessage)
+2. 승인된 제안서 + **도면 경로** + 태스크 배분 + **담당 AC ID** (SendMessage)
 3. 태스크별 담당 파일 영역 명시 (충돌 방지)
 4. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
-5. 각 구현 작업자는 계획 이탈을 완료 보고의 `Deviations`에 포함. 공유 `implementation-notes.md`와 activity log는 Lead만 직렬 갱신
+5. 각 구현 작업자는 계획 이탈을 완료 보고의 `Deviations`에, 담당 AC별 `ID | 증거 | 상태 제안`을 함께 포함. `checklist-status.md`는 Lead만 갱신. 공유 `implementation-notes.md`와 activity log는 Lead만 직렬 갱신
 6. 작업자 보고 수신
 7. **자재검사**: 구현 작업자와 분리된 네이티브 읽기 전용 리뷰 역할 투입
    - `skills/code-reviewer/SKILL.md`를 참조하여 구현 결과물 검수
@@ -317,7 +318,8 @@ Job:
    - 테스트 실패 시 → 구현 팀원에게 수정 지시 → 재실행 (최대 3회)
    - 테스트 프레임워크 없으면 → 핵심 기능에 대한 기본 테스트 작성 후 실행
    - 린트/타입 체크도 함께 실행 (`tsc --noEmit`, `eslint`, `ruff check` 등)
-9. 자재검사 + 테스트 모두 통과 → Phase 5 공정 점검 실행
+9. 테스트 결과로 `checklist-status.md`를 갱신 (실행 증거가 있으면 proved, 코드만 있으면 weak)
+10. 자재검사 + 테스트 모두 통과 → Phase 5 공정 점검 실행
 
 **Phase 4 에러 복구 전략:**
 
@@ -361,7 +363,7 @@ Job:
 4. PARTIAL MATCH인 경우 → 누락 노드를 남은 팀원에게 추가 구현 지시
 5. PARTIAL/MISMATCH가 추가 구현 2라운드 내 해결되지 않으면 → "미완"으로 명시 보고 (통과로 올리지 않음, 소진=미완)
 6. 재검증 → FULL MATCH 달성 시 최종 보고
-7. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
+7. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목, 완료 기준 M/N proved와 남은 AC ID). `checklist-status.md`에 proved가 아닌 행이 남으면 완료로 보고하지 않음
 8. activity log에 최종 검증 결과 기록
 9. 실행 중 작업자를 현재 런타임의 shutdown/interrupt 절차로 종료. `TeamDelete`나 런타임 디렉터리 수동 삭제는 하지 않음
 
@@ -478,6 +480,8 @@ zephermine(`/zephermine`)로 설계한 프로젝트는 planning 디렉토리에 
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
 | `spec.md` | 요구사항 확인 필요 시 참조 |
 | `api-spec.md` | API 계약서 참조 |
+| `checklist.md` | **완료 기준 계약 — AC ID별 약속 (구현 중 수정 금지)** |
+| `checklist-status.md` | 이행 장부 — Lead만 증거와 함께 갱신, 재개 시 이어서 사용 |
 | `db-schema.md` | DB 스키마 참조 |
 
 ### 공정 도면 활용 흐름

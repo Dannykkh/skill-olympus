@@ -168,7 +168,9 @@ teammate가 필요하면 Read 도구로 직접 파일을 읽을 수 있습니다
 
 ```
 Job ID: {job_id}
-완료 시 변경 파일, 검증 결과, 계획 이탈, 남은 위험을 반환하세요.
+담당 AC: {AC-NN-1, AC-NN-2, …} (checklist.md)
+완료 시 변경 파일, 검증 결과, 계획 이탈, 남은 위험, 그리고 담당 AC별 `ID | 증거(테스트 이름·명령 결과) | 상태 제안`을 반환하세요.
+코드가 있다는 사실만으로는 proved가 아닙니다 — 실행한 증거를 적으세요.
 전역 task 상태와 Wave ledger 갱신은 Lead가 담당합니다.
 ```
 
@@ -187,7 +189,7 @@ Job ID: {job_id}
 **⚠️ CRITICAL RETURN RULE:**
 - 구현 결과는 담당 파일에 쓰고, Lead에게는 변경 파일·검증 결과·Deviations·남은 위험만 간결하게 반환
 - 전체 분석이나 긴 명령 출력을 반복하지 않음
-- 예: `section-04-api 완료. changed=5, tests=pass, deviations=0, risks=0.`
+- 예: `section-04-api 완료. changed=5, tests=pass, deviations=0, risks=0. AC-04-1 proved (api.test.ts login ok), AC-04-2 weak (테스트 없음).`
 - 이유: return text가 Lead 컨텍스트에 합산되어 컨텍스트 폭발 방지
 
 **메시지 규칙:**
@@ -196,7 +198,7 @@ Job ID: {job_id}
 
 ### 9. Activity Logging (Lead 전용)
 
-작업자는 공유 로그를 직접 수정하지 않습니다. Lead가 각 작업자의 구조화된 완료 보고를 받은 뒤 `conversations/`와 `implementation-notes.md`에 직렬로 반영합니다.
+작업자는 공유 로그를 직접 수정하지 않습니다. Lead가 각 작업자의 구조화된 완료 보고를 받은 뒤 `conversations/`와 `<planning_dir>/implementation-notes.md`(자유 모드는 activity log 안의 `## Implementation Notes`)에 직렬로 반영합니다.
 
 **대상 파일:** `conversations/{YYYY-MM-DD}-team-poseidon.md`
 

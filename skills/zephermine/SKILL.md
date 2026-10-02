@@ -85,7 +85,7 @@ Determine session state by checking existing files:
    - [Requirement 1]
    - [Requirement 2]
    ```
-6. Scan for existing planning files (research-decision.md, research.md, research/, unknowns.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, team-reviews/, reviews/, flow-diagrams/, sections/)
+6. Scan for existing planning files (research-decision.md, research.md, research/, unknowns.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, checklist.md, team-reviews/, reviews/, flow-diagrams/, sections/)
 
    > 마스터 사전(`docs/domain-dictionary.md`)은 프로젝트 단일이므로 planning_dir 스캔에서 제외. planning_dir에는 변경 이력 델타만 보관.
 
@@ -116,6 +116,8 @@ Determine session state by checking existing files:
 | + flow-diagrams/ | resume | Step 19 (section index) |
 | + sections/index.md | resume | Step 20 (write sections) |
 | all sections complete | resume | Step 22 (operation scenarios) |
+| + qa-scenarios.md | resume | Step 22A (acceptance checklist) |
+| + checklist.md | resume | Step 23 (final status) |
 
 **도메인사전 Resume 보정 규칙** (위 테이블과 별도, Resume 시 항상 점검):
 
@@ -252,7 +254,7 @@ anti-slop 규칙만 적용하고 `frontend-design: NOT RUN (native fallback)`을
 | **Phase 3: Domain** | 10-11 | team-review.md, **docs/domain-dictionary.md v3**, domain-dictionary-delta.md |
 | **Phase 4: Plan** | 12-15 | plan.md, integration-notes.md |
 | **Phase 5: Design** | 16-19 | db-schema.md, api-spec.md, flow-diagrams/, sections/ |
-| **Phase 6: Validation** | 20-26 | section-*.md, operation-scenarios.md, qa-scenarios.md |
+| **Phase 6: Validation** | 20-26 | section-*.md, operation-scenarios.md, qa-scenarios.md, checklist.md |
 
 **도메인사전은 Step이 아니라 Step의 부산물입니다.** Step 8 끝에서 v1 초안, Step 10 끝에서 전문가 입력으로 v2 자동 병합, Step 11 끝에서 충돌만 확인하고 v3 확정. 별도 단계가 추가되지 않으며, 각 Step 본문 끝의 평범한 단락으로 처리됩니다.
 
@@ -635,6 +637,16 @@ See [operation-qa-guide.md](references/operation-qa-guide.md)
 (메뉴별 테스트 + E2E + 통합 테스트 + Summary)
 이 파일만 쓰는 `artifact-writer`로 실행하고, 위임 불가 시 메인 컨텍스트에서 순차 작성합니다.
 
+### 22A. Consolidate Acceptance Checklist
+
+See [acceptance-checklist-guide.md](references/acceptance-checklist-guide.md)
+
+섹션 파일의 Acceptance Criteria(정본)를 `<planning_dir>/checklist.md` 한 표로 모읍니다. 설계와 구현이 같은 ID로 완료 기준을 주고받는 약속이며, 구현 하네스는 이 파일을 기준으로 `checklist-status.md` 장부를 채웁니다.
+1. 섹션 순서대로 각 AC의 ID·완료 기준·근거·검증을 옮깁니다. 새 기준을 지어내거나 문장을 고치지 않습니다.
+2. `qa-scenarios.md`에서 이 AC를 `관련 AC`로 가리키는 QA ID를 검증 열에 덧붙입니다.
+3. 문제(P)별로 어느 AC가 맡는지 `## 추적 요약`을 만듭니다.
+빠진 근거·검증은 여기서 채우지 않고 Step 23 검사로 넘깁니다. Main/Lead가 직접 쓰고, 위임하지 않습니다.
+
 ### 23. Final Status
 
 Verify all files were created successfully:
@@ -644,12 +656,21 @@ Verify all files were created successfully:
 - Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
 - `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 18 미실행)
 - **역할명 정합성** — `spec.md` 시스템 역할 표를 기준으로 `db-schema.md` roles/permissions, `api-spec.md` 허용 역할, `flow-diagrams` 역할 레인, `operation-scenarios.md` RBAC 매트릭스가 같은 역할 ID를 쓰는지. 하위 문서에만 있는 역할이 발견되면 **역할 누락 신호**이므로 `spec.md` 시스템 역할 표에 역으로 추가(backfill)하고 `integration-notes.md`에 기록. 시스템 역할 표가 `NOT APPLICABLE: single role`이면 이 검사를 건너뜀
+- **완료 기준 계약** — 아직 설계 단계이므로 젭마인이 직접 고친다(구현 시작 뒤에만 적용되는 가이드의 '계약 변경' 승인 규칙은 여기서는 해당 없음). 검사와 처리:
+  - `checklist.md` 행 = 섹션 AC의 합집합(ID 중복·누락 없음, 형식 `AC-NN-k`) — 어긋나면 섹션 기준으로 다시 만든다
+  - 모든 문제(P)에 AC 1개 이상 — 없으면 spec.md Problem Statement의 '해결 섹션'에 AC를 추가한다(다음 순번 k). '해결 섹션'이 `-`라 맡을 섹션이 없으면 계획 공백이므로 `integration-notes.md`에 `미배정 문제`로 기록하고 Step 24 출력에 표시한다
+  - 모든 AC에 근거·검증 1개 이상 — 섹션 Test Scenarios·QA에서 찾을 수 있으면 채우고, 없으면 `검증 미정`을 남긴 채 `integration-notes.md`와 Step 24 출력에 경고한다
+  - 모순되는 AC 쌍(같은 대상·입력에 다른 기대 결과)이 없는지 — 있으면 설계 결정이므로 Step 15의 정지 규칙대로 권장 기본값을 붙인 한 문장 질문으로 정하고(질문할 수 없는 자동 실행이면 권장 기본값을 쓰고 기록), 진 쪽 AC는 `(삭제 — 사유)`로 남긴다
+  - `qa-scenarios.md`의 `관련 AC`가 실재하는 ID인지 — 아니면 QA 쪽을 고친다(맞는 AC로 바꾸거나, 그 동작이 약속이어야 하면 섹션에 AC를 추가)
+  - `## 추적 요약`의 문제→섹션이 spec.md Problem Statement '해결 섹션'과 어긋나면 spec을 backfill한다
+  섹션이나 QA를 고쳤으면 `checklist.md`를 다시 만들고 무엇을 왜 고쳤는지 `integration-notes.md`에 기록한다
 - **화면↔API 대응** — `api-spec.md`의 Screen Data Requirements 기준으로 모든 표시 데이터·액션이 엔드포인트에 대응하는지, 모든 엔드포인트에 Frontend Caller(또는 `external`/`webhook`/`batch`/`system`, 화면 재료가 빠지면 `TBD (화면 누락)` + 미결)가 있는지, 모든 목록 엔드포인트가 Pagination을 선언하고 필터·정렬 컬럼이 `db-schema.md` 인덱스 표에 있는지, 에러 응답이 공통 에러 형식인지. 빠진 것은 두 문서에 보완하고 `integration-notes.md`에 기록. 화면 표가 `NOT APPLICABLE: no UI`이면 Pagination·인덱스 검사만 수행
 - **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
 - `api-spec.md` (API가 있는 프로젝트)
 - `db-schema.md` (DB가 있는 프로젝트)
 - `design-system.md` + `personas-and-journeys.md` (UI가 있는 프로젝트)
 - `operation-scenarios.md` + `qa-scenarios.md`
+- `checklist.md` (완료 기준 계약 — 구현 하네스가 `checklist-status.md` 장부로 이행)
 - `team-reviews/domain-research.md` + `domain-process-analysis.md` + `domain-technical-analysis.md`
 - `docs/domain-dictionary.md` + `<planning_dir>/domain-dictionary-delta.md`, 또는 모듈 계약이
   허용한 5개 미만 용어의 명시적 `NOT APPLICABLE` delta
@@ -665,8 +686,10 @@ ZEPHERMINE: Planning Complete
 Generated: research-decision/unknowns/research/interview/spec/domain-dictionary/
            personas-and-journeys/team-review/plan/
            api-spec/db-schema/design-system/integration-notes/
-           operation-scenarios/qa-scenarios.md
+           operation-scenarios/qa-scenarios/checklist.md
            + team-reviews/ + reviews/ + flow-diagrams/ + sections/
+
+Acceptance checklist: checklist.md — M개 AC / 미배정 문제 {없음 | P3, …} / 검증 미정 {0 | AC-02-2, …}
 
 Implementation options:
   A. /agent-team <planning_dir> → 섹션 기반 병렬 구현 (권장)
@@ -696,7 +719,7 @@ Other options:
 ```
 ✅ 젭마인 설계 완료!
 
-📦 산출물: operation-scenarios.md, qa-scenarios.md, sections/
+📦 산출물: operation-scenarios.md, qa-scenarios.md, checklist.md (완료 기준 계약), sections/
 
 👉 다음 단계 (선택):
   /aphrodite           → 디자인 시스템 정교화 (design-system.md가 있는 UI 프로젝트에서 권장)

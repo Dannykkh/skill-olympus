@@ -41,6 +41,8 @@ Lead의 기억 공간이 전체 작전을 기억하는 **유일한 곳**이다.
 
 젭마인 산출물에는 섹션별 **Acceptance Criteria**(체크리스트)와 **flow-diagrams**(공정 도면)이 있다.
 teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조하여 **모든 항목이 통과할 때까지 반복**한다.
+완료 기준은 젭마인이 ID를 붙여 고정한 `checklist.md`(약속)이고, 이행은 Lead가 `checklist-status.md` 장부에 증거와 함께 기록한다.
+형식·상태·증거 규칙의 정본은 젭마인 `references/acceptance-checklist-guide.md`이다. 대화로만 대조하면 컨텍스트가 압축될 때 함께 사라지므로 장부에 남긴다.
 한 번 구현하고 끝내는 것은 PM이 아니라 실행자다.
 
 ### Lead 운영 규율
@@ -262,6 +264,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 4. 각 태스크의 의존성 판별 → Wave 그룹핑
 5. 구현 컨텍스트 매칭 ([expert-matching.md](references/expert-matching.md) 참조)
 6. **Step 2 (Build Wave Plan)**의 사용자 확인 출력으로 합류
+7. planning_dir이 없으므로 태스크별 완료 기준을 같은 형식(`AC-<태스크번호>-k`, 관찰 가능한 동작·검증)으로 정해 Step 2 실행 계획에 함께 출력하고, 이행 장부는 activity log의 `## Acceptance` 표로 둔다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
 
 **자유 모드 태스크 분해 원칙:**
 - 파일 충돌 없도록 담당 파일을 명확히 분리
@@ -288,7 +291,7 @@ See [artifacts-review.md](references/artifacts-review.md)
 2. `sections/index.md` — SECTION_MANIFEST + 의존성 그래프
 3. `flow-diagrams/` — 공정 도면 존재 여부 (없으면 사용자 경고)
 4. 보조 문서 (api-spec.md, db-schema.md 등) — teammate 전달 레퍼런스 등록
-5. 각 section의 Acceptance Criteria — 마스터 체크리스트로 통합
+5. 완료 기준 계약 — `checklist.md` 확인(없으면 섹션 AC에서 기계적으로 생성), `checklist-status.md` 장부 생성 또는 재개
 6. 영향도 분석 (기존 코드가 있는 경우) — 교차 영향 파일 경고
 
 ### Step 1: Parse Sections
@@ -367,6 +370,7 @@ Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEA
 
 **teammate 지시 핵심 요소:**
 - 프로젝트 기반 역할·근거, 섹션 내용, 담당 파일 목록
+- 담당 섹션의 AC ID 목록 — 완료 보고에 AC ID별 증거(테스트 이름·명령 결과)와 상태 제안을 포함
 - 📐 프로세스 도면 경로 + 담당 노드 ID (도면 있는 경우)
 - ⚠️ 파일 소유권 규칙 (다른 teammate 파일 수정 금지)
 - 작업자는 변경 파일·테스트·이탈 사유를 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 activity log를 기록
@@ -390,27 +394,29 @@ Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEA
 
 **검수 항목:** 기능/책임 단위 분리, 보안 취약점, 타입, SRP, DRY
 
-### Step 6: Verify Results — 마스터 체크리스트 대조
+### Step 6: Verify Results — 완료 기준 장부 대조
 
 See [verification-protocol.md](references/verification-protocol.md)
 
-> **체크리스트가 100% 통과할 때까지 반복한다.**
+> **`checklist-status.md`의 모든 행이 `proved`가 될 때까지 반복한다.**
 
 **검증 루프:**
 ```
-while (마스터 체크리스트 미통과 항목 존재):
+while (checklist-status.md에 proved가 아닌 행 존재):
   1. 파일 존재 검증 (Files to Create/Modify 전수 확인)        ← 사전 점검
-  2. Acceptance Criteria 대조 (코드 존재 여부 확인)            ← 사전 점검
+  2. AC 대조 — 작업자 보고 증거를 확인해 장부 갱신 (코드 존재만이면 weak) ← 사전 점검
   3. 도면 노드 검증 (flow-diagrams 존재 시)                   ← 사전 점검
   4. 파일 소유권 검증 (0단계 기준점 대비 변경 ↔ 섹션 소유 ↔ 작업자 보고) ← 사전 점검
   4b. 경계면 정합성 교차 비교 (웹앱: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) ← 사전 점검, verification-protocol.md 4.5단계
   5. 통합 게이트 (유일한 완료 권한): 병합 결과에 빌드/타입체크 + 전체 테스트 1회 — 1~4b는 사전 점검일 뿐, 이 게이트 통과로만 완료 (자동 PASS 금지). 상세 verification-protocol.md 5단계
 
+  6. 통합 게이트 뒤 proved 행의 증거를 한 번 더 확인 (그 사이 관련 코드가 바뀐 행은 weak로 내리고 재확인)
+
   미통과 → 해당 teammate에 재지시 → 대기 → 재검증 (최대 2회)
   2회 후에도 미통과 → 사용자에게 보고 + 수동 개입 요청 (통과로 보고하지 않음 — 소진=미완)
 ```
 
-> **완료 계약 (028):** Acceptance Criteria 대조는 이분(통과/미통과)이 아니라 proved/weak/missing으로 채점한다.
+> **완료 계약 (028):** Acceptance Criteria 대조는 이분(통과/미통과)이 아니라 proved/weak/missing/contradicted로 채점해 장부에 기록한다.
 > 코드는 있으나 동작 증거가 약한 항목은 `weak`로 따로 잡아, "파일 존재 = 완료"로 둔갑시키지 않는다.
 
 ### Step 7: Activity Log Summary
@@ -429,7 +435,7 @@ while (마스터 체크리스트 미통과 항목 존재):
 ═══════════════════════════════════════
 포세이돈: 실행 완료
 ═══════════════════════════════════════
-📋 마스터 체크리스트: M/N 통과 (XX%)
+📋 완료 기준 (checklist-status.md): M/N proved (XX%) — 남은 ID: …
 📐 도면 매칭: K개 노드 중 J개 구현 (YY%)
 ⏱️ 총 Wave: W개 | 검증 루프: R회
 내부 모듈: code-reviewer {LOADED|NOT RUN} | orchestrator MCP {NOT SELECTED|LOADED|NOT RUN}

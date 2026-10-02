@@ -143,7 +143,7 @@ Phase 6에서만 완료 조건을 출력합니다:
 모든 Phase의 실행 증거가 있어야 Phase 6를 시작할 수 있습니다:
 
 - Phase 1: `plan.md` 존재
-- Phase 2: `docs/zeus/zeus-log.md`에 agent-team 실행 기록 (마스터 체크리스트 통과율)
+- Phase 2: `docs/zeus/zeus-log.md`에 agent-team 실행 기록 (완료 기준 장부 `checklist-status.md`의 proved 비율과 남은 AC ID)
 - Phase 3: `docs/zeus/zeus-log.md`에 argos 실행 기록 (최소 정적 분석)
 - Phase 4: `docs/zeus/zeus-log.md`에 Docker/dev-server 시도 기록
 - Phase 5: QA 결과 파일 또는 `docs/zeus/zeus-log.md`에 minos 실행 기록
@@ -272,7 +272,7 @@ Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
 
 **공통 규칙:**
 - 병렬 경로에서는 Lead가 조정에 집중하고, 메인 순차 경로에서는 같은 Lead가 실행자 역할도 소유
-- zeus-log.md에 선택된 경로(A/B) + 체크리스트 통과율 + 도면 매칭률 기록
+- zeus-log.md에 선택된 경로(A/B) + 완료 기준 proved 비율(`checklist-status.md`) + 도면 매칭률 기록
 - 구현 중 섹션에 없는 작업이 필요해 보이면 스코프 게이트(CRITICAL RULES 8) 판정 후 진행 — 무단 스코프 확장 금지
 
 **실패 시 폴백 (Phase 2는 skip 금지):**

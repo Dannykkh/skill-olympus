@@ -315,6 +315,11 @@ Bash: {detected_e2e_command}
 
 ---
 
+**Phase 4A: 완료 기준 이행 감리** — `checklist.md`가 있는 프로젝트만. 절차와 등급 영향은 SKILL.md Phase 4A,
+형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`를 따릅니다. 감리는 `checklist-status.md`를 고치지 않습니다.
+
+---
+
 **Phase 5: 프로세스 도면 검증** — flow-diagrams 기반 (도면이 있는 프로젝트만)
 
 `<planning_dir>/flow-diagrams/`가 존재하면 실행.
@@ -474,7 +479,7 @@ design-system.md에서 정의된 토큰을 추출하고, 실제 코드에서 사
 
 ---
 
-메인 컨텍스트만 Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 + Phase 7
+메인 컨텍스트만 Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 4A + Phase 5 + Phase 6 + Phase 7
 결과를 합쳐 `<planning_dir>/verify-report.md`를 작성합니다. 위임된 읽기 전용 작업은 결과만 반환합니다.
 
 ### 검증 결과 보고
@@ -512,6 +517,7 @@ verify-report.md의 ❌ 항목을 수정 난이도별로 분류:
 1. Phase 1 누락 (기능 미구현) → 코드 생성/수정
 2. Phase 3 누락 (API 미구현) → 라우트/핸들러 추가
 3. Phase 4 실패 (QA 시나리오) → 로직 수정 또는 테스트 추가
+3a. Phase 4A 미이행 (AC missing·contradicted) → 해당 AC 구현 또는 반증 원인 수정 후 증거 확보
 4. Phase 5 누락 (도면 미매칭) → 누락 노드 구현
 5. Phase 2 실패 (빌드/테스트) → 컴파일 에러, 테스트 실패 수정
 ```

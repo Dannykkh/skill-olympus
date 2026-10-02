@@ -67,8 +67,10 @@ git ls-files --others --exclude-standard     # 새 파일 — 0단계 기존 unt
 ```
 for each changed_file:
   owners = file이 들어 있는 섹션의 Files to Create/Modify (자유 모드: 태스크 담당 파일)
+  if file이 Lead 기록(activity log, checklist-status.md, implementation-notes.md): 건너뜀
   if len(owners) >= 2:
-    CONFLICT: "파일 충돌: {file}이 여러 섹션에 걸쳐 있음 — {owners}"
+    if owners 중 둘 이상이 같은 Wave: CONFLICT: "파일 충돌: {file}을 같은 Wave의 {owners}가 함께 맡음"
+    else: SHARED: "{file}을 다른 Wave의 {owners}가 순차로 고침 — 각자 Module Contract가 맡은 부분만 바꿨는지 diff 확인"
   if len(owners) == 0:
     if file이 sections/index.md Harness의 조립 지점이고 변경이 등록 줄뿐: 허용
       # 등록 줄뿐 = `git diff {기준점 SHA} -- {file}`에 '-'로 시작하는 줄(삭제·수정)이 없고 추가 줄만 있음

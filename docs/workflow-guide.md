@@ -158,6 +158,8 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | `qa-scenarios.md` | QA 테스트 시나리오 | minos |
 | `db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | 아키텍처 검토, 개발자, api-spec |
 | `api-spec.md` | API 계약 (화면 데이터 요구 + 페이지네이션·에러 규약 + 엔드포인트) | 프론트/백엔드, minos |
+| `checklist.md` | 완료 기준 계약 (섹션 AC를 ID로 모은 집계본, 구현 중 수정 금지) | 포세이돈·다이달로스·크로노스·아르고스·클리오 |
+| `checklist-status.md` | 완료 기준 이행 장부 (구현 하네스가 증거와 함께 갱신) | 아르고스·클리오·제우스 |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
 
 ### 건너뛸 때

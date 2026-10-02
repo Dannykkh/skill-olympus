@@ -252,7 +252,7 @@ PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
 3. 검증 리포트 수신 → 판정 확인
 4. PARTIAL MATCH인 경우 → 누락 노드를 추가 구현 태스크로 생성 → 재검증
 5. FULL MATCH 달성 시 최종 보고
-6. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목)
+6. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목, 완료 기준 M/N proved와 남은 AC ID). proved가 아닌 행이 남으면 완료로 보고하지 않음
 7. activity log에 최종 검증 결과 기록
 
 ---
@@ -432,6 +432,8 @@ orchestrator_check_worker_logs()
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
 | `spec.md` | 요구사항 확인 필요 시 참조 |
 | `api-spec.md` | API 계약서 참조 |
+| `checklist.md` | **완료 기준 계약 — 태스크 prompt에 해당 AC ID 포함, 구현 중 수정 금지** |
+| `checklist-status.md` | 이행 장부 — PM만 증거와 함께 갱신 (형식: 젭마인 `references/acceptance-checklist-guide.md`) |
 | `db-schema.md` | DB 스키마 참조 |
 
 ### 공정 도면 활용 흐름

@@ -101,6 +101,8 @@ The implementer reading a section file should NOT need to reference `plan.md` or
 
 Include all necessary background, requirements, and implementation details within each section.
 
+**Acceptance Criteria**: 섹션 번호를 `NN`으로 쓰는 `AC-NN-k` ID, 관찰 가능한 동작, 근거(P·화면·엔드포인트·역할), 검증(테스트 이름·QA ID·명령)을 갖춥니다. 이 섹션 목록이 정본이며 형식은 [acceptance-checklist-guide.md](acceptance-checklist-guide.md)를 따릅니다. 빌드·회귀 같은 공통 조건은 AC로 세지 않고 Quality Gate에 둡니다.
+
 **API가 있는 프로젝트**: `api-spec.md`의 해당 엔드포인트를 섹션에 포함.
 구현 중 새 API를 추가하면 반드시 `api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
 섹션은 자립형이므로 `api-spec.md` Conventions 중 이 섹션에 해당하는 규약(목록 페이지네이션 방식·크기 상한·정렬 허용 컬럼, 공통 에러 형식)과 목록 엔드포인트의 Index 줄도 함께 옮깁니다. 구현자가 이 규약을 모르면 페이지네이션 없는 목록과 N+1 쿼리가 나옵니다.
@@ -240,9 +242,14 @@ Include all necessary background, requirements, and implementation details withi
 
 ## Acceptance Criteria
 
-- [ ] {Criterion 1}
-- [ ] {Criterion 2}
-- [ ] {Criterion 3}
+> 이 목록이 완료 기준의 정본입니다. Step 22A가 `checklist.md`로 모으고, 구현 하네스가 `checklist-status.md`에 이행을 기록합니다.
+> 형식은 젭마인 `references/acceptance-checklist-guide.md` — ID `AC-NN-k`, 관찰 가능한 동작, 근거 1개 이상, 검증 1개 이상.
+
+- [ ] AC-NN-1 {관찰 가능한 동작: ~하면 ~된다} — 근거: {P#, 엔드포인트·화면·역할} — 검증: {Test Scenarios의 테스트 이름 또는 QA ID}
+- [ ] AC-NN-2 {관찰 가능한 동작} — 근거: {…} — 검증: {…}
+- [ ] AC-NN-3 {관찰 가능한 동작} — 근거: {…} — 검증: {…}
+
+섹션 완료 조건 (AC 아님, ID 없음):
 - [ ] 위 Test Scenarios의 정상/에러/엣지 케이스가 모두 통과
 - [ ] Quality Gate 전 항목 통과
 

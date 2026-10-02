@@ -103,6 +103,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
   sections/index.md    → Phase 0-2, 0-3 (없으면 해당 서브체크 건너뜀)
   api-spec.md          → Phase 3 (API 일치)
   qa-scenarios.md      → Phase 4 (QA 시나리오)
+  checklist.md (+ checklist-status.md) → Phase 4A (완료 기준 이행)
   flow-diagrams/index.md      → Phase 5 (도면 대조)
   docs/domain-dictionary.md   → Phase 8 (도메인사전 감리)
 ```
@@ -121,6 +122,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
   ✅ sections/index.md → Phase 0 (에코시스템 커버리지)
   ✅ api-spec.md       → Phase 3
   ✅ qa-scenarios.md   → Phase 4
+  ✅ checklist.md      → Phase 4A (장부: checklist-status.md 있음/없음)
   ✅ flow-diagrams/ (3개)     → Phase 5
 ```
 
@@ -232,6 +234,20 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 4
 1. 각 테스트 케이스를 코드/테스트 결과 기반으로 판정
 2. `qa-scenarios.md`의 체크박스를 ✅/❌ 마킹
 3. 통과율 집계 (정상/에러/엣지 케이스별)
+
+### Phase 4A: 완료 기준 이행 감리
+
+`checklist.md`가 있는 경우만 실행. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`입니다.
+
+1. `checklist-status.md` 장부가 있으면 `proved` 행의 증거를 다시 실행·확인합니다(인용된 테스트·명령 재실행, 관찰 재현).
+   다시 실행해 실패하면 `contradicted`, 다시 실행할 수 없으면 `weak`로 기록합니다(가이드의 '다시 확인했을 때' 규칙).
+   `proved`가 아닌 행도 검증 열이나 장부의 증거로 지금 만족하는지 확인해 감리 판정을 적습니다. 검증 열 밖의 실행 증거도 인정합니다.
+2. 장부가 없으면 `checklist.md`의 검증 열을 기준으로 각 AC를 직접 확인하고 "이행 장부 없음"을 경고합니다.
+3. 감리는 구현 장부를 고치지 않습니다. 감리 판정은 보고서에만 적습니다.
+4. 집계: AC별 감리 판정(proved/weak/missing/contradicted), 장부 상태와 다른 행, 미이행 AC(감리 판정이 `proved`가 아닌 행).
+5. 원인을 나눕니다: 두 AC가 서로 모순되면(가이드의 '계약 모순') **설계 결함 — 계약 변경 필요**, 그 밖은 **구현 미이행**.
+
+**등급 영향:** `missing`·`contradicted`가 1개라도 있으면 FAIL, `weak`만 남으면 CONDITIONAL. FAIL 사유에 원인 구분을 적어 재시공(구현 미이행)과 계약 변경(설계 결함)을 섞지 않습니다.
 
 ### Phase 5: 프로세스 도면 검증
 
@@ -402,6 +418,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 - 테스트: {passed}/{total}
 - API 일치: {matched}/{total}
 - QA 통과: {passed}/{total}
+- 완료 기준: {proved}/{total} proved (장부 불일치 {n}건) 또는 건너뜀
 - 도면 매칭: {matched}/{total} 노드
 - 디자인 준수: {등급} ({총점}/10) 또는 건너뜀
 - 보안: 🔴{N} 🟠{N} 🟡{N}; 미실행 영역이 있으면 NOT RUN/UNVERIFIED
@@ -426,6 +443,9 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 
 ## Phase 4: QA 시나리오 검증
 {통과율 테이블 + 실패 항목}
+
+## Phase 4A: 완료 기준 이행 감리
+{AC별 감리 판정 + 장부와 다른 행 + 미이행 AC 목록}
 
 ## Phase 5: 프로세스 도면 검증
 {노드 매칭 테이블 + 누락 노드}

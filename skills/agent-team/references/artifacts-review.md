@@ -36,26 +36,21 @@ SECTION_MANIFEST + 의존성 그래프 확인.
 
 > **전체 내용 임베딩 X** — teammate가 필요할 때 Read로 직접 읽도록 경로만 전달 (컨텍스트 절약)
 
-### 5. Acceptance Criteria 수집
+### 5. 완료 기준 계약 확인 + 이행 장부 준비
 
-각 section-NN-*.md의 Acceptance Criteria를 하나의 마스터 체크리스트로 통합.
-이 체크리스트가 **최종 완료 기준**이 됨.
+형식·ID·상태·증거 규칙의 정본은 젭마인 `references/acceptance-checklist-guide.md`입니다. 여기서는 순서만 다룹니다.
 
-**마스터 체크리스트 형식:**
+1. `<planning_dir>/checklist.md`를 읽습니다. 이 파일(정본은 섹션 AC)이 **최종 완료 기준**입니다.
+2. 없으면(구버전 산출물) 섹션 파일의 Acceptance Criteria에서 기계적으로 만들고 activity log에 남깁니다. 기준 문장은 고치지 않습니다.
+3. `<planning_dir>/checklist-status.md`가 있으면 이어서 쓰고(재개), 없으면 모든 행을 `missing`으로 만듭니다.
+4. 섹션별 AC ID 목록을 Step 3·4의 작업자 지시에 넣습니다.
+
+사용자에게는 표 전체가 아니라 요약만 출력합니다:
 
 ```
 ═══════════════════════════════════════
-마스터 체크리스트 (N개 섹션, 총 M개 항목)
-═══════════════════════════════════════
-section-01-foundation:
-  [ ] BaseModule 클래스가 init()과 destroy() 메서드를 가짐
-  [ ] AppConfig 인터페이스가 필수 필드를 정의함
-  [ ] 단위 테스트가 존재함
-
-section-02-api:
-  [ ] POST /api/auth/login 엔드포인트 동작
-  [ ] JWT 토큰 발급 및 검증
-  ...
+완료 기준: checklist.md — N개 섹션, M개 AC
+장부: checklist-status.md — proved P / weak W / missing X / contradicted C
 ═══════════════════════════════════════
 ```
 

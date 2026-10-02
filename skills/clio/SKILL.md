@@ -178,7 +178,7 @@ docs/
 | argos 감리 보고서 | `docs/plan/*/verify-report.md` 파싱 | "미실행" 기록 |
 | minos QA 결과 | Playwright 테스트 결과 파싱 | "미실행" 기록 |
 | 설계 spec | `docs/plan/*/spec.md` | "없음" 기록 |
-| 섹션 AC | `docs/plan/*/sections/section-*.md`에서 Acceptance Criteria 추출 | 건너뜀 |
+| 완료 기준 | `docs/plan/*/checklist.md` + `checklist-status.md` 장부 (형식: 젭마인 `references/acceptance-checklist-guide.md`). `checklist.md`가 없으면 `sections/section-*.md`에서 Acceptance Criteria 추출 | 건너뜀 |
 
 ### 1-2. 코드 품질 최종 실행
 
@@ -209,7 +209,7 @@ spec이 있으면, **설계 대비 구현 누락**을 읽기 전용 탐색·검�
 
 1. spec.md에서 기능 목록 추출
 2. 소스 코드에서 해당 기능이 구현되었는지 Grep으로 확인
-3. Acceptance Criteria가 있으면 각 항목의 충족 여부 확인
+3. 완료 기준: 장부가 있으면 `proved`가 아닌 AC를 누락으로 집계하고, 장부가 없으면 AC별 충족 여부를 직접 확인 ("이행 장부 없음" 경고)
 4. 누락된 기능/AC 목록 생성
 
 ### 1-4. GO / NO-GO 판정
@@ -218,7 +218,7 @@ spec이 있으면, **설계 대비 구현 누락**을 읽기 전용 탐색·검�
 |------|------|
 | **GO** | 테스트 1개 이상 존재 + 전체 통과 + 린트 에러 0 + 타입 에러 0 + 누락 기능 0 + (minos 실행 시) minos PASS |
 | **CONDITIONAL GO** | 테스트 통과 + Minor 린트 경고만 있음, 또는 argos/minos 미실행, 또는 minos CONDITIONAL, 또는 **테스트가 아예 없음** (0개 통과는 "전체 통과"가 아님 — GO 승격 금지) |
-| **NO-GO** | 테스트 실패, 또는 누락 기능 있음, 또는 argos FAIL, 또는 minos FAIL |
+| **NO-GO** | 테스트 실패, 또는 누락 기능 있음, 또는 완료 기준 AC 중 `missing`·`contradicted` 있음, 또는 argos FAIL, 또는 minos FAIL |
 
 > **공허한 통과 방지**: "테스트 전체 통과"는 테스트가 1개 이상 존재할 때만 성립합니다.
 > **우회 표기**: `--force` 또는 `--docs-only`로 게이트를 건너뛴 경우, 모든 산출물(FINAL-REPORT 포함) 상단에 "점검 게이트 미통과/미수행 상태로 생성됨"을 표기합니다.
@@ -234,6 +234,7 @@ spec이 있으면, **설계 대비 구현 누락**을 읽기 전용 탐색·검�
   argos 감리:   {PASS | CONDITIONAL | FAIL | 미실행}
   minos QA:     {N% 통과 | 미실행}
   구현 누락:    {없음 | N개 항목}
+  완료 기준:    {M/N proved | 장부 없음 | 해당 없음}
 
   블로커: {없음 | 목록}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
