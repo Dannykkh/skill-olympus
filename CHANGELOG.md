@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.18.0] - 2026-10-03
+
+### Features
+
+- **workpm**: Apply zephermine's API conventions on the Daedalus path, which builds without a zephermine spec and so never passed through the section files that carry them. Once a proposal is approved, Phase 1 fixes the conventions: the planning dir's `api-spec.md` if present, otherwise the `## Conventions` of zephermine's `api-spec-guide.md` (paginated lists with a size cap and sort allow-list, one coded error format, naming and dates). List APIs get their pagination behaviour as acceptance criteria, worker briefs carry the conventions, the review checks pagination, N+1 queries, filter/sort indexes and the error format, and tests cover the size cap and a rejected sort. The MCP path also gains the "fix completion criteria" step the native path already had. (2e1c953)
+
+### Documentation
+
+- Note in the English and Korean READMEs that Daedalus API work follows the same list and error conventions. (2e1c953)
+
+### Validation and Scope
+
+- A new contract test keeps both Daedalus paths pointed at the single rule source; the full test suite passes (190). Windows full installation passed all 12 installed runtime checks.
+- Existing unrelated local rule edits and skill zip files are excluded from this release.
+
 ## [6.17.0] - 2026-10-03
 
 ### Features
