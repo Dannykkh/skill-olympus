@@ -48,14 +48,16 @@ def bump_version(version: str, bump_type: str) -> str:
 
 def load_json(path: Path) -> dict:
     """Load a JSON file."""
-    with open(path, "r") as f:
+    # 매니페스트에 한국어 설명이 있어 Windows 기본 인코딩(cp949)으로 읽으면 실패한다
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_json(path: Path, data: dict) -> None:
     """Save a JSON file with proper formatting."""
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
+    # 한국어를 \uXXXX로 바꾸지 않고, Windows에서도 LF 줄바꿈을 유지한다
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
         f.write("\n")
 
 
@@ -93,7 +95,7 @@ def bump_plugin_version(bump_type: str) -> None:
 
     save_json(marketplace_path, marketplace)
     save_json(plugin_path, plugin)
-    version_path.write_text(f"{new_version}\n", encoding="utf-8")
+    version_path.write_text(f"{new_version}\n", encoding="utf-8", newline="\n")
     print(f"[ok] Updated {marketplace_path}")
     print(f"[ok] Updated {plugin_path}")
     print(f"[ok] Updated {version_path}")
