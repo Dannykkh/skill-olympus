@@ -127,6 +127,8 @@ PM: 승인 결과를 activity log에 기록
 8. 답에 따라 아키텍처가 바뀌는 질문이 있으면 가장 큰 것부터 사용자에게 확인 (한 번에 한 질문)
 9. 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort, 근거 한 줄씩) → 현재 CLI의 질문 방식으로 채점표+추천안 제시·승인 (채점 없이 나열 금지)
 10. 승인 결과 기록 (`orchestrator_log_activity`)
+11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고 `checklist-status.md`를 모든 행 `missing`으로 만든다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
+12. **API 규약 고정** — 작업에 HTTP API가 있으면 planning_dir의 `api-spec.md`가 있으면 그것을, 없으면 젭마인 `references/api-spec-guide.md`의 `## Conventions`(목록 페이지네이션·크기 상한·정렬 허용 컬럼, 공통 에러 형식, 이름·날짜 형식)를 이 작업의 API 규약으로 삼는다. 목록 API가 있으면 완료 기준에 페이지네이션 동작(크기 상한, 허용 안 된 정렬은 400)을 AC로 넣는다. 설계 없이 구현하는 경로라도 목록을 한 번에 다 돌려주는 API를 만들지 않기 위해서다
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
@@ -192,6 +194,7 @@ PM: 전체 완료 확인 → 자재검사 (코드리뷰)
        id: "code-review",
        prompt: "skills/code-reviewer/SKILL.md를 참조하여 구현 결과물을 검수하라.
                 기능/책임 단위 분리, 보안, 타입, SRP, DRY 체크.
+                API가 있으면 목록 페이지네이션·크기 상한, N+1 쿼리, 필터·정렬 인덱스, 공통 에러 형식 확인.
                 리뷰 결과를 보고서로 작성하라.",
        scope: ["{구현된 파일 경로}"]
      })
@@ -205,7 +208,7 @@ PM: Phase 4 실행
 
 **Phase 3 체크리스트:**
 1. 승인된 제안서 기반 태스크 분해
-2. `orchestrator_create_task` — prompt에 **도면 경로** 포함, scope, depends_on 설정
+2. `orchestrator_create_task` — prompt에 **도면 경로**, **담당 AC ID**, **API 규약**(API 작업만) 포함, scope, depends_on 설정
 3. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
 4. Worker는 계획 이탈 사유·대안·영향 파일을 완료 결과로 반환하고 공유 `implementation-notes.md`를 직접 수정하지 않음. PM만 반환 결과를 취합해 `Deviations`에 기록
 5. Provider routing (`ai_provider`는 근거가 있을 때만 지정, 미지정 시 provider-agnostic)
@@ -213,6 +216,7 @@ PM: Phase 4 실행
 7. `orchestrator_get_progress` — 반복 모니터링
 8. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
    - `skills/code-reviewer/SKILL.md` 참조 지시
+   - API가 있으면 목록 페이지네이션·크기 상한·정렬 허용 컬럼, 반복문 안 쿼리(N+1) 없음, 목록 필터·정렬 컬럼 인덱스(마이그레이션 포함), 공통 에러 형식을 확인 (규약: 젭마인 `references/api-spec-guide.md`의 `## Conventions`)
    - 미통과 시 수정 태스크 생성 → 수정 후 재리뷰 (최대 2회)
 9. 자재검사 통과 → Phase 4 공정 점검으로 진행
 
@@ -296,6 +300,7 @@ Worker와 실시간 대화가 불가능하므로, prompt가 완벽해야 합니�
 | 입력/출력 | 인터페이스 불일치 |
 | 성공 기준 | 완료 판단 불가 |
 | 범위 밖 | 불필요한 작업 |
+| API 규약 (API 작업만) | 페이지네이션 없는 목록, 반복문 안 쿼리(N+1), 제각각인 에러 형식 |
 
 ### 태스크 생성 예시
 

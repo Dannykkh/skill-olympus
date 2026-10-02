@@ -493,7 +493,7 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/workpm` (`/daedalus`) — Build without a spec (Master Builder)**
 - **When:** no design exists and you want a PM that goes straight to implementation.
 - **Use:** `/workpm` (aliases: 다이달로스)
-- **Process:** research → 3 proposals scored on fit/risk/effort → the approved proposal's completion criteria fixed into `checklist.md` → flow diagram → implement → verify (tests/lint, bounded retries); progress kept in `checklist-status.md`, activity log externalized for resume.
+- **Process:** research → 3 proposals scored on fit/risk/effort → the approved proposal's completion criteria fixed into `checklist.md` → flow diagram → implement → verify (tests/lint, bounded retries); progress kept in `checklist-status.md`, activity log externalized for resume. API work follows zephermine's list and error conventions (paginated lists, size cap, sort allow-list, one coded error format) even without a spec, and the review checks them along with N+1 queries and filter/sort indexes.
 - **Output:** working code + decision/activity log.
 - **Next:** `/argos`, `/minos`.
 
