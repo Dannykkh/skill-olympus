@@ -541,8 +541,13 @@ DB가 없는 프로젝트(CLI, 라이브러리, 정적사이트)는 자동 건�
 
 See [api-spec-guide.md](references/api-spec-guide.md)
 
-`plan.md` + `db-schema.md`에서 API 엔드포인트 추출 → `<planning_dir>/api-spec.md` 생성.
-각 엔드포인트: Method + Path, Request/Response 스키마, Auth(방식 + **허용 역할 목록**), Frontend Caller 포함.
+**Inputs:** `plan.md` + `db-schema.md` + 화면 재료(`spec.md` 시스템 역할 표의 `화면` 열, `personas-and-journeys.md` 터치포인트, `design-system.md`, `research.md` 메뉴 구조 중 있는 것)
+**Output:** `<planning_dir>/api-spec.md` (Conventions + Screen Data Requirements + Endpoints + Summary)
+**Process:** 화면 데이터 요구 표 → 엔드포인트 도출(DB CRUD + 화면이 쓰는 조인·집계 조회) → Conventions 적용(목록 페이지네이션·정렬 허용 컬럼, 공통 에러 형식) → 목록 필터·정렬 컬럼(서버 고정 조건 포함)을 `db-schema.md` 인덱스 표·DDL에 backfill → 화면↔API 대응 검사
+
+DB 테이블에서만 엔드포인트를 뽑으면 화면이 쓰는 데이터가 빠져 구현 중 백엔드를 다시 만들게 되므로, 화면 요구 표를 먼저 씁니다. 재료에 없는 화면은 지어내지 않습니다.
+각 엔드포인트: Method + Path, Request/Response 스키마, Auth(방식 + **허용 역할 목록**), Frontend Caller, 목록이면 Pagination·Sort·Filter·Index 포함.
+UI가 없는 API 서버는 화면 표를 `NOT APPLICABLE: no UI`로 두고 소비자별 호출 시나리오로 대체합니다.
 역할이 둘 이상이면 Authentication에 Roles 표를 두고 Summary 표에도 허용 역할 열을 포함합니다. 역할명은 `spec.md`의 시스템 역할 표(Role Inventory) 역할 ID를 그대로 씁니다.
 API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀.
 
@@ -639,6 +644,7 @@ Verify all files were created successfully:
 - Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
 - `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 18 미실행)
 - **역할명 정합성** — `spec.md` 시스템 역할 표를 기준으로 `db-schema.md` roles/permissions, `api-spec.md` 허용 역할, `flow-diagrams` 역할 레인, `operation-scenarios.md` RBAC 매트릭스가 같은 역할 ID를 쓰는지. 하위 문서에만 있는 역할이 발견되면 **역할 누락 신호**이므로 `spec.md` 시스템 역할 표에 역으로 추가(backfill)하고 `integration-notes.md`에 기록. 시스템 역할 표가 `NOT APPLICABLE: single role`이면 이 검사를 건너뜀
+- **화면↔API 대응** — `api-spec.md`의 Screen Data Requirements 기준으로 모든 표시 데이터·액션이 엔드포인트에 대응하는지, 모든 엔드포인트에 Frontend Caller(또는 `external`/`webhook`/`batch`/`system`, 화면 재료가 빠지면 `TBD (화면 누락)` + 미결)가 있는지, 모든 목록 엔드포인트가 Pagination을 선언하고 필터·정렬 컬럼이 `db-schema.md` 인덱스 표에 있는지, 에러 응답이 공통 에러 형식인지. 빠진 것은 두 문서에 보완하고 `integration-notes.md`에 기록. 화면 표가 `NOT APPLICABLE: no UI`이면 Pagination·인덱스 검사만 수행
 - **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
 - `api-spec.md` (API가 있는 프로젝트)
 - `db-schema.md` (DB가 있는 프로젝트)

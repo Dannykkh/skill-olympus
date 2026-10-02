@@ -106,9 +106,17 @@ curl -s -X POST http://localhost:8000/api/items \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name":"테스트 항목","description":"테스트용"}' | jq .
 
-# READ (목록)
-curl -s http://localhost:8000/api/items \
-  -H "Authorization: Bearer $TOKEN" | jq .
+# READ (목록) — 페이지네이션 응답 형태 확인 (items + page/size/total 또는 nextCursor)
+curl -s "http://localhost:8000/api/items?page=1&size=20" \
+  -H "Authorization: Bearer $TOKEN" | jq '{count: (.items | length), page, size, total, nextCursor}'
+
+# READ (목록) — size 상한: 큰 값을 요청해도 상한 건수 이하만 와야 함
+curl -s "http://localhost:8000/api/items?size=1000" \
+  -H "Authorization: Bearer $TOKEN" | jq '.items | length'
+
+# READ (목록) — 허용 안 된 정렬 컬럼은 400
+curl -s "http://localhost:8000/api/items?sort=password,asc" \
+  -H "Authorization: Bearer $TOKEN" -w "\nHTTP: %{http_code}\n"
 
 # READ (단건)
 curl -s http://localhost:8000/api/items/1 \
@@ -147,11 +155,13 @@ curl -s -X POST http://localhost:8000/api/auth/register \
 **에러 응답 포맷 확인:**
 ```json
 {
-  "error": "ErrorCode",
+  "error": "EMAIL_DUPLICATE",
   "message": "사용자 친화적 메시지",
   "details": {}
 }
 ```
+
+`error`는 프론트가 분기하는 대문자 스네이크 코드, `message`는 표시용 문구, `details`는 선택(검증 오류는 `{ "fields": { "email": "INVALID_FORMAT" } }`). 젭마인 `api-spec.md` Conventions의 공통 에러 형식과 같은 형태입니다.
 
 ### 6. 파일 업로드 검증
 
@@ -191,7 +201,9 @@ done
 - [ ] CORS 설정 올바름 (preflight 통과)
 - [ ] 프록시 경로 정상 작동 (`/api/*` → 백엔드)
 - [ ] JWT 토큰 발급/검증 정상
-- [ ] 에러 응답 포맷 일관적
+- [ ] 에러 응답 포맷 일관적 (`error` 코드 + `message` + `details`)
+- [ ] 목록 API 페이지네이션 (offset `page`/`size` + `total` 또는 cursor `nextCursor`), size 상한 동작
+- [ ] 목록 API의 허용 안 된 정렬 컬럼 → 400
 
 ### 권장 (HIGH)
 - [ ] 인증 실패 시 적절한 상태 코드 (401/403)
@@ -201,7 +213,6 @@ done
 
 ### 선택 (MEDIUM)
 - [ ] Rate Limiting 동작
-- [ ] 페이지네이션 (offset/limit 또는 cursor)
 - [ ] 캐싱 헤더 (ETag, Cache-Control)
 
 ---
@@ -215,6 +226,7 @@ done
 | 토큰 거부 | 비밀키 불일치 | `.env` SECRET_KEY 일치 확인 |
 | 타임아웃 | 서버 미실행 | `docker ps` 또는 프로세스 확인 |
 | 413 Payload Too Large | 업로드 제한 | nginx/express body-parser 설정 |
+| 목록 API 느림 (> 1000ms) | 필터·정렬 컬럼 인덱스 없음, 행마다 추가 쿼리(N+1), 페이지네이션 없음 | 실행 계획(`EXPLAIN`) 확인 → 인덱스 추가, 조인·일괄 조회, 페이지네이션 적용 |
 
 ---
 

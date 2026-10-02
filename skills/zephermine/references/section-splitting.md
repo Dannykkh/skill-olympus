@@ -103,6 +103,7 @@ Include all necessary background, requirements, and implementation details withi
 
 **API가 있는 프로젝트**: `api-spec.md`의 해당 엔드포인트를 섹션에 포함.
 구현 중 새 API를 추가하면 반드시 `api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
+섹션은 자립형이므로 `api-spec.md` Conventions 중 이 섹션에 해당하는 규약(목록 페이지네이션 방식·크기 상한·정렬 허용 컬럼, 공통 에러 형식)과 목록 엔드포인트의 Index 줄도 함께 옮깁니다. 구현자가 이 규약을 모르면 페이지네이션 없는 목록과 N+1 쿼리가 나옵니다.
 
 ### Section File Template
 
@@ -185,10 +186,12 @@ Include all necessary background, requirements, and implementation details withi
 | 케이스 | 입력 | 기대 결과 |
 |--------|------|-----------|
 | 정상 | {valid input} | {expected output} |
-| 에러 - 필수값 누락 | {missing required} | 400, "{error message}" |
-| 에러 - 중복 | {duplicate data} | 409, "{conflict message}" |
-| 엣지 - 빈 값 | {} | 400, "{validation error}" |
-| 엣지 - 최대값 초과 | {max+1 length} | 400, "{limit message}" |
+| 에러 - 필수값 누락 | {missing required} | 400, `VALIDATION_ERROR` |
+| 에러 - 중복 | {duplicate data} | 409, `{CONFLICT_CODE}` |
+| 엣지 - 빈 값 | {} | 400, `VALIDATION_ERROR` |
+| 엣지 - 최대값 초과 | {max+1 length} | 400, `VALIDATION_ERROR` |
+| 목록 - size 상한 초과 (목록 API) | `?size=1000` | 200, 상한(예: 100)건 이하 |
+| 목록 - 허용 안 된 정렬 (목록 API) | `?sort={unknown},asc` | 400, `INVALID_SORT` |
 
 ### {기능/API 2}
 
@@ -221,6 +224,10 @@ Include all necessary background, requirements, and implementation details withi
 - [ ] 기존 테스트가 깨지지 않음 (회귀 없음)
 - [ ] Dependencies의 선행 섹션이 모두 완료됨
 - [ ] 새로 추가한 API가 `api-spec.md`에 등록됨 (해당 시)
+- [ ] 목록 API는 페이지네이션·크기 상한·정렬 허용 컬럼을 지킴 — 전체 행을 한 번에 반환하는 목록 없음 (해당 시)
+- [ ] 반복문 안에서 쿼리·API 호출 없음 (N+1) — 연관 데이터는 조인·일괄 조회 (해당 시)
+- [ ] 목록의 필터·정렬·검색 컬럼에 인덱스가 있음 — 마이그레이션에 포함 (해당 시)
+- [ ] 에러 응답이 공통 에러 형식(`error` 코드 + `message` + `details`)을 따름 (해당 시)
 - [ ] Flow Diagram Nodes의 모든 노드에 대응하는 코드가 존재함 (해당 시)
 
 ## Risk & Rollback

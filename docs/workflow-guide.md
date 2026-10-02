@@ -157,7 +157,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | `domain-technical-analysis.md` | 기술 스택 매핑 (연동/규제/솔루션) | 아키텍처 검토, 개발자 |
 | `qa-scenarios.md` | QA 테스트 시나리오 | minos |
 | `db-schema.md` | DB 스키마 (ERD + DDL + 설계 근거) | 아키텍처 검토, 개발자, api-spec |
-| `api-spec.md` | API 엔드포인트 명세 | 프론트/백엔드, minos |
+| `api-spec.md` | API 계약 (화면 데이터 요구 + 페이지네이션·에러 규약 + 엔드포인트) | 프론트/백엔드, minos |
 | `sections/index.md` | 섹션 의존성 그래프 | agent-team (Wave 계획) |
 
 ### 건너뛸 때
