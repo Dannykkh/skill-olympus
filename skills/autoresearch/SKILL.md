@@ -5,6 +5,7 @@ description: >
   체크리스트(3~6개 예/아니오 기준) 기반 hill-climbing 루프로
   SKILL.md를 자동 개선합니다. 한 번에 하나만 바꾸고, 채점하고,
   유지하거나 되돌립니다. 95%+ × 3회 연속 달성 시 종료.
+  최종 합격은 라운드에 쓰지 않은 holdout 입력으로 독립 채점합니다.
   기본 설치에서는 카탈로그의 source-only 원본을 직접 읽고, 전체 활성화 설치에서는 /autoresearch로 실행.
 ---
 
@@ -27,6 +28,7 @@ description: >
 | `train.py` 수정 | `SKILL.md` 수정 |
 | `program.md` 지침 | 이 SKILL.md = 루프 지침 |
 | `val_bpb` 메트릭 | 체크리스트 점수 (pass/total × 100) |
+| 학습 데이터 ≠ 검증 데이터 | 최적화 입력 ≠ holdout 입력 (holdout은 라운드에 쓰지 않고 최종 판정에만) |
 | `results.tsv` | `autoresearch-log.md` 변경 로그 |
 | `git commit/reset` | 유지/되돌림 |
 
@@ -63,6 +65,7 @@ autoresearch --scan --auto
 | `--scan` | — | — | 전체 스킬 품질 스캔 모드 |
 | `--auto` | — | — | scan 후 최하위 스킬부터 자동 최적화 시작 |
 | `--input` | — | 자동 생성 | 테스트용 샘플 입력. 파일 경로 또는 인라인 텍스트 |
+| `--holdout` | — | 자동 생성 1~2개 | 라운드에는 쓰지 않고 최종 독립 채점에만 쓰는 입력의 파일 경로. 개선 행위자는 내용을 읽지 않음 |
 | `--checklist` | — | 대화로 수집 | 체크리스트 파일 경로 (.md) |
 | `--rounds` | — | 20 | 최대 라운드 수 |
 | `--target` | — | 95 | 목표 점수 (%) |
@@ -185,8 +188,8 @@ scan 후 자동으로 최하위 스킬부터 순서대로 autoresearch를 실행
 2. 🔴 등급 스킬 중 최하위 선택
 3. 해당 스킬에 대해:
    └─ scan에서 FAIL된 항목을 체크리스트로 자동 생성
-   └─ 스킬 유형에 맞는 테스트 입력 자동 생성
-   └─ Hill-Climbing 루프 실행
+   └─ 스킬 유형에 맞는 테스트 입력 자동 생성 + holdout 입력 위임 생성 (Phase 0 3b)
+   └─ Hill-Climbing 루프 실행 → 독립 채점 게이트(holdout)
 4. 완료 후 다음 🔴 스킬로 이동
 5. 🔴 전부 처리 후 → 사용자에게 "🟡 스킬도 진행할까요?" 질문
 ```
@@ -225,6 +228,23 @@ FAIL 항목이 3개 미만이면 해당 스킬 유형에 맞는 범용 체크리
    └─ 코드 스킬: 대표적인 코드 스니펫
    └─ 설계 스킬: 간단한 기능 요구사항
 
+3b. holdout 입력 확보 — 최적화 입력과 같은 유형, 다른 내용 1~2개
+   └─ 생성·보관·실행은 격리된 쓰기 가능 작업자(holdout 담당 — Claude general-purpose /
+      Codex worker / Antigravity generalist / Grok general-purpose)에게 위임. holdout 담당은 채점하지 않음
+   └─ 위치: 입력 holdout/inputs/, 출력 holdout/outputs/baseline/, holdout/outputs/gate-<N>/
+      (모두 .autoresearch/<skill-name>/ 아래, 출력 파일명은 입력과 같게)
+   └─ holdout 담당이 읽는 것: 최적화 입력(유형을 맞추기 위해서만), 대상 SKILL.md, holdout 입력.
+      체크리스트는 읽지 않음 — 보면 출력이 채점 기준 쪽으로 기울어 판정이 무의미해짐
+   └─ 실행 계약은 Phase 1의 1번과 같음: SKILL.md 본문 + 입력만 따르고, 입력당 1회 실행
+   └─ 반환은 "쓴 파일 경로 + done"만. 모호점 보고·작업 요약·완료 메시지에도 입력·출력의
+      내용이나 주제를 적지 않음 (런타임이 자동으로 붙이는 완료 요약도 이 규칙을 따르게 지시)
+   └─ --holdout이 주어지면 그 경로를 holdout 담당에게 넘기기만 함
+   └─ 개선 행위자(메인)는 holdout 입력·출력을 읽지 않음 — 읽으면 최적화 입력이 됨.
+      메인은 holdout 담당이 준 경로를 채점 역할에게 그대로 전달만 함
+   └─ holdout 내용이 메인에 노출되면(반환·요약에 섞여 들어온 경우 포함) 그 holdout은 오염된 것:
+      로그에 holdout: leaked를 남기고 다음 게이트 전에 새 holdout 입력으로 교체
+   └─ 위임이 없으면 메인이 만들되 로그에 holdout: self-generated (약한 격리)로 기록
+
 4. 백업 생성
    └─ SKILL.md 원본을 .autoresearch/backup/<skill-name>-original.md로 복사
    └─ git stash 또는 별도 백업 (되돌림 안전장치)
@@ -238,7 +258,8 @@ FAIL 항목이 3개 미만이면 해당 스킬 유형에 맞는 범용 체크리
 ```
 1. 대상 스킬의 SKILL.md를 프롬프트로 사용하여 테스트 입력 처리
    └─ 네이티브 범용 작업 역할로 실행 (격리된 컨텍스트)
-   └─ 역할 계약: 대상 SKILL.md와 로그는 읽기 전용, 테스트 출력 또는 지정 임시 산출물만 반환
+   └─ 역할 계약: 대상 SKILL.md와 로그는 읽기 전용, 테스트 출력 또는 지정 임시 산출물만 반환.
+      체크리스트는 실행 역할에 주지 않음 (보면 출력이 채점 기준에 맞춰져 점수가 부풀음)
    └─ 특정 커스텀 에이전트명이나 vendor별 spawn 형식을 요구하지 않음
    └─ 위임이 없으면 메인 컨텍스트에서 순차 실행하고 로그에 isolation: main-context 기록
 
@@ -249,6 +270,15 @@ FAIL 항목이 3개 미만이면 해당 스킬 유형에 맞는 범용 체크리
 
 3. 기준점 기록
    └─ 로그에 "Baseline: 56% (3/5 pass)" 기록
+
+4. holdout 기준점 — holdout 담당이 원본 SKILL.md(.autoresearch/backup/<skill-name>-original.md)로
+   holdout 입력을 실행해 holdout/outputs/baseline/에 쓰고, 독립 채점 역할(아래 게이트와 같은 역할)이 그 출력을 채점
+   └─ 기준점과 게이트는 같은 holdout 담당·같은 채점 역할이 맡아야 비교가 성립 (실행 방식·채점자 차이로
+      되돌림이 일어나지 않게). 세션 중 역할을 잃으면 같은 지시문으로 다시 만들고 로그에 기록
+   └─ 채점 역할은 체크리스트·holdout 입력·출력만 읽음 (SKILL.md·최적화 입력·로그는 읽지 않음)
+   └─ 메인에 돌아오는 것은 고정 형식의 점수와 체크리스트 항목별 PASS/FAIL뿐. 채점 역할의
+      완료 요약에도 입력·출력의 인용·요약을 넣지 않게 지시 (넣으면 위 leaked 규칙 적용)
+   └─ 로그에 "Holdout baseline: 50% (2 inputs)" 기록
 ```
 
 ### Phase 2: Hill-Climbing 루프
@@ -291,6 +321,7 @@ LOOP (라운드 1 ~ --rounds):
      └─ 목표 점수(--target) 이상이 --streak회 연속? → Phase 3로 (success)
      └─ 최대 라운드 초과? → Phase 3로 (exhausted — 목표 미달 종료, success 아님)
         └─ 최종 점수 < baseline이면 SKILL.md를 원본으로 전량 되돌림 (개악 방지)
+     └─ 원본으로 되돌리지 않았다면 success든 exhausted든 Phase 3 전에 아래 독립 채점 게이트(holdout)를 거침
      └─ 아니면 → 다음 라운드
 ```
 
@@ -305,6 +336,7 @@ LOOP (라운드 1 ~ --rounds):
    │ Target: 95% × 3 streak                       │
    │ Baseline: 56% (3/5)                          │
    │ Final: 92% (4.6/5 avg over 3 runs)           │
+   │ Holdout: 50% → 83% (independent, 2 inputs)   │
    │ Rounds: 7 (4 kept, 1 neutral, 2 reverted)    │
    │                                              │
    │ ## Checklist                                  │
@@ -347,12 +379,14 @@ LOOP (라운드 1 ~ --rounds):
 
 Hill-climbing은 생성·채점을 같은 행위자가 수행하므로, 최종 버전이 자기 체크리스트에만 과적합했을 수 있다.
 streak 달성으로 완료를 선언하기 전, 가능하면 **다른 모델 패밀리의 읽기 전용 독립 채점 역할**에
-최종 SKILL.md의 출력물을 동일 체크리스트로 1회 재채점시킨다. 현재 CLI가 제공하는 네이티브 reviewer/explorer나
+최종 SKILL.md로 holdout 입력을 실행한 출력물을 동일 체크리스트로 1회 채점시킨다. 현재 CLI가 제공하는 네이티브 reviewer/explorer나
 별도 CLI 리뷰를 사용할 수 있지만, 채점 역할은 대상 SKILL.md와 로그를 수정하지 않는다.
 
 - 최적화에 쓴 점수(라운드 신호)와 합격 판정(독립 채점)을 **분리**한다 — 같은 점수로 고치고 같은 점수로 승인하지 않는다.
-- 독립 채점이 목표 미달이면 streak는 무효다. 격차가 크면 보수적으로 **낮은 쪽 점수를 채택**하고 라운드를 더 돈다.
-- 네이티브 위임이 없으면 메인 컨텍스트에서 반대 관점 채점을 순차 실행하고 `validator: sequential-main`으로 기록한다.
+- **판정은 holdout 입력으로 한다.** 최적화 입력은 라운드마다 고친 대상이라, 같은 입력으로 다시 채점하면 채점자가 바뀌어도 "그 입력에 맞춘 스킬"을 걸러내지 못한다(특히 `add_good_example`). holdout 담당이 최종 SKILL.md로 holdout 입력을 실행해 `holdout/outputs/gate-<N>/`에 쓰고, 독립 채점 역할이 그 출력을 채점한다. 메인에는 점수와 항목별 PASS/FAIL만 돌아온다.
+- holdout 점수가 목표 미달이면 streak는 무효다. 최적화 점수보다 20%p 이상 낮으면 과적합으로 보고 낮은 쪽 점수를 채택한 뒤 라운드를 더 돈다. 다음 라운드는 holdout에서 FAIL한 **항목 이름**만 보고 고친다 — holdout 출력 본문을 보고 고치면 holdout이 최적화 입력이 된다.
+- holdout 점수가 holdout 기준점보다 낮으면 개악이다. 1회 재실행해 같은 결과면 SKILL.md를 원본으로 되돌리고 `status: overfit`으로 기록한다 (최적화 점수가 올랐어도 일반화에 실패한 것).
+- 네이티브 위임이 없으면 메인 컨텍스트에서 반대 관점 채점을 순차 실행하고 `validator: sequential-main`으로 기록한다. 이때 holdout도 메인이 실행하므로 `holdout: self-run (약한 격리)`을 함께 기록한다.
 - 다른 모델 패밀리가 없으면 single-model 결과로 라벨하고 "독립 검증 안 됨"을 로그에 명시한다 (거짓 합격 금지).
 
 ---
@@ -406,8 +440,9 @@ streak 달성으로 완료를 선언하기 전, 가능하면 **다른 모델 패
 | 1 | **한 번에 하나만 변경.** 두 가지를 동시에 바꾸면 뭐가 효과 있었는지 모름 |
 | 2 | **Eval 격리.** 채점 시 SKILL.md(프롬프트)를 보지 말 것. 출력물만 보고 판단 |
 | 3 | **되돌림은 즉시.** 점수가 떨어지면 고민하지 말고 바로 되돌림 |
-| 4 | **같은 테스트 입력 사용.** 입력이 바뀌면 공정한 비교 불가 |
+| 4 | **같은 테스트 입력 사용.** 입력이 바뀌면 공정한 비교 불가 (라운드는 최적화 입력만 사용) |
 | 5 | **로그는 매 라운드 기록.** 건너뛰면 변경 로그의 가치가 사라짐 |
+| 6 | **holdout은 보지 않는다.** 개선 행위자는 holdout 입력·출력을 읽지 않고 점수와 항목별 PASS/FAIL만 받는다 |
 
 ### 하지 말 것
 
@@ -418,6 +453,8 @@ streak 달성으로 완료를 선언하기 전, 가능하면 **다른 모델 패
 | 3 | 한 번에 여러 변경 | 어떤 변경이 효과인지 구분 불가 |
 | 4 | 프롬프트 전체 재작성 | Hill climbing이 아니라 random restart |
 | 5 | 테스트 입력 중간 변경 | 점수 비교의 기준이 무너짐 |
+| 6 | holdout 출력을 보고 수정 | 미공개 입력이 최적화 입력이 되어 일반화 검증이 사라짐 |
+| 7 | 최적화 입력 문장을 그대로 `add_good_example`에 복사 | 그 입력에만 맞는 스킬이 됨 — 예시는 일반화해서 넣음 |
 
 ---
 
@@ -455,7 +492,12 @@ streak 달성으로 완료를 선언하기 전, 가능하면 **다른 모델 패
 ├── backup/
 │   └── <skill-name>-original.md    # 원본 백업
 └── <skill-name>/
-    └── autoresearch-log.md         # 변경 로그 + 점수 히스토리
+    ├── autoresearch-log.md         # 변경 로그 + 점수 히스토리
+    └── holdout/                    # holdout 담당·채점 역할만 읽음, 개선 행위자는 읽지 않음
+        ├── inputs/                 # holdout 입력
+        └── outputs/
+            ├── baseline/           # 원본 SKILL.md 실행 결과
+            └── gate-<N>/           # N번째 게이트의 최종 SKILL.md 실행 결과
 ```
 
 ---
