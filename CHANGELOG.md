@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.17.0] - 2026-10-03
+
+### Features
+
+- **zephermine**: Make acceptance criteria a contract between design and build. Every section's criterion carries a stable ID (`AC-NN-k`), an observable behaviour, a trace (problem, screen, endpoint, role) and a verification. Step 22A collects them into `checklist.md`; Step 23 checks that every problem has an AC, every AC can be verified, QA references exist and no two AC contradict, and fixes gaps while still in design. Poseidon (Claude and Codex), Daedalus (native and MCP) and Chronos record progress in one `checklist-status.md` ledger with `proved`/`weak`/`missing`/`contradicted` and executed evidence; only an all-`proved` ledger counts as done. Argos Phase 4A re-runs the evidence and separates contract defects from unbuilt work, Clio counts unmet AC as a NO-GO blocker, and Zeus logs the proved ratio. (4ac9869)
+- **zephermine**: Derive `api-spec.md` from a screen data-requirements table instead of the DB schema alone. Every list endpoint is paginated (offset `page`/`size` + `total` by default, cursor for feeds, size cap, sort allow-list), errors use one coded envelope `{ error, message, details }`, list filter/sort columns, including server-fixed conditions, are backfilled into the index table and DDL, and Step 23 checks screen-to-API coverage. Section files carry these conventions and a Quality Gate for pagination, N+1 queries, indexes and error format; api-tester requires pagination and sort checks for list APIs. (d0b4bfd)
+- **autoresearch**: Judge final acceptance on 1-2 holdout inputs that an isolated keeper creates and runs and the optimizer never sees. The same grader scores the holdout baseline and each gate; a 20%p gap to the optimization score is treated as overfitting, a drop below the holdout baseline restores the original skill, and any leaked holdout content forces new inputs before the next gate. (a341c48)
+
+### Bug Fixes
+
+- **agent-team**: Check file ownership against a baseline recorded before Wave 1 (`git stash create`, or HEAD when clean, plus the pre-existing untracked files) instead of `git diff HEAD~{N}`, which was undefined because the team never commits mid-run and missed new files. Changes are classified as `CONFLICT` (same Wave), `SHARED` (sequential Waves), `UNOWNED` or `UNREPORTED`, and the Codex adapter gained the same check. (4bb8fcc, 4ac9869)
+- **release**: `scripts/bump_version.py` reads and writes the plugin manifests as UTF-8 and keeps LF endings, so it no longer crashes on Korean Windows. The manifests, stuck at 6.14.1 since 6.15.0, are synced to this release. (58f427c)
+
+### Refactoring
+
+- **agents**: Remove six custom agents that duplicated same-name skills (`api-tester`, `code-reviewer`, `database-schema-designer`, `dotnet`/`fullstack`/`wpf-coding-standards`). The DB-First rules moved to `skills/database-schema-designer/references/db-first-design.md` and the coding-standard rules to each skill's `references/rules.md`. Agent sources drop from 42 to 36, and a test now forbids an agent that shares a skill's name. Users who opted into source-only agents lose these six; the same guidance remains in the skills. (7d5073b)
+
+### Documentation
+
+- Update the four language READMEs, setup guide and workflow guide for the acceptance contract, API conventions, team checks and agent counts. (1dcad36, 7d5073b, d0b4bfd, 4ac9869)
+
+### Validation and Scope
+
+- Each change was run end to end with blind executors on toy projects. The API-spec guide produced screen tables, paginated list endpoints, coded errors and partial/trigram index backfill, and surfaced six spec gaps before implementation. The ownership check classified nine files correctly where `HEAD~1` failed and `HEAD` gave a false positive. The holdout gate blocked a success claim when a first-line length rule did not generalize. The acceptance contract caught an unowned problem, an unverifiable AC and a dangling QA reference; the Lead refused completion at 4/5 with a contradictory AC parked; Argos caught a regression slipped in after the ledger was written. Gaps found in these runs were fixed before release.
+- The full test suite passes, including the version-sync check that had failed since 6.15.0. Windows full installation passed all 12 installed runtime checks.
+- Still open: overlapping retry counts in Poseidon, confirmations when no user can answer, and branches for environment-caused test failures. Existing unrelated local rule edits and skill zip files are excluded from this release.
+
 ## [6.16.0] - 2026-09-29
 
 ### Features
