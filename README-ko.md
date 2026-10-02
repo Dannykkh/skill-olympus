@@ -397,6 +397,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v6.17.0:** 설계와 구현이 이름 붙은 약속을 공유합니다. 젭마인은 섹션마다 완료 기준에 고정 ID(`AC-NN-k`)와 관찰 가능한 동작·근거·검증 방법을 붙여 `checklist.md`로 모으고, 모든 문제에 AC가 있는지, 모든 AC를 검증할 수 있는지, 서로 모순되는 AC가 없는지 확인합니다. 포세이돈·다이달로스·크로노스는 같은 `checklist-status.md` 장부에 이행을 기록하고(`proved`는 실행한 증거가 있어야 하며 모든 행이 `proved`여야 완료), 아르고스는 그 증거를 다시 실행해 확인하며(Phase 4A), 클리오는 미이행 AC를 NO-GO 사유로 셉니다. `api-spec.md`는 화면마다 보여 주고 하는 일에서 출발하고, 모든 목록 API에 페이지네이션을, 에러에는 공통 코드 형식을 적용하며, 목록의 필터·정렬 컬럼을 인덱스 계획에 역반영합니다. 포세이돈의 소유권 검사는 `HEAD~N` 대신 시작 시점 기준점과 비교하고, autoresearch는 최적화에 쓰지 않은 holdout 입력으로 최종 판정합니다. 같은 이름의 스킬과 겹치던 사용자 정의 에이전트 6개를 정리했습니다(에이전트 소스 42 → 36).
+
 **v6.14.1:** 훅과 설치 점검이 이름만 있는 Python을 진짜로 오인하지 않습니다. Windows의 `python`·`python3`는 PATH에 있어도 실행되지 않는 스토어 별칭일 수 있고, macOS에는 `python3`만 있습니다. 앵커 색인 재생성 훅과 API 검증 훅은 이제 `python`·`py`·`python3` 중 실제로 실행되는 첫 명령을 써서, 재생성을 건너뛰거나 가짜 구문 오류를 내지 않고 공백 있는 프로젝트 경로에서도 동작합니다. `install.js --check`는 Python 설치 방법과 별칭 끄는 방법을 알려주고, 에이전트는 셋 다 실패할 때만 핸드오프 도구를 쓸 수 없다고 보고합니다.
 
 **v6.14.0:** TermSnap 부품 지도(`codemap/component-map.json`)가 있는 프로젝트에서 `create_handoff.py`가 `Component map:` 줄을 씁니다. TermSnap이 만든 `codemap/components/owners.json`을 읽어 이번 세션 파일 중 주인 부품이 없는 것(미배정), 지도 재생성이 필요한 것, 지도 오류를 알립니다. `validate_handoff.py`는 이 결과에 `→ 배정함:`이나 `→ 보류:`가 없으면 경고합니다. 지도가 없는 프로젝트에는 줄이 없습니다. 스킬은 계약 파일만 읽고 지도를 고치거나 TermSnap의 소스 판정 규칙을 재구현하지 않습니다. 점으로 시작하는 폴더(`.github/…`)의 경로가 앞의 점을 잃어 Files Modified와 앵커 조회에서 빠지던 문제도 고쳤습니다.
@@ -483,14 +485,14 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 **`/agent-team` (`/poseidon`) — 병렬 구현 (포세이돈)**
 - **언제:** `sections/`가 있는 스펙이 있고 병렬로 구현하고 싶을 때.
 - **사용:** `/agent-team <planning_dir>` (별칭: 포세이돈)
-- **처리:** 의존성 그래프 → 웨이브 그룹핑 → 팀원이 웨이브 단위로 구현 → 병합 후 필수 통합 게이트(빌드 + 전체 테스트 + E2E 1회).
-- **결과물:** 구현 코드 + 검증 보고. 통합 게이트가 유일한 완료 권한(코드 존재 확인은 사전점검일 뿐).
+- **처리:** 의존성 그래프 → 웨이브 그룹핑 → 팀원이 웨이브 단위로 구현 → 병합 후 필수 통합 게이트(빌드 + 전체 테스트 + E2E 1회). 설계의 `checklist.md` 대비 이행을 `checklist-status.md` 장부에 기록하고(모든 AC가 실행 증거로 `proved`), 파일 소유권은 시작 시점 기준점과 비교해 검사합니다.
+- **결과물:** 구현 코드 + 검증 보고 + `checklist-status.md`. 통합 게이트가 유일한 완료 권한(코드 존재 확인은 사전점검일 뿐).
 - **다음:** `/argos`, `/minos`.
 
 **`/workpm` (`/daedalus`) — 설계 없이 구현 (다이달로스)**
 - **언제:** 설계가 없고 PM이 바로 구현으로 들어가길 원할 때.
 - **사용:** `/workpm` (별칭: 다이달로스)
-- **처리:** 리서치 → 제안 3개를 적합성/리스크/노력으로 채점 → 공정 도면 → 구현 → 검증(테스트/린트, 제한 재시도). activity log를 외부화해 재개 가능.
+- **처리:** 리서치 → 제안 3개를 적합성/리스크/노력으로 채점 → 승인된 제안의 완료 기준을 `checklist.md`로 고정 → 공정 도면 → 구현 → 검증(테스트/린트, 제한 재시도). 이행은 `checklist-status.md`에, activity log는 외부화해 재개 가능.
 - **결과물:** 동작 코드 + 결정/활동 로그.
 - **다음:** `/argos`, `/minos`.
 
@@ -499,7 +501,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 **`/argos` — 준공검사 (아르고스)**
 - **언제:** 구현 후 — 코드가 설계 산출물과 일치하는지 확인.
 - **사용:** `/argos [planning_dir]` (별칭: 아르고스, 감리)
-- **처리:** 정적 분석 → 런타임 검증 → API 명세 일치 → QA 시나리오 체크 → 도면 대 코드 대조 → 보안 (Phase 0~7).
+- **처리:** 정적 분석 → 런타임 검증 → API 명세 일치 → QA 시나리오 체크 → 완료 기준 장부 재확인(4A: 증거 재실행, 계약 모순과 구현 미이행 구분) → 도면 대 코드 대조 → 보안 (Phase 0~7).
 - **결과물:** `<planning_dir>/verify-report.md`.
 - **다음:** 발견 사항 수정 후 `/minos`.
 
@@ -515,7 +517,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 **`/clio` — 마무리투수 + 문서 (클리오)**
 - **언제:** 작업이 끝나 GO/NO-GO 판정과 산출 문서가 필요할 때.
 - **사용:** `/clio` (별칭: 클리오; 레거시 `/closer`)
-- **처리:** 파이프라인 GO/NO-GO(argos/minos 읽고 빌드/테스트 실행) → 소스 기반 흐름 추출 → PRD/기술/매뉴얼 생성 → 문서 사실 검증 게이트.
+- **처리:** 파이프라인 GO/NO-GO(argos/minos와 완료 기준 장부를 읽고 빌드/테스트 실행, 미이행 AC가 있으면 GO 불가) → 소스 기반 흐름 추출 → PRD/기술/매뉴얼 생성 → 문서 사실 검증 게이트.
 - **결과물:** `docs/clio/latest/` → `CHECKLIST.md`, `flow-diagrams/`, `PRD.md`, `TECHNICAL.md`, `USER-MANUAL.md`, `FINAL-REPORT.md`.
 - **다음:** 배포.
 
@@ -531,7 +533,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 **`/chronos` — 지치지 않는 수정 루프 (크로노스)**
 - **언제:** "X 안의 버그를 테스트 통과할 때까지 다 고쳐줘" — 자율·재개 가능.
 - **사용:** `/chronos [scope] --completion-promise '...'` (별칭: 크로노스)
-- **처리:** 사이클마다 FIND → FIX → VERIFY(자기판단 아닌 실제 테스트 실행), 우선순위 순, 한 사이클 한 이슈; 막힌 이슈는 Owner Decision Brief로 주차하되 주차 전 능력 1회 상향(에스컬레이션 사다리).
+- **처리:** 사이클마다 FIND → FIX → VERIFY(자기판단 아닌 실제 테스트 실행), 우선순위 순, 한 사이클 한 이슈; 막힌 이슈는 Owner Decision Brief로 주차하되 주차 전 능력 1회 상향(에스컬레이션 사다리). 스코프에 `checklist.md`가 있으면 그 AC 행이 요구사항이 되고 이행은 공유 장부에 기록합니다.
 - **결과물:** 수정 + `docs/chronos/chronos-log.md` 감사 로그(루프는 기억이 아니라 로그에서 재개).
 - **다음:** —
 
@@ -677,7 +679,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | **테스트** | minos, auto-continue-loop, flow-verifier, themis + 3개 | 크로노스 루프, Playwright QA, 개인정보처리방침 생성(테미스) |
 | **메모리** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill | 3계층 메모리, Devin 대화 저장 훅, raw 정제(rebuild) |
 | **문서** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3개 | 다이어그램, 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG, cathrynlavery/diagram-design MIT 벤더링), 프레젠테이션, 문서, 도메인 용어사전 |
-| **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing), 관리, 릴리즈 |
+| **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing, holdout 입력으로 최종 판정), 관리, 릴리즈 |
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |
 | **미디어** | video-maker | 스크립트→음성(TTS)→컴포지션→자막→렌더를 Remotion(React/TSX) 또는 HyperFrames(HTML/CSS/GSAP)로, 프로젝트당 엔진 하나, TTS 공급자 선택(HeyGen·ElevenLabs·Typecast·Edge TTS·Kokoro) |
 | **리서치** | reddit-researcher | 시장 조사 + 리드 스코어링 |

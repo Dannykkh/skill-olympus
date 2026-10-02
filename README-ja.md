@@ -291,9 +291,15 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 ---
 
-**最終更新:** 2026-09-01
+**最終更新:** 2026-10-03
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v6.17.0 — 完了基準を ID 付きの約束に
+
+設計と実装が名前の付いた約束を共有するようになりました。zephermine は各セクションの受け入れ基準に固定 ID（`AC-NN-k`）、観察可能な動作、根拠、検証方法を付けて `checklist.md` にまとめ、すべての課題に AC があること、すべての AC が検証可能であること、AC 同士が矛盾しないことを確認します。Poseidon・Daedalus・Chronos は同じ `checklist-status.md` 台帳に進捗を記録し（`proved` には実行した証拠が必要で、全行が `proved` のときだけ完了）、Argos はその証拠を再実行して確認し（Phase 4A）、Clio は未達の AC を NO-GO の理由に数えます。`api-spec.md` は各画面が表示・操作する内容から始まり、すべての一覧 API にページネーションを、エラーには共通のコード形式を適用し、一覧の絞り込み・並べ替え列をインデックス計画に反映します。Poseidon の所有権チェックは `HEAD~N` ではなく開始時点の基準と比較し、autoresearch は最適化に使わなかった holdout 入力で最終判定します。同名スキルと重複していたカスタムエージェント 6 個を削除しました（エージェントソース 42 → 36）。
+
+[変更履歴](CHANGELOG.md)
 
 ## v6.14.1 — Python の判定を名前ではなく実行で行う
 

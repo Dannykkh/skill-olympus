@@ -398,6 +398,8 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
+**v6.17.0:** Design and build now share named promises. Zephermine gives every section's acceptance criterion a stable ID (`AC-NN-k`) with an observable behaviour, a trace and a verification, collects them into `checklist.md`, and checks that every problem has an AC, every AC can be verified, and no two AC contradict. Poseidon, Daedalus and Chronos record progress in one `checklist-status.md` ledger (`proved` needs executed evidence; done means every row is `proved`), Argos re-runs that evidence (Phase 4A) and Clio counts unmet AC as a NO-GO blocker. `api-spec.md` now starts from what each screen shows and does, every list endpoint is paginated, errors use one coded format, and list filter/sort columns are backfilled into the index plan. Poseidon's ownership check compares against a start-of-run baseline instead of `HEAD~N`, and autoresearch judges the final skill on holdout inputs it never optimised against. Six custom agents that duplicated same-name skills were removed (42 → 36 agent sources).
+
 **v6.14.1:** Hooks and the health check no longer mistake a name for a working Python. On Windows, `python` and `python3` can be Store aliases that exist on PATH but fail to run; macOS ships only `python3`. The anchor-rebuild and API-validation hooks now use the first of `python`, `py`, `python3` that actually runs, so they no longer skip the rebuild or report false syntax errors, and project roots with spaces work. `install.js --check` tells you how to install Python or turn the aliases off, and agents report the handoff tools as unavailable only when all three fail.
 
 **v6.14.0:** In projects with a TermSnap component map (`codemap/component-map.json`), `create_handoff.py` adds a `Component map:` line that reads TermSnap's `codemap/components/owners.json` and reports this session's files that have no owning component, files that need the map regenerated, and map errors. `validate_handoff.py` warns when those findings carry neither `→ 배정함:` (assigned) nor `→ 보류:` (deferred). Projects without a map get no line. The skill only reads the contract; it never edits the map or re-implements TermSnap's source rules. This release also stops record paths under dot folders (`.github/…`) from losing their leading dot, which had dropped them from Files Modified and anchor lookups.
@@ -484,14 +486,14 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/agent-team` (`/poseidon`) — Parallel build (Sea Lord)**
 - **When:** a spec with `sections/` exists and you want parallel implementation.
 - **Use:** `/agent-team <planning_dir>` (aliases: 포세이돈)
-- **Process:** dependency graph → wave grouping → teammates build in waves → mandatory post-merge integration gate (build + full test suite + one E2E).
-- **Output:** implemented code + verification report; the integration gate is the sole completion authority (code-existence checks are pre-checks only).
+- **Process:** dependency graph → wave grouping → teammates build in waves → mandatory post-merge integration gate (build + full test suite + one E2E). Progress against the design's `checklist.md` goes into the `checklist-status.md` ledger (every AC `proved` with executed evidence), and file ownership is checked against a start-of-run baseline.
+- **Output:** implemented code + verification report + `checklist-status.md`; the integration gate is the sole completion authority (code-existence checks are pre-checks only).
 - **Next:** `/argos`, `/minos`.
 
 **`/workpm` (`/daedalus`) — Build without a spec (Master Builder)**
 - **When:** no design exists and you want a PM that goes straight to implementation.
 - **Use:** `/workpm` (aliases: 다이달로스)
-- **Process:** research → 3 proposals scored on fit/risk/effort → flow diagram → implement → verify (tests/lint, bounded retries); activity log externalized for resume.
+- **Process:** research → 3 proposals scored on fit/risk/effort → the approved proposal's completion criteria fixed into `checklist.md` → flow diagram → implement → verify (tests/lint, bounded retries); progress kept in `checklist-status.md`, activity log externalized for resume.
 - **Output:** working code + decision/activity log.
 - **Next:** `/argos`, `/minos`.
 
@@ -500,7 +502,7 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/argos` — Construction inspection (Watchman)**
 - **When:** after build — confirm the code matches the design artifacts.
 - **Use:** `/argos [planning_dir]` (aliases: 아르고스, 감리)
-- **Process:** static analysis → runtime checks → API-spec match → QA-scenario checklist → flow-diagram-vs-code → security (Phase 0–7).
+- **Process:** static analysis → runtime checks → API-spec match → QA-scenario checklist → acceptance-ledger re-check (4A: re-runs the evidence, separates contract defects from unbuilt work) → flow-diagram-vs-code → security (Phase 0–7).
 - **Output:** `<planning_dir>/verify-report.md`.
 - **Next:** fix findings, then `/minos`.
 
@@ -516,7 +518,7 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/clio` — Closer + docs (Chronicler)**
 - **When:** the work is done and you need a GO/NO-GO call plus deliverable docs.
 - **Use:** `/clio` (aliases: 클리오; legacy `/closer`)
-- **Process:** pipeline GO/NO-GO (reads argos/minos + runs build/test) → source-based flow extraction → PRD / technical / manual generation → doc fact-check gate.
+- **Process:** pipeline GO/NO-GO (reads argos/minos and the acceptance ledger + runs build/test; unmet AC block GO) → source-based flow extraction → PRD / technical / manual generation → doc fact-check gate.
 - **Output:** `docs/clio/latest/` → `CHECKLIST.md`, `flow-diagrams/`, `PRD.md`, `TECHNICAL.md`, `USER-MANUAL.md`, `FINAL-REPORT.md`.
 - **Next:** ship.
 
@@ -532,7 +534,7 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/chronos` — Tireless fix loop (Time)**
 - **When:** "fix everything in X until tests pass" — autonomous and resumable.
 - **Use:** `/chronos [scope] --completion-promise '...'` (aliases: 크로노스)
-- **Process:** FIND → FIX → VERIFY (a real test run, not self-judgment) per cycle, priority-ordered, one issue per cycle; blocked issues are parked with an Owner Decision Brief, with a capability-escalation step before parking.
+- **Process:** FIND → FIX → VERIFY (a real test run, not self-judgment) per cycle, priority-ordered, one issue per cycle; blocked issues are parked with an Owner Decision Brief, with a capability-escalation step before parking. When the scope has a `checklist.md`, its AC rows are the requirements and progress goes to the shared ledger.
 - **Output:** fixes + `docs/chronos/chronos-log.md` audit log (the loop resumes from the log, not memory).
 - **Next:** —
 
@@ -685,7 +687,7 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Testing** | minos, auto-continue-loop, flow-verifier, themis + 3 more | Chronos loop, Playwright QA, privacy-policy generator (Themis) |
 | **Memory** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill | 3-layer memory, Devin conversation hooks, raw distillation (rebuild) |
 | **Docs** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, editorial diagram rendering (.mmd → branded HTML+SVG, vendored from cathrynlavery/diagram-design MIT), presentations, documents, domain dictionary (DDD UL) |
-| **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing), management, release |
+| **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing, judged on holdout inputs), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |
 | **Media** | video-maker | Script → TTS → composition → captions → render on Remotion (React/TSX) or HyperFrames (HTML/CSS/GSAP), one engine per project, pluggable TTS (HeyGen, ElevenLabs, Typecast, Edge TTS, Kokoro) |
 | **Research** | reddit-researcher | Market research + lead scoring |
