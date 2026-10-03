@@ -1,6 +1,8 @@
 # Schema Design Guide
 
-젭마인 Step 16에서 서브에이전트가 참조하는 스키마 설계 가이드.
+젭마인 Step 16에서 서브에이전트가 참조하는 스키마 설계 가이드이자 **DB-First 설계 규칙의 정본**이다.
+`database-schema-designer` 스킬도 사본을 두지 않고 이 문서를 가리킨다. 젭마인 밖에서 쓸 때는
+`plan.md`·`domain-process-analysis.md` 대신 사용자 요구와 기존 코드베이스를 입력으로 삼는다.
 
 ---
 
@@ -144,12 +146,37 @@ customer_name VARCHAR(100) NOT NULL
 
 | 설계 결정 | PostgreSQL | MySQL | SQLite | MongoDB |
 |----------|-----------|-------|--------|---------|
-| PK 전략 | UUID / BIGSERIAL | AUTO_INCREMENT | INTEGER AUTOINCREMENT | ObjectId |
-| 반정형 데이터 | JSONB + GIN 인덱스 | TEXT + 별도 테이블 | JSON (제한적) | 네이티브 Document |
-| 멀티테넌시 | RLS 정책 | WHERE tenant_id | 파일 분리 | DB 분리 or tenant 필드 |
+| PK 전략 | UUID (`gen_random_uuid()`) / BIGSERIAL | BIGINT AUTO_INCREMENT | INTEGER AUTOINCREMENT | ObjectId |
+| 반정형 데이터 | JSONB + GIN 인덱스 | TEXT + 별도 테이블 정규화 | JSON (제한적) | 네이티브 Document |
+| 멀티테넌시 | RLS 정책 (DB 레벨 격리) | WHERE tenant_id + 미들웨어 | 파일 분리 | DB 분리 or tenant 필드 |
 | 전문 검색 | tsvector + GIN | FULLTEXT INDEX | FTS5 | Text Index |
-| 배열/리스트 | ARRAY 타입 | 별도 테이블 | 불가 | 네이티브 Array |
-| 인덱스 유형 | B-Tree/GIN/GiST/Partial | B-Tree/FULLTEXT | B-Tree | Single/Compound/Text |
+| 부분 일치 검색 (`%q%`) | `pg_trgm` GIN | FULLTEXT 또는 n-gram | FTS5 | Text Index / Atlas Search |
+| 배열/리스트 | ARRAY 타입 + GIN | 별도 테이블 (M:N) | 불가 | 네이티브 Array |
+| 인덱스 유형 | B-Tree / GIN / GiST / Partial | B-Tree / FULLTEXT / Spatial | B-Tree | Single / Compound / Text / Geo |
+| IP 주소 | INET 타입 | VARCHAR(45) | VARCHAR(45) | String |
+| 타임스탬프 | TIMESTAMPTZ (타임존 필수) | DATETIME(6) | TEXT (ISO8601) | ISODate |
+| Audit 트리거 | `CREATE TRIGGER` 네이티브 | `CREATE TRIGGER` 네이티브 | 제한적 | Change Streams |
+| 마이그레이션 도구 | Supabase CLI / Flyway / Prisma | Flyway / Liquibase | Prisma / 수동 | Mongoose / 수동 |
+
+### Audit 컬럼 (모든 테이블)
+
+```sql
+created_at {TIMESTAMP_TYPE} NOT NULL DEFAULT {NOW_FUNC},
+updated_at {TIMESTAMP_TYPE} NOT NULL DEFAULT {NOW_FUNC},
+created_by BIGINT,
+updated_by BIGINT
+```
+
+`{TIMESTAMP_TYPE}`·`{NOW_FUNC}`는 위 표의 타임스탬프 행을 따른다.
+
+### ERD 관계 표기 (Mermaid)
+
+- `||--||` : 1:1 (양쪽 필수)
+- `||--o|` : 1:1 (한쪽 선택)
+- `||--o{` : 1:N
+- `}o--o{` : M:N (junction table 별도 표시)
+
+컬럼에는 `PK`·`FK`·`UK` 표시와 짧은 설명을 붙인다: `type column_name PK "설명"`.
 
 ---
 
