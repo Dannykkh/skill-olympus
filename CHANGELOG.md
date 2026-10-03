@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.18.1] - 2026-10-03
+
+### Refactoring
+
+- **zephermine**: Make `schema-design-guide.md` the single source of the DB-First rules. v6.17.0 had moved the database-schema-designer agent's rules into `skills/database-schema-designer/references/db-first-design.md`, but most of that content already lived in the zephermine guide. The parts only the copy had (the extended DB matrix with partial-match search, IP, timestamp, audit-trigger and migration-tool rows, the audit-column template and the ERD relationship notation) are merged into the guide, `db-first-design.md` is deleted, and database-schema-designer now points at the zephermine guide instead of keeping a copy. (71f481b)
+
+### Validation and Scope
+
+- The full test suite passes (190). Windows full installation passed all 12 installed runtime checks, and the installed skills no longer reference the deleted file.
+- Existing unrelated local rule edits and skill zip files are excluded from this release.
+
 ## [6.18.0] - 2026-10-03
 
 ### Features
