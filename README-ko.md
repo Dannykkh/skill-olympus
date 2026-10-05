@@ -47,7 +47,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | **완료를 꾸며내지 않는 루프** | `/chronos`가 FIND → FIX → VERIFY를 실행하고, 소진과 막힘을 성공으로 포장하지 않음 |
 | **의도대로 구현됐다는 증거** | `/argos`가 명세, 코드, API, 시나리오, 다이어그램, 보안 경계를 대조 |
 | **실제로 실행되는 브라우저 테스트** | `/minos`가 Playwright 시나리오를 만들고 실행하며 제한된 반복 안에서 실패를 수정 |
-| **세션을 넘어가는 기억** | `mnemo`가 인덱스, 의미기억, 검색 가능한 대화, 재개 가능한 핸드오프를 유지 |
+| **세션을 넘어가는 기억** | `mnemo`가 태그와 근거로 대화 맥락을 찾고, 기존 기억을 정비하며, 핸드오프로 작업을 이어감 |
 | **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 78개로 라우팅 |
 
 **공개 추적 스킬 소스 103개(기본 allowlist 합집합 25개 = 사용자 진입점 19개 + 런타임 어댑터 6개, 통합 표면별 활성 21개 또는 22개, skills-only 호스트 활성 19개, source-only 내부·선택 모듈 78개) · 에이전트 참고 소스 36개(최상위 34개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
@@ -548,7 +548,7 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 - **언제:** 항상 — 그리고 "이전에 뭐 했더라?" 물을 때마다.
 - **사용:** `mnemo` (별칭: 므네모); 매 턴 훅이 자동 저장. opt-out: `MNEMO_DISABLE=1` (버전 체크는 `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
-- **처리:** 세션과 Claude/Codex/Antigravity/Grok을 가로지르는 3계층 메모리; 과거 대화 검색; 컨텍스트 한도 근처에서 자동 핸드오프.
+- **처리:** 세션과 Claude/Codex/Antigravity/Grok을 가로지르는 3계층 메모리, Devin은 Claude Mnemo 공유; 대화 맥락 회상; 컨텍스트 한도 근처에서 자동 핸드오프.
 - **결과물:** `MEMORY.md`(인덱스, 100줄 이내) + `memory/<카테고리>/NNN-slug.md`와 카테고리별 `index.md`(의미, 항목당 파일 하나) + `conversations/*.md`(일화) + `docs/handoffs/*.md`(세션 경계 — 기억의 입력구).
 - **다음:** 기억이 낡았다 싶으면 `mnemo_doctor.py`. 아래 표가 언제 무엇이 도는지입니다.
 
@@ -557,18 +557,47 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 | 시점 | 하는 일 | 도구 | Python 필요 |
 |------|---------|------|-------------|
 | 매 턴 (자동) | 프롬프트·응답·도구 관찰 저장. 관찰 실패 판정은 "error"라는 단어가 아니라 **에러 형태**로. 10 MB에서 로그 회전, 정제 기준값은 보존 | 훅 (PowerShell / bash) | 아니오 |
+| 과거 대화를 물을 때 | 태그·제목·본문을 검색하고 질문과 응답, 연결된 결정과 근거를 출력 예산 안에서 반환 | `recall.py` (읽기 전용) | 예 |
 | **파일을 고친 직후 (자동)** | **"이 파일에 기대는 결정"이 훅 컨텍스트로 모델에게 전달된다. 세션당 파일당 한 번.** 아무도 조회를 요청하지 않는다 — 어느 줄기 위에 있는지가 판단이 아니라 읽기가 된다 | `save-tool-use`(Claude·Grok) · `antigravity-hook`(Antigravity) | 아니오 |
 | 파일에 손대기 전 (수동) | 같은 질문을 직접, 그리고 "이 파일이 언제·왜·어떻게 바뀌었나". **"없음 확인"도 결과** — 새 줄기일 수 있다 | `build_anchor_index.py --file X`, `harvest_lineage.py --file X` | 예 |
 | 결정이 굳는 순간 | 항목이 증거를 들고 태어난다: `evidence:`(대화 파일+턴 시각), `alternatives:`(탈락 대안·왜 졌나·복귀 조건), `depends-on:`, `sources:`, `files:`. **나중이 아니라 그때** — 옛 것과 새 것을 동시에 아는 순간은 그때뿐 | 에이전트, 규칙으로 | 아니오 |
 | 세션 끝 | 에이전트가 확인한 요구와 근거를 `--origin`·`--origin-source` 쌍으로 전달한다. 미입력 출처는 TODO로 남기고 이전 인계는 `--continues-from`으로만 연결한다. 스캐폴드는 `Files Modified`를 관찰 로그에서 채우고(출처에 `session <uuid>`가 있으면 그 세션 것만), 고친 파일에 기대는 기존 항목을 **대체 후보**로 내민다. 앵커 색인도 이때 다시 만든다(네 CLI 공용). TermSnap 부품 지도가 있는 프로젝트면 이번 세션의 미배정 파일도 알린다. 검증은 실재하지 않는 대체 대상을 막고, 기억까지 가지 않은 결정과 이 세션이 건드린 항목 번호가 태그 줄(`arch:NNN`·`learned:NNN`·`gotcha:NNN`, 콜론 형식만)에 없는 것, 배정도 보류도 하지 않은 부품 지도 결과를 경고한다 | `create_handoff.py` → `validate_handoff.py` | 예 |
-| 주기적 — 그리고 **30일 지난 첫 핸드오프에 자동** | 17개 점검. 새로 더한 넷은 항목 증거(열리지 않는 링크, 산문에만 있는 앵커), 결정 계보(이유 없는 `SUPERSEDED`, 뒤집힌 결정에 기댄 `CURRENT`), 미부착 대화(어느 줄기에도 안 닿는 날을 결정 어휘 순으로), **열린 결정**(무엇이 바뀌면 다시 볼지 말하지 못하는 CURRENT — `CURRENT`는 "아직 맞다"가 아니라 "아직 대체되지 않았다"는 뜻이고, 반박할 수 없는 결정은 관습이 된다). `--chart`가 방문을 남겨 다음 방문이 차이만 말하고, `--fix`는 여전히 같은 기계적인 셋만 고치며 기억 본문은 별도 `--promote-structure`로만 건드린다 | `mnemo_doctor.py [--chart] [--fix]` | 예 |
+| 주기적 — 그리고 **30일 지난 첫 핸드오프에 자동** | 통합 진단으로 항목 증거(열리지 않는 링크, 산문에만 있는 앵커), 결정 계보(이유 없는 `SUPERSEDED`, 뒤집힌 결정에 기댄 `CURRENT`), 미부착 대화(어느 줄기에도 안 닿는 날을 결정 어휘 순으로), **열린 결정**(무엇이 바뀌면 다시 볼지 말하지 못하는 CURRENT — `CURRENT`는 "아직 맞다"가 아니라 "아직 대체되지 않았다"는 뜻)을 점검한다. `--chart`가 방문을 남기고, `--fix`는 기존의 기계적인 세 가지 보정 범위를 유지하며 기억 본문 정비에는 별도 명시적 모드를 사용한다 | `mnemo_doctor.py [--chart] [--fix]` | 예 |
+| 기존 기억의 링크·근거를 현재 형식으로 정비할 때 | 확인된 참조를 기존 파일에서 보정하고 명시적 대화 링크를 `evidence:`로 승격. 원문 바이트를 백업하고 번호·날짜·작성자·수명주기 결정을 보존하며, 미확인 참조는 검토 대상으로 남긴다 | `mnemo_doctor.py --upgrade-memory` | 예 |
 | 닥터가 가리킬 때 | 사라진 앵커 + CodeMap 이동 후보; 산문 앵커를 `files:` 줄로 승격; 비대한 `memory/X.md` 분할; 옛 훅이 오분류한 관찰 이동 | `check_memory_anchors.py`, `mnemo_doctor.py --promote-structure`, `split_memory_file.py`, `reclassify_observations.py` | 예 |
 
-이 체계를 지탱하는 규칙: 기억은 **프로젝트 로컬**(`~/.claude`에는 없음); 항목 간 링크는 **번호**(`[[041-…]]`, `g:072`)로, 태그는 검색용; 닥터는 **진단은 전부, 수정은 거의 안 함** — 경로 수정과 `SUPERSEDED` 판단은 사람 몫; 쓰는 도구는 전부 dry-run 기본에 `--apply` 시 백업. **진단만 할 때는 아무 파일도 쓰지 않는다** — 방문 기록과 본문 승격에 각각 별도 플래그가 필요한 이유다.
+이 체계를 지탱하는 규칙: 기억은 **프로젝트 로컬**이고, 항목 간 링크는 **번호**(`[[041-…]]`, `g:072`)로, 태그는 검색용입니다. **닥터의 기본 진단은 파일을 쓰지 않습니다.** 보정·정비·구조 승격·방문 기록에는 명시적 플래그가 필요하며, 정비·구조 승격은 원문을 백업합니다. 확인된 단일 참조는 기계적으로 보정하고, 수명주기 결정과 재검토 조건은 에이전트와 사용자가 판단합니다.
 
 **이것을 하나로 묶는 실.** 기억 항목은 주장이고 대화는 증거인데, 둘을 잇는 링크가 없었습니다. 그래서 항목 ID를 키로 삼습니다. 대화의 태그 줄이 `arch:NNN`(learned·gotcha는 `learned:NNN`·`gotcha:NNN`)을, 항목이 `files:`를 들고, 파생 색인이 그것을 뒤집어 **파일에서 결정으로** 되짚게 합니다. 훅이 편집 직후 그 색인을 전달하며, Claude·Grok·Antigravity 세 런타임이 각각 다른 수단(`additionalContext`, 같은 스키마, 두 단 `injectSteps`)으로 같은 경험을 만듭니다. Codex는 턴 단위 `notify`만 있어 규칙과 스캐폴드로 대신합니다 — 포착과 연결은 되고 자동 알림만 없습니다. 네 CLI가 같은 프로젝트 저장소에 대화를 쓰므로, 먼저 보장할 것은 그 포착입니다.
 
-Python이 없어도 훅은 매 턴 저장하며, 핸드오프는 `skills/mnemo/references/handoff-template.md`를 보고 직접 씁니다. 상세: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
+**일반 대화의 맥락과 기존 기억 정비.** 므네모는 선호·약속·이유·변경된 조건도 기억합니다. 임베딩이나 벡터 DB 없이 태그·제목·본문을 검색하며, 코드맵은 개발 작업에서 선택적으로 활용합니다. 공통 읽기 전용 도구 [`recall.py`](skills/mnemo/scripts/recall.py)는 질문과 응답을 함께 반환하고 대체 결정·의존 관계·근거 링크를 출력 예산 안에서 따라갑니다. 현재 에이전트가 검색어·동의어를 제공하고 지금도 적용할 수 있는 근거인지 판단합니다.
+
+기존 므네모닥터에 `--upgrade-memory`를 추가했습니다. 확인된 참조 경로를 기존 파일에서 보정하고 명시적 대화 링크를 `evidence:`로 승격하며, 원문 바이트 백업과 항목 번호·날짜·작성자·수명주기 결정을 보존합니다. 미확인 참조는 검토 대상으로 남깁니다. 기존 `--fix`의 보정 범위를 유지하고 정비는 별도 명령으로 실행합니다.
+
+Python 3와 Node.js가 있는 환경에서 저장소 루트에서 실행합니다.
+
+```bash
+# 읽기 전용 회상과 진단
+python -B -X utf8 skills/mnemo/scripts/recall.py --project-root . --term "선호" --term "약속" --max-chars 12000
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root .
+
+# 원문을 백업하고 기존 기억을 수정
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root . --upgrade-memory
+```
+
+다섯 CLI가 공통 회상·닥터 도구를 사용합니다.
+
+| CLI | Mnemo 패키지 |
+|---|---|
+| Claude Code | `mnemo` |
+| Codex CLI | `codex-mnemo` |
+| Antigravity CLI | `antigravity-mnemo` |
+| Grok Build | Claude 호환 표면의 `grok-mnemo` |
+| Devin CLI | Claude `mnemo` 공유, Devin 전용 대화 저장 훅 |
+
+Windows는 `install.bat`, macOS/Linux는 `bash install.sh`로 갱신합니다. [회상 계약](skills/mnemo/references/recall.md) · [정비 계약](skills/mnemo/docs/memory-hygiene.md) · [2026-10-05 검증](docs/plan/2026-10-05-mnemo-context-recall-audit/doctor-upgrade-results.md)에 범위와 근거를 기록했습니다. Python 243개·Node 25개 검사와 실제 설치본 확인, 세션 DB fixture를 사용한 Devin 저장 훅 통합 검사를 통과했습니다. 최종 LLM 답변 정확도는 미측정이며, 이번 변경 후 Devin 모델의 새 실제 대화 턴은 실행하지 않았습니다.
+
+네 통합 CLI의 훅은 Python 없이도 매 턴 저장하며, 핸드오프는 `skills/mnemo/references/handoff-template.md`를 보고 직접 씁니다. Devin의 응답 저장에는 Python 3가 필요합니다. 상세: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
 
 </details>
 

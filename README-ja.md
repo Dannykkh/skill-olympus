@@ -46,7 +46,7 @@ Mnemoフックで会話を保存できます。必要な専門機能やZeusの�
 | **途中で止まらない修正ループ** | `/chronos`が FIND → FIX → VERIFY を繰り返し、失敗やブロッカーも正直に記録する |
 | **仕様どおりに作れたか確かめる** | `/argos`が仕様、コード、API、QAシナリオ、図、セキュリティ境界を照合する |
 | **ブラウザテストを実際に動かす** | `/minos`がPlaywrightシナリオを生成・実行し、上限付きのループで失敗を直す |
-| **セッションをまたいで記憶する** | `mnemo`が索引、意味記憶、検索可能な会話、再開用ハンドオフを残す |
+| **セッションをまたいで記憶する** | `mnemo`がタグと根拠から会話の文脈を探し、既存の記憶を整備し、ハンドオフで作業をつなぐ |
 | **開始時のコンテキストを軽くする** | 少数の入口から、必要なsource-onlyモジュールだけを読む |
 
 公開スキルソースは102個です。標準のallowlistは24個の和集合で、統合CLIでは20個または
@@ -237,6 +237,29 @@ SUCCESSを返しません。
 
 全スキル、エージェント参考資料、フックの一覧は[英語版README](README.md#whats-inside)に
 まとめています。
+
+---
+
+## Mnemo — 会話の文脈と既存の記憶
+
+Mnemoは、普段の会話にある好み、約束、理由、条件の変化も扱います。埋め込みやベクトルDBを使わず、タグ・見出し・本文を検索します。コードマップは開発作業で任意に利用するものです。読み取り専用の [`recall.py`](skills/mnemo/scripts/recall.py) は質問と応答を組にして返し、置き換えられた決定・依存関係・根拠リンクを出力上限の範囲でたどります。検索語や同義語は現在のエージェントが指定し、根拠が今も当てはまるかを判断します。
+
+既存のDoctorに `--upgrade-memory` を追加しました。確認できる一意の参照を既存ファイル内で修正し、明示的な会話リンクを `evidence:` に整えます。元のバイト列をバックアップし、項目番号・日付・作成者・状態の決定を保ちます。未確認の参照はレビュー対象として残します。従来の `--fix` の修正範囲は変わらず、更新は別の明示的なコマンドです。
+
+Python 3とNode.jsがある環境で、リポジトリのルートから実行します。
+
+```bash
+# 読み取り専用の検索と診断
+python -B -X utf8 skills/mnemo/scripts/recall.py --project-root . --term "好み" --term "約束" --max-chars 12000
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root .
+
+# 元のファイルをバックアップして既存の記憶を更新
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root . --upgrade-memory
+```
+
+Claude Code・Codex・Antigravity・Grokの各アダプターに共通の検索・Doctorを同梱しています。DevinはClaudeの `mnemo` を共有し、会話の保存にはDevin専用フックを使います。Windowsは `install.bat`、macOS/Linuxは `bash install.sh` で更新します。
+
+[検索の契約](skills/mnemo/references/recall.md) · [更新の契約](skills/mnemo/docs/memory-hygiene.md) · [2026-10-05の検証](docs/plan/2026-10-05-mnemo-context-recall-audit/doctor-upgrade-results.md)に範囲と根拠を記録しています。Python 243件・Node 25件のテスト、インストール済みパッケージの確認、セッションDBのfixtureを使ったDevin保存フックの統合テストが通りました。最終的なLLMの回答精度は未測定で、この変更後のDevinモデルによる新たな実会話ターンも未実施です。
 
 ---
 

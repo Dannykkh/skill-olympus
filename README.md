@@ -47,7 +47,7 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **A loop that does not bluff** | `/chronos` runs FIND → FIX → VERIFY, records state, and reports exhaustion or blockers honestly |
 | **Proof that code matches intent** | `/argos` compares the specification, code, APIs, scenarios, diagrams, and security boundaries |
 | **Browser tests that actually run** | `/minos` writes Playwright scenarios, executes them, and repairs failures within a bounded loop |
-| **Memory across sessions** | `mnemo` keeps an index, semantic memory, searchable conversations, and resumable handoffs |
+| **Memory across sessions** | `mnemo` recalls conversational context from tags and evidence, keeps existing memories current, and supports resumable handoffs |
 | **Less prompt noise** | A small active registry routes into 78 source-only modules only when the work needs them |
 
 **103 public skill sources (default allowlist union: 25 = 19 user entry points + 6 runtime adapters; 21 or 22 active per integrated surface, 19 on skills-only hosts, 78 source-only internal/optional modules) · 36 agent source references (34 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
@@ -549,7 +549,7 @@ The four Mnemo adapters bundle these [dedicated procedures](skills/mnemo/referen
 
 - **When:** always — and whenever you ask "what did we do before?"
 - **Use:** `mnemo` (aliases: 므네모); auto-saves every turn via hooks. Opt-out: `MNEMO_DISABLE=1` (version check: `OLYMPUS_UPDATE_CHECK_DISABLE=1`).
-- **Process:** 3-layer memory that survives across sessions and across Claude/Codex/Antigravity/Grok; past-conversation search; auto handoff near the context limit.
+- **Process:** 3-layer memory across sessions and Claude/Codex/Antigravity/Grok, with Devin sharing Claude Mnemo; conversational recall; auto handoff near the context limit.
 - **Output:** `MEMORY.md` (index, ≤100 lines) + `memory/<category>/NNN-slug.md` with an `index.md` per category (semantic, one file per entry) + `conversations/*.md` (episodic) + `docs/handoffs/*.md` (session boundary — the input port for memory).
 - **Next:** when memory feels stale, run `mnemo_doctor.py --chart`; the workflow below says what runs when.
 
@@ -558,6 +558,7 @@ The four Mnemo adapters bundle these [dedicated procedures](skills/mnemo/referen
 | When | What happens | Tool | Needs Python |
 |------|--------------|------|--------------|
 | Every turn (automatic) | Save the prompt, the reply, and tool observations; classify observations by error *shape*, not by the word "error"; rotate logs at 10 MB while preserving the distill baseline | hooks (PowerShell / bash) | no |
+| When you ask about a past conversation | Search tags, titles, and bodies; return questions with their responses, linked decisions, and evidence within an output budget | `recall.py` (read-only) | yes |
 | **Right after you edit a file (automatic)** | **"Which decisions rest on this file?" is delivered to the model as hook context, once per file per session.** No lookup is requested and none is typed — knowing which trunk you are on becomes reading, not judgement | `save-tool-use` (Claude, Grok) · `antigravity-hook` (Antigravity) | no |
 | Before touching a file (manual) | The same question on demand, plus "when, why, and how did this file change?" from handoffs. "Nothing found" is a valid answer — it may be a new trunk | `build_anchor_index.py --file X`, `harvest_lineage.py --file X` | yes |
 | When a decision crystallizes | The entry is born holding its evidence: `evidence:` (conversation file + turn time), `alternatives:` (what lost and why, and what would bring it back), `depends-on:`, `sources:`, `files:`. Written then, not later — the moment you know both the old and the new state is the only one | agent, by rule | no |
@@ -566,13 +567,38 @@ The four Mnemo adapters bundle these [dedicated procedures](skills/mnemo/referen
 | When existing memories need current link and evidence formatting | Repair unambiguous existing references in place and promote explicit conversation links to `evidence:`. Back up original bytes and preserve entry IDs, dates, authors, and lifecycle decisions; unresolved references remain for review | `mnemo_doctor.py --upgrade-memory` | yes |
 | When the doctor points at it | Stale anchors with CodeMap move candidates; promote prose anchors to `files:` lines; split an oversized `memory/X.md`; move observations the old hook misfiled | `check_memory_anchors.py`, `mnemo_doctor.py --promote-structure`, `split_memory_file.py`, `reclassify_observations.py` | yes |
 
-Rules that hold it together: memory is **project-local** (nothing lives under `~/.claude`); links between entries use **entry numbers** (`[[041-…]]`, `g:072`) while tags stay for search; the doctor **diagnoses everything and fixes almost nothing** — path repairs and `SUPERSEDED` decisions are human calls; every writer is dry-run by default and backs up on `--apply`. A plain diagnosis writes no file at all, which is why the visit record and entry-body promotion each need their own flag.
+Rules that hold it together: memory is **project-local**; links between entries use **entry numbers** (`[[041-…]]`, `g:072`) while tags stay for search. A plain Doctor diagnosis writes no files. Repairs, upgrades, structural promotion, and visit records require explicit flags; upgrades and structural promotion back up original files. Verified, unambiguous references can be repaired mechanically; lifecycle decisions and conditions for reconsidering them remain with the agent and user.
 
 **The thread that ties it together.** A memory entry is a claim; the conversation is its evidence; nothing used to link them. So the entry ID is now the key: the conversation tag line carries `arch:NNN` (or `learned:NNN`, `gotcha:NNN`), the entry carries `files:`, and a derived index turns that around so a *file* can name the decisions resting on it. Hooks deliver that index the moment you edit, on Claude, Grok and Antigravity — three runtimes, three different mechanisms (`additionalContext`, the same schema again, and `injectSteps` behind a two-stage relay), one experience. Codex has only a turn-level `notify`, so it gets the rule and the scaffold instead; capture and linking work there, only the automatic nudge is missing. All four CLIs write conversations into the same project store, which is why that is the part worth guaranteeing first.
 
-Ordinary chat uses the same memory structure: preferences, promises, reasons, and changed conditions. The shared read-only [`recall.py`](skills/mnemo/scripts/recall.py) returns questions together with responses and follows existing entry tags, replacement decisions, and evidence links within an output budget. The current agent supplies keywords and synonyms and judges applicability. All four adapters bundle the helper, and Devin uses the same Claude Mnemo package. Existing memories can be upgraded in place with `mnemo_doctor.py --upgrade-memory`; [the upgrade contract](skills/mnemo/docs/memory-hygiene.md), [the recall contract](skills/mnemo/references/recall.md), and [synthetic evidence checks](skills/mnemo/evals/recall-cases.json) describe the scope. These checks measure retrieved evidence, not final LLM answer accuracy.
+**Conversational context and existing memories.** Mnemo also recalls ordinary chat: preferences, promises, reasons, and changed conditions. It searches tags, titles, and bodies without embeddings or a vector database; a code map is optional for programming tasks. The shared read-only [`recall.py`](skills/mnemo/scripts/recall.py) returns questions with their responses and follows replacement decisions, dependencies, and evidence links within an output budget. The current agent supplies keywords and synonyms and judges whether the evidence still applies.
 
-Without Python the hooks still save every turn; write the handoff by hand from `skills/mnemo/references/handoff-template.md`. Details: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
+The existing Doctor now includes `--upgrade-memory`. It repairs unambiguous existing references in place and promotes explicit conversation links to `evidence:`, backing up the original bytes while preserving entry IDs, dates, authors, and lifecycle decisions. Unresolved references remain for review. The original `--fix` repairs retain their scope; upgrades are a separate explicit command.
+
+From the repository root, with Python 3 and Node.js:
+
+```bash
+# Read-only recall and diagnosis
+python -B -X utf8 skills/mnemo/scripts/recall.py --project-root . --term "preferences" --term "promises" --max-chars 12000
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root .
+
+# Modify existing memories with original-file backups
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root . --upgrade-memory
+```
+
+All five CLIs use the common recall and Doctor helpers:
+
+| CLI | Mnemo package |
+|---|---|
+| Claude Code | `mnemo` |
+| Codex CLI | `codex-mnemo` |
+| Antigravity CLI | `antigravity-mnemo` |
+| Grok Build | `grok-mnemo` on the Claude compatibility surface |
+| Devin CLI | Shared Claude `mnemo`, with Devin-native capture hooks |
+
+Update with `install.bat` on Windows or `bash install.sh` on macOS/Linux. See the [recall contract](skills/mnemo/references/recall.md), [upgrade contract](skills/mnemo/docs/memory-hygiene.md), and [2026-10-05 verification](docs/plan/2026-10-05-mnemo-context-recall-audit/doctor-upgrade-results.md): 243 Python tests and 25 Node tests passed, with installed-package checks and a Devin producer integration test using a session-database fixture. Final LLM answer accuracy was not measured, and a new live Devin model turn was not run in that validation.
+
+For the four integrated CLIs, hooks keep saving turns without Python; write the handoff by hand from `skills/mnemo/references/handoff-template.md`. Devin assistant capture requires Python 3. Details: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
 
 </details>
 

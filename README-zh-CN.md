@@ -46,7 +46,7 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 | **持续修复而不假装成功** | `/chronos` 执行 FIND → FIX → VERIFY，并如实记录失败和阻塞 |
 | **证明实现符合设计** | `/argos` 对照规格、代码、API、QA 场景、流程图和安全边界 |
 | **真正运行浏览器测试** | `/minos` 生成并执行 Playwright 场景，在有限循环内修复失败 |
-| **跨会话保留记忆** | `mnemo` 保存索引、语义记忆、可搜索对话和可恢复交接 |
+| **跨会话保留记忆** | `mnemo` 通过标签和证据查找对话上下文，整理现有记忆，并通过交接延续工作 |
 | **保持较小的启动上下文** | 少量入口只在需要时加载 source-only 模块 |
 
 仓库公开跟踪 102 个技能源。默认 allowlist 的并集为 24 个；集成 CLI 会启用 20 或 21 个，
@@ -231,6 +231,29 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
 | 查找过去的决定 | `/mnemo` | 对话搜索、语义记忆、会话交接 |
 
 完整技能、智能体参考和 hook 清单请查看[英文 README](README.md#whats-inside)。
+
+---
+
+## Mnemo — 对话上下文与现有记忆
+
+Mnemo 也处理日常聊天中的偏好、约定、原因和条件变化。它不使用嵌入或向量数据库，而是搜索标签、标题和正文；代码地图供开发任务按需使用。只读工具 [`recall.py`](skills/mnemo/scripts/recall.py) 成对返回问题与回答，并在输出上限内追踪替代决定、依赖关系和证据链接。当前智能体提供关键词与同义词，并判断证据是否仍然适用。
+
+现有 Doctor 新增了 `--upgrade-memory`。它在原文件中修正已确认且唯一的引用，并将明确的对话链接整理为 `evidence:`。更新前备份原始字节，保留条目编号、日期、作者和生命周期决定；未确认的引用留待检查。原有 `--fix` 的修正范围保持不变，整理记忆需要单独显式执行。
+
+在安装了 Python 3 和 Node.js 的环境中，从仓库根目录运行：
+
+```bash
+# 只读检索与诊断
+python -B -X utf8 skills/mnemo/scripts/recall.py --project-root . --term "偏好" --term "约定" --max-chars 12000
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root .
+
+# 备份原文件并更新现有记忆
+python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root . --upgrade-memory
+```
+
+Claude Code、Codex、Antigravity 和 Grok 的适配器均包含共用的检索与 Doctor 工具。Devin 共享 Claude 的 `mnemo`，并使用 Devin 原生 hooks 保存对话。Windows 使用 `install.bat` 更新，macOS/Linux 使用 `bash install.sh`。
+
+[检索约定](skills/mnemo/references/recall.md) · [整理约定](skills/mnemo/docs/memory-hygiene.md) · [2026-10-05 验证记录](docs/plan/2026-10-05-mnemo-context-recall-audit/doctor-upgrade-results.md)说明了范围和证据。Python 243 项、Node 25 项测试、已安装包检查，以及使用会话数据库 fixture 的 Devin 保存 hook 集成测试均已通过。最终 LLM 回答准确率尚未测量，此次更新后也未执行 Devin 模型的新真实对话回合。
 
 ---
 
