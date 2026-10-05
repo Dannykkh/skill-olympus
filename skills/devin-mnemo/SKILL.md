@@ -18,5 +18,7 @@ Devin의 `UserPromptSubmit`은 사용자 입력을 제공하지만 [공식 Stop 
 - 저장: `conversations/YYYY-MM-DD-devin.md`, `MEMORY.md`, `memory/`. `<private>...</private>` 본문은 `[PRIVATE]`로 바꾼다. `MNEMO_DISABLE=1`이면 저장하지 않는다.
 - 프로젝트 루트: 공통 `mnemo-project-root.js`를 사용한다. Git 루트나 Devin이 명시한 workspace만 기록한다. CLI 설정 홈은 기록 대상이 아니다.
 - 검색: 공통 Mnemo 규칙에 따라 `MEMORY.md` → 관련 기억 → `conversations/*-devin.md`와 다른 CLI 로그 → 필요한 원본 세션 순서로 확인한다. 원본 DB는 읽기 전용으로 필요한 세션만 조회한다.
+- 회상·정비: Claude와 공유하는 `mnemo`의 `SKILL.md`에서 공통 회상·기억 위생 규약을 읽는다. 해당 Mnemo 설치본의 `scripts/recall.py`와 `scripts/mnemo_doctor.py --upgrade-memory`를 사용한다. Devin 대화의 질문·응답과 기존 기억 근거도 같은 경로로 조회·정비한다.
+- 한국어 저장: DB 조회용 Python은 `-X utf8`로 실행해 출력과 Node의 UTF-8 디코딩을 맞춘다. Windows 기본 cp949 출력으로 응답이 깨지는 회귀를 설치된 producer의 한국어 저장→정비→회상 검사로 확인한다.
 - 설치 위치: [Devin 공식 훅 설정](https://docs.devin.ai/cli/extensibility/hooks/overview)에 따라 Windows는 `%APPDATA%/devin/config.json`, macOS·Linux는 `~/.config/devin/config.json`의 `hooks`를 사용한다. 글로벌 `AGENTS.md`에는 Devin 전용 차이만 관리 블록으로 넣는다.
 - 검증: `--check`는 설정 정적 검사다. Devin `/hooks`에서 로드 여부를 보고, 한 테스트 턴 후 `conversations/*-devin.md`의 User·Assistant 한 쌍을 확인해야 런타임 저장을 PASS로 판단한다.

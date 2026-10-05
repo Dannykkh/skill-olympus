@@ -15,7 +15,8 @@ const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function pythonCall(mode, sessionId, options = {}) {
   const script = path.join(__dirname, "read-assistant.py");
   for (const command of process.platform === "win32" ? ["python", "py", "python3"] : ["python3", "python"]) {
-    const args = command === "py" ? ["-3", script, mode, sessionId] : [script, mode, sessionId];
+    const args = command === "py" ? ["-3", "-X", "utf8", script, mode, sessionId]
+      : ["-X", "utf8", script, mode, sessionId];
     if (options.afterRow !== undefined) args.push("--after-row", String(options.afterRow));
     if (options.since !== undefined) args.push("--since", String(options.since));
     if (options.db) args.push("--db", options.db);

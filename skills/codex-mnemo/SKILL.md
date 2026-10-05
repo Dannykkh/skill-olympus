@@ -47,9 +47,16 @@ node skills/codex-mnemo/install.js --uninstall  # 제거
 읽기 전용 요청에서는 복구 파일을 쓰지 않습니다. `--dry-run`은 복구 후보의 집계를 확인하는
 옵션이며 대화 본문을 출력하는 검색 기능으로 간주하지 않습니다.
 
+일반 대화의 선호·약속·변경 이유는 [대화 맥락 회상](references/recall.md)을 따라 조회합니다.
+동봉된 `scripts/recall.py`가 기존 태그·예약 ID·근거 링크로 질문과 응답을 함께 반환합니다.
+검색어·동의어와 의미 판단은 현재 에이전트가 맡으며 파일을 수정하지 않습니다.
+
 ---
 
 ## 포함 파일
+
+기존 기억의 경로·근거 형식은 공통 닥터의 `--upgrade-memory`로 정비합니다.
+실행 범위와 보존 규칙은 [기억 정비 계약](docs/memory-hygiene.md)을 따릅니다.
 
 ```
 codex-mnemo/

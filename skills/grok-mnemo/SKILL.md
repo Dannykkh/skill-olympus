@@ -9,7 +9,14 @@ description: Grok Build(xAI CLI) 과거 대화 검색과 장기기억 설정에 
 
 Grok Build 세션 간 컨텍스트 유지를 위한 장기기억 시스템입니다.
 
+일반 대화의 선호·약속·변경 이유는 공통 [대화 맥락 회상](references/recall.md)을 따른다.
+동봉된 `scripts/recall.py`가 기존 태그·예약 ID·근거 링크로 질문과 응답을 함께 반환한다.
+검색어·동의어와 의미 판단은 현재 에이전트가 맡으며 파일을 수정하지 않는다.
+
 ## 설치
+
+기존 기억의 경로·근거 형식은 공통 닥터의 `--upgrade-memory`로 정비한다.
+실행 범위와 보존 규칙은 [기억 정비 계약](docs/memory-hygiene.md)을 따른다.
 
 ```bash
 node "<module_root>/install.js"              # 설치 (Grok 미설치 시 자동 skip)

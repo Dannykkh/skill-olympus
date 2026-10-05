@@ -76,7 +76,7 @@ mnemo/
 │   ├── list_handoffs.py        # 목록
 │   ├── check_staleness.py      # 핸드오프가 현재 코드 대비 얼마나 낡았나 (git 기준)
 │   │   # ── 기억 위생 (진단 전부 · 수정 최소) ──
-│   ├── mnemo_doctor.py         # 진입점: 17개 점검, --fix는 기계적인 셋만
+│   ├── mnemo_doctor.py         # 진입점: 기억 점검, --fix / --upgrade-memory / --promote-structure
 │   ├── build_anchor_index.py   # 착수 전 조회: 이 파일에 기대는 결정 (기억 파생)
 │   ├── harvest_lineage.py      # 착수 전 조회: 파일별 "언제·왜·어떻게" (핸드오프 파생)
 │   ├── check_memory_anchors.py  # 기억이 가리키는 파일이 실재하는가 (CodeMap 이동 힌트)
@@ -84,6 +84,8 @@ mnemo/
 │   ├── reclassify_observations.py  # 복구: 옛 훅이 오분류한 관찰을 learned로
 │   │   # ── 공통 ──
 │   ├── reconcile_conversations.py  # JSONL → conversations/ 누락 턴 복구
+│   ├── recall.py               # 일반 대화·기억 연결을 읽기 전용으로 조회
+│   ├── mnemo_markdown.py       # 회상·닥터의 공통 Markdown 구조 해석
 │   └── mnemo_project_root.py   # 프로젝트 루트 판정 (훅과 같은 경계)
 ├── references/                 # 핸드오프 템플릿
 │   ├── handoff-template.md
@@ -145,6 +147,10 @@ python "<module_root>/scripts/reconcile_conversations.py" --project-root "<proje
 별도로 제한해 파싱하며, assistant 복구 성공을 전체 대화 복구로 보고하지 않습니다.
 
 ## 기능 2: MEMORY.md 관리
+
+일반 대화의 선호·약속·변경 이유도 같은 기억 구조를 사용한다. 반복 조회·연결 추적은
+[대화 맥락 회상](references/recall.md)을 읽고 동봉된 `scripts/recall.py`로 수행한다.
+기존 태그·예약 ID·근거 링크로 질문과 응답을 함께 조회하며, 의미 판단은 현재 에이전트가 맡는다.
 
 CLAUDE.md 규칙으로 자동 동작:
 - 첫 저장 턴에서 `MEMORY.md` + `memory/*.md` 기본 scaffold 자동 생성
@@ -299,19 +305,20 @@ python scripts/check_staleness.py <handoff-file>
 |------|------|---------|
 | **파일에 손대기 전** | `build_anchor_index.py --file X` | **그 파일에 기대는 결정**. 어느 줄기인가는 판단이 아니라 읽기다 |
 | 구현 착수 전 | `harvest_lineage.py --file X` | 그 파일이 언제·왜·어떻게 바뀌어왔나 (없음 확인도 결과) |
-| 주기적 / 이상할 때 | `mnemo_doctor.py` | 17개 점검 한 번에. FAIL·WARN과 근거 |
+| 주기적 / 이상할 때 | `mnemo_doctor.py` | 기억 점검 한 번에. FAIL·WARN과 근거 |
+| 기존 기록을 현재 형식으로 | `mnemo_doctor.py --upgrade-memory` | 확인된 경로·참조를 `evidence:`로 보정. 파일별 원본 백업, 의미·번호 추정 없음 |
 | 방문 기록을 남길 때 | `mnemo_doctor.py --chart` | 이번 판단을 차트에 남긴다. 다음 방문은 차이만 말한다 |
 | 닥터가 가리킬 때 | `mnemo_doctor.py --promote-structure` | 산문 앵커·암묵적 수명을 `files:`·`status:` 줄로 (기억 본문 수정, 백업) |
 | 닥터가 가리킬 때 | `check_memory_anchors.py` | 사라진 파일을 가리키는 기억 목록 + 이동 후보 |
 | 닥터가 가리킬 때 | `split_memory_file.py` | 비대한 상세 파일을 항목별로 (백업·링크 갱신) |
 | 닥터가 가리킬 때 | `reclassify_observations.py` | 옛 훅의 오분류 관찰 복구 (백업·delta 보존) |
 
-원칙 넷 — **진단은 전부, 수정은 기계적인 것만**(닥터 `--fix`는 정제 기준값, 정확히 하나에 맞는 `#slug` 링크의 `[[NNN-slug]]` 번호화, 기록 안의 루트 내부 절대경로 상대화 셋. 기억 본문을 고치는 `--promote-structure`와 차트를 쓰는 `--chart`는 별도 플래그이고, **진단만 할 때는 아무 파일도 쓰지 않는다**) /
+원칙 넷 — **진단은 전부, 수정은 기계적인 것만**(닥터 `--fix`는 정제 기준값, 정확히 하나에 맞는 `#slug` 링크의 `[[NNN-slug]]` 번호화, 기록 안의 루트 내부 절대경로 상대화 셋. 기존 참조를 갱신하는 `--upgrade-memory`, 산문 앵커·수명을 승격하는 `--promote-structure`, 차트를 쓰는 `--chart`는 별도 플래그이고, **진단만 할 때는 아무 파일도 쓰지 않는다**) /
 **판정 로직은 한 곳**(닥터는 형제 스크립트를 호출, 과거 재분류는 명시적 성공 근거가 있을 때만) /
 **"없음 확인"도 결과**(입력 부재는 exit 0 + 이유 + 대안, 실패 2는 루트 판정 불가뿐) /
 **되돌릴 수 있게**(dry-run 기본, `--apply`에 백업 강제).
 
-도구별 상세 — 닥터의 17개 점검 표, 앵커 판정 규칙(문맥 분류·이동 후보), 재분류 절차,
+도구별 상세 — 닥터의 점검·형식 갱신 표, 앵커 판정 규칙(문맥 분류·이동 후보), 재분류 절차,
 분할 규칙, 계보 이유 폴백과 각 종료 코드 — 는 **[`docs/memory-hygiene.md`](docs/memory-hygiene.md)**에
 있습니다. 위 시점 표와 원칙 넷이 계약이고, 상세는 해당 도구를 쓸 때 읽습니다.
 
@@ -327,7 +334,7 @@ python scripts/check_staleness.py <handoff-file>
 | 항상 (자동) | 지식 축적 | 중요 결정 시 `memory/`·`MEMORY.md` 갱신 |
 | 항상 | 민감 정보 제외 | `<private>API키</private>` → `[PRIVATE]` |
 | 항상 | 저장 전체 끄기 | `MNEMO_DISABLE=1` — 모든 훅 즉시 종료, 기존 저장분 유지 |
-| 착수 전 | 과거 검색 | "이전에 ~했었지?" — `MEMORY.md` 코드(`g:072`, `a:147`)가 항목을 직접 지정 |
+| 회상 시 | 과거 대화·결정 검색 | `MEMORY.md` → 관련 항목 → 근거 대화. 반복 조회는 `recall.py`; `arch:NNN`·`learned:NNN`·`gotcha:NNN`로 연결 |
 | 착수 전 | 이 파일 왜 이렇게 됐나 | `python scripts/harvest_lineage.py --file <파일>` |
 | 세션 끝 | 세션 전환 | `python scripts/create_handoff.py` → `validate_handoff.py` |
 | 세션 시작 | 세션 재개 | 최신 핸드오프 읽기, 낡았으면 `check_staleness.py` |

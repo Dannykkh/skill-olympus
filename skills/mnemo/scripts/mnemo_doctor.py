@@ -14,6 +14,7 @@ Judgement stays with the human. --fix only repairs what is purely mechanical: a
 distillation baseline that no longer matches the files it counts, a `#slug` lifecycle
 link that matches exactly one entry, and absolute in-project paths inside fixed-format
 records (handoff `Project:` headers, tool-log Edit/Write lines, observation path fields).
+--upgrade-memory repairs legacy memory links/evidence with unambiguous in-project targets.
 Everything else is reported with the evidence needed to decide.
 
 Usage:
@@ -21,6 +22,7 @@ Usage:
     python mnemo_doctor.py --fix                  # 기계적으로 안전한 것만 수정
     python mnemo_doctor.py --chart                # 이번 방문을 진료 기록에 남긴다
     python mnemo_doctor.py --promote-structure    # 산문 앵커·암묵적 수명을 구조 줄로 (기억 본문 수정)
+    python mnemo_doctor.py --upgrade-memory      # 기존 참조·경로를 현재 evidence 형식으로 (백업)
     python mnemo_doctor.py --project-root <path>
 """
 
@@ -31,11 +33,15 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
 
 from mnemo_project_root import detect_project_root
+from mnemo_markdown import (headings, is_memory_index, iter_entry_blocks,
+                            mask_fences, mask_private, memory_files,
+                            require_project_path, without_fences)
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -81,91 +87,6 @@ def count_lines(path: Path) -> int:
                if line.strip())
 
 
-def memory_files(root: Path):
-    memory = root / "memory"
-    return (p for p in sorted(memory.rglob("*.md"))
-            if not {"archive", ".archive"}.intersection(p.relative_to(memory).parts))
-
-
-def headings(text: str):
-    """ATX headings outside fenced examples, with character offsets."""
-    offset, fence = 0, None
-    result = []
-    for line in text.splitlines(keepends=True):
-        marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
-        if marker:
-            token = marker.group(1)
-            if fence is None:
-                fence = token
-            elif token[0] == fence[0] and len(token) >= len(fence):
-                fence = None
-        elif fence is None:
-            match = re.match(r'^ {0,3}(#{1,6})\s+(.+)', line)
-            if match:
-                result.append((offset, len(match.group(1)), match.group(2).strip()))
-        offset += len(line)
-    return result
-
-
-def without_fences(text: str) -> str:
-    """Ignore example metadata and lifecycle declarations inside code fences."""
-    lines, fence = [], None
-    for line in text.splitlines():
-        marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
-        if fence:
-            if re.fullmatch(r' {0,3}' + re.escape(fence[0]) + '{' + str(len(fence)) + r',}\s*', line):
-                fence = None
-            lines.append('')
-        elif marker:
-            fence = marker.group(1)
-            lines.append('')
-        else:
-            lines.append(line)
-    return '\n'.join(lines)
-
-
-def is_memory_index(path: Path, text: str) -> bool:
-    if path.name.lower() in {'index.md', 'memory.md'}:
-        return True
-    hs = headings(text)
-    if not hs or not re.search(r'카테고리 인덱스|색인|\bmemory index\b', hs[0][2], re.I):
-        return False
-    if not re.search(r'\]\(<?[^)]+\.md', text):
-        return False
-    # An index can have its own provenance, but detailed entries below it must
-    # still be checked when this is a mixed index-and-content document.
-    return not any(re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*#?(?:tags|source)\s*:',
-                             without_fences(text[start:hs[i + 1][0] if i + 1 < len(hs) else len(text)]))
-                   for i, (start, level, _) in enumerate(hs) if level > hs[0][1])
-
-
-def iter_entry_blocks(root: Path):
-    """memory/ 아래 정제 기억의 항목 단위 블록. 아카이브와 관찰 원본은 제외한다."""
-    memory = root / "memory"
-    if not memory.is_dir():
-        return
-    for path in memory_files(root):
-        if path.name == "index.md" or path.name.startswith("."):
-            continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        if is_memory_index(path, text):
-            continue
-        hs = headings(text)
-        if not hs:
-            continue
-        # Metadata immediately below a heading identifies an entry, not its subsections.
-        annotated = [i for i, (start, _, _) in enumerate(hs)
-                     if re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*#?(?:tags|date|source)\s*:',
-                                  text[start:hs[i + 1][0] if i + 1 < len(hs) else len(text)])]
-        levels = [hs[i][1] for i in annotated]
-        fallback = min(levels) if levels else min(h[1] for h in hs if h[1] > 1) if any(h[1] > 1 for h in hs) else 1
-        selected = [i for i, h in enumerate(hs) if h[1] == fallback]
-        for i in selected:
-            start, level, _ = hs[i]
-            end = next((h[0] for h in hs[i + 1:] if h[1] <= level), len(text))
-            yield path, text[start:end]
-
-
 def check_structure(root: Path, report: Report) -> None:
     """저장 3계층이 자리에 있는가. 없다고 실패는 아니다 — 아직 안 쓴 것일 수 있다."""
     expected = {
@@ -206,6 +127,7 @@ def check_entry_metadata(root: Path, report: Report) -> None:
     """검색 가능성은 태그·날짜·작성 CLI에 달려 있다. 없으면 나중에 못 찾는다."""
     total = 0
     missing = {"tags": [], "date": [], "source": []}
+    numbered = {}
     for path, block in iter_entry_blocks(root):
         total += 1
         # Metadata may follow a long supersession explanation. Limit by entry
@@ -218,15 +140,22 @@ def check_entry_metadata(root: Path, report: Report) -> None:
         for field in missing:
             if not re.search(rf'(?im)^\s*(?:[-*]\s*)?[`*]*#?{field}[`*]*\s*:', head):
                 missing[field].append(where)
+        number = re.match(r'(\d{3})-', path.name)
+        if number and path.parent.name in {"architecture", "learned", "gotchas"}:
+            numbered.setdefault((path.parent.name, number.group(1)), set()).add(path.name)
 
     if total == 0:
         report.add("WARN", "항목 메타데이터", "정제 기억 항목이 없습니다")
         return
-    worst = max(len(v) for v in missing.values())
+    duplicates = [sorted(names) for names in numbered.values() if len(names) > 1]
+    worst = max(len(v) for v in missing.values()) or len(duplicates)
     detail = (f"항목 {total}개 / tags 없음 {len(missing['tags'])} · "
               f"date 없음 {len(missing['date'])} · source 없음 {len(missing['source'])}")
-    report.add("WARN" if worst else "OK", "항목 메타데이터", detail,
-               f"예: {next(v[0] for v in missing.values() if v)}" if worst else None)
+    hint = f"예: {next(v[0] for v in missing.values() if v)}" if any(missing.values()) else None
+    if duplicates:
+        detail += f" · 파일번호 중복 {len(duplicates)}묶음"
+        hint = (hint + " / " if hint else "") + "기존 태그·근거의 의미 확인 후 번호 조정: " + ", ".join(duplicates[0])
+    report.add("WARN" if worst else "OK", "항목 메타데이터", detail, hint)
 
 
 def check_detail_file_size(root: Path, report: Report) -> None:
@@ -907,6 +836,150 @@ def local_link_targets(block: str):
         yield text
 
 
+def memory_link_target(root: Path, source: Path, target: str):
+    """Resolve explicit document/root paths and the old .claude/conversations alias.
+
+    Never search by basename or choose between different existing files.
+    """
+    value = target.strip().strip("<>")
+    if not value or value.startswith("#") or re.match(r'^[A-Za-z][A-Za-z0-9+.-]*:', value):
+        return None, "ignored"
+    name = unquote(value.partition("#")[0])
+    if not name.lower().endswith(".md"):
+        return None, "ignored"
+    candidates = [source.parent / name, root / name]
+    legacy = re.fullmatch(r'(?:\./|\.\./)*\.claude/conversations/([^/]+\.md)', name)
+    if legacy:
+        candidates.append(root / "conversations" / legacy.group(1))
+    found = set()
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except (OSError, RuntimeError):
+            return None, "unresolved-path"
+        if not resolved.is_relative_to(root.resolve()):
+            if candidate.is_file():
+                return None, "outside-project"
+            continue
+        if resolved.is_file():
+            found.add(resolved)
+    if len(found) == 1:
+        return next(iter(found)), "resolved"
+    return None, "ambiguous" if found else "missing"
+
+
+def replace_memory_file(root: Path, path: Path, original: bytes, changed: str) -> bool:
+    """Back up exact bytes, preserve concurrent changes, then atomically replace."""
+    require_project_path(root, path)
+    if path.is_symlink() or path.read_bytes() != original:
+        return False
+    backup = path.with_name(path.name + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f"))
+    require_project_path(root, backup)
+    with backup.open("xb") as stream:
+        stream.write(original)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".mnemo-upgrade-", delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(changed.encode("utf-8"))
+        if path.read_bytes() != original:
+            return False
+        os.replace(temporary, path)
+        temporary = None
+        return True
+    finally:
+        if temporary is not None:
+            require_project_path(root, temporary)
+            temporary.unlink()
+
+
+def upgrade_memory_format(root: Path, report: Report, fix: bool = False) -> None:
+    """Promote existing public references to evidence without inventing decisions."""
+    blocks_by_path = {}
+    for path, block in iter_entry_blocks(root, exclude_private=True):
+        blocks_by_path.setdefault(path, []).append(block)
+    proposed, repaired, links, evidence, pending = 0, 0, 0, 0, []
+    link_pattern = re.compile(r'\[[^\]\n]*\]\((?P<target>[^)\n]+)\)')
+    for path, blocks in blocks_by_path.items():
+        original = path.read_bytes()
+        try:
+            raw = original.decode("utf-8")
+        except UnicodeDecodeError:
+            pending.append(f"{path.name}: UTF-8 확인 필요")
+            continue
+        edits, cursor = [], 0
+        for block in blocks:
+            # iter_entry_blocks reads universal newlines; recover offsets in original bytes.
+            match = re.compile(re.escape(block).replace("\\\n", r"\r?\n")).search(raw, cursor)
+            if match is None:
+                pending.append(f"{path.name}: 항목 경계 확인 필요")
+                continue
+            start, end = match.span()
+            cursor = end
+            content = match.group()
+            clean = mask_fences(mask_private(content))
+            references = []
+            for link in link_pattern.finditer(clean):
+                target = link.group("target")
+                resolved, reason = memory_link_target(root, path, target)
+                if reason == "ignored":
+                    continue
+                if resolved is None:
+                    pending.append(f"{path.name}: {reason} ({target})")
+                    continue
+                fragment = target.strip().strip("<>").partition("#")[2]
+                suffix = "#" + fragment if fragment else ""
+                canonical = os.path.relpath(resolved, path.parent.resolve()).replace("\\", "/") + suffix
+                if target.strip().startswith("<"):
+                    canonical = "<" + canonical + ">"
+                if canonical != target:
+                    edits.append((start + link.start("target"), start + link.end("target"), canonical))
+                    links += 1
+                line_start = clean.rfind("\n", 0, link.start()) + 1
+                line = clean[line_start:link.start()]
+                if (resolved.relative_to(root.resolve()).parts[0] == "conversations"
+                        and re.match(r'^\s*(?:[-*]\s*)?[`*]*(?:참조|근거|출처|evidence)[`*]*\s*:', line, re.I)):
+                    reference = resolved.relative_to(root.resolve()).as_posix() + suffix
+                    if reference not in references:
+                        references.append(reference)
+            if not references or "evidence" in structured_lines(clean):
+                continue
+            hs = headings(clean)
+            head = clean[:hs[1][0]] if len(hs) > 1 else clean
+            meta = list(re.finditer(r'(?im)^\s*(?:[-*]\s*)?[`*]*#?(?:tags|date|source)[`*]*\s*:[^\n]*(?:\n|$)', head))
+            if not meta:
+                pending.append(f"{path.name}: evidence 삽입 위치 확인 필요")
+                continue
+            at = meta[-1].end()
+            newline = "\r\n" if "\r\n" in content else "\n"
+            addition = ("" if content[:at].endswith("\n") else newline)
+            addition += "evidence: " + "; ".join(references) + newline
+            edits.append((start + at, start + at, addition))
+            evidence += 1
+        if not edits:
+            continue
+        proposed += 1
+        changed = raw
+        for start, end, replacement in sorted(edits, reverse=True):
+            changed = changed[:start] + replacement + changed[end:]
+        if fix:
+            try:
+                if replace_memory_file(root, path, original, changed):
+                    repaired += 1
+                else:
+                    pending.append(f"{path.name}: 별칭·동시 변경 확인 필요")
+            except OSError:
+                pending.append(f"{path.name}: 쓰기 실패, 원본·백업 확인 필요")
+    detail = f"대상 파일 {proposed}개 / 링크 경로 {links}개 · evidence 승격 {evidence}개"
+    if fix:
+        detail += f" / 보정함 {repaired}개 (파일별 원본 .bak 백업)"
+    detail += f" / 확인 필요 {len(pending)}개"
+    hint = ("--upgrade-memory로 현재 기억 형식에 맞춰 보정합니다. " if proposed and not fix else "")
+    if pending:
+        hint += "추측·자동 재번호화 없이 원본 유지: " + "; ".join(pending[:3])
+    report.add("WARN" if pending or (proposed and not fix) else "OK", "기억 형식 갱신", detail, hint or None)
+
+
 def check_entry_evidence(root: Path, report: Report) -> dict:
     """주장에는 증거로 가는 문이 있어야 한다.
 
@@ -922,7 +995,7 @@ def check_entry_evidence(root: Path, report: Report) -> dict:
 
     dead_examples, prose_examples = [], []
     for path, block in entries:
-        clean = without_fences(block)
+        clean = without_fences(mask_private(block))
         keys = structured_lines(clean)
         if "evidence" in keys:
             metrics["evidence"] += 1
@@ -1274,7 +1347,7 @@ def read_chart(root: Path) -> dict:
     return state
 
 
-def append_chart(root: Path, metrics: dict, fixed: list, fix: bool) -> None:
+def append_chart(root: Path, metrics: dict, fixed: list, fix: bool, *, upgrade_memory: bool = False) -> None:
     path = root / "memory" / CHART_NAME
     path.parent.mkdir(parents=True, exist_ok=True)
     new = not path.is_file()
@@ -1285,7 +1358,8 @@ def append_chart(root: Path, metrics: dict, fixed: list, fix: bool) -> None:
                   "> 닥터가 방문마다 덧붙이는 판단 기록입니다. 고치지 말고 덧붙이세요.",
                   "> 기록에 대한 판단만 담습니다 — 프로젝트에 대한 사실은 항목과 대화에 있습니다.",
                   "> 무관하다고 판정한 날은 `- 무관: 2026-03-18, 2026-04-07`처럼 적으면 다시 묻지 않습니다.", ""]
-    lines.append(f"## {stamp} · {'--fix' if fix else '진단만'}")
+    modes = [name for active, name in ((fix, "--fix"), (upgrade_memory, "--upgrade-memory")) if active]
+    lines.append(f"## {stamp} · {' + '.join(modes) or '진단만'}")
     lines.append(f"<!-- metrics {json.dumps(metrics, ensure_ascii=False, sort_keys=True)} -->")
     lines.append("- 수치: " + " · ".join(f"{key} {value}" for key, value in sorted(metrics.items())))
     lines.append("- 고친 것: " + ("; ".join(fixed) if fixed else "없음"))
@@ -1324,6 +1398,8 @@ def main():
     parser.add_argument("--project-root", default=".", help="프로젝트 경로 (기본: 현재 디렉터리)")
     parser.add_argument("--fix", action="store_true",
                         help="기계적으로 안전한 것만 고친다 (정제 기준값, #slug 링크 번호화, 기록 안의 루트 내부 절대경로)")
+    parser.add_argument("--upgrade-memory", action="store_true",
+                        help="확인된 기존 기억 링크·참조를 현재 evidence 형식으로 보정 (원본 백업, 의미·번호 추정 없음)")
     parser.add_argument("--chart", action="store_true",
                         help="이번 방문을 진료 기록(memory/.mnemo-doctor-chart.md)에 남긴다. "
                              "--fix는 이미 포함한다. 진단만 할 때는 쓰지 않는다 — 읽기 전용 진단은 파일을 만들지 않는다")
@@ -1343,6 +1419,7 @@ def main():
     report = Report()
     check_structure(root, report)
     check_index_budget(root, report)
+    upgrade_memory_format(root, report, args.upgrade_memory)
     check_entry_metadata(root, report)
     check_detail_file_size(root, report)
     check_lifecycle_links(root, report, args.fix)
@@ -1359,6 +1436,8 @@ def main():
     metrics.update(check_decision_reasons(root, report))
     metrics.update(check_open_decisions(root, report))
     fixed = promote_structure(root, report) if args.promote_structure else []
+    if args.upgrade_memory:
+        fixed.extend(f"기억 형식 갱신: {row['detail']}" for row in report.rows if row['title'] == '기억 형식 갱신')
     metrics.update(check_unattached_conversations(root, report, chart["ignored"]))
     report_chart_delta(chart, metrics, report)
 
@@ -1380,9 +1459,9 @@ def main():
     if not args.fix and report.failures:
         print("  기계적으로 고칠 수 있는 항목은 --fix 로 처리합니다.")
 
-    if args.chart or args.fix or args.promote_structure:
+    if args.chart or args.fix or args.promote_structure or args.upgrade_memory:
         try:
-            append_chart(root, metrics, fixed, args.fix)
+            append_chart(root, metrics, fixed, args.fix, upgrade_memory=args.upgrade_memory)
             print(f"  진료 기록: memory/{CHART_NAME} 에 이번 방문을 남겼습니다.")
         except OSError as error:
             print(f"  진료 기록을 남기지 못했습니다: {error}")

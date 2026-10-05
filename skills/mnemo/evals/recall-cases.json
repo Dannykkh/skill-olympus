@@ -1,0 +1,140 @@
+{
+  "description": "Synthetic general-chat regression cases. Required evidence coverage, not final-answer accuracy or a blind holdout.",
+  "files": {
+    "memory/architecture/001-비행기계획.md": "# 비행기계획\n\ntags: 가족여행, 장거리휴가, 이유\ndate: 2025-01-01\nsource: codex\nstatus: SUPERSEDED\nsuperseded-by: [[002-기차계획]]\nevidence: conversations/2025-01-01-claude.md 10:00\n원래는 이동 시간을 줄이려고 비행기를 골랐다.\n",
+    "memory/architecture/002-기차계획.md": "# 기차계획\n\ntags: 새이동수단, 전환, 조건\ndate: 2026-02-01\nsource: codex\nstatus: CURRENT\nsupersedes: [[001-비행기계획]]\ndepends-on: [[003-멀미조건]]\nevidence: conversations/2026-02-01-antigravity.md 11:00\n아이와 동행하는 동안 기차를 사용한다.\nreopen-when: 아이의 멀미 조건이 바뀌면 이동수단을 다시 검토한다.\n",
+    "memory/architecture/003-멀미조건.md": "# 멀미조건\n\ntags: 멀미, 동행, 이유\ndate: 2026-01-01\nsource: codex\nstatus: CURRENT\n버스는 아이가 멀미해서 피한다. 아이가 함께 가지 않으면 이 조건은 적용하지 않는다.\n",
+    "memory/architecture/004-말투.md": "# 말투\n\ntags: 말투, tone, 선호\ndate: 2025-04-01\nsource: codex\nstatus: CURRENT\nevidence: conversations/2025-04-01-grok.md 09:00\n평소 채팅은 편하게 말하되 회의록은 존댓말로 작성한다.\n",
+    "memory/architecture/005-원래예산.md": "# 원래예산\n\ntags: 여행예산, 상한, 조건\ndate: 2025-01-01\nsource: codex\nstatus: SUPERSEDED\nsuperseded-by: [[006-새예산]]\n원래 상한은 50만원이었다.\n",
+    "memory/architecture/006-새예산.md": "# 새예산\n\ntags: 새상한, 동행, 변경\ndate: 2026-03-01\nsource: codex\nstatus: CURRENT\nsupersedes: [[005-원래예산]]\nevidence: conversations/2026-03-01-codex.md 12:00\n엄마가 동행할 때만 상한을 80만원으로 올린다.\n",
+    "memory/architecture/007-예약변경.md": "# 예약변경\n\ntags: 예약변경, 약속, 근거\ndate: 2026-03-01\nsource: codex\nstatus: CURRENT\nevidence: conversations/2024-12-01-codex.md 09:00\n이유의 원문 링크를 다시 확인해야 한다.\n",
+    "memory/architecture/008-약속시간.md": "# 약속시간\n\ntags: 약속시간, 일정, 확인\ndate: 2025-04-01\nsource: codex\nstatus: CURRENT\nevidence: conversations/2025-04-01-grok.md 09:10\n다음 주 금요일 오후로 변경했다.\n",
+    "memory/architecture/009-이동모임.md": "# 이동모임\n\ntags: 이동모임, 계획, 조건\ndate: 2026-03-01\nsource: codex\nstatus: CURRENT\ndepends-on: [[003-멀미조건]]\n아이와 동행하는 모임은 기차역 근처로 정한다.\n",
+    "memory/learned/001-이사이유.md": "# 이사이유\n\ntags: relocation, 이사, 이유\ndate: 2020-06-01\nsource: codex\nstatus: CURRENT\nevidence: conversations/2020-06-01-codex.md 18:00\n출퇴근 거리를 줄이려고 이사를 고민했다.\n",
+    "memory/gotchas/001-확인누락.md": "# 확인누락\n\ntags: 확인누락, 약속, 교훈\ndate: 2025-04-01\nsource: codex\nstatus: CURRENT\n담당자 확인 전에 약속을 확정하면 안 된다.\n",
+    "conversations/2020-06-01-codex.md": "# 과거 대화\n## [18:00:00] User\n출퇴근에 하루 두 시간이 걸려서 이사를 고민하고 있어.\n## [18:02:00] Assistant\n통근 시간을 줄이려는 이유를 기억하겠습니다.\n<!-- turn:relocation-origin -->\n",
+    "conversations/2025-01-01-claude.md": "# 과거 대화\n## [10:00] User\n가족 휴가에서는 이동 시간을 줄이려고 비행기로 가자.\n## [10:02:00] Assistant\n원래 선택 이유는 이동 시간으로 기록하겠습니다.\n#tags: 원래계획\n## [15:00] User\n오늘 점심은?\n## [15:01:00] Assistant\n국수요.\n#tags: 점심\n",
+    "conversations/2025-04-01-grok.md": "# 과거 대화\n<!-- grok-event:voice-user -->\n## [09:00:00] User\n채팅은 편하게 말해도 돼. 회의록에서는 존댓말을 써.\n<!-- grok-event:voice-assistant -->\n## [09:01:00] Assistant\n문서와 채팅의 말투를 구분하겠습니다.\n#tags: 문체\n<!-- grok-event:meeting-user -->\n## [09:10:00] User\n다음 주 금요일 오후로 옮기되 담당자 확인 후에만 확정해.\n<!-- grok-event:meeting-assistant -->\n## [09:11:00] Assistant\n확인 전에는 임시 일정으로 두겠습니다.\n#tags: 담당자확인 gotcha:001\n",
+    "conversations/2026-01-01-codex.md": "# 대화\n## [08:00:00] User\n가족여행의 이동수단을 다시 기억해 볼까?\n## [08:01:00] Assistant\n예전 선택과 바뀐 조건을 함께 확인하겠습니다.\n#tags: 가족여행 arch:001\n<!-- turn:trip-recall -->\n## [15:00:00] User\n아버지 생일 선물은 무거운 것 대신 가벼운 등산 모자로 정했었지?\n## [15:01:00] Assistant\n등산할 때 들고 다니기 편한 모자였어요.\n<!-- turn:gift-recall -->\n",
+    "conversations/2026-02-01-antigravity.md": "# 대화\n<!-- antigravity-turn:travel-change -->\n## [11:00:00] User\n아이가 버스에서 멀미하니 이번에는 기차로 가자. 아이가 안 가면 다시 고르자.\n## [11:00:00] Assistant\n동행 조건이 있는 변경으로 기록하겠습니다.\n#tags: 전환근거 arch:002 supersedes:#비행기계획\n",
+    "conversations/2026-03-01-codex.md": "# 대화\n## [12:00:00] User\n엄마가 동행할 때만 여행 상한을 80만원으로 올려.\n## [12:01:00] Assistant\n혼자 가면 50만원 상한을 유지하겠습니다.\n#tags: 동행조건\n<!-- turn:budget-change -->\n## [17:00:00] User\n공개 일정만 다시 확인하자.\n## [17:01:00] Assistant\n금요일이에요.\n<private>synthetic-private-needle</private>\n#tags: 공개일정\n<!-- turn:private-example -->\n"
+  },
+  "cases": [
+    {
+      "id": "trip-context",
+      "prompt": "가족여행에서 왜 이동수단을 바꿨지?",
+      "terms": ["가족여행"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/architecture/001-비행기계획.md", "status": "SUPERSEDED", "contains": ["이동 시간을 줄이려고"]},
+        {"path": "memory/architecture/002-기차계획.md", "status": "CURRENT", "contains": ["reopen-when:"]},
+        {"path": "conversations/2026-02-01-antigravity.md", "contains": ["아이가 버스에서 멀미", "아이가 안 가면"]}
+      ]
+    },
+    {
+      "id": "old-plan-with-new-reason",
+      "prompt": "장거리휴가 계획은 지금도 비행기야?",
+      "terms": ["장거리휴가"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/architecture/002-기차계획.md", "contains": ["아이와 동행"]},
+        {"path": "conversations/2025-01-01-claude.md", "contains": ["이동 시간을 줄이려고"], "absent": ["오늘 점심"]},
+        {"path": "conversations/2026-02-01-antigravity.md", "contains": ["이번에는 기차"]}
+      ]
+    },
+    {
+      "id": "conditional-budget-change",
+      "prompt": "여행예산을 올린 조건이 뭐였지?",
+      "terms": ["여행예산"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/architecture/005-원래예산.md", "status": "SUPERSEDED", "contains": ["50만원"]},
+        {"path": "conversations/2026-03-01-codex.md", "contains": ["엄마가 동행할 때만", "혼자 가면 50만원"]}
+      ]
+    },
+    {
+      "id": "chat-versus-document-tone",
+      "prompt": "내가 말투에 대해 뭐라고 했었지?",
+      "terms": ["말투"],
+      "limit": 1,
+      "required": [
+        {"path": "conversations/2025-04-01-grok.md", "contains": ["채팅은 편하게", "회의록에서는 존댓말"], "absent": ["다음 주 금요일"]}
+      ]
+    },
+    {
+      "id": "bilingual-old-memory",
+      "prompt": "이사 이야기는 왜 시작했었지?",
+      "terms": ["relocation", "이사"],
+      "limit": 1,
+      "required": [
+        {"path": "conversations/2020-06-01-codex.md", "contains": ["하루 두 시간", "통근 시간을 줄이려는"]}
+      ]
+    },
+    {
+      "id": "untagged-personal-chat",
+      "prompt": "아버지 선물을 뭐로 정했었지?",
+      "terms": ["생일 선물", "등산 모자"],
+      "limit": 1,
+      "required": [
+        {"path": "conversations/2026-01-01-codex.md", "contains": ["아버지 생일", "가벼운 등산 모자", "들고 다니기 편한"]}
+      ]
+    },
+    {
+      "id": "category-specific-entry",
+      "prompt": "약속을 확정할 때의 교훈을 다시 찾아줘.",
+      "terms": ["gotcha:001"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/gotchas/001-확인누락.md", "contains": ["담당자 확인 전에"]}
+      ],
+      "absent_fragments": ["출퇴근 거리를 줄이려고", "원래는 이동 시간을 줄이려고"]
+    },
+    {
+      "id": "dependency-condition",
+      "prompt": "이동모임 장소를 정하는 데 어떤 조건이 있었지?",
+      "terms": ["이동모임"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/architecture/003-멀미조건.md", "contains": ["아이가 함께 가지 않으면"]}
+      ]
+    },
+    {
+      "id": "missing-evidence",
+      "prompt": "예약변경 이유의 원문을 찾아줘.",
+      "terms": ["예약변경"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/architecture/007-예약변경.md", "contains": ["원문 링크"]}
+      ],
+      "unresolved_reason": "missing"
+    },
+    {
+      "id": "supersedes-tag",
+      "prompt": "이동수단 전환근거를 다시 확인해 줘.",
+      "terms": ["전환근거"],
+      "limit": 1,
+      "required": [
+        {"path": "memory/architecture/001-비행기계획.md", "status": "SUPERSEDED", "contains": ["원래는"]},
+        {"path": "memory/architecture/002-기차계획.md", "status": "CURRENT", "contains": ["동행하는 동안"]}
+      ]
+    },
+    {
+      "id": "timestamped-appointment",
+      "prompt": "약속시간을 언제 확정하기로 했더라?",
+      "terms": ["약속시간"],
+      "limit": 1,
+      "required": [
+        {"path": "conversations/2025-04-01-grok.md", "contains": ["담당자 확인 후에만", "임시 일정"], "absent": ["채팅은 편하게"]}
+      ]
+    },
+    {
+      "id": "private-excluded",
+      "prompt": "합성 비공개 문자열은 검색 결과에서 제외되는가?",
+      "terms": ["synthetic-private-needle"],
+      "limit": 1,
+      "required": [],
+      "expect_empty": true,
+      "absent_fragments": ["synthetic-private-needle"]
+    }
+  ]
+}
