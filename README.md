@@ -398,6 +398,8 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
+**v6.20.0:** Carry what worked into the next project. `/recipe` harvests something you built well — a UI piece, a backend flow, an MCP tool, an infra script — as a recipe: `recipe.md`, the explanation an LLM reads to rebuild it (what people call `llm.md`: when to use it, the contract, the decisions and the traps), plus a sample that runs on its own. Recipes live in a private library outside this repository and your projects (`CODE_RECIPES_DIR`, default `~/code-recipes`). Harvesting strips the source project (brand values, real APIs, secrets, personal data), asks only whether the code may be reused, runs the sample, and can have a worker with no context rebuild it to prove the recipe is enough. Aphrodite, frontend-design, Zephermine sections and Daedalus look recipes up and reference them as `recipe: <id>@<version>` instead of copying them.
+
 **v6.19.0:** Programs are now designed to be driven by an LLM as well as by people. Zephermine writes a separate `mcp-spec.md` (Step 17A) for web, server and local programs alike: what an agent will be asked to do (starting from what it actually knows — an email, not an id), which functions open as MCP tools (closed by default), and for each tool its risk annotations, call limits, audit trail and error text the model can act on. Tools wrap the REST endpoints by reference instead of copying their schemas; local programs without REST wrap the same internal commands the UI calls, never the database directly. `api-spec.md` stays the HTTP contract and gains a `MCP Tool` column. Daedalus applies the same MCP conventions without a spec, and Argos audits implemented tools against the spec (Phase 3A).
 
 **v6.17.0:** Design and build now share named promises. Zephermine gives every section's acceptance criterion a stable ID (`AC-NN-k`) with an observable behaviour, a trace and a verification, collects them into `checklist.md`, and checks that every problem has an AC, every AC can be verified, and no two AC contradict. Poseidon, Daedalus and Chronos record progress in one `checklist-status.md` ledger (`proved` needs executed evidence; done means every row is `proved`), Argos re-runs that evidence (Phase 4A) and Clio counts unmet AC as a NO-GO blocker. `api-spec.md` now starts from what each screen shows and does, every list endpoint is paginated, errors use one coded format, and list filter/sort columns are backfilled into the index plan. Poseidon's ownership check compares against a start-of-run baseline instead of `HEAD~N`, and autoresearch judges the final skill on holdout inputs it never optimised against. Six custom agents that duplicated same-name skills were removed (42 → 36 agent sources).
@@ -431,6 +433,7 @@ without silently adding the optional business, CEO, or documentation stages.
 | Make browser and API tests pass | `/minos` | Playwright tests and bounded repair cycles |
 | Keep fixing until a measurable condition is met | `/chronos` | Resumable audit log, verified fixes, or an honest blocker brief |
 | Close the project and write the docs | `/clio` | GO/NO-GO, diagrams, PRD, technical guide, and user manual |
+| Reuse something you built well in a new project | `/recipe` | A recipe (`recipe.md` + runnable sample) in your private library, rebuilt by reference |
 
 ---
 
@@ -524,6 +527,15 @@ without silently adding the optional business, CEO, or documentation stages.
 - **Process:** pipeline GO/NO-GO (reads argos/minos and the acceptance ledger + runs build/test; unmet AC block GO) → source-based flow extraction → PRD / technical / manual generation → doc fact-check gate.
 - **Output:** `docs/clio/latest/` → `CHECKLIST.md`, `flow-diagrams/`, `PRD.md`, `TECHNICAL.md`, `USER-MANUAL.md`, `FINAL-REPORT.md`.
 - **Next:** ship.
+
+### Reuse — carry what worked forward
+
+**`/recipe` — Recipe library**
+- **When:** you built something well (a popup, an upload flow, an MCP tool wrapper, a CI script) and want the next project to start from it — or you want to check whether you already have one.
+- **Use:** `/recipe harvest <file or folder>`, `/recipe find <words>`, `/recipe use <id>`, `/recipe list`, `/recipe where` (or say "make this a recipe", 레시피로 뽑아줘, llm.md로 추출).
+- **Process:** pick proven work and confirm the reuse scope → strip the source project → write `recipe.md` (decisions and traps drawn from Mnemo memory) → run the sample and record the result → optional rebuild by a context-free worker (Claude, Codex, Antigravity, Grok or Devin) → `recipe-lib.js check` and `index`.
+- **Output:** `~/code-recipes/<ui|backend|mcp|infra>/<id>/` with `recipe.md` and `sample/`, plus an `index.md` across recipes. Using a recipe rebuilds it in the project's own stack and conventions with a `recipe: <id>@<version>` marker.
+- **Next:** when a project improves on a recipe, harvest it again to bump the version.
 
 ### Always running — orchestration, loop, memory
 

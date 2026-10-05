@@ -94,6 +94,10 @@ test("the recipe skill keeps the library outside the repository and projects", (
   assert.match(skill, /~\/code-recipes/);
   assert.match(skill, /이 레포\(공개 저장소\)와 작업 중인 프로젝트 안/);
   assert.match(skill, /\*\*사용 범위\(`reuse`\)는 사용자에게 확인한다\*\*/);
+  // Grok·Devin은 Claude 설치본의 이 파일을 공유하지만 작업자 생성은 각자의 도구로 한다.
+  for (const role of ["Claude `general-purpose`", "Codex `worker`", "Gemini `generalist`", "Grok `general-purpose`", "`subagent_general`"]) {
+    assert.ok(skill.includes(role), `recipe SKILL.md is missing the writer role ${role}`);
+  }
   assert.match(read("skills/recipe/references/recipe-format.md"), /## 떼어내기/);
 });
 

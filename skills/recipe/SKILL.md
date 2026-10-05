@@ -33,7 +33,7 @@ LLM은 설명만 보고는 정확히 재현하지 못하고, 코드만 보고는
 
 | 항목 | 내용 |
 |------|------|
-| 위치 | 환경 변수 `CODE_RECIPES_DIR`, 없으면 `~/code-recipes`. Claude·Codex·Antigravity·Grok이 같은 경로를 쓴다 |
+| 위치 | 환경 변수 `CODE_RECIPES_DIR`, 없으면 `~/code-recipes`. Claude·Codex·Antigravity·Grok·Devin이 같은 경로를 쓴다(Grok·Devin은 Claude 설치본의 이 스킬을 그대로 읽는다) |
 | 두지 않는 곳 | 이 레포(공개 저장소)와 작업 중인 프로젝트 안 — 내 프로젝트 코드가 공개되거나 프로젝트마다 갈라진다 |
 | 생성 | 처음 수확할 때 `init`으로 만든다. 버전 이력이 필요하면 사용자가 원할 때 그 폴더를 private git 저장소로 만들 수 있다(자동으로 하지 않음) |
 | 도구 | `node <module_root>/scripts/recipe-lib.js <where\|init\|index\|check <dir>\|search <단어...>>` — `module_root`는 이 `SKILL.md`가 있는 폴더 |
@@ -65,7 +65,9 @@ LLM은 설명만 보고는 정확히 재현하지 못하고, 코드만 보고는
    상태 전환, 키보드, 다크 모드, 모바일 폭), backend·mcp는 테스트 통과, infra는 dry-run이나 lint. 결과를 `## 견본`의
    `검증:` 줄에 명령·결과·날짜로 적는다. 실행할 수 없으면 `검증: NOT RUN — <이유>`로 적고 그대로 보고한다.
 5. **재현 검사** (처음 수확하거나 크게 바꿀 때 권장) — 맥락을 모르는 네이티브 작업자(Claude `general-purpose`·Codex `worker`·
-   Gemini `generalist`·Grok `general-purpose`)에게 `recipe.md`와 `sample/`만 주고 빈 폴더나 다른 스택에서 다시 만들게 한다.
+   Gemini `generalist`·Grok `general-purpose`·Devin `run_subagent`의 `subagent_general` — 파일을 만들고 테스트를 돌려야 하므로
+   포그라운드로, 백그라운드는 미리 허용된 도구만 쓴다)에게 `recipe.md`와 `sample/`만 주고 빈 폴더나 다른 스택에서 다시 만들게 한다.
+   작업자를 띄울 수 없는 환경이면 메인 대화에서 recipe.md와 sample만 다시 읽고 순차로 재현하되, 맥락이 섞였다는 한계를 `## 견본`에 적는다.
    막힌 곳과 다르게 만든 곳이 설명서의 빈틈이다. 보완한 뒤 `## 견본`에 재현 검사 결과를 한 줄 남긴다.
 6. **등록** — 라이브러리에 넣고 `check`를 통과시킨다(오류 0, 경고는 하나씩 확인). 그다음 `index`로 목록을 다시 만든다.
    같은 id가 이미 있으면 `version`을 올리고 `## 변경 이력`에 무엇을 왜 바꿨는지 한 줄 남긴다.
