@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.20.0] - 2026-10-06
+
+### Features
+
+- **recipe**: Add `/recipe`, a user entry point that harvests something built well — a UI piece, a backend flow, an MCP tool, an infra script — as a recipe: `recipe.md`, the explanation an LLM reads to rebuild it (what people call `llm.md`: when to use it, the contract, the decisions and the traps), plus a sample that runs on its own. The library lives outside this public repository and outside projects (`CODE_RECIPES_DIR`, default `~/code-recipes`) and is shared by every CLI. Harvesting asks only for the reuse scope, strips the source project (brand values, real APIs, secrets, personal data, local paths), runs the sample and records the result, can have a context-free worker rebuild it, then checks and indexes it with `recipe-lib.js`. Aphrodite, frontend-design, Zephermine sections and Daedalus look recipes up and reference them as `recipe: <id>@<version>` instead of copying them. The common allowlist grows from 18 to 19 entry points (Claude 22 active, Codex/Antigravity 21, skills-only hosts 19). (ca7a608, 18a58b7)
+- **mnemo**: Recall original questions and responses through existing tags, entry IDs, replacement decisions and evidence links, without vectors or added LLM calls (`recall.py`). The Doctor gains an explicit, backed-up `--upgrade-memory` mode for existing memories, the shared tools are bundled for every CLI adapter including Devin through the Claude package, and Devin's Korean assistant messages decode as UTF-8. (e7c913b)
+
+### Bug Fixes
+
+- **codex-mnemo**: The Codex install check accepts the renamed rules heading "과거 대화·결정 검색" as well as the older ones; the rename had made the install verification fail with "past search: no". The compatibility audit matches all three headings. (7acef01)
+
+### Documentation
+
+- Describe `/recipe` in the English and Korean READMEs (v6.20.0 highlight, workflow row, Reuse section) and name Devin's worker role (`run_subagent` profile `subagent_general`) in the recipe skill, with a contract test for all five CLI roles. (1c91acb)
+- Explain conversational recall and the five-CLI memory upgrades. (aa6585e)
+- Update the skill inventory counts across the docs and refresh the TermSnap CodeMap rules block. (18a58b7, 5879b6f)
+
+### Validation and Scope
+
+- The full Node suite passes (208) and the Mnemo Python suite passes (243). Windows full installation passed all 12 installed runtime checks, and the installed Claude, Codex and Antigravity skill homes carry `recipe`, Zephermine's `mcp-spec-guide.md` and Argos Phase 3A; Grok and Devin read the Claude home.
+- The first harvested recipe (`infra/working-python-runtime`, from this repository's hooks) passed its sample tests, the library check and a context-free rebuild in Node.
+- Local skill zip files are excluded from this release.
+
 ## [6.19.0] - 2026-10-05
 
 ### Features
