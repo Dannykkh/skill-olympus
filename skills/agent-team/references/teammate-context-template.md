@@ -104,6 +104,7 @@ teammate가 필요할 때 Read로 직접 읽도록 **경로만 전달** (전체 
 ```
 📎 참조 문서 (필요 시 Read로 확인):
 - API 계약서: <planning_dir>/api-spec.md
+- MCP 계약서: <planning_dir>/mcp-spec.md
 - DB 스키마: <planning_dir>/db-schema.md
 - 도메인사전: docs/domain-dictionary.md (확정 v3 — 모든 식별자/UI 라벨이 이 사전을 따름)
 ```
@@ -114,6 +115,7 @@ teammate가 필요할 때 Read로 직접 읽도록 **경로만 전달** (전체 
 |----------|----------------|
 | **모든 섹션 공통** | **`docs/domain-dictionary.md`** (있으면 무조건 전달) |
 | API/백엔드 | `api-spec.md` |
+| MCP 서버·도구 | `mcp-spec.md` (+ REST를 감싸면 `api-spec.md`) |
 | 데이터베이스 | `db-schema.md` |
 | 프론트엔드/UI | `design-system.md` |
 | 통합/E2E | `operation-scenarios.md` |

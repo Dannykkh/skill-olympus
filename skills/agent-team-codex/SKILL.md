@@ -81,6 +81,7 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 3. `flow-diagrams/` — 공정 도면 존재 여부 (있으면 각 worker에게 담당 노드 배분)
 4. 보조 문서 매핑:
    - `api-spec.md` → API 관련 worker에게 전달
+   - `mcp-spec.md` → MCP 서버·도구 관련 worker에게 전달
    - `db-schema.md` → DB 관련 worker에게 전달
    - `design-system.md` → 프론트엔드 worker에게 전달
 5. 완료 기준 계약 — `checklist.md` 확인(없으면 섹션 AC에서 기계적으로 생성), `checklist-status.md` 장부 생성 또는 재개. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`

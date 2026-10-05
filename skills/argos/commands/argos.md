@@ -15,6 +15,7 @@ description: 설계 산출물 대비 구현 검증 — 준공검사 감리 (아�
    - Phase 1: Static Analysis (기능 요구사항 vs 코드, 비기능/품질)
    - Phase 2: Runtime Verification (빌드, 단위 테스트, E2E)
    - Phase 3: API Spec Verification (api-spec.md vs 실제 라우트)
+   - Phase 3A: MCP Spec Verification (mcp-spec.md vs 실제 등록 도구)
    - Phase 4: QA Scenario Checklist (qa-scenarios.md 항목별 통과/실패)
    - Phase 5: Flow Diagram Verification (flow-diagrams/ 노드 매칭)
    - Phase 6: Design Compliance (design-system.md 준수 + AI Slop + 0-10 채점)

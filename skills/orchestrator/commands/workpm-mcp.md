@@ -129,6 +129,7 @@ PM: 승인 결과를 activity log에 기록
 10. 승인 결과 기록 (`orchestrator_log_activity`)
 11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고 `checklist-status.md`를 모든 행 `missing`으로 만든다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
 12. **API 규약 고정** — 작업에 HTTP API가 있으면 planning_dir의 `api-spec.md`가 있으면 그것을, 없으면 젭마인 `references/api-spec-guide.md`의 `## Conventions`(목록 페이지네이션·크기 상한·정렬 허용 컬럼, 공통 에러 형식, 이름·날짜 형식)를 이 작업의 API 규약으로 삼는다. 목록 API가 있으면 완료 기준에 페이지네이션 동작(크기 상한, 허용 안 된 정렬은 400)을 AC로 넣는다. 설계 없이 구현하는 경로라도 목록을 한 번에 다 돌려주는 API를 만들지 않기 위해서다
+13. **MCP 규약 고정** — 작업이 MCP 서버나 도구를 만들거나 바꾸면 planning_dir의 `mcp-spec.md`가 있으면 그것을, 없으면 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`(노출 기본 꺼짐, 구성 대상 경유·DB 직접 접근 금지, 권한은 구성 대상 이하, annotations, 호출 한도·중복 방지, 에이전트 경유 기록, 모델용 에러 문구)를 이 작업의 MCP 규약으로 삼는다. 새로 여는 도구는 승인할 제안서에 도구 이름·구성 대상·위험 표시를 적는다 — 노출을 켜는 것은 사용자 확인 대상이기 때문이다. 프로젝트에 MCP 서버가 있는데 사람이 쓰는 기능을 새로 만들면 그 기능을 도구로 열지를 제안서에서 정하고, 열지 않으면 사유를 한 줄 적는다
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
@@ -208,7 +209,7 @@ PM: Phase 4 실행
 
 **Phase 3 체크리스트:**
 1. 승인된 제안서 기반 태스크 분해
-2. `orchestrator_create_task` — prompt에 **도면 경로**, **담당 AC ID**, **API 규약**(API 작업만) 포함, scope, depends_on 설정
+2. `orchestrator_create_task` — prompt에 **도면 경로**, **담당 AC ID**, **API 규약**(API 작업만), **MCP 규약**(MCP 작업만) 포함, scope, depends_on 설정
 3. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
 4. Worker는 계획 이탈 사유·대안·영향 파일을 완료 결과로 반환하고 공유 `implementation-notes.md`를 직접 수정하지 않음. PM만 반환 결과를 취합해 `Deviations`에 기록
 5. Provider routing (`ai_provider`는 근거가 있을 때만 지정, 미지정 시 provider-agnostic)
@@ -217,6 +218,7 @@ PM: Phase 4 실행
 8. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
    - `skills/code-reviewer/SKILL.md` 참조 지시
    - API가 있으면 목록 페이지네이션·크기 상한·정렬 허용 컬럼, 반복문 안 쿼리(N+1) 없음, 목록 필터·정렬 컬럼 인덱스(마이그레이션 포함), 공통 에러 형식을 확인 (규약: 젭마인 `references/api-spec-guide.md`의 `## Conventions`)
+   - MCP 도구가 있으면 구성 대상(엔드포인트·내부 명령) 경유와 DB·파일 직접 접근 없음, 호출한 사용자 권한 그대로 전달, annotations, 호출 한도·중복 방지, 쓰기 감사 기록, 모델용 에러 문구를 확인 (규약: 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`)
    - 미통과 시 수정 태스크 생성 → 수정 후 재리뷰 (최대 2회)
 9. 자재검사 통과 → Phase 4 공정 점검으로 진행
 
@@ -301,6 +303,7 @@ Worker와 실시간 대화가 불가능하므로, prompt가 완벽해야 합니�
 | 성공 기준 | 완료 판단 불가 |
 | 범위 밖 | 불필요한 작업 |
 | API 규약 (API 작업만) | 페이지네이션 없는 목록, 반복문 안 쿼리(N+1), 제각각인 에러 형식 |
+| MCP 규약 (MCP 작업만) | 검토 없이 열린 도구, DB를 직접 다루는 도구, 한도 없는 발송 도구 |
 
 ### 태스크 생성 예시
 
@@ -437,6 +440,7 @@ orchestrator_check_worker_logs()
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
 | `spec.md` | 요구사항 확인 필요 시 참조 |
 | `api-spec.md` | API 계약서 참조 |
+| `mcp-spec.md` | MCP 계약서 참조 (도구·구성 대상·규약) |
 | `checklist.md` | **완료 기준 계약 — 태스크 prompt에 해당 AC ID 포함, 구현 중 수정 금지** |
 | `checklist-status.md` | 이행 장부 — PM만 증거와 함께 갱신 (형식: 젭마인 `references/acceptance-checklist-guide.md`) |
 | `db-schema.md` | DB 스키마 참조 |

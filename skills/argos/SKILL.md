@@ -79,7 +79,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
 
 ```
 아르고스(Argos) — 100개의 눈으로 감리 시작
-순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 4 (QA) → Phase 5 (도면) → Phase 6 (디자인) → Phase 7 (보안) → Phase 8 (도메인사전) → Report
+순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 3A (MCP) → Phase 4 (QA) → Phase 5 (도면) → Phase 6 (디자인) → Phase 7 (보안) → Phase 8 (도메인사전) → Report
 ```
 
 ### 2. Resolve Planning Directory
@@ -102,6 +102,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
 선택 (있으면 해당 Phase 실행):
   sections/index.md    → Phase 0-2, 0-3 (없으면 해당 서브체크 건너뜀)
   api-spec.md          → Phase 3 (API 일치)
+  mcp-spec.md          → Phase 3A (MCP 일치, `NOT APPLICABLE: no MCP`면 사유만 확인)
   qa-scenarios.md      → Phase 4 (QA 시나리오)
   checklist.md (+ checklist-status.md) → Phase 4A (완료 기준 이행)
   flow-diagrams/index.md      → Phase 5 (도면 대조)
@@ -121,6 +122,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
   ✅ spec.md           → Phase 1, 2
   ✅ sections/index.md → Phase 0 (에코시스템 커버리지)
   ✅ api-spec.md       → Phase 3
+  ✅ mcp-spec.md       → Phase 3A
   ✅ qa-scenarios.md   → Phase 4
   ✅ checklist.md      → Phase 4A (장부: checklist-status.md 있음/없음)
   ✅ flow-diagrams/ (3개)     → Phase 5
@@ -224,6 +226,21 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 3
    - spec에 있지만 코드에 없음 → ❌ 미구현
    - 코드에 있지만 spec에 없음 → ⚠️ 미등록
 3. 중복 API 탐지 (단수/복수, 동사 중복)
+
+### Phase 3A: MCP 일치 검증
+
+`mcp-spec.md`가 있는 경우만 실행. 규약은 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`입니다.
+
+See [verify-protocol.md](references/verify-protocol.md) — Phase 3A
+
+1. 코드에서 실제 등록된 MCP 도구를 추출합니다(이름·annotations·설명·핸들러).
+2. `mcp-spec.md` `## Tools`와 대조합니다: 일치 / 미구현 / **미승인 노출**(코드에만 있는 도구 — 노출 기본 꺼짐 위반).
+3. 도구마다 계약을 확인합니다: 구성 대상(엔드포인트·내부 명령) 경유와 DB·파일 직접 접근 없음, 호출한 사용자 권한을 그대로 전달, annotations, 호출 한도·중복 방지, 쓰기 감사 기록, 에이전트 설명이 명세와 같은지, 실행 에러가 `isError: true`와 모델용 문구로 나가는지.
+4. 서버를 실행할 수 있으면 MCP 클라이언트로 `tools/list`를 호출해 1의 결과와 대조합니다. 못 하면 이 단계만 `NOT RUN`입니다.
+
+`mcp-spec.md`가 `NOT APPLICABLE: no MCP`인데 코드에 MCP 서버가 있으면 미승인 노출로 봅니다.
+
+**등급 영향:** 미승인 노출, 구성 대상 우회(DB·파일 직접 접근), 사용자보다 넓은 자격 증명으로 호출, 한도·중복 방지 없는 외부 발송·결제 도구, 덮어쓰기·삭제·외부 발송 도구의 사용자 확인 문구 누락, 가리기로 한 개인정보를 돌려주는 도구가 1개라도 있으면 FAIL. 명세 도구 미구현, annotations 누락·불일치, 서버 기본 호출 한도나 쓰기 감사 기록 없음, 설명이 명세와 다름(계약 변경 기록 없이)은 CONDITIONAL. 코드로 확인할 수 없는 항목은 `UNVERIFIED`, spec에 기준이 없는 항목은 설계 보완으로 따로 적습니다.
 
 ### Phase 4: QA 시나리오 검증
 
@@ -417,6 +434,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 - 빌드: ✅/❌
 - 테스트: {passed}/{total}
 - API 일치: {matched}/{total}
+- MCP 일치: {계약 통과 도구}/{spec 도구}, 미승인 노출 {n}건, 설계 보완 {n}건 또는 건너뜀
 - QA 통과: {passed}/{total}
 - 완료 기준: {proved}/{total} proved (장부 불일치 {n}건) 또는 건너뜀
 - 도면 매칭: {matched}/{total} 노드
@@ -440,6 +458,9 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 
 ## Phase 3: API 일치 검증
 {endpoint 대조 테이블}
+
+## Phase 3A: MCP 일치 검증
+{도구 대조 테이블 + 도구별 계약 위반 + tools/list 대조 또는 NOT RUN}
 
 ## Phase 4: QA 시나리오 검증
 {통과율 테이블 + 실패 항목}

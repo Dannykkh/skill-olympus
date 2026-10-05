@@ -85,7 +85,7 @@ Determine session state by checking existing files:
    - [Requirement 1]
    - [Requirement 2]
    ```
-6. Scan for existing planning files (research-decision.md, research.md, research/, unknowns.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, checklist.md, team-reviews/, reviews/, flow-diagrams/, sections/)
+6. Scan for existing planning files (research-decision.md, research.md, research/, unknowns.md, interview.md, spec.md, team-review.md, domain-dictionary-delta.md, plan.md, api-spec.md, mcp-spec.md, db-schema.md, integration-notes.md, design-system.md, operation-scenarios.md, qa-scenarios.md, checklist.md, team-reviews/, reviews/, flow-diagrams/, sections/)
 
    > 마스터 사전(`docs/domain-dictionary.md`)은 프로젝트 단일이므로 planning_dir 스캔에서 제외. planning_dir에는 변경 이력 델타만 보관.
 
@@ -112,7 +112,8 @@ Determine session state by checking existing files:
 | + reviews | resume | Step 14 (integrate) |
 | + integration-notes | resume | Step 15 (integrated plan checkpoint) |
 | + db-schema.md | resume | Step 17 (API spec) |
-| + api-spec.md | resume | Step 18 (flow diagrams) |
+| + api-spec.md | resume | Step 17A (MCP spec) |
+| + mcp-spec.md | resume | Step 18 (flow diagrams) |
 | + flow-diagrams/ | resume | Step 19 (section index) |
 | + sections/index.md | resume | Step 20 (write sections) |
 | all sections complete | resume | Step 22 (operation scenarios) |
@@ -253,7 +254,7 @@ anti-slop 규칙만 적용하고 `frontend-design: NOT RUN (native fallback)`을
 | **Phase 2: Spec** | 8-9 | spec.md, personas-and-journeys.md, **docs/domain-dictionary.md v1** |
 | **Phase 3: Domain** | 10-11 | team-review.md, **docs/domain-dictionary.md v3**, domain-dictionary-delta.md |
 | **Phase 4: Plan** | 12-15 | plan.md, integration-notes.md |
-| **Phase 5: Design** | 16-19 | db-schema.md, api-spec.md, flow-diagrams/, sections/ |
+| **Phase 5: Design** | 16-19 | db-schema.md, api-spec.md, mcp-spec.md, flow-diagrams/, sections/ |
 | **Phase 6: Validation** | 20-26 | section-*.md, operation-scenarios.md, qa-scenarios.md, checklist.md |
 
 **도메인사전은 Step이 아니라 Step의 부산물입니다.** Step 8 끝에서 v1 초안, Step 10 끝에서 전문가 입력으로 v2 자동 병합, Step 11 끝에서 충돌만 확인하고 v3 확정. 별도 단계가 추가되지 않으며, 각 Step 본문 끝의 평범한 단락으로 처리됩니다.
@@ -551,7 +552,17 @@ DB 테이블에서만 엔드포인트를 뽑으면 화면이 쓰는 데이터가
 각 엔드포인트: Method + Path, Request/Response 스키마, Auth(방식 + **허용 역할 목록**), Frontend Caller, 목록이면 Pagination·Sort·Filter·Index 포함.
 UI가 없는 API 서버는 화면 표를 `NOT APPLICABLE: no UI`로 두고 소비자별 호출 시나리오로 대체합니다.
 역할이 둘 이상이면 Authentication에 Roles 표를 두고 Summary 표에도 허용 역할 열을 포함합니다. 역할명은 `spec.md`의 시스템 역할 표(Role Inventory) 역할 ID를 그대로 씁니다.
-API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀.
+API 없는 프로젝트(정적사이트, CLI)는 자동 건너뜀. 에이전트 작업에 필요한 엔드포인트는 Step 17A가 이 문서로 역반영합니다(Frontend Caller `mcp`).
+
+### 17A. Generate MCP Specification
+
+See [mcp-spec-guide.md](references/mcp-spec-guide.md)
+
+**Inputs:** `plan.md` + `spec.md` + `interview.md`의 에이전트 사용 사례(없으면 `api-spec.md` 화면 액션·`personas-and-journeys.md` 여정에서 파생) + `api-spec.md`(있으면) + `db-schema.md`
+**Output:** `<planning_dir>/mcp-spec.md` (Server + Conventions + Agent Task Requirements + Internal Commands + Tools + Summary)
+**Process:** 에이전트 작업 요구 표 → 서버 구성(전송·프로세스·인증·호출 한도·기록) → 감쌀 대상 확인(REST면 엔드포인트, 없으면 UI와 함께 쓰는 내부 명령; 모자란 엔드포인트·인덱스는 `api-spec.md`·`db-schema.md`에 backfill) → 도구 정의(노출 기본 꺼짐) → 대응 검사
+
+웹·서버·로컬 프로그램은 사람이 화면으로 하는 일을 에이전트도 도구로 할 수 있게 MCP를 함께 둡니다. 그래서 HTTP API가 있을 때만 생기는 `api-spec.md`와 분리해 거의 항상 생성하고, 라이브러리·정적 사이트이거나 MCP를 넣지 않기로 했으면 `NOT APPLICABLE: no MCP — <사유>`를 씁니다. REST가 있으면 도구 블록은 엔드포인트를 이름·파라미터 이름으로 참조만 하고 스키마를 복사하지 않습니다. 화면에서 뽑은 엔드포인트만으로 도구를 정하면 에이전트에게 필요한 검색·작업 단위 도구가 빠지므로 에이전트 작업 요구 표가 별도 입력입니다.
 
 ### 18. Generate Process Flow Diagrams (공정 도면) — MANDATORY
 
@@ -655,7 +666,7 @@ Verify all files were created successfully:
 - `spec.md`에 `## Context Map`과 `## Problem Statement` 섹션이 있는지 확인
 - Context Map/Problem Statement의 '관련 섹션'/'해결 섹션' 열이 backfill되었는지 확인
 - `flow-diagrams/*.mmd` + `flow-diagrams/index.md` (**필수** — 없으면 Step 18 미실행)
-- **역할명 정합성** — `spec.md` 시스템 역할 표를 기준으로 `db-schema.md` roles/permissions, `api-spec.md` 허용 역할, `flow-diagrams` 역할 레인, `operation-scenarios.md` RBAC 매트릭스가 같은 역할 ID를 쓰는지. 하위 문서에만 있는 역할이 발견되면 **역할 누락 신호**이므로 `spec.md` 시스템 역할 표에 역으로 추가(backfill)하고 `integration-notes.md`에 기록. 시스템 역할 표가 `NOT APPLICABLE: single role`이면 이 검사를 건너뜀
+- **역할명 정합성** — `spec.md` 시스템 역할 표를 기준으로 `db-schema.md` roles/permissions, `api-spec.md` 허용 역할, `mcp-spec.md` 도구 허용 역할, `flow-diagrams` 역할 레인, `operation-scenarios.md` RBAC 매트릭스가 같은 역할 ID를 쓰는지. 하위 문서에만 있는 역할이 발견되면 **역할 누락 신호**이므로 `spec.md` 시스템 역할 표에 역으로 추가(backfill)하고 `integration-notes.md`에 기록. 시스템 역할 표가 `NOT APPLICABLE: single role`이면 이 검사를 건너뜀
 - **완료 기준 계약** — 아직 설계 단계이므로 젭마인이 직접 고친다(구현 시작 뒤에만 적용되는 가이드의 '계약 변경' 승인 규칙은 여기서는 해당 없음). 검사와 처리:
   - `checklist.md` 행 = 섹션 AC의 합집합(ID 중복·누락 없음, 형식 `AC-NN-k`) — 어긋나면 섹션 기준으로 다시 만든다
   - 모든 문제(P)에 AC 1개 이상 — 없으면 spec.md Problem Statement의 '해결 섹션'에 AC를 추가한다(다음 순번 k). '해결 섹션'이 `-`라 맡을 섹션이 없으면 계획 공백이므로 `integration-notes.md`에 `미배정 문제`로 기록하고 Step 24 출력에 표시한다
@@ -664,9 +675,11 @@ Verify all files were created successfully:
   - `qa-scenarios.md`의 `관련 AC`가 실재하는 ID인지 — 아니면 QA 쪽을 고친다(맞는 AC로 바꾸거나, 그 동작이 약속이어야 하면 섹션에 AC를 추가)
   - `## 추적 요약`의 문제→섹션이 spec.md Problem Statement '해결 섹션'과 어긋나면 spec을 backfill한다
   섹션이나 QA를 고쳤으면 `checklist.md`를 다시 만들고 무엇을 왜 고쳤는지 `integration-notes.md`에 기록한다
-- **화면↔API 대응** — `api-spec.md`의 Screen Data Requirements 기준으로 모든 표시 데이터·액션이 엔드포인트에 대응하는지, 모든 엔드포인트에 Frontend Caller(또는 `external`/`webhook`/`batch`/`system`, 화면 재료가 빠지면 `TBD (화면 누락)` + 미결)가 있는지, 모든 목록 엔드포인트가 Pagination을 선언하고 필터·정렬 컬럼이 `db-schema.md` 인덱스 표에 있는지, 에러 응답이 공통 에러 형식인지. 빠진 것은 두 문서에 보완하고 `integration-notes.md`에 기록. 화면 표가 `NOT APPLICABLE: no UI`이면 Pagination·인덱스 검사만 수행
+- **화면↔API 대응** — `api-spec.md`의 Screen Data Requirements 기준으로 모든 표시 데이터·액션이 엔드포인트에 대응하는지, 모든 엔드포인트에 Frontend Caller(또는 `external`/`webhook`/`batch`/`system`/`mcp`, 화면 재료가 빠지면 `TBD (화면 누락)` + 미결)가 있는지, 모든 목록 엔드포인트가 Pagination을 선언하고 필터·정렬 컬럼이 `db-schema.md` 인덱스 표에 있는지, 에러 응답이 공통 에러 형식인지. 빠진 것은 두 문서에 보완하고 `integration-notes.md`에 기록. 화면 표가 `NOT APPLICABLE: no UI`이면 Pagination·인덱스 검사만 수행
+- **에이전트 작업↔도구 대응** — `mcp-spec.md`가 있으면 가이드의 대응 검사를 다시 돌린다: 모든 에이전트 작업이 도구에 대응, 모든 도구의 구성 대상이 `api-spec.md` 엔드포인트나 `## Internal Commands`에 실재, `api-spec.md` Summary `MCP Tool` 열↔`## Tools` 1:1, Frontend Caller `mcp`인 엔드포인트마다 도구 존재, DB·파일 직접 접근 도구 없음, 도구 권한 ⊆ 구성 대상 권한, `annotations`·호출 한도·감사 기록·모델용 에러 문구. 빠진 것은 해당 문서에 보완하고 `integration-notes.md`에 기록. `NOT APPLICABLE: no MCP`면 사유가 적혀 있는지만 확인
 - **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
 - `api-spec.md` (API가 있는 프로젝트)
+- `mcp-spec.md` (건너뛴 프로젝트는 `NOT APPLICABLE: no MCP — <사유>` 한 줄)
 - `db-schema.md` (DB가 있는 프로젝트)
 - `design-system.md` + `personas-and-journeys.md` (UI가 있는 프로젝트)
 - `operation-scenarios.md` + `qa-scenarios.md`
@@ -685,7 +698,7 @@ ZEPHERMINE: Planning Complete
 
 Generated: research-decision/unknowns/research/interview/spec/domain-dictionary/
            personas-and-journeys/team-review/plan/
-           api-spec/db-schema/design-system/integration-notes/
+           api-spec/mcp-spec/db-schema/design-system/integration-notes/
            operation-scenarios/qa-scenarios/checklist.md
            + team-reviews/ + reviews/ + flow-diagrams/ + sections/
 
@@ -749,6 +762,7 @@ Other options:
 | [external-review.md](references/external-review.md) | Step 13 Antigravity/Codex 외부 리뷰 프롬프트 |
 | [schema-design-guide.md](references/schema-design-guide.md) | Step 16 DB 스키마 설계 절차, ERD/DDL 형식 |
 | [api-spec-guide.md](references/api-spec-guide.md) | Step 17 API 명세 형식, 엔드포인트 작성 규칙 |
+| [mcp-spec-guide.md](references/mcp-spec-guide.md) | Step 17A MCP 명세 형식, 에이전트 작업·도구 규약 |
 | [flow-diagrams-guide.md](references/flow-diagrams-guide.md) | Step 18 공정 도면 생성 절차, Mermaid 규칙 |
 | [section-index.md](references/section-index.md) | Step 19 SECTION_MANIFEST 형식, 의존성 그래프 |
 | [section-splitting.md](references/section-splitting.md) | Step 20 섹션 파일 완전 자립형 형식 |

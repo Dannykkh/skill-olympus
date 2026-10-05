@@ -12,6 +12,7 @@ test("the API conventions live in one place: zephermine api-spec-guide", () => {
   assert.match(guide, /## Conventions/);
   assert.match(guide, /모든 목록 API는 페이지네이션 필수/);
   assert.match(guide, /"error": "EMAIL_DUPLICATE"/);
+  assert.match(guide, /근거 없는 수정·삭제는 쓰지 않고/);
 });
 
 test("zephermine section files carry the conventions into the Quality Gate", () => {

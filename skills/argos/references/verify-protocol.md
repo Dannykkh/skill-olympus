@@ -267,6 +267,72 @@ Bash: {detected_e2e_command}
 
 ---
 
+**Phase 3A: MCP 일치 검증** — mcp-spec.md 기반 (MCP가 있는 프로젝트만)
+
+`<planning_dir>/mcp-spec.md`가 존재하면 실행. `NOT APPLICABLE: no MCP — <사유>` 한 줄이면 사유가 있는지와 코드에 MCP 서버가 없는지만 확인합니다.
+
+#### 3A-1. 실제 등록 도구 추출
+
+```
+감지 패턴:
+- TypeScript SDK: server.registerTool(...), server.tool(...),
+  저수준 setRequestHandler(ListToolsRequestSchema / CallToolRequestSchema)의 도구 배열과 switch 분기
+- Python SDK: @mcp.tool (FastMCP), @server.list_tools() / @server.call_tool()
+- 그 밖의 SDK: 도구 이름·inputSchema를 등록하는 호출을 검색
+```
+
+도구마다 이름, `annotations`, `description`, 핸들러 위치(`file:line`)를 적습니다.
+
+#### 3A-2. mcp-spec vs 실제 도구 대조
+
+| 검사 항목 | 판정 |
+|-----------|------|
+| spec에 있고 코드에 있음 | ✅ 일치 |
+| spec에 있지만 코드에 없음 | ❌ 미구현 |
+| 코드에 있지만 spec에 없음 | ❌ 미승인 노출 (노출 기본 꺼짐 위반) |
+
+#### 3A-3. 도구별 계약 검사
+
+| 검사 | 확인 방법 | 위반 시 |
+|------|-----------|---------|
+| 구성 대상 경유 | 핸들러가 spec의 엔드포인트·내부 명령을 부르는지, DB 클라이언트·ORM·파일 API를 직접 import·호출하지 않는지 | FAIL |
+| 권한 전달 | 호출한 사용자의 토큰·컨텍스트를 그대로 넘기는지 (서비스 계정·관리자 키로 부르면 권한 상승) | FAIL |
+| 외부 발송·결제 도구의 한도·중복 방지 | spec의 도구별 한도와 같은 대상 중복 방지가 코드에 있는지 | FAIL |
+| 사용자 확인 문구 | 덮어쓰기·삭제·외부 발송 도구의 `description`에 호출 전 사용자 확인이 있는지 | FAIL |
+| annotations | spec과 같은지. 조회 도구에 `readOnlyHint: true`가 없으면 기본값(`destructiveHint: true`)으로 취급됨 | CONDITIONAL |
+| 서버 기본 호출 한도·쓰기 감사 기록 | `## Server`에 적은 방식이 구현됐는지. 감사 기록에는 사용자·도구·인자 요약·결과·시각이 남는지 | CONDITIONAL |
+| 개인정보·응답 필드 | 도구 응답이 spec의 응답 필드·개인정보 처리와 같은지. 가리기로 한 필드를 돌려주면 위반 | FAIL |
+| 설명 일치 | 코드 `description`이 spec 에이전트 설명과 같은지. 다르면 계약 변경 기록(`integration-notes.md`·구현 로그)이 있는지 | CONDITIONAL |
+| 실행 에러 | 구성 대상 에러를 `isError: true` 결과와 spec의 모델용 문구로 돌려주는지 | CONDITIONAL |
+
+판정 규칙:
+- **근본 원인 1건으로 셉니다.** 하나의 원인이 여러 검사에 걸리면(예: 직접 UPDATE → 권한 검사·경유 표시·멱등성 모두 어긋남) 근본 원인만 판정에 세고 파생 결과는 같은 행에 적습니다.
+- **코드로 확인할 수 없으면 `UNVERIFIED`입니다.** 호출은 있는데 구현 소스가 없거나 반환값을 버리는 등 동작을 확인할 수 없으면 위반도 통과도 아닌 `UNVERIFIED`로 적고, PASS 근거로 쓰지 않습니다.
+- **spec에 비교 기준이 없으면 설계 보완입니다.** 모델용 문구·도구별 한도 같은 기준이 spec에 없으면 구현 위반으로 세지 않고 "설계 보완 필요 — mcp-spec.md"로 따로 적습니다.
+- `api-spec.md`가 있으면 구성 엔드포인트가 그 문서와 Phase 3 결과에 실재하는지도 봅니다. 없으면 호출 지점만 대조하고 그 사실을 적습니다.
+
+#### 3A-4. tools/list 대조 (실행 가능할 때)
+
+서버를 실행할 수 있으면 MCP 클라이언트로 `tools/list`를 호출해 3A-1 결과(이름·annotations·설명)와 대조합니다. 실행할 수 없으면 이 단계만 `NOT RUN`으로 적고 정적 결과로 판정합니다.
+
+#### 3A-5. MCP 검증 결과
+
+```markdown
+## MCP 일치 검증 결과
+
+| Tool | Spec | Code | 구성 대상 경유 | annotations | 한도·기록 | 상태 |
+|------|------|------|----------------|-------------|-----------|------|
+| find_users | ✅ | ✅ | ✅ GET /api/users | ✅ | ✅ | 일치 |
+| update_user_role | ✅ | ✅ | ❌ db.users.update 직접 호출 (src/mcp/tools.ts:42) | ✅ | ✅ | FAIL — 구성 대상 우회 |
+| export_all_users | ❌ | ✅ | — | — | — | FAIL — 미승인 노출 |
+
+tools/list 대조: NOT RUN (서버 실행에 DB 필요)
+```
+
+요약 수치: `MCP 일치 = 3A-3에서 FAIL·CONDITIONAL·UNVERIFIED가 없는 spec 도구 수 / spec 도구 수`, 미승인 노출 건수는 따로 적습니다.
+
+---
+
 **Phase 4: QA 시나리오 검증** — qa-scenarios.md 기반 통과 체크
 
 계획 단계에서 정의한 입출력 기대값을 실제 구현과 대조합니다.
@@ -479,7 +545,7 @@ design-system.md에서 정의된 토큰을 추출하고, 실제 코드에서 사
 
 ---
 
-메인 컨텍스트만 Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 4A + Phase 5 + Phase 6 + Phase 7
+메인 컨텍스트만 Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 3A + Phase 4 + Phase 4A + Phase 5 + Phase 6 + Phase 7
 결과를 합쳐 `<planning_dir>/verify-report.md`를 작성합니다. 위임된 읽기 전용 작업은 결과만 반환합니다.
 
 ### 검증 결과 보고
@@ -516,6 +582,7 @@ verify-report.md의 ❌ 항목을 수정 난이도별로 분류:
 수정 순서:
 1. Phase 1 누락 (기능 미구현) → 코드 생성/수정
 2. Phase 3 누락 (API 미구현) → 라우트/핸들러 추가
+2a. Phase 3A 위반 (MCP) → 미승인 노출 도구는 등록만 끄고(핸들러 코드는 남김) 노출 여부를 사용자 결정 항목으로 보고 — 노출을 켜는 것은 사용자 확인 대상이라 감리가 spec에 등록하지 않음. 구성 대상 우회는 경유로 수정, 한도·확인 문구·annotations 보완
 3. Phase 4 실패 (QA 시나리오) → 로직 수정 또는 테스트 추가
 3a. Phase 4A 미이행 (AC missing·contradicted) → 해당 AC 구현 또는 반증 원인 수정 후 증거 확보
 4. Phase 5 누락 (도면 미매칭) → 누락 노드 구현
@@ -543,6 +610,7 @@ verify-report.md의 ❌ 항목을 수정 난이도별로 분류:
 재검증 대상 결정:
 - 코드를 수정했으면 → Phase 1 (정적) + Phase 2 (런타임) 재실행
 - API 라우트를 추가했으면 → Phase 3 재실행
+- MCP 도구를 고쳤으면 → Phase 3A 재실행
 - QA 시나리오 관련 수정이면 → Phase 4 재실행
 - 도면 노드 구현이면 → Phase 5 재실행
 ```

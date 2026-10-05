@@ -1,6 +1,8 @@
 # API Specification Guide
 
-계획 단계에서 프론트엔드↔백엔드 간 API 계약서를 작성하는 가이드.
+계획 단계에서 HTTP API를 쓰는 소비자(웹 화면, 모바일 앱, 외부 연동, MCP 서버)와 백엔드 간 계약서를 작성하는 가이드.
+
+에이전트↔프로그램 계약(MCP 도구)은 [mcp-spec-guide.md](mcp-spec-guide.md)의 `mcp-spec.md`가 따로 다룹니다. MCP는 HTTP API가 없는 로컬 프로그램에도 들어가기 때문입니다. REST를 감싸는 MCP 도구는 이 문서의 엔드포인트를 참조하므로, 에이전트 작업에 필요한 엔드포인트는 Step 17A에서 이 문서로 역반영됩니다(Frontend Caller `mcp`).
 
 ## 언제 생성하나?
 
@@ -9,12 +11,12 @@
 | 웹앱 (프론트+백엔드) | ✅ 필수 |
 | REST/GraphQL API 서버 | ✅ 필수 |
 | 모바일 앱 + API | ✅ 필수 |
-| CLI 도구 | ❌ 건너뜀 |
+| CLI 도구 | ❌ 건너뜀 (MCP는 mcp-spec.md) |
 | 라이브러리/패키지 | ❌ 건너뜀 |
 | 정적 사이트 (API 없음) | ❌ 건너뜀 |
-| 데스크톱 앱 (로컬 전용) | ❌ 건너뜀 |
+| 데스크톱 앱 (로컬 전용) | ❌ 건너뜀 (MCP는 mcp-spec.md) |
 
-**판단 기준**: `plan.md`에서 HTTP 엔드포인트, API 라우트, 서버-클라이언트 통신이 언급되면 생성.
+**판단 기준**: `plan.md`에서 HTTP 엔드포인트, API 라우트, 서버-클라이언트 통신이 언급되면 생성. 로컬 프로그램 내부 통신(IPC)과 stdio MCP 연결은 여기서 말하는 통신이 아닙니다.
 
 ## 작성 순서
 
@@ -27,7 +29,7 @@
    - `research.md`의 메뉴 구조·페이지 목록
 
    계획상 필요한데 재료에 화면이 없는 호출(로그인·토큰 발급 등)은 화면을 지어내지 말고 엔드포인트는 쓰되 Frontend Caller를 `TBD (화면 누락)`으로 두고 `integration-notes.md`에 미결로 올립니다.
-2. **엔드포인트 도출** — `db-schema.md` 기준 CRUD에 화면 요구에서 나온 조회(조인·집계)를 더합니다. 화면 하나가 표시하는 데이터는 정해진 호출로 받을 수 있어야 하며, 목록의 행마다 추가 호출이 필요한 설계(N+1)는 만들지 않습니다.
+2. **엔드포인트 도출** — `db-schema.md` 기준 CRUD에 화면 요구에서 나온 조회(조인·집계)를 더합니다. 화면 하나가 표시하는 데이터는 정해진 호출로 받을 수 있어야 하며, 목록의 행마다 추가 호출이 필요한 설계(N+1)는 만들지 않습니다. 화면 재료에 없는 테이블은 데이터가 들어오는 경로(생성과 그 결과를 확인하는 조회)만 엔드포인트로 쓰고 Frontend Caller를 `TBD (화면 누락)`으로 둡니다. 근거 없는 수정·삭제는 쓰지 않고 `integration-notes.md`에 미결로 올립니다 — CRUD를 기계적으로 채우면 아무도 부르지 않는 API와 정책 없는 삭제가 생깁니다.
 3. **Conventions 적용** — 모든 목록 엔드포인트에 페이지네이션·정렬 허용 컬럼을, 모든 에러 응답에 공통 에러 형식을 적용합니다.
 4. **인덱스 역반영** — 목록 엔드포인트의 필터·정렬·검색 컬럼이 `db-schema.md`에 없으면 인덱스 표와 DDL(`CREATE INDEX`, 필요한 확장 포함) 양쪽에 추가하고 `integration-notes.md`에 기록합니다. 요청 파라미터가 아니라 서버가 고정으로 거는 조건(본인 한정, 미반납 같은 상태 조건)도 필터 컬럼으로 봅니다.
 5. **화면↔API 대응 검사** — 문서 끝의 체크리스트를 통과시킵니다.
@@ -39,7 +41,7 @@
 ```markdown
 # API Specification
 
-> 이 문서는 프론트엔드↔백엔드 간의 계약서입니다.
+> 이 문서는 HTTP API 소비자(화면·앱·외부 연동·MCP 서버)↔백엔드 간의 계약서입니다.
 > 구현 중 새 API를 추가하면 반드시 이 문서에도 추가하세요.
 
 ## Base URL
@@ -235,13 +237,15 @@
 
 ## Summary
 
-| Method | Path | Description | Auth | 허용 역할 | Pagination |
-|--------|------|-------------|------|-----------|------------|
-| POST | /api/users | 사용자 생성 | - | 전체 | - |
-| GET | /api/users | 사용자 목록 | 🔒 | admin, operator | offset |
-| GET | /api/users/:id | 사용자 조회 | 🔒 | admin, operator, user(본인) | - |
-| PUT | /api/users/:id | 사용자 수정 | 🔒 | admin, user(본인) | - |
-| DELETE | /api/users/:id | 사용자 삭제 | 🔒 | admin | - |
+| Method | Path | Description | Auth | 허용 역할 | Pagination | MCP Tool |
+|--------|------|-------------|------|-----------|------------|----------|
+| POST | /api/users | 사용자 생성 | - | 전체 | - | - |
+| GET | /api/users | 사용자 목록 | 🔒 | admin, operator | offset | `find_users` |
+| GET | /api/users/:id | 사용자 조회 | 🔒 | admin, operator, user(본인) | - | - |
+| PUT | /api/users/:id | 사용자 수정 | 🔒 | admin, user(본인) | - | `update_user_role` (`role`만) |
+| DELETE | /api/users/:id | 사용자 삭제 | 🔒 | admin | - | - |
+
+`MCP Tool` 열은 이 엔드포인트를 감싸는 도구 이름(정의는 `mcp-spec.md`)입니다. 엔드포인트를 바꿀 때 함께 고칠 도구를 찾는 용도이며, MCP 도구가 없으면 열을 생략합니다.
 ```
 
 ## 핵심 포함 항목
@@ -274,6 +278,7 @@
 2. 기존 API와 중복되지 않는지 확인 (같은 기능, 다른 이름 방지)
 3. Frontend Caller와 Screen Data Requirements도 함께 업데이트
 4. 목록 API면 Conventions의 페이지네이션·정렬 허용 컬럼을 지키고 인덱스를 확인
+5. Summary의 `MCP Tool` 열에 도구가 적힌 엔드포인트를 바꾸면 `mcp-spec.md`의 그 도구 블록도 함께 수정
 
 절대 하지 말 것:
 - api-spec에 없는 API를 암묵적으로 추가
@@ -297,7 +302,7 @@
 api-spec.md를 마치기 전과 Step 23 Final Status에서 확인:
 
 - [ ] Screen Data Requirements의 모든 표시 데이터·액션이 엔드포인트 1개 이상에 대응한다
-- [ ] 모든 엔드포인트에 Frontend Caller가 있거나, 화면이 없는 호출은 `external` / `webhook` / `batch` / `system`으로, 화면 재료가 빠진 호출은 `TBD (화면 누락)`으로 표시하고 미결에 올렸다
+- [ ] 모든 엔드포인트에 Frontend Caller가 있거나, 화면이 없는 호출은 `external` / `webhook` / `batch` / `system` / `mcp`(MCP 도구만 호출 — 화면도 부르면 화면을 적음)로, 화면 재료가 빠진 호출은 `TBD (화면 누락)`으로 표시하고 미결에 올렸다
 - [ ] 모든 목록 엔드포인트가 Pagination을 선언했다 (`none`은 최대 건수와 사유가 있을 때만)
 - [ ] 목록 엔드포인트의 필터·정렬·검색 컬럼(서버 고정 조건 포함)이 `db-schema.md` 인덱스 표와 DDL에 있다
 - [ ] 모든 에러 응답이 공통 에러 형식(`error` 코드 + `message`)을 따른다

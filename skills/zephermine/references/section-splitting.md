@@ -107,6 +107,8 @@ Include all necessary background, requirements, and implementation details withi
 구현 중 새 API를 추가하면 반드시 `api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
 섹션은 자립형이므로 `api-spec.md` Conventions 중 이 섹션에 해당하는 규약(목록 페이지네이션 방식·크기 상한·정렬 허용 컬럼, 공통 에러 형식)과 목록 엔드포인트의 Index 줄도 함께 옮깁니다. 구현자가 이 규약을 모르면 페이지네이션 없는 목록과 N+1 쿼리가 나옵니다.
 
+**MCP가 있는 프로젝트**: 섹션의 기능을 감싸는 `mcp-spec.md` `## Tools` 도구 블록(구성 대상·허용 역할·annotations·호출 한도·에이전트 설명·모델용 에러 문구)과 `## Conventions` 중 해당 규약, `## Server`의 기록 방식을 함께 옮깁니다. REST가 없는 로컬 프로그램은 그 도구들이 쓰는 `## Internal Commands` 행도 옮깁니다. UI와 도구가 같은 명령을 부르지 않으면 도구 쪽 검증이 빠집니다.
+
 ### Section File Template
 
 ```markdown
@@ -230,6 +232,7 @@ Include all necessary background, requirements, and implementation details withi
 - [ ] 반복문 안에서 쿼리·API 호출 없음 (N+1) — 연관 데이터는 조인·일괄 조회 (해당 시)
 - [ ] 목록의 필터·정렬·검색 컬럼에 인덱스가 있음 — 마이그레이션에 포함 (해당 시)
 - [ ] 에러 응답이 공통 에러 형식(`error` 코드 + `message` + `details`)을 따름 (해당 시)
+- [ ] MCP 도구가 `mcp-spec.md`와 일치함 — 구성 대상(엔드포인트·내부 명령)을 거쳐 권한 검사를 받고 DB·파일을 직접 다루지 않으며, `annotations`·호출 한도·감사 기록·에이전트 설명·모델용 에러 문구가 명세대로임 (해당 시)
 - [ ] Flow Diagram Nodes의 모든 노드에 대응하는 코드가 존재함 (해당 시)
 
 ## Risk & Rollback

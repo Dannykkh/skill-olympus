@@ -220,6 +220,7 @@ Job:
 10. 승인 결과 + 기각한 대안을 activity log에 decision으로 기록
 11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고, `checklist-status.md` 장부를 모든 행 `missing`으로 만든다. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`
 12. **API 규약 고정** — 작업에 HTTP API가 있으면 planning_dir의 `api-spec.md`가 있으면 그것을, 없으면 젭마인 `references/api-spec-guide.md`의 `## Conventions`(목록 페이지네이션·크기 상한·정렬 허용 컬럼, 공통 에러 형식, 이름·날짜 형식)를 이 작업의 API 규약으로 삼는다. 목록 API가 있으면 완료 기준에 페이지네이션 동작(크기 상한, 허용 안 된 정렬은 400)을 AC로 넣는다. 설계 없이 구현하는 경로라도 목록을 한 번에 다 돌려주는 API를 만들지 않기 위해서다
+13. **MCP 규약 고정** — 작업이 MCP 서버나 도구를 만들거나 바꾸면 planning_dir의 `mcp-spec.md`가 있으면 그것을, 없으면 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`(노출 기본 꺼짐, 구성 대상 경유·DB 직접 접근 금지, 권한은 구성 대상 이하, annotations, 호출 한도·중복 방지, 에이전트 경유 기록, 모델용 에러 문구)를 이 작업의 MCP 규약으로 삼는다. 새로 여는 도구는 승인할 제안서에 도구 이름·구성 대상·위험 표시를 적는다 — 노출을 켜는 것은 사용자 확인 대상이기 때문이다. 프로젝트에 MCP 서버가 있는데 사람이 쓰는 기능을 새로 만들면 그 기능을 도구로 열지를 제안서에서 정하고, 열지 않으면 사유를 한 줄 적는다
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
@@ -305,7 +306,7 @@ Job:
 
 **Phase 4 리더 체크리스트:**
 1. 현재 CLI의 구현 역할로 작업자 spawn. 런타임 모델·effort 설정을 상속
-2. 승인된 제안서 + **도면 경로** + 태스크 배분 + **담당 AC ID** + **API 규약**(API 작업만) (SendMessage)
+2. 승인된 제안서 + **도면 경로** + 태스크 배분 + **담당 AC ID** + **API 규약**(API 작업만) + **MCP 규약**(MCP 작업만) (SendMessage)
 3. 태스크별 담당 파일 영역 명시 (충돌 방지)
 4. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
 5. 각 구현 작업자는 계획 이탈을 완료 보고의 `Deviations`에, 담당 AC별 `ID | 증거 | 상태 제안`을 함께 포함. `checklist-status.md`는 Lead만 갱신. 공유 `implementation-notes.md`와 activity log는 Lead만 직렬 갱신
@@ -314,6 +315,7 @@ Job:
    - `skills/code-reviewer/SKILL.md`를 참조하여 구현 결과물 검수
    - 기능/책임 단위 분리, 보안, 타입, SRP, DRY 체크
    - API가 있으면 목록 페이지네이션·크기 상한·정렬 허용 컬럼, 반복문 안 쿼리(N+1) 없음, 목록 필터·정렬 컬럼 인덱스(마이그레이션 포함), 공통 에러 형식을 확인 (규약: 젭마인 `references/api-spec-guide.md`의 `## Conventions`)
+   - MCP 도구가 있으면 구성 대상(엔드포인트·내부 명령) 경유와 DB·파일 직접 접근 없음, 호출한 사용자 권한 그대로 전달, annotations, 호출 한도·중복 방지, 쓰기 감사 기록, 모델용 에러 문구를 확인 (규약: 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`)
    - 미통과 시 → 구현 팀원에게 수정 지시 → 수정 후 재리뷰 (최대 2회)
 8. **테스트 검증**: 구현 작업자 또는 별도 범용 작업자에게 테스트 실행 위임
    - 프로젝트에 테스트 프레임워크가 있으면 → 기존 테스트 실행 (`npm test`, `pytest` 등)
@@ -483,6 +485,7 @@ zephermine(`/zephermine`)로 설계한 프로젝트는 planning 디렉토리에 
 | `sections/section-NN-*.md` | 각 섹션을 독립 태스크로 생성 |
 | `spec.md` | 요구사항 확인 필요 시 참조 |
 | `api-spec.md` | API 계약서 참조 |
+| `mcp-spec.md` | MCP 계약서 참조 (도구·구성 대상·규약) |
 | `checklist.md` | **완료 기준 계약 — AC ID별 약속 (구현 중 수정 금지)** |
 | `checklist-status.md` | 이행 장부 — Lead만 증거와 함께 갱신, 재개 시 이어서 사용 |
 | `db-schema.md` | DB 스키마 참조 |
@@ -532,6 +535,7 @@ Phase 5: 도면 vs 실제 코드 대조 (공정 점검)
 | 성공 기준 | 완료 판단 불가 |
 | 범위 밖 | 불필요한 작업 |
 | API 규약 (API 작업만) | 페이지네이션 없는 목록, 반복문 안 쿼리(N+1), 제각각인 에러 형식 |
+| MCP 규약 (MCP 작업만) | 검토 없이 열린 도구, DB를 직접 다루는 도구, 한도 없는 발송 도구 |
 
 ---
 

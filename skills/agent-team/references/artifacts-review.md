@@ -29,6 +29,7 @@ SECTION_MANIFEST + 의존성 그래프 확인.
 | 보조 문서 | 전달 대상 | 전달 방법 |
 |----------|----------|----------|
 | `api-spec.md` | API/백엔드 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
+| `mcp-spec.md` | MCP 서버·도구 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
 | `db-schema.md` | 데이터베이스 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
 | `design-system.md` | 프론트엔드 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
 | `operation-scenarios.md` | 통합/E2E 담당 teammate | description에 경로 전달 |
