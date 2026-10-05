@@ -653,7 +653,7 @@ function buildMarkdown() {
   const globalAgentsText = readText(codexAgentsPath);
   const hasMnemoRules = /<!-- CODEX-MNEMO:START -->/.test(globalAgentsText);
   const hasTagRules = /응답 키워드 규칙/.test(globalAgentsText);
-  const hasConversationSearchRules = /과거 대화 검색 규칙/.test(
+  const hasConversationSearchRules = /과거 (?:대화 검색 규칙|작업·결정 검색|대화·결정 검색)/.test(
     globalAgentsText,
   );
   const hasOrchestratorModeRules = /오케스트레이터 모드 자동 해석/.test(

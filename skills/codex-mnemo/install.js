@@ -736,7 +736,8 @@ function check() {
   const agentsMd = readText(agentsMdPath);
   const hasRules = agentsMd.includes(MARKER_START) && agentsMd.includes(MARKER_END);
   const hasTags = /#tags:\s*\S+/.test(agentsMd);
-  const hasSearch = /^## 과거 (?:대화 검색 규칙|작업·결정 검색)\s*$/m.test(agentsMd);
+  // 규칙 템플릿 제목이 바뀌어도 이전 설치본을 문제로 보지 않게 옛 제목도 함께 인정한다.
+  const hasSearch = /^## 과거 (?:대화 검색 규칙|작업·결정 검색|대화·결정 검색)\s*$/m.test(agentsMd);
   console.log(`      mnemo block: ${hasRules ? "yes" : "no"}`);
   console.log(`      response tags: ${hasTags ? "yes" : "no"}`);
   console.log(`      past search: ${hasSearch ? "yes" : "no"}`);
