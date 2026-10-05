@@ -41,4 +41,17 @@
 
 코드 위치 답변 시 `file:line` 형식 사용 (예: `RAGService.cs:53`).
 
+### 관계를 물으면 그래프
+
+"어디 있나"가 아니라 "무엇과 이어지나"를 묻는 질문은 위 4단계로 답이 안 나옵니다. grep은 이름이 나온 자리를 알려줄 뿐 그 이름이 타입인지, 어느 타입이 쓰는지 구분하지 못합니다. 이럴 때만 그래프를 씁니다.
+
+- **누가 이 타입을 쓰나 / 이 클래스는 무엇에 의존하나 / 이 인터페이스 구현체는** → `graphify_explain`
+  (`Uses`=나가는 의존, `Used by`=들어오는 의존으로 나뉘어 나옴. 한쪽이 잘리면 응답 끝에 적힌 `direction`·`offset`으로 다음 쪽을 부를 것. 이름이 여러 선언에 맞으면 고르지 않고 후보를 주니, 그중 `path:line`을 그대로 다시 넣을 것)
+- **A와 B가 어떻게 이어지나** → `graphify_path`
+- **이름만 아는 대상의 주변 맥락** → `graphify_query`
+
+그래프가 담는 관계: `references_type`(타입 사용·정적 접근·생성), `inherits`(상속/구현), `imports`(파일 의존), `references_code`(문서→코드), `calls_endpoint`/`calls_external_api`(HTTP 호출).
+
+한계를 알고 쓸 것 — 메서드 단위 호출 관계는 아직 없습니다(타입 단위까지). 타입 관계(누가 쓰나)와 멤버 줄은 C#·Java·Kotlin·Python·TS/JS(React 컴포넌트·훅·`<Comp />` 포함)·Go·Rust·PHP·Ruby·Swift·C++·Dart에서 확인돼 있고(다언어 계약 테스트), 그 밖의 언어는 파일 단위까지입니다. partial은 주 파일(`Foo.cs`)로 합쳐 해석하지만, 여러 곳에 선언된 동명 타입은 이름만으로 어느 쪽인지 몰라 참조를 잇지 않습니다(explain이 그 사실을 적어 줌). 그래프에 없다고 참조가 없다고 단정하지 말 것.
+
 <!-- CODEMAP_RULES_END -->
