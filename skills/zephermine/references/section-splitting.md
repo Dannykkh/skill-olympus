@@ -103,6 +103,8 @@ Include all necessary background, requirements, and implementation details withi
 
 **Acceptance Criteria**: 섹션 번호를 `NN`으로 쓰는 `AC-NN-k` ID, 관찰 가능한 동작, 근거(P·화면·엔드포인트·역할), 검증(테스트 이름·QA ID·명령)을 갖춥니다. 이 섹션 목록이 정본이며 형식은 [acceptance-checklist-guide.md](acceptance-checklist-guide.md)를 따릅니다. 빌드·회귀 같은 공통 조건은 AC로 세지 않고 Quality Gate에 둡니다.
 
+**레시피**: 사용자의 레시피 라이브러리(`/recipe` — `CODE_RECIPES_DIR` 또는 `~/code-recipes`의 `index.md`)에 이 섹션 기능과 맞는 레시피가 있으면 섹션에 `recipe: <id>@<version>`과 `recipe.md` 경로를 적습니다. 내용을 복사하지 않습니다 — 구현자가 원본을 읽고 프로젝트 규약으로 다시 구현합니다. 라이브러리가 없으면 생략합니다.
+
 **API가 있는 프로젝트**: `api-spec.md`의 해당 엔드포인트를 섹션에 포함.
 구현 중 새 API를 추가하면 반드시 `api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
 섹션은 자립형이므로 `api-spec.md` Conventions 중 이 섹션에 해당하는 규약(목록 페이지네이션 방식·크기 상한·정렬 허용 컬럼, 공통 에러 형식)과 목록 엔드포인트의 Index 줄도 함께 옮깁니다. 구현자가 이 규약을 모르면 페이지네이션 없는 목록과 N+1 쿼리가 나옵니다.

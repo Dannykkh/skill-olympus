@@ -210,7 +210,7 @@ Job:
 **Phase 1 리더 체크리스트:**
 1. 독립 조사에 이득이 있으면 현재 CLI의 읽기 전용 탐색 역할을 bounded fan-out. Claude Agent Teams는 사용자가 실험 기능을 켠 경우 named `Agent`를 직접 생성
 2. 작업자가 없거나 병렬성이 불분명하면 Lead가 조사 영역을 순차 실행
-3. 각 작업자에게 고유 리서치 영역과 반환 형식을 전달
+3. 각 작업자에게 고유 리서치 영역과 반환 형식을 전달. 사용자의 레시피 라이브러리(`/recipe` — `CODE_RECIPES_DIR` 또는 `~/code-recipes`의 `index.md`)가 있으면 이번 작업과 맞는 레시피를 찾는 일을 한 영역에 넣고, 쓰기로 한 레시피는 제안서에 `recipe: <id>@<version>`으로 적는다
 4. 팀원 보고 수신 대기
 5. **Blindspot pass** — 명시 요구사항, 미정 결정, 암묵 기대, unknown unknowns, 아키텍처 변경 질문을 정리하고 activity log에 기록
 6. 답에 따라 아키텍처가 바뀌는 질문이 있으면 가장 큰 것부터 사용자에게 확인 (한 번에 한 질문)

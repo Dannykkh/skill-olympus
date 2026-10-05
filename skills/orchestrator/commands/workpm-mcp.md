@@ -119,7 +119,7 @@ PM: 승인 결과를 activity log에 기록
 **Phase 1 체크리스트:**
 1. `orchestrator_detect_providers` — 설치된 AI CLI 확인
 2. 플랜 로드 (경로 or `orchestrator_get_latest_plan`)
-3. 리서치 태스크 생성 (`orchestrator_create_task` × 2~4개)
+3. 리서치 태스크 생성 (`orchestrator_create_task` × 2~4개). 사용자의 레시피 라이브러리(`/recipe` — `CODE_RECIPES_DIR` 또는 `~/code-recipes`의 `index.md`)가 있으면 맞는 레시피 찾기를 한 태스크에 넣고, 쓰기로 한 레시피는 제안서에 `recipe: <id>@<version>`으로 적는다
 4. Worker 생성 (`orchestrator_spawn_workers({ count: 2 })`)
 5. 진행 모니터링 (`orchestrator_get_progress` 반복)
 6. 완료 결과 수집 (`orchestrator_get_task_summary`)

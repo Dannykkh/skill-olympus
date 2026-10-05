@@ -179,7 +179,10 @@ design-system.md / design-tokens.json
 tailwind.config.* / theme.* / CSS variables
 docs/plan/*/spec.md                     (시스템 역할 표 = 역할 ID 정본)
 docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
+<레시피 라이브러리>/index.md             (/recipe — CODE_RECIPES_DIR 또는 ~/code-recipes, kind ui)
 ```
+
+레시피 라이브러리에 맞는 `ui` 레시피가 있으면 후보로 기록하고, 쓰기로 하면 `recipe: <id>@<version>`을 Experience Contract에 남깁니다. 견본은 기준일 뿐 DESIGN.md 토큰으로 다시 구현합니다. 라이브러리가 없으면 건너뜁니다.
 
 젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고 여기서 새 역할명을 만들지 않습니다.
 없으면 역할 구분 없는 단일 화면으로 진행하되, 화면에 관리 기능이 보이면 역할 존재 여부를 한 번 확인합니다.

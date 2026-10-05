@@ -45,6 +45,7 @@ const DEFAULT_COMMON_RUNTIME_SKILLS = Object.freeze([
   "hestia",
   "ko-en-translator",
   "minos",
+  "recipe",
   "release-notes",
   "seo-audit",
   "themis",

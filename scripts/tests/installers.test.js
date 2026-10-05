@@ -281,12 +281,12 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     RUNTIME_SKILL_EXCLUSIONS.codex,
   ).skillNames;
   assert.deepEqual(codexManifest.managedSkills, expectedCodexSkills);
-  assert.equal(codexManifest.managedSkills.length, 20);
+  assert.equal(codexManifest.managedSkills.length, 21);
   const codexSkillsCatalog = fs.readFileSync(
     path.join(tempHome, ".codex", "SKILLS-CATALOG.md"),
     "utf8",
   );
-  assert.match(codexSkillsCatalog, /기본 활성 스킬: 20개/);
+  assert.match(codexSkillsCatalog, /기본 활성 스킬: 21개/);
   assert.match(codexSkillsCatalog, expectedSourceOnlySkillPattern);
   assert.match(codexSkillsCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".codex"), "Codex");
@@ -300,7 +300,7 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     path.join(tempHome, ".claude", "SKILLS-CATALOG.md"),
     "utf8",
   );
-  assert.match(grokCompatCatalog, /기본 활성 스킬: 21개/);
+  assert.match(grokCompatCatalog, /기본 활성 스킬: 22개/);
   assert.match(grokCompatCatalog, expectedSourceOnlySkillPattern);
   assert.match(grokCompatCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".claude"), "Claude/Grok");
@@ -897,6 +897,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
     "hestia",
     "ko-en-translator",
     "minos",
+    "recipe",
     "release-notes",
     "seo-audit",
     "themis",
@@ -905,7 +906,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
     "zephermine",
     "zeus",
   ]);
-  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 24);
+  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 25);
   assert.deepEqual(RUNTIME_SKILL_ADDITIONS.codex, [
     "agent-team-codex",
     "codex-mnemo",
@@ -949,7 +950,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
       DEFAULT_RUNTIME_SKILL_ALLOWLIST,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
-    assert.equal(selection.skillNames.length, runtime === "claude" ? 21 : 20);
+    assert.equal(selection.skillNames.length, runtime === "claude" ? 22 : 21);
     for (const required of [
       ...DEFAULT_COMMON_RUNTIME_SKILLS,
       ...RUNTIME_SKILL_ADDITIONS[runtime],
@@ -986,7 +987,7 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   const managed = JSON.parse(
     fs.readFileSync(path.join(tempHome, ".claude-skills-sync-manifest.json"), "utf8"),
   ).managedSkills;
-  assert.equal(managed.length, 21);
+  assert.equal(managed.length, 22);
   assert.equal(fs.existsSync(path.join(tempHome, "skills", "zephermine", "SKILL.md")), true);
   assert.equal(fs.existsSync(path.join(tempHome, "skills", "docx", "SKILL.md")), false);
   assert.equal(fs.existsSync(localSkill), true);
@@ -999,7 +1000,7 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   );
 
   const catalog = fs.readFileSync(path.join(tempHome, "SKILLS-CATALOG.md"), "utf8");
-  assert.match(catalog, /기본 활성 스킬: 21개/);
+  assert.match(catalog, /기본 활성 스킬: 22개/);
   assert.match(catalog, expectedSourceOnlySkillPattern);
   assert.match(catalog, /\| zephermine \| active \|/);
   assert.match(catalog, /\| docx \| source-only \|/);
@@ -1139,12 +1140,12 @@ test("Claude and Antigravity agent syncs support default exclusion and explicit 
           "utf8",
         ),
       );
-      assert.equal(manifest.managedSkills.length, 20);
+      assert.equal(manifest.managedSkills.length, 21);
       const skillsCatalog = fs.readFileSync(
         path.join(entry.catalogHome, "SKILLS-CATALOG.md"),
         "utf8",
       );
-      assert.match(skillsCatalog, /기본 활성 스킬: 20개/);
+      assert.match(skillsCatalog, /기본 활성 스킬: 21개/);
       assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
       assertDormantOrchestratorModule(entry.catalogHome, "Antigravity");
       assert.equal(

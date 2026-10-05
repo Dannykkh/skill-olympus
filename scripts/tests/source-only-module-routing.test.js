@@ -25,6 +25,7 @@ const EXPECTED_COMMON_RUNTIME_SKILLS = Object.freeze([
   "hestia",
   "ko-en-translator",
   "minos",
+  "recipe",
   "release-notes",
   "seo-audit",
   "themis",
@@ -254,10 +255,10 @@ test("entry-point default deny keeps 18 common entry points, six adapters, and 7
     ),
     EXPECTED_RUNTIME_ADAPTERS,
   );
-  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 24);
+  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 25);
 
   const allSkills = allRepoSkillNames();
-  assert.equal(allSkills.length, 102, "public repository skill inventory changed; revisit policy counts");
+  assert.equal(allSkills.length, 103, "public repository skill inventory changed; revisit policy counts");
 
   for (const runtime of ["claude", "codex", "antigravity", "grok", "openclaw", "hermes"]) {
     const selection = selectRuntimeSkills(
@@ -265,8 +266,8 @@ test("entry-point default deny keeps 18 common entry points, six adapters, and 7
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
     const skillsOnly = runtime === "openclaw" || runtime === "hermes";
-    const expectedActiveCount = skillsOnly ? 18 : runtime === "claude" ? 21 : 20;
-    const expectedAvailableCount = skillsOnly ? 96 : runtime === "claude" ? 99 : 98;
+    const expectedActiveCount = skillsOnly ? 19 : runtime === "claude" ? 22 : 21;
+    const expectedAvailableCount = skillsOnly ? 97 : runtime === "claude" ? 100 : 99;
 
     assert.equal(selection.skillNames.length, expectedActiveCount, `${runtime} active count`);
     assert.equal(selection.defaultDisabledNames.length, 78, `${runtime} source-only count`);
@@ -298,12 +299,12 @@ test("all canonical skills use portable Agent Skills frontmatter", () => {
     "metadata",
   ]);
   const entries = allRepoSkillEntries();
-  // 공개 추적 스킬 102개에 git에 추적되지 않는 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
+  // 공개 추적 스킬 103개에 git에 추적되지 않는 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
   const expectedEntries = fs.existsSync(
     path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
   )
-    ? 103
-    : 102;
+    ? 104
+    : 103;
   assert.equal(
     entries.length,
     expectedEntries,
