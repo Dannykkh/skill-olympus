@@ -785,7 +785,7 @@ claude plugin install pg-aiguide
 
 ### 글로벌 스킬 소스 (직접 제작, 주요 항목)
 
-공개 추적 스킬 소스 102개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 99개(활성 21 + source-only 78), Codex와 Antigravity 각각 98개(활성 20 + source-only 78), OpenClaw과 Hermes Agent 각각 96개(활성 18 + source-only 78)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 21개를 공유합니다. Devin CLI는 Claude 스킬을 읽고 `devin-mnemo`가 자체 훅으로 대화를 저장하며, 네 통합 CLI의 전체 지원 수치에는 포함하지 않습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
+공개 추적 스킬 소스 103개는 기본 allowlist 합집합 25개(사용자 진입점 19개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 100개(활성 22 + source-only 78), Codex와 Antigravity 각각 99개(활성 21 + source-only 78), OpenClaw과 Hermes Agent 각각 97개(활성 19 + source-only 78)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 22개를 공유합니다. Devin CLI는 Claude 스킬을 읽고 `devin-mnemo`가 자체 훅으로 대화를 저장하며, 네 통합 CLI의 전체 지원 수치에는 포함하지 않습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
 
 | 이름 | 기본 상태 | 용도 |
 |------|-----------|------|

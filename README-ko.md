@@ -34,7 +34,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 [설치 변경 범위](#설치-전에-무엇이-바뀌나요) · [빠른 시작](#빠른-시작) · [상황에 맞는 워크플로우](#상황에-맞는-워크플로우) · [CLI 지원](#크로스-cli-지원) · [전체 스킬](#구성-요소)
 
 > Olympus는 프롬프트 100개를 한꺼번에 싣는 모음집이 아닙니다. 기본 탐색에는 집중된 진입점
-> 18개만 두고, 저수준 모듈은 필요할 때 source 카탈로그에서 읽습니다. 통합 CLI의 네이티브
+> 19개만 두고, 저수준 모듈은 필요할 때 source 카탈로그에서 읽습니다. 통합 CLI의 네이티브
 > 에이전트, 리뷰 엔진, 태스크 기능은 그대로 사용합니다.
 
 ---
@@ -50,7 +50,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | **세션을 넘어가는 기억** | `mnemo`가 인덱스, 의미기억, 검색 가능한 대화, 재개 가능한 핸드오프를 유지 |
 | **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 78개로 라우팅 |
 
-**공개 추적 스킬 소스 102개(기본 allowlist 합집합 24개 = 사용자 진입점 18개 + 런타임 어댑터 6개, 통합 표면별 활성 20개 또는 21개, skills-only 호스트 활성 18개, source-only 내부·선택 모듈 78개) · 에이전트 참고 소스 36개(최상위 34개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
+**공개 추적 스킬 소스 103개(기본 allowlist 합집합 25개 = 사용자 진입점 19개 + 런타임 어댑터 6개, 통합 표면별 활성 21개 또는 22개, skills-only 호스트 활성 19개, source-only 내부·선택 모듈 78개) · 에이전트 참고 소스 36개(최상위 34개 + 스킬 소유 2개, 기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
 
 ---
 
@@ -168,7 +168,7 @@ Claude·Codex·Antigravity의 기본 MCP는 `context7`과 `playwright`입니다.
 
 ### OpenClaw·Hermes Agent skills-only 설치
 
-아래 진입점은 사용자용 공통 스킬 18개와 source-only 모듈 78개를 설치합니다. 플러그인,
+아래 진입점은 사용자용 공통 스킬 19개와 source-only 모듈 78개를 설치합니다. 플러그인,
 훅, Mnemo, MCP, 사용자 정의 에이전트, 기존 네 CLI용 런타임 어댑터는 설치하지 않습니다.
 
 ```powershell
@@ -582,7 +582,7 @@ Python이 없어도 훅은 매 턴 저장하며, 핸드오프는 `skills/mnemo/r
 
 | 기능 | Claude Code | Codex CLI | Antigravity CLI | Grok Build |
 |------|------------|-----------|------------|------------|
-| 스킬 | `~/.claude/skills/`에 21개 | `~/.codex/skills/`에 20개 | `~/.gemini/antigravity-cli/skills/`에 20개 | Claude 호환 계층의 같은 21개 |
+| 스킬 | `~/.claude/skills/`에 22개 | `~/.codex/skills/`에 21개 | `~/.gemini/antigravity-cli/skills/`에 21개 | Claude 호환 계층의 같은 22개 |
 | 사용자 정의 에이전트 | 기본 없음(source opt-in 시 `~/.claude/agents/`) | 기본 없음; 활성 정의는 `.toml`만 | 기본 없음(source opt-in 시 `~/.gemini/config/agents/`) | Olympus 기본 등록 없음 |
 | 메모리 (므네모) | save-response 훅 | save-turn 훅 | native `Stop` 훅 | grok-mnemo 훅 |
 | 오답노트/학습 | save-tool-use 훅 | save-turn 훅 | turn 단위 `Stop` 훅 | grok-mnemo 훅 |
@@ -610,8 +610,8 @@ Devin CLI 3000.11.3의 Windows 실제 턴으로 확인했으며 macOS·Linux 런
 | [Cursor](https://prod.cursor.com/docs/skills) | 로컬 Claude·Codex 스킬 디렉터리를 호환 소스로 읽음 | 전용 설치 정책, 별칭, 훅/Mnemo, MCP, Cursor 내장 기능과의 중복 감사 |
 | [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | 표준 프로젝트·개인 Agent Skills 지원 | 현재 전역 Claude 설치 경로는 Copilot 개인 경로가 아님; 설치기·별칭·훅/Mnemo·오케스트레이션 어댑터 없음 |
 | [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md) | Agent Skills 구현, Claude·Codex 경로를 설정으로 추가 가능 | 기본 설치 대상·런타임 어댑터 없음; 명시 호출 형식은 Pi의 `/skill:<name>` |
-| [Hermes Agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/guides/work-with-skills.md) | `install-hermes.*`가 `~/.hermes`에 활성 스킬 18개와 source 카탈로그 설치 | Olympus 별칭·플러그인/훅/Mnemo·MCP·오케스트레이션 매핑 없음 |
-| [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*`가 `~/.openclaw`에 활성 스킬 18개와 source 카탈로그 설치 | 플러그인 패키징·Olympus 별칭·훅/Mnemo·MCP·네이티브 서브에이전트 검증 없음 |
+| [Hermes Agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/guides/work-with-skills.md) | `install-hermes.*`가 `~/.hermes`에 활성 스킬 19개와 source 카탈로그 설치 | Olympus 별칭·플러그인/훅/Mnemo·MCP·오케스트레이션 매핑 없음 |
+| [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*`가 `~/.openclaw`에 활성 스킬 19개와 source 카탈로그 설치 | 플러그인 패키징·Olympus 별칭·훅/Mnemo·MCP·네이티브 서브에이전트 검증 없음 |
 
 따라서 정확한 짧은 문구는 **Claude Code, Codex CLI, Antigravity CLI, Grok Build에서 통합 지원;
 Devin CLI에서 Claude 스킬 호환과 자체 Mnemo 대화 저장; OpenClaw과 Hermes Agent에서 skills-only
@@ -623,10 +623,10 @@ skills-only `sync-portable-skills.js`가 처리합니다.
 Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents/skills`와 중복 탐색되지
 않습니다. 격리된 프로젝트 미러 테스트가 필요할 때만
 `node scripts/sync-codex-assets.js --include-project-skills`를 사용합니다. 모든 런타임은
-기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 18개와
-`agent-team`·`mnemo` 어댑터 6개를 합친 24개입니다. 각 런타임은 호환되지 않는 어댑터
-3개 또는 4개를 제외해 Claude 21개, Codex/Antigravity/독립 Grok 20개를 활성화하며,
-실제 Grok 설치 표면은 Claude의 공유 21개를 읽습니다. allowlist 밖의 같은 78개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
+기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 19개와
+`agent-team`·`mnemo` 어댑터 6개를 합친 25개입니다. 각 런타임은 호환되지 않는 어댑터
+3개 또는 4개를 제외해 Claude 22개, Codex/Antigravity/독립 Grok 21개를 활성화하며,
+실제 Grok 설치 표면은 Claude의 공유 22개를 읽습니다. allowlist 밖의 같은 78개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
 `SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
 `--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
 이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
@@ -668,7 +668,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 ## 구성 요소
 
-### 스킬 소스 (102개, 기본 합집합 24개, 설치 표면별 활성 20개 또는 21개)
+### 스킬 소스 (103개, 기본 합집합 25개, 설치 표면별 활성 21개 또는 22개)
 
 아래 표는 시작 시 레지스트리가 아니라 소스 목록입니다. 저빈도 문서 형식 도구, 서비스 통합, 프레임워크 레시피, 생성기는 명시 호출하거나 opt-in 설치하기 전까지 source-only로 남습니다.
 
@@ -680,7 +680,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |
 | **비즈니스** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO 코칭, 견적서, OKR, 스탠드업 |
 | **테스트** | minos, auto-continue-loop, flow-verifier, themis + 3개 | 크로노스 루프, Playwright QA, 개인정보처리방침 생성(테미스) |
-| **메모리** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill | 3계층 메모리, Devin 대화 저장 훅, raw 정제(rebuild) |
+| **메모리** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill, recipe | 3계층 메모리, Devin 대화 저장 훅, raw 정제(rebuild), 프로젝트를 넘나드는 코드 레시피(`recipe.md` + 실행되는 견본, 개인 `~/code-recipes`) |
 | **문서** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3개 | 다이어그램, 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG, cathrynlavery/diagram-design MIT 벤더링), 프레젠테이션, 문서, 도메인 용어사전 |
 | **메타** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4개 | 스킬 자동 최적화 (Hill Climbing, holdout 입력으로 최종 판정), 관리, 릴리즈 |
 | **Git** | commit-work, release-notes, deploymonitor | 커밋, CHANGELOG, 배포 |

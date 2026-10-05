@@ -2,7 +2,7 @@
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
 >
-> Olympus 공개 추적 스킬 소스 100개는 기본 allowlist 합집합 24개(사용자 진입점 18개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 76개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 21개, Codex/Antigravity는 활성 20개이며 Grok 설치 표면은 Claude의 21개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
+> Olympus 공개 추적 스킬 소스 103개는 기본 allowlist 합집합 25개(사용자 진입점 19개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 22개, Codex/Antigravity는 활성 21개이며 Grok 설치 표면은 Claude의 22개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
 >
 > **호출 규칙:** 아래 `고정 호출명` 표만 기본 slash 진입점입니다. source-only 항목은 자연어로 기능을 요청하면 LLM이나 활성 하네스가 카탈로그의 현재 `SKILL.md`를 직접 읽어 적용합니다. source-only 이름을 `/name`으로 입력하는 방식은 `--include-source-only-skills`로 활성 등록한 환경에서만 보장됩니다. 표의 “opt-in 시 `/name`” 표기도 모두 이 조건을 뜻합니다.
 
@@ -28,6 +28,7 @@
 | 한↔영 번역 | `/translate` (ko-en-translator) |
 | 릴리즈 노트 | `/release` (release-notes) |
 | 코드 기반 영상 | `/video-maker` |
+| 레시피 수확·적용 | `/recipe` (“레시피로 뽑아줘”, “llm.md로 추출”) |
 | API 통합 테스트 | “API 테스트해줘” (api-tester) |
 
 `estimate`, `okr`는 기본 source-only입니다. 각각 “견적서 만들어줘”, “OKR 정리해줘”처럼 자연어로 요청하면 카탈로그 원본을 직접 읽습니다. `/estimate`, `/okr` 메뉴가 필요할 때만 `--include-source-only-skills`로 활성화합니다.
@@ -312,6 +313,7 @@ claude plugin install voltagent-qa-sec
 | `skills/verify-implementation/` | 모든 verify-* 스킬 순차 실행 → 통합 검증 보고서 |
 | `skills/clio/` | 역사의 뮤즈(Closer) — 파이프라인 완료 후 흐름도 추출 + 문서 산출물(PRD, 기술문서, 매뉴얼) 일괄 생성 (/clio) |
 | `skills/themis/` | 테미스(Themis) — 개인정보 수집/저장/전송/삭제 전수 감사(file:line 근거) + 국가별(한국/미국/EU) 개인정보처리방침 초안 생성 (/themis) |
+| `skills/recipe/` | 레시피 — 프로젝트에서 잘 만든 UI·백엔드·MCP·인프라를 `recipe.md`(LLM이 읽는 설명서) + 혼자 실행되는 견본으로 수확·검색·적용. 라이브러리는 레포 밖 개인 폴더(`CODE_RECIPES_DIR`, 기본 `~/code-recipes`) (`/recipe`) |
 | `skills/release-notes/` | 릴리즈 노트 — Conventional Commits 기반 버전 결정 + CHANGELOG.md + Git 태그 + GitHub Release (`/release`) |
 | `skills/estimate/` | 개발 견적서 — 기능별 공수 산정 + 비용 그룹별(개발비/인건비/클라우드/API/잡비) 엑셀 출력 (source-only, opt-in 시 `/estimate`) |
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |

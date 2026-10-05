@@ -33,7 +33,7 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 
 [Installation impact](#before-installing-what-changes) · [Quick start](#quick-start) · [Choose a workflow](#choose-a-workflow) · [CLI support](#cross-cli-support) · [Browse all skills](#whats-inside)
 
-> Olympus is not a prompt dump. Eighteen focused entry points stay discoverable by default; lower-level
+> Olympus is not a prompt dump. Nineteen focused entry points stay discoverable by default; lower-level
 > modules remain available through a source catalog, while each integrated CLI keeps its native agents,
 > review engine, and task primitives.
 
@@ -50,7 +50,7 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Memory across sessions** | `mnemo` keeps an index, semantic memory, searchable conversations, and resumable handoffs |
 | **Less prompt noise** | A small active registry routes into 78 source-only modules only when the work needs them |
 
-**102 public skill sources (default allowlist union: 24 = 18 user entry points + 6 runtime adapters; 20 or 21 active per integrated surface, 18 on skills-only hosts, 78 source-only internal/optional modules) · 36 agent source references (34 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
+**103 public skill sources (default allowlist union: 25 = 19 user entry points + 6 runtime adapters; 21 or 22 active per integrated surface, 19 on skills-only hosts, 78 source-only internal/optional modules) · 36 agent source references (34 top-level + 2 skill-owned; 0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
 
 ---
 
@@ -170,7 +170,7 @@ workflow explicit.
 
 ### OpenClaw and Hermes Agent: skills-only install
 
-These entry points install the 18 portable user-facing skills plus the 78 source-only modules. They
+These entry points install the 19 portable user-facing skills plus the 78 source-only modules. They
 do not install plugins, hooks, Mnemo, MCP, custom agents, or the existing four-CLI runtime adapters.
 
 ```powershell
@@ -583,7 +583,7 @@ runtime-specific policy or adapters, not merely a readable `SKILL.md`.
 
 | Feature | Claude Code | Codex CLI | Antigravity CLI | Grok Build |
 |---------|------------|-----------|------------|------------|
-| Skills | 21 active in `~/.claude/skills/` | 20 active in `~/.codex/skills/` | 20 active in `~/.gemini/antigravity-cli/skills/` | same 21 from Claude compatibility layer |
+| Skills | 22 active in `~/.claude/skills/` | 21 active in `~/.codex/skills/` | 21 active in `~/.gemini/antigravity-cli/skills/` | same 22 from Claude compatibility layer |
 | Custom agents | none by default (`~/.claude/agents/` only on opt-in) | none by default; Codex requires `.toml` | none by default (`~/.gemini/config/agents/` only on opt-in) | none from Olympus by default |
 | Memory (Mnemo) | save-response hook | save-turn hook | native `Stop` hook | grok-mnemo hook |
 | Gotchas/Learned | save-tool-use hook | save-turn hook | turn-level `Stop` hook | grok-mnemo hook |
@@ -612,8 +612,8 @@ permissions, subagent delegation, or completion loop behave the same way.
 | [Cursor](https://prod.cursor.com/docs/skills) | Reads local Claude and Codex skill directories as compatibility sources | Dedicated install policy, aliases, hooks/Mnemo, MCP, and overlap audit against Cursor built-ins |
 | [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | Supports standard project and personal Agent Skills | The current global Claude install is not a Copilot personal root; installer, aliases, hooks/Mnemo, and orchestration adapters are absent |
 | [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md) | Implements Agent Skills and can be configured to read Claude/Codex roots | No default install target or runtime adapter; explicit invocation uses Pi's `/skill:<name>` form |
-| [Hermes Agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/guides/work-with-skills.md) | `install-hermes.*` installs 18 active skills and the source catalog under `~/.hermes` | Olympus aliases, plugins/hooks/Mnemo, MCP, and orchestration mapping are absent |
-| [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*` installs 18 active skills and the source catalog under `~/.openclaw` | Plugin packaging, Olympus aliases, hooks/Mnemo, MCP, and native-subagent verification are absent |
+| [Hermes Agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/guides/work-with-skills.md) | `install-hermes.*` installs 19 active skills and the source catalog under `~/.hermes` | Olympus aliases, plugins/hooks/Mnemo, MCP, and orchestration mapping are absent |
+| [OpenClaw](https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md) | `install-openclaw.*` installs 19 active skills and the source catalog under `~/.openclaw` | Plugin packaging, Olympus aliases, hooks/Mnemo, MCP, and native-subagent verification are absent |
 
 The accurate short claim is therefore: **integrated on Claude Code, Codex CLI, Antigravity CLI, and
 Grok Build; Claude skill compatibility and native Mnemo conversation capture on Devin CLI; skills-only
@@ -626,9 +626,9 @@ and the skills-only `sync-portable-skills.js`.
 Codex skills install globally only by default, avoiding duplicate discovery from this repo's
 `.agents/skills`; use `node scripts/sync-codex-assets.js --include-project-skills` only for an
 isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
-contains 24 skills: 18 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
-3 or 4 incompatible adapters, leaving Claude with 21 active skills and Codex/Antigravity/standalone Grok
-with 20; the installed Grok surface reads Claude's shared 21. The same 78 public non-allowlisted sources are
+contains 25 skills: 19 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
+3 or 4 incompatible adapters, leaving Claude with 22 active skills and Codex/Antigravity/standalone Grok
+with 21; the installed Grok surface reads Claude's shared 22. The same 78 public non-allowlisted sources are
 copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
 `SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
 `.olympus/runtime-modules/orchestrator`; MCP registration points there and dependency caches survive source refreshes. Activate every compatible source-only skill with `--include-source-only-skills`,
@@ -676,7 +676,7 @@ Includes deterministic gotcha/learned capture:
 
 ## What's Inside
 
-### Skill sources (102; default union 24, 20 or 21 active per installed surface)
+### Skill sources (103; default union 25, 21 or 22 active per installed surface)
 
 The table is the source inventory, not the startup registry. Low-frequency format tools, provider integrations, framework cookbooks, and generators remain source-only until explicitly invoked through the catalog or installed with the opt-in flag.
 
@@ -688,7 +688,7 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |
 | **Business** | biz-strategy, ceo, estimate, okr, daily-meeting-update | CEO coaching, cost estimation, OKR, standup |
 | **Testing** | minos, auto-continue-loop, flow-verifier, themis + 3 more | Chronos loop, Playwright QA, privacy-policy generator (Themis) |
-| **Memory** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill | 3-layer memory, Devin conversation hooks, raw distillation (rebuild) |
+| **Memory** | mnemo, devin-mnemo, memory-compact, project-gotchas, memory-distill, recipe | 3-layer memory, Devin conversation hooks, raw distillation (rebuild), cross-project code recipes (`recipe.md` + runnable sample, private `~/code-recipes`) |
 | **Docs** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, editorial diagram rendering (.mmd → branded HTML+SVG, vendored from cathrynlavery/diagram-design MIT), presentations, documents, domain dictionary (DDD UL) |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing, judged on holdout inputs), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |
