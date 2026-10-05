@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.19.0] - 2026-10-05
+
+### Features
+
+- **zephermine**: Add a separate MCP contract, `mcp-spec.md` (Step 17A), so programs are designed to be driven by an LLM as well as by people. It is written for web, server and local programs (libraries and static sites record why not), while `api-spec.md` stays the HTTP contract. The spec starts from an agent-task table built on what the agent knows (an email or a shop name, not an id; derived from screen actions and flagged as an open question when the interview has no agent use cases), fixes the server (transport, process, auth, call limits, audit) and defines each tool. Exposure is off by default. Tools wrap REST endpoints by name and parameter names instead of copying schemas, and local programs without REST wrap the internal commands the UI also calls, never the database. The conventions cover MCP annotations (the spec defaults to the most dangerous values), per-tool limits and duplicate guards for outbound sends, an agent-invoked marker with a write audit log, model-facing error text, and change review (opening a tool or lowering its risk needs user confirmation). `api-spec.md` gains Frontend Caller `mcp` and a `MCP Tool` summary column, and tables with no screen now get only their data-entry paths. (70f7163)
+- **workpm**: Daedalus fixes the MCP conventions in Phase 1, reviews them, and decides in the proposal whether a new human-facing feature opens as a tool. (70f7163)
+- **argos**: Phase 3A audits implemented MCP tools against `mcp-spec.md`. Tools only in code are unapproved exposure; bypassed targets, credentials broader than the caller, unlimited outbound sends, missing confirmation text and returned masked personal data also fail. Unverifiable items are reported as `UNVERIFIED`, and missing spec criteria as design follow-ups. (70f7163)
+
+### Documentation
+
+- Describe the MCP contract, Daedalus MCP conventions and Argos Phase 3A in the English and Korean READMEs. (9a7c55e)
+
+### Validation and Scope
+
+- Blind runs on toy projects caught every planted trap: a web library with REST (9), a local Electron+SQLite ledger without REST (8), and a seeded-defect MCP server for Argos (6 defects plus one clean control tool). The gaps the runs reported are folded into the guides; the runs were not repeated afterwards.
+- On the committed tree the node suite passes except the 9 Mnemo root/hook tests that fail in any temporary worktree (the previous release fails the same 9 there). In the working copy those pass. The one installer check that failed there, codex-only `install.bat`, comes from uncommitted Mnemo edits by another session: it passes on the previous release and with only this change applied.
+- Unrelated uncommitted Mnemo edits, local rule edits and skill zip files are excluded from this release.
+
 ## [6.18.1] - 2026-10-03
 
 ### Refactoring
