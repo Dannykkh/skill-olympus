@@ -208,7 +208,12 @@ Focus on:
   - **한·영 페어링은 한 시스템으로(중요)**: 한글+라틴이 섞일 때 따로 놀지 않으려면 둘을 같은 시각 논리로 묶어라 — (1) 한 패밀리가 한·영을 모두 커버하거나(Pretendard/Wanted Sans/IBM Plex Sans KR 등), (2) 한글 폰트와 라틴 폰트의 **무게축·획 대비(contrast) DNA·x-height를 맞춰** 같은 목소리로. 검증된 조합 예: 송명(고대비 명조)×Fraunces(고대비 모던 세리프), 검은고딕(초헤비)×Space Grotesk(헤비 그로테스크), Gothic A1×Space Mono(기능적/모노). 한글엔 진짜 이탤릭이 거의 없으니 **한글 강조는 라틴 이탤릭에 의존하지 말고** 한글 serif·색·굵기·의도된 슬랜트(skewX)로 — 라틴 전용 이탤릭(Instrument Serif/Fraunces 등)에 한글을 넣으면 시스템 serif로 폴백해 의도가 깨진다.
 - **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes. **신규 색은 `oklch()`로 작성** (2026 권장 기본) — 지각 균일(equal L = 동일 밝기)이라 톤 스케일·대비 예측·접근성이 HEX/HSL보다 유리, HEX는 레거시 폴백으로. 광색역은 chroma ≤0.15면 sRGB 안전, 0.2+는 Display P3 영역(더 선명).
   - **초록/주황 자동 수렴 금지**: 현재 팔레트 DB의 Accent는 두 계열 비중이 높습니다. CSV 첫 행이나 익숙한 성공 사례를 추천 순위로 쓰지 말고 hue family를 먼저 분산합니다. 후보 3개에는 서로 다른 색상 계열을 쓰며, 초록·주황은 합쳐 최대 1개만 허용합니다.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise. **스크롤 연동 모션은 2026 주류** — 네이티브 CSS 스크롤 타임라인(`animation-timeline: view()` / `scroll()`)을 1순위로(컴포지터 스레드 실행 → 메인스레드 jank 제로, 약 80% 케이스 커버). 핀(pin)·스크롤 스냅·복잡한 시퀀스·WebGL/스크롤리텔링만 GSAP ScrollTrigger(부드러운 스크롤은 Lenis, `gsap.ticker`와 동기화). JS 스크롤 효과는 모바일 LCP/CLS·SEO를 해치므로 남용 금지, 모든 스크롤 모션에 `prefers-reduced-motion` 폴백 필수. **페이지/뷰 전환은 View Transitions API** — SPA는 `document.startViewTransition()`(baseline), MPA는 `@view-transition { navigation: auto }`(동일 출처 양쪽 페이지, Chromium+Safari). 미지원 브라우저에선 애니 없이 정상 동작하는 점진적 향상이므로 지금 도입 OK, cross-document는 Speculation Rules로 목적지 프리로드.
+- **Motion**: 사용자 입력·상태·콘텐츠의 목적에서 움직임을 정합니다. 단순 HTML 피드백은 CSS를,
+  React의 gesture·spring은 기존 Motion 라이브러리를 우선 검토합니다. 단순 스크롤 연동은 지원되는
+  CSS scroll timeline, pin·snap·복합 sequence는 기존 GSAP ScrollTrigger로 구현합니다. View Transitions는
+  목표 브라우저의 지원을 확인한 뒤 적용합니다. 엔진 선택만으로 성능을 보장하지 않으며 실제 프레임·
+  LCP/CLS와 cleanup을 확인합니다. 대표 장면은 입력·중간 상태·수렴 기준을 갖추고 모든 모션에
+  `prefers-reduced-motion` 대체를 둡니다. 고유 표현은 대표 장면에 집중합니다.
 - **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density. **컴포넌트 반응형은 뷰포트 미디어쿼리가 아니라 컨테이너 쿼리**(`container-type: inline-size` + `@container`, 2024~ baseline widely available) — 카드가 사이드바/본문 어디 놓이든 자기 컨테이너 폭에 적응하므로 재사용 컴포넌트에 1순위. 미디어쿼리는 페이지 전역 레이아웃(내비 데스크톱→모바일, 전역 타이포·간격, print)에만. JS `ResizeObserver` 대체 → 메인스레드 부담↓. **상태/내용 기반 스타일은 `:has()`**(첫 부모 셀렉터, 2023~ baseline) — "에러 input 있는 폼 섹션 강조", "특정 자식 가진 카드만 변형" 같은 걸 JS DOM 검사 없이. 단 성능상 `.container`/`.gallery`처럼 구체적 앵커에만 걸고(`body`/`:root`/`*` 금지), 내부 셀렉터엔 `>`/`+` 조합자로 탐색 범위 한정. 미지원 대비 `@supports (selector(:has(*)))`.
 - **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays. **구현 값**: `technique-recipes.md` §11(그레인/메시/강조 이탈/지속 비대칭) — 지시만 읽고 넘어가지 말 것. flat 패널 + 완벽히 균일한 반복 그리드는 규칙(색·폰트·대비)을 다 지켜도 "딱딱한 AI적 느낌"의 가장 흔한 원인.
 
@@ -242,7 +247,8 @@ Focus on:
 
 **Motion:**
 - `transform`과 `opacity`만 애니메이트 — `top`, `left`, `width`, `height` 애니메이트 금지
-- Spring Physics 기본: `type: "spring", stiffness: 100, damping: 20`
+- Spring Physics는 drag·release 등 촉각 피드백에 선택적으로 사용합니다. stiffness·damping은
+  장면의 이동 거리·허용 overshoot·수렴 시간에서 정하고, 모든 효과에 같은 spring 값을 강제하지 않습니다.
 - 스크롤 효과에 메인스레드 `scroll` 이벤트 리스너 직접 사용 금지 → CSS `animation-timeline`(우선) 또는 `IntersectionObserver`/GSAP ScrollTrigger로
 - 스크롤 컨테이너에 grain/noise 필터 금지 (성능)
 - `z-index` 남발 금지 — 시스템 레이어(navbar, modal, overlay)에만

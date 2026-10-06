@@ -13,6 +13,8 @@
 - GSAP Timeline과 ScrollTrigger
 - GSAP Flip, SplitText
 - SVG DrawSVG, MorphSVG, MotionPath 또는 core attribute animation
+- 기존 Motion 라이브러리의 gesture·spring·layout animation
+- Canvas 2D와 Three.js/WebGL 기반의 제품 대표 인터랙션
 
 제외:
 
@@ -41,6 +43,12 @@
 
 높은 단계가 낮은 단계보다 더 좋은 디자인을 의미하지 않습니다. 같은 결과를 CSS로 안정적으로
 구현할 수 있으면 GSAP dependency를 추가하지 않습니다.
+
+렌더링 방식은 이 DOM 엔진 사다리와 별도로 결정합니다. 많은 도형·입자·변형이 핵심이면
+Canvas 2D, 실제 공간·조명·셰이더가 필요하면 Three.js/WebGL을 검토합니다. 깊이감만 필요하면
+CSS perspective·SVG·이미지 레이어로 충분한지 먼저 확인합니다. 이미 사용하는 Motion 라이브러리의
+gesture·spring이 목적을 달성하면 재사용합니다. 상세 선택·조작감·계측은
+[web-motion-engineering.md](web-motion-engineering.md)를 따릅니다.
 
 ## 3. GSAP Dependency Gate
 
@@ -112,9 +120,14 @@
 각 행에는 장식 명칭이 아니라 사용자가 이해하거나 조작하는 목적을 씁니다. 목적을 설명할 수 없는
 motion은 삭제합니다.
 
+대표 인터랙션·물리 반응·복제 장면은 위 행에 입력 경로, 원본 관찰값/채택값, 초기·중간·최종
+상태, 허용 오차·수렴 시간과 근거 파일을 덧붙입니다. 검증에 쓰는 숫자는 해당 장면의 목적에서
+정하며 사이트 전체의 움직이는 요소 비율이나 타이포 비율을 보편적 합격선으로 쓰지 않습니다.
+
 ## 6. Performance and Accessibility
 
-- 기본적으로 `transform`과 `opacity`만 애니메이트합니다.
+- DOM은 기본적으로 `transform`과 `opacity`를 애니메이트합니다. Canvas/WebGL은 draw cost,
+  픽셀 수·DPR·자산 업로드·offscreen pause를 별도 예산으로 관리합니다.
 - `will-change`는 실제 활성 구간에만 제한합니다.
 - 지속 motion과 scroll hijacking을 기본값으로 만들지 않습니다.
 - `prefers-reduced-motion: reduce`에서는 duration 축소만이 아니라 pin·scrub·parallax를 제거하고
@@ -131,5 +144,10 @@ motion은 삭제합니다.
 4. route 이동과 component unmount 뒤 orphan trigger·listener 확인
 5. layout shift, long task, dropped frame을 성능 도구로 측정
 6. keyboard와 screen reader reading order 확인
+
+대표 모션·물리 반응·복제에는 실제 입력으로 반응하는지, 전환 중간 상태가 존재하는지,
+입력을 멈춘 뒤 위치와 속도가 계약대로 수렴하는지 확인합니다. Canvas/WebGL의 DOM box가
+변했다는 사실만으로 내부 장면이 움직였다고 판정하지 않습니다. 상태 계측과 실제 화면을
+대조하며, 상세 실행은 [web-motion-engineering.md](web-motion-engineering.md)의 검증 절을 따릅니다.
 
 검증하지 못한 plugin은 `SUPPORTED`가 아니라 `NOT RUN` 또는 `UNVERIFIED`로 기록합니다.

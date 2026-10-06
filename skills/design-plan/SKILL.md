@@ -333,6 +333,10 @@ Adopt·Adapt·Avoid를 포함합니다.
 - 데스크톱 대표 화면 + 모바일 핵심 화면 포함
 - 스크린샷만 먼저 보고 이해·구도·리듬·제품성·신뢰·모바일을 비평
 
+모션이 제품의 대표 표현이면 [web-motion-engineering.md](references/web-motion-engineering.md)를
+읽고 후보의 핵심 입력→반응을 작은 프로토타입으로 실행합니다. 정적 화면 비평과 실제 조작감
+비평을 함께 direction에 남기고, 새 주 행동이 생기면 Phase 2-5로 돌아갑니다.
+
 선택 결과와 탈락 이유를 각각 `direction`과 `critique` 파일에 저장합니다. 실제 렌더를 만들지 않은
 경우 생략 근거를 기록합니다.
 
@@ -399,12 +403,17 @@ Experience Contract에 기록합니다. `모바일은 1열 stack`만 있으면 �
 
 ### 4-3. Web Motion Contract
 
-브라우저에서 실행되는 signature motion, 스크롤 연동, 레이아웃 전환, 텍스트·SVG 모션이 있으면
+브라우저에서 실행되는 signature motion, 스크롤 연동, 레이아웃 전환, 텍스트·SVG·Canvas/WebGL 모션이 있으면
 [web-motion-contract.md](references/web-motion-contract.md)를 읽고 각 장면의 목적, trigger, engine,
 fallback, cleanup, 검증 방법을 기록합니다. CSS transition·View Transitions·Scroll-driven
 Animations를 우선하고, pin·snap·복잡한 timeline·DOM 재배치·텍스트 분할·SVG path가 실제로 필요할
 때만 GSAP core, ScrollTrigger, Flip, SplitText, SVG plugin을 선택합니다. 프로젝트 manifest에 없는
 dependency를 자동으로 추가하지 않습니다.
+
+물리 반응·Canvas/WebGL·대표 인터랙션을 만들거나 원본 모션을 가져오고 복제하면
+[web-motion-engineering.md](references/web-motion-engineering.md)의 해당 절만 추가로 읽습니다.
+원본에서 관찰한 수치와 제품에 적용할 값을 구분하고, 장면별 검증 기준을 direction 또는 layout에
+기록합니다. 기능형 UI의 단순 상태 전환에는 이 확장 절차를 요구하지 않습니다.
 
 이 계약은 실시간 웹 UI만 다룹니다. Remotion, HyperFrames, BGM·SFX, MP4 렌더링, 영상용 storyboard는
 Aphrodite의 범위 밖이며 `video-maker`로 인계합니다.
@@ -523,6 +532,11 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 5. 실제 이미지·폰트·영상·스크립트로 성능 측정
 6. `DESIGN.md` lint는 대화형일 때만 보조 신호로 사용. 헤드리스 무출력은 통과로 간주하지 않음
 
+대표 모션·물리 반응·복제 작업은 Web Motion Contract의 장면별 입력·중간 상태·수렴 검사를
+실행합니다. `scripts/measure_web_motion.py` 또는 기존 프로젝트 테스트로 근거를 수집하고,
+미학 비평·모바일 과업·reduced-motion 검증 결과와 함께 보고합니다. 계측만 한 결과는
+`UNVERIFIED`이며, 자동 검사의 `PASS`는 실행한 장면별 기준에만 적용합니다.
+
 자동 수정→재검증은 최대 2라운드입니다. 남은 문제는 숨기지 않고 잔여 이슈로 보고합니다.
 
 ## Phase 7: Evolve
@@ -560,7 +574,8 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
   marketplace·설치·세션 노출 근거, 추천·동의 결과,
   실제 선택한 Product Design/local/Stitch 어댑터. 적용 대상이 아니면 `NOT APPLICABLE`
 - Product Design 유무 대조가 요청됐거나 첫 도입이면 adapter comparison 결과 또는 `NOT RUN` 이유
-- Web Motion Contract 적용 여부와 선택한 CSS/GSAP 경로. 영상 요청이면 `video-maker` 인계 근거
+- Web Motion Contract 적용 여부와 선택한 엔진. 대표 모션·물리 반응·복제면 실제 입력 trace,
+  장면별 검사 결과와 시각 근거. 영상 요청이면 `video-maker` 인계 근거
 - `Module Coverage`: 각 내부 모듈의 절대 해석 경로, module/native-fallback/NOT RUN 상태,
   미실행 범위. 조건부 모듈은 NOT REQUESTED/requested를 구분하고, 요청된 경로의
   `NOT RUN`/`UNVERIFIED`/`BLOCKED` 항목은 완료 증거로 계산하지 않음
@@ -588,6 +603,7 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 | [experience-contract-guide.md](references/experience-contract-guide.md) | 모든 신규·재설계 작업의 경험 계약 |
 | [render-critique-loop.md](references/render-critique-loop.md) | 방향 탐색과 첫 구현 비평 |
 | [web-motion-contract.md](references/web-motion-contract.md) | 브라우저 실시간 모션이 있을 때만 |
+| [web-motion-engineering.md](references/web-motion-engineering.md) | 모션 중심 창작·물리 반응·Canvas/WebGL·원본 모션 계측과 복제 |
 | [design-md-guide.md](references/design-md-guide.md) | DESIGN.md 생성·마이그레이션·export |
 | `MODULE_SKILL[frontend-design]` | Phase 3·5 시각 방향과 구현 |
 | `MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md` | Phase 4 구조 계약 |
