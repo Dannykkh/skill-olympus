@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.21.0] - 2026-10-06
+
+### Features
+
+- **aphrodite**: Connect website motion creation, reference capture and replication to the existing design workflow. The conditional motion engineering guide covers engine selection, frame timing, physical response, cleanup and reference measurement; scenes define their own input, intermediate-state and settling criteria. Reuse CSS/DOM, existing Motion/GSAP and Canvas/WebGL according to the scene, and replace universal spring settings and unsupported performance claims with scene-specific choices and actual measurement. No new skill entry point or registry change. (f9a5670)
+- **motion measurement**: Add an original Python Playwright recorder for real pointer, drag, wheel, click and keyboard input, with input events and DOM or optional page state on the same timeline. Scene-specific `range`, `final`, `visits` and `settled` checks distinguish continuous transitions from dead interactions and immediate jumps. Missing or non-finite metrics fail; captures without criteria remain `UNVERIFIED`. Numeric results accompany visual, mobile and reduced-motion review. (f9a5670)
+
+### Documentation
+
+- Update the English and Korean READMEs and workflow guide. Publish the motion-web comparison, adoption boundaries, primary technical sources and reproducible validation results. The guide and recorder are independently authored; upstream text, code and assets are not included. (f9a5670)
+
+### Validation and Scope
+
+- The full Node suite passes (208; no failures or skips), including version synchronization. On Windows the test process uses Git Bash and GNU grep ahead of WSL in PATH.
+- The installed Codex Aphrodite Python suite passes (18), including real Chrome input, continuous transitions, dead and jumping controls, scroll coordinate separation, Canvas state and reduced-motion checks.
+- Windows full installation passes all 12 Claude, Codex, Antigravity and Grok runtime checks. All 39 changed skill files match their canonical sources. The `design-plan.zip` and `frontend-design.zip` release packages pass integrity and source-content checks.
+- Upstream examples, real product websites, complete design runs in each native CLI and physical touch devices were not tested. Helper and installer execution evidence is distinct from those workflows.
+
 ## [6.20.0] - 2026-10-06
 
 ### Features
