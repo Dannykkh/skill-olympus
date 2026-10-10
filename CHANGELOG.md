@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-10-10
+
+### Breaking Changes
+
+- **install**: Remove the custom-agent install pipeline; no custom agents ship. Native subagents handle delegation and skills own their procedures. The two skill-owned compatibility prompts (`chronos-worker`, `gotcha-analyzer`) are deleted, since their delegation rules already live in their skills, together with the agent-only scripts (`agent-catalog.js`, `agent-files.js`, `agent-install-policy.js`, `sync-claude-agents.js`). `--include-source-only-agents`, `--include-project-agents`, `--include-passive-agents` and `--include-broad-coding-agents` are accepted with an "ignored" warning. Install and uninstall now move agent files that match the 52 stale agent names (for example `~/.claude/agents/architect.md`) and `agents/references` to a timestamped backup folder, remove an emptied `agents/` folder, and delete the generated `AGENTS-CATALOG.md` (only when it carries the generator banner) and `.claude-agents-sync-manifest.json`. The Codex and Antigravity syncs read the previous manifest: recorded agent copies whose hash still matches are deleted, and edited ones are kept in `_olympus-preserved`. The three global rule templates no longer mention `AGENTS-CATALOG.md`. (165f741)
+
+### Other Changes
+
+- **agents**: Remove the 33 standalone reference agents under `agents/` and `agents/references/mermaid-patterns.md`. Since the entrypoint-only runtime (v5.0.0) none was installed, read by a skill or script, or spawned. Their names, plus `ai-ml` and the six same-name agents removed in v6.17.0, join `STALE_AGENT_FILES` so installs older than v5.0.0 clean them up. (c371a89)
+- **mermaid-diagrams**: Move the `stateDiagram-v2` syntax that only `mermaid-patterns.md` carried into `skills/mermaid-diagrams/references/state-diagrams.md`; all eight diagrams render with Mermaid 11. (c371a89)
+
+### Documentation
+
+- Update the agent policy, counts and lists in AGENTS.md, both READMEs, QUICK-REFERENCE.md, SETUP.md, `docs/skill-registry-migration.md`, `docs/workflow-guide.md` and `docs/smart-setup-registry.json`, and add the v7.0.0 entry to the READMEs' recent changes. (c371a89, 165f741, 7272086)
+
+### Validation and Scope
+
+- The full Node suite passes (208; no failures or skips), including version synchronization. New tests cover legacy manifest cleanup (matching copies deleted, edited copies preserved, unrecorded user files kept), pruning of pipeline leftovers and ignored flags, and guard that no custom agent prompt ships again.
+- Windows full installation passes all 12 Claude, Codex, Antigravity and Grok runtime checks. After the pipeline removal no CLI keeps `AGENTS-CATALOG.md` or `.claude-agents-sync-manifest.json`, the installed CLAUDE.md, AGENTS.md and GEMINI.md no longer mention the agent catalog, and no agent folder is created.
+- NOT RUN: `install.sh` on macOS or Linux (checked only with `bash -n` and `install-sh.test.js`) and the Python suite (no Python code changed).
+- `skills/*/agents/openai.yaml` (Codex skill UI metadata) and the non-agent `conversations/` and `memory/` folders under `~/.codex/agents/` are left alone. Unrelated skill zip files in the working tree are excluded from this release.
+
 ## [6.21.1] - 2026-10-10
 
 ### Other Changes
