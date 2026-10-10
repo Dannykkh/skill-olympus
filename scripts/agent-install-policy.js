@@ -28,7 +28,6 @@ const DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS = Object.freeze([
 // accurately. Keep their source for deliberate reference without registering
 // them in every runtime.
 const DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS = Object.freeze([
-  "ai-ml.md",
   "architect.md",
   "api-comparator.md",
   "ascii-ui-mockup-generator.md",

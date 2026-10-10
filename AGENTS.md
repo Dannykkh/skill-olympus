@@ -8,7 +8,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |IMPORTANT: Prefer retrieval-led reasoning over pre-training knowledge
 |skills/:{ai-tools,meta,documentation,frontend,development,planning,professional,testing,git,utilities}
-|agents/:{fullstack,ai-ml,api,qa,docs,design,migration,planning,communication,general}
+|agents/:{fullstack,api,qa,docs,design,migration,planning,communication,general}
 
 
 ### Quick Retrieval Paths
@@ -152,7 +152,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
 | 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact, recipe | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프 + 파일→결정 앵커 조회) + CLI별 어댑터 (Codex notify / Antigravity PreToolUse+PostInvocation / Grok camelCase envelope·post_tool_use) + 메모리 크기 점검 및 압축 |
 
-### Agents (참고 소스 36개: 최상위 34개 + 스킬 소유 2개, 기본 등록 0개)
+### Agents (참고 소스 35개: 최상위 33개 + 스킬 소유 2개, 기본 등록 0개)
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
@@ -186,7 +186,6 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | | performance-engineer | 네이티브 측정·프로파일링을 우선하는 성능 참고자료 (소스 보존, 기본 미설치) |
 | | stitch-developer | stitch 스킬로 대체된 얇은 호스트 (소스 보존, 기본 미설치) |
 | | writing-specialist | 네이티브 글쓰기와 명시형 글쓰기 스킬로 대체 (소스 보존, 기본 미설치) |
-| | ai-ml | 정적 공급자 API·RAG 참고자료; 실제 구현은 프로젝트 SDK·공식 문서·평가 테스트 우선 (소스 보존, 기본 미설치) |
 | | qa-engineer | Minos·Argos·실제 테스트 실행으로 대체된 QA 참고자료 (소스 보존, 기본 미설치) |
 | | qa-writer | Zephermine·Minos의 시나리오 생성 계약으로 대체된 참고자료 (소스 보존, 기본 미설치) |
 | | security-reviewer | 안전한 보안 감사 참조와 Argos Phase 7로 흡수된 정적 감사 프롬프트 (소스 보존, 기본 미설치) |

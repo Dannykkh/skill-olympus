@@ -1041,16 +1041,15 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
 test("shared runtime agent policy keeps every custom agent source-only by default", () => {
   assert.equal(DEFAULT_DISABLED_PASSIVE_AGENTS.length, 6);
   assert.equal(DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS.length, 7);
-  assert.equal(DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS.length, 21);
+  assert.equal(DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS.length, 20);
   assert.equal(DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS.length, 2);
   assert.equal(DEFAULT_RUNTIME_AGENT_ALLOWLIST.length, 0);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 36);
+  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 35);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("security-reviewer.md"), true);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("chronos-worker.md"), true);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("gotcha-analyzer.md"), true);
 
   const all = new Map([
-    ["ai-ml.md", "ai-ml"],
     ["frontend-react.md", "frontend"],
     ["chronos-worker.md", "chronos-worker"],
     ["gotcha-analyzer.md", "gotcha-analyzer"],

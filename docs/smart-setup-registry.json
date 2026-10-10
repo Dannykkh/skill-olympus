@@ -294,7 +294,6 @@
     { "id": "database-mysql", "tags": ["mysql"], "priority": "optional" },
     { "id": "database-postgresql", "tags": ["postgresql", "supabase"], "priority": "optional" },
     { "id": "python-fastapi-guidelines", "tags": ["python", "fastapi"], "priority": "optional" },
-    { "id": "ai-ml", "tags": ["python", "openai", "anthropic", "gemini", "ollama"], "priority": "optional" },
     { "id": "api-comparator", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
     { "id": "qa-engineer", "tags": ["*"], "priority": "optional" },
     { "id": "qa-writer", "tags": ["*"], "priority": "optional" },
