@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.1] - 2026-10-11
+
+### Bug Fixes
+
+- **release-notes**: Stop running `git add -A` before the release commit, which could pull unrelated edits and untracked files (build output, archives, local settings) into it. The skill now stages `CHANGELOG.md` and the version files it updated and commits them with a pathspec, so changes already staged for other paths stay out of the commit and remain staged. Annotated tags pass `--cleanup=verbatim`; the default cleanup mode treated the CHANGELOG `###` section headings as comments and dropped them from the tag message. (201eab0)
+
+### Documentation
+
+- Add the v7.0.1 entry to the READMEs' recent changes. (f743126)
+
+### Validation and Scope
+
+- The full Node suite passes (208; no failures or skips), including version synchronization.
+- In a scratch repository, the new commit step committed only the version file and a new `CHANGELOG.md` while a file staged beforehand stayed staged and an untracked archive stayed untracked; `--cleanup=verbatim` kept `### Features` in the tag message, which the default mode removed.
+- Windows full installation passes all 12 Claude, Codex, Antigravity and Grok runtime checks, and the installed `release-notes` copies (including the source-only copies) carry the new commands with no `git add -A`.
+- Unrelated skill zip files in the working tree are excluded from this release.
+
 ## [7.0.0] - 2026-10-10
 
 ### Breaking Changes
