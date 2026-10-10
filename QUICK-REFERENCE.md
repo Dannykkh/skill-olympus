@@ -55,9 +55,7 @@
 
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
-| **backend-dotnet (소스 참고)** | ASP.NET Core 참고 패턴 (기본 미설치) | 이 저장소의 `agents/backend-dotnet.md` |
 | **dotnet-coding-standards (스킬)** | .NET 코딩 표준 통합 패키지 (규칙 본문 `references/rules.md` + C#/ASP.NET/EF Core 템플릿) | 이 저장소의 `skills/dotnet-coding-standards/` |
-| **desktop-wpf (소스 참고)** | WPF 참고 패턴 (기본 미설치) | 이 저장소의 `agents/desktop-wpf.md` |
 | **wpf-coding-standards (스킬)** | WPF 코딩 표준 통합 패키지 (규칙 본문 `references/rules.md` + MVVM/스레딩/메모리 템플릿) | 이 저장소의 `skills/wpf-coding-standards/` |
 | **claude-code-dotnet** | 25개 스킬, 5개 에이전트 | `npx add-skill Aaronontheweb/claude-code-dotnet -a claude-code` |
 
@@ -72,8 +70,6 @@
 | 리소스 | 설명 | 설치 |
 |--------|------|------|
 | **database-schema-designer (source-only 스킬)** | DB-First 설계 + 타입, 인덱스, 제약조건, 마이그레이션 | 카탈로그의 원본 경로 |
-| **database-mysql (소스 참고)** | 고정 MySQL 패턴 참고자료 (기본 미설치) | 이 저장소의 `agents/database-mysql.md` |
-| **database-postgresql (소스 참고)** | 고정 PostgreSQL/Supabase 패턴 참고자료 (기본 미설치) | 이 저장소의 `agents/database-postgresql.md` |
 
 ### Java / Spring Boot
 
@@ -298,12 +294,6 @@ claude plugin install voltagent-qa-sec
 | `skills/data-visualization/` | 차트 선택 가이드 + Python 시각화 패턴 (Anthropic 공식 벤더링) |
 | `skills/humanizer/` | AI 글쓰기 패턴 제거 |
 | `skills/ppt-generator/` | PPT 생성 |
-| `agents/frontend-react.md` | React + Zustand + TanStack 참고자료 (기본 미설치) |
-| `agents/backend-spring.md` | Java 21 + Spring Boot 3.x 참고자료 (기본 미설치) |
-| `agents/backend-dotnet.md` | ASP.NET Core + Clean Architecture + EF Core 참고자료 (기본 미설치) |
-| `agents/desktop-wpf.md` | WPF 데스크톱 참고자료 (기본 미설치) |
-| `agents/database-mysql.md` | MySQL 8.0 + Flyway 참고자료 (기본 미설치) |
-| `agents/database-postgresql.md` | PostgreSQL 16 + Supabase + RLS 참고자료 (기본 미설치) |
 | `skills/memory-compact/` | source-only 내부 모듈 — 활성 mnemo 규칙이 카탈로그에서 직접 읽어 MEMORY.md 크기 점검·압축 |
 | `skills/manage-skills/` | 세션 변경사항 분석 → verify-* 스킬 자동 생성/업데이트 |
 | `skills/mnemo/scripts/` | 기억 위생·연결 도구 — `mnemo_doctor.py`(17점검, `--chart` 방문 기록, `--fix`는 기계적인 셋만, 기억 본문은 `--promote-structure`), `build_anchor_index.py`(파일 → 그 파일에 기대는 결정, 훅이 쓰는 파생 색인), `harvest_lineage.py`(파일별 변경 계보), `check_memory_anchors.py`(앵커 실재+CodeMap 이동 후보), `split_memory_file.py`(항목별 분할), `reclassify_observations.py`(오분류 관찰 복구); 상세 `skills/mnemo/docs/memory-hygiene.md` |

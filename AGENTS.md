@@ -8,7 +8,6 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 |IMPORTANT: Prefer retrieval-led reasoning over pre-training knowledge
 |skills/:{ai-tools,meta,documentation,frontend,development,planning,professional,testing,git,utilities}
-|agents/:{fullstack,api,qa,docs,design,migration,planning,communication,general}
 
 
 ### Quick Retrieval Paths
@@ -25,8 +24,8 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Documentation|네이티브 작성 + 목적별 skills/api-handoff, documentation-and-adrs, release-notes, crafting-effective-readmes|
 |FastAPI|프로젝트·공식 문서 우선; 명시 요청 시 skills/python-backend-fastapi/SKILL.md|
 |Spring Boot|프로젝트 build manifest·BOM·기존 계층·설정·테스트 우선; 버전 API는 공식 문서 확인|
-|ASP.NET Core|프로젝트·공식 문서 우선; agents/backend-dotnet.md는 소스 참고용|
-|WPF Desktop|프로젝트·공식 문서 우선; agents/desktop-wpf.md는 소스 참고용|
+|ASP.NET Core|프로젝트·공식 문서 우선; 명시 요청 시 skills/dotnet-coding-standards/SKILL.md|
+|WPF Desktop|프로젝트·공식 문서 우선; 명시 요청 시 skills/wpf-coding-standards/SKILL.md|
 |Database Design|skills/database-schema-designer/SKILL.md|
 |Database (MySQL)|프로젝트 DB 버전·schema·migration 도구·실행 계획 우선|
 |Database (PostgreSQL/Supabase)|프로젝트 schema·RLS·연결 설정 우선; 명시 요청 시 skills/supabase-postgres-best-practices/SKILL.md|
@@ -105,7 +104,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 - Codex 스킬은 기본적으로 `~/.codex/skills/`에만 설치합니다. 이 저장소의 `.agents/skills` 미러는 격리 테스트용 `--include-project-skills` 옵션에서만 생성합니다.
 - 공개 추적 스킬 소스 103개는 기본 allowlist 합집합 25개(공통 진입점 19개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 100개(활성 22 + source-only 78), Codex와 Antigravity 각각 99개(활성 21 + source-only 78), OpenClaw과 Hermes Agent 각각 97개(활성 19 + source-only 78)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 99개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 22개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
 - 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
-- 사용자 정의 에이전트는 기본 거부 정책으로 0개를 등록합니다. 현재 소스 36종(패시브 6, 네이티브 중복 7, 중복 전문·스킬 래퍼 21, 워크플로 호환 프롬프트 2)은 source-only이며, 스킬과 같은 이름의 에이전트는 두지 않습니다(스킬 안 규칙 본문은 `references/`에 둠). 새 에이전트도 고유 런타임 계약을 입증해 allowlist에 넣기 전에는 자동 활성화되지 않습니다. 전체 소스 복사가 필요할 때만 `--include-source-only-agents`를 사용하고, Codex 프로젝트 에이전트 미러는 `--include-project-agents`에서만 생성합니다.
+- 사용자 정의 에이전트는 기본 거부 정책으로 0개를 등록합니다. 현재 소스는 스킬이 소유한 워크플로 호환 프롬프트 2종(`chronos-worker`, `gotcha-analyzer`)뿐이고 source-only이며, 스킬과 같은 이름의 에이전트는 두지 않습니다(스킬 안 규칙 본문은 `references/`에 둠). 새 에이전트도 고유 런타임 계약을 입증해 allowlist에 넣기 전에는 자동 활성화되지 않습니다. 전체 소스 복사가 필요할 때만 `--include-source-only-agents`를 사용하고, Codex 프로젝트 에이전트 미러는 `--include-project-agents`에서만 생성합니다.
 - 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모), `/video-maker`(비디오메이커, 영상 요청 진입점)
 
 ---
@@ -152,43 +151,12 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
 | 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact, recipe | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프 + 파일→결정 앵커 조회) + CLI별 어댑터 (Codex notify / Antigravity PreToolUse+PostInvocation / Grok camelCase envelope·post_tool_use) + 메모리 크기 점검 및 압축 |
 
-### Agents (참고 소스 35개: 최상위 33개 + 스킬 소유 2개, 기본 등록 0개)
+### Agents (참고 소스 2개: 스킬 소유 2개, 기본 등록 0개)
+
+`agents/`에 있던 독립 참고 에이전트는 v5.0.0 이후 설치·스킬 참조·호출이 한 번도 없어 삭제했습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트, 절차는 스킬이 맡습니다.
 
 | 카테고리 | 에이전트 | 설명 |
 |----------|----------|------|
-| **Optional References** | architect | 네이티브 계획·검토와 documentation-and-adrs로 대체된 아키텍처 참고자료 (소스 보존, 기본 미설치) |
-| | documentation | 네이티브 작성과 목적별 문서 스킬로 대체된 템플릿 참고자료 (소스 보존, 기본 미설치) |
-| | mermaid-diagram-specialist | mermaid-diagrams 스킬로 대체된 다이어그램 참고자료 (소스 보존, 기본 미설치) |
-| | typescript-spec | 프로젝트 설정·컴파일러를 따르는 네이티브 TypeScript 작업으로 대체 (소스 보존, 기본 미설치) |
-| | python-spec | 프로젝트 설정·테스트를 따르는 네이티브 Python 작업으로 대체 (소스 보존, 기본 미설치) |
-| | ui-ux-designer | design-plan 렌더 비평과 ui-ux-auditor로 대체 (소스 보존, 기본 미설치) |
-| | frontend-react | 프로젝트 manifest·기존 UI 구조·테스트를 따르는 네이티브 구현으로 대체 (소스 보존, 기본 미설치) |
-| | backend-spring | 프로젝트 build manifest·기존 계층·테스트를 따르는 네이티브 구현으로 대체 (소스 보존, 기본 미설치) |
-| | database-mysql | 프로젝트 DB 버전·schema·migration·실행 계획 기반 구현으로 대체 (소스 보존, 기본 미설치) |
-| | database-postgresql | 프로젝트 schema·RLS·연결 설정과 명시형 Postgres 스킬로 대체 (소스 보존, 기본 미설치) |
-| | react-best-practices | React/Next.js 최적화 참고 문서 (소스 보존, 기본 미설치) |
-| | python-fastapi-guidelines | FastAPI 참고 문서 (소스 보존, 기본 미설치) |
-| | naming-conventions | 네이밍 참고 문서 (소스 보존, 기본 미설치) |
-| | writing-guidelines | 글쓰기 + AI 패턴 제거 참고 문서 (소스 보존, 기본 미설치) |
-| | bilingual-dev | 한↔영 개발 참고 문서 (소스 보존, 기본 미설치) |
-| | web-preview-guide | 레거시 웹 프리뷰 상세 문서 (소스 보존, 기본 미설치) |
-| | codebase-pattern-finder | 네이티브 탐색과 중복되는 패턴 검색 참고자료 (소스 보존, 기본 미설치) |
-| | explore-agent | 네이티브 탐색과 중복되는 레거시 분석 참고자료 (소스 보존, 기본 미설치) |
-| | debugger | 네이티브 진단과 중복되는 디버깅 참고자료 (소스 보존, 기본 미설치) |
-| | feature-tracker | 네이티브 계획 상태·핸드오프로 대체된 추적 참고자료 (소스 보존, 기본 미설치) |
-| | tdd-coach | 네이티브 테스트 루프와 명시형 TDD 스킬로 대체 (소스 보존, 기본 미설치) |
-| | migration-helper | deprecation-and-migration으로 대체된 참고자료 (소스 보존, 기본 미설치) |
-| | spec-interviewer | zephermine 인터뷰 흐름으로 대체된 참고자료 (소스 보존, 기본 미설치) |
-| | api-comparator | 네이티브 diff + deprecation-and-migration + api-tester로 대체 (소스 보존, 기본 미설치) |
-| | ascii-ui-mockup-generator | 네이티브 ASCII 출력과 Aphrodite 와이어프레임 흐름으로 대체 (소스 보존, 기본 미설치) |
-| | backend-dotnet | 프로젝트·공식 문서 우선의 ASP.NET Core 참고자료 (소스 보존, 기본 미설치) |
-| | desktop-wpf | 프로젝트·공식 문서 우선의 WPF 참고자료 (소스 보존, 기본 미설치) |
-| | performance-engineer | 네이티브 측정·프로파일링을 우선하는 성능 참고자료 (소스 보존, 기본 미설치) |
-| | stitch-developer | stitch 스킬로 대체된 얇은 호스트 (소스 보존, 기본 미설치) |
-| | writing-specialist | 네이티브 글쓰기와 명시형 글쓰기 스킬로 대체 (소스 보존, 기본 미설치) |
-| | qa-engineer | Minos·Argos·실제 테스트 실행으로 대체된 QA 참고자료 (소스 보존, 기본 미설치) |
-| | qa-writer | Zephermine·Minos의 시나리오 생성 계약으로 대체된 참고자료 (소스 보존, 기본 미설치) |
-| | security-reviewer | 안전한 보안 감사 참조와 Argos Phase 7로 흡수된 정적 감사 프롬프트 (소스 보존, 기본 미설치) |
 | **Skill-owned source-only** | chronos-worker | auto-continue-loop 정본을 가리키는 선택 호환 프롬프트 (기본 미설치) |
 | | gotcha-analyzer | memory-distill 정본을 가리키는 선택 호환 프롬프트 (기본 미설치) |
 

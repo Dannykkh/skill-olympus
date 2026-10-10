@@ -349,7 +349,7 @@ Docker 배포 환경 만들어줘
 |------|------|----------|
 | `fullstack-coding-standards` | 4계층 아키텍처, 코딩 규칙 12개 | 사용자가 명시 요청할 때 |
 | `code-reviewer` | 기능/책임 단위 분리, DRY, 보안 체크 | 코드 리뷰나 보안 감사를 요청할 때 |
-| `react-best-practices` | Vercel React 규칙 | React 규칙 검토를 요청할 때 |
+| `vercel-react-best-practices` | Vercel React 규칙 | React 규칙 검토를 요청할 때 |
 | `naming-analyzer` | 네이밍 분석·대안 제안 | 네이밍 검토를 요청할 때 |
 
 ### 문서화 도구

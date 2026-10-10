@@ -800,18 +800,9 @@ claude plugin install pg-aiguide
 | test-driven-development | source-only | TDD 워크플로우 참고자료 |
 | systematic-debugging | source-only | 체계적 디버깅 참고자료 |
 
-### source-only 에이전트 참고자료 (기본 미설치, 주요 항목)
+### source-only 에이전트
 
-| 이름 | 용도 |
-|------|------|
-| frontend-react | 소스 참고용; 실제 구현은 프로젝트 설정·기존 UI 구조·테스트를 따르는 네이티브 작업자 사용 |
-| backend-spring | 소스 참고용; 실제 구현은 build manifest·기존 계층·테스트를 따르는 네이티브 작업자 사용 |
-| architect | 소스 참고용; 실제 설계는 네이티브 계획·검토 + documentation-and-adrs 사용 |
-| security-reviewer | 소스 참고용; 실제 검증은 code-reviewer 보안 감사 모드 또는 argos Phase 7 사용 |
-| stitch-developer | 소스 참고용; 실제 실행은 design-plan이 조건부 source-only stitch 어댑터를 직접 읽어 수행 |
-| qa-engineer | 소스 참고용; 실제 QA는 프로젝트 테스트 실행·minos·argos 사용 |
-| documentation | 소스 참고용; 실제 작성은 네이티브 작업자 + 목적별 문서 스킬 사용 |
-| spec-interviewer | 소스 참고용; 실제 인터뷰는 zephermine 사용 |
+`agents/`에 있던 독립 참고 에이전트는 설치·스킬 참조·호출이 없어 삭제했습니다. 남은 것은 스킬이 소유한 호환 프롬프트 2개(`chronos-worker`, `gotcha-analyzer`)이며 기본 설치되지 않습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트, 절차는 스킬이 맡습니다.
 
 ### 기본 활성 진입점과 source-only 요청
 

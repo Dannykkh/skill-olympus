@@ -1,54 +1,8 @@
 "use strict";
 
-// Broad passive guides stay available as reference material without entering
-// every runtime's agent registry.
-const DEFAULT_DISABLED_PASSIVE_AGENTS = Object.freeze([
-  "react-best-practices.md",
-  "python-fastapi-guidelines.md",
-  "naming-conventions.md",
-  "writing-guidelines.md",
-  "bilingual-dev.md",
-  "web-preview-guide.md",
-]);
-
-// These explicit agents have no runtime consumers and duplicate native
-// exploration, planning, debugging, or a canonical on-demand skill.
-const DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS = Object.freeze([
-  "codebase-pattern-finder.md",
-  "explore-agent.md",
-  "debugger.md",
-  "feature-tracker.md",
-  "tdd-coach.md",
-  "migration-helper.md",
-  "spec-interviewer.md",
-]);
-
-// These specialist agents either wrap an existing explicit skill or restate
-// broad guidance that the native model and project documentation handle more
-// accurately. Keep their source for deliberate reference without registering
-// them in every runtime.
-const DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS = Object.freeze([
-  "architect.md",
-  "api-comparator.md",
-  "ascii-ui-mockup-generator.md",
-  "backend-spring.md",
-  "backend-dotnet.md",
-  "database-mysql.md",
-  "database-postgresql.md",
-  "desktop-wpf.md",
-  "documentation.md",
-  "frontend-react.md",
-  "mermaid-diagram-specialist.md",
-  "performance-engineer.md",
-  "python-spec.md",
-  "qa-engineer.md",
-  "qa-writer.md",
-  "security-reviewer.md",
-  "stitch-developer.md",
-  "typescript-spec.md",
-  "ui-ux-designer.md",
-  "writing-specialist.md",
-]);
+// The standalone reference agents under agents/ were deleted: none was
+// installed, read by a skill, or spawned after the entrypoint-only runtime.
+// Their names live in prune-stale-assets.js so older installs are cleaned up.
 
 // Workflow persistence and memory distillation are owned by their skills and
 // harnesses. These files remain as optional compatibility prompts, but a
@@ -60,9 +14,6 @@ const DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS = Object.freeze([
 ]);
 
 const DEFAULT_SOURCE_ONLY_AGENTS = Object.freeze([
-  ...DEFAULT_DISABLED_PASSIVE_AGENTS,
-  ...DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS,
-  ...DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS,
   ...DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS,
 ]);
 
@@ -89,9 +40,6 @@ function selectRuntimeAgents(allAgentFiles, includeSourceOnlyAgents = false) {
 }
 
 module.exports = {
-  DEFAULT_DISABLED_PASSIVE_AGENTS,
-  DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS,
-  DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS,
   DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS,
   DEFAULT_RUNTIME_AGENT_ALLOWLIST,
   DEFAULT_SOURCE_ONLY_AGENTS,

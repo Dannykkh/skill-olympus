@@ -142,6 +142,7 @@ For in-depth guidance on specific diagram types, see:
 - **[references/flowcharts.md](references/flowcharts.md)** - Node shapes, connections, decision logic, subgraphs, styling
 - **[references/erd-diagrams.md](references/erd-diagrams.md)** - Entities, relationships, cardinality, keys, attributes
 - **[references/c4-diagrams.md](references/c4-diagrams.md)** - System context, container, component diagrams, boundaries
+- **[references/state-diagrams.md](references/state-diagrams.md)** - Lifecycle states, labelled transitions, aliases, composite states, choice/fork/join, concurrent regions, notes
 - **[references/advanced-features.md](references/advanced-features.md)** - Themes, styling, configuration, layout options
 
 ## Best Practices

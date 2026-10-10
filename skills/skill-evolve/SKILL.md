@@ -105,7 +105,7 @@ skill-evolve --min 5
 
   스킬                  gotcha  learned  총계   상태
   humanizer               4       1       5    개선 권장
-  backend-spring          3       0       3    개선 가능
+  react-dev               3       0       3    개선 가능
   commit-work             1       2       3    개선 가능
 
   권장: skill-evolve humanizer route로 시작하세요

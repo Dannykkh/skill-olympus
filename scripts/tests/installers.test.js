@@ -9,11 +9,8 @@ const {
   latestTurn: latestAntigravityTurn,
 } = require("../../skills/antigravity-mnemo/hooks/save-turn");
 const { collectAgentFiles } = require("../agent-files");
-const { pruneStaleAssets } = require("../prune-stale-assets");
+const { pruneStaleAssets, STALE_AGENT_FILES } = require("../prune-stale-assets");
 const {
-  DEFAULT_DISABLED_PASSIVE_AGENTS,
-  DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS,
-  DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS,
   DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS,
   DEFAULT_RUNTIME_AGENT_ALLOWLIST,
   DEFAULT_SOURCE_ONLY_AGENTS,
@@ -449,7 +446,7 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     tempHome,
     ".codex",
     "agents",
-    "react-best-practices.md",
+    "chronos-worker.md",
   );
   fs.mkdirSync(path.dirname(staleAgentPath), { recursive: true });
   fs.writeFileSync(staleAgentPath, "stale managed copy");
@@ -1039,42 +1036,17 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
 });
 
 test("shared runtime agent policy keeps every custom agent source-only by default", () => {
-  assert.equal(DEFAULT_DISABLED_PASSIVE_AGENTS.length, 6);
-  assert.equal(DEFAULT_DISABLED_NATIVE_OVERLAP_AGENTS.length, 7);
-  assert.equal(DEFAULT_DISABLED_REDUNDANT_SPECIALIST_AGENTS.length, 20);
   assert.equal(DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS.length, 2);
   assert.equal(DEFAULT_RUNTIME_AGENT_ALLOWLIST.length, 0);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 35);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("security-reviewer.md"), true);
+  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 2);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("chronos-worker.md"), true);
   assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("gotcha-analyzer.md"), true);
 
+  // A name the policy has never seen must stay disabled too (default deny).
   const all = new Map([
-    ["frontend-react.md", "frontend"],
     ["chronos-worker.md", "chronos-worker"],
     ["gotcha-analyzer.md", "gotcha-analyzer"],
-    ["security-reviewer.md", "source-security-wrapper"],
-    ["react-best-practices.md", "react-guide"],
-    ["python-fastapi-guidelines.md", "python-guide"],
-    ["naming-conventions.md", "naming-guide"],
-    ["writing-guidelines.md", "writing-guide"],
-    ["bilingual-dev.md", "bilingual-guide"],
-    ["web-preview-guide.md", "web-preview-guide"],
-    ["debugger.md", "debugger"],
-    ["spec-interviewer.md", "spec-interviewer"],
-    ["backend-dotnet.md", "backend-dotnet"],
-    ["stitch-developer.md", "stitch-developer"],
-    ["architect.md", "architect"],
-    ["documentation.md", "documentation"],
-    ["mermaid-diagram-specialist.md", "mermaid-diagram-specialist"],
-    ["python-spec.md", "python-spec"],
-    ["typescript-spec.md", "typescript-spec"],
-    ["ui-ux-designer.md", "ui-ux-designer"],
-    ["backend-spring.md", "backend-spring"],
-    ["database-mysql.md", "database-mysql"],
-    ["database-postgresql.md", "database-postgresql"],
-    ["qa-engineer.md", "qa-engineer"],
-    ["qa-writer.md", "qa-writer"],
+    ["future-agent.md", "future-agent"],
   ]);
   const defaults = selectRuntimeAgents(all);
   assert.deepEqual(Array.from(defaults.agentFiles.keys()), []);
@@ -1180,11 +1152,6 @@ test("Claude and Antigravity agent syncs support default exclusion and explicit 
       assert.equal(optInCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), true);
     }
     assert.match(optInCatalog, /\| chronos-worker \| active \|/);
-    assert.equal(
-      fs.existsSync(path.join(entry.agentsHome, "references")),
-      true,
-      "Source-only opt-in did not copy shared agent references",
-    );
     if (entry.script === syncAntigravityAssets) {
       for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
         const staleExcludedDir = path.join(entry.skillsHome, name);
@@ -1625,6 +1592,13 @@ test("custom agent sources match the source-only policy and never reuse a skill 
     .map((name) => name.replace(/\.md$/i, ""))
     .filter((name) => skillNames.has(name));
   assert.deepEqual(overlaps, []);
+
+  // 폐기 목록의 이름은 설치 때마다 백업 폴더로 옮겨진다. 살아 있는 소스와 겹치면
+  // opt-in으로 설치한 에이전트가 다음 설치에서 치워진다.
+  assert.deepEqual(
+    Array.from(agentFiles.keys()).filter((name) => STALE_AGENT_FILES.includes(name)),
+    [],
+  );
 });
 
 test("agent descriptions avoid YAML plain-scalar colon ambiguity", () => {

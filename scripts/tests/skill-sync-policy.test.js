@@ -547,13 +547,13 @@ test("unlink removes exact untracked Olympus assets and preserves same-name user
       env(home) {
         return { ...process.env, HOME: home, USERPROFILE: home };
       },
-      exactSource: path.join(repoRoot, "agents", "architect.md"),
+      exactSource: path.join(repoRoot, "skills", "auto-continue-loop", "agents", "chronos-worker.md"),
       exactTarget(home) {
-        return path.join(home, "agents", "architect.md");
+        return path.join(home, "agents", "chronos-worker.md");
       },
-      modifiedSource: path.join(repoRoot, "agents", "documentation.md"),
+      modifiedSource: path.join(repoRoot, "skills", "project-gotchas", "agents", "gotcha-analyzer.md"),
       modifiedTarget(home) {
-        return path.join(home, "agents", "documentation.md");
+        return path.join(home, "agents", "gotcha-analyzer.md");
       },
     },
     {

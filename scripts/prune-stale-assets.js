@@ -16,6 +16,52 @@ const STALE_AGENT_FILES = [
   "react-useeffect-guidelines.md",
   "reducing-entropy.md",
   "web-preview-development.md",
+  // Agents deleted in v6.17.0 because a skill of the same name owns the content.
+  // The same old-install gap applies to them as to the block below.
+  "api-tester.md",
+  "code-reviewer.md",
+  "database-schema-designer.md",
+  "dotnet-coding-standards.md",
+  "fullstack-coding-standards.md",
+  "wpf-coding-standards.md",
+  // Reference agents deleted in 2026-10: none was installed, read by a skill or
+  // spawned after the entrypoint-only runtime (v5.0.0). Installs older than v5.0.0
+  // may still register them, and the source-based disable pass can no longer
+  // see them once the sources are gone.
+  "ai-ml.md",
+  "api-comparator.md",
+  "architect.md",
+  "ascii-ui-mockup-generator.md",
+  "backend-dotnet.md",
+  "backend-spring.md",
+  "bilingual-dev.md",
+  "codebase-pattern-finder.md",
+  "database-mysql.md",
+  "database-postgresql.md",
+  "debugger.md",
+  "desktop-wpf.md",
+  "documentation.md",
+  "explore-agent.md",
+  "feature-tracker.md",
+  "frontend-react.md",
+  "mermaid-diagram-specialist.md",
+  "migration-helper.md",
+  "naming-conventions.md",
+  "performance-engineer.md",
+  "python-fastapi-guidelines.md",
+  "python-spec.md",
+  "qa-engineer.md",
+  "qa-writer.md",
+  "react-best-practices.md",
+  "security-reviewer.md",
+  "spec-interviewer.md",
+  "stitch-developer.md",
+  "tdd-coach.md",
+  "typescript-spec.md",
+  "ui-ux-designer.md",
+  "web-preview-guide.md",
+  "writing-guidelines.md",
+  "writing-specialist.md",
 ];
 
 const STALE_SKILL_DIRS = [
