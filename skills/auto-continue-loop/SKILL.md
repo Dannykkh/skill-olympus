@@ -173,7 +173,7 @@ Antigravity의 내부 판정 방식을 추정하지 않으며, 모든 런타임�
 
 지속성 엔진이 없으면 메인 컨텍스트에서 사이클을 순차 반복합니다. `--max-iterations`까지 또는 검증 게이트 통과까지 진행하되, 컨텍스트 한도에 유의합니다.
 
-`chronos-worker`라는 커스텀 에이전트 이름은 지속성 엔진이 아니며 기본 등록하지 않습니다. 한 사이클을 격리할 이점이 있을 때만 general-write 역할(Claude `general-purpose`, Codex `worker`, Antigravity 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트, Grok `general-purpose`)에 고유 파일 범위·검증 게이트·현재 로그·주차 목록을 함께 넘깁니다. 큐, 공유 로그, 재시도, 완료 판정과 다음 사이클은 메인 Chronos 하네스가 계속 소유합니다.
+별도 커스텀 에이전트는 없습니다. 한 사이클을 격리할 이점이 있을 때만 general-write 역할(Claude `general-purpose`, Codex `worker`, Antigravity 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트, Grok `general-purpose`)에 고유 파일 범위·검증 게이트·현재 로그·주차 목록을 함께 넘깁니다. 큐, 공유 로그, 재시도, 완료 판정과 다음 사이클은 메인 Chronos 하네스가 계속 소유합니다.
 
 ---
 
@@ -704,7 +704,6 @@ Codex 재개는 background `codex exec resume --last`로 수행되며, 현재 �
 | `skills/auto-continue-loop/scripts/continue-loop.ps1` | Codex notify → background resume (Windows) |
 | `skills/codex-mnemo/hooks/save-turn.sh` | Codex notify 오케스트레이터 + Chronos 체인 |
 | `skills/codex-mnemo/hooks/save-turn.ps1` | Codex notify 오케스트레이터 + Chronos 체인 |
-| `skills/auto-continue-loop/agents/chronos-worker.md` | 명시 opt-in용 source-only 호환 프롬프트 (기본 등록·지속성 의존 없음) |
 | 전역 카탈로그 `flow-verifier` 행의 `읽을 경로` | 선택 시 `${flow_verifier_root}/SKILL.md`의 Chronos 통합 계약 |
 | 전역 카탈로그 `code-reviewer` 행의 `읽을 경로` | 리뷰/보안 gate 선택 시 `${code_reviewer_root}/SKILL.md` |
 | `skills/systematic-debugging/SKILL.md` | 디버깅 방법론 참조 |

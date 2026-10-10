@@ -211,7 +211,7 @@ test("Codex sync integrates dedup for custom CODEX_HOME and unlink without needi
   const repository = path.join(f.root, "repository");
   const scripts = path.join(repository, "scripts");
   fs.mkdirSync(scripts, { recursive: true });
-  for (const name of ['agent-catalog.js', 'agent-files.js', 'agent-install-policy.js', 'prune-stale-assets.js', 'skill-catalog.js', 'skill-install-policy.js', 'codex-skill-dedup.js', 'sync-codex-assets.js']) {
+  for (const name of ['prune-stale-assets.js', 'skill-catalog.js', 'skill-install-policy.js', 'codex-skill-dedup.js', 'sync-codex-assets.js']) {
     fs.copyFileSync(path.join(__dirname, "..", name), path.join(scripts, name));
   }
   fs.mkdirSync(path.join(repository, "skills", "design-plan"), { recursive: true });

@@ -54,7 +54,6 @@ OpenClaw과 Hermes Agent는 기본 네 CLI 설치에 포함되지 않습니다. 
 | 가벼운 기본 구성 | 옵션 없음 |
 | source-only 77개까지 모두 활성 등록 | `--include-source-only-skills` |
 | 기존 범용 코딩 가이드 8개만 추가 활성 | `--include-broad-coding-skills` |
-| 레거시 에이전트 참고 파일 복사 | `--include-source-only-agents` |
 
 예를 들어 Windows에서 모든 호환 스킬을 다시 활성화하려면 다음과 같이 실행합니다.
 
@@ -70,8 +69,9 @@ OpenClaw과 Hermes Agent는 기본 네 CLI 설치에 포함되지 않습니다. 
 
 `--include-source-only-skills`는 Olympus의 source-only 원본을 활성 레지스트리에 추가하는
 옵션이지, `_olympus-preserved`에 보관된 사용자 충돌본을 복원하는 옵션은 아닙니다.
-`--include-source-only-agents`는 호환성 확인용 Markdown 참고 파일을 복사합니다. Codex에서는
-이 파일이 네이티브 `.toml` 에이전트로 활성화되는 것이 아닙니다.
+사용자 정의 에이전트는 더 이상 배포하지 않습니다. 예전 `--include-source-only-agents` 옵션은 받아들이되
+아무것도 설치하지 않으며, 예전에 복사된 Olympus 에이전트는 설치할 때 `_pruned-stale-olympus/`로
+옮기고 생성된 `AGENTS-CATALOG.md`는 지웁니다.
 
 ## 충돌본 확인과 복구
 

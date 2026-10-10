@@ -50,7 +50,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | **세션을 넘어가는 기억** | `mnemo`가 태그와 근거로 대화 맥락을 찾고, 기존 기억을 정비하며, 핸드오프로 작업을 이어감 |
 | **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 78개로 라우팅 |
 
-**공개 추적 스킬 소스 103개(기본 allowlist 합집합 25개 = 사용자 진입점 19개 + 런타임 어댑터 6개, 통합 표면별 활성 21개 또는 22개, skills-only 호스트 활성 19개, source-only 내부·선택 모듈 78개) · 스킬 소유 에이전트 프롬프트 2개(기본 등록 0개) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
+**공개 추적 스킬 소스 103개(기본 allowlist 합집합 25개 = 사용자 진입점 19개 + 런타임 어댑터 6개, 통합 표면별 활성 21개 또는 22개, skills-only 호스트 활성 19개, source-only 내부·선택 모듈 78개) · 사용자 정의 에이전트 없음(네이티브 서브에이전트 + 스킬) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
 
 ---
 
@@ -676,7 +676,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 `SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
 `--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
 이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
-네 CLI 런타임 표면 모두 스킬 소유 에이전트 프롬프트 2종을 기본 source-only로 유지합니다. `--include-source-only-agents`는 의도적인 호환성 테스트를 위해 레거시 프롬프트를 복사할 뿐, Markdown을 Codex 활성 에이전트로 만들지는 않습니다. 기존 `--include-passive-agents`와 `--include-broad-coding-agents`는 호환 별칭으로 유지합니다. Codex의 `.agents/agents` 미러는 프로젝트 미러와 source-only opt-in을 함께 지정할 때만 내용이 생깁니다.
+어느 CLI 런타임 표면에도 사용자 정의 에이전트를 배포하지 않습니다. 예전 옵션 `--include-source-only-agents`, `--include-project-agents`, `--include-passive-agents`, `--include-broad-coding-agents`는 기존 스크립트가 깨지지 않도록 받아들이지만 아무것도 설치하지 않습니다.
 
 에이전트를 쓰던 스킬의 오케스트레이션 절차는 유지하고, 의미 역할만 각 CLI 내장 작업자에 매핑합니다.
 
@@ -735,13 +735,9 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 | **번역** | ko-en-translator | 한↔영 양방향 번역 (기술 문서, 코드, i18n) |
 | **유틸** | humanizer, jira, datadog-cli, excel2md + 3개 | AI 패턴 제거, 통합 |
 
-### 에이전트 참고 소스 (스킬 소유 2개, 기본 등록 0개)
+### 에이전트 (배포하지 않음)
 
-이 파일들은 항상 켜진 런타임 페르소나가 아니라 호환성·참고용 소스입니다. 일반 분업은 각 CLI의 네이티브 서브에이전트가, 절차는 스킬이 담당합니다. 두 개 모두 기본 거부 정책 아래 source-only이며 `--include-source-only-agents`로 명시 복사할 수 있습니다. `agents/`에 있던 독립 참고 에이전트는 v5.0.0 이후 설치·스킬 참조·호출이 없어 삭제했습니다.
-
-| 영역 | 에이전트 |
-|------|----------|
-| **스킬 소유 호환 프롬프트** | chronos-worker, gotcha-analyzer |
+사용자 정의 에이전트는 배포하지 않습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트가, 절차는 스킬이 담당하며, 스킬 안 규칙 본문은 그 스킬의 `references/`에 둡니다. `agents/`에 있던 참고 에이전트와 스킬이 소유하던 호환 프롬프트 2개는 v5.0.0 이후 설치·스킬 참조·호출이 없어 에이전트 설치 파이프라인과 함께 삭제했습니다. 다시 설치하면 예전 버전이 남긴 Olympus 에이전트 사본은 `_pruned-stale-olympus/`로 옮기고, 생성된 `AGENTS-CATALOG.md`는 지웁니다.
 
 ### 훅 (9개)
 

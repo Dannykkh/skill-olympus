@@ -538,9 +538,7 @@ node scripts/sync-claude-skills.js ~/.claude
 # 모든 source-only 스킬도 활성 레지스트리에 추가해야 할 때만:
 node scripts/sync-claude-skills.js ~/.claude --include-source-only-skills
 
-# Custom agents는 기본 설치하지 않음
-# 호환성 테스트용 source-only 프롬프트가 꼭 필요할 때만:
-node scripts/sync-claude-agents.js ~/.claude --include-source-only-agents
+# 사용자 정의 에이전트는 배포하지 않음 (네이티브 서브에이전트 사용)
 
 # Hooks (글로벌) + settings.json 자동 설정
 cp hooks/*.sh hooks/*.ps1 ~/.claude/hooks/
@@ -735,7 +733,7 @@ claude plugin install pg-aiguide
 # Windows: install.bat
 # Linux/Mac: ./install.sh
 # → Skills, Commands, Hooks 글로벌 설치
-# → 사용자 정의 에이전트 참고 소스는 기본 미설치 (네이티브 서브에이전트 사용)
+# → 사용자 정의 에이전트는 배포하지 않음 (네이티브 서브에이전트 사용)
 # → settings.json 훅 설정 자동 등록
 # → CLAUDE.md 장기기억 규칙 자동 추가 (응답 태그, 대화 검색)
 ```
@@ -800,9 +798,9 @@ claude plugin install pg-aiguide
 | test-driven-development | source-only | TDD 워크플로우 참고자료 |
 | systematic-debugging | source-only | 체계적 디버깅 참고자료 |
 
-### source-only 에이전트
+### 사용자 정의 에이전트
 
-`agents/`에 있던 독립 참고 에이전트는 설치·스킬 참조·호출이 없어 삭제했습니다. 남은 것은 스킬이 소유한 호환 프롬프트 2개(`chronos-worker`, `gotcha-analyzer`)이며 기본 설치되지 않습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트, 절차는 스킬이 맡습니다.
+배포하지 않습니다. `agents/`의 참고 에이전트와 스킬이 소유하던 호환 프롬프트 2개는 설치·스킬 참조·호출이 없어 에이전트 설치 파이프라인과 함께 삭제했습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트, 절차는 스킬이 맡습니다. 예전 설치가 남긴 Olympus 에이전트 사본은 다음 설치 때 `_pruned-stale-olympus/`로 옮겨집니다.
 
 ### 기본 활성 진입점과 source-only 요청
 

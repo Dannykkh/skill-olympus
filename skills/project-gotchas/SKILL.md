@@ -135,9 +135,7 @@ CLI의 실패 패턴과 성공 패턴을 자동 수집하고 명시적으로 정
 ```
 skills/project-gotchas/
 ├── SKILL.md              ← 이 파일 (규칙서)
-├── config.json           ← 관찰 설정
-└── agents/
-    └── gotcha-analyzer.md ← source-only 호환 프롬프트 (기본 등록 안 함)
+└── config.json           ← 관찰 설정
 
 hooks/
 ├── save-tool-use.ps1|sh          ← Claude PostToolUse: 도구 단위 관찰

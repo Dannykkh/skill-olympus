@@ -82,7 +82,7 @@ rebuild 증거로 간주하지 않습니다.
 
 `--min-cluster` 미만인 단발 관찰은 무시 (노이즈).
 
-입력이 커서 격리 분석이 유리할 때만 **읽기 전용 클러스터 후보 추출**을 네이티브 역할에 위임합니다: Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`. 작업자는 스크럽된 관찰만 읽고 후보를 반환하며 파일을 쓰지 않습니다. 별도 `gotcha-analyzer` 이름은 필요하지 않습니다. 모드 판정, archive, 재번호, 파일 쓰기, index/MEMORY 동기화는 이 스킬을 실행한 메인 하네스가 소유합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 클러스터링을 순차 실행합니다.
+입력이 커서 격리 분석이 유리할 때만 **읽기 전용 클러스터 후보 추출**을 네이티브 역할에 위임합니다: Claude `Explore`, Codex `explorer`, Antigravity `research`, Grok `explore`. 작업자는 스크럽된 관찰만 읽고 후보를 반환하며 파일을 쓰지 않습니다. 모드 판정, archive, 재번호, 파일 쓰기, index/MEMORY 동기화는 이 스킬을 실행한 메인 하네스가 소유합니다. 위임이 없거나 병렬 이득이 없으면 메인 컨텍스트에서 같은 클러스터링을 순차 실행합니다.
 
 ### Phase 3: 출력 형식
 

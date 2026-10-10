@@ -2,9 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const {
-  DEFAULT_SOURCE_ONLY_AGENTS,
-} = require("../agent-install-policy");
+const { STALE_AGENT_FILES } = require("../prune-stale-assets");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const skillRoots = [
@@ -68,8 +66,12 @@ test("cross-CLI workflows do not invoke removed or read-only write agents", () =
   }
 });
 
-test("source-only agent names are not used as spawn targets", () => {
-  const names = DEFAULT_SOURCE_ONLY_AGENTS.map((name) =>
+// 사용자 정의 에이전트는 더 이상 배포하지 않는다. 지운 이름을 워크플로가 대상으로 부르면
+// 그 단계는 어느 CLI에서도 실행되지 않는다.
+test("deleted custom agent names are not used as spawn targets", () => {
+  // general-purpose는 지금 Claude 네이티브 역할 이름이라 옛 동명 파일과 별개다.
+  const notAgentNames = new Set(["MEMORY.md", "general-purpose.md"]);
+  const names = STALE_AGENT_FILES.filter((name) => !notAgentNames.has(name)).map((name) =>
     name.replace(/\.md$/i, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
   ).join("|");
   const directTarget = new RegExp(
@@ -81,7 +83,7 @@ test("source-only agent names are not used as spawn targets", () => {
     assert.doesNotMatch(
       fs.readFileSync(filePath, "utf8"),
       directTarget,
-      `${path.relative(repoRoot, filePath)} directly targets a source-only agent`,
+      `${path.relative(repoRoot, filePath)} directly targets a deleted custom agent`,
     );
   }
 });

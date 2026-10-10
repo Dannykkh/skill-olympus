@@ -293,10 +293,7 @@
     "internal-skills": [
       { "id": "deploymonitor", "reason": "특정 배포 시스템(DeployMonitor) 전용 내부 워크플로우. 범용 추천 대상 아님" }
     ],
-    "internal-agents": [
-      { "id": "chronos-worker", "reason": "auto-continue-loop 정본을 가리키는 source-only 호환 프롬프트. named spawn·기본 설치·추천 대상 아님" },
-      { "id": "gotcha-analyzer", "reason": "memory-distill 정본을 가리키는 source-only 호환 프롬프트. 자동 분석·기본 설치·추천 대상 아님" }
-    ]
+    "internal-agents": []
   },
 
   "hooks": [

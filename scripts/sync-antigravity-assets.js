@@ -5,25 +5,27 @@ const crypto = require("crypto");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { writeAgentsCatalog } = require("./agent-catalog");
-const { collectAgentFiles } = require("./agent-files");
-const { DEFAULT_RUNTIME_AGENT_ALLOWLIST, selectRuntimeAgents } = require("./agent-install-policy");
 const { pruneStaleAssets } = require("./prune-stale-assets");
 const { collectSkillFiles, copyMnemoSupportFiles, syncSkillSourceLibrary, writeSkillsCatalog } = require("./skill-catalog");
 const { RUNTIME_SKILL_EXCLUSIONS, selectRuntimeSkills } = require("./skill-install-policy");
 
 const argv = process.argv.slice(2);
-const knownArgs = new Set([
-  "--include-source-only-skills",
-  "--include-broad-coding-skills",
+// No custom agent sources ship any more. The old agent opt-in flags are still
+// accepted so existing scripts keep working, and they change nothing.
+const legacyAgentArgs = new Set([
   "--include-source-only-agents",
   "--include-passive-agents",
   "--include-broad-coding-agents",
+]);
+const knownArgs = new Set([
+  "--include-source-only-skills",
+  "--include-broad-coding-skills",
   "--unlink",
+  ...legacyAgentArgs,
 ]);
 
 function usage() {
-  console.error("Usage: node scripts/sync-antigravity-assets.js [--include-source-only-skills] [--include-broad-coding-skills] [--include-source-only-agents] [--unlink]");
+  console.error("Usage: node scripts/sync-antigravity-assets.js [--include-source-only-skills] [--include-broad-coding-skills] [--unlink]");
 }
 
 if (argv.includes("--help") || argv.includes("-h")) {
@@ -37,18 +39,16 @@ if (unknown) {
   process.exit(1);
 }
 
+for (const arg of argv.filter((value) => legacyAgentArgs.has(value))) {
+  console.warn(`[antigravity-sync] ignored ${arg}: no custom agent sources ship`);
+}
+
 const mode = argv.includes("--unlink") ? "unlink" : "copy";
 const includeSourceOnlySkills = argv.includes("--include-source-only-skills");
 const includeBroadCodingSkills = argv.includes("--include-broad-coding-skills");
-const includeSourceOnlyAgents = argv.some((arg) => [
-  "--include-source-only-agents",
-  "--include-passive-agents",
-  "--include-broad-coding-agents",
-].includes(arg));
 
 const repoRoot = path.resolve(__dirname, "..");
 const skillsSource = path.join(repoRoot, "skills");
-const agentsSource = path.join(repoRoot, "agents");
 const hooksSource = path.join(repoRoot, "hooks");
 const googleHome = process.env.ANTIGRAVITY_HOME
   ? path.resolve(process.env.ANTIGRAVITY_HOME)
@@ -228,9 +228,10 @@ function migrateLegacyGeminiAssets() {
   };
   for (const key of ["skills", "agents", "hooks"]) {
     for (const name of legacy[key]) {
-      const sourceRoot = key === "skills" ? skillsSource : key === "agents" ? agentsSource : hooksSource;
+      // Agent sources no longer exist, so legacy agent copies are judged by hash alone.
+      const sourceRoot = key === "skills" ? skillsSource : key === "agents" ? null : hooksSource;
       removeManaged(
-        path.join(sourceRoot, name),
+        sourceRoot ? path.join(sourceRoot, name) : null,
         path.join(legacyRoots[key], name),
         `legacy-gemini-${key}`,
         name,
@@ -241,7 +242,7 @@ function migrateLegacyGeminiAssets() {
   }
   for (const name of legacy.supportDirectories) {
     removeManaged(
-      path.join(agentsSource, name),
+      null,
       path.join(legacyRoots.agents, name),
       "legacy-gemini-agent-support",
       name,
@@ -304,7 +305,7 @@ function syncNamedFiles(files, targetRoot, key, previous) {
   }
 }
 
-function writeManifest(skillNames, agentNames, hookNames, supportDirectories) {
+function writeManifest(skillNames, hookNames) {
   writeJson(manifestPath, {
     mode: "copy",
     syncedAt: new Date().toISOString(),
@@ -312,18 +313,13 @@ function writeManifest(skillNames, agentNames, hookNames, supportDirectories) {
       googleHome,
       cliHome,
       skillsDir: targets.skills,
-      agentsDir: targets.agents,
       hooksDir: targets.hooks,
     },
     managedSkills: skillNames,
-    managedAgents: agentNames,
     managedHooks: hookNames,
-    managedSupportDirectories: supportDirectories,
     managedAssetHashes: {
       skills: hashNames(targets.skills, skillNames),
-      agents: hashNames(targets.agents, agentNames),
       hooks: hashNames(targets.hooks, hookNames),
-      supportDirectories: hashNames(targets.agents, supportDirectories),
     },
   });
 }
@@ -340,8 +336,6 @@ function run() {
     includeSourceOnlySkills,
     includeBroadCodingSkills,
   );
-  const allAgentFiles = collectAgentFiles(agentsSource, skillsSource);
-  const agentSelection = selectRuntimeAgents(allAgentFiles, includeSourceOnlyAgents);
   const hookFiles = collectHookFiles();
   const previous = managedState(readJson(manifestPath));
 
@@ -351,10 +345,6 @@ function run() {
   if (selection.defaultDisabledNames.length > 0) {
     console.log(`[antigravity-sync] source-only skills: ${selection.defaultDisabledNames.join(", ")}`);
   }
-  if (agentSelection.defaultDisabledNames.length > 0) {
-    console.log(`[antigravity-sync] source-only agents: ${agentSelection.defaultDisabledNames.join(", ")}`);
-  }
-
   if (mode === "copy") {
     pruneStaleAssets(cliHome, { backupBase: path.join(googleHome, "_olympus-preserved") });
   }
@@ -372,23 +362,12 @@ function run() {
       previous.hashes.skills[name],
     );
   }
-  syncNamedFiles(agentSelection.agentFiles, targets.agents, "agents", previous);
+  // No agent sources ship: an empty set removes the agent copies an earlier
+  // manifest recorded (hash match) and preserves anything else.
+  syncNamedFiles(new Map(), targets.agents, "agents", previous);
   syncNamedFiles(hookFiles, targets.hooks, "hooks", previous);
-
-  const supportDirectories = [];
-  if (mode === "copy" && agentSelection.agentFiles.size > 0 && fs.existsSync(agentsSource)) {
-    for (const entry of fs.readdirSync(agentsSource, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const sourcePath = path.join(agentsSource, entry.name);
-      const targetPath = path.join(targets.agents, entry.name);
-      prepareReplacement(sourcePath, targetPath, "agent-support", entry.name, previous.hashes.supportDirectories[entry.name]);
-      copyDirectory(sourcePath, targetPath);
-      supportDirectories.push(entry.name);
-    }
-  } else {
-    for (const name of previous.supportDirectories) {
-      removeManaged(path.join(agentsSource, name), path.join(targets.agents, name), "agent-support", name, previous.hashes.supportDirectories[name]);
-    }
+  for (const name of previous.supportDirectories) {
+    removeManaged(null, path.join(targets.agents, name), "agent-support", name, previous.hashes.supportDirectories[name]);
   }
 
   if (mode === "unlink") {
@@ -409,19 +388,8 @@ function run() {
     const skillsCatalog = writeSkillsCatalog(cliHome, sourceSkillFiles, "antigravity-sync", {
       activeSkillNames: selection.skillNames,
     });
-    const agentsCatalog = writeAgentsCatalog(cliHome, agentSelection.agentFiles, "antigravity-sync", {
-      activeAgentNames: includeSourceOnlyAgents
-        ? Array.from(agentSelection.agentFiles.keys())
-        : DEFAULT_RUNTIME_AGENT_ALLOWLIST,
-    });
-    writeManifest(
-      selection.skillNames,
-      Array.from(agentSelection.agentFiles.keys()),
-      Array.from(hookFiles.keys()),
-      supportDirectories,
-    );
+    writeManifest(selection.skillNames, Array.from(hookFiles.keys()));
     console.log(`[antigravity-sync] skills_catalog=${skillsCatalog}`);
-    console.log(`[antigravity-sync] agents_catalog=${agentsCatalog}`);
   }
 
   removeIfEmpty(targets.skills);
@@ -429,10 +397,8 @@ function run() {
   removeIfEmpty(targets.hooks);
   console.log(`[antigravity-sync] mode=${mode}`);
   console.log(`[antigravity-sync] skills=${mode === "copy" ? selection.skillNames.length : 0}`);
-  console.log(`[antigravity-sync] agents=${mode === "copy" ? agentSelection.agentFiles.size : 0}`);
   console.log(`[antigravity-sync] hooks=${mode === "copy" ? hookFiles.size : 0}`);
   console.log(`[antigravity-sync] antigravity_skills=${targets.skills}`);
-  console.log(`[antigravity-sync] antigravity_agents=${targets.agents}`);
   console.log(`[antigravity-sync] antigravity_hooks=${targets.hooks}`);
 }
 

@@ -8,14 +8,7 @@ const {
   appendTurn: appendAntigravityTurn,
   latestTurn: latestAntigravityTurn,
 } = require("../../skills/antigravity-mnemo/hooks/save-turn");
-const { collectAgentFiles } = require("../agent-files");
-const { pruneStaleAssets, STALE_AGENT_FILES } = require("../prune-stale-assets");
-const {
-  DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS,
-  DEFAULT_RUNTIME_AGENT_ALLOWLIST,
-  DEFAULT_SOURCE_ONLY_AGENTS,
-  selectRuntimeAgents,
-} = require("../agent-install-policy");
+const { pruneStaleAssets } = require("../prune-stale-assets");
 const {
   DEFAULT_COMMON_RUNTIME_SKILLS,
   DEFAULT_DISABLED_BROAD_CODING_SKILLS,
@@ -30,7 +23,6 @@ const installBat = path.join(repoRoot, "install.bat");
 const installAntigravityMcp = path.join(repoRoot, "install-mcp-antigravity.js");
 const generateCatalogs = path.join(repoRoot, "scripts", "generate-catalogs.js");
 const installHooksConfig = path.join(repoRoot, "install-hooks-config.js");
-const syncClaudeAgents = path.join(repoRoot, "scripts", "sync-claude-agents.js");
 const syncClaudeSkills = path.join(repoRoot, "scripts", "sync-claude-skills.js");
 const syncCodexAssets = path.join(repoRoot, "scripts", "sync-codex-assets.js");
 const syncAntigravityAssets = path.join(repoRoot, "scripts", "sync-antigravity-assets.js");
@@ -307,13 +299,11 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     false,
     "Codex skill was duplicated into the repository .agents/skills directory",
   );
-  for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-    assert.equal(
-      fs.existsSync(path.join(tempHome, ".codex", "agents", name)),
-      false,
-      `${name} should not be installed by default`,
-    );
-  }
+  assert.equal(
+    fs.existsSync(path.join(tempHome, ".codex", "agents")),
+    false,
+    "Codex sync created a custom-agent directory although no agent sources ship",
+  );
   assert.equal(
     fs.existsSync(path.join(repoRoot, ".agents", "agents")),
     false,
@@ -339,13 +329,9 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     true,
     "Broad React guide was not restored by opt-in",
   );
-  for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-    assert.equal(
-      fs.existsSync(path.join(tempHome, ".codex", "agents", name)),
-      true,
-      `${name} was not restored by opt-in`,
-    );
-  }
+  // 옛 에이전트 옵트인 플래그는 받아들이되 아무것도 설치하지 않는다.
+  assert.match(optInResult.stderr, /ignored --include-broad-coding-agents/);
+  assert.equal(fs.existsSync(path.join(tempHome, ".codex", "agents")), false);
 
   const defaultResult = spawnSync(process.execPath, [syncCodexAssets], {
     cwd: repoRoot,
@@ -361,15 +347,8 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     false,
     "Returning to default policy did not remove the opt-in guide",
   );
-  for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-    assert.equal(
-      fs.existsSync(path.join(tempHome, ".codex", "agents", name)),
-      false,
-      `Returning to default policy did not remove ${name}`,
-    );
-  }
 
-  const projectAgentOptInResult = spawnSync(
+  const retiredAgentFlagsResult = spawnSync(
     process.execPath,
     [
       syncCodexAssets,
@@ -378,30 +357,12 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     ],
     { cwd: repoRoot, env, encoding: "utf8", timeout: 120000 },
   );
-  assert.equal(projectAgentOptInResult.status, 0);
-  assert.equal(
-    fs.existsSync(path.join(repoRoot, ".agents", "agents", "chronos-worker.md")),
-    true,
-    "Project agent mirror was not restored by explicit opt-in",
-  );
-  for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-    assert.equal(
-      fs.existsSync(path.join(repoRoot, ".agents", "agents", name)),
-      true,
-      `Project mirror opt-in did not restore ${name}`,
-    );
-  }
-
-  const removeProjectAgentMirrorResult = spawnSync(
-    process.execPath,
-    [syncCodexAssets],
-    { cwd: repoRoot, env, encoding: "utf8", timeout: 120000 },
-  );
-  assert.equal(removeProjectAgentMirrorResult.status, 0);
+  assert.equal(retiredAgentFlagsResult.status, 0);
+  assert.match(retiredAgentFlagsResult.stderr, /ignored --include-project-agents/);
   assert.equal(
     fs.existsSync(path.join(repoRoot, ".agents", "agents")),
     false,
-    "Returning to default policy did not remove the project agent mirror",
+    "Retired project-agent flag created a repository agent mirror",
   );
 
   // A stale directory must still be removed when a mismatched manifest has
@@ -460,15 +421,15 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   assert.equal(
     fs.existsSync(staleAgentPath),
     false,
-    "Policy cleanup trusted a stale manifest and left a disabled agent installed",
+    "Legacy cleanup left a retired Olympus agent in CODEX_HOME/agents",
   );
   assert.ok(
     findFileWithContent(
-      path.join(tempHome, ".codex", "_olympus-preserved"),
+      path.join(tempHome, ".codex", "_pruned-stale-olympus"),
       "stale managed copy",
       `${path.sep}agents${path.sep}`,
     ),
-    "Policy cleanup removed a same-name custom agent without preserving it",
+    "Legacy cleanup removed a retired agent copy without a backup",
   );
   } finally {
     if (projectManifestBefore === null) {
@@ -1035,156 +996,59 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   assert.equal(fs.existsSync(localSkill), true);
 });
 
-test("shared runtime agent policy keeps every custom agent source-only by default", () => {
-  assert.equal(DEFAULT_DISABLED_WORKFLOW_SUPPORT_AGENTS.length, 2);
-  assert.equal(DEFAULT_RUNTIME_AGENT_ALLOWLIST.length, 0);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.length, 2);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("chronos-worker.md"), true);
-  assert.equal(DEFAULT_SOURCE_ONLY_AGENTS.includes("gotcha-analyzer.md"), true);
+test("Antigravity sync installs skills and hooks without custom agents and ignores retired agent flags", () => {
+  const googleHome = makeTempHome("ccc-antigravity-no-agents-test-");
+  const env = { ...process.env, ANTIGRAVITY_HOME: googleHome };
+  const cliHome = path.join(googleHome, "antigravity-cli");
+  const agentsHome = path.join(googleHome, "config", "agents");
+  const skillsHome = path.join(cliHome, "skills");
 
-  // A name the policy has never seen must stay disabled too (default deny).
-  const all = new Map([
-    ["chronos-worker.md", "chronos-worker"],
-    ["gotcha-analyzer.md", "gotcha-analyzer"],
-    ["future-agent.md", "future-agent"],
-  ]);
-  const defaults = selectRuntimeAgents(all);
-  assert.deepEqual(Array.from(defaults.agentFiles.keys()), []);
-  assert.deepEqual(defaults.defaultDisabledNames, Array.from(all.keys()));
+  const defaultResult = spawnSync(process.execPath, [syncAntigravityAssets], {
+    cwd: repoRoot,
+    env,
+    encoding: "utf8",
+    timeout: 120000,
+  });
+  assert.equal(
+    defaultResult.status,
+    0,
+    `Default Antigravity sync failed\nstdout:\n${defaultResult.stdout}\nstderr:\n${defaultResult.stderr}`,
+  );
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(cliHome, ".olympus-sync-manifest.json"), "utf8"),
+  );
+  assert.equal(manifest.managedSkills.length, 21);
+  assert.equal("managedAgents" in manifest, false);
+  const skillsCatalog = fs.readFileSync(path.join(cliHome, "SKILLS-CATALOG.md"), "utf8");
+  assert.match(skillsCatalog, /기본 활성 스킬: 21개/);
+  assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
+  assertDormantOrchestratorModule(cliHome, "Antigravity");
+  assert.equal(
+    fs.existsSync(path.join(googleHome, "config", "hooks", "antigravity-hook.js")),
+    true,
+  );
+  assert.equal(fs.existsSync(agentsHome), false, "Antigravity sync created a custom-agent directory");
+  assert.equal(fs.existsSync(path.join(cliHome, "AGENTS-CATALOG.md")), false);
 
-  const optedIn = selectRuntimeAgents(all, true);
-  assert.deepEqual(Array.from(optedIn.agentFiles.keys()), Array.from(all.keys()));
-  assert.deepEqual(optedIn.defaultDisabledNames, []);
-});
-
-test("Claude and Antigravity agent syncs support default exclusion and explicit opt-in", () => {
-  const tempRoot = makeTempHome("ccc-agent-policy-test-");
-  const claudeHome = path.join(tempRoot, ".claude");
-  const googleHome = path.join(tempRoot, ".gemini");
-  const cases = [
-    {
-      name: "Claude",
-      script: syncClaudeAgents,
-      scriptArgs: [claudeHome],
-      env: process.env,
-      catalogHome: claudeHome,
-      agentsHome: path.join(claudeHome, "agents"),
-      skillsHome: path.join(claudeHome, "skills"),
-    },
-    {
-      name: "Antigravity",
-      script: syncAntigravityAssets,
-      scriptArgs: [],
-      env: { ...process.env, ANTIGRAVITY_HOME: googleHome },
-      catalogHome: path.join(googleHome, "antigravity-cli"),
-      agentsHome: path.join(googleHome, "config", "agents"),
-      skillsHome: path.join(googleHome, "antigravity-cli", "skills"),
-    },
-  ];
-
-  for (const entry of cases) {
-    const defaultResult = spawnSync(process.execPath, [entry.script, ...entry.scriptArgs], {
-      cwd: repoRoot,
-      env: entry.env,
-      encoding: "utf8",
-      timeout: 120000,
-    });
+  for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
+    const staleExcludedDir = path.join(skillsHome, name);
+    fs.mkdirSync(staleExcludedDir, { recursive: true });
+    fs.writeFileSync(path.join(staleExcludedDir, "SKILL.md"), "stale incompatible copy");
+  }
+  const retiredFlagResult = spawnSync(
+    process.execPath,
+    [syncAntigravityAssets, "--include-source-only-agents"],
+    { cwd: repoRoot, env, encoding: "utf8", timeout: 120000 },
+  );
+  assert.equal(retiredFlagResult.status, 0);
+  assert.match(retiredFlagResult.stderr, /ignored --include-source-only-agents/);
+  assert.equal(fs.existsSync(agentsHome), false);
+  for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
     assert.equal(
-      defaultResult.status,
-      0,
-      `Default agent sync failed\nstdout:\n${defaultResult.stdout}\nstderr:\n${defaultResult.stderr}`,
-    );
-    const defaultCatalog = fs.readFileSync(
-      path.join(entry.catalogHome, "AGENTS-CATALOG.md"),
-      "utf8",
-    );
-    assert.match(defaultCatalog, /총 0개 에이전트가 설치되어 있습니다/);
-    assert.equal(
-      fs.existsSync(entry.agentsHome),
+      fs.existsSync(path.join(skillsHome, name)),
       false,
-      "Default sync should not leave an empty custom-agent directory",
+      `Antigravity retained incompatible skill ${name}`,
     );
-    if (entry.script === syncAntigravityAssets) {
-      const manifest = JSON.parse(
-        fs.readFileSync(
-          path.join(entry.catalogHome, ".olympus-sync-manifest.json"),
-          "utf8",
-        ),
-      );
-      assert.equal(manifest.managedSkills.length, 21);
-      const skillsCatalog = fs.readFileSync(
-        path.join(entry.catalogHome, "SKILLS-CATALOG.md"),
-        "utf8",
-      );
-      assert.match(skillsCatalog, /기본 활성 스킬: 21개/);
-      assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
-      assertDormantOrchestratorModule(entry.catalogHome, "Antigravity");
-      assert.equal(
-        fs.existsSync(path.join(googleHome, "config", "hooks", "antigravity-hook.js")),
-        true,
-      );
-    }
-    for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-      assert.equal(fs.existsSync(path.join(entry.agentsHome, name)), false);
-      assert.equal(defaultCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), false);
-    }
-
-    const optInResult = spawnSync(
-      process.execPath,
-      [entry.script, ...entry.scriptArgs, "--include-source-only-agents"],
-      { cwd: repoRoot, env: entry.env, encoding: "utf8", timeout: 120000 },
-    );
-    assert.equal(optInResult.status, 0);
-    const optInCatalog = fs.readFileSync(
-      path.join(entry.catalogHome, "AGENTS-CATALOG.md"),
-      "utf8",
-    );
-    assert.match(
-      optInCatalog,
-      new RegExp(`총 ${DEFAULT_SOURCE_ONLY_AGENTS.length}개 에이전트가 설치되어 있습니다`),
-    );
-    assert.match(
-      optInCatalog,
-      /복사된 source-only 참고 파일: 0개/,
-    );
-    for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-      assert.equal(fs.existsSync(path.join(entry.agentsHome, name)), true);
-      assert.equal(optInCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), true);
-    }
-    assert.match(optInCatalog, /\| chronos-worker \| active \|/);
-    if (entry.script === syncAntigravityAssets) {
-      for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
-        const staleExcludedDir = path.join(entry.skillsHome, name);
-        fs.mkdirSync(staleExcludedDir, { recursive: true });
-        fs.writeFileSync(path.join(staleExcludedDir, "SKILL.md"), "stale incompatible copy");
-      }
-    }
-
-    const returnToDefaultResult = spawnSync(process.execPath, [entry.script, ...entry.scriptArgs], {
-      cwd: repoRoot,
-      env: entry.env,
-      encoding: "utf8",
-      timeout: 120000,
-    });
-    assert.equal(returnToDefaultResult.status, 0);
-    const restoredCatalog = fs.readFileSync(
-      path.join(entry.catalogHome, "AGENTS-CATALOG.md"),
-      "utf8",
-    );
-    for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-      assert.equal(fs.existsSync(path.join(entry.agentsHome, name)), false);
-      assert.equal(restoredCatalog.includes(`| ${name.replace(/\.md$/, "")} |`), false);
-    }
-    assert.equal(fs.existsSync(path.join(entry.agentsHome, "references")), false);
-    if (entry.script === syncAntigravityAssets) {
-      for (const name of RUNTIME_SKILL_EXCLUSIONS.antigravity) {
-        assert.equal(
-          fs.existsSync(path.join(entry.skillsHome, name)),
-          false,
-          `Antigravity retained incompatible skill ${name}`,
-        );
-      }
-    }
   }
 });
 
@@ -1285,6 +1149,37 @@ test("stale Olympus assets are moved to backup while local-only assets remain", 
   );
 });
 
+test("prune cleans up what the removed custom-agent pipeline left behind", () => {
+  const tempHome = makeTempHome("ccc-prune-legacy-agents-");
+  const agentsDir = path.join(tempHome, "agents");
+  fs.mkdirSync(path.join(agentsDir, "references"), { recursive: true });
+  fs.writeFileSync(path.join(agentsDir, "chronos-worker.md"), "old opt-in copy");
+  fs.writeFileSync(path.join(agentsDir, "references", "patterns.md"), "old support file");
+  fs.writeFileSync(
+    path.join(tempHome, "AGENTS-CATALOG.md"),
+    "# 사용 가능한 글로벌 에이전트 카탈로그\n\n> 이 파일은 claude-agent-sync 설치 과정에서 자동 생성됩니다.\n",
+  );
+  fs.writeFileSync(path.join(tempHome, ".claude-agents-sync-manifest.json"), "{}");
+
+  pruneStaleAssets(tempHome, { now: new Date(2026, 9, 10, 9, 8, 7) });
+
+  const backup = path.join(tempHome, "_pruned-stale-olympus", "20261010-090807", "agents");
+  assert.equal(fs.existsSync(path.join(backup, "chronos-worker.md")), true);
+  assert.equal(fs.existsSync(path.join(backup, "references", "patterns.md")), true);
+  assert.equal(fs.existsSync(agentsDir), false, "an emptied agents directory should be removed");
+  assert.equal(fs.existsSync(path.join(tempHome, "AGENTS-CATALOG.md")), false);
+  assert.equal(fs.existsSync(path.join(tempHome, ".claude-agents-sync-manifest.json")), false);
+
+  // 생성기 머리말이 없는 같은 이름 파일과 사용자 에이전트는 사용자 것이므로 둔다.
+  const userHome = makeTempHome("ccc-prune-user-catalog-");
+  fs.mkdirSync(path.join(userHome, "agents"), { recursive: true });
+  fs.writeFileSync(path.join(userHome, "agents", "my-own.md"), "mine");
+  fs.writeFileSync(path.join(userHome, "AGENTS-CATALOG.md"), "# my notes\n");
+  pruneStaleAssets(userHome);
+  assert.equal(fs.readFileSync(path.join(userHome, "agents", "my-own.md"), "utf8"), "mine");
+  assert.equal(fs.readFileSync(path.join(userHome, "AGENTS-CATALOG.md"), "utf8"), "# my notes\n");
+});
+
 test("generate-catalogs creates global catalogs and honors excluded skills", () => {
   const tempHome = makeTempHome("ccc-catalog-test-");
   const result = spawnSync(
@@ -1313,7 +1208,6 @@ test("generate-catalogs creates global catalogs and honors excluded skills", () 
   );
 
   const skillsCatalog = fs.readFileSync(path.join(tempHome, "SKILLS-CATALOG.md"), "utf8");
-  const agentsCatalog = fs.readFileSync(path.join(tempHome, "AGENTS-CATALOG.md"), "utf8");
 
   assert.match(skillsCatalog, /auto-continue-loop/);
   assert.match(skillsCatalog, /\| auto-continue-loop \| active \|/);
@@ -1343,10 +1237,7 @@ test("generate-catalogs creates global catalogs and honors excluded skills", () 
   );
   assert.doesNotMatch(skillsCatalog, /agent-team-codex/);
   assert.doesNotMatch(skillsCatalog, /deploymonitor/);
-  assert.match(agentsCatalog, /사용 가능한 글로벌 에이전트 카탈로그/);
-  for (const name of DEFAULT_SOURCE_ONLY_AGENTS) {
-    assert.doesNotMatch(agentsCatalog, new RegExp(name.replace(/\.md$/, "")));
-  }
+  assert.equal(fs.existsSync(path.join(tempHome, "AGENTS-CATALOG.md")), false);
 });
 
 test("four CLI instruction surfaces keep the native-first boundary aligned", () => {
@@ -1570,56 +1461,20 @@ test("localized README surfaces stay connected and disclose portable hosts", () 
   assert.match(readmes.get("README-zh-CN.md"), /正常更新前\s*不需要先卸载/);
 });
 
-test("custom agent sources match the source-only policy and never reuse a skill name", () => {
-  const agentFiles = collectAgentFiles(
-    path.join(repoRoot, "agents"),
-    path.join(repoRoot, "skills"),
-  );
-  assert.deepEqual(
-    Array.from(agentFiles.keys()).sort(),
-    [...DEFAULT_SOURCE_ONLY_AGENTS].sort(),
-  );
-
-  // 같은 이름의 스킬과 에이전트가 함께 있으면 opt-in 설치 시 라우팅이 갈리고
-  // 한쪽만 갱신되어 낡는다. 스킬 안 규칙 본문은 agents/가 아닌 references/에 둔다.
-  const skillNames = new Set(
-    fs
-      .readdirSync(path.join(repoRoot, "skills"), { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name),
-  );
-  const overlaps = Array.from(agentFiles.keys())
-    .map((name) => name.replace(/\.md$/i, ""))
-    .filter((name) => skillNames.has(name));
-  assert.deepEqual(overlaps, []);
-
-  // 폐기 목록의 이름은 설치 때마다 백업 폴더로 옮겨진다. 살아 있는 소스와 겹치면
-  // opt-in으로 설치한 에이전트가 다음 설치에서 치워진다.
-  assert.deepEqual(
-    Array.from(agentFiles.keys()).filter((name) => STALE_AGENT_FILES.includes(name)),
-    [],
-  );
-});
-
-test("agent descriptions avoid YAML plain-scalar colon ambiguity", () => {
-  const agentFiles = collectAgentFiles(
-    path.join(repoRoot, "agents"),
-    path.join(repoRoot, "skills"),
-  );
-  for (const [name, filePath] of agentFiles) {
-    const descriptionLine = fs
-      .readFileSync(filePath, "utf8")
-      .split(/\r?\n/)
-      .find((line) => line.startsWith("description:"));
-    assert.ok(descriptionLine, `${name} is missing a description`);
-    const value = descriptionLine.slice("description:".length).trim();
-    const isQuotedOrBlock = /^["'>|]/.test(value);
-    assert.equal(
-      !isQuotedOrBlock && /:\s/.test(value),
-      false,
-      `${name} has an ambiguous unquoted colon in its description`,
-    );
+// 사용자 정의 에이전트는 배포하지 않는다. 설치 파이프라인이 없으므로 새 .md 프롬프트를
+// 두면 아무 CLI에도 설치되지 않는다. 스킬 안 규칙 본문은 references/에 둔다.
+// (skills/*/agents/openai.yaml은 Codex 스킬 화면 정보라 에이전트가 아니다.)
+test("no custom agent prompts ship", () => {
+  assert.equal(fs.existsSync(path.join(repoRoot, "agents")), false);
+  const prompts = [];
+  for (const entry of fs.readdirSync(path.join(repoRoot, "skills"), { withFileTypes: true })) {
+    const dir = path.join(repoRoot, "skills", entry.name, "agents");
+    if (!entry.isDirectory() || !fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (name.toLowerCase().endsWith(".md")) prompts.push(`${entry.name}/agents/${name}`);
+    }
   }
+  assert.deepEqual(prompts, []);
 });
 
 test("Antigravity Mnemo migrates legacy Gemini entries without deleting user rules", () => {

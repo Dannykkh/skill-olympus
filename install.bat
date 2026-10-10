@@ -4,8 +4,8 @@ setlocal enabledelayedexpansion
 
 REM ============================================
 REM   Claude Code Customizations Installer
-REM   Auto-install Skills, Agents, Hooks + MCP
-REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills] [--include-source-only-agents]
+REM   Auto-install Skills, Hooks + MCP
+REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -24,7 +24,6 @@ if "!SHOW_HELP!"=="1" (
     echo   --uninstall                        Remove managed assets
     echo   --include-source-only-skills       Register optional source-only skills
     echo   --include-broad-coding-skills      Register legacy broad coding skills
-    echo   --include-source-only-agents       Register optional custom agents
     echo   --help, -h                         Show this help without changing files
     exit /b 0
 )
@@ -63,8 +62,6 @@ set "OPENCLAW_SYNC_RESULT=not-run"
 set "HERMES_SYNC_RESULT=not-run"
 set "DEFAULT_MCP_SERVERS=context7 playwright"
 set "LEGACY_MCP_SERVERS=chrome-devtools sequential-thinking"
-set "INCLUDE_SOURCE_ONLY_AGENTS=0"
-set "SOURCE_ONLY_AGENT_FLAG="
 set "INCLUDE_SOURCE_ONLY_SKILLS=0"
 set "INCLUDE_BROAD_CODING_SKILLS=0"
 set "SOURCE_ONLY_SKILL_FLAG="
@@ -144,13 +141,9 @@ REM Determine mode (scan all arguments)
 set "MODE=copy"
 for %%A in (%*) do (
     if /i "%%A"=="--uninstall" set "MODE=uninstall"
-    if /i "%%A"=="--include-source-only-agents" set "INCLUDE_SOURCE_ONLY_AGENTS=1"
-    if /i "%%A"=="--include-passive-agents" set "INCLUDE_SOURCE_ONLY_AGENTS=1"
-    if /i "%%A"=="--include-broad-coding-agents" set "INCLUDE_SOURCE_ONLY_AGENTS=1"
     if /i "%%A"=="--include-source-only-skills" set "INCLUDE_SOURCE_ONLY_SKILLS=1"
     if /i "%%A"=="--include-broad-coding-skills" set "INCLUDE_BROAD_CODING_SKILLS=1"
 )
-if "!INCLUDE_SOURCE_ONLY_AGENTS!"=="1" set "SOURCE_ONLY_AGENT_FLAG=--include-source-only-agents"
 if "!INCLUDE_SOURCE_ONLY_SKILLS!"=="1" set "SOURCE_ONLY_SKILL_FLAG=--include-source-only-skills"
 if "!INCLUDE_BROAD_CODING_SKILLS!"=="1" set "SOURCE_ONLY_SKILL_FLAG=!SOURCE_ONLY_SKILL_FLAG! --include-broad-coding-skills"
 
@@ -229,15 +222,11 @@ if "%MODE%"=="uninstall" (
         echo       [ERROR] sync-claude-skills.js not found
         exit /b 1
     )
-    if exist "%SCRIPT_DIR%scripts\sync-claude-agents.js" (
-        node "%SCRIPT_DIR%scripts\sync-claude-agents.js" "%CLAUDE_DIR%" --unlink
-        if !errorlevel! neq 0 (
-            echo       [ERROR] Claude agent cleanup failed: !errorlevel!
-            exit /b 1
-        )
-        del /f /q "%CLAUDE_DIR%\AGENTS-CATALOG.md" >nul 2>nul
-    ) else (
-        echo       [ERROR] sync-claude-agents.js not found
+    REM No custom agents ship. Move legacy Olympus agent copies to a backup
+    REM folder and delete the generated agent catalog and sync manifest.
+    node "%SCRIPT_DIR%scripts\prune-stale-assets.js" "%CLAUDE_DIR%" --label uninstall
+    if !errorlevel! neq 0 (
+        echo       [ERROR] Legacy agent cleanup failed: !errorlevel!
         exit /b 1
     )
 
@@ -277,7 +266,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [6/14] Unlinking Codex Skills/Agents/Hooks sync...
+    echo [6/14] Unlinking Codex Skills/Hooks sync...
     if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-codex-assets.js" --unlink
         if !errorlevel! equ 0 (
@@ -370,7 +359,7 @@ if "%MODE%"=="uninstall" (
     )
 
     echo.
-    echo [10/14] Unlinking Antigravity Skills/Agents/Hooks sync...
+    echo [10/14] Unlinking Antigravity Skills/Hooks sync...
     if exist "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" (
         node "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" --unlink
         if !errorlevel! equ 0 (
@@ -543,21 +532,10 @@ if exist "%SCRIPT_DIR%scripts\sync-claude-skills.js" (
     exit /b 1
 )
 
-REM Install Agents (global, core)
+REM Custom agents: none ship. prune-stale-assets above moved any legacy
+REM Olympus agent copies to a backup folder.
 echo.
-echo [2/7] Installing Agents... (global) [core]
-if exist "%SCRIPT_DIR%scripts\sync-claude-agents.js" (
-    node "%SCRIPT_DIR%scripts\sync-claude-agents.js" "%CLAUDE_DIR%" !SOURCE_ONLY_AGENT_FLAG!
-    if !errorlevel! equ 0 (
-        echo       Done!
-    ) else (
-        echo       [ERROR] Agent sync failed: !errorlevel!
-        exit /b 1
-    )
-) else (
-    echo       [ERROR] sync-claude-agents.js not found
-    exit /b 1
-)
+echo [2/7] Agents: none ship (legacy copies moved to backup) [core]
 
 REM Install Hooks (global, always installed for mnemo)
 echo.
@@ -596,7 +574,7 @@ goto :after_claude_assets
 :skip_claude_assets
 echo [1/7] Skipping Claude global skills install... (Claude not selected)
 echo.
-echo [2/7] Skipping Claude global agents install... (Claude not selected)
+echo [2/7] Agents: none ship (Claude not selected)
 echo.
 echo [3/7] Skipping Claude global hooks install... (Claude not selected)
 
@@ -733,11 +711,11 @@ if exist "%SCRIPT_DIR%skills\codex-mnemo\install.js" (
 )
 echo       !CODEX_MNEMO_RESULT!
 
-REM Sync Codex Skills/Agents/Hooks (always runs, required for zephermine)
+REM Sync Codex Skills/Hooks (always runs, required for zephermine)
 echo.
-echo   Syncing Codex Skills/Agents/Hooks...
+echo   Syncing Codex Skills/Hooks...
 if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
-    node "%SCRIPT_DIR%scripts\sync-codex-assets.js" !SOURCE_ONLY_SKILL_FLAG! !SOURCE_ONLY_AGENT_FLAG!
+    node "%SCRIPT_DIR%scripts\sync-codex-assets.js" !SOURCE_ONLY_SKILL_FLAG!
     if !errorlevel! equ 0 (
         set "CODEX_SYNC_RESULT=Sync complete"
     ) else (
@@ -852,9 +830,9 @@ if exist "%SCRIPT_DIR%skills\antigravity-mnemo\install.js" (
 echo       !ANTIGRAVITY_MNEMO_RESULT!
 
 echo.
-echo   Syncing Antigravity Skills/Agents/Hooks...
+echo   Syncing Antigravity Skills/Hooks...
 if exist "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" (
-    node "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" !SOURCE_ONLY_SKILL_FLAG! !SOURCE_ONLY_AGENT_FLAG!
+    node "%SCRIPT_DIR%scripts\sync-antigravity-assets.js" !SOURCE_ONLY_SKILL_FLAG!
     if !errorlevel! equ 0 (
         set "ANTIGRAVITY_SYNC_RESULT=Sync complete"
     ) else (
@@ -952,16 +930,6 @@ if exist "%SCRIPT_DIR%skills\grok-mnemo\install.js" (
                 echo       [ERROR] sync-claude-skills.js not found
                 exit /b 1
             )
-            if exist "%SCRIPT_DIR%scripts\sync-claude-agents.js" (
-                node "%SCRIPT_DIR%scripts\sync-claude-agents.js" "%CLAUDE_DIR%" !SOURCE_ONLY_AGENT_FLAG!
-                if !errorlevel! neq 0 (
-                    echo       [ERROR] Grok compatibility agent sync failed: !errorlevel!
-                    exit /b 1
-                )
-            ) else (
-                echo       [ERROR] sync-claude-agents.js not found
-                exit /b 1
-            )
             if exist "%SCRIPT_DIR%install-claude-md.js" node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
         )
         node "%SCRIPT_DIR%skills\grok-mnemo\install.js"
@@ -1044,8 +1012,7 @@ echo.
 if "!HAS_CLAUDE!"=="1" (
     echo   [Claude]
     echo   - Skills: %CLAUDE_DIR%\skills\
-    echo   - Agents: %CLAUDE_DIR%\agents\
-    echo   - Catalogs: %CLAUDE_DIR%\SKILLS-CATALOG.md, %CLAUDE_DIR%\AGENTS-CATALOG.md
+    echo   - Catalog: %CLAUDE_DIR%\SKILLS-CATALOG.md
     echo   - CLAUDE.md memory rules registered
     echo   - MCP: !CLAUDE_MCP_RESULT!
     echo   - Orchestrator: !CLAUDE_ORCH_RESULT!
@@ -1053,7 +1020,7 @@ if "!HAS_CLAUDE!"=="1" (
 if "!HAS_CODEX!"=="1" (
     echo   [Codex]
     echo   - Mnemo: !CODEX_MNEMO_RESULT!
-    echo   - Skills/Agents/Hooks: !CODEX_SYNC_RESULT!
+    echo   - Skills/Hooks: !CODEX_SYNC_RESULT!
     echo   - MCP: !CODEX_MCP_RESULT!
     echo   - multi_agent: !CODEX_MULTI_AGENT_RESULT!
     echo   - Orchestrator: !CODEX_ORCH_RESULT!
@@ -1061,7 +1028,7 @@ if "!HAS_CODEX!"=="1" (
 if "!HAS_ANTIGRAVITY!"=="1" (
     echo   [Antigravity]
     echo   - Mnemo: !ANTIGRAVITY_MNEMO_RESULT!
-    echo   - Skills/Agents/Hooks: !ANTIGRAVITY_SYNC_RESULT!
+    echo   - Skills/Hooks: !ANTIGRAVITY_SYNC_RESULT!
     echo   - Hooks: !ANTIGRAVITY_HOOKS_RESULT!
     echo   - MCP: !ANTIGRAVITY_MCP_RESULT!
     echo   - Orchestrator: !ANTIGRAVITY_ORCH_RESULT!
@@ -1069,7 +1036,7 @@ if "!HAS_ANTIGRAVITY!"=="1" (
 if exist "%USERPROFILE%\.grok" (
     echo   [Grok]
     echo   - Mnemo: !GROK_MNEMO_RESULT!
-    echo   - Skills/Agents/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
+    echo   - Skills/MCP: reads ~/.claude/ directly via compat.claude - no sync needed
 )
 if exist "%APPDATA%\devin\cli" (
     echo   [Devin]

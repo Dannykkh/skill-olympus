@@ -62,7 +62,19 @@ const STALE_AGENT_FILES = [
   "web-preview-guide.md",
   "writing-guidelines.md",
   "writing-specialist.md",
+  // The last two compatibility prompts were deleted with the custom-agent
+  // install pipeline; their skills already held the delegation rules.
+  "chronos-worker.md",
+  "gotcha-analyzer.md",
 ];
+
+// Left behind by the removed custom-agent install pipeline. The catalog is
+// deleted only when it carries the generator's own header; the shared
+// references directory is moved like any other stale agent asset.
+const STALE_AGENT_SUPPORT_DIRS = ["references"];
+const STALE_GENERATED_FILES = [".claude-agents-sync-manifest.json"];
+const LEGACY_AGENTS_CATALOG = "AGENTS-CATALOG.md";
+const LEGACY_CATALOG_MARKER = "설치 과정에서 자동 생성됩니다";
 
 const STALE_SKILL_DIRS = [
   "deploy-server",
@@ -131,6 +143,29 @@ function pruneStaleAssets(rootDir, options = {}) {
     const movedTo = moveToBackup(path.join(agentsDir, name), backupRoot, "agents");
     if (movedTo) moved.push({ kind: "agent", name, path: movedTo });
   }
+  for (const name of STALE_AGENT_SUPPORT_DIRS) {
+    const movedTo = moveToBackup(path.join(agentsDir, name), backupRoot, "agents");
+    if (movedTo) moved.push({ kind: "agent-support", name, path: movedTo });
+  }
+  try {
+    if (fs.existsSync(agentsDir) && fs.readdirSync(agentsDir).length === 0) {
+      fs.rmdirSync(agentsDir);
+    }
+  } catch {
+    // A directory holding the user's own agents must remain.
+  }
+
+  for (const name of STALE_GENERATED_FILES) {
+    const target = path.join(root, name);
+    if (!fs.existsSync(target)) continue;
+    fs.rmSync(target, { force: true });
+    moved.push({ kind: "generated", name, path: null });
+  }
+  const catalog = path.join(root, LEGACY_AGENTS_CATALOG);
+  if (fs.existsSync(catalog) && fs.readFileSync(catalog, "utf8").includes(LEGACY_CATALOG_MARKER)) {
+    fs.rmSync(catalog, { force: true });
+    moved.push({ kind: "generated", name: LEGACY_AGENTS_CATALOG, path: null });
+  }
 
   const skillsDir = path.join(root, "skills");
   for (const name of STALE_SKILL_DIRS) {
@@ -170,9 +205,9 @@ function runCli() {
     return;
   }
 
-  console.log(`[prune-stale] ${label}moved ${result.moved.length} stale assets to ${result.backupRoot}`);
+  console.log(`[prune-stale] ${label}cleaned ${result.moved.length} stale assets (moved ones are in ${result.backupRoot})`);
   for (const item of result.moved) {
-    console.log(`  - ${item.kind}: ${item.name}`);
+    console.log(`  - ${item.kind}: ${item.name}${item.path ? "" : " (deleted, generated)"}`);
   }
 }
 
@@ -182,6 +217,8 @@ if (require.main === module) {
 
 module.exports = {
   STALE_AGENT_FILES,
+  STALE_AGENT_SUPPORT_DIRS,
+  STALE_GENERATED_FILES,
   STALE_SKILL_DIRS,
   pruneStaleAssets,
 };

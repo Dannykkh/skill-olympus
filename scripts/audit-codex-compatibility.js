@@ -5,7 +5,6 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFileSync, execSync } = require("child_process");
-const { collectAgentFiles } = require("./agent-files");
 
 const args = process.argv.slice(2);
 const writeIndex = args.indexOf("--write");
@@ -28,9 +27,7 @@ const codexAgentsPath = path.join(codexHome, "AGENTS.md");
 const codexHooksDir = path.join(codexHome, "hooks");
 
 const skillsDir = path.join(repoRoot, "skills");
-const agentsDir = path.join(repoRoot, "agents");
 const hooksDir = path.join(repoRoot, "hooks");
-const repoAgentFiles = collectAgentFiles(agentsDir, skillsDir);
 
 const detectionPatterns = [
   {
@@ -248,13 +245,6 @@ function classifySkill(item) {
   return "doc-marker";
 }
 
-function classifyAgent(item) {
-  const severity = highestSeverity(item.markers);
-  if (severity === "high") return "needs-adapter";
-  if (severity === "medium") return "needs-review";
-  return "doc-marker";
-}
-
 function markerSummary(item) {
   return item.markers
     .map((marker) => {
@@ -294,30 +284,6 @@ function scanSkillFlags(managedSkillNames = null) {
   return results.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function scanAgentFlags(managedAgentNames = null) {
-  const results = [];
-
-  for (const [agentName, agentPath] of repoAgentFiles.entries()) {
-    const markers = scanMarkdownFilesForMarkers([agentPath]);
-    const flags = markers.map((marker) => marker.key);
-
-    if (flags.length > 0) {
-      const item = {
-        name: agentName,
-        path: path.relative(repoRoot, agentPath).replace(/\\/g, "/"),
-        flags,
-        markers,
-        installedInCodex: managedAgentNames
-          ? managedAgentNames.has(agentName)
-          : null,
-      };
-      item.classification = classifyAgent(item);
-      results.push(item);
-    }
-  }
-
-  return results.sort((a, b) => a.name.localeCompare(b.name));
-}
 
 function safeExists(targetPath) {
   try {
@@ -600,19 +566,12 @@ function buildMarkdown() {
   const managedSkillNames = new Set(
     Array.isArray(manifest.managedSkills) ? manifest.managedSkills : [],
   );
-  const managedAgentNames = new Set(
-    Array.isArray(manifest.managedAgents) ? manifest.managedAgents : [],
-  );
   const skillFlags = scanSkillFlags(managedSkillNames);
-  const agentFlags = scanAgentFlags(managedAgentNames);
   const tomlAudit = parseTomlAudit(manifest);
   const priorityList = buildPriorityList(skillFlags);
 
   const managedSkills = Array.isArray(manifest.managedSkills)
     ? manifest.managedSkills.length
-    : 0;
-  const managedAgents = Array.isArray(manifest.managedAgents)
-    ? manifest.managedAgents.length
     : 0;
   const managedHooks = Array.isArray(manifest.managedHooks)
     ? manifest.managedHooks.length
@@ -624,10 +583,6 @@ function buildMarkdown() {
     : 0;
 
   const repoSkills = listDirectories(skillsDir).length;
-  const repoTopLevelAgents = countFiles(agentsDir, (name) =>
-    name.toLowerCase().endsWith(".md"),
-  );
-  const repoAgentSources = repoAgentFiles.size;
   const repoHooks = countFiles(hooksDir, (name) =>
     [".ps1", ".sh", ".js"].includes(path.extname(name).toLowerCase()),
   );
@@ -676,9 +631,6 @@ function buildMarkdown() {
       highestSeverity(item.markers) === "medium" &&
       item.classification !== "codex-adapted",
   );
-  const highAgentFlags = agentFlags.filter(
-    (item) => highestSeverity(item.markers) === "high",
-  );
 
   const lines = [];
   lines.push("# Codex Compatibility Report");
@@ -690,11 +642,9 @@ function buildMarkdown() {
   lines.push("## Inventory");
   lines.push("");
   lines.push(`- Repo skills: ${repoSkills}`);
-  lines.push(`- Repo agent source files: ${repoAgentSources} (${repoTopLevelAgents} top-level + ${repoAgentSources - repoTopLevelAgents} skill-owned)`);
   lines.push(`- Repo root hooks (.ps1/.sh/.js): ${repoHooks}`);
   lines.push(`- Managed sync skills: ${managedSkills}`);
   lines.push(`- Dormant Olympus skill sources: ${dormantCodexSkillSources}`);
-  lines.push(`- Managed sync agent source files: ${managedAgents}`);
   lines.push(`- Managed sync root hooks: ${managedHooks}`);
   lines.push(`- Managed Codex notify hooks: ${managedCodexNotifyHooks}`);
   lines.push(`- Installed Codex skills (total): ${installedCodexSkills}`);
@@ -705,10 +655,10 @@ function buildMarkdown() {
   lines.push("## Working Well");
   lines.push("");
   lines.push(
-    "- The fail-closed allowlist syncs only core harnesses and Codex adapters into `~/.codex/skills/`. Other compatible sources remain outside discovery in `~/.codex/.olympus/source-skills/` and are routed by exact catalog path. Duplicate project mirrors are opt-in via `--include-project-skills` and `--include-project-agents`.",
+    "- The fail-closed allowlist syncs only core harnesses and Codex adapters into `~/.codex/skills/`. Other compatible sources remain outside discovery in `~/.codex/.olympus/source-skills/` and are routed by exact catalog path. Duplicate project mirrors are opt-in via `--include-project-skills`.",
   );
   lines.push(
-    "- Agent Markdown files remain in the repository as source references only; the default sync does not install them or count them as effective Codex custom agents.",
+    "- No custom agent sources ship. Delegation uses Codex built-in subagents and procedures live in skills; the sync moves known legacy Olympus agent copies to a backup folder.",
   );
   lines.push(
     "- `config.toml` notify is wired directly or through a wrapper to `save-turn`, so Codex-Mnemo runs automatically each turn.",
@@ -788,13 +738,13 @@ function buildMarkdown() {
   lines.push("");
   lines.push("## Gaps");
   lines.push("");
-  if (managedAgentNames.size === 0 && installedCodexAgentSources === 0) {
+  if (installedCodexAgentSources === 0) {
     lines.push(
-      `1. No Olympus custom agents are installed by default. Codex built-in subagents and on-demand skills remain available; effective custom agents: ${installedCodexCustomAgents}.`,
+      `1. No Olympus custom agents ship. Codex built-in subagents and on-demand skills remain available; effective custom agents: ${installedCodexCustomAgents}.`,
     );
   } else {
     lines.push(
-      `1. Codex custom agents require \`~/.codex/agents/*.toml\` definitions. The ${installedCodexAgentSources} installed Markdown files are inert source references; effective custom agents: ${installedCodexCustomAgents}.`,
+      `1. ${installedCodexAgentSources} Markdown files remain in \`~/.codex/agents\`; Codex ignores them (custom agents need \`.toml\`). Known Olympus names move to a backup folder on the next sync; effective custom agents: ${installedCodexCustomAgents}.`,
     );
   }
   lines.push(
@@ -816,7 +766,7 @@ function buildMarkdown() {
     );
   }
   lines.push(
-    `4. ${highInstalledSkillFlags.length} Codex-installed skills and ${highAgentFlags.length} source-only agent files contain high-risk markers (vendor-only question tools, removed Claude team lifecycle calls, or non-portable question parameters).`,
+    `4. ${highInstalledSkillFlags.length} Codex-installed skills contain high-risk markers (vendor-only question tools, removed Claude team lifecycle calls, or non-portable question parameters).`,
   );
   lines.push(
     `   Additional review markers: ${reviewInstalledSkillFlags.length} installed skills, ${excludedSkillFlags.length} Codex-excluded skills. Excluded skills are not immediate Codex runtime risk but should stay documented as CLI-specific.`,
@@ -836,7 +786,6 @@ function buildMarkdown() {
   lines.push(
     `- Codex-excluded skills with markers: ${excludedSkillFlags.length}`,
   );
-  lines.push(`- Source-only agents with high-risk markers: ${highAgentFlags.length}`);
   lines.push("");
 
   const criticalRows = highInstalledSkillFlags
@@ -853,21 +802,6 @@ function buildMarkdown() {
     for (const item of criticalRows) {
       lines.push(
         `| \`${item.name}\` | ${item.classification} | ${markerSummary(item)} |`,
-      );
-    }
-  }
-  lines.push("");
-
-  lines.push("### Agents Needing Runtime Adapters");
-  lines.push("");
-  if (managedAgentNames.size === 0) {
-    lines.push("- None detected.");
-  } else {
-    lines.push("| Agent source | Classification | Reason |");
-    lines.push("|---|---|---|");
-    for (const name of Array.from(managedAgentNames).sort((a, b) => a.localeCompare(b))) {
-      lines.push(
-        `| \`${name.replace(/\.md$/i, "")}\` | source-only-in-codex | Markdown frontmatter must be translated to a Codex \`.toml\` custom-agent definition before runtime use |`,
       );
     }
   }
@@ -945,7 +879,7 @@ function buildMarkdown() {
     "4. Treat remaining review markers as documentation cleanup, not immediate Codex breakage. Prioritize the current report's installed-skill rows and Claude-only memory documentation when touching those skills next.",
   );
   lines.push(
-    "5. Re-run this audit after major skill/agent/hook changes to keep the report current.",
+    "5. Re-run this audit after major skill/hook changes to keep the report current.",
   );
 
   return `${lines.join("\n")}\n`;

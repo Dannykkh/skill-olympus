@@ -4,12 +4,6 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { generateAgentsCatalog } = require("./agent-catalog");
-const { collectAgentFiles } = require("./agent-files");
-const {
-  DEFAULT_RUNTIME_AGENT_ALLOWLIST,
-  selectRuntimeAgents,
-} = require("./agent-install-policy");
 const {
   collectSkillFiles,
   syncSkillSourceLibrary,
@@ -19,11 +13,10 @@ const { selectRuntimeSkills } = require("./skill-install-policy");
 
 const repoRoot = path.resolve(__dirname, "..");
 const skillsSrcDir = path.join(repoRoot, "skills");
-const agentsSrcDir = path.join(repoRoot, "agents");
 
 function usage() {
   console.error(
-    "Usage: node scripts/generate-catalogs.js <dest-home> [--source <name>] [--exclude <skill>]... [--include-source-only-skills] [--include-source-only-agents]",
+    "Usage: node scripts/generate-catalogs.js <dest-home> [--source <name>] [--exclude <skill>]... [--include-source-only-skills]",
   );
 }
 
@@ -41,7 +34,6 @@ let source = "installer";
 const excludeSkills = new Set();
 let includeSourceOnlySkills = false;
 let includeBroadCodingSkills = false;
-let includeSourceOnlyAgents = false;
 
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
@@ -82,7 +74,8 @@ for (let i = 0; i < args.length; i += 1) {
     arg === "--include-passive-agents" ||
     arg === "--include-broad-coding-agents"
   ) {
-    includeSourceOnlyAgents = true;
+    // No custom agent sources ship any more; the old flag is accepted and ignored.
+    console.warn(`[catalogs] ignored ${arg}: no custom agent sources ship`);
     continue;
   }
   if (arg.startsWith("-")) {
@@ -128,26 +121,12 @@ const compatibleSkillFiles = new Map(
     ([name]) => !runtimeExcludedNames.includes(name),
   ),
 );
-const allAgentFiles = collectAgentFiles(agentsSrcDir, skillsSrcDir);
-const { agentFiles } = selectRuntimeAgents(
-  allAgentFiles,
-  includeSourceOnlyAgents,
-);
 const skillsCatalogPath = path.join(destHome, "SKILLS-CATALOG.md");
-const agentsCatalogPath = path.join(destHome, "AGENTS-CATALOG.md");
 
 ensureDir(destHome);
 const sourceSkillFiles = syncSkillSourceLibrary(destHome, compatibleSkillFiles);
 writeSkillsCatalog(destHome, sourceSkillFiles, source, {
   activeSkillNames: skillNames,
 });
-fs.writeFileSync(
-  agentsCatalogPath,
-  generateAgentsCatalog(agentFiles, source, {
-    activeAgentNames: DEFAULT_RUNTIME_AGENT_ALLOWLIST,
-  }),
-  "utf8",
-);
 
 console.log(`[catalogs] skills_catalog=${skillsCatalogPath}`);
-console.log(`[catalogs] agents_catalog=${agentsCatalogPath}`);

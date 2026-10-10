@@ -2,7 +2,44 @@
 
 const fs = require("fs");
 const path = require("path");
-const { extractFrontmatterDescription } = require("./agent-catalog");
+
+function extractFrontmatterDescription(filePath, fallbackHeading = true) {
+  if (!fs.existsSync(filePath)) return "";
+  try {
+    const content = fs.readFileSync(filePath, "utf8");
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length && i < 30; i += 1) {
+      const match = lines[i].match(/^description:\s*(.*)/);
+      if (!match) continue;
+
+      const value = match[1].trim().replace(/^["']|["']$/g, "");
+      if (value && value !== ">" && value !== "|") {
+        return value.replace(/\|/g, "／").slice(0, 120);
+      }
+
+      const descLines = [];
+      for (let j = i + 1; j < lines.length && j < i + 10; j += 1) {
+        const next = lines[j];
+        if (!/^\s+\S/.test(next)) break;
+        descLines.push(next.trim());
+      }
+      if (descLines.length > 0) {
+        return descLines.join(" ").replace(/\|/g, "／").slice(0, 120);
+      }
+    }
+
+    if (fallbackHeading) {
+      const headingMatch = content.match(/^#\s+(.+)$/m);
+      if (headingMatch) {
+        return headingMatch[1].trim().replace(/\|/g, "／").slice(0, 120);
+      }
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
 
 // These modules have executable runtimes that must survive a dormant-library
 // refresh. They stay outside CLI skill discovery while keeping dependency

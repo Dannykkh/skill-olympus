@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const crypto = require("node:crypto");
 const { syncSkillSourceLibrary } = require("../skill-catalog");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -36,14 +37,10 @@ function writeFixtureFile(root, relativePath, content) {
 
 function copySyncFixtureScripts(fixtureRoot) {
   const scriptNames = [
-    "agent-catalog.js",
-    "agent-files.js",
-    "agent-install-policy.js",
     "prune-stale-assets.js",
     "skill-catalog.js",
     "skill-install-policy.js",
     "codex-skill-dedup.js",
-    "sync-claude-agents.js",
     "sync-claude-skills.js",
     "sync-codex-assets.js",
     "sync-antigravity-assets.js",
@@ -66,16 +63,6 @@ function writeManagedFixtureVersion(fixtureRoot, version) {
   );
   writeFixtureFile(
     fixtureRoot,
-    path.join("agents", "fixture-agent.md"),
-    `# Fixture agent\n${version}\n`,
-  );
-  writeFixtureFile(
-    fixtureRoot,
-    path.join("agents", "references", "fixture.md"),
-    `support-${version}\n`,
-  );
-  writeFixtureFile(
-    fixtureRoot,
     path.join("hooks", "fixture-hook.js"),
     `// hook-${version}\n`,
   );
@@ -95,18 +82,10 @@ function writeManagedFixtureVersion(fixtureRoot, version) {
     "design-plan",
     "removed-after-v1.txt",
   );
-  const removedSupportFile = path.join(
-    fixtureRoot,
-    "agents",
-    "references",
-    "removed-after-v1.txt",
-  );
   if (version === "v1") {
     fs.writeFileSync(removedSkillFile, "managed-v1-only", "utf8");
-    fs.writeFileSync(removedSupportFile, "managed-v1-only", "utf8");
   } else {
     fs.rmSync(removedSkillFile, { force: true });
-    fs.rmSync(removedSupportFile, { force: true });
   }
 }
 
@@ -323,61 +302,34 @@ test("managed asset hashes distinguish safe upgrades from user modifications", (
       ],
     },
     {
-      name: "claude-agents",
-      script: "sync-claude-agents.js",
-      manifest: ".claude-agents-sync-manifest.json",
-      args: (home) => [home, "--include-source-only-agents"],
-      env: () => ({ ...process.env }),
-      hashGroups: ["agents", "supportDirectories"],
-      targets: (home) => [
-        path.join(home, "agents", "fixture-agent.md"),
-        path.join(home, "agents", "references", "fixture.md"),
-      ],
-      removedTargets: (home) => [
-        path.join(home, "agents", "references", "removed-after-v1.txt"),
-      ],
-    },
-    {
       name: "codex",
       script: "sync-codex-assets.js",
       manifest: ".codex-sync-manifest.json",
-      args: () => ["--include-source-only-agents"],
+      args: () => [],
       env: (home) => ({ ...process.env, CODEX_HOME: home }),
-      hashGroups: [
-        "skills",
-        "agents",
-        "hooks",
-        "codexNotifyHooks",
-        "supportDirectories",
-      ],
+      hashGroups: ["skills", "hooks", "codexNotifyHooks"],
       targets: (home) => [
         path.join(home, "skills", "design-plan", "SKILL.md"),
-        path.join(home, "agents", "fixture-agent.md"),
-        path.join(home, "agents", "references", "fixture.md"),
         path.join(home, "hooks", "fixture-hook.js"),
         path.join(home, "hooks", "fixture-notify.js"),
       ],
       removedTargets: (home) => [
         path.join(home, "skills", "design-plan", "removed-after-v1.txt"),
-        path.join(home, "agents", "references", "removed-after-v1.txt"),
       ],
     },
     {
       name: "antigravity",
       script: "sync-antigravity-assets.js",
       manifest: path.join("antigravity-cli", ".olympus-sync-manifest.json"),
-      args: () => ["--include-source-only-agents"],
+      args: () => [],
       env: (home) => ({ ...process.env, ANTIGRAVITY_HOME: home }),
-      hashGroups: ["skills", "agents", "hooks", "supportDirectories"],
+      hashGroups: ["skills", "hooks"],
       targets: (home) => [
         path.join(home, "antigravity-cli", "skills", "design-plan", "SKILL.md"),
-        path.join(home, "config", "agents", "fixture-agent.md"),
-        path.join(home, "config", "agents", "references", "fixture.md"),
         path.join(home, "config", "hooks", "antigravity-hook.js"),
       ],
       removedTargets: (home) => [
         path.join(home, "antigravity-cli", "skills", "design-plan", "removed-after-v1.txt"),
-        path.join(home, "config", "agents", "references", "removed-after-v1.txt"),
       ],
     },
   ];
@@ -483,6 +435,93 @@ test("managed asset hashes distinguish safe upgrades from user modifications", (
   }
 });
 
+// 동기화 스크립트의 hashPath와 같은 방식(파일·폴더 경로와 내용)으로 해시를 만든다.
+function olympusHash(target) {
+  const hash = crypto.createHash("sha256");
+  const visit = (current, relative) => {
+    const normalized = relative.replace(/\\/g, "/");
+    if (fs.statSync(current).isDirectory()) {
+      hash.update(`dir\0${normalized}\0`);
+      for (const entry of fs.readdirSync(current).sort()) {
+        visit(path.join(current, entry), path.join(relative, entry));
+      }
+      return;
+    }
+    hash.update(`file\0${normalized}\0`);
+    hash.update(fs.readFileSync(current));
+    hash.update("\0");
+  };
+  visit(target, path.basename(target));
+  return hash.digest("hex");
+}
+
+// 사용자 정의 에이전트는 더 이상 배포하지 않는다. 옛 설치가 기록해 둔 에이전트 사본은
+// 해시가 그대로면 지우고, 사용자가 고쳤으면 보존 폴더로 옮기며, 기록에 없는 파일은 건드리지 않는다.
+test("syncs remove legacy agent copies an old manifest recorded and preserve modified ones", () => {
+  const fixtureRoot = makeTempHome("ccc-legacy-agent-fixture-");
+  copySyncFixtureScripts(fixtureRoot);
+  writeManagedFixtureVersion(fixtureRoot, "v1");
+
+  const cases = [
+    {
+      name: "codex",
+      script: "sync-codex-assets.js",
+      env: (home) => ({ ...process.env, CODEX_HOME: home }),
+      agentsDir: (home) => path.join(home, "agents"),
+      manifest: (home) => path.join(home, ".codex-sync-manifest.json"),
+      preserved: (home) => path.join(home, "_olympus-preserved"),
+    },
+    {
+      name: "antigravity",
+      script: "sync-antigravity-assets.js",
+      env: (home) => ({ ...process.env, ANTIGRAVITY_HOME: home }),
+      agentsDir: (home) => path.join(home, "config", "agents"),
+      manifest: (home) => path.join(home, "antigravity-cli", ".olympus-sync-manifest.json"),
+      preserved: (home) => path.join(home, "_olympus-preserved"),
+    },
+  ];
+
+  for (const entry of cases) {
+    const home = makeTempHome(`ccc-${entry.name}-legacy-agent-`);
+    const agentsDir = entry.agentsDir(home);
+    const exact = writeFixtureFile(agentsDir, "old-agent.md", "# old agent\n");
+    const modified = writeFixtureFile(agentsDir, "edited-agent.md", "# edited agent\n");
+    writeFixtureFile(path.join(agentsDir, "references"), "patterns.md", "support\n");
+    const userOwned = writeFixtureFile(agentsDir, "my-own.md", "# mine\n");
+    const manifest = {
+      mode: "copy",
+      managedAgents: ["old-agent.md", "edited-agent.md"],
+      managedSupportDirectories: ["references"],
+      managedAssetHashes: {
+        agents: {
+          "old-agent.md": olympusHash(exact),
+          "edited-agent.md": olympusHash(modified),
+        },
+        supportDirectories: { references: olympusHash(path.join(agentsDir, "references")) },
+      },
+    };
+    writeFixtureFile(path.dirname(entry.manifest(home)), path.basename(entry.manifest(home)), JSON.stringify(manifest));
+    fs.appendFileSync(modified, "user-change\n", "utf8");
+
+    const result = spawnSync(process.execPath, [path.join(fixtureRoot, "scripts", entry.script)], {
+      cwd: fixtureRoot,
+      env: entry.env(home),
+      encoding: "utf8",
+      timeout: 30000,
+    });
+    assert.equal(result.status, 0, `${entry.name} sync failed\n${result.stdout}\n${result.stderr}`);
+
+    assert.equal(fs.existsSync(exact), false, `${entry.name} kept an unchanged legacy agent copy`);
+    assert.equal(fs.existsSync(path.join(agentsDir, "references")), false, `${entry.name} kept the legacy references directory`);
+    assert.equal(fs.existsSync(modified), false, `${entry.name} left the modified copy in the agents directory`);
+    assert.match(readAllTextFiles(entry.preserved(home)), /user-change/, `${entry.name} did not preserve the modified copy`);
+    assert.equal(fs.readFileSync(userOwned, "utf8"), "# mine\n", `${entry.name} touched an unrecorded user agent`);
+
+    const rewritten = JSON.parse(fs.readFileSync(entry.manifest(home), "utf8"));
+    assert.equal("managedAgents" in rewritten, false, `${entry.name} still records managed agents`);
+  }
+});
+
 test("catalog generation publishes a portable dormant library and sync manifests follow catalog work", () => {
   const tempHome = makeTempHome("ccc-portable-catalog-test-");
   const generateCatalogs = path.join(repoRoot, "scripts", "generate-catalogs.js");
@@ -537,25 +576,6 @@ test("catalog generation publishes a portable dormant library and sync manifests
 
 test("unlink removes exact untracked Olympus assets and preserves same-name user modifications", () => {
   const cases = [
-    {
-      name: "claude-agents",
-      script: path.join(repoRoot, "scripts", "sync-claude-agents.js"),
-      home: makeTempHome("ccc-claude-agent-unlink-test-"),
-      args(home) {
-        return [home, "--unlink"];
-      },
-      env(home) {
-        return { ...process.env, HOME: home, USERPROFILE: home };
-      },
-      exactSource: path.join(repoRoot, "skills", "auto-continue-loop", "agents", "chronos-worker.md"),
-      exactTarget(home) {
-        return path.join(home, "agents", "chronos-worker.md");
-      },
-      modifiedSource: path.join(repoRoot, "skills", "project-gotchas", "agents", "gotcha-analyzer.md"),
-      modifiedTarget(home) {
-        return path.join(home, "agents", "gotcha-analyzer.md");
-      },
-    },
     {
       name: "codex",
       script: path.join(repoRoot, "scripts", "sync-codex-assets.js"),

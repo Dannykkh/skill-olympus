@@ -50,7 +50,7 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Memory across sessions** | `mnemo` recalls conversational context from tags and evidence, keeps existing memories current, and supports resumable handoffs |
 | **Less prompt noise** | A small active registry routes into 78 source-only modules only when the work needs them |
 
-**103 public skill sources (default allowlist union: 25 = 19 user entry points + 6 runtime adapters; 21 or 22 active per integrated surface, 19 on skills-only hosts, 78 source-only internal/optional modules) · 2 skill-owned agent prompts (0 custom agents registered by default) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
+**103 public skill sources (default allowlist union: 25 = 19 user entry points + 6 runtime adapters; 21 or 22 active per integrated surface, 19 on skills-only hosts, 78 source-only internal/optional modules) · no custom agents (native subagents + skills) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
 
 ---
 
@@ -684,7 +684,7 @@ menu entry is required, because some CLIs reject unknown slash names before mode
 Directories whose names match this repository's skill sources are installer-managed and may be
 replaced or removed on sync; unrelated local skill names are preserved. Customize the repository
 source or use a distinct local name instead of editing an installed Olympus copy in place.
-All four runtime surfaces keep the 2 skill-owned agent prompts source-only by default. `--include-source-only-agents` copies those legacy prompts for deliberate compatibility testing; it does not make Markdown an active Codex agent definition. (`--include-passive-agents` and `--include-broad-coding-agents` remain legacy aliases.) Codex also keeps `.agents/agents` absent unless both a project mirror and source-only opt-in are requested.
+No custom agents ship to any runtime surface. The retired `--include-source-only-agents`, `--include-project-agents`, `--include-passive-agents` and `--include-broad-coding-agents` options are still accepted so existing scripts keep working, and they install nothing.
 
 Agent-using skills keep their orchestration logic and map semantic roles to each CLI's built-ins:
 
@@ -743,15 +743,9 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
 
-### Agent source references (2 skill-owned prompts; 0 registered by default)
+### Agents (none ship)
 
-These are retained compatibility/reference prompts, not always-on runtime personas. Normal delegation uses each CLI's native subagents; procedural behavior lives in skills.
-
-Both remain source-only under a default-deny policy and can be copied for explicit compatibility testing with `--include-source-only-agents`. The standalone reference agents that used to live in `agents/` were removed: none was installed, read by a skill, or spawned after v5.0.0.
-
-| Area | Agents |
-|------|--------|
-| **Skill-owned compatibility prompts** | chronos-worker, gotcha-analyzer |
+No custom agents ship. Normal delegation uses each CLI's native subagents; procedural behavior lives in skills, and a skill's own rules live in its `references/`. The reference agents that used to live in `agents/` and the two skill-owned compatibility prompts were removed together with the agent install pipeline: none was installed, read by a skill, or spawned after v5.0.0. Installing again moves Olympus agent copies left by older versions to `_pruned-stale-olympus/` and deletes the generated `AGENTS-CATALOG.md`.
 
 ### Hooks (9)
 

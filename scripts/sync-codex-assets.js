@@ -4,21 +4,13 @@
 // Usage:
 //   node scripts/sync-codex-assets.js
 //   node scripts/sync-codex-assets.js --include-source-only-skills
-//   node scripts/sync-codex-assets.js --include-source-only-agents
 //   node scripts/sync-codex-assets.js --include-project-skills
-//   node scripts/sync-codex-assets.js --include-project-agents
 //   node scripts/sync-codex-assets.js --unlink
 
 const fs = require("fs");
 const crypto = require("crypto");
 const os = require("os");
 const path = require("path");
-const { writeAgentsCatalog } = require("./agent-catalog");
-const { collectAgentFiles } = require("./agent-files");
-const {
-  DEFAULT_RUNTIME_AGENT_ALLOWLIST,
-  selectRuntimeAgents,
-} = require("./agent-install-policy");
 const { pruneStaleAssets } = require("./prune-stale-assets");
 const {
   collectSkillFiles,
@@ -33,20 +25,25 @@ const {
 const { reconcileCodexSkillDuplicates } = require("./codex-skill-dedup");
 
 const args = process.argv.slice(2);
-const knownArgs = new Set([
-  "--include-project-skills",
+// No custom agent sources ship any more. The old agent opt-in flags are still
+// accepted so existing scripts keep working, and they change nothing.
+const legacyAgentArgs = new Set([
   "--include-project-agents",
-  "--include-source-only-skills",
-  "--include-broad-coding-skills",
   "--include-source-only-agents",
   "--include-passive-agents",
   "--include-broad-coding-agents",
+]);
+const knownArgs = new Set([
+  "--include-project-skills",
+  "--include-source-only-skills",
+  "--include-broad-coding-skills",
   "--unlink",
+  ...legacyAgentArgs,
 ]);
 
 function usage() {
   console.error(
-    "Usage: node scripts/sync-codex-assets.js [--include-project-skills] [--include-project-agents] [--include-source-only-skills] [--include-broad-coding-skills] [--include-source-only-agents] [--unlink]",
+    "Usage: node scripts/sync-codex-assets.js [--include-project-skills] [--include-source-only-skills] [--include-broad-coding-skills] [--unlink]",
   );
 }
 
@@ -60,23 +57,20 @@ if (unknownArg) {
   usage();
   process.exit(1);
 }
+for (const arg of args.filter((value) => legacyAgentArgs.has(value))) {
+  console.warn(`[codex-sync] ignored ${arg}: no custom agent sources ship`);
+}
 const isUnlink = args.includes("--unlink");
 // Codex already loads global ~/.codex/skills in every workspace. Mirroring the
 // same skills into this repository's .agents/skills makes every description
 // appear twice in this project. Keep the mirror available only for isolation
 // tests or deliberately project-local installs.
 const includeProjectSkills = args.includes("--include-project-skills");
-const includeProjectAgents = args.includes("--include-project-agents");
 const includeSourceOnlySkills = args.includes("--include-source-only-skills");
 const includeBroadCodingSkills = args.includes("--include-broad-coding-skills");
-const includeSourceOnlyAgents =
-  args.includes("--include-source-only-agents") ||
-  args.includes("--include-passive-agents") ||
-  args.includes("--include-broad-coding-agents");
 
 const repoRoot = path.resolve(__dirname, "..");
 const skillsSrcDir = path.join(repoRoot, "skills");
-const agentsSrcDir = path.join(repoRoot, "agents");
 const hooksSrcDir = path.join(repoRoot, "hooks");
 const codexMnemoHooksSrcDir = path.join(skillsSrcDir, "codex-mnemo", "hooks");
 
@@ -234,23 +228,6 @@ function removeDirIfEmpty(dirPath) {
   }
 }
 
-function cleanupManagedAgentSubdirectories(destDir, homeRoot, previousHashes = {}) {
-  if (!fs.existsSync(agentsSrcDir)) return;
-  for (const entry of fs.readdirSync(agentsSrcDir, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      preparePathForChange(
-        path.join(agentsSrcDir, entry.name),
-        path.join(destDir, entry.name),
-        homeRoot,
-        "agent-support",
-        entry.name,
-        "same-name agent support directory disabled by runtime policy",
-        true,
-        previousHashes[entry.name],
-      );
-    }
-  }
-}
 
 function hasNestedNodeModules(src) {
   const stack = [src];
@@ -490,19 +467,26 @@ function prepareSelectedEntries(
   }
 }
 
-function prepareSelectedAgentEntries(destDir, files, homeRoot, previousHashes = {}) {
-  for (const [name, sourcePath] of files.entries()) {
-    preparePathForChange(
-      sourcePath,
-      path.join(destDir, name),
-      homeRoot,
-      "agents",
-      name,
-      "same-name agent before managed replacement",
-      false,
-      previousHashes[name],
-    );
-  }
+// Earlier releases could copy custom agents (and the shared agents/references
+// directory) into CODEX_HOME/agents or the repository mirror. Remove the copies
+// a manifest recorded when their hash still matches and preserve anything else;
+// prune-stale-assets moves the known names that no manifest recorded.
+function cleanupLegacyAgents(destDir, homeRoot, state) {
+  if (!fs.existsSync(destDir)) return;
+  const options = {
+    sourceForName: () => null,
+    homeRoot,
+    kind: "agents",
+    previousHashes: state.hashes.agents,
+    reason: "legacy custom agent",
+  };
+  cleanupStaleEntries(destDir, state.agents, [], options);
+  cleanupStaleEntries(destDir, state.supportDirectories, [], {
+    ...options,
+    kind: "agent-support",
+    previousHashes: state.hashes.supportDirectories,
+  });
+  removeDirIfEmpty(destDir);
 }
 
 function prepareSelectedHookEntries(
@@ -560,44 +544,6 @@ function validateSkillInstall(destDir, skillNames) {
   }
 }
 
-function syncAgents(
-  destDir,
-  agentFiles,
-  mode,
-  homeRoot,
-  previousSupportHashes = {},
-) {
-  if (mode === "unlink" || agentFiles.size === 0) {
-    cleanupManagedAgentSubdirectories(destDir, homeRoot, previousSupportHashes);
-    removeDirIfEmpty(destDir);
-    return;
-  }
-  ensureDir(destDir);
-  for (const [name, src] of agentFiles.entries()) {
-    const dest = path.join(destDir, name);
-    copyFileIfChanged(src, dest);
-  }
-  // agents/ 하위 디렉토리도 동기화 (references/ 등)
-  if (mode !== "unlink" && fs.existsSync(agentsSrcDir)) {
-    for (const entry of fs.readdirSync(agentsSrcDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const src = path.join(agentsSrcDir, entry.name);
-      const dest = path.join(destDir, entry.name);
-      preparePathForChange(
-        src,
-        dest,
-        homeRoot,
-        "agent-support",
-        entry.name,
-        "same-name agent support directory before managed replacement",
-        false,
-        previousSupportHashes[entry.name],
-      );
-      installDir(src, dest);
-    }
-  }
-}
-
 function syncHooks(destDir, hookFiles, mode) {
   ensureDir(destDir);
   for (const [name, src] of hookFiles.entries()) {
@@ -612,32 +558,20 @@ function syncHooks(destDir, hookFiles, mode) {
 function writeManifest(
   mode,
   skillNames,
-  agentNames,
   hookNames,
   codexNotifyHookNames,
   projectSkillsEnabled,
-  projectAgentsEnabled,
 ) {
-  const supportDirectoryNames =
-    agentNames.length > 0 && fs.existsSync(agentsSrcDir)
-      ? fs
-        .readdirSync(agentsSrcDir, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-      : [];
   const common = {
     mode,
     syncedAt: new Date().toISOString(),
     project: {
       skillsDir: projectSkillsEnabled ? targets.projectSkills : null,
       skillsEnabled: projectSkillsEnabled,
-      agentsDir: projectAgentsEnabled ? targets.projectAgents : null,
-      agentsEnabled: projectAgentsEnabled,
     },
     codex: {
       home: codexHome,
       skillsDir: targets.codexSkills,
-      agentsDir: targets.codexAgents,
     },
   };
   const projectManifestData = {
@@ -645,22 +579,14 @@ function writeManifest(
     scope: "project",
     scopeRoot: repoRoot,
     managedSkills: projectSkillsEnabled ? skillNames : [],
-    managedAgents: projectAgentsEnabled ? agentNames : [],
     managedHooks: hookNames,
     managedCodexNotifyHooks: [],
-    managedSupportDirectories: projectAgentsEnabled ? supportDirectoryNames : [],
     managedAssetHashes: {
       skills: projectSkillsEnabled
         ? hashNamedPaths(targets.projectSkills, skillNames)
         : {},
-      agents: projectAgentsEnabled
-        ? hashNamedPaths(targets.projectAgents, agentNames)
-        : {},
       hooks: hashNamedPaths(targets.projectHooks, hookNames),
       codexNotifyHooks: {},
-      supportDirectories: projectAgentsEnabled
-        ? hashNamedPaths(targets.projectAgents, supportDirectoryNames)
-        : {},
     },
   };
   const codexManifestData = {
@@ -668,21 +594,14 @@ function writeManifest(
     scope: "codex-home",
     scopeRoot: codexHome,
     managedSkills: skillNames,
-    managedAgents: agentNames,
     managedHooks: hookNames,
     managedCodexNotifyHooks: codexNotifyHookNames,
-    managedSupportDirectories: supportDirectoryNames,
     managedAssetHashes: {
       skills: hashNamedPaths(targets.codexSkills, skillNames),
-      agents: hashNamedPaths(targets.codexAgents, agentNames),
       hooks: hashNamedPaths(targets.codexHooks, hookNames),
       codexNotifyHooks: hashNamedPaths(
         targets.codexHooks,
         codexNotifyHookNames,
-      ),
-      supportDirectories: hashNamedPaths(
-        targets.codexAgents,
-        supportDirectoryNames,
       ),
     },
   };
@@ -730,17 +649,8 @@ function run() {
       `[codex-sync] source-only skills: ${defaultDisabledNames.join(", ")}`,
     );
   }
-  const allAgentFiles = collectAgentFiles(agentsSrcDir, skillsSrcDir);
-  const { agentFiles, defaultDisabledNames: defaultDisabledAgentNames } =
-    selectRuntimeAgents(allAgentFiles, includeSourceOnlyAgents);
-  if (defaultDisabledAgentNames.length > 0) {
-    console.log(
-      `[codex-sync] source-only agents: ${defaultDisabledAgentNames.join(", ")}`,
-    );
-  }
   const hookFiles = collectHookFiles();
   const codexNotifyHookFiles = collectCodexNotifyHookFiles();
-  const agentNames = Array.from(agentFiles.keys()).sort((a, b) => a.localeCompare(b));
   const hookNames = Array.from(hookFiles.keys()).sort((a, b) => a.localeCompare(b));
   const codexNotifyHookNames = Array.from(codexNotifyHookFiles.keys()).sort((a, b) => a.localeCompare(b));
 
@@ -756,18 +666,6 @@ function run() {
     homeRoot: projectHome,
     kind: "skills",
     previousHashes: previous.project.hashes.skills,
-  };
-  const globalAgentOptions = {
-    sourceForName: (name) => allAgentFiles.get(name),
-    homeRoot: codexHome,
-    kind: "agents",
-    previousHashes: previous.codex.hashes.agents,
-  };
-  const projectAgentOptions = {
-    sourceForName: (name) => allAgentFiles.get(name),
-    homeRoot: projectHome,
-    kind: "agents",
-    previousHashes: previous.project.hashes.agents,
   };
   const projectHookOptions = {
     sourceForName: (name) => hookFiles.get(name),
@@ -793,12 +691,6 @@ function run() {
       dest: targets.codexSkills,
       previousNames: previous.codex.skills,
       cleanupOptions: globalSkillOptions,
-    },
-    {
-      key: "agents",
-      dest: targets.codexAgents,
-      previousNames: previous.codex.agents,
-      cleanupOptions: globalAgentOptions,
     },
     {
       key: "hooks",
@@ -827,21 +719,14 @@ function run() {
       cleanupOptions: projectSkillOptions,
     });
   }
-  if (includeProjectAgents || mode === "unlink") {
-    targetMatrix.unshift({
-      key: "agents",
-      dest: targets.projectAgents,
-      previousNames: previous.project.agents,
-      cleanupOptions: projectAgentOptions,
-    });
-  }
-
   const currentByKey = {
     skills: mode === "unlink" ? [] : skillNames,
-    agents: mode === "unlink" ? [] : agentNames,
     hooks: mode === "unlink" ? [] : hookNames,
     codexNotifyHooks: mode === "unlink" ? [] : codexNotifyHookNames,
   };
+
+  cleanupLegacyAgents(targets.codexAgents, codexHome, previous.codex);
+  cleanupLegacyAgents(targets.projectAgents, projectHome, previous.project);
 
   if (mode !== "unlink") {
     pruneStaleAssets(path.join(repoRoot, ".agents"));
@@ -863,17 +748,6 @@ function run() {
       ...globalSkillOptions,
       reason: "same-name skill excluded for Codex",
     });
-    if (!includeSourceOnlyAgents) {
-      cleanupStaleEntries(
-        targets.codexAgents,
-        defaultDisabledAgentNames,
-        [],
-        {
-          ...globalAgentOptions,
-          reason: "same-name agent disabled by runtime policy",
-        },
-      );
-    }
     if (!includeProjectSkills) {
       cleanupStaleEntries(
         targets.projectSkills,
@@ -882,20 +756,6 @@ function run() {
         projectSkillOptions,
       );
       removeDirIfEmpty(targets.projectSkills);
-    }
-    if (!includeProjectAgents) {
-      cleanupStaleEntries(
-        targets.projectAgents,
-        previous.project.agents,
-        [],
-        projectAgentOptions,
-      );
-      cleanupManagedAgentSubdirectories(
-        targets.projectAgents,
-        projectHome,
-        previous.project.hashes.supportDirectories,
-      );
-      removeDirIfEmpty(targets.projectAgents);
     }
   }
 
@@ -916,22 +776,10 @@ function run() {
       globalSkillOptions,
     );
     cleanupStaleEntries(
-      targets.codexAgents,
-      Array.from(allAgentFiles.keys()),
-      [],
-      globalAgentOptions,
-    );
-    cleanupStaleEntries(
       targets.projectSkills,
       allSkillNames,
       [],
       projectSkillOptions,
-    );
-    cleanupStaleEntries(
-      targets.projectAgents,
-      Array.from(allAgentFiles.keys()),
-      [],
-      projectAgentOptions,
     );
     cleanupStaleEntries(
       targets.projectHooks,
@@ -960,12 +808,6 @@ function run() {
       "skills",
       previous.codex.hashes.skills,
     );
-    prepareSelectedAgentEntries(
-      targets.codexAgents,
-      agentFiles,
-      codexHome,
-      previous.codex.hashes.agents,
-    );
     if (includeProjectSkills) {
       prepareSelectedEntries(
         targets.projectSkills,
@@ -974,14 +816,6 @@ function run() {
         projectHome,
         "skills",
         previous.project.hashes.skills,
-      );
-    }
-    if (includeProjectAgents) {
-      prepareSelectedAgentEntries(
-        targets.projectAgents,
-        agentFiles,
-        projectHome,
-        previous.project.hashes.agents,
       );
     }
     prepareSelectedHookEntries(
@@ -1017,22 +851,6 @@ function run() {
     }
     validateSkillInstall(targets.codexSkills, skillNames);
   }
-  if (includeProjectAgents || mode === "unlink") {
-    syncAgents(
-      targets.projectAgents,
-      agentFiles,
-      mode,
-      projectHome,
-      previous.project.hashes.supportDirectories,
-    );
-  }
-  syncAgents(
-    targets.codexAgents,
-    agentFiles,
-    mode,
-    codexHome,
-    previous.codex.hashes.supportDirectories,
-  );
   syncHooks(targets.projectHooks, hookFiles, mode);
   syncHooks(targets.codexHooks, hookFiles, mode);
   syncHooks(targets.codexHooks, codexNotifyHookFiles, mode);
@@ -1047,7 +865,7 @@ function run() {
     safeRm(path.join(codexHome, ".olympus", "source-skills"));
     safeRm(path.join(codexHome, ".olympus", "runtime-modules"));
   } else {
-    // 스킬 + 에이전트 카탈로그 생성
+    // 스킬 카탈로그 생성 (옛 에이전트 카탈로그는 prune-stale-assets가 지운다)
     const compatibleSkillFiles = new Map(
       Array.from(allSkillFiles.entries()).filter(
         ([name]) => !runtimeExcludedNames.includes(name),
@@ -1060,42 +878,23 @@ function run() {
       "codex-sync",
       { activeSkillNames: skillNames },
     );
-    const agentsCatalog = writeAgentsCatalog(
-      codexHome,
-      agentFiles,
-      "codex-sync",
-      {
-        activeAgentNames: includeSourceOnlyAgents
-          ? agentNames
-          : DEFAULT_RUNTIME_AGENT_ALLOWLIST,
-      },
-    );
     writeManifest(
       mode,
       skillNames,
-      agentNames,
       hookNames,
       codexNotifyHookNames,
       includeProjectSkills,
-      includeProjectAgents,
     );
     console.log(`[codex-sync] skills_catalog=${skillsCatalog}`);
-    console.log(`[codex-sync] agents_catalog=${agentsCatalog}`);
   }
 
   console.log(`[codex-sync] mode=${mode}`);
   console.log(`[codex-sync] skills=${skillNames.length}`);
-  console.log(`[codex-sync] agents=${agentNames.length}`);
   console.log(`[codex-sync] hooks=${hookNames.length}`);
   console.log(`[codex-sync] codex_notify_hooks=${codexNotifyHookNames.length}`);
   console.log(
     `[codex-sync] project_skills=${
       includeProjectSkills ? targets.projectSkills : "disabled (use --include-project-skills)"
-    }`,
-  );
-  console.log(
-    `[codex-sync] project_agents=${
-      includeProjectAgents ? targets.projectAgents : "disabled (use --include-project-agents)"
     }`,
   );
   console.log(`[codex-sync] project_hooks=${targets.projectHooks}`);

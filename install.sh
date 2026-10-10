@@ -1,8 +1,8 @@
 #!/bin/bash
 # ============================================
 #   Claude Code Customizations Installer
-#   Skills, Agents, Hooks + MCP 자동 설치
-#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills] [--include-source-only-agents]
+#   Skills, Hooks + MCP 자동 설치
+#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills]
 # ============================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -16,7 +16,6 @@ show_help() {
     echo "  --uninstall                        Remove managed assets"
     echo "  --include-source-only-skills       Register optional source-only skills"
     echo "  --include-broad-coding-skills      Register legacy broad coding skills"
-    echo "  --include-source-only-agents       Register optional custom agents"
     echo "  --help, -h                         Show this help without changing files"
 }
 
@@ -53,8 +52,6 @@ HAS_CLAUDE_CLI=0
 JQ_MISSING=0
 CLAUDE_MCP_RESULT="미실행"
 CLAUDE_ORCH_RESULT="미실행"
-INCLUDE_SOURCE_ONLY_AGENTS=0
-SOURCE_ONLY_AGENT_FLAG=""
 INCLUDE_SOURCE_ONLY_SKILLS=0
 INCLUDE_BROAD_CODING_SKILLS=0
 SOURCE_ONLY_SKILL_FLAG=""
@@ -107,14 +104,10 @@ MODE="copy"
 for arg in "$@"; do
     case "$arg" in
         --uninstall) MODE="uninstall" ;;
-        --include-source-only-agents|--include-passive-agents|--include-broad-coding-agents) INCLUDE_SOURCE_ONLY_AGENTS=1 ;;
         --include-source-only-skills) INCLUDE_SOURCE_ONLY_SKILLS=1 ;;
         --include-broad-coding-skills) INCLUDE_BROAD_CODING_SKILLS=1 ;;
     esac
 done
-if [ "$INCLUDE_SOURCE_ONLY_AGENTS" = "1" ]; then
-    SOURCE_ONLY_AGENT_FLAG="--include-source-only-agents"
-fi
 if [ "$INCLUDE_SOURCE_ONLY_SKILLS" = "1" ]; then
     SOURCE_ONLY_SKILL_FLAG="--include-source-only-skills"
 fi
@@ -196,14 +189,10 @@ if [ "$MODE" = "uninstall" ]; then
         echo "      [오류] sync-claude-skills.js 없음"
         exit 1
     fi
-    if [ -f "$SCRIPT_DIR/scripts/sync-claude-agents.js" ]; then
-        if ! node "$SCRIPT_DIR/scripts/sync-claude-agents.js" "$CLAUDE_DIR" --unlink; then
-            echo "      [오류] Claude Agent 정리 실패"
-            exit 1
-        fi
-        rm -f "$CLAUDE_DIR/AGENTS-CATALOG.md"
-    else
-        echo "      [오류] sync-claude-agents.js 없음"
+    # 사용자 정의 에이전트는 더 이상 배포하지 않는다. 옛 Olympus 에이전트 사본은
+    # 백업 폴더로 옮기고, 생성된 에이전트 카탈로그와 동기화 기록은 지운다.
+    if ! node "$SCRIPT_DIR/scripts/prune-stale-assets.js" "$CLAUDE_DIR" --label uninstall; then
+        echo "      [오류] 옛 에이전트 정리 실패"
         exit 1
     fi
 
@@ -242,7 +231,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[6/14] Codex Skills/Agents/Hooks 동기화 해제 중..."
+    echo "[6/14] Codex Skills/Hooks 동기화 해제 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
         if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" --unlink; then
             CODEX_SYNC_RESULT="해제 완료"
@@ -331,7 +320,7 @@ if [ "$MODE" = "uninstall" ]; then
     fi
 
     echo ""
-    echo "[10/14] Antigravity Skills/Agents/Hooks 동기화 해제 중..."
+    echo "[10/14] Antigravity Skills/Hooks 동기화 해제 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" ]; then
         if node "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" --unlink; then
             echo "      완료!"
@@ -456,7 +445,7 @@ if [ "$HAS_CLAUDE" = "1" ] && [ ! -d "$CLAUDE_DIR" ]; then
 fi
 
 # ============================================
-#   복사 모드: Skills/Agents/Hooks 설치
+#   복사 모드: Skills/Hooks 설치
 # ============================================
 
 if [ "$HAS_CLAUDE" = "1" ]; then
@@ -482,20 +471,10 @@ if [ "$HAS_CLAUDE" = "1" ]; then
         exit 1
     fi
 
-    # Agents 설치 (코어)
+    # 사용자 정의 에이전트는 배포하지 않는다. 옛 Olympus 에이전트 사본은 위의
+    # prune-stale-assets가 백업 폴더로 옮겼다.
     echo ""
-    echo "[2/7] Agents 설치 중... (글로벌) [코어]"
-    if [ -f "$SCRIPT_DIR/scripts/sync-claude-agents.js" ]; then
-        if node "$SCRIPT_DIR/scripts/sync-claude-agents.js" "$CLAUDE_DIR" $SOURCE_ONLY_AGENT_FLAG; then
-            echo "      완료!"
-        else
-            echo "      [오류] Agent 동기화 실패"
-            exit 1
-        fi
-    else
-        echo "      [오류] sync-claude-agents.js 없음"
-        exit 1
-    fi
+    echo "[2/7] Agents: 배포하지 않음 (옛 사본은 백업으로 이동) [코어]"
 
     # Hooks 설치 (mnemo 필수이므로 항상 설치)
     echo ""
@@ -532,7 +511,7 @@ if [ "$HAS_CLAUDE" = "1" ]; then
 else
     echo "[1/7] Claude 글로벌 Skills 설치 건너뜀... (Claude 미선택)"
     echo ""
-    echo "[2/7] Claude 글로벌 Agents 설치 건너뜀... (Claude 미선택)"
+    echo "[2/7] Agents: 배포하지 않음 (Claude 미선택)"
     echo ""
     echo "[3/7] Claude 글로벌 Hooks 설치 건너뜀... (Claude 미선택)"
 fi
@@ -652,12 +631,12 @@ else
 fi
 echo "      $CODEX_MNEMO_RESULT"
 
-# Codex Skills/Agents/Hooks 동기화 (zephermine 필수이므로 항상 실행)
+# Codex Skills/Hooks 동기화 (zephermine 필수이므로 항상 실행)
 if true; then
     echo ""
-    echo "  Codex Skills/Agents/Hooks 동기화 중..."
+    echo "  Codex Skills/Hooks 동기화 중..."
     if [ -f "$SCRIPT_DIR/scripts/sync-codex-assets.js" ]; then
-        if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" $SOURCE_ONLY_SKILL_FLAG $SOURCE_ONLY_AGENT_FLAG; then
+        if node "$SCRIPT_DIR/scripts/sync-codex-assets.js" $SOURCE_ONLY_SKILL_FLAG; then
             CODEX_SYNC_RESULT="동기화 완료"
         else
             CODEX_SYNC_RESULT="동기화 실패"
@@ -753,9 +732,9 @@ fi
 echo "      $ANTIGRAVITY_MNEMO_RESULT"
 
 echo ""
-echo "  Antigravity Skills/Agents/Hooks 동기화 중..."
+echo "  Antigravity Skills/Hooks 동기화 중..."
 if [ -f "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" ]; then
-    if node "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" $SOURCE_ONLY_SKILL_FLAG $SOURCE_ONLY_AGENT_FLAG; then
+    if node "$SCRIPT_DIR/scripts/sync-antigravity-assets.js" $SOURCE_ONLY_SKILL_FLAG; then
         ANTIGRAVITY_SYNC_RESULT="동기화 완료"
     else
         ANTIGRAVITY_SYNC_RESULT="동기화 실패"
@@ -841,15 +820,6 @@ if [ -f "$SCRIPT_DIR/skills/grok-mnemo/install.js" ]; then
                 echo "      [오류] sync-claude-skills.js 없음"
                 exit 1
             fi
-            if [ -f "$SCRIPT_DIR/scripts/sync-claude-agents.js" ]; then
-                if ! node "$SCRIPT_DIR/scripts/sync-claude-agents.js" "$CLAUDE_DIR" $SOURCE_ONLY_AGENT_FLAG; then
-                    echo "      [오류] Grok 호환 Agent 동기화 실패"
-                    exit 1
-                fi
-            else
-                echo "      [오류] sync-claude-agents.js 없음"
-                exit 1
-            fi
             if [ -f "$SCRIPT_DIR/install-claude-md.js" ]; then
                 node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md"
             fi
@@ -932,8 +902,7 @@ echo ""
 if [ "$HAS_CLAUDE" = "1" ]; then
     echo "  [Claude]"
     echo "  - Skills: $CLAUDE_DIR/skills/"
-    echo "  - Agents: $CLAUDE_DIR/agents/"
-    echo "  - Catalogs: $CLAUDE_DIR/SKILLS-CATALOG.md, $CLAUDE_DIR/AGENTS-CATALOG.md"
+    echo "  - Catalog: $CLAUDE_DIR/SKILLS-CATALOG.md"
     echo "  - CLAUDE.md 장기기억 규칙 등록 완료"
     echo "  - MCP: $CLAUDE_MCP_RESULT"
     echo "  - Orchestrator: $CLAUDE_ORCH_RESULT"
@@ -941,7 +910,7 @@ fi
 if [ "$HAS_CODEX" = "1" ]; then
     echo "  [Codex]"
     echo "  - Mnemo: $CODEX_MNEMO_RESULT"
-    echo "  - Skills/Agents/Hooks: $CODEX_SYNC_RESULT"
+    echo "  - Skills/Hooks: $CODEX_SYNC_RESULT"
     echo "  - MCP: $CODEX_MCP_RESULT"
     echo "  - multi_agent: $CODEX_MULTI_AGENT_RESULT"
     echo "  - Orchestrator: $CODEX_ORCH_RESULT"
@@ -949,7 +918,7 @@ fi
 if [ "$HAS_ANTIGRAVITY" = "1" ]; then
     echo "  [Antigravity]"
     echo "  - Mnemo: $ANTIGRAVITY_MNEMO_RESULT"
-    echo "  - Skills/Agents/Hooks: $ANTIGRAVITY_SYNC_RESULT"
+    echo "  - Skills/Hooks: $ANTIGRAVITY_SYNC_RESULT"
     echo "  - Hooks: $ANTIGRAVITY_HOOKS_RESULT"
     echo "  - MCP: $ANTIGRAVITY_MCP_RESULT"
     echo "  - Orchestrator: $ANTIGRAVITY_ORCH_RESULT"
@@ -957,7 +926,7 @@ fi
 if [ "$HAS_GROK" = "1" ] || [ -d "$HOME/.grok" ]; then
     echo "  [Grok]"
     echo "  - Mnemo: $GROK_MNEMO_RESULT"
-    echo "  - Skills/Agents/MCP: compat.claude 직접 읽기 (sync 불필요)"
+    echo "  - Skills/MCP: compat.claude 직접 읽기 (sync 불필요)"
 fi
 if [ -d "${DEVIN_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/devin}" ] || command -v devin >/dev/null 2>&1; then
     echo "  [Devin]"

@@ -40,7 +40,7 @@ Antigravity CLI의 전역 스킬 루트는 `~/.gemini/antigravity-cli`이다. �
 - 조회 순서: `~/.gemini/antigravity-cli/SKILLS-CATALOG.md` → 실제 존재하는 프로젝트 `SKILLS-CATALOG.md` → 둘 다 없으면 `~/.gemini/antigravity-cli/skills/*/SKILL.md` 탐색.
 - 실행 의도로 지정한 스킬명·slash·별칭은 이름을 정확히 매칭한 뒤 카탈로그의 별칭·설명으로 찾는다. 설명이나 인용에 등장한 이름만으로 실행 모드에 진입하지 않는다.
 - 상태와 '읽을 경로'를 확인하고 정확한 `SKILL.md`를 읽는다. 매칭이 없으면 그 사실을 알리고 가능한 일반 작업을 진행한다.
-- 사용 가능한 스킬은 카탈로그를 근거로 답한다. `AGENTS-CATALOG.md`는 사용자 정의 에이전트의 설치·opt-in 상태를 확인할 때 읽는다.
+- 사용 가능한 스킬은 카탈로그를 근거로 답한다.
 - Olympus는 사용자 진입점만 기본 활성화하고 내부 모듈은 source-only로 유지한다. source-only는 해당 작업에서 직접 읽으며 별도 등록된 스킬·에이전트로 간주하지 않는다.
 - 모듈 경로는 실제 프로젝트 파일 → 현재 CLI 활성 스킬 루트 → 카탈로그의 정확한 원본 경로 순서로 해석한다. 읽은 `SKILL.md`의 디렉터리를 `module_root`로 삼아 참조·스크립트를 찾는다.
 - 내부 모듈은 slash 호출로 넘기지 않는다. 필수 모듈 누락은 실패 또는 `NOT RUN`, 선택 모듈은 명시된 대체 경로만 허용한다.
