@@ -397,6 +397,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v7.0.0:** 사용자 정의 에이전트를 더 이상 배포하지 않습니다. 독립 참고 에이전트 33개와 스킬이 갖고 있던 호환 프롬프트 2개(`chronos-worker`, `gotcha-analyzer`)를 지우고 에이전트 설치 과정도 걷어냈습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트가, 절차는 스킬이 맡습니다. 에이전트에만 있던 머메이드 상태 다이어그램 문법은 `mermaid-diagrams` 스킬로 옮겼습니다. **호환성 변경:** `--include-source-only-agents` 등 에이전트 옵션은 받아들이지만 무시합니다. 설치할 때 예전에 배포한 에이전트와 이름이 같은 파일(예: `~/.claude/agents/architect.md`)은 시각이 붙은 백업 폴더로 옮기고, 자동 생성된 `AGENTS-CATALOG.md`와 에이전트 동기화 기록은 지웁니다. Codex·Antigravity에서 직접 고친 사본은 지우지 않고 따로 보존합니다.
+
 **v6.21.1:** 쓰이지 않던 `ai-ml` 에이전트 소스를 삭제했습니다. 사용자 정의 에이전트가 source-only로 바뀐 뒤로 설치되거나 스킬이 읽은 적이 없었고, Gemini 예시는 지원이 끝난 `google.generativeai` SDK를 안내하고 있었습니다. LLM API 작업은 프로젝트 SDK와 공급자 공식 문서를 따릅니다. Claude Code는 내장 `claude-api` 스킬, Codex는 `openai-docs`, 그 밖의 라이브러리는 context7을 씁니다. 에이전트 소스는 35개(최상위 33개 + 스킬 소유 2개)이며 기본 등록은 0개입니다.
 
 **v6.21.0:** 아프로디테가 웹사이트를 새로 만들거나 원본 모션을 가져오고 복제할 때 실제 브라우저 입력으로 움직임을 계측합니다. 모션 엔지니어링 참조에는 엔진 선택, 프레임 시간, 물리 반응, 원본 계측 기준을 담았습니다. Playwright 도구는 입력과 상태를 같은 시간축에 기록하고 장면별 반응·중간 상태·수렴을 검사합니다. 기준 없는 계측은 `UNVERIFIED`로 남기며, 수치 검사와 시각·모바일·모션 감소 검증을 함께 보고합니다. [구현·계측 가이드](skills/design-plan/references/web-motion-engineering.md)와 [motion-web 분석](docs/research/2026-10-06-motion-web-assessment.md)을 참고하세요.
