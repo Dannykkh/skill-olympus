@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [6.21.1] - 2026-10-10
+
+### Other Changes
+
+- **agents**: Remove the unused `ai-ml` agent source and its only reference file `agents/references/ai-code-patterns.md`. Since the entrypoint-only runtime (v5.0.0) it was never installed, no skill or agent read it, and no session spawned it; its Gemini "latest pattern" still taught `google.generativeai`, whose support ended on 2025-11-30. LLM API work follows the project SDK and official provider docs — the built-in `claude-api` skill in Claude Code, `openai-docs` in Codex and context7 for other libraries. The source-only policy drops it (redundant specialists 21 → 20), leaving 35 agent sources (33 top-level + 2 skill-owned), none registered by default. (0f6c8ea)
+
+### Documentation
+
+- Update agent counts and lists in AGENTS.md, both READMEs, QUICK-REFERENCE.md and `docs/smart-setup-registry.json`, and add the v6.21.1 entry to the READMEs' recent changes. (0f6c8ea, f0ba72a)
+
+### Validation and Scope
+
+- The full Node suite passes (208; no failures or skips), including version synchronization.
+- Windows full installation passes all 12 Claude, Codex, Antigravity and Grok runtime checks. No installed skill, agent directory or catalog references `ai-ml` or `ai-code-patterns`, and the agent catalog still lists 0 installed agents.
+- The local, untracked `claude-code-guide.html` still mentions `ai-ml`; it is not distributed. Unrelated skill zip files in the working tree are excluded from this release.
+
 ## [6.21.0] - 2026-10-06
 
 ### Features
