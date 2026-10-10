@@ -249,15 +249,19 @@ All notable changes to this project will be documented in this file.
 ### 태그 생성
 
 ```bash
-# 버전 소스 파일이 업데이트되었으면 커밋
-git add -A
-git commit -m "chore(release): v{X.Y.Z}"
+# 이 스킬이 고친 파일만 커밋: CHANGELOG.md + Phase 2에서 갱신한 버전 파일
+git add CHANGELOG.md {갱신한 버전 파일들}
+git commit -m "chore(release): v{X.Y.Z}" -- CHANGELOG.md {갱신한 버전 파일들}
 
-# annotated tag 생성
-git tag -a v{X.Y.Z} -m "Release v{X.Y.Z}
+# annotated tag 생성 (--cleanup=verbatim: CHANGELOG의 ### 제목 줄을 보존)
+git tag -a v{X.Y.Z} --cleanup=verbatim -m "Release v{X.Y.Z}
 
 {CHANGELOG의 이번 버전 섹션 내용}"
 ```
+
+**`git add -A`·`git add .`를 쓰지 않는다.** 작업 트리의 무관한 수정과 추적 안 된 파일(빌드 산출물, 압축 파일, 로컬 설정)이 릴리즈 커밋에 섞인다. 커밋 끝의 `-- <경로>`는 이미 스테이징돼 있던 다른 변경도 이번 커밋에서 빼고 스테이징된 채로 남긴다. 커밋 뒤 `git show --stat HEAD`로 CHANGELOG.md와 버전 파일만 들어갔는지 확인한다.
+
+**태그에는 `--cleanup=verbatim`을 붙인다.** git은 기본으로 태그 메시지에서 `#`로 시작하는 줄을 주석으로 보고 지워서, `### Features` 같은 섹션 제목이 사라지고 항목만 남는다. `-F <파일>`로 메시지를 넘길 때도 같다.
 
 ### 태그 확인
 
