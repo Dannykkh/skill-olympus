@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.4] - 2026-10-11
+
+### Bug Fixes
+
+- **mnemo**: The PowerShell Stop hook no longer drops the other CLIs' sections of `conversations/.mnemo-index.json`. The index is shared: the Claude hooks write `claude`, and the Codex reconcile tool writes `codex` and `codex_aborted`. `Add-UuidToIndex` rebuilt the file with only `version` and `claude`, so on Windows every saved Claude answer removed the Codex sections. It now updates `claude` and keeps every other top-level key as it is, including keys it doesn't know. When the index can't be parsed or its root isn't an object, the hook logs `index-read` to `.claude/mnemo-errors.log` and leaves the file untouched instead of overwriting it with an empty index. The conversation itself is still saved. This matches the Bash hook, which already kept other keys and skips the write when jq fails. No conversation records were lost: the Codex reconcile tool rebuilds its sections from the `*-codex.md` markers on every run. (fe37c62)
+
+### Documentation
+
+- The READMEs' recent changes gain a v7.0.4 entry. (f393b9b)
+
+### Validation and Scope
+
+- `scripts/tests/mnemo-claude-hook-inputs.test.js` gains two tests per shell. One checks that the Stop hook keeps `codex`, `codex_aborted` and an unknown nested section while adding its uuid. The other checks that a truncated index stays byte-for-byte unchanged and the error is logged. Against the previous hook the two PowerShell tests fail and the Bash ones pass. With this release all 10 tests in the file pass, and the full Node suite passes (228, no failures or skips). Python tests were not run; no Python code changed.
+- Windows full installation passes all 12 runtime checks, and the installed `~/.claude/hooks/save-response.ps1` matches the source. The fix has not yet been observed on a real Claude session's Stop event.
+- `install.sh` was not run on macOS or Linux; the Bash hook did not change.
+- Unrelated skill zip files in the working tree are excluded from this release.
+
 ## [7.0.3] - 2026-10-11
 
 ### Bug Fixes
