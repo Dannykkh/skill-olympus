@@ -245,7 +245,11 @@ fi
 source "$SCRIPT_DIR/append-user.sh"
 source "$SCRIPT_DIR/append-assistant.sh"
 
-PAYLOAD="${@: -1}"
+PAYLOAD=""
+# 인수가 없으면 ${@: -1}은 $0(스크립트 경로)을 돌려주므로 stdin을 읽기 전에 개수를 확인한다.
+if [ "$#" -gt 0 ]; then
+    PAYLOAD="${@: -1}"
+fi
 if [ -z "$PAYLOAD" ]; then
     PAYLOAD="$(cat 2>/dev/null)"
 fi

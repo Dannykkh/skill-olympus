@@ -91,16 +91,35 @@ for (const shell of ['PowerShell', 'Bash']) {
   const slash = value => (isBash ? value.replaceAll('\\', '/') : value);
 
   // Codex는 notify 입력 JSON을 마지막 인수로 넘긴다. 따옴표 이스케이프를 피하려고 파일 경로로 넘긴다(훅이 지원).
-  function run(fx, payload) {
+  function run(fx, payload, { viaStdin = false } = {}) {
     const payloadFile = path.join(fx.base, `payload-${crypto.randomUUID()}.json`);
-    fs.writeFileSync(payloadFile, JSON.stringify({ type: 'agent-turn-complete', cwd: fx.project, ...payload }));
+    const payloadText = JSON.stringify({ type: 'agent-turn-complete', cwd: fx.project, ...payload });
+    fs.writeFileSync(payloadFile, payloadText);
     const script = path.join(hooksDir, `save-turn.${isBash ? 'sh' : 'ps1'}`);
     const args = isBash ? [slash(script), slash(payloadFile)] : ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, payloadFile];
+    if (viaStdin) args.pop();
     const env = { ...process.env, CODEX_HOME: isBash ? slash(fx.codexHome) : fx.codexHome, MNEMO_DISABLE: '0', CODEX_HOOK_BRIDGE_HOOKS: 'none' };
     for (const key of ['CODEX_WORKSPACE_ROOT', 'MNEMO_STRICT']) delete env[key];
-    const result = spawnSync(isBash ? bash : ps, args, { env, encoding: 'utf8', timeout: 60000, windowsHide: true });
+    const result = spawnSync(isBash ? bash : ps, args, { env, input: viaStdin ? payloadText : undefined, encoding: 'utf8', timeout: 60000, windowsHide: true });
     assert.equal(result.status, 0, result.stderr || String(result.error));
   }
+
+  test(`${shell} save-turn accepts stdin payloads with Unicode, private redaction and replay deduplication`, { skip }, t => {
+    const fx = fixture(t);
+    const payload = {
+      'thread-id': uuidv7(Date.now()), 'turn-id': uuidv7(Date.now()),
+      'input-messages': ['사용자 질문 <private>user-hidden</private>'],
+      'last-assistant-message': '한글 답변 <private>assistant-hidden</private>',
+    };
+    run(fx, payload, { viaStdin: true });
+    const saved = history(fx.project);
+    assert.ok(saved.includes('사용자 질문 [PRIVATE]'));
+    assert.ok(saved.includes('한글 답변 [PRIVATE]'));
+    assert.ok(!saved.includes('user-hidden'));
+    assert.ok(!saved.includes('assistant-hidden'));
+    run(fx, payload, { viaStdin: true });
+    assert.equal(history(fx.project), saved);
+  });
 
   test(`${shell} save-turn skips subagent turns found through the notify thread-id`, { skip }, t => {
     const fx = fixture(t);

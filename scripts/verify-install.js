@@ -81,7 +81,15 @@ function smoke(runtime, roots, parent) {
     function invoke(file, payload, disabled = false) {
       const args = file.endsWith(".ps1") ? ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", file] : [file];
       const command = file.endsWith(".ps1") ? "powershell.exe" : file.endsWith(".sh") ? "bash" : process.execPath;
-      return run(command, args, { cwd: root, env: { ...env, ...(disabled ? { MNEMO_DISABLE: "1" } : {}) }, input: JSON.stringify(payload) });
+      const inputPath = path.join(root, "probe-input.json");
+      fs.writeFileSync(inputPath, JSON.stringify(payload), { mode: 0o600 });
+      const inputFd = fs.openSync(inputPath, "r");
+      try {
+        // Opt-out hooks can exit before reading stdin; a file descriptor avoids EPIPE.
+        return run(command, args, { cwd: root, env: { ...env, ...(disabled ? { MNEMO_DISABLE: "1" } : {}) }, stdio: [inputFd, "pipe", "pipe"] });
+      } finally {
+        fs.closeSync(inputFd);
+      }
     }
     let payload, replayFile = files[0].installed;
     if (runtime === "claude") {

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- **codex-mnemo**: The Bash `save-turn` hook now reads JSON from stdin when invoked without arguments. Previously, Bash expanded the last-argument expression to the script's own path, so the hook read its own source and silently skipped the turn. Regression tests cover stdin saving, Korean text, private redaction and replay deduplication in both shells.
+- **installer verification**: Installed-hook checks pass the JSON payload through a file descriptor on stdin. A disabled hook can exit before reading its input; writing the payload through a pipe could then produce an intermittent `EPIPE` and fail an otherwise successful opt-out check. Payload and exit-status checks remain intact.
 - **release tooling**: `scripts/bump_version.py` now tells users to update CHANGELOG.md and stage and commit only the four release files. The former `git commit -am` instruction could include unrelated tracked changes; the path-specific commit also keeps unrelated staged changes out of the release.
 
 ## [7.0.4] - 2026-10-11
