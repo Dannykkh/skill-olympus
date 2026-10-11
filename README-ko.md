@@ -397,6 +397,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v7.0.3:** Codex Mnemo가 하위 에이전트의 턴을 대화 기록에 저장하지 않습니다. Codex는 하위 에이전트의 턴이 끝날 때도 `notify` 훅을 실행하는데, 그 입력에는 하위 에이전트라는 표시가 없습니다. 그래서 `save-turn`이 하위 에이전트의 보고를 대화 턴으로 저장했습니다. `input-messages`가 비면 그 폴더의 가장 최근 세션에서 User 내용을 가져왔는데, 그것이 대개 하위 에이전트 세션이라 AGENTS.md 지침 전문이 User 턴으로 들어갔습니다. 이제 `save-turn`은 notify의 `thread-id`로 세션 파일을 열고, `session_meta`가 하위 에이전트이면 저장하지 않습니다. 판정 규칙은 복구 도구와 같습니다. 이런 턴에서는 관찰 기록과 Chronos 이어가기도 건너뜁니다. 부모 턴이 아직 진행 중일 때 하위 에이전트가 끝났다고 `resume`이 시작되지 않게 하려는 것입니다. 변경 파일 검사는 그대로 돕니다. AGENTS.md·`<environment_context>` 같은 주입 메시지는 User로 저장하지 않고, Windows의 대체 경로는 해당 턴의 세션을 읽습니다. 세션 파일이 없는 턴(세션을 남기지 않는 `codex exec` 등)은 전처럼 저장합니다. 이미 저장된 기록은 복구 도구가 지울 때까지 남습니다. 전체 실행이 무엇을 바꿀지는 `reconcile_codex_conversations.py --all --staging-dir <폴더>`로 미리 봅니다. `--dry-run`은 병합 단계를 건너뛰어 삭제 수가 늘 0으로 나옵니다.
+
 **v7.0.2:** Claude Code용 Mnemo 훅이 대화 기록을 빠뜨리거나 엉뚱한 턴을 남기지 않습니다. Stop 훅이 Claude Code가 넘겨주는 `last_assistant_message`를 저장하므로, 기록 파일(transcript)에 최종 답이 아직 쓰이기 전에 훅이 실행돼 앞선 진행 안내가 대신 저장되던 일이 없어집니다. 이 값이 없는 옛 CLI에서는 지금처럼 기록 파일을 읽습니다. UserPromptSubmit 훅은 `source`가 `system`인 턴과 `<task-notification>` 작업 알림을 User 턴으로 저장하지 않습니다. 직접 입력한 프롬프트와 `/loop`·예약 작업이 넣는 프롬프트는 그대로 저장합니다. 다른 CLI는 바뀌지 않습니다. Codex와 Grok은 이미 훅 입력의 마지막 답을 쓰고, Antigravity의 Stop 입력에는 답 본문이 없어 기록 파일 읽기를 유지합니다.
 
 **v7.0.1:** `release-notes` 스킬이 릴리즈 커밋 전에 `git add -A`를 실행하지 않습니다. 무관한 수정과 추적 안 된 파일(빌드 산출물, 압축 파일, 로컬 설정)이 릴리즈 커밋에 섞이지 않습니다. 스킬이 고친 `CHANGELOG.md`와 버전 파일만 스테이징하고 경로를 지정해 커밋하므로, 다른 파일을 미리 스테이징해 둔 것도 이번 커밋에서 빠집니다. 태그는 `--cleanup=verbatim`으로 만들어 CHANGELOG의 `###` 섹션 제목이 주석으로 지워지지 않고 태그 메시지에 남습니다.
