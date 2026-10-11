@@ -74,7 +74,8 @@ function Get-ClaudeProjectRoot {
 
 # ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
 # conversations/.mnemo-index.json 포맷:
-#   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] } }
+#   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] }, "codex": {...}, "codex_aborted": {...} }
+# claude 구역만 이 훅이 쓴다. codex·codex_aborted는 Codex 복구 도구가 같은 파일에 쓰므로 그대로 둔다.
 # PS 5.1 호환: -AsHashtable 없이 PSCustomObject → Hashtable 수동 변환.
 function Test-UuidInIndex {
     param([string]$ConvDir, [string]$Today, [string]$Uuid)
@@ -96,17 +97,29 @@ function Add-UuidToIndex {
     param([string]$ConvDir, [string]$Today, [string]$Uuid)
     if (-not $Uuid) { return }
     $indexPath = Join-Path $ConvDir '.mnemo-index.json'
-    $data = @{ version = 1; claude = @{} }
+    $data = [ordered]@{ version = 1; claude = @{} }
     if (Test-Path $indexPath) {
         try {
             $obj = Get-Content $indexPath -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ($obj.version) { $data.version = $obj.version }
-            if ($obj.claude) {
-                foreach ($prop in $obj.claude.PSObject.Properties) {
-                    $data.claude[$prop.Name] = @($prop.Value)
+        } catch {
+            $obj = $null
+        }
+        # 읽지 못한 색인을 새로 쓰면 다른 구역까지 잃는다. sh 훅(jq 실패 시 쓰지 않음)처럼 건너뛴다.
+        if (-not ($obj -is [System.Management.Automation.PSCustomObject])) {
+            Write-MnemoError -Context 'index-read' -Message "인덱스를 읽지 못해 갱신하지 않음: $indexPath"
+            return
+        }
+        foreach ($top in $obj.PSObject.Properties) {
+            if ($top.Name -eq 'claude') {
+                if ($top.Value) {
+                    foreach ($prop in $top.Value.PSObject.Properties) {
+                        $data.claude[$prop.Name] = @($prop.Value)
+                    }
                 }
+            } elseif ($top.Name -ne 'version' -or $null -ne $top.Value) {
+                $data[$top.Name] = $top.Value
             }
-        } catch {}
+        }
     }
     if (-not $data.claude.ContainsKey($Today)) {
         $data.claude[$Today] = @()

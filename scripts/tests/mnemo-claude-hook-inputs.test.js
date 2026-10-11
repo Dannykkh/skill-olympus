@@ -110,4 +110,40 @@ for (const shell of ['PowerShell', 'Bash']) {
     assert.ok(!saved.includes('Peer message injected by the host'));
     assert.ok(!saved.includes('task-notification'));
   });
+
+  // 색인은 Codex 복구 도구와 같이 쓴다. claude 구역만 고치고 다른 구역은 그대로 둬야 한다.
+  test(`${shell} Stop hook keeps the other CLI sections of the shared index`, { skip }, t => {
+    const { base, project } = fixture(t);
+    const conv = path.join(project, 'conversations');
+    fs.mkdirSync(conv);
+    const others = {
+      codex: { '2026-03-07': ['codex-turn-1'], '2026-03-08': ['codex-turn-2', 'codex-turn-3'] },
+      codex_aborted: {},
+      future_cli: { nested: { ids: [] } },
+    };
+    fs.writeFileSync(path.join(conv, '.mnemo-index.json'),
+      JSON.stringify({ claude: { '2026-01-01': ['uuid-earlier'] }, ...others, version: 1 }, null, 2) + '\n');
+    const transcript = path.join(base, 'session.jsonl');
+    fs.writeFileSync(transcript, assistantLine('uuid-new', 'Answer saved next to Codex records') + '\n');
+    run('save-response', { session_id: 'hook-input-test', project_root: project, cwd: project, transcript_path: slash(transcript) });
+    const index = JSON.parse(fs.readFileSync(path.join(conv, '.mnemo-index.json'), 'utf8'));
+    for (const [key, value] of Object.entries(others)) assert.deepEqual(index[key], value, `${key} must survive`);
+    assert.equal(index.version, 1);
+    assert.ok(indexedUuids(project).includes('uuid-earlier'));
+    assert.ok(indexedUuids(project).includes('uuid-new'));
+  });
+
+  test(`${shell} Stop hook leaves an unreadable index untouched`, { skip }, t => {
+    const { base, project } = fixture(t);
+    const conv = path.join(project, 'conversations');
+    fs.mkdirSync(conv);
+    const broken = '{"codex": {"2026-03-07": ["codex-turn-1"]'; // 쓰다 끊긴 파일
+    fs.writeFileSync(path.join(conv, '.mnemo-index.json'), broken);
+    const transcript = path.join(base, 'session.jsonl');
+    fs.writeFileSync(transcript, assistantLine('uuid-new', 'Answer saved while the index is broken') + '\n');
+    run('save-response', { session_id: 'hook-input-test', project_root: project, cwd: project, transcript_path: slash(transcript) });
+    assert.ok(history(project).includes('Answer saved while the index is broken'));
+    assert.equal(fs.readFileSync(path.join(conv, '.mnemo-index.json'), 'utf8'), broken);
+    assert.match(fs.readFileSync(path.join(project, '.claude', 'mnemo-errors.log'), 'utf8'), /\[index-(read|write)\]/);
+  });
 }
