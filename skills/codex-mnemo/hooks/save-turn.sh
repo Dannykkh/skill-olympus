@@ -303,29 +303,150 @@ except: pass
     fi
 }
 
+# Codex가 사용자 입력 앞에 넣는 지침·환경 메시지 머리말. 정본은
+# reconcile_codex_conversations.py의 USER_INJECTION_PREFIXES이고 save-turn.ps1도 같은 목록을 쓴다.
+INJECTED_USER_PREFIXES_JSON='["# AGENTS.md instructions for","<environment_context","<codex_internal_context","<skills_instructions","<permissions instructions","<turn_aborted","You are an agent in a team of agents collaborating to complete a task.","Message Type: NEW_TASK","Message Type: MESSAGE","Message Type: FINAL_ANSWER"]'
+
+# input-messages에서 주입 메시지를 빼고 마지막 사용자 입력을 고른다 (Codex는 누적 전달)
+select_user_input() {
+    if command -v jq &>/dev/null; then
+        printf '%s' "$PAYLOAD" | jq -r --argjson prefixes "$INJECTED_USER_PREFIXES_JSON" '
+            def text: if type == "object" then ((.text // .content // "") | text)
+                      elif type == "array" then map(text) | join("\n")
+                      elif type == "string" then .
+                      elif . == null then ""
+                      else tostring end;
+            (."input-messages" // .input_messages // [])
+            | (if type == "array" then . else [.] end)
+            | map(text | gsub("^\\s+|\\s+$"; ""))
+            | map(select(. != "" and (. as $t | $prefixes | any(. as $p | $t | startswith($p)) | not)))
+            | last // empty
+        ' 2>/dev/null
+    elif command -v python3 &>/dev/null; then
+        printf '%s' "$PAYLOAD" | python3 -c '
+import json, sys
+prefixes = json.loads(sys.argv[1])
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+def text(v):
+    if v is None:
+        return ""
+    if isinstance(v, str):
+        return v
+    if isinstance(v, list):
+        return "\n".join(text(i) for i in v)
+    if isinstance(v, dict):
+        return text(v.get("text") or v.get("content") or "")
+    return str(v)
+msgs = data.get("input-messages")
+if msgs is None:
+    msgs = data.get("input_messages")
+if msgs is None:
+    msgs = []
+if not isinstance(msgs, list):
+    msgs = [msgs]
+picked = ""
+for m in msgs:
+    t = text(m).strip()
+    if t and not any(t.startswith(p) for p in prefixes):
+        picked = t
+sys.stdout.write(picked)
+' "$INJECTED_USER_PREFIXES_JSON" 2>/dev/null
+    fi
+}
+
+# notify의 thread-id로 그 스레드의 세션 파일(sessions/yyyy/mm/dd/rollout-…-<thread-id>.jsonl)을 찾는다.
+find_thread_session() {
+    local id="$1" root="$CODEX_ROOT/sessions" sec off day f
+    [[ "$id" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || return 0
+    [ -d "$root" ] || return 0
+    if [ "${id:14:1}" = "7" ]; then
+        # UUIDv7 앞 48비트는 생성 시각(ms)이고 세션 파일은 그 로컬 날짜 폴더에 생긴다(2026-10 실측 6,388개 모두 일치).
+        # 그날과 앞뒤 하루만 본다. 없으면(세션을 남기지 않는 codex exec 등) 빈 값을 돌려 전처럼 저장한다.
+        sec=$(( 16#${id:0:8}${id:9:4} / 1000 ))
+        for off in 0 -86400 86400; do
+            # BSD(macOS)는 -r 초, GNU는 -d @초. BSD의 -d는 DST 옵션이라 root에서 오늘 날짜를 내므로 -r을 먼저 쓴다
+            # (GNU -r은 파일 기준 옵션이라 숫자 인수면 실패하고 -d로 넘어간다).
+            day="$(date -r "$((sec + off))" +%Y/%m/%d 2>/dev/null || date -d "@$((sec + off))" +%Y/%m/%d 2>/dev/null)"
+            [ -n "$day" ] || continue
+            for f in "$root/$day"/*-"$id".jsonl; do
+                [ -f "$f" ] && { printf '%s' "$f"; return 0; }
+            done
+        done
+        return 0
+    fi
+    for f in "$root"/*/*/*/*-"$id".jsonl; do
+        [ -f "$f" ] && { printf '%s' "$f"; return 0; }
+    done
+    return 0
+}
+
+# reconcile_codex_conversations.py SessionMeta.is_subagent와 같은 규칙: 첫 session_meta의 source가 객체이거나
+# agent_path·parent_thread_id·forked_from_id가 있거나 thread_source가 subagent면 하위 에이전트 세션이다.
+# 옛 하위 에이전트 파일에는 부모 session_meta가 둘째로 붙어 있어 첫 것만 본다.
+is_subagent_session() {
+    local file="$1"
+    [ -f "$file" ] || return 1
+    if command -v jq &>/dev/null; then
+        head -n 3 "$file" 2>/dev/null | jq -R -s -e '
+            [split("\n")[] | fromjson? | select(type == "object" and .type == "session_meta")] | first | .payload
+            | . != null and (((.source | type) == "object")
+                or ((.agent_path // "") != "") or ((.parent_thread_id // "") != "")
+                or ((.forked_from_id // "") != "") or (.thread_source == "subagent"))
+        ' >/dev/null 2>&1
+        return $?
+    fi
+    if command -v python3 &>/dev/null; then
+        python3 -c '
+import json, sys
+meta = None
+with open(sys.argv[1], encoding="utf-8", errors="replace") as stream:
+    for i, line in enumerate(stream):
+        if i >= 3:
+            break
+        try:
+            o = json.loads(line)
+        except Exception:
+            continue
+        if isinstance(o, dict) and o.get("type") == "session_meta":
+            meta = o.get("payload")
+            break
+if not isinstance(meta, dict):
+    sys.exit(1)
+sub = isinstance(meta.get("source"), dict) or any(meta.get(k) for k in ("agent_path", "parent_thread_id", "forked_from_id")) or meta.get("thread_source") == "subagent"
+sys.exit(0 if sub else 1)
+' "$file" 2>/dev/null
+        return $?
+    fi
+    return 1
+}
+
 TURN_ID="$(json_get '."turn-id"')"
 if [ -z "$TURN_ID" ]; then
     TURN_ID="$(json_get '.turn_id')"
 fi
 
-# input-messages가 배열이면 마지막 요소만 추출 (Codex는 누적 전달)
-if command -v jq &>/dev/null; then
-    USER_TEXT="$(echo "$PAYLOAD" | jq -r '
-        (."input-messages" // .input_messages // null)
-        | if type == "array" and length > 0 then .[-1]
-          elif type == "string" then .
-          else empty end
-        | if type == "object" then (.text // .content // empty)
-          elif type == "array" then map(if type == "object" then (.text // .content // empty) else . end) | join("\n")
-          else . end
-    ' 2>/dev/null)"
+# legacy notify는 하위 에이전트 턴에도 실행되는데 입력에 그 표시가 없다. 2026-10-11 실측: 하위 에이전트
+# 턴의 thread-id는 하위 에이전트 자신의 세션 id이고 input-messages는 []이다. 그 세션 파일의 session_meta로
+# 알아보고 대화 기록·관찰 기록·chronos 이어가기를 건너뛴다(이어가기가 부모 턴 도중 resume을 띄우지 않게).
+# 하위 에이전트가 고친 파일 검사(hook bridge)는 전처럼 돈다. 세션 파일을 못 찾으면 전처럼 저장한다.
+THREAD_ID="$(json_get '."thread-id"')"
+if [ -z "$THREAD_ID" ]; then
+    THREAD_ID="$(json_get '.thread_id')"
 fi
-if [ -z "$USER_TEXT" ]; then
-    USER_TEXT="$(json_get '."input-messages"')"
+THREAD_SESSION="$(find_thread_session "$THREAD_ID")"
+if [ -n "$THREAD_SESSION" ] && is_subagent_session "$THREAD_SESSION"; then
+    debug_log "skip: subagent turn, thread=$THREAD_ID, turnId=$TURN_ID"
+    BASE_DIR="$(resolve_mnemo_project_root "$PAYLOAD")"
+    if [ -n "$BASE_DIR" ]; then
+        run_hook_bridge "$BASE_DIR" >/dev/null
+    fi
+    exit 0
 fi
-if [ -z "$USER_TEXT" ]; then
-    USER_TEXT="$(json_get '.input_messages')"
-fi
+
+USER_TEXT="$(select_user_input)"
 USER_TEXT="$(echo "$USER_TEXT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
 RESPONSE="$(json_get '."last-assistant-message"')"

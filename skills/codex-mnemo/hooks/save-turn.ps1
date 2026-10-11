@@ -105,6 +105,105 @@ function Resolve-MnemoProjectRoot($Payload) {
     return $null
 }
 
+# Codex가 사용자 입력 앞에 넣는 지침·환경 메시지 머리말. 정본은
+# reconcile_codex_conversations.py의 USER_INJECTION_PREFIXES이고 save-turn.sh도 같은 목록을 쓴다.
+$InjectedUserPrefixes = @(
+    '# AGENTS.md instructions for',
+    '<environment_context',
+    '<codex_internal_context',
+    '<skills_instructions',
+    '<permissions instructions',
+    '<turn_aborted',
+    'You are an agent in a team of agents collaborating to complete a task.',
+    'Message Type: NEW_TASK',
+    'Message Type: MESSAGE',
+    'Message Type: FINAL_ANSWER'
+)
+
+function Test-InjectedUserText([string]$text) {
+    if (-not $text) { return $false }
+    $t = $text.TrimStart()
+    foreach ($prefix in $InjectedUserPrefixes) {
+        if ($t.StartsWith($prefix, [System.StringComparison]::Ordinal)) { return $true }
+    }
+    return $false
+}
+
+# input-messages에서 주입 메시지를 빼고 마지막 사용자 입력을 고른다 (Codex는 누적 전달)
+function Select-UserInput($messages) {
+    if ($null -eq $messages) { return "" }
+    $items = @($messages)
+    for ($i = $items.Count - 1; $i -ge 0; $i--) {
+        $text = (Extract-Text $items[$i]).Trim()
+        if ($text -and -not (Test-InjectedUserText $text)) { return $text }
+    }
+    return ""
+}
+
+# reconcile_codex_conversations.py SessionMeta.is_subagent와 같은 규칙.
+# 2026-10 실측(세션 6,386개): agent_path·parent_thread_id·forked_from_id·thread_source=subagent는
+# 모두 source가 객체인 세션에서만 나오고, source 객체만 있는 하위 에이전트 세션도 있다.
+function Test-SubagentSessionMeta($meta) {
+    if ($null -eq $meta) { return $false }
+    $source = $null
+    try { $source = $meta.PSObject.Properties['source'].Value } catch {}
+    if ($source -is [System.Management.Automation.PSCustomObject]) { return $true }
+    foreach ($key in @('agent_path', 'parent_thread_id', 'forked_from_id')) {
+        if ((Get-String $meta $key).Trim()) { return $true }
+    }
+    return ((Get-String $meta 'thread_source') -eq 'subagent')
+}
+
+# 세션 파일의 첫 session_meta payload. 옛 하위 에이전트 파일에는 부모 session_meta가 둘째로 붙어 있어 첫 것만 본다.
+function Read-SessionMeta([string]$path) {
+    if (-not $path) { return $null }
+    $reader = $null
+    try {
+        $stream = [System.IO.FileStream]::new($path, 'Open', 'Read', 'ReadWrite')
+        $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
+        for ($i = 0; $i -lt 3; $i++) {
+            $line = $reader.ReadLine()
+            if ($null -eq $line) { break }
+            $o = Parse-JsonSafe $line
+            if ($o -and "$($o.type)" -eq 'session_meta') { return $o.payload }
+        }
+    } catch {
+    } finally {
+        if ($reader) { $reader.Dispose() }
+    }
+    return $null
+}
+
+# notify의 thread-id로 그 스레드의 세션 파일(sessions/yyyy/MM/dd/rollout-…-<thread-id>.jsonl)을 찾는다.
+function Find-ThreadSessionFile([string]$threadId) {
+    if ($threadId -notmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') { return $null }
+    $sessionRoot = Join-Path $CodexHome "sessions"
+    if (-not (Test-Path -LiteralPath $sessionRoot)) { return $null }
+    $pattern = "*-$threadId.jsonl"
+    try {
+        if ($threadId[14] -eq '7') {
+            # UUIDv7 앞 48비트는 생성 시각(ms)이고 세션 파일은 그 로컬 날짜 폴더에 생긴다(2026-10 실측 6,388개 모두 일치).
+            # 그날과 앞뒤 하루만 보면 세션이 수천 개여도 몇 ms에 끝난다. 없으면(세션을 남기지 않는 codex exec 등)
+            # 전체를 뒤지지 않고 null을 돌려 지금처럼 저장한다.
+            $ms = [Convert]::ToInt64($threadId.Replace('-', '').Substring(0, 12), 16)
+            $day = [DateTimeOffset]::FromUnixTimeMilliseconds($ms).LocalDateTime.Date
+            $inv = [System.Globalization.CultureInfo]::InvariantCulture
+            foreach ($offset in @(0, -1, 1)) {
+                $d = $day.AddDays($offset)
+                $dir = [System.IO.Path]::Combine($sessionRoot, $d.ToString('yyyy', $inv), $d.ToString('MM', $inv), $d.ToString('dd', $inv))
+                if (-not [System.IO.Directory]::Exists($dir)) { continue }
+                $hit = [System.IO.Directory]::GetFiles($dir, $pattern)
+                if ($hit.Count -gt 0) { return $hit[0] }
+            }
+            return $null
+        }
+        foreach ($file in [System.IO.Directory]::EnumerateFiles($sessionRoot, $pattern, [System.IO.SearchOption]::AllDirectories)) {
+            return $file
+        }
+    } catch {}
+    return $null
+}
+
 function Select-SessionFile([string]$preferredCwd) {
     $sessionRoot = Join-Path $CodexHome "sessions"
     if (-not (Test-Path $sessionRoot)) { return $null }
@@ -123,6 +222,8 @@ function Select-SessionFile([string]$preferredCwd) {
                 $o = Parse-JsonSafe $line
                 if (-not $o) { continue }
                 if ("$($o.type)" -eq "session_meta") {
+                    # 하위 에이전트 세션의 user 메시지는 AGENTS.md 주입뿐이라 대체 원천이 될 수 없다
+                    if (Test-SubagentSessionMeta $o.payload) { break }
                     $cwd = Normalize-PathSafe (Get-String $o.payload "cwd")
                     if ($cwd -and ($cwd -eq $prefNorm)) {
                         return $f.FullName
@@ -156,8 +257,9 @@ function Read-SessionTailLines([string]$path, [int]$maxBytes = 2097152) {
     }
 }
 
-function Get-LatestSessionData([string]$preferredCwd) {
-    $sessionFile = Select-SessionFile $preferredCwd
+function Get-LatestSessionData([string]$preferredCwd, [string]$threadSessionFile) {
+    # notify의 thread-id 세션이 있으면 그것을 읽는다. cwd의 최신 세션은 다른 스레드일 수 있다.
+    $sessionFile = if ($threadSessionFile) { $threadSessionFile } else { Select-SessionFile $preferredCwd }
     if (-not $sessionFile) {
         return @{ UserText = ""; ResponseText = ""; Cwd = "" }
     }
@@ -191,6 +293,7 @@ function Get-LatestSessionData([string]$preferredCwd) {
         $text = (Extract-Text $p.content).Trim()
         if (-not $text) { continue }
         if ($role -eq "user") {
+            if (Test-InjectedUserText $text) { continue }
             $lastUser = $text
         } else {
             $lastAssistant = $text
@@ -450,20 +553,23 @@ if (-not $turnId) {
     $turnId = "$($payload.turn_id)".Trim()
 }
 
-# input-messages가 배열이면 마지막 요소만 추출 (Codex는 누적 전달)
-$inputMsgs = $payload.'input-messages'
-if ($inputMsgs -is [array] -and $inputMsgs.Count -gt 0) {
-    $userText = (Extract-Text $inputMsgs[-1]).Trim()
-} else {
-    $userText = (Extract-Text $inputMsgs).Trim()
+# legacy notify는 하위 에이전트 턴에도 실행되는데 입력에 그 표시가 없다. 2026-10-11 실측: 하위 에이전트
+# 턴의 thread-id는 하위 에이전트 자신의 세션 id이고 input-messages는 []이다. 그 세션 파일의 session_meta로
+# 알아보고 대화 기록·관찰 기록·chronos 이어가기를 건너뛴다(이어가기가 부모 턴 도중 resume을 띄우지 않게).
+# 하위 에이전트가 고친 파일 검사(hook bridge)는 전처럼 돈다. 세션 파일을 못 찾으면 전처럼 저장한다.
+$threadId = (Get-String $payload 'thread-id').Trim()
+if (-not $threadId) { $threadId = (Get-String $payload 'thread_id').Trim() }
+$threadSessionFile = Find-ThreadSessionFile $threadId
+if ($threadSessionFile -and (Test-SubagentSessionMeta (Read-SessionMeta $threadSessionFile))) {
+    Write-DebugLog "skip: subagent turn, thread=$threadId, turnId=$turnId"
+    $baseDir = Resolve-MnemoProjectRoot $payload
+    if ($baseDir) { Invoke-CodexHookBridge -BaseDir $baseDir -PayloadObject $payload | Out-Null }
+    exit 0
 }
+
+$userText = Select-UserInput $payload.'input-messages'
 if (-not $userText) {
-    $inputMsgs2 = $payload.'input_messages'
-    if ($inputMsgs2 -is [array] -and $inputMsgs2.Count -gt 0) {
-        $userText = (Extract-Text $inputMsgs2[-1]).Trim()
-    } else {
-        $userText = (Extract-Text $inputMsgs2).Trim()
-    }
+    $userText = Select-UserInput $payload.'input_messages'
 }
 
 $response = (Extract-Text $payload.'last-assistant-message').Trim()
@@ -481,7 +587,7 @@ if ((-not $userText -or $userText.Length -lt 1) -or (-not $response -or $respons
     if (-not $prefCwd -and $env:CODEX_WORKSPACE_ROOT) { $prefCwd = $env:CODEX_WORKSPACE_ROOT }
     if (-not $prefCwd) { exit 0 }
 
-    $sessionData = Get-LatestSessionData $prefCwd
+    $sessionData = Get-LatestSessionData $prefCwd $threadSessionFile
     if (-not $userText -or $userText.Length -lt 1) {
         $userText = "$($sessionData.UserText)".Trim()
     }

@@ -95,9 +95,10 @@ Claude 인덱스(`claude` 네임스페이스)와 충돌하지 않습니다.
 
 **수동 실행**:
 ```bash
-python skills/codex-mnemo/scripts/reconcile_codex_conversations.py              # 오늘자
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py              # 최근 7일(세션 파일 수정 시각 기준)
 python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --all        # 전체 기간
-python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --dry-run    # 시뮬레이션
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --dry-run    # 원본 스캔 집계만 (병합을 건너뛰어 canonicalized·added·subagent_records_removed는 늘 0)
+python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --all --staging-dir <임시폴더>  # 병합 미리보기: 결과 대화 파일 + manifest.json, 실제 대화는 그대로
 python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --project-root D:/git/foo
 ```
 
@@ -110,6 +111,9 @@ Codex CLI 대화
     ↓
 [notify: agent-turn-complete]
     → JSON 페이로드 수신 (argv/stdin/파일경로)
+    → thread-id 세션 파일의 session_meta가 하위 에이전트면 저장·관찰·이어가기를 건너뜀
+      (notify는 하위 에이전트 턴에도 실행된다. 변경 파일 검사 bridge만 돈다. 세션 파일이 없으면 저장)
+    → input-messages에서 AGENTS.md·<environment_context> 같은 주입 메시지는 User로 쓰지 않음
     → save-turn(오케스트레이터)에서 역할 분리 호출
       → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
       → append-user: User 입력 저장
