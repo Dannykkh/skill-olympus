@@ -397,6 +397,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v7.0.2:** Claude Code용 Mnemo 훅이 대화 기록을 빠뜨리거나 엉뚱한 턴을 남기지 않습니다. Stop 훅이 Claude Code가 넘겨주는 `last_assistant_message`를 저장하므로, 기록 파일(transcript)에 최종 답이 아직 쓰이기 전에 훅이 실행돼 앞선 진행 안내가 대신 저장되던 일이 없어집니다. 이 값이 없는 옛 CLI에서는 지금처럼 기록 파일을 읽습니다. UserPromptSubmit 훅은 `source`가 `system`인 턴과 `<task-notification>` 작업 알림을 User 턴으로 저장하지 않습니다. 직접 입력한 프롬프트와 `/loop`·예약 작업이 넣는 프롬프트는 그대로 저장합니다. 다른 CLI는 바뀌지 않습니다. Codex와 Grok은 이미 훅 입력의 마지막 답을 쓰고, Antigravity의 Stop 입력에는 답 본문이 없어 기록 파일 읽기를 유지합니다.
+
 **v7.0.1:** `release-notes` 스킬이 릴리즈 커밋 전에 `git add -A`를 실행하지 않습니다. 무관한 수정과 추적 안 된 파일(빌드 산출물, 압축 파일, 로컬 설정)이 릴리즈 커밋에 섞이지 않습니다. 스킬이 고친 `CHANGELOG.md`와 버전 파일만 스테이징하고 경로를 지정해 커밋하므로, 다른 파일을 미리 스테이징해 둔 것도 이번 커밋에서 빠집니다. 태그는 `--cleanup=verbatim`으로 만들어 CHANGELOG의 `###` 섹션 제목이 주석으로 지워지지 않고 태그 메시지에 남습니다.
 
 **v7.0.0:** 사용자 정의 에이전트를 더 이상 배포하지 않습니다. 독립 참고 에이전트 33개와 스킬이 갖고 있던 호환 프롬프트 2개(`chronos-worker`, `gotcha-analyzer`)를 지우고 에이전트 설치 과정도 걷어냈습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트가, 절차는 스킬이 맡습니다. 에이전트에만 있던 머메이드 상태 다이어그램 문법은 `mermaid-diagrams` 스킬로 옮겼습니다. **호환성 변경:** `--include-source-only-agents` 등 에이전트 옵션은 받아들이지만 무시합니다. 설치할 때 예전에 배포한 에이전트와 이름이 같은 파일(예: `~/.claude/agents/architect.md`)은 시각이 붙은 백업 폴더로 옮기고, 자동 생성된 `AGENTS-CATALOG.md`와 에이전트 동기화 기록은 지웁니다. Codex·Antigravity에서 직접 고친 사본은 지우지 않고 따로 보존합니다.
