@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.2] - 2026-10-11
+
+### Bug Fixes
+
+- **mnemo**: The Claude Code Stop hook saves the `last_assistant_message` field from its hook input instead of the last assistant text line in the transcript. Claude Code writes the transcript in batches, so a hook that ran before the final line was flushed saved an earlier progress note and lost the final answer (1 of 310 Stop events in this project since 09-01). Older CLIs without the field still read the transcript. The transcript line's uuid is indexed only when that line holds the same answer, so a repeated call or `reconcile` matches the turn by its 80-character fingerprint and does not save it twice. (539407b)
+- **mnemo**: The Claude Code UserPromptSubmit hook no longer saves machine-injected prompts as User turns: it skips `source: "system"` (task notifications, peer or channel messages, auto-continuation) and prompts that start with `<task-notification>`, since payloads may still omit `source`. Prompts with `user`, `sdk`, `loop_wakeup` or `schedule_wakeup` are kept. Notification turns saved before this release are left as they are. (539407b)
+
+### Documentation
+
+- Update the hook flow in `skills/mnemo/docs/memory-system.md` and add the v7.0.2 entry to the READMEs' recent changes. (539407b, e0f3c46)
+
+### Validation and Scope
+
+- New `scripts/tests/mnemo-claude-hook-inputs.test.js` runs the PowerShell and Bash hooks on a transcript that has not caught up, on input without `last_assistant_message`, and on system and notification prompts. Against the previous hooks 4 of its 6 tests fail (the 2 fallback tests pass). With this release all 6 pass, and the full Node suite passes (214; no failures or skips). Python tests were not run; no Python code changed.
+- Windows full installation passes all 12 Claude, Codex, Antigravity and Grok runtime checks. The installed Claude hooks match the source and keep their Grok and Devin guards.
+- Only the Claude Code hooks change. Codex `save-turn` already uses notify's `last-assistant-message` and Grok `save-turn` uses Stop's `lastAssistantMessage`. Antigravity's Stop input has no answer text, so it keeps reading the transcript. Devin reads its session database with retries.
+- Unrelated skill zip files in the working tree are excluded from this release.
+
 ## [7.0.1] - 2026-10-11
 
 ### Bug Fixes
