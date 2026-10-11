@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.3] - 2026-10-11
+
+### Bug Fixes
+
+- **codex-mnemo**: `save-turn` no longer saves subagent turns as conversation turns. Codex runs the legacy `notify` hook when a subagent finishes a turn too, and the payload has nothing that marks a subagent: a captured subagent payload carried the subagent's own `thread-id`, empty `input-messages` and no `client`. The hook now finds the session file for the notify `thread-id` (`sessions/yyyy/MM/dd/rollout-…-<thread-id>.jsonl`; for UUIDv7 ids it looks only in the id's date folder and the day on either side, and it searches everything only for other ids). It skips the turn when the first `session_meta` marks a subagent, using the reconcile tool's `is_subagent` rule (an object `source`, `agent_path`, `parent_thread_id`, `forked_from_id`, or `thread_source: "subagent"`). Skipped turns also skip observations, the status notice and the Chronos continue loop, which could otherwise start `codex exec resume --last` while the parent turn is still running. The hook bridge still checks changed files. Turns without a session file, such as `codex exec` runs that keep no session, are saved as before. (b22f213)
+- **codex-mnemo**: Injected context is no longer saved as the User turn. `save-turn` drops `input-messages` entries that start with the reconcile tool's `USER_INJECTION_PREFIXES` (AGENTS.md instructions, `<environment_context>`, `<turn_aborted>` and similar) and keeps the last remaining one. The Windows fallback runs when `input-messages` is empty or the answer is shorter than 5 characters. It now reads the thread's own session instead of the newest session in the folder, skips subagent sessions and ignores injected user messages. Before, it often picked a subagent session and saved its AGENTS.md instructions as the User text. (b22f213)
+
+### Documentation
+
+- `skills/codex-mnemo/SKILL.md` shows the subagent skip in the flow diagram and corrects the reconcile examples. The default run covers session files from the last 7 days, not just today. `--dry-run` skips the merge, so its removed and added counts are always 0; preview a full run with `--all --staging-dir <folder>`. The READMEs' recent changes gain a v7.0.3 entry. (b22f213, dfa2a2c)
+
+### Validation and Scope
+
+- New `scripts/tests/codex-save-turn-subagent.test.js` runs the PowerShell and Bash hooks against a temporary `CODEX_HOME`. It covers subagent sessions (current and `source`-only forms, UUIDv7 and other ids), injected `input-messages`, a session outside the date folders, a turn with no session file, and the PowerShell fallback. Against the previous hooks 5 of its 9 tests fail (the subagent, injection and fallback tests). With this release all 9 pass, and the full Node suite passes (224 including the codex-mnemo install check; no failures or skips). The Bash hook's python3 path (no jq) was checked by hand. Python tests were not run; the reconcile tool did not change.
+- Windows full installation passes all 12 runtime checks, and the installed `save-turn.ps1|sh` match the source. A real `codex exec` that spawned one subagent ran through the installed notify chain. It logged `skip: subagent turn` for the subagent, and the parent's fallback read the parent's own session.
+- `install.sh` was not run on macOS or Linux. To find the date folder, the Bash hook tries BSD `date -r` before GNU `date -d @`.
+- Unrelated skill zip files in the working tree are excluded from this release.
+
 ## [7.0.2] - 2026-10-11
 
 ### Bug Fixes
