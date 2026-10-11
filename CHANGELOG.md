@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **release tooling**: `scripts/bump_version.py` now tells users to update CHANGELOG.md and stage and commit only the four release files. The former `git commit -am` instruction could include unrelated tracked changes; the path-specific commit also keeps unrelated staged changes out of the release.
+
 ## [7.0.4] - 2026-10-11
 
 ### Bug Fixes

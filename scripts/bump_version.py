@@ -100,11 +100,16 @@ def bump_plugin_version(bump_type: str) -> None:
     print(f"[ok] Updated {plugin_path}")
     print(f"[ok] Updated {version_path}")
 
+    release_files = "CHANGELOG.md VERSION .claude-plugin/plugin.json .claude-plugin/marketplace.json"
     print("\nVersion bumped successfully.")
-    print(f"\nNext steps:")
-    print(f"  1. Review changes: git diff")
-    print(f"  2. Commit: git commit -am 'chore: bump version to {new_version}'")
-    print(f"  3. Push: git push")
+    print("\nNext steps:")
+    print("  1. Review changes: git diff")
+    print(f"  2. Update CHANGELOG.md for {new_version}")
+    print(f"  3. Stage release files: git add -- {release_files}")
+    print(
+        f"  4. Commit release files: git commit -m 'chore(release): v{new_version}' -- {release_files}"
+    )
+    print("  5. Push: git push")
 
 
 def show_version() -> None:
