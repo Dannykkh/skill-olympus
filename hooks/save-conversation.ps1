@@ -191,6 +191,10 @@ try {
 $Prompt = $json.prompt
 if (-not $Prompt) { exit 0 }
 
+# 백그라운드 작업 알림·채널 메시지처럼 기계가 넣은 턴은 사용자 발화가 아니다.
+# Claude Code는 입력의 source로 알려 주고(system), 필드가 아직 빠질 수 있어 알림 태그로도 거른다.
+if ($json.source -eq 'system' -or $Prompt.TrimStart().StartsWith('<task-notification>')) { exit 0 }
+
 # <private> 블록 제거 (민감 정보 보호)
 if ($Prompt) {
     $Prompt = $Prompt -replace '(?s)<private>.*?</private>', '[PRIVATE]'

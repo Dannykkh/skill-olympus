@@ -196,8 +196,17 @@ JQ_STATUS=$?
 if [ $JQ_STATUS -ne 0 ]; then
     exit_mnemo_error 'stdin-json' "stdin JSON 파싱 실패 (jq exit=$JQ_STATUS)"
 fi
-# transcript_path 자체가 없거나 파일이 없는 건 정상 skip (로그 X)
-if [ -z "$TRANSCRIPT_PATH" ] || [ ! -f "$TRANSCRIPT_PATH" ]; then
+HAS_TRANSCRIPT=0
+if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then HAS_TRANSCRIPT=1; fi
+
+# Claude Code는 Stop 입력에 마지막 답(last_assistant_message)을 넣어 준다. 기록 파일(JSONL)은
+# 몰아서 쓰여 훅이 읽는 순간 마지막 답이 아직 없을 수 있다(2026-10-11, Stop 310건 중 1건 누락).
+# 이 값을 먼저 쓰고, 값이 없는 옛 CLI에서만 기록 파일의 마지막 텍스트 줄로 대신한다.
+# 기존 추출과 같은 정리(줄 앞뒤 공백 제거)를 해야 아래 uuid 대조가 맞는다.
+LAST_ASSISTANT=$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+# 답을 얻을 곳이 하나도 없으면 정상 skip (로그 X)
+if [ -z "$LAST_ASSISTANT" ] && [ "$HAS_TRANSCRIPT" -eq 0 ]; then
     exit 0
 fi
 
@@ -242,27 +251,43 @@ fi
 #     grep 전체 스캔이 수십 ms 안에 끝난다.
 # Claude Code는 thinking/text/tool_use를 별도 JSONL 줄로 분리함
 # → "type":"assistant" AND "type":"text" 둘 다 포함된 줄을 찾아야 함
-LAST_TEXT_LINE=$(grep '"type":"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep '"type":"text"' | tail -n 1)
-if [ -z "$LAST_TEXT_LINE" ]; then
-    # type 앞에 공백이 있을 수 있음 (JSON formatter 차이)
-    LAST_TEXT_LINE=$(grep -E '"type"[[:space:]]*:[[:space:]]*"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep -E '"type"[[:space:]]*:[[:space:]]*"text"' | tail -n 1)
-fi
-if [ -z "$LAST_TEXT_LINE" ]; then
-    # 이상 상황: 전체 스캔 후에도 assistant text가 없음.
-    # reconcile-conversations가 다음 세션 시작 시 JSONL 전체에서 복구한다.
-    log_mnemo_error 'no-assistant-text' "transcript=$TRANSCRIPT_PATH 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
-    exit 0
+LAST_TEXT_LINE=""
+if [ "$HAS_TRANSCRIPT" -eq 1 ]; then
+    LAST_TEXT_LINE=$(grep '"type":"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep '"type":"text"' | tail -n 1)
+    if [ -z "$LAST_TEXT_LINE" ]; then
+        # type 앞에 공백이 있을 수 있음 (JSON formatter 차이)
+        LAST_TEXT_LINE=$(grep -E '"type"[[:space:]]*:[[:space:]]*"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep -E '"type"[[:space:]]*:[[:space:]]*"text"' | tail -n 1)
+    fi
 fi
 
 # 텍스트 + uuid 추출
 # JSONL 전체 라인 파싱 → text 블록과 라인 uuid를 함께 추출
 # uuid는 JSONL 줄마다 고유 (dedup 키), message.id는 여러 줄 공유 가능
-if ! echo "$LAST_TEXT_LINE" | jq -e . >/dev/null 2>&1; then
-    exit_mnemo_error 'message-json' 'assistant 라인 JSON 파싱 실패'
+LINE_TEXT=""
+LINE_UUID=""
+if [ -n "$LAST_TEXT_LINE" ]; then
+    if echo "$LAST_TEXT_LINE" | jq -e . >/dev/null 2>&1; then
+        LINE_TEXT=$(echo "$LAST_TEXT_LINE" | jq -r '[.message.content[] | select(.type=="text") | .text] | join("\n")' 2>/dev/null)
+        LINE_UUID=$(echo "$LAST_TEXT_LINE" | jq -r '.uuid // empty' 2>/dev/null)
+        LINE_TEXT=$(echo "$LINE_TEXT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    elif [ -z "$LAST_ASSISTANT" ]; then
+        exit_mnemo_error 'message-json' 'assistant 라인 JSON 파싱 실패'
+    fi
 fi
-RESPONSE=$(echo "$LAST_TEXT_LINE" | jq -r '[.message.content[] | select(.type=="text") | .text] | join("\n")' 2>/dev/null)
-LINE_UUID=$(echo "$LAST_TEXT_LINE" | jq -r '.uuid // empty' 2>/dev/null)
-RESPONSE=$(echo "$RESPONSE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+if [ -n "$LAST_ASSISTANT" ]; then
+    RESPONSE="$LAST_ASSISTANT"
+    # uuid는 기록 파일의 마지막 텍스트 줄이 같은 답일 때만 쓴다. 아직 안 쓰였으면 uuid 없이 저장하고,
+    # reconcile이 80자 지문으로 같은 턴임을 알아본다(중복 저장 없음).
+    if [ "$LINE_TEXT" != "$LAST_ASSISTANT" ]; then LINE_UUID=""; fi
+elif [ -n "$LAST_TEXT_LINE" ]; then
+    RESPONSE="$LINE_TEXT"
+else
+    # 이상 상황: 전체 스캔 후에도 assistant text가 없음.
+    # reconcile-conversations가 다음 세션 시작 시 JSONL 전체에서 복구한다.
+    log_mnemo_error 'no-assistant-text' "transcript=$TRANSCRIPT_PATH 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
+    exit 0
+fi
 
 # <private> 블록 제거 (민감 정보 보호)
 RESPONSE=$(echo "$RESPONSE" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$RESPONSE" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')

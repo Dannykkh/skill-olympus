@@ -167,6 +167,14 @@ fi
 PROMPT=$(echo "$INPUT_JSON" | jq -r '.prompt // empty' 2>/dev/null)
 if [ -z "$PROMPT" ]; then exit 0; fi
 
+# 백그라운드 작업 알림·채널 메시지처럼 기계가 넣은 턴은 사용자 발화가 아니다.
+# Claude Code는 입력의 source로 알려 주고(system), 필드가 아직 빠질 수 있어 알림 태그로도 거른다.
+PROMPT_SOURCE=$(echo "$INPUT_JSON" | jq -r '.source // empty' 2>/dev/null)
+if [ "$PROMPT_SOURCE" = "system" ]; then exit 0; fi
+case "${PROMPT#"${PROMPT%%[![:space:]]*}"}" in
+    '<task-notification>'*) exit 0 ;;
+esac
+
 # <private> 블록 제거 (민감 정보 보호)
 PROMPT=$(echo "$PROMPT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$PROMPT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
 

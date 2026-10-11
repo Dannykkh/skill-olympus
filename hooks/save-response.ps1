@@ -250,9 +250,15 @@ try {
     Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"
 }
 $transcriptPath = $json.transcript_path
+$hasTranscript = [bool]($transcriptPath -and (Test-Path $transcriptPath))
 
-# transcript_path가 없거나 파일이 없는 경우는 정상 skip (로그 X)
-if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) { exit 0 }
+# Claude Code는 Stop 입력에 마지막 답(last_assistant_message)을 넣어 준다. 기록 파일(JSONL)은
+# 몰아서 쓰여 훅이 읽는 순간 마지막 답이 아직 없을 수 있다(2026-10-11, Stop 310건 중 1건 누락).
+# 이 값을 먼저 쓰고, 값이 없는 옛 CLI에서만 기록 파일의 마지막 텍스트 줄로 대신한다.
+$lastAssistant = "$($json.last_assistant_message)".Trim()
+
+# 답을 얻을 곳이 하나도 없으면 정상 skip (로그 X)
+if (-not $lastAssistant -and -not $hasTranscript) { exit 0 }
 
 # 프로젝트 루트 결정: 명시 workspace → payload cwd → transcript metadata
 $ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath -Payload $json
@@ -298,37 +304,55 @@ summary: ""
 #     메모리 효율적이라 전체 스캔이 충분히 빠르다. 단순함이 정확성을 보장.
 # 마지막 1개만 필요하므로 전체 스캔하며 match할 때마다 덮어쓴다.
 $lastTextLine = $null
-try {
-    foreach ($line in [System.IO.File]::ReadLines($transcriptPath, [System.Text.Encoding]::UTF8)) {
-        if ($line -match '"type"\s*:\s*"assistant"' -and $line -match '"type"\s*:\s*"text"') {
-            $lastTextLine = $line
+if ($hasTranscript) {
+    try {
+        foreach ($line in [System.IO.File]::ReadLines($transcriptPath, [System.Text.Encoding]::UTF8)) {
+            if ($line -match '"type"\s*:\s*"assistant"' -and $line -match '"type"\s*:\s*"text"') {
+                $lastTextLine = $line
+            }
+        }
+    } catch {
+        if (-not $lastAssistant) {
+            Exit-MnemoError -Context 'transcript-read' -Message "JSONL 읽기 실패: $($_.Exception.Message)"
         }
     }
-} catch {
-    Exit-MnemoError -Context 'transcript-read' -Message "JSONL 읽기 실패: $($_.Exception.Message)"
-}
-# 마지막 text 라인을 못 찾은 경우 → 이상 상황 (전체 스캔 후에도 없음).
-# reconcile-conversations가 다음 세션 시작 시 JSONL 전체를 다시 훑어 복구하므로
-# 여기서는 기록만 남기고 정상 종료.
-if (-not $lastTextLine) {
-    Write-MnemoError -Context 'no-assistant-text' -Message "transcript=$transcriptPath 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
-    exit 0
 }
 
 # 텍스트 + uuid 추출
 # uuid는 JSONL 줄마다 고유하므로 dedup 키로 완벽함 (message.id는 여러 줄 공유됨)
-try {
-    $msg = $lastTextLine | ConvertFrom-Json
-    $texts = @()
-    foreach ($block in $msg.message.content) {
-        if ($block.type -eq "text" -and $block.text) {
-            $texts += $block.text
+$lineText = $null
+$lineUuid = $null
+if ($lastTextLine) {
+    try {
+        $msg = $lastTextLine | ConvertFrom-Json
+        $texts = @()
+        foreach ($block in $msg.message.content) {
+            if ($block.type -eq "text" -and $block.text) {
+                $texts += $block.text
+            }
+        }
+        $lineText = ($texts -join "`n").Trim()
+        $lineUuid = $msg.uuid  # JSONL 줄 고유 식별자
+    } catch {
+        if (-not $lastAssistant) {
+            Exit-MnemoError -Context 'message-json' -Message "assistant 라인 JSON 파싱 실패: $($_.Exception.Message)"
         }
     }
-    $response = ($texts -join "`n").Trim()
-    $lineUuid = $msg.uuid  # JSONL 줄 고유 식별자
-} catch {
-    Exit-MnemoError -Context 'message-json' -Message "assistant 라인 JSON 파싱 실패: $($_.Exception.Message)"
+}
+
+if ($lastAssistant) {
+    $response = $lastAssistant
+    # uuid는 기록 파일의 마지막 텍스트 줄이 같은 답일 때만 쓴다. 아직 안 쓰였으면 uuid 없이 저장하고,
+    # reconcile이 80자 지문으로 같은 턴임을 알아본다(중복 저장 없음).
+    if ($lineText -cne $lastAssistant) { $lineUuid = $null }
+} elseif ($lastTextLine) {
+    $response = $lineText
+} else {
+    # 마지막 text 라인을 못 찾은 경우 → 이상 상황 (전체 스캔 후에도 없음).
+    # reconcile-conversations가 다음 세션 시작 시 JSONL 전체를 다시 훑어 복구하므로
+    # 여기서는 기록만 남기고 정상 종료.
+    Write-MnemoError -Context 'no-assistant-text' -Message "transcript=$transcriptPath 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
+    exit 0
 }
 
 # <private> 블록 제거 (민감 정보 보호)

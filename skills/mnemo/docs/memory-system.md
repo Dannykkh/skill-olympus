@@ -69,6 +69,7 @@ RAG/벡터DB 없이 키워드 기반 파일 검색으로 동작합니다.
 사용자 입력
     ↓
 [UserPromptSubmit 훅] save-conversation.ps1
+    → source가 system인 턴·작업 알림(<task-notification>)은 저장 안 함 (사용자 발화 아님)
     → <private> 블록 제거
     → 대화 파일에 "## [HH:mm] User" append (AI 호출 없음)
     ↓
@@ -81,7 +82,7 @@ Claude 도구 호출
 Claude 응답 (끝에 #tags 포함)
     ↓
 [Stop 훅] save-response.ps1
-    → transcript JSONL에서 마지막 assistant text 추출
+    → 훅 입력의 last_assistant_message 사용 (없는 옛 CLI는 transcript JSONL의 마지막 assistant text)
     → <private> 블록 제거
     → 응답 전체를 대화 파일에 append (AI 호출 없음)
 ```
