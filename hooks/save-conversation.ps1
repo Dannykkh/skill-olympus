@@ -215,41 +215,8 @@ $ConvFile = Join-Path $ConvDir "$Today-claude.md"
 
 Ensure-MemoryScaffold -BaseDir $ProjectRoot
 
-# 폴더 생성
-if (-not (Test-Path $ConvDir)) {
-    New-Item -ItemType Directory -Path $ConvDir -Force | Out-Null
-}
-
-# 파일 없으면 헤더 (BOM 없는 UTF-8로 저장)
-if (-not (Test-Path $ConvFile)) {
-    $Header = @"
----
-date: $Today
-project: $(Split-Path $ProjectRoot -Leaf)
-keywords: []
-summary: ""
----
-
-# $Today
-
-"@
-    [System.IO.File]::WriteAllText($ConvFile, $Header, $Utf8NoBom)
-}
-
-# 중복 방지: 같은 분(minute)에 동일 프롬프트가 이미 저장되어 있으면 스킵
-$TimeStamp = Get-Date -Format 'HH:mm'
-$Entry = "`n## [$TimeStamp] User`n`n$Prompt`n"
-
+$store = Join-Path $PSScriptRoot 'claude-event-store.js'
 try {
-    if (Test-Path $ConvFile) {
-        $Existing = Get-Content $ConvFile -Raw -Encoding UTF8
-        if ($Existing -match [regex]::Escape("## [$TimeStamp] User") -and $Existing -match [regex]::Escape($Prompt)) {
-            exit 0
-        }
-    }
-
-    # append (BOM 없는 UTF-8로 저장)
-    [System.IO.File]::AppendAllText($ConvFile, $Entry, $Utf8NoBom)
-} catch {
-    Exit-MnemoError -Context 'file-io' -Message "대화 파일 쓰기 실패: $($_.Exception.Message)"
-}
+    $receipt = ($json | ConvertTo-Json -Depth 40 -Compress) | & node $store $ProjectRoot user
+    if ($LASTEXITCODE -ne 0) { Exit-MnemoError -Context 'file-io' -Message '대화 저장 대기 또는 실패; 오류 로그와 대기 파일 확인' }
+} catch { Exit-MnemoError -Context 'file-io' -Message $_.Exception.Message }

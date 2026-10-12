@@ -32,7 +32,7 @@ const codexDir = process.env.CODEX_HOME
 
   const hookSource = (file) => {
     const local = path.join(sourceDir, "hooks", file);
-    return file === "mnemo-project-root.js" && !fs.existsSync(local)
+    return ["mnemo-project-root.js", "mnemo-record-store.js"].includes(file) && !fs.existsSync(local)
       ? path.join(sourceDir, "..", "..", "hooks", file) : local;
   };
 const scriptSource = (file) => {
@@ -527,15 +527,15 @@ function install() {
   const hookFiles = isWindows
     ? [
         "save-turn.ps1",
-        "append-user.ps1",
-        "append-assistant.ps1",
+        "store-turn.js",
+        "mnemo-record-store.js",
         "codex-hook-bridge.js",
         "mnemo-project-root.js",
       ]
     : [
         "save-turn.sh",
-        "append-user.sh",
-        "append-assistant.sh",
+        "store-turn.js",
+        "mnemo-record-store.js",
         "codex-hook-bridge.js",
         "mnemo-project-root.js",
       ];
@@ -651,15 +651,15 @@ function check() {
   const hookFiles = isWindows
     ? [
         "save-turn.ps1",
-        "append-user.ps1",
-        "append-assistant.ps1",
+        "store-turn.js",
+        "mnemo-record-store.js",
         "codex-hook-bridge.js",
         "mnemo-project-root.js",
       ]
     : [
         "save-turn.sh",
-        "append-user.sh",
-        "append-assistant.sh",
+        "store-turn.js",
+        "mnemo-record-store.js",
         "codex-hook-bridge.js",
         "mnemo-project-root.js",
       ];
@@ -774,6 +774,8 @@ function uninstall() {
     "append-user.ps1",
     "append-assistant.ps1",
     "codex-hook-bridge.js",
+    "store-turn.js",
+        "mnemo-record-store.js",
         "mnemo-project-root.js",
     "sync-sessions.ps1",
     "codex-mnemo-notify-wrapper.ps1",

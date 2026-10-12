@@ -193,29 +193,7 @@ PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 ensure_memory_scaffold "$PROJECT_ROOT"
 
-# 폴더 생성
-mkdir -p "$CONV_DIR"
-
-# 파일 없으면 헤더
-if [ ! -f "$CONV_FILE" ]; then
-    cat > "$CONV_FILE" << EOF
----
-date: $TODAY
-project: $PROJECT_NAME
-keywords: []
-summary: ""
----
-
-# $TODAY
-
-EOF
-fi
-
-# 중복 방지: 같은 분(minute)에 동일 프롬프트가 이미 저장되어 있으면 스킵
-TIMESTAMP=$(date +%H:%M)
-if [ -f "$CONV_FILE" ] && grep -qF "## [$TIMESTAMP] User" "$CONV_FILE" && grep -qF "$PROMPT" "$CONV_FILE"; then
-    exit 0
-fi
-
-# append
-echo -e "\n## [$TIMESTAMP] User\n\n$PROMPT\n" >> "$CONV_FILE"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STORE_RESULT="$(printf '%s' "$INPUT_JSON" | node "$SCRIPT_DIR/claude-event-store.js" "$PROJECT_ROOT" user)"
+if [ "$?" -ne 0 ]; then exit_mnemo_error 'file-io' '사용자 입력 저장 대기 또는 실패'; fi
+exit 0

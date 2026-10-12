@@ -28,7 +28,7 @@ FIELD = re.compile(
 )
 ROLE = re.compile(r"^\[(\d{2}:\d{2}(?::\d{2})?)\] (User|Assistant)$")
 MARKER = re.compile(
-    r"(?m)^<!--\s*(?P<kind>turn|turnhash|aborted-turn|uuid|antigravity-turn|grok-event|devin-turn)"
+    r"(?m)^<!--\s*(?P<kind>turn|turnhash|aborted-turn|uuid|antigravity-turn|grok-event|devin-turn|devin-event|mnemo-[a-z-]+-event)"
     r":(?P<value>[^ >]+)\s*-->"
 )
 RESERVED = re.compile(r"^(arch|learned|gotcha):\d{3}$")
@@ -96,9 +96,9 @@ def conversation_headings(raw: str) -> tuple[list[tuple[int, int, str]], bool]:
     visible = mask_fences(mask_private(raw), closed_only=True)
     boundaries = {0, len(raw)}
     for marker in MARKER.finditer(visible):
-        if marker.group("kind") in TERMINAL_MARKERS:
+        if marker.group("kind") in TERMINAL_MARKERS or marker.group("kind").startswith("mnemo-"):
             boundaries.add(marker.end())
-        elif marker.group("kind") in {"antigravity-turn", "grok-event", "devin-turn"}:
+        elif marker.group("kind") in {"antigravity-turn", "grok-event", "devin-turn", "devin-event"}:
             boundaries.add(marker.start())
     offsets, result, incomplete = sorted(boundaries), [], False
     for start, end in zip(offsets, offsets[1:]):

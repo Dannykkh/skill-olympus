@@ -745,7 +745,7 @@ test("Antigravity MCP adapter owns only the entries it installs", () => {
   assert.deepEqual(config.mcpServers.personal, { command: "personal-mcp" });
 });
 
-test("Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates", () => {
+test("Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates", async () => {
   const tempRoot = makeTempHome("ccc-antigravity-turn-test-");
   const transcriptPath = path.join(tempRoot, "transcript.jsonl");
   fs.writeFileSync(transcriptPath, [
@@ -760,14 +760,15 @@ test("Antigravity Mnemo parses camelCase transcripts, redacts private blocks, an
   assert.equal(turn.assistantText, "최종 답변");
   assert.equal(turn.order, 3);
 
-  appendAntigravityTurn(tempRoot, payload, turn);
-  appendAntigravityTurn(tempRoot, payload, turn);
-  const date = new Date().toISOString().slice(0, 10);
+  await appendAntigravityTurn(tempRoot, payload, turn);
+  await appendAntigravityTurn(tempRoot, payload, turn);
+  const date = new Date().toLocaleDateString("en-CA");
   const saved = fs.readFileSync(
     path.join(tempRoot, "conversations", `${date}-antigravity.md`),
     "utf8",
   );
-  assert.equal((saved.match(/antigravity-turn:/g) || []).length, 1);
+  assert.equal((saved.match(/## \[.*?\] User/g) || []).length, 1);
+  assert.equal((saved.match(/## \[.*?\] Assistant/g) || []).length, 1);
   assert.match(saved, /질문 \[PRIVATE\]/);
   assert.doesNotMatch(saved, /secret|internal reasoning/);
   assert.equal(fs.existsSync(path.join(tempRoot, "MEMORY.md")), true);

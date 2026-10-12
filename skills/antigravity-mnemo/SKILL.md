@@ -37,7 +37,7 @@ The installer also migrates Olympus-managed Gemini CLI Mnemo assets. Unmodified 
 
 ## Runtime contract
 
-The Stop hook reads Antigravity's `transcriptPath`, stores the latest user and model turn in `conversations/YYYY-MM-DD-antigravity.md`, redacts `<private>` blocks, and always permits the Stop event.
+The Stop hook reads Antigravity's `transcriptPath`, stores every unrecorded user input and the latest model answer in `conversations/YYYY-MM-DD-antigravity.md`, redacts `<private>` blocks, and always permits the Stop event. Transcript position and conversation identity distinguish repeated new input from a replay. Node.js is required; persistence and retry follow the shared [record storage contract](references/record-storage.md).
 
 ## Rules and past-work lookup
 

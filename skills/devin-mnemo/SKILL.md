@@ -15,6 +15,12 @@ node "<module_root>/install.js" --uninstall # 이 어댑터가 추가한 항목 
 
 Devin의 `UserPromptSubmit`은 사용자 입력을 제공하지만 [공식 Stop 페이로드](https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks)에 응답 본문은 명시되지 않는다. Windows 실측 경로 `%APPDATA%/devin/cli/sessions.db`의 `message_nodes`에서 현재 세션·턴 이후의 assistant 본문만 읽는다. Python 3와 Node.js가 필요하다. 로컬 DB가 없거나 형식이 달라지면 사용자 입력만 남을 수 있으므로 실제 Devin 턴으로 확인한다. 저장 실패는 Devin 턴을 차단하지 않는다.
 
+사용자 입력은 DB 조회 전에 대기 파일로 보존한다. 본문 쓰기·재시도는 공통
+[대화 레코드 저장 계약](../mnemo/references/record-storage.md)을 따른다.
+Stop에서 아직 DB 본문이 없으면 조회 상태를 남긴다. 다음 입력의 baseline으로 이전 턴의
+상한을 확정하고 이후 이벤트에서 범위 안의 답변만 읽는다. 상한을 확인하지 못하거나
+답변이 그 상한 뒤에 생긴 경우 다른 턴을 가져오지 않고 미해결 상태를 유지한다.
+
 - 저장: `conversations/YYYY-MM-DD-devin.md`, `MEMORY.md`, `memory/`. `<private>...</private>` 본문은 `[PRIVATE]`로 바꾼다. `MNEMO_DISABLE=1`이면 저장하지 않는다.
 - 프로젝트 루트: 공통 `mnemo-project-root.js`를 사용한다. Git 루트나 Devin이 명시한 workspace만 기록한다. CLI 설정 홈은 기록 대상이 아니다.
 - 검색: 공통 Mnemo 규칙에 따라 `MEMORY.md` → 관련 기억 → `conversations/*-devin.md`와 다른 CLI 로그 → 필요한 원본 세션 순서로 확인한다. 원본 DB는 읽기 전용으로 필요한 세션만 조회한다.

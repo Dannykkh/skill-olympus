@@ -19,7 +19,8 @@ test("배치 파일은 ASCII만 포함한다 (cmd.exe UTF-8 파서 버그 방지
   });
   assert.equal(listed.status, 0, "git ls-files failed");
 
-  const files = listed.stdout.split("\n").map((line) => line.trim()).filter(Boolean);
+  const files = listed.stdout.split("\n").map((line) => line.trim())
+    .filter((relative) => relative && fs.existsSync(path.join(repoRoot, relative)));
   assert.ok(files.length > 0, "no .bat/.cmd files tracked");
 
   const offenders = [];
@@ -48,7 +49,8 @@ test("비ASCII를 포함한 .ps1은 UTF-8 BOM을 가진다 (PowerShell 5.1 CP949
   });
   assert.equal(listed.status, 0, "git ls-files failed");
 
-  const files = listed.stdout.split("\n").map((line) => line.trim()).filter(Boolean);
+  const files = listed.stdout.split("\n").map((line) => line.trim())
+    .filter((relative) => relative && fs.existsSync(path.join(repoRoot, relative)));
   assert.ok(files.length > 0, "no .ps1 files tracked");
 
   const offenders = [];

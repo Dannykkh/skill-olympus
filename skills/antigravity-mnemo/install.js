@@ -21,6 +21,10 @@ const sourceHookPath = path.join(sourceDir, "hooks", "save-turn.js");
 const rootHelperName = "mnemo-project-root.js";
 const rootHelperSource = fs.existsSync(path.join(sourceDir, "hooks", rootHelperName))
   ? path.join(sourceDir, "hooks", rootHelperName) : path.join(sourceDir, "../../hooks", rootHelperName);
+const recordStoreName = 'mnemo-record-store.js';
+const recordStoreSource = fs.existsSync(path.join(sourceDir,'hooks',recordStoreName))
+  ? path.join(sourceDir,'hooks',recordStoreName) : path.join(sourceDir,'../../hooks',recordStoreName);
+
 const hookId = "olympus-antigravity-mnemo";
 const markerStart = "<!-- ANTIGRAVITY-MNEMO:START -->";
 const markerEnd = "<!-- ANTIGRAVITY-MNEMO:END -->";
@@ -170,7 +174,7 @@ function installImprovementModules() {
 }
 
 function install() {
-  if (!fs.existsSync(sourceHookPath) || !fs.existsSync(templatePath) || !fs.existsSync(rootHelperSource)) {
+  if (!fs.existsSync(sourceHookPath) || !fs.existsSync(templatePath) || !fs.existsSync(rootHelperSource) || !fs.existsSync(recordStoreSource)) {
     throw new Error("Antigravity Mnemo package is incomplete");
   }
   installImprovementModules();
@@ -178,6 +182,7 @@ function install() {
   ensureDir(hookDir);
   fs.copyFileSync(sourceHookPath, hookPath);
   fs.copyFileSync(rootHelperSource, path.join(hookDir, rootHelperName));
+  fs.copyFileSync(recordStoreSource, path.join(hookDir, recordStoreName));
   if (process.platform !== "win32") fs.chmodSync(hookPath, 0o755);
   installHookConfig();
   mergeRules();
@@ -188,6 +193,7 @@ function uninstall() {
   uninstallHookConfig();
   fs.rmSync(hookPath, { force: true });
   fs.rmSync(path.join(hookDir, rootHelperName), { force: true });
+  fs.rmSync(path.join(hookDir, recordStoreName), { force: true });
   removeRules(rulesPath, false);
   migrateLegacy();
   console.log(`Antigravity Mnemo removed from ${googleHome}`);
@@ -197,7 +203,9 @@ function check() {
   const config = readJson(hooksConfigPath);
   const stop = config[hookId]?.Stop;
   const issues = [];
-  if (!fs.existsSync(hookPath)) issues.push(`missing hook: ${hookPath}`);
+  if (!fs.existsSync(hookPath) || sha256(hookPath) !== sha256(sourceHookPath)) issues.push(`missing or stale hook: ${hookPath}`);
+  const recordStoreInstalled=path.join(hookDir,recordStoreName);
+  if (!fs.existsSync(recordStoreInstalled) || sha256(recordStoreInstalled)!==sha256(recordStoreSource)) issues.push(`missing or stale record store: ${recordStoreInstalled}`);
   const rootHelperInstalled = path.join(hookDir, rootHelperName);
   if (!fs.existsSync(rootHelperInstalled) || sha256(rootHelperInstalled) !== sha256(rootHelperSource)) {
     issues.push(`missing or stale root helper: ${rootHelperInstalled}`);

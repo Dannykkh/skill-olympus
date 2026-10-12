@@ -10,6 +10,7 @@ function improvementFiles(sourceDir) {
   const files = [
     [path.join(common, "references/self-improvement.md"), "references/self-improvement.md"],
     [path.join(common, "references/project-storage.md"), "references/project-storage.md"],
+    [path.join(common, "references/record-storage.md"), "references/record-storage.md"],
     [path.join(common, "references/handoff-memory.md"), "references/handoff-memory.md"],
     [path.join(common, "references/project-skill-improvement.md"), "references/project-skill-improvement.md"],
     [path.join(common, "references/session-learning.md"), "references/session-learning.md"],
@@ -27,9 +28,38 @@ function improvementFiles(sourceDir) {
     [fs.existsSync(path.join(common, "hooks/mnemo-project-root.js"))
       ? path.join(common, "hooks/mnemo-project-root.js")
       : path.join(common, "../../hooks/mnemo-project-root.js"), "hooks/mnemo-project-root.js"],
+    [fs.existsSync(path.join(common, "hooks/mnemo-record-store.js"))
+      ? path.join(common, "hooks/mnemo-record-store.js")
+      : path.join(common, "../../hooks/mnemo-record-store.js"), "hooks/mnemo-record-store.js"],
     [__filename, "scripts/bundle-improvement.js"],
     [path.join(sourceDir, "SKILL.md"), "SKILL.md"],
   ];
+  // The module's own reinstall command must use the current adapter too.
+  // Updating only shared references leaves an old install.js able to restore
+  // obsolete hooks after a successful installation.
+  const add = (source, relative) => {
+    if (!files.some(([, target]) => target === relative)) files.push([source, relative]);
+  };
+  const installer = path.join(sourceDir, 'install.js');
+  if (fs.existsSync(installer)) add(installer, 'install.js');
+  function ownFiles(relative) {
+    const dir = path.join(sourceDir, relative);
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (['tests','__pycache__'].includes(entry.name)) continue;
+      const child = `${relative}/${entry.name}`;
+      if (entry.isDirectory()) ownFiles(child);
+      else if (entry.isFile() && !/\.(?:pyc|zip)$/.test(entry.name)) add(path.join(sourceDir, child), child);
+    }
+  }
+  for (const relative of ['hooks','scripts','templates']) ownFiles(relative);
+  if (path.basename(sourceDir) === 'mnemo') {
+    for (const name of ['save-conversation.ps1','save-conversation.sh','save-response.ps1','save-response.sh',
+      'save-tool-use.ps1','save-tool-use.sh','reconcile-conversations.ps1','reconcile-conversations.sh','claude-event-store.js']) {
+      const local = path.join(sourceDir,'hooks',name);
+      add(fs.existsSync(local) ? local : path.join(sourceDir,'../../hooks',name), `hooks/${name}`);
+    }
+  }
   // Fail before creating a partial package when a required module is missing.
   for (const [file] of files) {
     if (!fs.statSync(file).isFile()) throw new Error(`Missing Mnemo dependency: ${file}`);

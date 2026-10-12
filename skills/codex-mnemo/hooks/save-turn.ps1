@@ -1,7 +1,5 @@
 ﻿# save-turn.ps1 - Codex notify orchestrator
-# Role split:
-# - append-user.ps1: persist user message
-# - append-assistant.ps1: persist assistant message
+# store-turn.js가 한 턴의 전체 입력·답변·표식을 함께 저장한다.
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
 if ($env:MNEMO_DISABLE -match '^(1|true|yes)$') { exit 0 }
@@ -105,41 +103,6 @@ function Resolve-MnemoProjectRoot($Payload) {
     return $null
 }
 
-# Codex가 사용자 입력 앞에 넣는 지침·환경 메시지 머리말. 정본은
-# reconcile_codex_conversations.py의 USER_INJECTION_PREFIXES이고 save-turn.sh도 같은 목록을 쓴다.
-$InjectedUserPrefixes = @(
-    '# AGENTS.md instructions for',
-    '<environment_context',
-    '<codex_internal_context',
-    '<skills_instructions',
-    '<permissions instructions',
-    '<turn_aborted',
-    'You are an agent in a team of agents collaborating to complete a task.',
-    'Message Type: NEW_TASK',
-    'Message Type: MESSAGE',
-    'Message Type: FINAL_ANSWER'
-)
-
-function Test-InjectedUserText([string]$text) {
-    if (-not $text) { return $false }
-    $t = $text.TrimStart()
-    foreach ($prefix in $InjectedUserPrefixes) {
-        if ($t.StartsWith($prefix, [System.StringComparison]::Ordinal)) { return $true }
-    }
-    return $false
-}
-
-# input-messages에서 주입 메시지를 빼고 마지막 사용자 입력을 고른다 (Codex는 누적 전달)
-function Select-UserInput($messages) {
-    if ($null -eq $messages) { return "" }
-    $items = @($messages)
-    for ($i = $items.Count - 1; $i -ge 0; $i--) {
-        $text = (Extract-Text $items[$i]).Trim()
-        if ($text -and -not (Test-InjectedUserText $text)) { return $text }
-    }
-    return ""
-}
-
 # reconcile_codex_conversations.py SessionMeta.is_subagent와 같은 규칙.
 # 2026-10 실측(세션 6,386개): agent_path·parent_thread_id·forked_from_id·thread_source=subagent는
 # 모두 source가 객체인 세션에서만 나오고, source 객체만 있는 하위 에이전트 세션도 있다.
@@ -234,85 +197,6 @@ function Select-SessionFile([string]$preferredCwd) {
     }
 
     return $null
-}
-
-function Read-SessionTailLines([string]$path, [int]$maxBytes = 2097152) {
-    if (-not $path -or -not (Test-Path $path)) { return @() }
-    $fs = $null
-    try {
-        $fs = [System.IO.FileStream]::new($path, 'Open', 'Read', 'ReadWrite')
-        $len = [int64]$fs.Length
-        if ($len -le 0) { return @() }
-        $read = [Math]::Min($maxBytes, $len)
-        $start = $len - $read
-        $fs.Seek($start, 'Begin') | Out-Null
-        $buffer = New-Object byte[] $read
-        [void]$fs.Read($buffer, 0, $read)
-        $text = [System.Text.Encoding]::UTF8.GetString($buffer)
-        return ($text -split "`n")
-    } catch {
-        return @()
-    } finally {
-        if ($fs) { $fs.Close() }
-    }
-}
-
-function Get-LatestSessionData([string]$preferredCwd, [string]$threadSessionFile) {
-    # notify의 thread-id 세션이 있으면 그것을 읽는다. cwd의 최신 세션은 다른 스레드일 수 있다.
-    $sessionFile = if ($threadSessionFile) { $threadSessionFile } else { Select-SessionFile $preferredCwd }
-    if (-not $sessionFile) {
-        return @{ UserText = ""; ResponseText = ""; Cwd = "" }
-    }
-
-    $cwd = ""
-    $lastUser = ""
-    $lastAssistant = ""
-    $lines = Read-SessionTailLines -path $sessionFile -maxBytes 2097152
-    if (-not $lines) {
-        return @{ UserText = ""; ResponseText = ""; Cwd = "" }
-    }
-
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        $line = $lines[$i]
-        if (-not $line) { continue }
-        $o = Parse-JsonSafe $line
-        if (-not $o) { continue }
-
-        if ("$($o.type)" -eq "session_meta" -and -not $cwd) {
-            $cwdCandidate = Get-String $o.payload "cwd"
-            if ($cwdCandidate) { $cwd = $cwdCandidate.Trim() }
-            continue
-        }
-
-        if ("$($o.type)" -ne "response_item") { continue }
-        $p = $o.payload
-        if ("$($p.type)" -ne "message") { continue }
-        $role = "$($p.role)"
-        if ($role -ne "user" -and $role -ne "assistant") { continue }
-
-        $text = (Extract-Text $p.content).Trim()
-        if (-not $text) { continue }
-        if ($role -eq "user") {
-            if (Test-InjectedUserText $text) { continue }
-            $lastUser = $text
-        } else {
-            $lastAssistant = $text
-        }
-    }
-
-    return @{ UserText = $lastUser; ResponseText = $lastAssistant; Cwd = $cwd; SessionFile = $sessionFile }
-}
-
-function Get-Sha1([string]$text) {
-    if (-not $text) { return "" }
-    $sha = [System.Security.Cryptography.SHA1]::Create()
-    try {
-        $bytes = [System.Text.Encoding]::UTF8.GetBytes($text)
-        $hash = $sha.ComputeHash($bytes)
-        return ([BitConverter]::ToString($hash) -replace "-", "").ToLowerInvariant()
-    } finally {
-        $sha.Dispose()
-    }
 }
 
 function Get-NodeCommand {
@@ -491,15 +375,6 @@ function Ensure-MemoryScaffold([string]$BaseDir) {
     }
 }
 
-$helperUser = Join-Path $PSScriptRoot "append-user.ps1"
-$helperAssistant = Join-Path $PSScriptRoot "append-assistant.ps1"
-if (-not (Test-Path $helperUser) -or -not (Test-Path $helperAssistant)) {
-    Write-DebugLog "skip: helper scripts not found in $PSScriptRoot"
-    exit 0
-}
-. $helperUser
-. $helperAssistant
-
 $payload = $null
 $lastArg = $null
 if ($args.Count -gt 0) {
@@ -567,54 +442,6 @@ if ($threadSessionFile -and (Test-SubagentSessionMeta (Read-SessionMeta $threadS
     exit 0
 }
 
-$userText = Select-UserInput $payload.'input-messages'
-if (-not $userText) {
-    $userText = Select-UserInput $payload.'input_messages'
-}
-
-$response = (Extract-Text $payload.'last-assistant-message').Trim()
-if (-not $response) {
-    $response = (Extract-Text $payload.'last_assistant_message').Trim()
-}
-
-if ((-not $userText -or $userText.Length -lt 1) -or (-not $response -or $response.Length -lt 5)) {
-    $prefCwd = ""
-    foreach ($k in @("cwd", "working-directory", "working_directory", "project-root", "project_root", "workspace-root", "workspace_root")) {
-        $v = ""
-        try { $v = "$($payload.$k)".Trim() } catch {}
-        if ($v) { $prefCwd = $v; break }
-    }
-    if (-not $prefCwd -and $env:CODEX_WORKSPACE_ROOT) { $prefCwd = $env:CODEX_WORKSPACE_ROOT }
-    if (-not $prefCwd) { exit 0 }
-
-    $sessionData = Get-LatestSessionData $prefCwd $threadSessionFile
-    if (-not $userText -or $userText.Length -lt 1) {
-        $userText = "$($sessionData.UserText)".Trim()
-    }
-    if (-not $response -or $response.Length -lt 5) {
-        $response = "$($sessionData.ResponseText)".Trim()
-    }
-    if (-not (Get-String $payload "cwd")) {
-        if (-not (Get-String $payload "working-directory")) {
-            if (-not (Get-String $payload "working_directory")) {
-                if ($sessionData.Cwd) {
-                    $payload | Add-Member -NotePropertyName "cwd" -NotePropertyValue $sessionData.Cwd -Force
-                }
-            }
-        }
-    }
-    Write-DebugLog "fallback-used: session=$($sessionData.SessionFile), userLen=$($userText.Length), respLen=$($response.Length), prefCwd=$prefCwd"
-}
-
-# <private> 블록 제거 (민감 정보 보호)
-if ($userText) { $userText = $userText -replace '(?s)<private>.*?</private>', '[PRIVATE]' }
-if ($response) { $response = $response -replace '(?s)<private>.*?</private>', '[PRIVATE]' }
-
-if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $response.Length -lt 5)) {
-    Write-DebugLog "skip: empty turn, pwd=$($PWD.Path)"
-    exit 0
-}
-
 $baseDir = Resolve-MnemoProjectRoot $payload
 if (-not $baseDir) { exit 0 }
 if (-not (Test-Path -LiteralPath (Join-Path $baseDir '.mnemo-root'))) {
@@ -623,66 +450,32 @@ if (-not (Test-Path -LiteralPath (Join-Path $baseDir '.mnemo-root'))) {
 
 Ensure-MemoryScaffold $baseDir
 
-$convDir = Join-Path $baseDir "conversations"
-$today = Get-Date -Format "yyyy-MM-dd"
-$convFile = Join-Path $convDir "$today-codex.md"
-
-if (-not (Test-Path $convDir)) {
-    New-Item -ItemType Directory -Path $convDir -Force | Out-Null
-}
-
-if (-not (Test-Path $convFile)) {
-    $header = @"
----
-date: $today
-project: $(Split-Path $baseDir -Leaf)
-keywords: []
-summary: ""
----
-
-# $today
-
-"@
-    [System.IO.File]::WriteAllText($convFile, $header, $Utf8NoBom)
-}
-
-if (Test-Path $convFile) {
-    $existing = Get-Content $convFile -Raw -Encoding UTF8
-    if ($turnId) {
-        if ($existing -match [regex]::Escape("<!-- turn:$turnId -->")) {
-            Write-DebugLog "skip: duplicate turnId=$turnId"
-            exit 0
-        }
-    } else {
-        $sig = Get-Sha1 ("$userText`n---`n$response")
-        if ($sig -and ($existing -match [regex]::Escape("<!-- turnhash:$sig -->"))) {
-            Write-DebugLog "skip: duplicate turnHash=$sig"
-            exit 0
-        }
-    }
-}
-
-$ts = Get-Date -Format 'HH:mm:ss'
-# P1 parity: 파일 쓰기 실패 시 mnemo-errors.log에 기록해 사용자에게 가시화한다.
+$storeHelper = Join-Path $PSScriptRoot 'store-turn.js'
+$sessionFile = $threadSessionFile
+# thread-id가 없는 옛 알림만 같은 cwd의 루트 세션을 대체 원천으로 찾는다.
+if (-not $threadId) { $sessionFile = Select-SessionFile (Get-String $payload 'cwd') }
+$stored = $null
 try {
-    Add-CodexUserEntry -ConvFile $convFile -Timestamp $ts -UserText $userText
-    Add-CodexAssistantEntry -ConvFile $convFile -Timestamp $ts -Response $response
-
-    if ($turnId) {
-        [System.IO.File]::AppendAllText($convFile, "<!-- turn:$turnId -->`n", $Utf8NoBom)
-    } else {
-        $sig = Get-Sha1 ("$userText`n---`n$response")
-        if ($sig) {
-            [System.IO.File]::AppendAllText($convFile, "<!-- turnhash:$sig -->`n", $Utf8NoBom)
-        }
-    }
+    $storeJson = ($payload | ConvertTo-Json -Compress -Depth 40) | & node $storeHelper $baseDir "$sessionFile"
+    $stored = Parse-JsonSafe ($storeJson -join "`n")
+    if (-not $stored) { throw 'store-turn returned no result' }
 } catch {
-    Write-MnemoError -Context 'conv-append' -Message "conversations 파일 쓰기 실패: $($_.Exception.Message)"
+    Write-MnemoError -Context 'conv-append' -Message "완료 턴 저장 실패: $($_.Exception.Message)"
     if ($env:MNEMO_STRICT -eq '1') { exit 1 }
-    # fail-open: notify 훅 체인은 계속 진행 (에러는 이미 기록됨)
 }
-
-Write-DebugLog "saved: baseDir=$baseDir, file=$convFile, userLen=$($userText.Length), respLen=$($response.Length), turnId=$turnId"
+$userText = "$($stored.userText)"
+$response = "$($stored.response)"
+if ($stored.status -eq 'duplicate') {
+    Write-DebugLog "skip: duplicate turnId=$turnId"
+    exit 0
+}
+if ($stored.status -eq 'empty') { Write-DebugLog 'skip: empty turn'; exit 0 }
+if ($stored.status -eq 'saved') {
+    Write-DebugLog "saved: baseDir=$baseDir, userCount=$($stored.userCount), userLen=$($userText.Length), respLen=$($response.Length), turnId=$turnId, flushed=$($stored.savedCount)"
+} elseif ($stored) {
+    Write-MnemoError -Context 'conv-append' -Message "완료 턴 저장 대기: $($stored.error); pending=$($stored.pendingFile)"
+    if ($env:MNEMO_STRICT -eq '1') { exit 1 }
+}
 $hookSummary = Invoke-CodexHookBridge -BaseDir $baseDir -PayloadObject $payload
 
 # ─────────────────────────────────────────────

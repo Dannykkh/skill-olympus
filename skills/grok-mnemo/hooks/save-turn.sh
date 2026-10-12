@@ -209,7 +209,7 @@ if [ -n "$RESPONSE" ]; then
 fi
 
 # 둘 다 비어있으면 스킵
-if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; then
+if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 1 ]; }; then
     exit 0
 fi
 
@@ -235,6 +235,7 @@ mkdir -p "$CONV_DIR"
 APPEND_HELPER="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/append-event.js"
 if [ ! -f "$APPEND_HELPER" ]; then APPEND_HELPER="${APPEND_HELPER%/append-event.js}/grok-mnemo-append-event.js"; fi
 APPEND_RESULT=$(printf '%s' "$INPUT" | node "$APPEND_HELPER" "$PROJECT_ROOT") || exit_mnemo_error 'append-event' 'event persistence failed'
+[ "$APPEND_RESULT" != "pending" ] || exit_mnemo_error 'append-event' 'event queued for retry'
 [ "$APPEND_RESULT" = "saved" ] || exit 0
 
 # ─────────────────────────────────────────────

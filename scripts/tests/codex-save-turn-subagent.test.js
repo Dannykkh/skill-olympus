@@ -14,7 +14,7 @@ const repo = path.resolve(__dirname, '../..');
 const hooksDir = path.join(repo, 'skills', 'codex-mnemo', 'hooks');
 const ps = process.platform === 'win32' ? 'powershell.exe' : 'pwsh';
 const bash = process.env.BASH_PATH || (process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : '/bin/bash');
-const hasBashJq = spawnSync(bash, ['-c', 'command -v jq >/dev/null'], { windowsHide: true }).status === 0;
+const hasBashJson = spawnSync(bash, ['-c', 'command -v jq >/dev/null || command -v python3 >/dev/null'], { windowsHide: true }).status === 0;
 const hasPowerShell = spawnSync(ps, ['-NoProfile', '-Command', 'exit 0'], { windowsHide: true }).status === 0;
 
 const AGENTS_TEXT = '# AGENTS.md instructions for D:\\example\n\n<INSTRUCTIONS>\n## 규칙\n- 답변은 한국어로\n</INSTRUCTIONS>';
@@ -87,7 +87,7 @@ function debugLog(codexHome) {
 
 for (const shell of ['PowerShell', 'Bash']) {
   const isBash = shell === 'Bash';
-  const skip = isBash ? (!hasBashJq && 'Bash or jq is unavailable') : (!hasPowerShell && 'PowerShell is unavailable');
+  const skip = isBash ? (!hasBashJson && 'Bash or a JSON parser is unavailable') : (!hasPowerShell && 'PowerShell is unavailable');
   const slash = value => (isBash ? value.replaceAll('\\', '/') : value);
 
   // Codex는 notify 입력 JSON을 마지막 인수로 넘긴다. 따옴표 이스케이프를 피하려고 파일 경로로 넘긴다(훅이 지원).
@@ -119,6 +119,40 @@ for (const shell of ['PowerShell', 'Bash']) {
     assert.ok(!saved.includes('assistant-hidden'));
     run(fx, payload, { viaStdin: true });
     assert.equal(history(fx.project), saved);
+  });
+
+  test(`${shell} save-turn preserves every actual user input in the completed turn`, { skip }, t => {
+    const fx = fixture(t);
+    const payload = {
+      'thread-id': uuidv7(Date.now()), 'turn-id': uuidv7(Date.now()),
+      'input-messages': [AGENTS_TEXT, '첫 요청: 터널 설정 확인', ENV_TEXT,
+        { content: [{ type: 'input_text', text: '추가 질문 <private>hidden-follow-up</private>' }] },
+        '<subagent_notification>internal worker report</subagent_notification>', '마지막 수정 요청'],
+      'last-assistant-message': '전체 요청을 반영한 최종 답변',
+    };
+    run(fx, payload);
+    const saved = history(fx.project);
+    for (const message of ['첫 요청: 터널 설정 확인', '추가 질문 [PRIVATE]', '마지막 수정 요청']) {
+      assert.ok(saved.includes(message), `Missing user input: ${message}`);
+    }
+    assert.ok(saved.indexOf('첫 요청:') < saved.indexOf('추가 질문'));
+    assert.ok(saved.indexOf('추가 질문') < saved.indexOf('마지막 수정 요청'));
+    assert.ok(!saved.includes('internal worker report'));
+    assert.ok(!saved.includes('hidden-follow-up'));
+    run(fx, payload);
+    assert.equal(history(fx.project), saved);
+  });
+
+  test(`${shell} save-turn preserves short answers and literal backslashes`, { skip }, t => {
+    const fx = fixture(t);
+    run(fx, {
+      'thread-id': uuidv7(Date.now()), 'turn-id': uuidv7(Date.now()),
+      'input-messages': ['Keep C:\\new\\test and literal \\n text'],
+      'last-assistant-message': 'OK',
+    });
+    const saved = history(fx.project);
+    assert.ok(saved.includes('C:\\new\\test and literal \\n text'));
+    assert.match(saved, /Assistant\s+OK\s+<!-- turn:/);
   });
 
   test(`${shell} save-turn skips subagent turns found through the notify thread-id`, { skip }, t => {
@@ -183,7 +217,7 @@ for (const shell of ['PowerShell', 'Bash']) {
   });
 }
 
-// save-turn.sh에는 기록 파일 대체 경로가 없다 (input-messages가 비면 User 없이 저장)
+// thread-id가 없는 옛 PowerShell 알림은 같은 cwd의 root 세션을 대체 원천으로 읽는다
 test('PowerShell save-turn fallback reads the thread session and skips injected and subagent sessions', { skip: !hasPowerShell && 'PowerShell is unavailable' }, t => {
   const fx = fixture(t);
   const now = Date.now();
@@ -197,7 +231,7 @@ test('PowerShell save-turn fallback reads the thread session and skips injected 
 
   const payloadFile = path.join(fx.base, 'payload-fallback.json');
   const runFallback = payload => {
-    fs.writeFileSync(payloadFile, JSON.stringify({ type: 'agent-turn-complete', cwd: fx.project, 'input-messages': [], 'last-assistant-message': 'ok', ...payload }));
+    fs.writeFileSync(payloadFile, JSON.stringify({ type: 'agent-turn-complete', cwd: fx.project, 'input-messages': [], 'last-assistant-message': '', ...payload }));
     const env = { ...process.env, CODEX_HOME: fx.codexHome, MNEMO_DISABLE: '0', CODEX_HOOK_BRIDGE_HOOKS: 'none' };
     delete env.CODEX_WORKSPACE_ROOT;
     const result = spawnSync(ps, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(hooksDir, 'save-turn.ps1'), payloadFile], { env, encoding: 'utf8', timeout: 60000, windowsHide: true });

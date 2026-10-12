@@ -26,12 +26,12 @@ node skills/mnemo/install.js --uninstall  # 제거
 
 | 기능 | 런타임 | Python이 없으면 |
 |------|--------|-----------------|
-| 대화 자동 저장 · 도구 관찰 로그 · MEMORY.md 규칙 | PowerShell / bash | **정상 동작** |
+| 대화 자동 저장 · 도구 관찰 로그 · MEMORY.md 규칙 | PowerShell / bash + Node.js | **정상 동작** |
 | 누락 턴 복구 (SessionStart) | 셸 → Python | **조용히 건너뜀** (`exit 0`) |
 | 핸드오프 생성·검증·목록·staleness | Python 3 | 실행 불가 → 아래 대안 |
 | 변경 계보 수확 · 기억 앵커 검사 | Python 3 + Node | 실행 불가 |
 
-**Python이 없어도 기억은 계속 쌓입니다.** 저장 훅은 전부 셸 스크립트이고, Python은
+**Python이 없어도 기억은 계속 쌓입니다.** 저장 훅은 셸에서 Node.js 저장기를 실행하며, Python은
 쌓인 것을 읽고 분석하는 도구에만 필요합니다. `install.js --check`의 `[4/4]`가 현재
 상태를 알려주며, **Python 없음은 설치 실패로 치지 않습니다.** 명령은 `python`·`py`·`python3` 중
 `--version`이 되는 첫 것을 씁니다 — Windows 스토어 별칭 때문에 `python`만 실패하고 `py`는 되는 PC가 있습니다
@@ -66,6 +66,8 @@ mnemo/
 │   ├── save-conversation.ps1/.sh       # User 입력 저장
 │   ├── save-tool-use.ps1/.sh           # 도구 호출 관찰 로그 + 앵커 조회 주입 (Claude·Grok 공용)
 │   ├── save-response.ps1/.sh           # Assistant 응답 저장 (Stop)
+│   ├── claude-event-store.js           # 입력 세대와 응답 UUID 식별
+│   ├── mnemo-record-store.js           # CLI 공통 대기 저장·본문 확인
 │   └── reconcile-conversations.ps1/.sh # 누락 턴 복구 (SessionStart)
 ├── templates/                  # CLAUDE.md 규칙
 │   └── claude-md-rules.md
@@ -117,18 +119,22 @@ Claude 도구 호출
 Claude 응답 (끝에 #tags 포함)
     ↓
 [Stop 훅] save-response
-    → transcript에서 응답 추출 → <private> 블록 제거 → 대화 파일 append
+    → CLI last_assistant_message 우선, 없으면 transcript → 대기 저장 → 대화 파일 append
 ```
 
 **원본 세션** (마지막 단계에서 필요한 대화만 파싱·복구): `~/.claude/projects/<encoded>/*.jsonl`
 **검색 대상** (사람이 읽고 Claude가 grep): `conversations/YYYY-MM-DD-claude.md`
 **멱등 인덱스**: `conversations/.mnemo-index.json` (JSONL 줄 uuid 기반)
 
+저장·재시도는 공통 [대화 레코드 저장 계약](references/record-storage.md)을 따른다.
+Claude는 `UserPromptSubmit` 호출마다 입력 세대를 나눠 같은 문장의 새 입력을 보존한다.
+동일 세대의 응답 재전달은 중복 저장하지 않고, 본문 저장 후에만 UUID를 색인한다.
+
 > 검색 순서는 `MEMORY.md` → 관련 기억 항목 → 연결 대화·`#tags:` → 대화 본문 → 범위를 좁힌 원본 세션입니다. 태그가 없어도 본문을 확인합니다. [전역 규칙 정본](templates/claude-md-rules.md)의 읽기 전용·카탈로그·핸드오프 기준을 함께 따릅니다. 설치기는 `autoMemoryEnabled=false`로 설정해 새 의미기억을 프로젝트 Mnemo에 모읍니다. 기존 네이티브 기억과 원본 세션은 삭제하지 않습니다.
 
-Stop 훅이 한 번이라도 실패하거나 Claude Code가 강제 종료되면 해당 턴의
-미러링이 누락됩니다. 다음 세션 시작 시 `reconcile-conversations`가 자동으로
-JSONL을 스캔하여 놓친 턴을 복구합니다. 수동 실행도 가능합니다:
+쓰기 실패로 남은 대기 레코드는 다음 저장 이벤트에서 재시도합니다. 훅 실행 전 강제 종료처럼
+대기 내용을 확보하지 못한 경우 다음 세션의 `reconcile-conversations`가 JSONL에서 복구합니다.
+수동 실행도 가능합니다:
 
 ```bash
 python "<module_root>/scripts/reconcile_conversations.py" --project-root "<project>" --date YYYY-MM-DD

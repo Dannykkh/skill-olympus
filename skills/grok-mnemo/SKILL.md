@@ -36,7 +36,7 @@ node "<module_root>/install.js" --check      # 설치 상태 점검
 | 설정 형식 | settings.json | config.toml | config/hooks.json | **hooks/*.json 자동 스캔** |
 | 규칙 파일 | CLAUDE.md | AGENTS.md | GEMINI.md | **~/.grok/rules/*.md (델타만)** |
 | 저장 경로 | `conversations/*-claude.md` | `conversations/*-codex.md` | `conversations/*-antigravity.md` | **`conversations/*-grok.md`** |
-| 중복 방지 | 타임스탬프 | turn-id | 타임스탬프 | **이벤트 식별자 또는 세션 입력·응답 상태 + reason 필터** |
+| 중복 방지 | 입력 세대·응답 UUID | turn-id | 대화 ID·원본 위치 | **이벤트 식별자 또는 세션 입력·응답 상태 + reason 필터** |
 
 **Grok만의 특이점** (실측 근거, Grok Build 0.2.111):
 
@@ -115,6 +115,10 @@ Grok Build 대화
 식별자가 없으면 직전 역할·내용과 입력 순번으로 연속 중복을 제거한다. 응답 후 같은 문장을 새로 입력하면 별도 턴으로 보존한다. 이 경우 과거 입력·응답 쌍 전체의 재전달과 동일한 새 대화는 구분할 수 없다. 세션 정보까지 없으면 다른 대화를 잘못 버리지 않도록 중복 제거를 하지 않는다.
 
 파일 잠금으로 동시 저장을 직렬화하고 종료된 프로세스의 잠금은 회수한다. 인덱스 손상이나 잠금 시간 초과는 기존 오류 로그·`MNEMO_STRICT` 규칙을 따른다. 인덱스를 지우면 과거 이벤트의 중복 판정 근거가 사라지므로 일반 청소 대상으로 취급하지 않는다.
+
+짧은 응답·대기 파일·완료 표식·재시도는 공통 [대화 레코드 저장 계약](references/record-storage.md)을 따른다.
+`.grok-events.json`의 `seen`은 본문 또는 완전한 대기 레코드가 있다는 뜻이다.
+저장기가 본문을 확인하기 전에는 성공으로 보고하지 않는다.
 
 ## 검색 규칙 (Grok 세션에서)
 

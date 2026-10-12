@@ -47,43 +47,6 @@ get_claude_project_root() {
     printf '%s' "$INPUT" | node "$helper" --claude 2>/dev/null || true
 }
 
-# ── 사이드카 인덱스 I/O (reconcile과 공유) ─────────────────────
-# conversations/.mnemo-index.json 포맷:
-#   { "version": 1, "claude": { "YYYY-MM-DD": ["uuid", "uuid", ...] } }
-is_uuid_in_index() {
-    local index_path="$1"
-    local today="$2"
-    local uuid="$3"
-    [ -z "$uuid" ] && return 1
-    [ ! -f "$index_path" ] && return 1
-    jq -e --arg d "$today" --arg u "$uuid" \
-        '.claude[$d] // [] | index($u) != null' \
-        "$index_path" >/dev/null 2>&1
-}
-
-add_uuid_to_index() {
-    local index_path="$1"
-    local today="$2"
-    local uuid="$3"
-    [ -z "$uuid" ] && return 0
-    local tmp
-    tmp=$(mktemp 2>/dev/null || echo "${index_path}.tmp.$$")
-    if [ -f "$index_path" ]; then
-        jq --arg d "$today" --arg u "$uuid" \
-            '.version //= 1 | .claude //= {} | .claude[$d] //= [] | .claude[$d] |= (. + [$u] | unique)' \
-            "$index_path" > "$tmp" 2>/dev/null
-    else
-        jq -n --arg d "$today" --arg u "$uuid" \
-            '{version: 1, claude: {($d): [$u]}}' > "$tmp" 2>/dev/null
-    fi
-    if [ -s "$tmp" ]; then
-        mv "$tmp" "$index_path" 2>/dev/null || rm -f "$tmp"
-    else
-        rm -f "$tmp"
-        log_mnemo_error 'index-write' 'jq 인덱스 생성 실패'
-    fi
-}
-
 ensure_memory_scaffold() {
     local base_dir="$1"
     local memory_dir="$base_dir/memory"
@@ -224,110 +187,13 @@ CONV_FILE="$CONV_DIR/$TODAY-claude.md"
 
 ensure_memory_scaffold "$PROJECT_ROOT"
 
-# conversations 폴더 자동 생성
-if [ ! -d "$CONV_DIR" ]; then
-    mkdir -p "$CONV_DIR"
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STORE_RESULT="$(printf '%s' "$INPUT" | node "$SCRIPT_DIR/claude-event-store.js" "$PROJECT_ROOT" assistant)"
+if [ "$?" -ne 0 ]; then exit_mnemo_error 'file-io' '답변 저장 대기 또는 실패'; fi
+RESPONSE="$(printf '%s' "$STORE_RESULT" | jq -r '.response // empty')"
+STORE_STATUS="$(printf '%s' "$STORE_RESULT" | jq -r '.status // empty')"
+case "$STORE_STATUS" in empty|duplicate) exit 0 ;; esac
 
-# 파일 없으면 헤더 자동 생성 (save-conversation이 아직 안 돌았을 수 있음)
-if [ ! -f "$CONV_FILE" ]; then
-    PROJECT_NAME=$(basename "$PROJECT_ROOT")
-    cat > "$CONV_FILE" << HEADER
----
-date: $TODAY
-project: $PROJECT_NAME
-keywords: []
-summary: ""
----
-
-# $TODAY
-
-HEADER
-fi
-
-# JSONL 전체 스캔 — 마지막 assistant text 메시지 찾기
-# P3: 이전에는 tail -n 500으로 마지막 500줄만 봤는데, tool_use가 많은 긴 turn에서는
-#     assistant text가 500줄 경계 밖으로 밀려 누락됐다. 오늘자 JSONL은 보통 수 MB라
-#     grep 전체 스캔이 수십 ms 안에 끝난다.
-# Claude Code는 thinking/text/tool_use를 별도 JSONL 줄로 분리함
-# → "type":"assistant" AND "type":"text" 둘 다 포함된 줄을 찾아야 함
-LAST_TEXT_LINE=""
-if [ "$HAS_TRANSCRIPT" -eq 1 ]; then
-    LAST_TEXT_LINE=$(grep '"type":"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep '"type":"text"' | tail -n 1)
-    if [ -z "$LAST_TEXT_LINE" ]; then
-        # type 앞에 공백이 있을 수 있음 (JSON formatter 차이)
-        LAST_TEXT_LINE=$(grep -E '"type"[[:space:]]*:[[:space:]]*"assistant"' "$TRANSCRIPT_PATH" 2>/dev/null | grep -E '"type"[[:space:]]*:[[:space:]]*"text"' | tail -n 1)
-    fi
-fi
-
-# 텍스트 + uuid 추출
-# JSONL 전체 라인 파싱 → text 블록과 라인 uuid를 함께 추출
-# uuid는 JSONL 줄마다 고유 (dedup 키), message.id는 여러 줄 공유 가능
-LINE_TEXT=""
-LINE_UUID=""
-if [ -n "$LAST_TEXT_LINE" ]; then
-    if echo "$LAST_TEXT_LINE" | jq -e . >/dev/null 2>&1; then
-        LINE_TEXT=$(echo "$LAST_TEXT_LINE" | jq -r '[.message.content[] | select(.type=="text") | .text] | join("\n")' 2>/dev/null)
-        LINE_UUID=$(echo "$LAST_TEXT_LINE" | jq -r '.uuid // empty' 2>/dev/null)
-        LINE_TEXT=$(echo "$LINE_TEXT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    elif [ -z "$LAST_ASSISTANT" ]; then
-        exit_mnemo_error 'message-json' 'assistant 라인 JSON 파싱 실패'
-    fi
-fi
-
-if [ -n "$LAST_ASSISTANT" ]; then
-    RESPONSE="$LAST_ASSISTANT"
-    # uuid는 기록 파일의 마지막 텍스트 줄이 같은 답일 때만 쓴다. 아직 안 쓰였으면 uuid 없이 저장하고,
-    # reconcile이 80자 지문으로 같은 턴임을 알아본다(중복 저장 없음).
-    if [ "$LINE_TEXT" != "$LAST_ASSISTANT" ]; then LINE_UUID=""; fi
-elif [ -n "$LAST_TEXT_LINE" ]; then
-    RESPONSE="$LINE_TEXT"
-else
-    # 이상 상황: 전체 스캔 후에도 assistant text가 없음.
-    # reconcile-conversations가 다음 세션 시작 시 JSONL 전체에서 복구한다.
-    log_mnemo_error 'no-assistant-text' "transcript=$TRANSCRIPT_PATH 에서 assistant text 줄을 찾지 못함 (전체 스캔)"
-    exit 0
-fi
-
-# <private> 블록 제거 (민감 정보 보호)
-RESPONSE=$(echo "$RESPONSE" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$RESPONSE" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
-
-# 빈 응답이면 스킵
-if [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; then
-    exit 0
-fi
-
-# P2: 4000자 truncation 제거. JSONL 원본에 온전히 있으니 미러도 온전히 저장.
-
-# 중복 방지 (P2): uuid 기반 사이드카 인덱스가 1순위, 레거시 fingerprint는 fallback
-INDEX_PATH="$CONV_DIR/.mnemo-index.json"
-if [ -n "$LINE_UUID" ] && is_uuid_in_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"; then
-    exit 0
-fi
-
-# 레거시 호환: 인덱스 도입 전에 저장된 파일은 fingerprint로 매칭
-FINGERPRINT="${RESPONSE:0:80}"
-if [ -n "$FINGERPRINT" ] && grep -qF "$FINGERPRINT" "$CONV_FILE" 2>/dev/null; then
-    # 이미 저장되어 있음 → 인덱스에만 등록하고 종료
-    if [ -n "$LINE_UUID" ]; then
-        add_uuid_to_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"
-    fi
-    exit 0
-fi
-
-# append
-TIMESTAMP=$(date +%H:%M:%S)
-printf '\n## [%s] Assistant\n\n%s\n' "$TIMESTAMP" "$RESPONSE" >> "$CONV_FILE"
-
-# 인덱스에 uuid 등록 (다음 Stop 훅과 reconcile이 이걸 보고 skip)
-if [ -n "$LINE_UUID" ]; then
-    add_uuid_to_index "$INDEX_PATH" "$TODAY" "$LINE_UUID"
-fi
-
-# ── mnemo status notify (LLM 호출 X, 비용 0) ──────────────────
-# raw 관찰 누적량 + 마지막 핸드오프 일수가 임계값을 넘으면
-# memory/.mnemo-status.md에 기록 + stderr로 안내.
-# 사용자/LLM이 다음 세션 시작 시 status 파일을 보고 정제 권유.
 notify_mnemo_status() {
     local root="$1"
     local gotchas_jsonl="$root/memory/gotchas/observations.jsonl"

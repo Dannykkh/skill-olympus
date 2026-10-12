@@ -74,6 +74,8 @@ USER_INJECTION_PREFIXES = (
     "<skills_instructions",
     "<permissions instructions",
     "<turn_aborted",
+    "<subagent_notification>",
+    "<task-notification>",
     "You are an agent in a team of agents collaborating to complete a task.",
     "Message Type: NEW_TASK",
     "Message Type: MESSAGE",

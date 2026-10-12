@@ -18,6 +18,7 @@ function pythonCall(mode, sessionId, options = {}) {
     const args = command === "py" ? ["-3", "-X", "utf8", script, mode, sessionId]
       : ["-X", "utf8", script, mode, sessionId];
     if (options.afterRow !== undefined) args.push("--after-row", String(options.afterRow));
+    if (options.beforeRow !== undefined) args.push("--before-row", String(options.beforeRow));
     if (options.since !== undefined) args.push("--since", String(options.since));
     if (options.db) args.push("--db", options.db);
     const result = spawnSync(command, args, { encoding: "utf8", timeout: 2500, windowsHide: true });
@@ -26,31 +27,6 @@ function pythonCall(mode, sessionId, options = {}) {
     }
   }
   return null;
-}
-
-async function withLock(lockPath, action) {
-  const deadline = Date.now() + 5000;
-  let handle;
-  while (handle === undefined) {
-    try {
-      handle = fs.openSync(lockPath, "wx", 0o600);
-      fs.writeFileSync(handle, String(process.pid));
-    } catch (error) {
-      if (error.code !== "EEXIST" || Date.now() >= deadline) throw error;
-      try {
-        const owner = Number(fs.readFileSync(lockPath, "utf8"));
-        let stale = Date.now() - fs.statSync(lockPath).mtimeMs > 30000;
-        if (Number.isSafeInteger(owner) && owner > 0) {
-          try { process.kill(owner, 0); stale = false; }
-          catch (probe) { stale = probe.code === "ESRCH"; }
-        }
-        if (stale) fs.unlinkSync(lockPath);
-      } catch (probe) { if (probe.code !== "ENOENT") throw probe; }
-      await pause(25);
-    }
-  }
-  try { return await action(); }
-  finally { fs.closeSync(handle); fs.unlinkSync(lockPath); }
 }
 
 function ensureScaffold(root) {
@@ -68,62 +44,75 @@ function ensureScaffold(root) {
   }
 }
 
-function append(root, role, value, key, now = new Date()) {
-  const text = redact(value);
-  if (!text) return false;
-  const dir = path.join(root, "conversations");
-  fs.mkdirSync(dir, { recursive: true });
-  const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const time = now.toTimeString().slice(0, 8);
-  const file = path.join(dir, `${date}-devin.md`);
-  const marker = `<!-- devin-event:${hash(key)} -->`;
-  const old = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
-  if (old.includes(marker)) return false;
-  if (!old) fs.writeFileSync(file, `---\ndate: ${date}\nproject: ${path.basename(root)}\nkeywords: []\nsummary: ""\n---\n\n# ${date}\n`, { flag: "wx", mode: 0o600 });
-  fs.appendFileSync(file, `\n${marker}\n## [${time}] ${role}\n\n${text}\n`);
-  return true;
+const shared = fs.existsSync(path.join(__dirname,'mnemo-record-store.js'))
+  ? path.join(__dirname,'mnemo-record-store.js') : path.resolve(__dirname,'../../../hooks/mnemo-record-store.js');
+const { journal, record, atomicJson } = require(shared);
+function readState(file) {
+  const state = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file,'utf8')) : {version:1,sessions:{}};
+  if (state.version !== 1 || !state.sessions) throw new Error('unsupported Devin event index');
+  state.pendingReads ||= [];
+  if (!Array.isArray(state.pendingReads)) throw new Error('invalid pending Devin reads; preserved');
+  return state;
 }
-
 async function saveEvent(payload, options = {}) {
-  if (/^(1|true|yes)$/i.test(process.env.MNEMO_DISABLE || "")) return false;
+  if (/^(1|true|yes)$/i.test(process.env.MNEMO_DISABLE || '')) return false;
   const event = payload.hook_event_name;
-  if (!["UserPromptSubmit", "Stop", "SessionEnd"].includes(event)) return false;
-  const sessionId = String(payload.session_id || "");
+  if (!['UserPromptSubmit','Stop','SessionEnd'].includes(event)) return false;
+  const sessionId = String(payload.session_id || '');
   if (!sessionId) return false;
   const root = options.root || resolveDevin(payload);
   if (!root) return false;
-  const dir = path.join(root, "conversations");
-  fs.mkdirSync(dir, { recursive: true });
-  return withLock(path.join(dir, ".devin-events.lock"), async () => {
-    const stateFile = path.join(dir, ".devin-events.json");
-    const state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile, "utf8")) : { version: 1, sessions: {} };
-    if (state.version !== 1 || !state.sessions) throw new Error("unsupported Devin event index");
-    const previous = state.sessions[sessionId] || {};
-    let saved = false;
-    if (event === "UserPromptSubmit") {
-      const promptId = String(payload.prompt_id || "");
-      if (!promptId || promptId === previous.promptId) return false;
-      const baseline = pythonCall("baseline", sessionId, { db: options.db });
-      saved = append(root, "User", payload.prompt, `${sessionId}:user:${promptId}`);
-      state.sessions[sessionId] = { promptId, baseline: Number.isInteger(baseline) ? baseline : 0, submittedAt: Math.floor(Date.now() / 1000), assistantSaved: false };
-    } else if (previous.promptId && !previous.assistantSaved) {
-      let message = null;
-      for (let attempt = 0; attempt < 3 && !message; attempt += 1) {
-        message = pythonCall("assistant", sessionId, { afterRow: previous.baseline, since: previous.submittedAt, db: options.db });
-        if (!message && attempt < 2) await pause(150);
-      }
-      if (message?.content) {
-        saved = append(root, "Assistant", message.content, `${sessionId}:assistant:${previous.promptId}:${message.message_id || message.row_id}`);
-        previous.assistantSaved = true;
-      }
+  const tx = journal(root);
+  const stateFile = path.join(root,'conversations','.devin-events.json');
+  const snapshot = readState(stateFile);
+  const previous = snapshot.sessions[sessionId] || {};
+  const promptId = String(payload.prompt_id || previous.promptId || '');
+  const submittedAt = Math.floor(Date.now()/1000);
+  let currentEntry, baseline, message;
+  if (event === 'UserPromptSubmit') {
+    if (!payload.prompt_id || !redact(payload.prompt)) return false;
+    currentEntry = record(root,'devin',`${sessionId}:user:${promptId}`,[{role:'User',text:payload.prompt}],
+      {aliases:[`<!-- devin-event:${hash(`${sessionId}:user:${promptId}`)} -->`]});
+    tx.put(currentEntry); // DB 조회나 잠금 대기 전에 사용자 입력을 보존한다.
+    baseline = pythonCall('baseline',sessionId,{db:options.db});
+  } else if (previous.promptId === promptId && !previous.assistantSaved) {
+    for (let i=0;i<3 && !message;i++) {
+      message = pythonCall('assistant',sessionId,{afterRow:previous.baseline,since:previous.submittedAt,db:options.db});
+      if (!message && i<2) await pause(150);
     }
-    if (event === "UserPromptSubmit") ensureScaffold(root);
-    const temp = `${stateFile}.${process.pid}.${crypto.randomUUID()}.tmp`;
-    try {
-      fs.writeFileSync(temp, JSON.stringify(state), { flag: "wx", mode: 0o600 });
-      fs.renameSync(temp, stateFile);
-    } finally { if (fs.existsSync(temp)) fs.unlinkSync(temp); }
-    return saved;
+    if (message?.content) {
+      const key = `${sessionId}:assistant:${promptId}:${message.message_id || message.row_id}`;
+      currentEntry = record(root,'devin',key,[{role:'Assistant',text:message.content}],{aliases:[`<!-- devin-event:${hash(key)} -->`]});
+      tx.put(currentEntry);
+    }
+  }
+  // 옛 Stop의 DB 읽기는 다음 입력의 baseline으로 상한을 정해 다른 턴 답변을 가져오지 않는다.
+  const recovered = [];
+  for (const pending of snapshot.pendingReads.filter(p => Number.isInteger(p.beforeRow) && p.beforeRow > p.baseline).slice(0,2)) {
+    const result = pythonCall('assistant',pending.sessionId,{afterRow:pending.baseline,beforeRow:pending.beforeRow,since:pending.submittedAt,db:options.db});
+    if (result?.content) recovered.push({pending,result});
+  }
+  return tx.locked(async j => {
+    const state = readState(stateFile);
+    const active = state.sessions[sessionId] || {};
+    if (event === 'UserPromptSubmit' && active.promptId !== promptId) {
+      if (active.awaitingBody && !active.assistantSaved) state.pendingReads.push({...active,sessionId,beforeRow:Number.isInteger(baseline)?baseline:null});
+      state.sessions[sessionId] = {promptId,baseline:Number.isInteger(baseline)?baseline:0,submittedAt,assistantSaved:false};
+      ensureScaffold(root);
+    } else if (event !== 'UserPromptSubmit' && active.promptId === promptId) {
+      if (message?.content) { active.assistantSaved = true; active.awaitingBody = false; }
+      else if (!active.assistantSaved) active.awaitingBody = true;
+    }
+    for (const {pending,result} of recovered) {
+      const key = `${pending.sessionId}:assistant:${pending.promptId}:${result.message_id || result.row_id}`;
+      j.put(record(root,'devin',key,[{role:'Assistant',text:result.content}],{aliases:[`<!-- devin-event:${hash(key)} -->`]}));
+      state.pendingReads = state.pendingReads.filter(p => !(p.sessionId===pending.sessionId && p.promptId===pending.promptId));
+    }
+    atomicJson(stateFile,state);
+    const result = await j.flush();
+    if (result.error) console.error(`[devin-mnemo] ${result.error}`);
+    if (active.awaitingBody) console.error('[devin-mnemo] assistant DB text not available; pending turn retained');
+    return !!currentEntry && result.results.get(currentEntry.marker) === 'saved';
   });
 }
 

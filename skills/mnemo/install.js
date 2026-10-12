@@ -289,8 +289,8 @@ function install() {
   ensureDir(hooksDir);
 
   const hookFiles = isWindows
-    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js"]
-    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js"];
+    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js", "mnemo-record-store.js", "claude-event-store.js"]
+    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js", "mnemo-record-store.js", "claude-event-store.js"];
 
   for (const file of hookFiles) {
     // Search for hook file source: skills/mnemo/hooks/ → root hooks/ fallback
@@ -434,8 +434,8 @@ function check() {
   // 1. Hook files exist
   console.log("[1/4] Checking hook files...");
   const hookFiles = isWindows
-    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js"]
-    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js"];
+    ? ["save-conversation.ps1", "save-tool-use.ps1", "save-response.ps1", "reconcile-conversations.ps1", "mnemo-project-root.js", "mnemo-record-store.js", "claude-event-store.js"]
+    : ["save-conversation.sh", "save-tool-use.sh", "save-response.sh", "reconcile-conversations.sh", "mnemo-project-root.js", "mnemo-record-store.js", "claude-event-store.js"];
 
   for (const file of hookFiles) {
     const dest = path.join(hooksDir, file);
@@ -564,7 +564,7 @@ function uninstall() {
     "save-conversation.ps1", "save-conversation.sh",
     "save-tool-use.ps1", "save-tool-use.sh",
     "save-response.ps1", "save-response.sh",
-    "reconcile-conversations.ps1", "reconcile-conversations.sh", "mnemo-project-root.js"
+    "reconcile-conversations.ps1", "reconcile-conversations.sh", "mnemo-project-root.js", "mnemo-record-store.js", "claude-event-store.js"
   ];
   for (const file of hookFiles) {
     if (removeFile(path.join(hooksDir, file))) {

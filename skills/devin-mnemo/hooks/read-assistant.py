@@ -18,7 +18,7 @@ def default_db():
     return data_home / "devin" / "cli" / "sessions.db"
 
 
-def read_message(db_path, session_id, after_row, since):
+def read_message(db_path, session_id, after_row, since, before_row=None):
     if not db_path.is_file():
         return None
     with sqlite3.connect(db_path.as_uri() + "?mode=ro", uri=True, timeout=1) as db:
@@ -26,8 +26,8 @@ def read_message(db_path, session_id, after_row, since):
         # save rows created for this turn; never replay a previous assistant turn.
         rows = db.execute(
             "SELECT row_id, chat_message, created_at FROM message_nodes "
-            "WHERE session_id = ? AND row_id > ? ORDER BY row_id DESC LIMIT 100",
-            (session_id, after_row),
+            "WHERE session_id = ? AND row_id > ? AND (? IS NULL OR row_id <= ?) ORDER BY row_id DESC LIMIT 100",
+            (session_id, after_row, before_row, before_row),
         )
         for row_id, raw, created_at in rows:
             if created_at < since - 2:
@@ -46,7 +46,7 @@ def read_message(db_path, session_id, after_row, since):
 
 def baseline(db_path, session_id):
     if not db_path.is_file():
-        return 0
+        return None
     with sqlite3.connect(db_path.as_uri() + "?mode=ro", uri=True, timeout=1) as db:
         return db.execute("SELECT COALESCE(MAX(row_id), 0) FROM message_nodes WHERE session_id = ?", (session_id,)).fetchone()[0]
 
@@ -56,10 +56,11 @@ def main():
     parser.add_argument("mode", choices=("baseline", "assistant"))
     parser.add_argument("session_id")
     parser.add_argument("--after-row", type=int, default=0)
+    parser.add_argument("--before-row", type=int, default=None)
     parser.add_argument("--since", type=int, default=0)
     parser.add_argument("--db", type=Path, default=default_db())
     args = parser.parse_args()
-    result = baseline(args.db, args.session_id) if args.mode == "baseline" else read_message(args.db, args.session_id, args.after_row, args.since)
+    result = baseline(args.db, args.session_id) if args.mode == "baseline" else read_message(args.db, args.session_id, args.after_row, args.since, args.before_row)
     print(json.dumps(result, ensure_ascii=False))
 
 

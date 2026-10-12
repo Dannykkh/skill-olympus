@@ -35,7 +35,10 @@ function absolutePath(candidate) {
 function realPath(candidate) {
   if (fs.existsSync(candidate)) return fs.realpathSync.native(candidate);
   // Resolve existing parents too: a missing file below a junction is not local.
-  if (fs.lstatSync(candidate, { throwIfNoEntry: false })) throw new Error("dangling link");
+  const entry = fs.lstatSync(candidate, { throwIfNoEntry: false });
+  if (entry?.isSymbolicLink()) throw new Error("dangling link");
+  // Atomic rename can publish a regular file after existsSync returned false.
+  if (entry) return fs.realpathSync.native(candidate);
   const parent = path.dirname(candidate);
   return parent === candidate ? candidate : path.join(realPath(parent), path.basename(candidate));
 }
@@ -56,13 +59,31 @@ function validatePath(candidate, options = {}) {
 
 function storageSafe(root) {
   const visited = new Set();
-  function visit(target) {
-    const resolved = realPath(target);
-    if (!contained(root, resolved)) return false;
-    if (!fs.existsSync(resolved) || visited.has(resolved)) return true;
-    visited.add(resolved);
-    if (!fs.statSync(resolved).isDirectory()) return true;
-    return fs.readdirSync(resolved).every((name) => visit(path.join(resolved, name)));
+  function visit(target, rechecks = 0) {
+    try {
+      const resolved = realPath(target);
+      if (!contained(root, resolved)) {
+        // Windows can resolve an unlinked open file into NTFS $Extend/$Deleted.
+        // Recheck the original entry and its real parent; never allow a live
+        // junction/symlink to use this concurrent-deletion exception.
+        const entry = fs.lstatSync(target, { throwIfNoEntry: false });
+        if (entry?.isSymbolicLink() || !contained(root, realPath(path.dirname(target)))) return false;
+        if (!entry) return true;
+        if (rechecks < 3) { visited.delete(target); return visit(target, rechecks + 1); }
+        return false;
+      }
+      if (!fs.existsSync(resolved) || visited.has(resolved)) return true;
+      visited.add(resolved);
+      if (!fs.statSync(resolved).isDirectory()) return true;
+      return fs.readdirSync(resolved).every((name) => visit(path.join(resolved, name)));
+    } catch (error) {
+      // 동시 notify가 대기 파일·잠금 폴더를 지울 수 있다. 실제로 사라진 항목만 허용하며,
+      // 남아 있는 dangling symlink와 프로젝트 밖 부모는 계속 거부한다.
+      if (error.code !== "ENOENT") throw error;
+      if (rechecks < 3) { visited.delete(target); return visit(target, rechecks + 1); }
+      if (fs.lstatSync(target, { throwIfNoEntry: false })) throw error;
+      return contained(root, realPath(path.dirname(target)));
+    }
   }
   try {
     return [".mnemo-root", "MEMORY.md", "memory", "conversations", "docs/handoffs"]

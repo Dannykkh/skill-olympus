@@ -79,6 +79,8 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 
 Mnemo 훅은 프로젝트의 `conversations/`에 대화 사본을 저장합니다. 기억과 인계 문서는 `MEMORY.md`, `memory/`, `docs/handoffs/`를 사용합니다. `<private>...</private>`는 지원되는 Mnemo 저장본에서 가리지만 CLI 자체 세션 기록까지 지우지는 않습니다. 새 규칙을 위해 모델·추론 강도·언어·권한 값을 추가로 설정할 필요는 없습니다.
 
+Claude Code·Codex·Antigravity·Grok·Devin의 대화 저장은 공통 [레코드 저장 계약](skills/mnemo/references/record-storage.md)을 따릅니다. 짧은 답변과 원문을 보존하고, 쓰기 실패 내용은 `conversations/.mnemo-pending/`에 남겨 다음 저장 이벤트에서 재시도합니다. Claude 응답 UUID는 Markdown 본문을 확인한 뒤 등록합니다. 다섯 어댑터 모두 Node.js가 필요하며 Devin 응답 저장에는 Python 3도 필요합니다. 대기 파일은 프로젝트와 함께 보존할 복구 데이터입니다.
+
 기존 Codex 설치기는 `config.toml`의 `notify`를 구성하고 `tui.notifications=false`, `tui.animations=true`, `tui.whimsy=false`도 설정합니다. save-turn이 이미 연결된 체인은 유지하지만 일부 데스크톱·IDE 알림 전용 체인은 교체합니다. 알림을 직접 구성했다면 [설정 변경·제거 시 동작](docs/global-agent-rules.md)을 확인하세요.
 
 ### Codex Astra 입력창의 별 효과 끄기·켜기
@@ -397,6 +399,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 
 ## 최근 변경
 
+**v7.0.5:** 다섯 CLI의 Mnemo 대화 누락을 수정했습니다. Codex는 작업 중 추가 메시지를 포함해 실제 사용자 입력을 모두 보존하고, Claude·Grok은 `OK` 같은 짧은 답도 저장합니다. Claude는 같은 문장의 새 입력을 보존하며 본문 쓰기 성공 후 UUID를 등록합니다. Antigravity는 최신 답변 전의 미저장 사용자 입력을 모두 기록합니다. 공통 저장기는 실패한 내용을 대기 파일에 남기고 부분 쓰기를 되돌린 뒤 다음 이벤트에서 재시도합니다. Devin은 지연 답변의 DB 조회를 이전 프롬프트 행 범위로 제한합니다. Windows 동시 삭제 검사에서도 외부 링크를 계속 거부하며, 설치본의 재설치 스크립트도 최신 코드로 갱신합니다. Windows 검사 250개·설치본 검사 24개와 실제 Claude·Grok·agy·Devin의 `OK` 저장을 확인했습니다. Bash 표준입력 처리, 저장 비활성화 검증의 파이프 오류, 릴리즈 파일만 커밋하는 안내도 수정했습니다.
+
 **v7.0.4:** Windows에서 Claude Code의 Stop 훅이 공유 대화 색인의 Codex 구역을 지우지 않습니다. `conversations/.mnemo-index.json`에는 Claude 훅이 쓰는 `claude` 구역과 Codex 복구 도구가 쓰는 `codex`·`codex_aborted` 구역이 함께 있습니다. 그런데 PowerShell Stop 훅이 답할 때마다 `version`과 `claude`만 남기고 파일을 다시 썼습니다. 이제 `claude` 구역만 고치고 다른 구역은 그대로 둡니다. 색인을 읽지 못하면 빈 색인으로 덮어쓰지 않고, `.claude/mnemo-errors.log`에 `index-read`를 남긴 뒤 파일을 건드리지 않습니다. 답은 그대로 저장됩니다. Bash 훅과 복구 도구는 원래 다른 구역을 보존했습니다. 대화 기록은 잃지 않았습니다. 이미 지워진 Codex 구역은 다음에 Codex 복구 도구가 실행될 때 대화 파일에서 다시 만들어집니다.
 
 **v7.0.3:** Codex Mnemo가 하위 에이전트의 턴을 대화 기록에 저장하지 않습니다. Codex는 하위 에이전트의 턴이 끝날 때도 `notify` 훅을 실행하는데, 그 입력에는 하위 에이전트라는 표시가 없습니다. 그래서 `save-turn`이 하위 에이전트의 보고를 대화 턴으로 저장했습니다. `input-messages`가 비면 그 폴더의 가장 최근 세션에서 User 내용을 가져왔는데, 그것이 대개 하위 에이전트 세션이라 AGENTS.md 지침 전문이 User 턴으로 들어갔습니다. 이제 `save-turn`은 notify의 `thread-id`로 세션 파일을 열고, `session_meta`가 하위 에이전트이면 저장하지 않습니다. 판정 규칙은 복구 도구와 같습니다. 이런 턴에서는 관찰 기록과 Chronos 이어가기도 건너뜁니다. 부모 턴이 아직 진행 중일 때 하위 에이전트가 끝났다고 `resume`이 시작되지 않게 하려는 것입니다. 변경 파일 검사는 그대로 돕니다. AGENTS.md·`<environment_context>` 같은 주입 메시지는 User로 저장하지 않고, Windows의 대체 경로는 해당 턴의 세션을 읽습니다. 세션 파일이 없는 턴(세션을 남기지 않는 `codex exec` 등)은 전처럼 저장합니다. 이미 저장된 기록은 복구 도구가 지울 때까지 남습니다. 전체 실행이 무엇을 바꿀지는 `reconcile_codex_conversations.py --all --staging-dir <폴더>`로 미리 봅니다. `--dry-run`은 병합 단계를 건너뛰어 삭제 수가 늘 0으로 나옵니다.
@@ -622,9 +626,9 @@ python -B -X utf8 skills/mnemo/scripts/mnemo_doctor.py --project-root . --upgrad
 | Grok Build | Claude 호환 표면의 `grok-mnemo` |
 | Devin CLI | Claude `mnemo` 공유, Devin 전용 대화 저장 훅 |
 
-Windows는 `install.bat`, macOS/Linux는 `bash install.sh`로 갱신합니다. [회상 계약](skills/mnemo/references/recall.md) · [정비 계약](skills/mnemo/docs/memory-hygiene.md) · [2026-10-05 검증](docs/plan/2026-10-05-mnemo-context-recall-audit/doctor-upgrade-results.md)에 범위와 근거를 기록했습니다. Python 243개·Node 25개 검사와 실제 설치본 확인, 세션 DB fixture를 사용한 Devin 저장 훅 통합 검사를 통과했습니다. 최종 LLM 답변 정확도는 미측정이며, 이번 변경 후 Devin 모델의 새 실제 대화 턴은 실행하지 않았습니다.
+Windows는 `install.bat`, macOS/Linux는 `bash install.sh`로 갱신합니다. [회상 계약](skills/mnemo/references/recall.md) · [정비 계약](skills/mnemo/docs/memory-hygiene.md) · [2026-10-05 검증](docs/plan/2026-10-05-mnemo-context-recall-audit/doctor-upgrade-results.md)에 범위와 근거를 기록했습니다. Python 243개·Node 25개 검사와 실제 설치본 확인, 세션 DB fixture를 사용한 Devin 저장 훅 통합 검사를 통과했습니다. 최종 LLM 답변 정확도는 미측정이며, 해당 2026-10-05 검증에서는 Devin 모델의 새 실제 대화 턴을 실행하지 않았습니다.
 
-네 통합 CLI의 훅은 Python 없이도 매 턴 저장하며, 핸드오프는 `skills/mnemo/references/handoff-template.md`를 보고 직접 씁니다. Devin의 응답 저장에는 Python 3가 필요합니다. 상세: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
+네 통합 CLI의 훅은 Node.js가 있으면 Python 없이도 매 턴 저장하며, 핸드오프는 `skills/mnemo/references/handoff-template.md`를 보고 직접 씁니다. Devin의 응답 저장에는 Python 3가 필요합니다. 상세: [`skills/mnemo/SKILL.md`](skills/mnemo/SKILL.md) · [`skills/mnemo/docs/memory-hygiene.md`](skills/mnemo/docs/memory-hygiene.md).
 
 </details>
 

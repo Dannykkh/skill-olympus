@@ -1,8 +1,6 @@
 #!/bin/bash
 # save-turn.sh - Codex notify orchestrator
-# Role split:
-# - append-user.sh: persist user message
-# - append-assistant.sh: persist assistant message
+# store-turn.js가 한 턴의 전체 입력·답변·표식을 함께 저장한다.
 
 # 저장 opt-out: MNEMO_DISABLE=1|true|yes 면 mnemo 자동 저장 전체 비활성화 (개인정보처리방침 거부 방법)
 case "${MNEMO_DISABLE:-}" in 1|[Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]) exit 0 ;; esac
@@ -238,13 +236,6 @@ EOF
 }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ ! -f "$SCRIPT_DIR/append-user.sh" ] || [ ! -f "$SCRIPT_DIR/append-assistant.sh" ]; then
-    debug_log "skip: helper scripts not found in $SCRIPT_DIR"
-    exit 0
-fi
-source "$SCRIPT_DIR/append-user.sh"
-source "$SCRIPT_DIR/append-assistant.sh"
-
 PAYLOAD=""
 # 인수가 없으면 ${@: -1}은 $0(스크립트 경로)을 돌려주므로 stdin을 읽기 전에 개수를 확인한다.
 if [ "$#" -gt 0 ]; then
@@ -285,79 +276,6 @@ try:
     print(val if val else '')
 except: pass
 " 2>/dev/null
-    fi
-}
-
-json_join_array() {
-    local key="$1"
-    if command -v jq &>/dev/null; then
-        echo "$PAYLOAD" | jq -r ".[\"$key\"] // [] | if type == \"array\" then .[] else . end" 2>/dev/null
-    elif command -v python3 &>/dev/null; then
-        echo "$PAYLOAD" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    val = d.get('$key', [])
-    if isinstance(val, list):
-        print('\n'.join(str(v) for v in val))
-    else:
-        print(str(val))
-except: pass
-" 2>/dev/null
-    fi
-}
-
-# Codex가 사용자 입력 앞에 넣는 지침·환경 메시지 머리말. 정본은
-# reconcile_codex_conversations.py의 USER_INJECTION_PREFIXES이고 save-turn.ps1도 같은 목록을 쓴다.
-INJECTED_USER_PREFIXES_JSON='["# AGENTS.md instructions for","<environment_context","<codex_internal_context","<skills_instructions","<permissions instructions","<turn_aborted","You are an agent in a team of agents collaborating to complete a task.","Message Type: NEW_TASK","Message Type: MESSAGE","Message Type: FINAL_ANSWER"]'
-
-# input-messages에서 주입 메시지를 빼고 마지막 사용자 입력을 고른다 (Codex는 누적 전달)
-select_user_input() {
-    if command -v jq &>/dev/null; then
-        printf '%s' "$PAYLOAD" | jq -r --argjson prefixes "$INJECTED_USER_PREFIXES_JSON" '
-            def text: if type == "object" then ((.text // .content // "") | text)
-                      elif type == "array" then map(text) | join("\n")
-                      elif type == "string" then .
-                      elif . == null then ""
-                      else tostring end;
-            (."input-messages" // .input_messages // [])
-            | (if type == "array" then . else [.] end)
-            | map(text | gsub("^\\s+|\\s+$"; ""))
-            | map(select(. != "" and (. as $t | $prefixes | any(. as $p | $t | startswith($p)) | not)))
-            | last // empty
-        ' 2>/dev/null
-    elif command -v python3 &>/dev/null; then
-        printf '%s' "$PAYLOAD" | python3 -c '
-import json, sys
-prefixes = json.loads(sys.argv[1])
-try:
-    data = json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-def text(v):
-    if v is None:
-        return ""
-    if isinstance(v, str):
-        return v
-    if isinstance(v, list):
-        return "\n".join(text(i) for i in v)
-    if isinstance(v, dict):
-        return text(v.get("text") or v.get("content") or "")
-    return str(v)
-msgs = data.get("input-messages")
-if msgs is None:
-    msgs = data.get("input_messages")
-if msgs is None:
-    msgs = []
-if not isinstance(msgs, list):
-    msgs = [msgs]
-picked = ""
-for m in msgs:
-    t = text(m).strip()
-    if t and not any(t.startswith(p) for p in prefixes):
-        picked = t
-sys.stdout.write(picked)
-' "$INJECTED_USER_PREFIXES_JSON" 2>/dev/null
     fi
 }
 
@@ -450,75 +368,30 @@ if [ -n "$THREAD_SESSION" ] && is_subagent_session "$THREAD_SESSION"; then
     exit 0
 fi
 
-USER_TEXT="$(select_user_input)"
-USER_TEXT="$(echo "$USER_TEXT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-
-RESPONSE="$(json_get '."last-assistant-message"')"
-if [ -z "$RESPONSE" ]; then
-    RESPONSE="$(json_get '.last_assistant_message')"
-fi
-RESPONSE="$(echo "$RESPONSE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-
-# <private> 블록 제거 (민감 정보 보호)
-if [ -n "$USER_TEXT" ]; then
-    USER_TEXT=$(echo "$USER_TEXT" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$USER_TEXT" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
-fi
-if [ -n "$RESPONSE" ]; then
-    RESPONSE=$(echo "$RESPONSE" | perl -0pe 's/<private>.*?<\/private>/[PRIVATE]/gs' 2>/dev/null || echo "$RESPONSE" | sed 's/<private>[^<]*<\/private>/[PRIVATE]/g')
-fi
-
-if [ -z "$USER_TEXT" ] && { [ -z "$RESPONSE" ] || [ ${#RESPONSE} -lt 5 ]; }; then
-    debug_log "skip: empty turn, pwd=$PWD"
-    exit 0
-fi
-
 BASE_DIR="$(resolve_mnemo_project_root "$PAYLOAD")"
 [ -n "$BASE_DIR" ] || exit 0
 [ -f "$BASE_DIR/.mnemo-root" ] || : > "$BASE_DIR/.mnemo-root"
 
 ensure_memory_scaffold "$BASE_DIR"
 
-CONV_DIR="$BASE_DIR/conversations"
-TODAY="$(date +%Y-%m-%d)"
-CONV_FILE="$CONV_DIR/$TODAY-codex.md"
-PROJECT_NAME="$(basename "$BASE_DIR")"
-
-mkdir -p "$CONV_DIR"
-
-if [ ! -f "$CONV_FILE" ]; then
-    cat > "$CONV_FILE" << EOF
----
-date: $TODAY
-project: $PROJECT_NAME
-keywords: []
-summary: ""
----
-
-# $TODAY
-
-EOF
-fi
-
-if [ -n "$TURN_ID" ] && grep -qF "<!-- turn:$TURN_ID -->" "$CONV_FILE" 2>/dev/null; then
-    debug_log "skip: duplicate turnId=$TURN_ID"
-    exit 0
-fi
-
-TIMESTAMP="$(date +%H:%M:%S)"
-# P1 parity: 파일 쓰기 실패 시 mnemo-errors.log에 기록
-if ! {
-    append_user_entry "$CONV_FILE" "$TIMESTAMP" "$USER_TEXT" &&
-    append_assistant_entry "$CONV_FILE" "$TIMESTAMP" "$RESPONSE"
-} 2>/dev/null; then
-    log_mnemo_error 'conv-append' "conversations 파일 쓰기 실패 ($CONV_FILE)"
-    if [ "${MNEMO_STRICT:-}" = "1" ]; then exit 1; fi
-fi
-
-if [ -n "$TURN_ID" ]; then
-    echo "<!-- turn:$TURN_ID -->" >> "$CONV_FILE" 2>/dev/null || log_mnemo_error 'turn-marker' "turn marker 쓰기 실패"
-fi
-
-debug_log "saved: baseDir=$BASE_DIR, file=$CONV_FILE, userLen=${#USER_TEXT}, respLen=${#RESPONSE}, turnId=$TURN_ID"
+STORE_RESULT="$(printf '%s' "$PAYLOAD" | node "$SCRIPT_DIR/store-turn.js" "$BASE_DIR" "$THREAD_SESSION")"
+# 원본 payload는 bridge·Chronos 체인에 그대로 전달하고, 저장 결과만 잠시 파싱한다.
+NOTIFY_PAYLOAD="$PAYLOAD"
+PAYLOAD="$STORE_RESULT"
+STORE_STATUS="$(json_get '.status')"
+USER_TEXT="$(json_get '.userText')"
+RESPONSE="$(json_get '.response')"
+STORE_ERROR="$(json_get '.error')"
+STORE_PENDING="$(json_get '.pendingFile')"
+STORE_COUNT="$(json_get '.savedCount')"
+PAYLOAD="$NOTIFY_PAYLOAD"
+case "$STORE_STATUS" in
+    duplicate) debug_log "skip: duplicate turnId=$TURN_ID"; exit 0 ;;
+    empty) debug_log 'skip: empty turn'; exit 0 ;;
+    saved) debug_log "saved: baseDir=$BASE_DIR, userLen=${#USER_TEXT}, respLen=${#RESPONSE}, turnId=$TURN_ID, flushed=$STORE_COUNT" ;;
+    *) log_mnemo_error 'conv-append' "완료 턴 저장 대기: $STORE_ERROR; pending=$STORE_PENDING"
+       if [ "${MNEMO_STRICT:-}" = "1" ]; then exit 1; fi ;;
+esac
 HOOK_SUMMARY="$(run_hook_bridge "$BASE_DIR")"
 
 # ─────────────────────────────────────────────

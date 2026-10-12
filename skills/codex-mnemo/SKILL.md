@@ -28,7 +28,7 @@ node skills/codex-mnemo/install.js --uninstall  # 제거
 | 설정 | settings.json (JSON) | **config.toml** (TOML) |
 | 규칙 파일 | CLAUDE.md | **AGENTS.md** |
 | 저장 경로 | `conversations/*-claude.md` | **`conversations/*-codex.md`** |
-| 중복 방지 | 타임스탬프 기반 | **turn-id 기반** (더 정확) |
+| 중복 방지 | 입력 세대·응답 UUID | **turn-id 기반** |
 
 ---
 
@@ -64,11 +64,8 @@ codex-mnemo/
 ├── install.js                   # 설치/제거 스크립트
 ├── hooks/
 │   ├── save-turn.ps1            # Windows notify 오케스트레이터 (+ Chronos optional chain)
-│   ├── append-user.ps1          # User 저장 전담
-│   ├── append-assistant.ps1     # Assistant 저장 전담
 │   ├── save-turn.sh             # Linux/Mac notify 오케스트레이터 (+ Chronos optional chain)
-│   ├── append-user.sh           # User 저장 전담
-│   └── append-assistant.sh      # Assistant 저장 전담
+│   └── store-turn.js            # 전체 입력·답변·표식의 동시 저장, 대기 턴 재시도
 ├── scripts/
 │   └── reconcile_codex_conversations.py  # rollout JSONL → conversations/ 복구
 └── templates/
@@ -86,12 +83,14 @@ Codex의 notify 훅이 한 번이라도 실패하거나 Codex CLI가 강제 종�
 
 여기서 `<CODEX_HOME>`은 `CODEX_HOME` 환경 변수 값이며, 미설정 시 `~/.codex`입니다.
 
-**Dedup 키**: Codex rollout 라인에는 uuid가 없으므로 `sha1(timestamp + role + content[:200])`
-조합을 키로 사용하며, `conversations/.mnemo-index.json`의 `codex` 네임스페이스에 저장됩니다.
+**Dedup 키**: 완료 턴의 `turn-id`와 대화의 `<!-- turn:... -->` 표식을 사용합니다.
+notify에 turn-id가 없는 옛 실행은 입력·답변 전체의 SHA-1 표식을 사용합니다.
+복구 도구는 `conversations/.mnemo-index.json`의 `codex` 네임스페이스에 턴 ID를 저장합니다.
 Claude 인덱스(`claude` 네임스페이스)와 충돌하지 않습니다.
 
 **자동 실행**: Claude Code의 `SessionStart` 훅(`reconcile-conversations.ps1/.sh`)이
-오늘자 날짜에 대해 Claude + Codex 두 CLI를 모두 복구합니다.
+Claude 기록과 최근 7일의 Codex 기록을 복구합니다. Codex만 사용하는 환경에서는 이
+SessionStart 복구가 실행되지 않으므로 과거 전체 누락은 `--all`로 별도 대조합니다.
 
 **수동 실행**:
 ```bash
@@ -114,16 +113,27 @@ Codex CLI 대화
     → thread-id 세션 파일의 session_meta가 하위 에이전트면 저장·관찰·이어가기를 건너뜀
       (notify는 하위 에이전트 턴에도 실행된다. 변경 파일 검사 bridge만 돈다. 세션 파일이 없으면 저장)
     → input-messages에서 AGENTS.md·<environment_context> 같은 주입 메시지는 User로 쓰지 않음
-    → save-turn(오케스트레이터)에서 역할 분리 호출
+    → save-turn(오케스트레이터)에서 공통 저장기 호출
       → MEMORY.md + memory/*.md scaffold 자동 생성(없을 때만)
-      → append-user: User 입력 저장
-      → append-assistant: Assistant 응답 저장(전체)
-    → conversations/YYYY-MM-DD-codex.md에 append
-    → turn-id 기반 중복 방지
+      → store-turn.js: 실제 사용자 입력 모두를 순서대로 저장(추가 입력은 Follow-up)
+      → 비어 있지 않은 답변은 길이와 관계없이 저장, 백슬래시·코드 블록을 그대로 보존
+      → conversations/.mnemo-pending/에 private 블록을 제거한 완전한 턴을 먼저 보존
+      → 프로젝트별 잠금 아래 User·Assistant·turn-id를 함께 append하고 중복 방지
+      → 쓰기 실패 시 부분 기록을 원래 길이로 되돌리고 제한된 재시도
+      → 계속 실패하면 대기 파일과 오류 로그를 남김(성공 로그는 쓰지 않음)
+      → 다음 notify가 대기 턴을 재시도하고 성공한 대기 파일만 제거
     → (optional) auto-continue-loop 설치 시 continue-loop 호출
       → loop-state.md 확인
       → 미완료면 background `codex exec resume --last`
 ```
+
+Node.js가 필수입니다(기존 프로젝트 루트 판별기·hook bridge와 같은 런타임).
+`store-turn.js`는 Codex 입력을 해석하고 공통 `mnemo-record-store.js`에 전달합니다.
+저장·실패 복구 계약은 [대화 레코드 저장 계약](references/record-storage.md)을 따릅니다.
+notify 입력이 비면 thread-id의 원본 세션에서 해당 턴만 읽고, AGENTS·환경·하위 작업 알림을
+제외합니다. 파일 잠금이 해제돼도 새 notify가 없으면 대기 턴은 아직 Markdown에 반영되지
+않습니다. 원본 세션과 `.mnemo-pending/`을 보존하고 다음 notify 또는 수동 복구를 실행합니다.
+프로세스가 OS에서 강제 종료되는 모든 시점의 디스크 영속성을 보장하는 계약은 아닙니다.
 
 ---
 

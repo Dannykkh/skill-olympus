@@ -23,14 +23,14 @@ function fixture(t) {
   return { base, project };
 }
 
-test('Antigravity stays with payload workspace, preserves a moved boundary, rejects internal and absent workspace', (t) => {
+test('Antigravity stays with payload workspace, preserves a moved boundary, rejects internal and absent workspace', async (t) => {
   const { base, project } = fixture(t);
   assert.equal(agy.resolveProjectRoot({ workspacePath: project, cwd: base }), project);
   fs.writeFileSync(path.join(base, '.mnemo-root'), '');
   assert.equal(agy.resolveProjectRoot({ workspacePath: project }), project);
   assert.equal(agy.resolveProjectRoot({ workspacePaths: [project] }), project);
   assert.equal(agy.resolveProjectRoot({ cwd: 'project' }), null);
-  agy.appendTurn(project, {}, { userText: 'root test', assistantText: '', order: 0 });
+  await agy.appendTurn(project, {}, { userText: 'root test', assistantText: '', order: 0 });
   const moved = path.join(base, 'moved');
   fs.renameSync(project, moved);
   const subdir = path.join(moved, 'src'); fs.mkdirSync(subdir);

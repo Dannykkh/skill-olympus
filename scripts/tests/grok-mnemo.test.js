@@ -63,7 +63,10 @@ test("Grok private text stays out of both conversation and identity index; shutd
   const root = fixture(t);
   assert.equal(await appendEvent(root, stop({ reason: "channel_closed" })), false);
   assert.equal(await appendEvent(root, user({ prompt: "<user_query>hello <private>secret-value</private></user_query>" }), at(7)), true);
-  for (const name of fs.readdirSync(path.join(root, "conversations"))) assert.doesNotMatch(fs.readFileSync(path.join(root, "conversations", name), "utf8"), /secret-value|user_query/);
+  for (const name of fs.readdirSync(path.join(root, "conversations"))) {
+    const file = path.join(root, "conversations", name);
+    if (fs.statSync(file).isFile()) assert.doesNotMatch(fs.readFileSync(file, "utf8"), /secret-value|user_query/);
+  }
   assert.match(fs.readFileSync(path.join(root, "conversations/2026-09-07-grok.md"), "utf8"), /hello \[PRIVATE\]/);
 });
 
@@ -72,8 +75,11 @@ test("Grok recovers a lock left by a terminated process", async (t) => {
   const child = spawnSync(process.execPath, ["-e", "process.stdout.write(String(process.pid))"], { encoding: "utf8" });
   assert.equal(child.status, 0);
   fs.mkdirSync(path.join(root, "conversations"));
-  fs.writeFileSync(path.join(root, "conversations/.grok-events.lock"), child.stdout);
+  const lock = path.join(root, "conversations/.mnemo-write.lock");
+  fs.mkdirSync(lock);
+  fs.writeFileSync(path.join(lock, "owner.json"), JSON.stringify({pid:Number(child.stdout)}));
   assert.equal(await appendEvent(root, user()), true);
+  assert.equal(fs.existsSync(lock), false);
 });
 
 test("Grok installer deploys and validates the shared event helper", (t) => {

@@ -14,10 +14,15 @@ const configPath = path.join(configDir, "config.json");
 const rulesPath = path.join(configDir, "AGENTS.md");
 const hooksDir = path.join(configDir, "hooks");
 const hookName = "devin-mnemo-save-turn.js";
+function sharedHook(name) {
+  const local = path.join(source, "hooks", name);
+  return fs.existsSync(local) ? local : path.join(source, "../../hooks", name);
+}
 const files = {
   [hookName]: path.join(source, "hooks", "save-turn.js"),
   "read-assistant.py": path.join(source, "hooks", "read-assistant.py"),
-  "mnemo-project-root.js": path.join(source, "../../hooks/mnemo-project-root.js"),
+  "mnemo-project-root.js": sharedHook("mnemo-project-root.js"),
+  "mnemo-record-store.js": sharedHook("mnemo-record-store.js"),
 };
 const start = "<!-- DEVIN-MNEMO:START -->";
 const end = "<!-- DEVIN-MNEMO:END -->";

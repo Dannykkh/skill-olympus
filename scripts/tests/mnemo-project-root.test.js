@@ -139,6 +139,7 @@ for (const [cli, shell] of [['claude', 'PowerShell'], ['codex', 'PowerShell'], [
     if (cli === 'codex' && !useInstalled) {
       fs.cpSync(path.join(repo, 'skills/codex-mnemo/hooks'), installed, { recursive: true });
       fs.copyFileSync(path.join(repo, 'hooks/mnemo-project-root.js'), path.join(installed, 'mnemo-project-root.js'));
+      fs.copyFileSync(path.join(repo, 'hooks/mnemo-record-store.js'), path.join(installed, 'mnemo-record-store.js'));
       script = path.join(installed, `save-turn.${extension}`);
     }
     assert.ok(fs.existsSync(script), `hook does not exist: ${script}`);

@@ -203,7 +203,7 @@ if ($userText) { $userText = $userText -replace '(?s)<private>.*?</private>', '[
 if ($response) { $response = $response -replace '(?s)<private>.*?</private>', '[PRIVATE]' }
 
 # 둘 다 비어있으면 스킵
-if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $response.Length -lt 5)) {
+if ((-not $userText -or $userText.Length -lt 1) -and (-not $response -or $response.Length -lt 1)) {
     exit 0
 }
 
@@ -237,6 +237,7 @@ if (-not (Test-Path $appendHelper)) { $appendHelper = Join-Path $PSScriptRoot 'g
 try {
     $appendResult = ($payload | ConvertTo-Json -Compress -Depth 30) | & node $appendHelper $ProjectRoot
     if ($LASTEXITCODE -ne 0) { Exit-MnemoError -Context 'append-event' -Message 'event persistence failed' }
+    if ("$appendResult".Trim() -eq 'pending') { Exit-MnemoError -Context 'append-event' -Message '대화 저장 대기; 다음 이벤트에서 복구' }
     if ("$appendResult".Trim() -ne 'saved') { exit 0 }
 } catch { Exit-MnemoError -Context 'append-event' -Message $_.Exception.Message }
 

@@ -95,7 +95,21 @@ function latestTurn(payload) {
 
   const userText = user?.content || redact(payload.prompt || payload.userPrompt || "");
   const assistantText = assistant?.content || redact(payload.promptResponse || payload.response || "");
-  return { userText, assistantText, order: assistant?.order ?? user?.order ?? -1 };
+  const users = records.filter(isUserRecord).map(record => ({content:redact(textFrom(record.content ?? record.message ?? record)),order:recordOrder(record),aliases:[]})).filter(user => user.content);
+  // 과거의 단일 턴 표식과 맞춰 이미 저장한 입력을 중복으로 쓰지 않는다.
+  for (let i=0;i<users.length;i++) {
+    const userOnly = [payload.conversationId || 'unknown',users[i].order,users[i].content,''].join('\0');
+    users[i].aliases.push(`<!-- antigravity-turn:${crypto.createHash('sha1').update(userOnly).digest('hex')} -->`);
+    const next = users[i+1]?.order ?? Infinity;
+    const models = records.filter(record => recordOrder(record)>=users[i].order && recordOrder(record)<next && isModelRecord(record));
+    for (const model of models) {
+      const content = redact(textFrom(model.content ?? model.message));
+      if (!content) continue;
+      const identity = [payload.conversationId || 'unknown',recordOrder(model),users[i].content,content].join('\0');
+      users[i].aliases.push(`<!-- antigravity-turn:${crypto.createHash('sha1').update(identity).digest('hex')} -->`);
+    }
+  }
+  return { userText, assistantText, order: assistant?.order ?? user?.order ?? -1, users };
 }
 
 function ensureFile(filePath, content) {
@@ -126,27 +140,31 @@ function ensureScaffold(root, date) {
   ensureScaffoldFile(path.join(memoryDir, "gotchas.md"), "# Gotchas - 주의사항, 함정\n\n---\n");
 }
 
-function appendTurn(root, payload, turn) {
-  if (!turn.userText && !turn.assistantText) return;
+const sharedStore = fs.existsSync(path.join(__dirname, 'mnemo-record-store.js'))
+  ? path.join(__dirname, 'mnemo-record-store.js') : path.resolve(__dirname, '../../../hooks/mnemo-record-store.js');
+const { record, storeRecords } = require(sharedStore);
+async function appendTurn(root, payload, turn) {
+  if (!turn.userText && !turn.assistantText) return {statuses:[]};
   const now = new Date();
-  const date = now.toISOString().slice(0, 10);
-  const time = now.toTimeString().slice(0, 8);
+  const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   ensureScaffold(root, date);
-  const conversationDir = path.join(root, "conversations");
-  fs.mkdirSync(conversationDir, { recursive: true });
-  const filePath = path.join(conversationDir, `${date}-antigravity.md`);
-  ensureFile(filePath, `---\ndate: ${date}\nproject: ${path.basename(root)}\nkeywords: []\nsummary: ""\n---\n\n# ${date}\n`);
-
-  const identity = [payload.conversationId || "unknown", turn.order, turn.userText, turn.assistantText].join("\0");
-  const marker = `<!-- antigravity-turn:${crypto.createHash("sha1").update(identity).digest("hex")} -->`;
-  const existing = fs.readFileSync(filePath, "utf8");
-  if (existing.includes(marker)) return;
-
-  const parts = ["", marker];
-  if (turn.userText) parts.push(`## [${time}] User`, "", turn.userText);
-  if (turn.assistantText) parts.push("", `## [${time}] Assistant`, "", turn.assistantText);
-  parts.push("");
-  fs.appendFileSync(filePath, parts.join("\n"), "utf8");
+  const conversation = payload.conversationId || payload.transcriptPath || 'unknown';
+  const entries = [];
+  const users = turn.users?.length ? turn.users : [{content:turn.userText,order:turn.order,aliases:[]}];
+  for (const user of users) {
+    if (!user.content) continue;
+    entries.push(record(root,'antigravity',`${conversation}:user:${user.order}:${user.content}`,
+      [{role:'User',text:user.content}],{aliases:user.aliases || []}));
+  }
+  if (turn.assistantText) {
+    const legacy = [payload.conversationId || 'unknown',turn.order,turn.userText,turn.assistantText].join('\0');
+    const alias = `<!-- antigravity-turn:${crypto.createHash('sha1').update(legacy).digest('hex')} -->`;
+    entries.push(record(root,'antigravity',`${conversation}:assistant:${turn.order}:${turn.assistantText}`,
+      [{role:'Assistant',text:turn.assistantText}],{aliases:[alias]}));
+  }
+  const result = await storeRecords(root,entries);
+  if (result.error) logFailure(root,new Error(result.error));
+  return result;
 }
 
 function logFailure(root, error) {
@@ -164,13 +182,13 @@ function logFailure(root, error) {
   }
 }
 
-function main() {
+async function main() {
   let root = null;
   try {
     if (enabled()) {
       const payload = readPayload();
       root = resolveProjectRoot(payload);
-      if (root) appendTurn(root, payload, latestTurn(payload));
+      if (root) await appendTurn(root, payload, latestTurn(payload));
     }
   } catch (error) {
     logFailure(root, error);

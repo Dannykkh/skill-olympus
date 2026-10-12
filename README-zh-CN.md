@@ -310,6 +310,12 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.0.5 — 修复对话保存遗漏
+
+Claude Code、Codex、Antigravity、Grok 和 Devin 的 Mnemo 使用统一的保存逻辑。短回复 `OK`、回答前的追加输入及含反斜杠的原文都会保留。写入失败的内容存入 `conversations/.mnemo-pending/`，在下次保存事件中重试。Claude 在确认回答正文已保存后才登记 UUID。Devin 仅在上一条提示对应的数据库行范围内读取延迟出现的回答。
+
+所有保存适配器都需要 Node.js，Devin 的回答读取还需要 Python 3。Windows 的 250 项测试、已安装适配器的 24 项测试，以及实际 Claude、Grok、agy、Devin 的 `OK` 保存验证均已通过。重新安装所用的代码也已更新。详见[统一保存契约](skills/mnemo/references/record-storage.md)。
+
 ## v6.17.0 — 验收标准成为带 ID 的约定
 
 设计与实现现在共享带名称的约定。zephermine 为每个分区的验收标准分配固定 ID（`AC-NN-k`），写明可观察的行为、依据和验证方式，汇总到 `checklist.md`，并检查每个问题都有 AC、每个 AC 都能验证、AC 之间没有矛盾。Poseidon、Daedalus 和 Chronos 在同一个 `checklist-status.md` 台账中记录进度（`proved` 需要实际执行的证据，只有全部为 `proved` 才算完成），Argos 重新执行这些证据进行核查（Phase 4A），Clio 把未达成的 AC 计为 NO-GO 原因。`api-spec.md` 现在从每个页面显示和操作的内容出发，所有列表接口都必须分页，错误使用统一的编码格式，列表的筛选和排序列会回填到索引计划中。Poseidon 的所有权检查改为与开始时的基线比较，而不是 `HEAD~N`；autoresearch 用从未参与优化的 holdout 输入做最终判定。删除了与同名技能重复的 6 个自定义代理（代理源 42 → 36）。

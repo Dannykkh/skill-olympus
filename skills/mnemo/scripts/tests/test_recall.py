@@ -111,6 +111,30 @@ class RecallTests(unittest.TestCase):
         self.assertEqual(results[0]["tags"], ["예전조건", "새조건"])
         self.assertEqual(results[0]["turn_id"], "")
 
+    def test_record_end_markers_reset_broken_fences_without_severing_followup_input(self):
+        self.write("conversations/2026-01-01-antigravity.md", """## [09:00:00] User
+기차 계획을 정리해줘.
+```text
+unfinished code
+<!-- mnemo-antigravity-event:input-one -->
+## [09:00:01] User
+아이도 동행해.
+<!-- mnemo-antigravity-event:input-two -->
+## [09:00:02] Assistant
+가족여행은 기차로 갑니다.
+#tags: 가족여행
+<!-- mnemo-antigravity-event:answer -->
+## [10:00:00] User
+다른 약속은?
+<!-- mnemo-antigravity-event:next-input -->
+""")
+        results = self.search("가족여행")["results"]
+        self.assertEqual(len(results), 1)
+        self.assertIn("기차 계획", results[0]["content"])
+        self.assertIn("아이도 동행", results[0]["content"])
+        self.assertNotIn("다른 약속", results[0]["content"])
+        self.assertTrue(results[0]["structure_unverified"])
+
     def test_reserved_tag_follows_a_memory_entry_and_its_timestamped_evidence(self):
         self.entry(1, "이동수단", "evidence: conversations/2025-12-01-claude.md 14:10", tags="이동, 결정, 조건")
         self.write("conversations/2025-12-01-claude.md", """## [14:10] User
