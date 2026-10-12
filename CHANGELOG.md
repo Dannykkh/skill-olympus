@@ -4,11 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.0.5] - 2026-10-12
+
 ### Bug Fixes
 
-- **codex-mnemo**: The Bash `save-turn` hook now reads JSON from stdin when invoked without arguments. Previously, Bash expanded the last-argument expression to the script's own path, so the hook read its own source and silently skipped the turn. Regression tests cover stdin saving, Korean text, private redaction and replay deduplication in both shells.
-- **installer verification**: Installed-hook checks pass the JSON payload through a file descriptor on stdin. A disabled hook can exit before reading its input; writing the payload through a pipe could then produce an intermittent `EPIPE` and fail an otherwise successful opt-out check. Payload and exit-status checks remain intact.
-- **release tooling**: `scripts/bump_version.py` now tells users to update CHANGELOG.md and stage and commit only the four release files. The former `git commit -am` instruction could include unrelated tracked changes; the path-specific commit also keeps unrelated staged changes out of the release.
+- **mnemo adapters**: Claude Code, Grok, Antigravity and Devin now use the same pending-record writer as Codex. Claude and Grok retain short answers; Claude preserves identical new inputs and registers transcript UUIDs only after the answer is confirmed in Markdown. Antigravity stores all unrecorded user inputs, including steering messages before one answer. Failed writes remain recoverable on the next event. Devin queues input before DB lookup and retains delayed-answer reads with a prompt-scoped row boundary. Old leading markers are accepted only with their complete body. (94ae631)
+- **codex-mnemo**: Completed turns keep every actual user input, short answers, literal backslashes and code blocks. The shared Node writer saves each full turn under a project lock, rolls back partial writes, and retains failed turns in a private-redacted pending queue for the next notification. Failed writes no longer emit a successful `saved` trace. Concurrent storage validation rechecks disappeared files and Windows NTFS deleted-object paths while still rejecting external storage links. Completion is confirmed under the project lock when a duplicate delivery republishes a pending filename. (94ae631)
+- **mnemo packages**: Installed adapter modules include their current installer, hooks, templates and runtime scripts. Reinstalling from an installed module no longer restores obsolete conversation writers. Recall recognizes the new record-end markers while retaining follow-up input with its answer. (94ae631)
+- **codex-mnemo**: The Bash `save-turn` hook reads JSON from stdin when invoked without arguments. Previously, the last-argument expression expanded to the script's own path and the hook silently skipped the turn. (de64a9a)
+- **installer verification**: Installed-hook checks pass JSON through a file descriptor on stdin. A disabled hook can exit without reading its input; a pipe could intermittently report `EPIPE` despite a successful opt-out check. Payload and exit-status checks remain intact. (de64a9a)
+- **release tooling**: `bump_version.py` tells users to update CHANGELOG.md and stage and commit only the four release files. The former `git commit -am` instruction could include unrelated tracked changes; path-specific commits also exclude other staged changes. (21f986c)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs describe the saving fixes and shared recovery contract. All five adapters require Node.js; Devin assistant capture also requires Python 3. (94ae631)
+
+### Validation and Scope
+
+- Windows Node suite: 250 passed, no failures or skips. Installed adapter storage and project-boundary checks: 24 passed. Packaging and standalone-install checks: 13 passed. Concurrent storage: 13 processes per burst, 10 successful bursts. Python recall and Codex reconciliation: 46 passed.
+- WSL Ubuntu 22.04 / Node 22 / Bash: 34 passed, 19 platform-dependent checks skipped, no failures. Native Claude Code 2.1.286, Grok 1.0.50, agy and Devin 3000.11.3 each saved one user input and an `OK` answer in a new isolated session.
+- The v7.0.5 Windows integrated installation passed all 12 final checks; the subsequent installed-adapter suite passed 24 checks. TermSnap's notify wrapper and connection were preserved.
+- Failed pending records require a later saving event to reach Markdown. This release does not bulk-repair historical records for every CLI or certify every provider's native session/UI storage. macOS execution was not run. Unrelated local skill ZIPs are excluded.
 
 ## [7.0.4] - 2026-10-11
 
