@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.1.0] - 2026-10-13
+
+### Features
+
+- **codex-mnemo**: Read-only PM-to-worker history lookup finds direct and nested subagents by an exact PM session ID within one project. It reads active and archived rollouts and returns worker messages, tool calls, arguments, outputs and reports with source paths and line numbers. Inherited parent history, system context and reasoning are excluded; private content and recognizable secrets are masked. Search, pagination and JSON character budgets keep queries reviewable. The existing adapter packages, installs, checks and removes the query tool. (8c6abe6)
+
+### Bug Fixes
+
+- **codex-mnemo**: User-created `/fork` sessions are saved instead of being classified as subagents solely because they carry `forked_from_id`. PowerShell, Bash and the Node rollout fallback use the first session metadata for classification. Reconciliation keeps fork lineage separate from actual parent-agent metadata and imports only the user fork's own turns, excluding inherited completed and aborted turns. Actual subagent turns remain outside the user conversation mirror. (8c6abe6)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs describe the Codex-only tracing feature and the distinction from v7.0.5's shared conversation-saving fixes across Claude Code, Codex, Grok, Antigravity and Devin. (8c6abe6)
+- Plugin descriptions reflect the current 103 public skill sources and native-agent policy, replacing retired custom-agent counts.
+
+### Validation and Scope
+
+- Targeted Windows/Git Bash Node checks: 53 passed. Python reconciliation and tracing: 21 passed. Installed-hook execution verified user-fork fallback storage, replay deduplication and subagent exclusion; installed queries read worker execution evidence. A real PM lineage returned three workers with inherited parent turns excluded.
+- Windows integrated installation passed all 12 final checks, including installed-hook execution for the four integrated CLI surfaces. Devin's adapter was also installed. Subsequent installed-adapter storage and project-boundary checks passed 15 tests, including Devin's input and delayed-response handling. Codex's installed query modules match the source. Existing local ZIPs were preserved and excluded from the release.
+- Worker-history tracing is Codex-only. This release does not add equivalent tracing to the other four CLIs or bulk-repair their historical conversations. The shared v7.0.5 saving changes remain in place. macOS execution and a fresh user-fork UI interaction were not run; fork metadata, both shell hooks and installed-hook execution were checked.
+
 ## [7.0.5] - 2026-10-12
 
 ### Bug Fixes
