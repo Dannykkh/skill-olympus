@@ -79,6 +79,8 @@ Installation ends with automatic rule, registration, and installed-hook checks. 
 
 Mnemo hooks save conversation copies under your project's `conversations/`; memory and handoffs use `MEMORY.md`, `memory/`, and `docs/handoffs/`. `<private>...</private>` is redacted in supported Mnemo outputs, but does not erase native CLI session history. No additional model, reasoning-effort, language, or permission value is required for the new rules.
 
+Codex user-created `/fork` conversations are saved separately from subagent work. The read-only [`trace_subagents.py`](skills/codex-mnemo/scripts/trace_subagents.py) finds workers by their PM's session ID and reads their messages, tool calls, results, and reports with source line numbers. It excludes inherited parent history and masks private content. See [Codex-Mnemo usage](skills/codex-mnemo/SKILL.md).
+
 All Mnemo adapters and handoff/recovery tools share one [project-root contract](skills/mnemo/references/project-storage.md). Git roots and portable `.mnemo-root` markers keep subdirectory sessions together; unmarked `cwd` values cannot create a new storage root. Inherited Git settings and storage links cannot redirect writes outside the project. Non-Git workspaces need an explicit workspace declaration or an initial root marker.
 
 Conversation capture on Claude Code, Codex, Antigravity, Grok and Devin uses the shared [record storage contract](skills/mnemo/references/record-storage.md). It preserves short answers and literal text, queues failed writes in `conversations/.mnemo-pending/`, and retries them on the next saving event. Claude transcript UUIDs are registered after the answer is confirmed in Markdown. Node.js is required for all five adapters; Devin assistant capture also requires Python 3. Pending records are recovery data and should stay with the project.
@@ -399,6 +401,8 @@ and her remembering crosses every session, every CLI, every dawn.
 ---
 
 ## Recent changes
+
+**v7.1.0:** Codex-Mnemo adds read-only PM-to-worker history lookup. It finds direct and nested subagents by the PM's exact session ID and returns their messages, tool calls, results and reports with source line numbers. User-created `/fork` conversations are now saved; inherited parent turns remain excluded from recovery. This tracing feature is Codex-only. The shared conversation-saving fixes from v7.0.5 remain available across Claude Code, Codex, Grok, Antigravity and Devin. Storage, recovery, tracing, packaging and policy checks passed (74); installed-hook execution and real worker-history lookup were also verified.
 
 **v7.0.5:** Mnemo fixes conversation omissions across five CLIs. Codex keeps every actual user input, including steering messages, and Claude/Grok retain short answers such as `OK`. Claude preserves identical new prompts and records UUIDs only after a successful write; Antigravity stores every unrecorded user input before the latest answer. A shared writer retains failed content, rolls back partial appends and retries on the next event. Devin also keeps delayed-answer queries within the previous prompt's database row range. Windows concurrent deletion checks retain external-link protection, and installed adapter packages include current reinstall scripts. Windows tests (250), installed-adapter tests (24) and real Claude/Grok/agy/Devin `OK` capture passed. Bash stdin handling, opt-out verification pipes and release-file staging instructions are also fixed.
 
@@ -910,4 +914,4 @@ Crash recovery, persistent data after restart, and database restoration **still 
 
 ---
 
-**Last Updated:** 2026-09-14
+**Last Updated:** 2026-10-13

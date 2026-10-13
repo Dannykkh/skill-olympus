@@ -104,14 +104,13 @@ function Resolve-MnemoProjectRoot($Payload) {
 }
 
 # reconcile_codex_conversations.py SessionMeta.is_subagent와 같은 규칙.
-# 2026-10 실측(세션 6,386개): agent_path·parent_thread_id·forked_from_id·thread_source=subagent는
-# 모두 source가 객체인 세션에서만 나오고, source 객체만 있는 하위 에이전트 세션도 있다.
+# forked_from_id는 사용자 /fork에도 있으므로 하위 에이전트 판정 근거가 아니다.
 function Test-SubagentSessionMeta($meta) {
     if ($null -eq $meta) { return $false }
     $source = $null
     try { $source = $meta.PSObject.Properties['source'].Value } catch {}
     if ($source -is [System.Management.Automation.PSCustomObject]) { return $true }
-    foreach ($key in @('agent_path', 'parent_thread_id', 'forked_from_id')) {
+    foreach ($key in @('agent_path', 'parent_thread_id')) {
         if ((Get-String $meta $key).Trim()) { return $true }
     }
     return ((Get-String $meta 'thread_source') -eq 'subagent')

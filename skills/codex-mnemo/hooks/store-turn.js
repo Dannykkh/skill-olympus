@@ -29,12 +29,13 @@ function userText(value) {
 
 function sessionFallback(file, turnId) {
   if (!file || !fs.existsSync(file)) return { users: [], response: "" };
-  let active, selected, latest, hasLifecycle = false, legacyUser = "", legacyAnswer = "";
+  let active, selected, latest, hasLifecycle = false, hasMeta = false, legacyUser = "", legacyAnswer = "";
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
     let item; try { item = JSON.parse(line); } catch { continue; }
     const p = item.payload || {};
-    if (item.type === "session_meta") {
-      if ((p.source && typeof p.source === "object") || p.agent_path || p.parent_thread_id || p.forked_from_id || p.thread_source === "subagent")
+    if (item.type === "session_meta" && !hasMeta) {
+      hasMeta = true;
+      if ((p.source && typeof p.source === "object") || p.agent_path || p.parent_thread_id || p.thread_source === "subagent")
         return { users: [], response: "" };
     } else if (item.type === "event_msg" && p.type === "task_started") {
       hasLifecycle = true;

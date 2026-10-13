@@ -7,7 +7,8 @@ rollout task lifecycle rather than treating every assistant message as a turn:
     task_started -> user_message(s) -> final_answer -> task_complete
 
 Developer instructions, injected AGENTS/environment context, commentary,
-reasoning, tools, aborted turns, and sub-agent/fork histories are excluded.
+reasoning, tools, aborted turns, sub-agent turns, and inherited fork history are excluded.
+User forks are eligible for their own completed turns.
 For reviewable historical repairs, ``--staging-dir`` writes a deterministic
 tree and manifest without changing the live conversations directory.
 """
@@ -166,6 +167,7 @@ class SessionMeta:
     thread_source: str
     source: Any
     timestamp: str
+    forked_from_id: str = ""
 
     @property
     def is_subagent(self) -> bool:
@@ -330,11 +332,12 @@ def read_session_meta(path: Path, counts: Counter[str]) -> SessionMeta | None:
             thread_id=thread_id,
             session_id=session_id,
             cwd=str(payload.get("cwd") or ""),
-            parent_thread_id=str(payload.get("parent_thread_id") or payload.get("forked_from_id") or ""),
+            parent_thread_id=str(payload.get("parent_thread_id") or ""),
             agent_path=str(payload.get("agent_path") or ""),
             thread_source=str(payload.get("thread_source") or ""),
             source=source,
             timestamp=str(payload.get("timestamp") or obj.get("timestamp") or ""),
+            forked_from_id=str(payload.get("forked_from_id") or ""),
         )
     return None
 
@@ -346,7 +349,7 @@ def event_message_text(payload: dict[str, Any]) -> str:
     return extract_text(value)
 
 
-def turn_is_owned_by_subagent(turn_id: str, meta: SessionMeta) -> bool:
+def turn_is_owned_by_session(turn_id: str, meta: SessionMeta) -> bool:
     """UUIDv7 identifiers sort chronologically; inherited fork history is older."""
     return bool(turn_id and meta.thread_id and turn_id >= meta.thread_id)
 
@@ -370,6 +373,10 @@ def extract_completed_turns(
         if event_turn_id and active["turn_id"] and event_turn_id != active["turn_id"]:
             result.counts[f"excluded_mismatched_{reason}"] += 1
             return
+        if meta.forked_from_id and not meta.is_subagent and not turn_is_owned_by_session(active["turn_id"], meta):
+            result.counts["excluded_inherited_fork_turns"] += 1
+            active = None
+            return
         if reason == "aborted":
             result.counts["excluded_aborted_turns"] += 1
             if not meta.is_subagent:
@@ -389,13 +396,13 @@ def extract_completed_turns(
             active = None
             return
 
-        # Fork rollouts contain inherited parent history followed by the
+        # Subagent rollouts contain inherited parent history followed by the
         # child-owned task.  They are never import candidates: collect only
         # exact owned turn IDs for leakage cleanup, before requiring a normal
         # user/final pair (the child prompt is intentionally classified as an
         # injected NEW_TASK envelope).
         if meta.is_subagent:
-            if turn_is_owned_by_subagent(active["turn_id"], meta):
+            if turn_is_owned_by_session(active["turn_id"], meta):
                 result.subagent_turn_ids.add(active["turn_id"])
                 result.counts["excluded_subagent_completed_turns"] += 1
             else:

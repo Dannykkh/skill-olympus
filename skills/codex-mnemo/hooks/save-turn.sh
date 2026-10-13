@@ -306,7 +306,8 @@ find_thread_session() {
 }
 
 # reconcile_codex_conversations.py SessionMeta.is_subagent와 같은 규칙: 첫 session_meta의 source가 객체이거나
-# agent_path·parent_thread_id·forked_from_id가 있거나 thread_source가 subagent면 하위 에이전트 세션이다.
+# agent_path·parent_thread_id가 있거나 thread_source가 subagent면 하위 에이전트 세션이다.
+# forked_from_id는 사용자 /fork에도 있으므로 판정 근거가 아니다.
 # 옛 하위 에이전트 파일에는 부모 session_meta가 둘째로 붙어 있어 첫 것만 본다.
 is_subagent_session() {
     local file="$1"
@@ -316,7 +317,7 @@ is_subagent_session() {
             [split("\n")[] | fromjson? | select(type == "object" and .type == "session_meta")] | first | .payload
             | . != null and (((.source | type) == "object")
                 or ((.agent_path // "") != "") or ((.parent_thread_id // "") != "")
-                or ((.forked_from_id // "") != "") or (.thread_source == "subagent"))
+                or (.thread_source == "subagent"))
         ' >/dev/null 2>&1
         return $?
     fi
@@ -337,7 +338,7 @@ with open(sys.argv[1], encoding="utf-8", errors="replace") as stream:
             break
 if not isinstance(meta, dict):
     sys.exit(1)
-sub = isinstance(meta.get("source"), dict) or any(meta.get(k) for k in ("agent_path", "parent_thread_id", "forked_from_id")) or meta.get("thread_source") == "subagent"
+sub = isinstance(meta.get("source"), dict) or any(meta.get(k) for k in ("agent_path", "parent_thread_id")) or meta.get("thread_source") == "subagent"
 sys.exit(0 if sub else 1)
 ' "$file" 2>/dev/null
         return $?

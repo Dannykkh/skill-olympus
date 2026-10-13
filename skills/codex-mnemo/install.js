@@ -40,6 +40,7 @@ const scriptSource = (file) => {
   return file === "mnemo_project_root.py" && !fs.existsSync(local)
     ? path.join(sourceDir, "../mnemo/scripts", file) : local;
 };
+const runtimeScripts = ["reconcile_codex_conversations.py", "mnemo_project_root.py", "trace_subagents.py"];
 
 // ── Utility functions ──
 function normalizePath(p) {
@@ -574,9 +575,8 @@ function install() {
   // Install reconcile script (used by Claude's SessionStart hook wrapper
   // to back-fill conversations from Codex rollout JSONL).
   const scriptsDir = path.join(codexDir, "scripts");
-  const scriptFiles = ["reconcile_codex_conversations.py", "mnemo_project_root.py"];
   let scriptsInstalled = 0;
-  for (const scriptFile of scriptFiles) {
+  for (const scriptFile of runtimeScripts) {
     const src = scriptSource(scriptFile);
     if (!fs.existsSync(src)) continue;
     ensureDir(scriptsDir);
@@ -683,8 +683,8 @@ function check() {
     }
   }
 
-  console.log("\n[2/4] Checking reconcile parser and source parity...");
-  for (const reconcileFile of ["reconcile_codex_conversations.py", "mnemo_project_root.py"]) {
+  console.log("\n[2/4] Checking reconcile/trace scripts and source parity...");
+  for (const reconcileFile of runtimeScripts) {
     const reconcileSource = scriptSource(reconcileFile);
     const reconcileInstalled = path.join(codexDir, "scripts", reconcileFile);
     if (!fs.existsSync(reconcileSource)) {
@@ -791,8 +791,7 @@ function uninstall() {
   }
   // Remove reconcile scripts installed under <CODEX_HOME>/scripts/.
   const scriptsDir = path.join(codexDir, "scripts");
-  const scriptFiles = ["reconcile_codex_conversations.py", "mnemo_project_root.py"];
-  for (const file of scriptFiles) {
+  for (const file of runtimeScripts) {
     if (removeFile(path.join(scriptsDir, file))) {
       console.log(`      - scripts/${file} removed`);
     }

@@ -79,6 +79,8 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 
 Mnemo 훅은 프로젝트의 `conversations/`에 대화 사본을 저장합니다. 기억과 인계 문서는 `MEMORY.md`, `memory/`, `docs/handoffs/`를 사용합니다. `<private>...</private>`는 지원되는 Mnemo 저장본에서 가리지만 CLI 자체 세션 기록까지 지우지는 않습니다. 새 규칙을 위해 모델·추론 강도·언어·권한 값을 추가로 설정할 필요는 없습니다.
 
+Codex에서 사용자가 `/fork`한 대화는 서브에이전트 작업과 구분해 저장합니다. 읽기 전용 [`trace_subagents.py`](skills/codex-mnemo/scripts/trace_subagents.py)는 PM 세션 ID로 워커를 찾고 메시지·도구 호출·결과·보고를 원본 행 번호와 함께 조회합니다. 상속한 부모 기록은 제외하고 private 내용을 가립니다. 사용법은 [Codex-Mnemo](skills/codex-mnemo/SKILL.md)에서 확인합니다.
+
 Claude Code·Codex·Antigravity·Grok·Devin의 대화 저장은 공통 [레코드 저장 계약](skills/mnemo/references/record-storage.md)을 따릅니다. 짧은 답변과 원문을 보존하고, 쓰기 실패 내용은 `conversations/.mnemo-pending/`에 남겨 다음 저장 이벤트에서 재시도합니다. Claude 응답 UUID는 Markdown 본문을 확인한 뒤 등록합니다. 다섯 어댑터 모두 Node.js가 필요하며 Devin 응답 저장에는 Python 3도 필요합니다. 대기 파일은 프로젝트와 함께 보존할 복구 데이터입니다.
 
 기존 Codex 설치기는 `config.toml`의 `notify`를 구성하고 `tui.notifications=false`, `tui.animations=true`, `tui.whimsy=false`도 설정합니다. save-turn이 이미 연결된 체인은 유지하지만 일부 데스크톱·IDE 알림 전용 체인은 교체합니다. 알림을 직접 구성했다면 [설정 변경·제거 시 동작](docs/global-agent-rules.md)을 확인하세요.
@@ -398,6 +400,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 ---
 
 ## 최근 변경
+
+**v7.1.0:** Codex-Mnemo에 PM 세션 기준 워커 원본 조회를 추가했습니다. 정확한 PM ID로 직계·중첩 서브에이전트를 찾고 메시지·도구 호출·결과·보고를 원본 행 번호와 함께 읽습니다. 사용자 `/fork` 대화도 저장하며, 복구할 때 상속한 부모 턴은 제외합니다. 이 추적 기능은 Codex 전용입니다. v7.0.5의 공통 대화 저장 수정은 Claude Code·Codex·Grok·Antigravity·Devin에 유지됩니다. 저장·복구·조회·패키지·정책 검사 74개와 설치된 훅 실행·실제 워커 원본 조회를 확인했습니다.
 
 **v7.0.5:** 다섯 CLI의 Mnemo 대화 누락을 수정했습니다. Codex는 작업 중 추가 메시지를 포함해 실제 사용자 입력을 모두 보존하고, Claude·Grok은 `OK` 같은 짧은 답도 저장합니다. Claude는 같은 문장의 새 입력을 보존하며 본문 쓰기 성공 후 UUID를 등록합니다. Antigravity는 최신 답변 전의 미저장 사용자 입력을 모두 기록합니다. 공통 저장기는 실패한 내용을 대기 파일에 남기고 부분 쓰기를 되돌린 뒤 다음 이벤트에서 재시도합니다. Devin은 지연 답변의 DB 조회를 이전 프롬프트 행 범위로 제한합니다. Windows 동시 삭제 검사에서도 외부 링크를 계속 거부하며, 설치본의 재설치 스크립트도 최신 코드로 갱신합니다. Windows 검사 250개·설치본 검사 24개와 실제 Claude·Grok·agy·Devin의 `OK` 저장을 확인했습니다. Bash 표준입력 처리, 저장 비활성화 검증의 파이프 오류, 릴리즈 파일만 커밋하는 안내도 수정했습니다.
 
@@ -900,4 +904,4 @@ ISO/IEC 25023(품질 측정), 25041(품질 평가 지침), 25051(제품·문서 
 
 ---
 
-**마지막 업데이트:** 2026-09-14
+**마지막 업데이트:** 2026-10-13

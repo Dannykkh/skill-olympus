@@ -56,7 +56,7 @@ function assistantLine(text) {
 
 // 실제 Codex처럼 sessions/yyyy/MM/dd/rollout-…-<thread-id>.jsonl 에 첫 줄 session_meta를 둔다
 // subagent: 'spawn'은 요즘 형태(agent_path·thread_source 포함), 'source-only'는 source 객체만 있는 옛 형태
-function writeSession(codexHome, { id, cwd, subagent = false, lines = [], ms = Date.now(), mtime }) {
+function writeSession(codexHome, { id, cwd, subagent = false, forkedFrom = '', lines = [], ms = Date.now(), mtime }) {
   const d = new Date(ms);
   const dir = path.join(codexHome, 'sessions', String(d.getFullYear()), pad(d.getMonth() + 1), pad(d.getDate()));
   fs.mkdirSync(dir, { recursive: true });
@@ -67,6 +67,7 @@ function writeSession(codexHome, { id, cwd, subagent = false, lines = [], ms = D
     : subagent
       ? { id, cwd, source: { subagent: { thread_spawn: { parent_thread_id: uuidv7(ms - 1000), depth: 1, agent_path: '/root/worker' } } }, agent_path: '/root/worker', thread_source: 'subagent' }
       : { id, cwd, source: 'cli', thread_source: 'user' };
+  if (forkedFrom) payload.forked_from_id = forkedFrom;
   const all = [{ timestamp: d.toISOString(), type: 'session_meta', payload }, ...lines];
   fs.writeFileSync(file, all.map(o => JSON.stringify(o)).join('\n') + '\n');
   if (mtime) fs.utimesSync(file, mtime, mtime);
@@ -177,6 +178,31 @@ for (const shell of ['PowerShell', 'Bash']) {
     assert.ok(!saved.includes('Third subagent report'));
     assert.ok(!saved.includes('AGENTS.md instructions'));
     assert.equal((debugLog(fx.codexHome).match(/skip: subagent turn/g) || []).length, 3);
+  });
+
+  test(`${shell} save-turn saves user forks with notify input and rollout fallback`, { skip }, t => {
+    const fx = fixture(t);
+    const now = Date.now() - 1000;
+    const id = uuidv7(now), inputTurn = uuidv7(now + 100), fallbackTurn = uuidv7(now + 200);
+    const event = (type, fields) => ({ type: 'event_msg', payload: { type, ...fields } });
+    writeSession(fx.codexHome, {
+      id, cwd: fx.project, ms: now, forkedFrom: uuidv7(now - 1000),
+      lines: [
+        { type: 'session_meta', payload: { source: { subagent: { other: {} } }, agent_path: '/root/old-worker' } },
+        event('task_started', { turn_id: fallbackTurn }),
+        event('user_message', { message: 'User question in the fork rollout' }),
+        event('task_complete', { turn_id: fallbackTurn, last_agent_message: 'Fork rollout answer' }),
+      ],
+    });
+    run(fx, { 'thread-id': id, 'turn-id': inputTurn, 'input-messages': ['User question in a fork tab'], 'last-assistant-message': 'Fork tab answer' });
+    run(fx, { 'thread-id': id, 'turn-id': fallbackTurn, 'input-messages': [], 'last-assistant-message': '' });
+    const saved = history(fx.project);
+    for (const value of ['User question in a fork tab', 'Fork tab answer', 'User question in the fork rollout', 'Fork rollout answer']) {
+      assert.ok(saved.includes(value), `Missing fork content: ${value}`);
+    }
+    assert.ok(!debugLog(fx.codexHome).includes('skip: subagent turn'));
+    run(fx, { 'thread-id': id, 'turn-id': fallbackTurn, 'input-messages': [], 'last-assistant-message': '' });
+    assert.equal(history(fx.project), saved);
   });
 
   test(`${shell} save-turn drops injected context from input-messages`, { skip }, t => {

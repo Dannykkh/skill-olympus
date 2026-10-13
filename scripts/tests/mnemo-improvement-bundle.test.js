@@ -102,6 +102,32 @@ for (const name of ['mnemo', 'codex-mnemo', 'antigravity-mnemo', 'grok-mnemo']) 
     fs.writeFileSync(path.join(project, '.mnemo-root'), '');
     fs.writeFileSync(path.join(project, 'conversations/2026-01-01-codex.md'),
       '## [09:00:00] User\n왜 기차로 가기로 했지?\n## [09:01:00] Assistant\n아이의 멀미 때문이에요.\n#tags: 가족여행\n');
+    if (name === 'codex-mnemo') {
+      const parent = '019ff850-0000-7000-8000-000000000000';
+      const child = '019ff852-0000-7000-8000-000000000000';
+      const turn = '019ff853-0000-7000-8000-000000000000';
+      const sessions = path.join(codex, 'sessions');
+      fs.mkdirSync(sessions, { recursive: true });
+      for (const id of [parent, child]) {
+        const meta = { id, cwd: project, source: id === child ? { subagent: { other: {} } } : 'cli',
+          parent_thread_id: id === child ? parent : '', timestamp: '2026-10-13T00:00:00Z' };
+        const records = [{ type: 'session_meta', payload: meta }];
+        if (id === child) records.push(
+          { type: 'event_msg', payload: { type: 'task_started', turn_id: turn } },
+          { type: 'event_msg', payload: { type: 'task_complete', turn_id: turn, last_agent_message: 'Installed child report' } });
+        fs.writeFileSync(path.join(sessions, `rollout-fixture-${id}.jsonl`), records.map(r => JSON.stringify(r)).join('\n'));
+      }
+      for (const script of [path.join(dest, 'scripts/trace_subagents.py'), path.join(codex, 'scripts/trace_subagents.py')]) {
+        const traced = spawnSync('python', ['-B', script, '--project-root', project, '--parent-session', parent],
+          { env, cwd: root, encoding: 'utf8', timeout: 30000, windowsHide: true });
+        assert.equal(traced.status, 0, traced.stderr + traced.stdout);
+        const data = JSON.parse(traced.stdout);
+        assert.equal(data.sessions.length, 1);
+        assert.equal(data.sessions[0].session_id, child);
+        assert.equal(data.sessions[0].last_report, 'Installed child report');
+        assert.equal(data.read_only, true);
+      }
+    }
     if (name === 'grok-mnemo') {
       // Use the installed producer's real prefix markers and consecutive replies.
       const payloads = [

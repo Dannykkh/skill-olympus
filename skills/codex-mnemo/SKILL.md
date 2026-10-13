@@ -1,6 +1,6 @@
 ---
 name: codex-mnemo
-description: Codex CLI 과거 대화 검색과 장기기억 설정에 사용한다. notify 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색을 제공한다. /mnemo, 므네모, 장기기억, 기억해, 이전에, handoff, 핸드오프, 세션 저장, codex 기억, codex memory 요청에 사용한다.
+description: Codex CLI 과거 대화 검색, 서브에이전트 작업 추적과 장기기억 설정에 사용한다. notify 훅으로 대화 자동 저장, 키워드 태깅, 과거 검색을 제공한다. /mnemo, 므네모, 장기기억, 기억해, 이전에, handoff, 핸드오프, 세션 저장, codex 기억, codex memory 요청에 사용한다.
 ---
 
 # Codex-Mnemo - Codex CLI 기억 시스템
@@ -103,6 +103,27 @@ python skills/codex-mnemo/scripts/reconcile_codex_conversations.py --project-roo
 
 ---
 
+## 서브에이전트 작업 조회
+
+사용자가 워커의 대화·수행 과정·검증 근거를 물으면 PM의 **정확한 세션 ID**로 조회한다.
+현재 세션 ID를 일별 대화의 첫 턴이나 최신 파일에서 추정하지 않는다. 사용할 수 있는
+네이티브 `thread/list`·`thread/read`가 있으면 우선하며, 로컬 원본 조회는 다음 도구를 쓴다.
+`module_root`는 이번에 읽은 이 `SKILL.md`의 디렉터리다.
+
+```bash
+python -B "<module_root>/scripts/trace_subagents.py" --project-root "<workspace>" --parent-session "<PM-ID>"
+python -B "<module_root>/scripts/trace_subagents.py" --project-root "<workspace>" --parent-session "<PM-ID>" --session "<child-ID>" --term "검사"
+```
+
+첫 명령은 같은 프로젝트의 직계·중첩 워커와 마지막 보고·원본 경로를 반환한다. 두 번째는
+워커에게 전달된 메시지, 도구 호출·인자·결과와 답변을 행 번호와 함께 읽는다. 검색은 정제된
+내용에 적용하며 `--offset`·`--limit`·`next_offset`으로 이어 읽는다. 전체 JSON의 문자 수는
+`--max-chars`로 제한한다. `content_omitted`가 있으면 같은 offset에서 예산을 늘려 조회한다.
+활성·보관 세션을 조회하며 부모에게서 상속한 과거 턴, 시스템 주입·reasoning은 제외한다.
+`<private>`와 식별 가능한 비밀값을 가리고 파일은 생성·수정하지 않는다. 워커의 보고와
+실제 도구 결과를 구분하며, 원본이 삭제됐거나 PM과의 계보가 없으면 미확인으로 보고한다.
+이 조회 기능은 Codex용이며 다른 CLI의 서브에이전트 추적 parity를 주장하지 않는다.
+
 ## 동작 흐름
 
 ```
@@ -110,7 +131,7 @@ Codex CLI 대화
     ↓
 [notify: agent-turn-complete]
     → JSON 페이로드 수신 (argv/stdin/파일경로)
-    → thread-id 세션 파일의 session_meta가 하위 에이전트면 저장·관찰·이어가기를 건너뜀
+    → thread-id 세션 파일의 첫 session_meta가 하위 에이전트면 저장·관찰·이어가기를 건너뜀
       (notify는 하위 에이전트 턴에도 실행된다. 변경 파일 검사 bridge만 돈다. 세션 파일이 없으면 저장)
     → input-messages에서 AGENTS.md·<environment_context> 같은 주입 메시지는 User로 쓰지 않음
     → save-turn(오케스트레이터)에서 공통 저장기 호출
@@ -134,6 +155,9 @@ notify 입력이 비면 thread-id의 원본 세션에서 해당 턴만 읽고, A
 제외합니다. 파일 잠금이 해제돼도 새 notify가 없으면 대기 턴은 아직 Markdown에 반영되지
 않습니다. 원본 세션과 `.mnemo-pending/`을 보존하고 다음 notify 또는 수동 복구를 실행합니다.
 프로세스가 OS에서 강제 종료되는 모든 시점의 디스크 영속성을 보장하는 계약은 아닙니다.
+
+사용자가 `/fork`한 일반 세션은 저장한다. `forked_from_id`는 계보이며 하위 에이전트 표시가
+아니다. 복구는 포크 뒤 이 세션에 속한 턴만 처리해 상속한 부모 대화를 중복 반영하지 않는다.
 
 ---
 

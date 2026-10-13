@@ -236,6 +236,8 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
 
 ## Mnemo — 对话上下文与现有记忆
 
+Codex 会保存用户通过 `/fork` 分支后的对话。只读工具 [`trace_subagents.py`](skills/codex-mnemo/scripts/trace_subagents.py) 根据 PM 会话 ID 查找工作者，并返回消息、工具调用、执行结果和报告及其原始行号。它排除继承的父会话历史并隐藏 private 内容。用法见 [Codex-Mnemo](skills/codex-mnemo/SKILL.md)。
+
 Mnemo 也处理日常聊天中的偏好、约定、原因和条件变化。它不使用嵌入或向量数据库，而是搜索标签、标题和正文；代码地图供开发任务按需使用。只读工具 [`recall.py`](skills/mnemo/scripts/recall.py) 成对返回问题与回答，并在输出上限内追踪替代决定、依赖关系和证据链接。当前智能体提供关键词与同义词，并判断证据是否仍然适用。
 
 现有 Doctor 新增了 `--upgrade-memory`。它在原文件中修正已确认且唯一的引用，并将明确的对话链接整理为 `evidence:`。更新前备份原始字节，保留条目编号、日期、作者和生命周期决定；未确认的引用留待检查。原有 `--fix` 的修正范围保持不变，整理记忆需要单独显式执行。
@@ -306,9 +308,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-10-03
+**最后更新：** 2026-10-13
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.1.0 — 查询 Codex 工作者历史
+
+通过 PM 的准确会话 ID 查找直接及嵌套的子智能体，只读查询消息、工具调用、执行结果和报告，并返回原始行号。用户通过 `/fork` 分支后的对话也会保存，恢复时排除继承的父会话轮次。此查询功能仅支持 Codex。v7.0.5 的统一保存修复继续适用于 Claude Code、Codex、Grok、Antigravity 和 Devin。74 项检查已通过，并验证了已安装 hook 的执行和实际工作者历史查询。
 
 ## v7.0.5 — 修复对话保存遗漏
 

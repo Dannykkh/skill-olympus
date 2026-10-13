@@ -251,6 +251,41 @@ class LifecycleExtractionTests(unittest.TestCase):
         self.assertEqual([], turns)
         self.assertEqual(1, result.counts["excluded_aborted_turns"])
 
+    def test_user_fork_recovers_only_owned_turns_and_preserves_real_subagent_exclusion(self) -> None:
+        parent_id = "019ff850-0000-7000-8000-000000000000"
+        fork_id = "019ff852-0000-7000-8000-000000000000"
+        inherited_id = "019ff851-0000-7000-8000-000000000000"
+        own_id = "019ff853-0000-7000-8000-000000000000"
+        with tempfile.TemporaryDirectory() as temp:
+            fixture = write_synthetic_rollout(Path(temp), "user-fork", [
+                session_meta(thread_id=fork_id, forked_from_id=parent_id, thread_source="user"),
+                event("2026-08-13T00:00:01Z", "task_started", turn_id=inherited_id),
+                event("2026-08-13T00:00:02Z", "user_message", message="Inherited parent question"),
+                event("2026-08-13T00:00:03Z", "task_complete", turn_id=inherited_id, last_agent_message="Parent answer"),
+                event("2026-08-13T00:00:04Z", "task_started", turn_id=own_id),
+                event("2026-08-13T00:00:05Z", "user_message", message="Question after the user fork"),
+                event("2026-08-13T00:00:06Z", "task_complete", turn_id=own_id, last_agent_message="Fork answer"),
+            ])
+            meta, result, turns = extract_fixture(fixture)
+        self.assertFalse(meta.is_subagent)
+        self.assertEqual([own_id], [turn.turn_id for turn in turns])
+        self.assertEqual("Question after the user fork", turns[0].user_messages[0].text)
+        self.assertEqual(set(), result.subagent_turn_ids)
+        self.assertEqual(1, result.counts["excluded_inherited_fork_turns"])
+
+    def test_user_fork_does_not_recover_inherited_aborted_prompts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            fixture = write_synthetic_rollout(Path(temp), "fork-aborted", [
+                session_meta(thread_id="019ff852-0000-7000-8000-000000000000", forked_from_id="019ff850-0000-7000-8000-000000000000"),
+                event("2026-08-13T00:00:01Z", "task_started", turn_id="019ff851-0000-7000-8000-000000000000"),
+                event("2026-08-13T00:00:02Z", "user_message", message="Parent unfinished question"),
+                event("2026-08-13T00:00:03Z", "turn_aborted", turn_id="019ff851-0000-7000-8000-000000000000"),
+            ])
+            meta, result, turns = extract_fixture(fixture)
+        self.assertFalse(meta.is_subagent)
+        self.assertEqual([], turns)
+        self.assertEqual([], result.aborted_root_turns)
+
     def test_subagent_owned_turn_id_is_collected_before_completeness_checks(self) -> None:
         child_thread_id = "019ff852-0000-7000-8000-000000000000"
         inherited_turn_id = "019ff851-ffff-7000-8000-000000000000"
