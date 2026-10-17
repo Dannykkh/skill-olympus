@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.1.1] - 2026-10-17
+
+### Bug Fixes
+
+- **mnemo**: Doctor and recall read metadata lines and entry names through one shared rule in `mnemo_markdown.py` (`meta_line`, `entry_names`). Bold headers such as `- **Date**:` no longer split an entry into its subsections, and legacy `### NNN-slug` heading links resolve in lifecycle, status and `depends-on` checks exactly as recall opens them. Entry files saved with a UTF-8 BOM, which both tools skipped entirely, are read again; bold or backticked `superseded-by`/`supersedes` fields are read too. (1986d78)
+- **mnemo**: Decision lineage finds replacement reasons written a few content lines below the status line, counts `depends-on` targets that do not exist, keeps statuses per entry inside legacy multi-entry files, and names a `CURRENT` entry that still depends on an entry it fully replaced (a partial replacement of a live entry is not flagged). Entry metadata warns on numbered files that split into several entries and on Korean field names, which are reported rather than accepted because recall and the other CLIs read only standard names. The size check ignores derived dot-files and backup folders. Lifecycle `--fix` and `--promote-structure` back up original bytes and preserve CRLF line endings. (1986d78)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs and `skills/mnemo/docs/memory-hygiene.md` describe the corrected Doctor checks and the shared rule. (1986d78)
+
+### Validation and Scope
+
+- Python: 260 passed, including 16 new shared-rule tests; the first 14 were confirmed to fail on the previous code. Node: 251 of 252 passed; the one failure, a Grok concurrent-delivery test that does not touch the Doctor or recall, passed 3/3 when run alone.
+- On the reporting project (read-only diagnosis): missing tags/date/source 1/1/1 -> 0/0/0, unresolved lifecycle targets 13 -> 0, reasonless replacements 16 -> 0, shaky `CURRENT` entries 0 -> 3 (two depend on an entry they replaced), missing `depends-on` targets 0, and the largest-file hint now points at `architecture.md` instead of the derived anchor index. Entries rose 467 -> 468 because a keyword index is no longer counted and two BOM entries became visible. Restoring that project's backups into a copy reproduced 21 missing `depends-on` targets and 8 split numbered files.
+- Windows integrated installation passed all 12 final checks. The installed Mnemo scripts for Claude Code, Codex, Antigravity and Grok match the source, Devin uses Claude's copy, and each installed Doctor and recall returned the same results. No memory files were rewritten by `--fix` or `--promote-structure` on real projects; those paths were verified by tests. An exclusive entry-number allocator for concurrent sessions was deferred.
+
 ## [7.1.0] - 2026-10-13
 
 ### Features
