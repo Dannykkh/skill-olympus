@@ -15,7 +15,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
 
-from mnemo_markdown import (PRIVATE, fence_spans, headings, iter_entry_blocks,
+from mnemo_markdown import (PRIVATE, entry_names, fence_spans, headings, iter_entry_blocks,
                             mask_fences, mask_private, require_project_path, without_fences)
 from mnemo_project_root import detect_project_root
 
@@ -229,11 +229,8 @@ class Context:
             if record.kind == "memory":
                 if record.entry_id:
                     self.by_id[record.entry_id].append(record)
-                stems = {Path(record.path).stem}
-                legacy_name = re.match(r"^(\d{3}-\S+)(?:\s|$)", record.title)
-                if legacy_name and record.entry_id:
-                    stems.add(legacy_name.group(1))
-                for stem in stems:
+                # 닥터의 링크 판정과 같은 이름 규칙이다 — 둘이 갈라지면 한쪽만 링크를 연다.
+                for stem in entry_names(Path(record.path), record.content):
                     self.by_stem[stem].append(record)
 
     def unique(self, items: list[Record], source: Record, target: str):

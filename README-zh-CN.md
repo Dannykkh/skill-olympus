@@ -308,9 +308,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-10-13
+**最后更新：** 2026-10-17
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.1.1 — 修复 Mnemo Doctor 的误报和漏报
+
+Mnemo Doctor 和 recall 现在用同一套共享规则读取元数据行和条目名称，修复了在一个含 467 条记忆的项目中报告的误报和漏报。带有 `- **Date**:` 等粗体头部的条目不再按小标题拆分，旧式 `### NNN-slug` 标题链接在 Doctor 中的解析方式与 recall 完全一致。写在状态行下方几行的替换原因也能被识别。指向不存在条目的 `depends-on` 会被计数，仍依赖自己已完全替换之条目的 `CURRENT` 会被单独指出。两种工具此前都会跳过的 UTF-8 BOM 条目文件现在可以读取。大小检查排除点前缀派生文件和备份文件夹，`--fix`/`--promote-structure` 会备份原始字节并保留 CRLF 换行。韩文字段名不会被接受而是被报告，因为 recall 和其他 CLI 只读取标准名称。修复通过共享的 Mnemo 脚本同时适用于五个 CLI。260 项 Python 检查已通过；在报告该问题的项目中，未解析的生命周期目标从 13 降为 0，无原因的替换从 16 降为 0。
 
 ## v7.1.0 — 查询 Codex 工作者历史
 

@@ -39,9 +39,9 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from mnemo_project_root import detect_project_root
-from mnemo_markdown import (headings, is_memory_index, iter_entry_blocks,
-                            mask_fences, mask_private, memory_files,
-                            require_project_path, without_fences)
+from mnemo_markdown import (ENTRY_META, entry_names, headings, is_memory_index,
+                            iter_entry_blocks, mask_fences, mask_private, memory_files,
+                            meta_line, require_project_path, without_fences)
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -123,11 +123,17 @@ def check_index_budget(root: Path, report: Report) -> None:
                "링크를 실제 경로로 고치거나 항목을 인덱스에서 내리세요." if dead else None)
 
 
+# 다른 CLI가 한국어 이름으로 쓴 머리 줄. 받아 주지 않는다 — 회상과 다른 CLI는 표준 이름만 읽어서,
+# 닥터만 받아 주면 닥터에서만 정상으로 보인다. 표준 이름이 빠진 자리에 있을 때만 알린다.
+KOREAN_META = {"tags": "태그", "date": "작성일|날짜", "source": "작성자", "status": "상태",
+               "files": "근거 파일", "depends-on": "의존 항목"}
+
+
 def check_entry_metadata(root: Path, report: Report) -> None:
     """검색 가능성은 태그·날짜·작성 CLI에 달려 있다. 없으면 나중에 못 찾는다."""
     total = 0
     missing = {"tags": [], "date": [], "source": []}
-    numbered = {}
+    numbered, blocks_per_file, unrecognized = {}, {}, {}
     for path, block in iter_entry_blocks(root):
         total += 1
         # Metadata may follow a long supersession explanation. Limit by entry
@@ -138,8 +144,21 @@ def check_entry_metadata(root: Path, report: Report) -> None:
         title = block.splitlines()[0].strip("# ").strip()[:50]
         where = f"{path.relative_to(root).as_posix()} › {title}"
         for field in missing:
-            if not re.search(rf'(?im)^\s*(?:[-*]\s*)?[`*]*#?{field}[`*]*\s*:', head):
+            if not meta_line(field).search(head):
                 missing[field].append(where)
+        # 머리를 못 읽어 쪼개진 파일은 정작 머리가 있는 첫 절이 어느 항목에도 안 들어간다. 함께 본다.
+        heads = [head]
+        if path not in blocks_per_file:
+            whole = without_fences(path.read_text(encoding="utf-8", errors="replace"))
+            top = headings(whole)
+            heads.append(whole[:top[1][0]] if len(top) > 1 else whole)
+        for text in heads:
+            for field, alias in KOREAN_META.items():
+                found = meta_line(alias).search(text)
+                if found and not meta_line(field).search(text):
+                    label = found.group().strip(" \t\r\n-*`#:")
+                    unrecognized.setdefault((path, field), f"{path.name}: {label}→{field}")
+        blocks_per_file[path] = blocks_per_file.get(path, 0) + 1
         number = re.match(r'(\d{3})-', path.name)
         if number and path.parent.name in {"architecture", "learned", "gotchas"}:
             numbered.setdefault((path.parent.name, number.group(1)), set()).add(path.name)
@@ -148,14 +167,25 @@ def check_entry_metadata(root: Path, report: Report) -> None:
         report.add("WARN", "항목 메타데이터", "정제 기억 항목이 없습니다")
         return
     duplicates = [sorted(names) for names in numbered.values() if len(names) > 1]
-    worst = max(len(v) for v in missing.values()) or len(duplicates)
+    # 번호 파일 하나는 항목 하나다. 여러 개로 나오면 거의 언제나 머리를 못 읽어 소제목마다 잘린 것이다.
+    split = sorted(path.name for path, count in blocks_per_file.items()
+                   if count > 1 and re.match(r'\d{3}-', path.name)
+                   and path.parent.name in {"architecture", "learned", "gotchas"})
+    unrecognized = list(unrecognized.values())
+    worst = max(len(v) for v in missing.values()) or len(duplicates) or len(split) or len(unrecognized)
     detail = (f"항목 {total}개 / tags 없음 {len(missing['tags'])} · "
               f"date 없음 {len(missing['date'])} · source 없음 {len(missing['source'])}")
-    hint = f"예: {next(v[0] for v in missing.values() if v)}" if any(missing.values()) else None
+    hints = [f"예: {next(v[0] for v in missing.values() if v)}"] if any(missing.values()) else []
+    if split:
+        detail += f" · 여러 항목으로 쪼개진 번호 파일 {len(split)}개"
+        hints.append(f"머리 메타를 읽지 못해 소제목마다 항목으로 잘렸습니다: {', '.join(split[:3])}")
+    if unrecognized:
+        detail += f" · 인식하지 못한 한국어 머리 줄 {len(unrecognized)}개"
+        hints.append("회상·다른 CLI는 표준 이름만 읽으니 바꾸세요: " + ", ".join(unrecognized[:3]))
     if duplicates:
         detail += f" · 파일번호 중복 {len(duplicates)}묶음"
-        hint = (hint + " / " if hint else "") + "기존 태그·근거의 의미 확인 후 번호 조정: " + ", ".join(duplicates[0])
-    report.add("WARN" if worst else "OK", "항목 메타데이터", detail, hint)
+        hints.append("기존 태그·근거의 의미 확인 후 번호 조정: " + ", ".join(duplicates[0]))
+    report.add("WARN" if worst else "OK", "항목 메타데이터", detail, " / ".join(hints) or None)
 
 
 def check_detail_file_size(root: Path, report: Report) -> None:
@@ -211,6 +241,12 @@ def check_detail_file_size(root: Path, report: Report) -> None:
     report.add("WARN", "상세 파일 크기", " / ".join(detail), hint)
 
 
+# 이름 뒤의 닫는 `**`·백틱과 콜론 뒤 표시도 받는다(`- **superseded-by**: [[x]]`, `` `supersedes:` [[x]] ``).
+# `[[x]]`를 먼저 잡아 뒤에 붙은 조사(`[[x]]의 …`)가 대상 이름에 섞이지 않게 한다.
+LIFECYCLE_LINK = re.compile(
+    r'(?im)\b(superseded-by|supersedes)[`*]*\s*:[`*\s]*(\[\[[^\]\n]+\]\]|\[[^\]]*\]\([^)]+\)|[^\s`),*]+)')
+
+
 def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None:
     """결정이 바뀌면 삭제하지 않고 SUPERSEDED로 잇는다. 그 링크가 실제로 이어지는가.
 
@@ -220,9 +256,11 @@ def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None
     일치하는 파일이 **하나**일 때. 접두 일치·추측으로는 잇지 않는다. 잘못 이어진 링크는
     경고가 사라져 끊긴 링크보다 나쁘다.
     """
-    text_by_file = {}
-    for path, _ in iter_entry_blocks(root):
+    # 항목으로 못 읽힌 파일도 실재하면 [[이름]]이 열린다 — 파싱 실패가 '대상 없음'으로 번지지 않게.
+    text_by_file, names = {}, {path.stem for path in memory_files(root)}
+    for path, block in iter_entry_blocks(root):
         text_by_file.setdefault(path, without_fences(path.read_text(encoding="utf-8", errors="replace")))
+        names |= entry_names(path, block)
     def slug(title):
         return re.sub(r'[^\w\s-]', '', title.lower()).strip().replace(' ', '-')
 
@@ -243,7 +281,7 @@ def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None
                                      *( [slug(first[0][2])] if first else [] )}
     links = [(path, m.group(1).lower(), m.group(2).strip())
              for path, text in text_by_file.items()
-             for m in re.finditer(r'(?im)\b(superseded-by|supersedes)\s*:\s*(\[[^\]]*\]\([^)]+\)|[^\s`),]+)', text)]
+             for m in LIFECYCLE_LINK.finditer(text)]
     superseded_by = [target for _, kind, target in links if kind == 'superseded-by']
     supersedes = [target for _, kind, target in links if kind == 'supersedes']
     if not superseded_by and not supersedes:
@@ -251,16 +289,24 @@ def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None
         return
 
     def resolvable(source: Path, target: str) -> bool:
-        # [[NNN-slug]]는 항목 번호로 가리키는 형식이다. 파일명(stem)과 정확히 같아야 한다.
+        # [[NNN-slug]]는 항목 번호로 가리키는 형식이다. 파일 stem이나 옛 다항목 파일의
+        # `### NNN-slug` 제목 토큰과 정확히 같아야 한다 — 회상 도구와 같은 규칙(entry_names).
         wiki = re.fullmatch(r'\[\[([^\]|#]+)\]\]', target.strip('`,.;:'))
         if wiki:
-            return any(p.stem == wiki.group(1) for p in identifiers)
+            return wiki.group(1) in names
         markdown = re.search(r'\[[^]]*\]\(([^)]+)\)', target)
         target = markdown.group(1) if markdown else target.split()[0].strip('`,')
         filepart, _, fragment = target.partition('#')
+        # 산문에 붙은 조사(`docs/x.md의`)는 경로가 아니다.
+        filepart = re.sub(r'(\.md)[^A-Za-z0-9_./\\-].*$', r'\1', filepart, flags=re.I)
         if filepart and ('.md' in filepart or '/' in filepart):
             candidates = [(source.parent / filepart).resolve(), (root / filepart).resolve()]
-            return any(p in identifiers and (not fragment or fragment in identifiers[p]) for p in candidates)
+            if any(p in identifiers and (not fragment or fragment in identifiers[p]) for p in candidates):
+                return True
+            # 기억 밖 문서의 원칙을 대체했다고 적은 경우다. 프로젝트 안에 실재하면 이어진 것으로 본다.
+            return not fragment and any(p.is_relative_to(root.resolve()) and p.is_file()
+                                        and not p.is_relative_to((root / "memory").resolve())
+                                        for p in candidates)
         needle = fragment or filepart
         return bool(needle) and any(needle in ids for ids in identifiers.values())
 
@@ -279,39 +325,55 @@ def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None
     fixable = [(path, kind, target, stem) for path, kind, target in dangling
                if (stem := numbered_target(path, target))]
 
-    rewritten = 0
+    rewritten, untouched, failed = 0, [], set()
     if fix and fixable:
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         by_file = {}
         for path, kind, target, stem in fixable:
             by_file.setdefault(path, []).append((kind, target.strip('`,'), stem))
         for path, items in by_file.items():
-            raw = path.read_text(encoding="utf-8", errors="replace")
+            # 원본 바이트 그대로 디코드한다 — CRLF와 UTF-8 아닌 바이트를 조용히 바꾸지 않는다.
+            original = path.read_bytes()
+            try:
+                raw = original.decode("utf-8")
+            except UnicodeDecodeError:
+                untouched.append(f"{path.name}: UTF-8 확인 필요")
+                failed.add(path)
+                continue
             # 코드 펜스 안의 예시는 링크가 아니다. 검출과 같은 기준으로 건너뛴다.
             fences = [(m.start(), m.end()) for m in re.finditer(r'```.*?```', raw, re.S)]
             def outside(pos):
                 return not any(s <= pos < e for s, e in fences)
             changed = raw
             for kind, target, stem in items:
-                pattern = re.compile(rf'(?i)\b({kind})(\s*:\s*){re.escape(target)}(?![\w-])')
+                pattern = re.compile(rf'(?i)\b({kind})([`*]*\s*:[`*\s]*){re.escape(target)}(?![\w-])')
                 changed = pattern.sub(
                     lambda m: f"{m.group(1)}{m.group(2)}[[{stem}]]" if outside(m.start()) else m.group(0),
                     changed)
-            if changed != raw:
-                path.with_name(f"{path.name}.bak-{stamp}").write_text(raw, encoding="utf-8", newline="\n")
-                path.write_text(changed, encoding="utf-8", newline="\n")
-                rewritten += sum(1 for k, t, _ in items)
-        remaining = [t for p, k, t in dangling if (p, k, t, numbered_target(p, t)) not in fixable]
+            if changed == raw:
+                continue
+            try:
+                replaced = replace_memory_file(root, path, original, changed)
+            except OSError:
+                replaced = False
+            if replaced:
+                rewritten += len(items)
+            else:
+                untouched.append(f"{path.name}: 동시 변경·쓰기 실패, 원본 유지")
+                failed.add(path)
+        remaining = [t for p, k, t in dangling
+                     if (p, k, t, numbered_target(p, t)) not in fixable or p in failed]
     else:
         remaining = [t for _, _, t in dangling]
 
     detail = f"superseded-by {len(superseded_by)}개 / supersedes {len(supersedes)}개"
     if rewritten:
-        detail += f" / 보정함 {rewritten}개 → [[NNN-slug]] (원본은 .bak-{stamp})"
+        detail += f" / 보정함 {rewritten}개 → [[NNN-slug]] (파일별 원본 .bak 백업)"
     detail += f" / 대상 확인 실패 {len(remaining)}개 (역방향 연결 완전성은 별도 확인)"
     hint = None
     if remaining:
         hint = f"가리키는 대상을 찾지 못한 링크: {', '.join(remaining[:3])}"
+    if untouched:
+        hint = (hint + " / " if hint else "") + "고치지 못함: " + "; ".join(untouched[:3])
     if fixable and not fix:
         hint = (f"{len(fixable)}개는 같은 디렉터리의 항목 하나와 정확히 일치합니다 — "
                 f"--fix 로 [[NNN-slug]] 번호 링크로 바꿉니다. " + (hint or ""))
@@ -543,8 +605,6 @@ def check_record_paths(root: Path, report: Report, fix: bool = False) -> None:
     # 기억 본문은 보고만 한다. 명령 예시·설명 속 경로를 바꾸는 것은 사람의 판단이다.
     prose = 0
     for path in memory_files(root):
-        if path.name.startswith("."):
-            continue
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
             if any(relativize_record_path(token, roots) is not None
                    for token in ABSOLUTE_PATH_TOKEN.findall(line)):
@@ -804,7 +864,7 @@ def structured_lines(block: str) -> dict:
     """항목이 들고 있는 구조 줄. `files:`처럼 백틱으로 감싼 형태도 같이 읽는다."""
     found = {}
     for key in STRUCTURE_KEYS:
-        match = re.search(rf'(?im)^\s*(?:[-*]\s*)?[`*]*{re.escape(key)}[`*]*\s*:\s*(.*)$', block)
+        match = meta_line(re.escape(key), r'\s*(.*)$').search(block)
         if match:
             found[key] = match.group(1).strip()
     return found
@@ -816,7 +876,7 @@ def entry_status(block: str) -> str | None:
     본문 어딘가의 SUPERSEDED는 하위 결정 하나가 바뀐 것일 수 있어 항목의 상태가 아니다.
     추측으로 상태를 정하면 살아 있는 결정을 죽은 것으로 보고하게 된다.
     """
-    match = re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*status[`*]*\s*:\s*(.*)$', block)
+    match = meta_line('status', r'\s*(.*)$').search(block)
     if not match:
         return None
     value = match.group(1).upper()
@@ -946,7 +1006,7 @@ def upgrade_memory_format(root: Path, report: Report, fix: bool = False) -> None
                 continue
             hs = headings(clean)
             head = clean[:hs[1][0]] if len(hs) > 1 else clean
-            meta = list(re.finditer(r'(?im)^\s*(?:[-*]\s*)?[`*]*#?(?:tags|date|source)[`*]*\s*:[^\n]*(?:\n|$)', head))
+            meta = list(meta_line('tags|date|source', r'[^\n]*(?:\n|$)').finditer(head))
             if not meta:
                 pending.append(f"{path.name}: evidence 삽입 위치 확인 필요")
                 continue
@@ -1026,6 +1086,42 @@ def check_entry_evidence(root: Path, report: Report) -> dict:
     return metrics
 
 
+STATUS_LINE = meta_line('status')
+DEPENDS_ON = re.compile(r'(?i)depends-on[`*]*\s*:([^\n]*)')
+SUPERSEDES_LINE = re.compile(r'(?i)\bsupersedes[`*]*\s*:([^\n]*)')
+WIKI_NAME = re.compile(r'\[\[([^\]|#]+)\]\]')
+# 이유를 찾을 때 건너뛰는 메타 줄. superseded-by는 뺀다 — 그 줄 안에 이유를 잇는 표기가 많다.
+REASON_SKIP = meta_line('status|supersedes|tags|date|source|depends-on|files|sources|evidence|'
+                        'alternatives|reopen-when|last_verified')
+HEADING_LINE = re.compile(r'^\s{0,3}#{1,6}\s')
+REASON_LEAD = re.compile(r"(?i)^\s*(?:[-*>]\s*)?[`*]*(?:(?:변경|대체|교체)\s*이유|이유|후속|정정|reason|why)(?![\w가-힣])"
+                         r"|^\s*(?:[-*>]\s*)?20\d\d-\d\d-\d\d(?!\d)")
+
+
+def _has_reason_near(lines: list, index: int, limit: int = 3) -> bool:
+    """교체 표시 근처에 이유가 있는가.
+
+    표시 줄부터 3줄 안의 이유는 그대로 인정한다. 더해서, 다음 소제목 전까지 빈 줄·메타 줄을 뺀
+    내용 줄 `limit`개 안에 이유 표시로 시작하는 줄이 있으면 이유가 있다 — 상태·링크 줄 뒤에
+    빈 줄을 두고 이유를 쓰는 머리가 흔하다. 창만 넓히면 이유 없이 이어지는 옛 본문(`- 결정: …`)이
+    길이 조건으로 통과해 진짜 결손을 놓친다.
+    """
+    if _has_reason(" ".join(lines[index:index + 3])):
+        return True
+    seen = 0
+    for line in lines[index + 1:]:
+        if HEADING_LINE.match(line):
+            break
+        if not line.strip() or REASON_SKIP.match(line):
+            continue
+        seen += 1
+        if REASON_LEAD.match(line) and _has_reason(line):
+            return True
+        if seen >= limit:
+            break
+    return False
+
+
 def check_decision_reasons(root: Path, report: Report) -> dict:
     """무엇으로 바뀌었나는 링크가 답하지만, 왜 바뀌었나는 아무도 검사하지 않았다.
 
@@ -1034,58 +1130,92 @@ def check_decision_reasons(root: Path, report: Report) -> dict:
     지금은 조용히 CURRENT인 채 낡는다.
     """
     entries = list(iter_entry_blocks(root))
-    metrics = {"status_missing": 0, "supersede_total": 0, "supersede_no_reason": 0, "stale_depends": 0}
+    metrics = {"status_missing": 0, "supersede_total": 0, "supersede_no_reason": 0, "stale_depends": 0,
+               "depends_cycle": 0, "depends_missing": 0}
     if not entries:
         return metrics
 
-    status_of, no_reason, shaky = {}, [], []
+    # 상태는 기록을 가리킬 수 있는 모든 이름(entry_names)으로 둔다. 다항목 파일은 기록마다 stem이
+    # 같아서, stem으로만 두면 마지막 기록의 상태가 앞의 것을 덮는다.
+    status_of, no_reason, shaky, cycles, missing = {}, [], [], [], []
     for path, block in entries:
         clean = without_fences(block)
         status = entry_status(clean)
         if status is None:
             metrics["status_missing"] += 1
-        status_of[path.stem] = status
+        for name in entry_names(path, block):
+            status_of.setdefault(name, []).append(status)
         # 교체 '사건'은 본문의 표시다. `status:` 줄은 그 결과를 선언할 뿐이라 따로 세지 않는다
         # (둘 다 세면 항목 하나가 두 건으로 보인다). 본문에 표시가 없을 때만 선언을 사건으로 본다.
         lines = clean.splitlines()
-        is_status = [bool(re.match(r'(?im)^\s*(?:[-*]\s*)?[`*]*status[`*]*\s*:', line)) for line in lines]
+        is_status = [bool(STATUS_LINE.match(line)) for line in lines]
         events = [i for i, line in enumerate(lines) if "SUPERSEDED" in line and not is_status[i]]
         if not events:
             events = [i for i, line in enumerate(lines) if "SUPERSEDED" in line]
         for index in events:
             metrics["supersede_total"] += 1
-            context = " ".join(lines[index:index + 3])
-            if not _has_reason(context):
+            if not _has_reason_near(lines, index):
                 metrics["supersede_no_reason"] += 1
                 if len(no_reason) < 5:
                     no_reason.append(f"{path.name}:{index + 1}")
+    # 항목으로 못 읽힌 기억 파일도 실재하는 대상이다. 상태는 모르므로 흔들림으로는 세지 않는다.
+    for path in memory_files(root):
+        status_of.setdefault(path.stem, [None])
 
     for path, block in entries:
         clean = without_fences(block)
+        depends = [name for line in DEPENDS_ON.findall(clean) for name in WIKI_NAME.findall(line)]
+        # 다항목 파일은 파일 이름만으로 어느 기록인지 모른다. `### NNN-slug` 이름을 덧붙인다.
+        legacy = sorted(entry_names(path, block) - {path.stem})
+        where = f"{path.name} › {legacy[0]}" if legacy else path.name
+        # 열리지 않는 의존은 상태와 무관하게 센다. 비슷한 이름으로 잇는 것은 사람의 몫이다.
+        for name in depends:
+            if name not in status_of:
+                metrics["depends_missing"] += 1
+                if len(missing) < 3:
+                    missing.append(f"{where} → {name}")
         if entry_status(clean) != "CURRENT":
             continue
-        for target in re.findall(r'(?i)depends-on[`*]*\s*:([^\n]*)', clean):
-            for stem in re.findall(r'\[\[([^\]|#]+)\]\]', target):
-                if status_of.get(stem) == "SUPERSEDED":
-                    metrics["stale_depends"] += 1
-                    if len(shaky) < 5:
-                        shaky.append(f"{path.name} → {stem}")
+        replaced = {name for line in SUPERSEDES_LINE.findall(clean) for name in WIKI_NAME.findall(line)}
+        for name in depends:
+            # 이름 하나가 상태가 다른 여러 기록을 가리키면 고르지 않는다.
+            if set(status_of.get(name, ())) != {"SUPERSEDED"}:
+                continue
+            metrics["stale_depends"] += 1
+            if len(shaky) < 5:
+                shaky.append(f"{where} → {name}")
+            # 일부만 대체하고 나머지에 기대는 것은 정상이다. 통째로 대체한 항목에 기댈 때만 순환이다.
+            if name in replaced:
+                metrics["depends_cycle"] += 1
+                if len(cycles) < 3:
+                    cycles.append(f"{where} → {name}")
 
     detail = (f"SUPERSEDED {metrics['supersede_total']}건 중 이유 없음 {metrics['supersede_no_reason']} · "
               f"status 줄 없음 {metrics['status_missing']}/{len(entries)} · "
-              f"기대던 결정이 뒤집힌 CURRENT {metrics['stale_depends']}")
+              f"기대던 결정이 뒤집힌 CURRENT {metrics['stale_depends']}"
+              f"(그중 대체한 항목에 기댐 {metrics['depends_cycle']}) · "
+              f"기대는 대상 없음 {metrics['depends_missing']}")
     if no_reason:
         detail += " / 이유 없음: " + ", ".join(no_reason)
     if shaky:
         detail += " / 재검토: " + ", ".join(shaky)
-    hint = None
+    if cycles:
+        detail += " / 대체하며 기댐: " + ", ".join(cycles)
+    if missing:
+        detail += " / 대상 없음: " + ", ".join(missing)
+    hints = []
+    if metrics["depends_cycle"]:
+        hints.append("대체한 항목은 기대는 대상에서 빼고, 이어받는 범위는 supersedes 줄에 적으세요.")
     if metrics["stale_depends"]:
-        hint = "기대던 항목이 바뀌었습니다. 위 CURRENT 항목이 아직 유효한지 확인하세요."
-    elif metrics["supersede_no_reason"]:
-        hint = ("바꾼 이유는 되살릴 수 없습니다 — 그 결정을 내린 세션의 대화가 유일한 근거입니다. "
-                "닥터는 이유를 지어내지 않습니다; 위 위치를 사람이 채워야 합니다.")
-    level = "WARN" if (metrics["supersede_no_reason"] or metrics["stale_depends"]) else "OK"
-    report.add(level, "결정 계보", detail, hint)
+        hints.append("기대던 항목이 바뀌었습니다. 위 CURRENT 항목이 아직 유효한지 확인하세요.")
+    if metrics["depends_missing"]:
+        hints.append("depends-on이 없는 항목을 가리킵니다. 이름이 비슷하다고 추측해 잇지 말고 "
+                     "사람이 실제 대상을 정하세요.")
+    if metrics["supersede_no_reason"]:
+        hints.append("바꾼 이유는 되살릴 수 없습니다 — 그 결정을 내린 세션의 대화가 유일한 근거입니다. "
+                     "닥터는 이유를 지어내지 않습니다; 위 위치를 사람이 채워야 합니다.")
+    level = "WARN" if hints else "OK"
+    report.add(level, "결정 계보", detail, " / ".join(hints) or None)
     return metrics
 
 
@@ -1113,16 +1243,16 @@ def check_open_decisions(root: Path, report: Report) -> dict:
         if entry_status(clean) == "SUPERSEDED":
             continue
         metrics["live"] += 1
-        if not re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*reopen-when[`*]*\s*:', clean):
+        if not meta_line('reopen-when').search(clean):
             metrics["reopen_missing"] += 1
             if len(closed) < 5:
                 closed.append(path.name)
         # 외부 사실에 기댄 결정만 재확인 대상이다. 우리 설계는 시간으로 낡지 않는다.
-        if not re.search(r'(?im)https?://|^\s*(?:[-*]\s*)?[`*]*sources[`*]*\s*:', clean):
+        if not (re.search(r'(?i)https?://', clean) or meta_line('sources').search(clean)):
             continue
         metrics["external"] += 1
         # `last_verified:` 2026-09-20 처럼 콜론 뒤에 백틱이 남는 표기를 함께 받는다.
-        verified = re.search(r'(?im)^\s*(?:[-*]\s*)?[`*]*last_verified[`*]*\s*:[`*\s]*(\d{4}-\d{2}-\d{2})', clean)
+        verified = meta_line('last_verified', r'[`*\s]*(\d{4}-\d{2}-\d{2})').search(clean)
         if not verified:
             metrics["verify_stale"] += 1
             if len(stale) < 5:
@@ -1251,6 +1381,9 @@ def check_unattached_conversations(root: Path, report: Report, ignored: set) -> 
     return metrics
 
 
+PROMOTE_META = meta_line('tags|date|source|status')
+
+
 def promote_structure(root: Path, report: Report) -> list:
     """산문에만 있던 앵커와 암묵적 수명을 구조 줄로 올린다 (--fix).
 
@@ -1265,13 +1398,17 @@ def promote_structure(root: Path, report: Report) -> list:
     for path, block in iter_entry_blocks(root):
         blocks_by_path.setdefault(path, []).append(block)
 
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     changed, skipped = [], 0
     for path, blocks in sorted(blocks_by_path.items()):
         if len(blocks) != 1:
             skipped += 1
             continue
-        raw = path.read_text(encoding="utf-8", errors="replace")
+        original = path.read_bytes()
+        try:
+            raw = original.decode("utf-8")
+        except UnicodeDecodeError:
+            skipped += 1
+            continue
         clean = without_fences(raw)
         keys = structured_lines(clean)
         additions = []
@@ -1286,8 +1423,7 @@ def promote_structure(root: Path, report: Report) -> list:
 
         if entry_status(clean) is None:
             lines = clean.splitlines()
-            meta = [i for i, line in enumerate(lines)
-                    if re.match(r'(?im)^\s*(?:[-*]\s*)?[`*]*(tags|date|source)[`*]*\s*:', line)]
+            meta = [i for i, line in enumerate(lines) if ENTRY_META.match(line)]
             head = "\n".join(lines[:(max(meta) + 1) if meta else 0])
             if "SUPERSEDED" in head:
                 additions.append("`status: ❌ SUPERSEDED`")
@@ -1296,23 +1432,31 @@ def promote_structure(root: Path, report: Report) -> list:
 
         if not additions:
             continue
-        source_lines = raw.splitlines()
-        meta = [i for i, line in enumerate(source_lines)
-                if re.match(r'(?im)^\s*(?:[-*]\s*)?[`*]*(tags|date|source|status)[`*]*\s*:', line)]
+        source_lines = raw.splitlines(keepends=True)
+        meta = [i for i, line in enumerate(source_lines) if PROMOTE_META.match(line)]
         if not meta:
             skipped += 1
             continue
         at = max(meta) + 1
-        path.with_name(f"{path.name}.bak-{stamp}").write_text(raw, encoding="utf-8", newline="\n")
-        merged = source_lines[:at] + additions + source_lines[at:]
-        path.write_text("\n".join(merged) + "\n", encoding="utf-8", newline="\n")
+        # 원래 줄바꿈을 따른다 — 줄 몇 개를 더하려고 파일 전체의 CRLF를 LF로 바꾸지 않는다.
+        newline = "\r\n" if "\r\n" in raw else "\n"
+        if not source_lines[at - 1].endswith(("\n", "\r")):
+            source_lines[at - 1] += newline
+        merged = "".join(source_lines[:at] + [line + newline for line in additions] + source_lines[at:])
+        try:
+            replaced = replace_memory_file(root, path, original, merged)
+        except OSError:
+            replaced = False
+        if not replaced:
+            skipped += 1
+            continue
         changed.append(f"{path.name}({len(additions)}줄)")
 
     if changed:
         note = f"구조 줄 승격 {len(changed)}개 항목"
         if skipped:
-            note += f" / 단일본·메타데이터 없음 {skipped}개는 사람 판단"
-        report.add("OK", "구조 줄 승격", note + " — 파일별 .bak-" + stamp)
+            note += f" / 단일본·메타데이터 없음·동시 변경 {skipped}개는 사람 판단"
+        report.add("OK", "구조 줄 승격", note + " — 파일별 원본 .bak 백업")
         return [note]
     return []
 
@@ -1364,9 +1508,9 @@ def append_chart(root: Path, metrics: dict, fixed: list, fix: bool, *, upgrade_m
     lines.append("- 수치: " + " · ".join(f"{key} {value}" for key, value in sorted(metrics.items())))
     lines.append("- 고친 것: " + ("; ".join(fixed) if fixed else "없음"))
     lines.append("- 미룸: 이유 없는 SUPERSEDED {0}건 · 앵커가 산문에만 {1}건 · 신호 있는 미부착 {2}일 · "
-                 "되돌릴 조건 없음 {3}건 · 외부 사실 재확인 {4}건".format(
+                 "되돌릴 조건 없음 {3}건 · 외부 사실 재확인 {4}건 · 기대는 대상 없음 {5}건".format(
         metrics.get("supersede_no_reason", 0), metrics.get("prose_only", 0), metrics.get("signal_days", 0),
-        metrics.get("reopen_missing", 0), metrics.get("verify_stale", 0)))
+        metrics.get("reopen_missing", 0), metrics.get("verify_stale", 0), metrics.get("depends_missing", 0)))
     lines.append("")
     with path.open("a", encoding="utf-8", newline="\n") as handle:
         handle.write("\n".join(lines))
@@ -1382,7 +1526,8 @@ def report_chart_delta(previous: dict, metrics: dict, report: Report) -> None:
               "supersede_no_reason": "이유 없는 SUPERSEDED", "stale_depends": "흔들리는 CURRENT",
               "unattached_days": "미부착 날", "evidence": "evidence 줄", "entries": "항목",
               "status_missing": "status 줄 없음", "signal_days": "신호 있는 미부착", "reopen_missing": "되돌릴 조건 없음",
-              "verify_stale": "외부 사실 재확인 필요", "live": "살아 있는 결정", "external": "외부 사실에 기댄 결정"}
+              "verify_stale": "외부 사실 재확인 필요", "live": "살아 있는 결정", "external": "외부 사실에 기댄 결정",
+              "depends_cycle": "대체한 항목에 기댐", "depends_missing": "기대는 대상 없음"}
     moved = [f"{labels.get(key, key)} {old[key]}→{metrics[key]}"
              for key in metrics if key in old and old[key] != metrics[key]]
     detail = f"지난 방문 {previous.get('when') or '시각 미상'} 대비 — "
