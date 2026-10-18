@@ -647,6 +647,7 @@ test("video-maker routes one project to Remotion or HyperFrames without global s
   const voice = readRepoFile(
     "skills/video-maker/references/voice-captions.md",
   );
+  const appPromo = readRepoFile("skills/video-maker/references/app-promo.md");
 
   assert.match(source, /Remotion은 React\/TSX/);
   assert.match(source, /HyperFrames는 HTML\/CSS\/GSAP/);
@@ -667,22 +668,44 @@ test("video-maker routes one project to Remotion or HyperFrames without global s
   assert.match(source, /`\/hyperframes`, `\/media-use` 같은 slash 호출로 넘기지 않습니다/);
   assert.match(source, /이미 설치된 서드파티 스킬 번들은 제거·갱신·재설치하지 않습니다/);
 
-  // 어느 엔진이든 Script → Voice → Composition → Captions → Render 5단계를 같은 계약으로 다룬다.
-  for (const stage of ["Script", "Voice", "Composition", "Captions", "Render"]) {
+  // 어느 엔진이든 (Capture →) Script → Voice → Composition → Captions → Render를 같은 계약으로 다룬다.
+  for (const stage of ["Capture", "Script", "Voice", "Composition", "Captions", "Render"]) {
     assert.match(source, new RegExp(`^\\| ${stage} \\|`, "m"), `SKILL.md lacks pipeline stage ${stage}`);
   }
   assert.match(source, /스크립트와 스토리보드는 프레임워크가 만들어 주지 않으며/);
 
-  // 번들 모듈은 설치되어 있을 때만 정확한 파일 경로로 읽고, 워크플로우 스킬은 읽지 않는다.
+  // brief 유형이 실행할 단계를 정한다: 무내레이션 모션 단편과 앱 홍보영상은 정식 유형이다.
+  for (const type of ["narrated", "motion-short", "app-promo"]) {
+    assert.match(source, new RegExp(`^\\| \`${type}\` \\|`, "m"), `SKILL.md lacks brief type ${type}`);
+  }
+  assert.match(source, /Voice·Captions `SKIPPED`/);
+  assert.match(source, /\[references\/app-promo\.md\]\(references\/app-promo\.md\) \| brief 유형이 `app-promo`일 때만/);
+  assert.match(source, /### 생성형 B-roll \(선택, 기본 꺼짐\)/);
+  assert.match(source, /`HYPERFRAMES_SKIP_SKILLS=1`/);
+
+  // 앱 홍보영상은 실제 화면을 캡처하고, 캡처가 실패하면 대체물을 만들지 않고 멈춘다.
+  assert.match(appPromo, /캡처가 실패하면 멈춥니다/);
+  assert.match(appPromo, /`BLOCKED\.md`/);
+  assert.match(appPromo, /`demo-steps\.json`/);
+  assert.match(appPromo, /결정적 재생 → 사후 가상 카메라/);
+
+  // 번들 모듈은 설치되어 있을 때만 정확한 파일 경로로 읽고, 워크플로우 스킬은 설치돼 있어도 쓰지 않는다.
   assert.match(hyperframes, /## 전역 번들 모듈 \(설치되어 있을 때만\)/);
-  for (const module of ["hyperframes-core", "hyperframes-cli", "media-use"]) {
+  for (const module of ["hyperframes-core", "hyperframes", "hyperframes-cli", "media-use"]) {
     assert.match(hyperframes, new RegExp(`^\\| \`${module}\` \\|`, "m"), `hyperframes-engine.md lacks module ${module}`);
   }
+  // 2026-10-17 갱신본(v0.8.168)에서 storyboard·script 형식은 라우터 폴더 references로 옮겨졌다.
+  assert.match(hyperframes, /`hyperframes\/references\/storyboard-format\.md`/);
+  assert.match(hyperframes, /`hyperframes\/references\/script-format\.md`/);
+  assert.match(hyperframes, /설치되어 있어도 진입점이나 워크플로로 쓰지 않고/);
+  assert.doesNotMatch(hyperframes, /설치되어 있지\s*않고, 설치하지도 않습니다/);
   assert.match(hyperframes, /번들이 없으면 이\s*문서만으로 진행하고[\s\S]*`NOT RUN`/);
   assert.match(hyperframes, /`npx hyperframes@latest upgrade` 안내는 따르지\s*않고/);
+  assert.match(hyperframes, /### 번들 갱신 \(사용자가 결정하는 유지보수\)/);
+  assert.match(hyperframes, /`HYPERFRAMES_SKIP_SKILLS=1`/);
 
   // TTS 공급자는 교체 가능한 계약이며, 자막 정렬은 timestamps 유무로 분기한다.
-  for (const provider of ["HeyGen", "ElevenLabs", "Typecast", "Edge TTS", "Kokoro"]) {
+  for (const provider of ["HeyGen", "ElevenLabs", "Typecast", "Gemini", "Edge TTS", "Kokoro"]) {
     assert.match(voice, new RegExp(`^\\| ${provider} \\|`, "m"), `voice-captions.md lacks provider ${provider}`);
   }
   assert.match(voice, /API 키는 환경 변수로만 읽고/);
@@ -692,6 +715,16 @@ test("video-maker routes one project to Remotion or HyperFrames without global s
   assert.match(voice, /@remotion\/captions/);
   assert.match(voice, /tts-to-captions\.md/);
   assert.match(remotion, /createTikTokStyleCaptions/);
+  // 한국어 기본값: Kokoro에는 한국어 voice가 없고, TTS 대본이 있으면 강제 정렬을 먼저 쓴다.
+  assert.match(voice, /\*\*한국어 voice 없음\*\*/);
+  assert.match(voice, /`granularity=word\\\|char`/);
+  assert.match(voice, /대본을 아는 강제 정렬을 먼저 씁니다/);
+  assert.match(voice, /Parakeet\(한국어 미지원\)/);
+
+  // 렌더 QA는 정지 프레임·라우드니스를 수치로 재고, 생성·캡처 자산은 해시로 고정한다.
+  assert.match(qa, /freezedetect/);
+  assert.match(qa, /ebur128/);
+  assert.match(qa, /\| Modification \| Hash \| Status \|/);
 });
 
 test("mnemo templates and hooks route memory maintenance without active slash assumptions", () => {

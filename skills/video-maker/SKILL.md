@@ -1,6 +1,6 @@
 ---
 name: video-maker
-description: "영상 요청의 진입점. Remotion 또는 HyperFrames 중 엔진 하나를 골라 스크립트→음성(TTS)→컴포지션→자막→렌더를 코드 기반으로 설계·구현·검증한다. 제품 소개 영상, 데모 비디오, SNS 숏폼, 데이터 시각화 영상, 나레이션·자막 영상, MP4 렌더링, Remotion, HyperFrames 요청에 /video-maker로 사용한다. 전역에 설치된 HyperFrames 스킬 번들의 라우터는 진입점으로 쓰지 않는다."
+description: "영상 요청의 진입점. Remotion 또는 HyperFrames 중 엔진 하나를 골라 (캡처→)스크립트→음성(TTS)→컴포지션→자막→렌더를 코드 기반으로 설계·구현·검증한다. 제품 소개 영상, 앱 홍보영상, 데모 비디오, SNS 숏폼, 모션그래픽, 데이터 시각화 영상, 나레이션·자막 영상, MP4 렌더링, Remotion, HyperFrames 요청에 /video-maker로 사용한다. 전역에 설치된 HyperFrames 스킬 번들의 라우터는 진입점으로 쓰지 않는다."
 ---
 
 # Video Maker — 선택형 코드 영상 제작
@@ -73,8 +73,11 @@ Remotion을 선택하면 [references/remotion-engine.md](references/remotion-eng
 - `npx skills add heygen-com/hyperframes`, `npx skills add remotion-dev/skills`, `npx skills add elevenlabs/skills`를
   실행하지 않습니다.
 - 사용자 전역 스킬 디렉터리나 다른 CLI 설치본으로 복사·동기화하지 않습니다.
-- 이미 설치된 서드파티 스킬 번들은 제거·갱신·재설치하지 않습니다. 번들 문서가 `npx hyperframes@latest`
-  같은 unpinned 실행을 권해도 이 스킬의 버전 고정 규칙이 우선합니다.
+- 영상 작업 중에는 이미 설치된 서드파티 스킬 번들은 제거·갱신·재설치하지 않습니다. 번들 문서가
+  `npx hyperframes@latest`나 `skills update <workflow>` 같은 unpinned·온디맨드 설치를 권해도 이 스킬의
+  버전 고정 규칙이 우선하며, HyperFrames CLI는 `HYPERFRAMES_SKIP_SKILLS=1`로 실행합니다. 갱신은 사용자가
+  요청할 때 [references/hyperframes-engine.md](references/hyperframes-engine.md)의 번들 갱신 절차로 따로
+  합니다.
 - 프로젝트 의존성 변경은 정확한 패키지와 버전, 변경 파일을 제시한 뒤 현재 작업 범위의 승인을
   확인합니다.
 - 설치하지 않아도 가능한 설계·검토 작업은 설치 없이 계속합니다.
@@ -82,6 +85,22 @@ Remotion을 선택하면 [references/remotion-engine.md](references/remotion-eng
   `LICENSE.md`를 확인하고, 판단 불가이면 `LICENSE REVIEW REQUIRED`로 남깁니다.
 
 ## Phase 3: 공통 제작 계약
+
+### Brief 유형
+
+먼저 유형 하나를 정합니다. 유형은 어느 단계를 실행하고 어디서 승인받는지를 바꿀 뿐 엔진 선택과는
+무관합니다.
+
+| 유형 | 맞는 요청 | 단계와 승인 |
+|---|---|---|
+| `narrated` | 나레이션·자막이 있는 설명·소개 영상(기본값) | Capture `SKIPPED`, 나머지 단계 실행. 스토리보드 승인 후 빌드 |
+| `motion-short` | 나레이션 없는 10초 안팎(최대 약 30초) 모션그래픽: kinetic-type, stat, chart, logo-reveal, lower-third, map, UI 애니메이션 | Voice·Captions `SKIPPED`. 질문은 최대 한 번, 스토리보드 승인 대신 대표 still 미리보기 승인 한 번. 음악을 쓰면 비트, 아니면 storyboard scene timing이 타이밍 정본 |
+| `app-promo` | 앱·웹 서비스 홍보영상, 런치 필름, 실제 기능 데모 | Capture 실행. [references/app-promo.md](references/app-promo.md)의 두 갈래 중 하나를 따름 |
+
+`motion-short`도 무음 재생에서 메시지가 전달되어야 하고, 화면 텍스트의 읽기 시간은
+[references/video-qa.md](references/video-qa.md) 3절로 검사합니다.
+
+### 제작 항목
 
 구현 전에 다음을 확정합니다.
 
@@ -92,8 +111,8 @@ Remotion을 선택하면 [references/remotion-engine.md](references/remotion-eng
 | Format | 해상도, 비율, fps, 목표 길이, 출력 형식 |
 | Story | hook → evidence/demo → resolution/CTA |
 | Scenes | 각 scene의 시작·종료·핵심 프레임·전환 |
-| Assets | 로컬 경로, 출처, 라이선스, attribution, 변경 허용 |
-| Audio | 음성·BGM·SFX의 필요성, 출처, 음량, 무음 대체 |
+| Assets | 로컬 경로, 출처, 라이선스, attribution, 변경 허용. 생성형 B-roll은 아래 선택 단계로만 |
+| Audio | 음성·BGM·SFX의 필요성, 출처, 음량, 무음 대체. `app-promo`·`motion-short`는 BGM·SFX 여부를 한 번 묻고, 묻지 않고 기본 포함하지 않음 |
 | Accessibility | 자막, flashing 제한, 읽기 시간, 색 외 신호 |
 | Acceptance | 대표 프레임과 완성 판정 방법 |
 
@@ -107,19 +126,36 @@ Remotion을 선택하면 [references/remotion-engine.md](references/remotion-eng
 
 | 단계 | 산출물 | 담당 문서 |
 |---|---|---|
+| Capture | `app-promo`에서만: `capture/`의 실제 화면·토큰 또는 `demo-steps.json`과 재생 프레임, provenance 행. 실패하면 대체물을 만들지 않고 멈춤 | [references/app-promo.md](references/app-promo.md) 2절 |
 | Script | `STORYBOARD.md`, 나레이션이 있으면 `SCRIPT.md` | 이 Phase와 [references/voice-captions.md](references/voice-captions.md) 4절 |
 | Voice | 나레이션 오디오, 가능하면 단어 timestamps, provenance 행 | [references/voice-captions.md](references/voice-captions.md) |
 | Composition | 엔진 컴포지션 | 선택한 엔진 reference |
 | Captions | 엔진이 소비하는 caption 데이터와 자막 clip | [references/voice-captions.md](references/voice-captions.md) |
 | Render | still, draft, final 출력 | [references/video-qa.md](references/video-qa.md) |
 
-`STORYBOARD.md`와 `SCRIPT.md`는 HyperFrames 번들 `hyperframes-core`의 storyboard-format과
-script-format shape를 두 엔진 공통으로 씁니다. 번들이 없으면 같은 shape를 이 스킬이 직접 작성합니다.
+`STORYBOARD.md`와 `SCRIPT.md`는 HyperFrames 번들 `hyperframes/references/`의 storyboard-format과
+script-format shape를 두 엔진 공통으로 씁니다(라우터 `SKILL.md`는 읽지 않고 이 두 파일만 읽습니다).
+번들이 없으면 같은 shape를 이 스킬이 직접 작성합니다.
 스크립트와 스토리보드는 프레임워크가 만들어 주지 않으며 이 Phase에서 에이전트가 brief를 근거로
 씁니다.
 
-TTS 공급자는 HeyGen, ElevenLabs, Typecast, Edge TTS, Kokoro 중 사용자 지정과 언어·비용 조건으로
-고르며 하나로 고정하지 않습니다. 요금이 발생하는 호출은 확인 후 실행합니다.
+TTS 공급자는 Typecast, HeyGen, ElevenLabs, Gemini, Edge TTS, Kokoro 중 사용자 지정과 언어·비용 조건으로
+고르며 하나로 고정하지 않습니다. Kokoro에는 한국어 voice가 없으므로 한국어 나레이션은 공급자를
+명시합니다. 요금이 발생하는 호출은 확인 후 실행합니다.
+
+### 생성형 B-roll (선택, 기본 꺼짐)
+
+실사 인물, 실제 환경 속 제품, 분위기 컷처럼 코드로 그리기 어려운 장면에만 씁니다. UI 화면, 키네틱
+타이포, 수치·차트, 로고는 결정적 코드 렌더로 만듭니다.
+
+- 생성 전에 공급자, 모델, 클립 길이·개수, 예상 비용을 제시하고 승인을 받습니다.
+- 현재 CLI에 해당 공급자의 MCP 커넥터나 API 키가 있을 때만 실행하고, 없으면 `NOT RUN`으로 남깁니다.
+  CLI마다 커넥터가 달라 다섯 CLI 공통 경로가 아니므로 필수 단계로 만들지 않습니다.
+- 결과는 즉시 로컬 파일로 고정하고 해시와 함께 [references/video-qa.md](references/video-qa.md) 5절
+  provenance 표에 적습니다.
+- 생성 영상 안에 글자를 그리게 하지 않고 텍스트·로고·CTA는 코드로 덧입힙니다.
+- 공급자·모델의 지역 제한과 워터마크 고지 조건을 확인합니다. 한국에서 쓸 수 없는 오픈 가중치
+  (예: HunyuanVideo-1.5, MiniMax H3)는 쓰지 않고, Veo 출력은 SynthID 고지를 남깁니다.
 
 ## Phase 4: 구현
 
@@ -141,15 +177,16 @@ TTS 공급자는 HeyGen, ElevenLabs, Typecast, Edge TTS, Kokoro 중 사용자 �
 4. 최종 렌더의 duration·resolution·fps·stream·audio 검사
 5. 자막·가독 시간·flashing·asset provenance 확인
 6. 나레이션이 있으면 자막 timing 출처(공급자 timestamps 또는 전사)와 TTS provenance 확인
+7. 정지 프레임·오디오 라우드니스·클리핑을 수치로 측정하고, contact sheet로 장면 반복을 확인
 
 실행하지 못한 검사는 `NOT RUN`, 결과를 관찰하지 못한 항목은 `UNVERIFIED`로 남깁니다.
 
 ## 완료 증거
 
-- 선택 엔진과 라우팅 근거
+- brief 유형, 선택 엔진과 라우팅 근거
 - 설치·라이선스 상태
 - 사용한 brief·storyboard·script·asset manifest
-- 단계별 상태(Script, Voice, Composition, Captions, Render)와 TTS 공급자·voice·모델
+- 단계별 상태(Capture, Script, Voice, Composition, Captions, Render)와 TTS 공급자·voice·모델
 - 생성·수정한 컴포지션과 출력 경로
 - still/draft/final 검증 결과
 - 남은 `NOT RUN`, `UNVERIFIED`, 권리·품질 이슈
@@ -161,6 +198,7 @@ TTS 공급자는 HeyGen, ElevenLabs, Typecast, Edge TTS, Kokoro 중 사용자 �
 | [references/remotion-engine.md](references/remotion-engine.md) | Remotion을 선택했을 때만 |
 | [references/hyperframes-engine.md](references/hyperframes-engine.md) | HyperFrames를 선택했을 때만 |
 | [references/voice-captions.md](references/voice-captions.md) | 나레이션 또는 자막이 필요할 때만 |
+| [references/app-promo.md](references/app-promo.md) | brief 유형이 `app-promo`일 때만 |
 | [references/video-qa.md](references/video-qa.md) | 모든 렌더와 납품 전 |
 
 전역 HyperFrames 번들 모듈은 HyperFrames를 선택했고 번들이 존재할 때만

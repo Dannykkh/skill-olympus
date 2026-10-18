@@ -40,34 +40,44 @@ Remotion을 선택해도 이 shape로 저장한 뒤 `Caption[]`으로 변환합�
 
 ## 3. 공급자 비교
 
-아래는 2026-09-04 기준 공식 문서로 확인한 내용이며, 실제 사용 직전에 다시 확인합니다.
+아래는 2026-10-17 기준 공식 문서와 갱신한 HyperFrames 번들(v0.8.168)로 확인한 내용이며, 실제 사용
+직전에 다시 확인합니다. 조사 근거는 `docs/research/research_notes/코딩 에이전트 영상 생성 오픈소스 2026/voice_captions_editing.md`에
+있습니다.
 
 | 공급자 | 타임스탬프 | 제어 | 비용·조건 | 비고 |
 |---|---|---|---|---|
-| HeyGen | 단어 단위, 같은 응답에 포함 | voice id, 언어 | 계정과 CLI 인증 필요, OAuth 무료 사용량 | 번들 `media-use`의 `audio/scripts/heygen-tts.mjs`가 words.json까지 생성 |
-| ElevenLabs | 문자 단위, `/v1/text-to-speech/{voice_id}/with-timestamps` | voice id, 모델, stability·similarity·style | 유료 API 키 | 단어 단위로 집계 필요. 공식 에이전트 스킬 번들이 있으나 이 스킬은 설치를 전제하지 않음 |
-| Typecast | 타임스탬프 엔드포인트 문서 존재, 단위는 `[확인 필요]` | 감정 프리셋 7종, 감정 강도 0.0~2.0, 템포 0.5~2.0x | 유료 API 키 | 한국어 voice 500개 이상, 한국어 나레이션 1순위 후보 |
-| Edge TTS | `--write-subtitles`로 SRT 출력 | rate, volume, pitch. SSML은 voice·prosody만 허용 | 무료, API 키 없음 | 비공식 경로라 서비스 약관과 안정성 리스크를 사용자에게 알린 뒤 사용 |
-| Kokoro | 없음 | voice 54종, 영어 중심 | 무료 로컬 | HyperFrames 번들 `npx hyperframes tts`가 이 경로. 한국어 품질은 `[확인 필요]` |
+| Typecast | 단어+문자, 초 단위 `start`·`end`. `POST /v1/text-to-speech/with-timestamps`, `granularity=word\|char`로 한쪽만 받기 가능 | 모델 `ssfm-v30`(권장)·`ssfm-v21`, 감정 프리셋, 감정 강도, 템포. 요청당 텍스트 1~2000자 | 유료 API 키 | 한국어 voice가 가장 많고 어절 타이밍까지 한 번에 받는 1순위. 공식 MCP·Claude 스킬·`cast` CLI가 있지만 설치를 전제하지 않고 HTTP API 계약으로 호출 |
+| HeyGen | 단어 단위, 같은 응답에 포함 | starfish voice id, `--lang` | 계정과 CLI 인증 필요, OAuth 무료 사용량 | 번들 `media-use/audio/scripts/heygen-tts.mjs`가 words.json까지 생성. 한국어 voice 존재는 공개 문서에 없어 `[확인 필요]`이며, `--voice` 없이 비영어를 요청하면 첫 일치 voice로 떨어짐 |
+| ElevenLabs | 문자 단위, `/v1/text-to-speech/{voice_id}/with-timestamps` | voice id, 모델, stability·similarity·style | 유료 API 키 | 한국어 지원(`eleven_multilingual_v2` 등). 단어 단위로 집계 필요. 공식 로컬 MCP는 보관(archived)되고 OAuth 호스티드 MCP로 옮겨짐. 번들 경로는 timestamps 없이 전사로 정렬 |
+| Gemini | 없음. 번들 오디오 엔진이 전사로 정렬 | `gemini-3.8-flash-tts`(기본)·`-lite-tts`, voice `Kore` 등, `style` 지시 | `GEMINI_API_KEY`·`GOOGLE_API_KEY` 또는 서비스 계정 | 공식 언어 표에 Korean 포함(3.8 Flash·Flash-Lite). 번들 `media-use/audio/scripts/audio.mjs`의 `--only tts` 경로 |
+| Edge TTS | `--write-subtitles`로 SRT, `WordBoundary` 선택 가능 | rate, volume, pitch. SSML은 voice·prosody만 허용 | 무료, API 키 없음, 인터넷 필요 | `ko-KR-SunHiNeural`·`InJoonNeural`. 라이선스 LGPLv3. 비공식 경로라 서비스 약관과 안정성 리스크를 사용자에게 알린 뒤 사용 |
+| Kokoro | 없음 | voice 54종 | 무료 로컬 | **한국어 voice 없음**(언어 접두사 a·b·e·f·h·i·j·p·z). 한국어 나레이션에 쓰지 않음. 번들 `npx hyperframes tts`와 무키 기본값이 이 경로 |
 
 선택 규칙은 순서대로 적용합니다.
 
 1. 사용자가 공급자나 voice를 지정하면 그대로 씁니다.
-2. 한국어 나레이션이면 Typecast를 먼저 제안하고, 비용을 쓸 수 없으면 Edge TTS를 제안합니다.
-3. 영어이고 HeyGen 인증이 있으면 HeyGen이 단어 timestamps까지 한 번에 줍니다.
-4. 이미 ElevenLabs 키와 voice가 정해진 프로젝트는 그 voice를 유지합니다.
-5. 어느 것도 못 쓰면 Voice 단계를 `NOT RUN`으로 남기고 자막 없는 대안을 제시합니다.
+2. 한국어 나레이션이면 Typecast를 먼저 제안합니다. 비용을 쓸 수 없으면 Edge TTS, 이미 Gemini 키가
+   있으면 Gemini를 제안합니다. 번들 기본값(키가 없으면 Kokoro)으로 떨어지지 않게 공급자를 명시합니다.
+3. 오프라인이 필요하면 Apache-2.0인 Qwen3-TTS(한국어 프리셋 포함)나 Fun-CosyVoice3를 제안하고, 품질은
+   draft에서 들어 보고 정합니다.
+4. 영어이고 HeyGen 인증이 있으면 HeyGen이 단어 timestamps까지 한 번에 줍니다.
+5. 이미 ElevenLabs 키와 voice가 정해진 프로젝트는 그 voice를 유지합니다.
+6. 어느 것도 못 쓰면 Voice 단계를 `NOT RUN`으로 남기고 자막 없는 대안을 제시합니다.
+
+상업 영상 후보에서 빼는 것: F5-TTS 사전학습 가중치(CC-BY-NC), Fish Speech(자체 커뮤니티·연구
+라이선스). 한국어를 지원하지 않는 Dia, Zonos, IndexTTS-2.5도 한국어 영상에 쓰지 않습니다.
 
 공식 근거:
 
+- Typecast timestamps: https://typecast.ai/docs/api-reference/text-to-speech/text-to-speech-with-timestamps
 - ElevenLabs timestamps: https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps
-- Typecast API: https://typecast.ai/developers/api/ , https://typecast.ai/docs/api-reference/text-to-speech/text-to-speech-with-timestamps
-- Edge TTS: https://pypi.org/project/edge-tts/
-- HeyGen 경로와 Kokoro: HyperFrames 번들 `media-use/audio/references/tts.md`
+- Gemini speech generation: https://ai.google.dev/gemini-api/docs/speech-generation
+- Edge TTS: https://github.com/rany2/edge-tts
+- HeyGen·Gemini 경로와 Kokoro 언어표: HyperFrames 번들 `media-use/audio/references/tts.md`
 
 ## 4. Script 형식
 
-`SCRIPT.md`는 HyperFrames 번들 `hyperframes-core/references/script-format.md`의 shape를 두 엔진
+`SCRIPT.md`는 HyperFrames 번들 `hyperframes/references/script-format.md`의 shape를 두 엔진
 공통으로 씁니다. 헤더에 voice·설정·전달 방향, 라인마다 storyboard frame 번호와 들여쓴 spoken
 text를 둡니다. TTS에는 들여쓴 spoken text만 보냅니다. Remotion에는 이 파일을 읽는 파서가 없으므로
 문서와 provenance 용도로만 두고 spoken text를 코드로 옮길 때 원문과 대조합니다.
@@ -80,15 +90,19 @@ text를 둡니다. TTS에는 들여쓴 spoken text만 보냅니다. Remotion에�
 |---|---|
 | 단어 timestamps | 전사 생략. words.json으로 저장 |
 | 문자 timestamps | 공백·문장부호 경계로 단어를 묶어 words.json 생성. 한국어는 어절 단위 |
-| SRT | 그대로 import. 단어 하이라이트가 필요하면 STT 전사로 보강 |
-| 없음 | STT 전사. 아래 엔진별 명령 사용 |
+| SRT | 그대로 import. 단어 하이라이트가 필요하면 강제 정렬 또는 STT 전사로 보강 |
+| 없음, 음성이 `SCRIPT.md`로 만든 TTS | 대본을 아는 강제 정렬을 먼저 씁니다. WhisperX(`--language ko`, 한국어 wav2vec2 정렬 모델 내장) 또는 Qwen3-ForcedAligner(한국어 포함, 5분 이하 단위로 나눔). 둘 다 못 쓰면 아래 STT 전사 |
+| 없음, 대본 없는 녹음·실사 음성 | STT 전사. 아래 엔진별 명령 사용 |
 | 음성 자체가 없음 | 전사 대상이 없으므로 `STORYBOARD.md`의 scene 시작·종료 시각을 기준으로 자막을 배치하고, 읽기 시간은 [video-qa.md](video-qa.md) 3절로 검사 |
 
 STT 전사 규칙:
 
 - HyperFrames: `npx hyperframes transcribe <audio> --model <name>`에서 `--model`을 항상 명시합니다.
   `.en` 모델은 비영어 음성을 영어로 번역하므로 한국어는 `--model small --language ko` 이상을 씁니다.
-  근거는 번들 `media-use/audio/references/transcribe.md`입니다.
+  근거는 번들 `media-use/audio/references/transcribe.md`입니다. 번들 `tts.md` 끝의
+  "ElevenLabs/Kokoro는 `--model small.en`으로 전사" 예시는 영어 전용이므로 비영어에 따르지 않습니다.
+- 한국어 전사에 쓰지 않는 것: `.en` 모델, Parakeet(한국어 미지원), OpenAI `gpt-*-transcribe`
+  계열(단어 timestamps 미지원, `timestamp_granularities[]`는 `whisper-1`만 지원).
 - Remotion: `@remotion/install-whisper-cpp`로 whisper.cpp를 설치하고 16kHz WAV로 변환한 뒤
   `tokenLevelTimestamps: true`로 전사하고 `toCaptions()`로 `Caption[]`을 만듭니다.
 - 전사 결과는 원문 `SCRIPT.md`와 대조해 오인식 단어를 고칩니다. 시간은 유지하고 텍스트만 교정합니다.

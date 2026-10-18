@@ -55,15 +55,31 @@ still을 실제 이미지로 열어 다음을 관찰합니다.
 긴 최종 렌더 전에 짧은 draft 또는 제한 구간으로 media sync를 검증합니다. draft 성공을 최종 품질
 성공으로 승격하지 않습니다.
 
+### 수치 검사
+
+미감 판단을 대신하지는 않지만, 렌더가 성공해도 남는 결함을 숫자로 잡습니다. 측정값과 명령을 완료
+보고에 적습니다.
+
+| 검사 | 명령 예 | 실패 기준 |
+|---|---|---|
+| 정지 프레임 | `ffmpeg -i out.mp4 -vf freezedetect=n=-60dB:d=1 -map 0:v -f null -` | storyboard에 적은 의도된 hold(엔드 카드, 데모 대기 등) 밖에서 1초 이상 멈춘 구간 |
+| 라우드니스·피크 | `ffmpeg -i out.mp4 -af ebur128=peak=true -f null -` | true peak가 −1 dBTP를 넘거나 음성이 음악에 묻힘. 통합 라우드니스는 납품 플랫폼 기준을 따르고, 기준이 없으면 웹·SNS용 −14 LUFS 안팎을 출발점으로 삼아 측정값을 기록 |
+| 클리핑 | 위 `ebur128` 출력의 true peak, `volumedetect`의 `max_volume` | 0 dBFS 도달 |
+| 반복 | contact sheet: `ffmpeg -i out.mp4 -vf "fps=1/2,scale=480:-1,tile=4x3" -frames:v 1 contact.png` 또는 HyperFrames `snapshot` | 같은 레이아웃·같은 전환이 세 장면 이상 연달아 반복 |
+
+−14 LUFS는 조사에서 본 사례값이고 플랫폼 공식 기준으로 확인한 값이 아닙니다. 무음 영상은 라우드니스
+검사를 `SKIPPED`로 남깁니다.
+
 ## 5. Provenance and Delivery
 
 납품 전에 asset별로 다음을 남깁니다.
 
-| Asset | Local path | Source | License/permission | Attribution | Modification | Status |
-|---|---|---|---|---|---|---|
+| Asset | Local path | Source | License/permission | Attribution | Modification | Hash | Status |
+|---|---|---|---|---|---|---|---|
 
 근거를 찾지 못한 로고·음원·효과음·영상·이미지는 임의로 상업 이용 가능하다고 판단하지 않습니다.
-생성형 미디어도 생성 도구, 생성일, 사용 조건을 기록합니다. TTS 나레이션은 Source 열에 공급자,
+생성형 미디어도 생성 도구, 생성일, 사용 조건을 기록하고, 로컬에 고정한 파일의 SHA-256을 Hash 열에
+적습니다. 앱 캡처 화면은 Source 열에 URL 또는 앱 버전·커밋과 캡처 시각을 적습니다. TTS 나레이션은 Source 열에 공급자,
 voice id, 모델을 적고 API 키는 어디에도 적지 않습니다.
 
 완료 보고에는 출력 경로, engine/version, 렌더 명령, 검증한 acceptance frame, media probe 결과,

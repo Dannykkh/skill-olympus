@@ -758,7 +758,7 @@ The table is the source inventory, not the startup registry. Low-frequency forma
 | **Docs** | mermaid-diagrams, diagram-design, marp-slide, docx, pdf, draw-io, domain-dictionary + 3 more | Diagrams, editorial diagram rendering (.mmd → branded HTML+SVG, vendored from cathrynlavery/diagram-design MIT), presentations, documents, domain dictionary (DDD UL) |
 | **Meta** | autoresearch, skill-judge, manage-skills, plugin-forge, release-notes + 4 more | Skill auto-optimization (Hill Climbing, judged on holdout inputs), management, release |
 | **Git** | commit-work, release-notes, deploymonitor | Conventional commits, CHANGELOG |
-| **Media** | video-maker | Script → TTS → composition → captions → render on Remotion (React/TSX) or HyperFrames (HTML/CSS/GSAP), one engine per project, pluggable TTS (HeyGen, ElevenLabs, Typecast, Edge TTS, Kokoro) |
+| **Media** | video-maker | Script → TTS → composition → captions → render on Remotion (React/TSX) or HyperFrames (HTML/CSS/GSAP), one engine per project. Brief types for narrated videos, unnarrated motion shorts, and app promos (a Capture stage records real screens and stops instead of faking UI). Pluggable TTS (Typecast, HeyGen, ElevenLabs, Gemini, Edge TTS, Kokoro) with Korean-safe defaults; freeze-frame and loudness checks in render QA |
 | **Research** | reddit-researcher | Market research + lead scoring |
 | **Translation** | ko-en-translator | Korean↔English bidirectional translation |
 | **Utilities** | humanizer, jira, datadog-cli, excel2md + 3 more | AI pattern removal, integrations |
