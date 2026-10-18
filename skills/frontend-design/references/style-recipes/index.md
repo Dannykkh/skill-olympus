@@ -1,10 +1,11 @@
 # Style Recipes Index — 명명된 스타일 레시피 라이브러리
 
 > 하나의 완결된 미학을 "경계 선언 + 토큰(hex) + 한·영 폰트 스택 + 패턴 + Tuning Knobs + Avoid"로
-> 캡슐화한 레시피 12종. **모든 레시피는 실제 값이 박혀 있어 두 번 생성해도 같은 방향이 나옵니다.**
+> 캡슐화한 레시피 13종. **모든 레시피는 실제 값이 박혀 있어 두 번 생성해도 같은 방향이 나옵니다.**
 >
 > Credits: 캡슐 문법과 일부 레시피는 [MengTo/Skills](https://github.com/MengTo/Skills)(MIT)에서 각색.
 > 원본의 "값 없는 산문" 한계를 이 레포의 CSV DB(hex/한글 폰트)로 바인딩해 보완했습니다.
+> `corporate-trust`는 [madebymustafa/design-taste](https://github.com/madebymustafa/design-taste)(MIT) 각색 초안입니다.
 
 ## 사용법
 
@@ -19,6 +20,7 @@
 - 후보 3개는 **베이스 명도**, **액센트 색상 계열**, **표면 재질**, **모션 강도** 중 최소 3개가 달라야 합니다.
 - 초록·주황 계열 레시피는 합쳐서 후보 3개 중 최대 1개만 허용합니다.
 - `paper-tech-light`는 따뜻한 종이/산업 신호가 필요할 때, `tech-green-dark`는 모니터링·환경·핀테크 상태 신호가 필요할 때만 후보에 넣습니다.
+- `corporate-trust`는 청중이 규제 산업·B2B 구매 결정·공공 대상 납품이고 **실제 수치·인증·도입 사례가 있을 때만** 후보에 넣습니다. 공공기관 사이트 자체는 KRDS가 정본입니다.
 - 방향이 모호하거나 사용자가 결과 반복을 지적하면 먼저
   [`motion-first-prompt-playbook.md`](../motion-first-prompt-playbook.md)의 서로 다른 3안 규칙으로
   구성·색상 레인을 정한 뒤 레시피를 매칭합니다.
@@ -42,6 +44,7 @@
 | [tech-green-dark](tech-green-dark.md) | 다크 그린 시스템 + 에메랄드 시그널 | 그린 블랙 `#04100A` | Space Grotesk + Pretendard | 모니터링, 개발자 도구, 핀테크 | 4/4/6 |
 | [dopamine-bold](dopamine-bold.md) | 크림 + 잉크 보더 + 고채도 스티커 | 크림 `#FFF8E7` | Space Grotesk + Black Han Sans | 이벤트, Gen-Z 브랜드, 크리에이티브 | 8/5/5 |
 | [luxury-quiet](luxury-quiet.md) | 여백 + 라이트 세리프 + 골드 헤어라인 | 아이보리 `#F8F5F0` | Cormorant + Noto Serif KR | 패션, 주얼리, 하이엔드 서비스 | 5/4/2 |
+| [corporate-trust](corporate-trust.md) (초안) | 흰 지면 + 딥 블루 1색 + 근거 표 | 순백 `#FFFFFF` | Pretendard Variable 600 (시스템 계열) | 핀테크, 의료, 보안, B2B 엔터프라이즈 | 2/1/5 |
 
 V/M/D = VARIANCE / MOTION / DENSITY 근사값 (frontend-design 프리셋 파라미터)
 
@@ -51,11 +54,11 @@ V/M/D = VARIANCE / MOTION / DENSITY 근사값 (frontend-design 프리셋 파라�
 
 | 프리셋 | 기본 후보 풀 | 조건부 후보 |
 |--------|----------------|-------------|
-| 깔끔하게 | notion-minimal, framed-grid-agency, skeuo-tactile, dark-glass | paper-tech-light(따뜻한 종이/기술 문서) |
+| 깔끔하게 | notion-minimal, framed-grid-agency, skeuo-tactile, dark-glass | paper-tech-light(따뜻한 종이/기술 문서), corporate-trust(신뢰 우선 — 근거 보유 시) |
 | 럭셔리하게 | luxury-quiet, editorial-tech, dark-glass, book-serif-editorial | — |
 | 대담하게 | dopamine-bold, swiss-brutalist, mesh-dark-blue, editorial-tech | tech-green-dark(상태 신호가 핵심일 때) |
 | 미니멀하게 | notion-minimal, book-serif-editorial, luxury-quiet, framed-grid-agency | paper-tech-light(웜 테크가 명시될 때) |
-| 대시보드 | skeuo-tactile, swiss-brutalist(Tactical), mesh-dark-blue, notion-minimal | tech-green-dark(모니터링/핀테크), paper-tech-light(산업/물류) |
+| 대시보드 | skeuo-tactile, swiss-brutalist(Tactical), mesh-dark-blue, notion-minimal | tech-green-dark(모니터링/핀테크), paper-tech-light(산업/물류), corporate-trust(규제 산업·B2B 관리 화면) |
 | 매거진 | editorial-tech, book-serif-editorial, framed-grid-agency, luxury-quiet | — |
 | 직접 설정 | V/M/D 근사값 상위 4개에서 색상·명도·재질이 다른 2~3개 | 초록/주황 합계 최대 1개 |
 

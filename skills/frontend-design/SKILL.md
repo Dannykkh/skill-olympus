@@ -127,7 +127,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 
 | DB | 파일 | 항목 수 | 내용 |
 |----|------|---------|------|
-| **스타일 레시피** | [references/style-recipes/index.md](references/style-recipes/index.md) | 12종 | 완결된 미학 캡슐 — 경계 선언 + hex 토큰 + 한·영 폰트 스택 + 패턴 + Avoid. **프리셋보다 구체적인 시작점** |
+| **스타일 레시피** | [references/style-recipes/index.md](references/style-recipes/index.md) | 13종 | 완결된 미학 캡슐 — 경계 선언 + hex 토큰 + 한·영 폰트 스택 + 패턴 + Avoid. **프리셋보다 구체적인 시작점** |
 | **Motion-first 프롬프트** | [references/motion-first-prompt-playbook.md](references/motion-first-prompt-playbook.md) | 방향 8종 | 공개 무료 프롬프트에서 합성한 구현 문법 + 색상 레인 + 초록/주황 편향 차단 |
 | **코더 UI 패턴** | [references/coder-interface-pattern-playbook.md](references/coder-interface-pattern-playbook.md) | 유형 5종 | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage의 정보 구조, 밀도, 상태, 모션 예산 |
 | **블록 해부 카탈로그** | [references/layout-block-anatomy.md](references/layout-block-anatomy.md) | 블록 30종 | Marketing/App/Ecommerce 블록별 구조 계약(요소 순서·잉크 위계·강조 규칙) + 페이지 시퀀스 템플릿 + 와이어프레임-퍼스트 청사진 절차 |
@@ -222,9 +222,9 @@ Focus on:
 > 공유 블랙리스트: [references/ai-slop-blacklist.md](references/ai-slop-blacklist.md) — 10항목 블랙리스트 + Hard Rejection 7개 + 폰트 블랙리스트/대안
 
 **Typography:**
-- `Inter`/시스템 폰트를 기본값으로 쓰지 말 것 (= AI 슬롭 신호) → `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi`, `General Sans` 등. **한글: Pretendard 기본 + [눈누](https://noonnu.cc)에서 탐색**
+- `Inter`/시스템 폰트를 기본값으로 쓰지 말 것 (= AI 슬롭 신호) → `Geist`, `Outfit`, `Cabinet Grotesk`, `Satoshi`, `General Sans` 등. **한글: Pretendard 기본 + [눈누](https://noonnu.cc)에서 탐색**. 단 **신뢰 우선 화면**(규제 산업·B2B 구매 결정·공공처럼 절제 자체가 정체성인 경우)에서 의도적으로 고른 `system-ui` 스택은 유효(Inter는 예외 아님) — 조건: DESIGN.md Typography에 선택 이유를 적고, 개성은 서체 대신 표·`tabular-nums` 숫자 정렬·근거 표기로 낸다. "무심코"는 금지, "의도적"은 OK
 - 한글 강조에 라틴 전용 이탤릭 폰트(Instrument Serif·Fraunces 등) 직접 적용 금지 → 한글이 시스템 serif로 폴백해 의도가 깨짐. 한글 강조는 한글 serif(송명·마루부리·고운바탕 등) + 색/굵기로
-- 한글 디스플레이를 Pretendard 볼드로만 때우지 말 것(= 개성 없는 기본값) → 헤드라인은 눈누/구글의 개성 있는 한글 디스플레이(검은고딕·송명·Gothic A1 900 등)로
+- 한글 디스플레이를 Pretendard 볼드로만 때우지 말 것(= 개성 없는 기본값) → 헤드라인은 눈누/구글의 개성 있는 한글 디스플레이(검은고딕·송명·Gothic A1 900 등)로. 단 위 신뢰 우선 예외에서는 Pretendard 500~600 디스플레이를 H1 약 2.8rem 이하로 쓰는 것이 유효
 - 대시보드/소프트웨어 UI에 Serif 금지
 - 과도한 H1 크기 금지
 
