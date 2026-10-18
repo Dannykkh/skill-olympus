@@ -308,9 +308,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-10-17
+**最后更新：** 2026-10-18
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.2.0 — 视频 brief 类型、应用宣传截取与信任优先设计配方
+
+`/video-maker` 新增 brief 类型和 Capture 阶段。默认是 `narrated`；`motion-short` 制作约 10 秒、无旁白和字幕的动态短片；`app-promo` 在写脚本前先录制真实界面：发布影片使用截取的页面，应用演示先确定性回放，再在后期加入虚拟镜头。截取失败时会停止，而不是伪造界面。韩语旁白有了安全默认值：没有韩语音色的 Kokoro 不再使用，Typecast 返回词级和字级时间戳，新增 Gemini TTS 提供方，已知 TTS 脚本时先做强制对齐，再考虑自由转写。渲染 QA 现在以数值测量冻结帧和响度，并为每个生成或截取的素材记录哈希。HeyGen HyperFrames 模块参照已对齐 v0.8.168：该版本移动了 storyboard 和 script 格式文件的位置，CLI 运行需要 `HYPERFRAMES_SKIP_SKILLS=1`。Aphrodite 的 `frontend-design` 模块新增 `corporate-trust` 风格配方，仅在面向受监管行业、B2B 或公共采购且有真实数据或认证时作为条件候选。信任优先的界面只要在 `DESIGN.md` 中写明理由，就可以使用系统字体栈或 Pretendard 500–600 字重的标题；Trust & Authority 风格不再使用闪动的指标，改为几乎静止的动效。10 个配方中的 36 处字体栈加入了 `Pretendard Variable`：jsDelivr 可变字体 CSS 只声明了这个名称，此前韩文会悄悄回退到系统黑体（同一句话宽 446.8px，而不是 389.3px），新的契约测试会发现这种错误。265 项 Node 测试通过。
 
 ## v7.1.1 — 修复 Mnemo Doctor 的误报和漏报
 
