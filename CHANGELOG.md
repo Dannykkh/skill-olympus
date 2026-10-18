@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.2.0] - 2026-10-18
+
+### Features
+
+- **video-maker**: Brief types choose which stages run and where approval happens, independent of the engine: `narrated` (default), `motion-short` (unnarrated, about 10 s, Voice and Captions `SKIPPED`, at most one question, still-preview approval) and `app-promo`. `app-promo` runs a new Capture stage before Script (`references/app-promo.md`). Launch films go capture → tokens → storyboard approval → scene build → contact sheet; real app demos go `demo-steps.json` → deterministic replay → post-hoc virtual camera, recorded with Playwright on either engine. A failed capture stops the run instead of faking UI, and HyperFrames `capture` returning `ok:false` or `BLOCKED.md` is a hard stop. (77243bb)
+- **video-maker**: Korean narration defaults. Kokoro has no Korean voice and is not used; Typecast uses word and character timestamps (`granularity`, `ssfm-v30`); Gemini TTS is added as a provider (Korean is in the official language table; no word timestamps). When the TTS script is known, forced alignment (WhisperX `ko`, Qwen3-ForcedAligner) comes before free transcription, and Parakeet and `gpt-*-transcribe` are not used for Korean. (77243bb)
+- **video-maker**: Render QA measures frozen frames (`freezedetect`) and loudness (`ebur128`), repeats contact-sheet checks and records a provenance Hash column for generated and captured assets. Generative B-roll is an optional stage, off by default, cost-approved, and `NOT RUN` without a connector. (77243bb)
+- **frontend-design**: `corporate-trust`, a Korean adaptation of the design-taste corporate-trust pack (MIT), is added as a draft style recipe. It is only a conditional candidate for the clean and dashboard presets when the audience is regulated, B2B or public procurement and real figures, certifications or customers exist; public-sector sites follow KRDS. It adds a control-border token for 3:1 non-text contrast and Korean trust signals (certification chips, VAT-exclusive prices, business-registration footer). Trust-first screens may use an intentional `system-ui` stack or a Pretendard 500–600 display (H1 up to about 2.8rem) when DESIGN.md Typography records the reason, and design style #26 Trust & Authority moves from pulsing metrics and certificate carousels to near-zero motion. (183095a)
+
+### Bug Fixes
+
+- **frontend-design**: Recipe font stacks name `Pretendard Variable` before `Pretendard` in 36 stacks across 10 recipes. The jsDelivr variable CSS declares only the `Pretendard Variable` family, so stacks that named `Pretendard` never used the web font and Korean text fell back to the system Gothic on machines without a local install (the same sentence measures 446.8 px in Malgun Gothic, 389.3 px in Pretendard Variable). `document.fonts.check()` and computed `font-family` both miss this; the new `style-recipes-contract.test.js` fails a recipe that loads the variable CSS without naming the variable family first. (dceb84e)
+- **video-maker**: The HyperFrames engine reference follows bundle v0.8.168 (upstream `main` `b18b3e9`, now including `hyperframes-studio`). `storyboard-format.md` and `script-format.md` moved to `hyperframes/references/`, and the module table and routing test lock the new paths. CLI runs set `HYPERFRAMES_SKIP_SKILLS=1` because `init` now ignores `--skip-skills`; `validate`, `inspect` and `layout` are deprecated aliases of `check`. Installed workflow skills such as `general-video` are still not used as entry points, and a user-run bundle refresh procedure is documented. (77243bb)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs describe both changes under Recent changes. `AGENTS.md`, `README.md`, `README-ko.md` and `QUICK-REFERENCE.md` list the video-maker brief types and TTS providers. The research report and notes these choices cite are added under `docs/research/`. (77243bb, 64376b9)
+
+### Validation and Scope
+
+- Node: 265 of 265 passed. The video-maker routing test now covers brief types, Capture, app-promo hard stops, Korean defaults and QA checks. `style-recipes-contract.test.js` was confirmed to fail all 10 recipes at the previous commit, naming the same 36 lines.
+- The corporate-trust sample page rendered at 1280 and 390 px with Pretendard Variable loaded, equal-width tabular figures, no horizontal overflow and 13 px smallest text. The compiled DESIGN.md snippet has no broken references or orphan tokens, and all six text pairs reach 4.5:1. `design.md lint` was not run (the CLI is a no-op without a TTY).
+- Windows integrated installation (`install.bat --all`) passed all 12 final checks. The installed `video-maker` copies for Claude Code, Codex and Antigravity and the source-only `frontend-design` copies match the source, and the separately installed HyperFrames bundle was left unchanged.
+- No video was rendered with the new brief types, and Capture, the TTS providers and the QA measurements were not run end to end. These changes are procedure and reference documents checked by the routing test.
+
 ## [7.1.1] - 2026-10-17
 
 ### Bug Fixes
