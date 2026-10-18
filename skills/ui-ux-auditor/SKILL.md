@@ -198,8 +198,8 @@ text-xs|text-sm|text-base|text-lg|text-xl|text-2xl|text-3xl|text-4xl
 gap-|space-|p-|px-|py-|m-|mx-|my-
 # 줄 간격
 leading-|line-height
-# 폰트 실제 로드 (이름만 쓰고 @import/link 누락 → 시스템 폴백)
-font-family|@import.*fonts|<link.*fonts|Pretendard|noonnu
+# 폰트 실제 로드 (이름만 쓰고 @import/link 누락 → 시스템 폴백, 스택 이름 ≠ CSS의 @font-face 이름 → 시스템 폴백)
+font-family|@font-face|@import.*fonts|<link.*fonts|[Pp]retendard|noonnu
 ```
 
 | 검사 항목 | 기준 |
@@ -208,7 +208,7 @@ font-family|@import.*fonts|<link.*fonts|Pretendard|noonnu
 | 줄 간격 | 본문 `leading-relaxed` (1.625) 이상 |
 | 섹션 간격 | 일관된 간격 패턴 (예: 섹션 간 `py-12`, 카드 간 `gap-6`) |
 | 폰트 일관성 | 같은 용도에 같은 크기/굵기 사용 |
-| **폰트 실제 로드** | `font-family`에 쓴 폰트가 `@import`/`<link>`로 실제 로드됐는지 — 누락 시 시스템 폴백 (`document.fonts.check('700 16px "X"')`로 확인 — 한글 등 서브셋 폰트는 로드돼도 check() false 가능, face status로 확인·gotcha 045) |
+| **폰트 실제 로드** | `font-family`에 쓴 폰트가 `@import`/`<link>`로 실제 로드되고, **스택의 이름이 불러온 CSS의 `@font-face` 이름과 같은지** — 누락·불일치 시 시스템 폴백. 예: Pretendard 가변 CSS(`.../variable/pretendardvariable-*.css`)는 `'Pretendard Variable'`만 선언하므로 스택에 `Pretendard`만 있으면 불일치(정적 CSS는 `Pretendard`). 판정(스택의 웹폰트마다): `await document.fonts.load('<실제 굵기> 32px "<웹폰트 이름>"', '<공백 없는 문장>')`이 빈 배열이면 이름 불일치. 같은 문장의 렌더 폭이 "스택에서 그 웹폰트만 뺀 나머지"와 같으면 폴백 중 — 기준을 그냥 `sans-serif`로 두거나 문장에 공백을 넣으면 라틴 폰트가 앞에 있는 스택에서 폴백 중에도 폭이 달라져 통과로 오판한다. `document.fonts.check()`·computed `font-family`는 근거 아님 — check()는 서브셋 폰트에서 false 오판(gotcha 045), 등록 안 된 이름에서 true 오판(gotcha 112) |
 | **한글 웹폰트** | 한글 포함 UI에 한글 웹폰트(Pretendard 등) 로드 여부 — 라틴 폰트엔 한글 글리프 없어 한글이 시스템 폴백 |
 
 > `ux-guidelines.csv` Category=Typography(6) + Layout(7, z-index/stacking context/viewport unit/컨테이너 폭) + Content(4, 말줄임/날짜·숫자 포맷/플레이스홀더).

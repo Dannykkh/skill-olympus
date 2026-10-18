@@ -66,10 +66,29 @@ components:
 
 **규칙**
 - `typography.*`는 `fontFamily`+`fontSize` 필수. `fontWeight/lineHeight/letterSpacing/fontFeature/fontVariation`은 선택.
-- **폰트는 실제 로드**: `fontFamily`에 적은 폰트는 구현 시 `@import`/`<link>`로 **실제 로드**해야 함(이름만 쓰면 시스템 폴백, `document.fonts.check('700 16px "X"')`로 확인 — 단 한글 등 unicode-range 서브셋 폰트는 로드돼도 check()가 false일 수 있으니 `[...document.fonts]` face status나 렌더 폭으로 확인, gotcha 045).
-- **한글 UI는 한글 전용 페어링을 우선(권장)**: `font-pairings.csv`의 한글 행(#74~82 — Hahmlet/Noto Serif KR/Gowun Batang 헤딩 + Pretendard/Noto Sans KR/Nanum Gothic 본문)은 한글·라틴 글리프를 모두 가져 **폴백 함정을 구조적으로 회피**한다. 라틴+Pretendard를 덧대기 전에 이 경로를 먼저 검토하라.
-- **(라틴 페어링을 쓸 때) 한글은 정본 스택에 함께(필수)**: `fontFamily`는 단일 이름이 아니라 **CSS 스택 문자열**로 적을 수 있다(`"라틴, 한글, sans-serif"`). 한글이 들어가는 UI는 라틴 폰트(Space Grotesk 등)에 한글 글리프가 없어 한글만 시스템 폴백되므로, **정본(DESIGN.md) 단계에서** 한글 웹폰트(Pretendard 등)를 스택에 함께 박는다 — 헤딩은 `"라틴, Pretendard, sans-serif"`(라틴 디스플레이는 라틴이 렌더, 한글만 Pretendard로 폴백). 정본이 라틴 단일값이면 Phase 5의 "토큰 그대로 사용"이 그 값을 전파해 한글이 깨진다(gotcha 041).
-  - **스택 순서 = 라틴 폰트의 운명(검증으로 확인, 2026-06-30)**: Pretendard는 라틴 글리프도 가지므로 **본문에 `"Pretendard, DM Sans, sans-serif"`처럼 Pretendard를 앞에 두면 라틴 본문까지 Pretendard로 렌더되고, 뒤의 DM Sans는 lazy-load라 한 번도 다운로드되지 않아 죽은 폰트가 된다**(`document.fonts.check('"DM Sans"')` → false). 한·영을 한 목소리로 통일하려면(한글 우선 제품) Pretendard-first가 맞고 라틴 본문 폰트는 생략해도 된다. 반대로 **라틴 본문은 페어링 폰트(DM Sans)로 보이고 한글만 Pretendard로** 떨어뜨리려면 `"DM Sans, Pretendard, sans-serif"`처럼 **라틴을 앞에** 둔다. 어느 쪽이든 `document.fonts.check`로 의도한 폰트가 실제 로드됐는지 확인.
+- **폰트는 실제 로드**: `fontFamily`에 적은 폰트는 구현 시 `@import`/`<link>`로 **실제 로드**해야 함(이름만 쓰면 시스템 폴백).
+  - **family 이름은 불러온 CSS의 `@font-face`에서 복사한다**: 같은 폰트도 CSS 파일마다 이름이 다르다. Pretendard v1.3.9는 가변 CSS(`dist/web/variable/pretendardvariable-dynamic-subset.min.css`)가 `'Pretendard Variable'`, 정적 CSS(`dist/web/static/pretendard-dynamic-subset.min.css`)가 `Pretendard`, GOV 정적 CSS가 `'Pretendard GOV'`만 선언한다(2026-10-18 CSS 원문 확인). 가변 CSS를 불러오고 스택에 `Pretendard`만 쓰면 CSS 요청은 정상인데 그 이름의 face가 없어 **한글이 시스템 고딕으로 렌더된다** → 가변 CSS면 `"Pretendard Variable", "Pretendard"` 순서로 쓴다(뒤는 정적 Pretendard를 로컬에 설치한 기기용 대체, gotcha 112).
+  - **로드 판정은 face 로드 결과 + 렌더 폭으로 한다**. 아래를 브라우저 콘솔에 붙여 넣거나, Playwright면 `async () => { … return {…}; }`로 감싸 `page.evaluate`에 넘긴다(페이지에 한글이 아직 없어도 동작):
+    ```js
+    const name  = 'Pretendard Variable';                                          // 확인할 웹폰트 하나 (스택에 웹폰트가 여럿이면 이름마다 따로 돌린다)
+    const stack = '"Space Grotesk", "Pretendard Variable", "Pretendard", sans-serif'; // DESIGN.md 스택 그대로 (이름의 따옴표 유무는 CSS에서 같은 뜻)
+    const rest  = '"Space Grotesk", sans-serif';                                   // stack에서 확인할 웹폰트와 그 대체만 뺀 나머지
+    const font  = '700 32px';                                                      // 그 스타일의 실제 굵기
+    const text  = '한글렌더확인문장';                                               // 공백 없이 — 공백은 앞쪽 라틴 폰트로 그려져 폭을 바꾼다
+    const faces = await document.fonts.load(`${font} "${name}"`, text);           // 0개면 그 이름의 @font-face가 없다(이름 불일치)
+    const width = (s) => { const el = document.createElement('span'); el.textContent = text;
+      el.style.cssText = `position:absolute;white-space:nowrap;font:${font} ${s}`;
+      document.body.append(el); const w = el.getBoundingClientRect().width; el.remove(); return w; };
+    ({ faces: faces.length, applied: width(stack) !== width(rest) });              // applied:false면 폴백 중
+    ```
+    - `faces`는 이름이 CSS와 맞는지, `applied`는 실제로 그 폰트로 그려졌는지를 본다. **둘 다 통과해야 한다** — 같은 이름의 폰트가 로컬에 설치된 기기에서는 이름이 틀려도 `applied`만 true가 될 수 있다(추정, 미실측).
+    - 라틴 웹폰트는 `name`을 그 폰트로, `text`를 라틴 문장(공백 없이)으로, `rest`를 그 라틴 폰트만 뺀 스택으로 바꿔 같은 코드를 돌린다.
+    - 기준을 `rest` 대신 `sans-serif`로, 문장을 공백 있는 한글로 두면 라틴이 앞에 있는 스택에서 **이름이 틀려도 `applied: true`가 나온다**(2026-10-18 실측 — Space Grotesk 로드 상태의 h1 스택). 위처럼 둘 다 지킨다.
+    - 2026-10-18 실측(Space Grotesk·Pretendard 가변 CSS 로드, 한글 없는 페이지): 이름이 틀리면 `faces: 0`·`applied: false`, 맞으면 `faces: 5`·`applied: true`. 본문 스택과 라틴 확인도 같은 판정이 나왔다.
+  - **`document.fonts.check()`·computed 값은 근거가 아니다**: `check()`는 양쪽으로 틀린다. 한글 등 unicode-range 서브셋 폰트는 로드돼도 false일 수 있고(gotcha 045), **등록되지 않은 이름은 폴백 중이어도 true**다(존재하지 않는 이름도 true, gotcha 112). computed `font-family`는 선언값을 그대로 돌려준다. `await document.fonts.ready`는 dynamic-subset에서 끝나지 않을 수 있어 위 코드는 쓰지 않는다(gotcha 056).
+- **한글 UI는 한글 전용 페어링을 우선(권장)**: `font-pairings.csv`의 한글 행(#74~84 — Noto Serif KR/Hahmlet/Gowun Batang 등 헤딩 + Noto Sans KR/Nanum Gothic/IBM Plex Sans KR 등 본문)은 한글·라틴 글리프를 모두 가져 **폴백 함정을 구조적으로 회피**한다. 라틴+Pretendard를 덧대기 전에 이 경로를 먼저 검토하라. CSV는 Google Fonts 기준이라 Pretendard 행이 없다 — Pretendard는 위 jsDelivr CSS로 불러온다.
+- **(라틴 페어링을 쓸 때) 한글은 정본 스택에 함께(필수)**: `fontFamily`는 단일 이름이 아니라 **CSS 스택 문자열**로 적을 수 있다(`"라틴, 한글, sans-serif"`). 한글이 들어가는 UI는 라틴 폰트(Space Grotesk 등)에 한글 글리프가 없어 한글만 시스템 폴백되므로, **정본(DESIGN.md) 단계에서** 한글 웹폰트(Pretendard 등)를 스택에 함께 박는다 — 헤딩은 `"라틴, Pretendard Variable, Pretendard, sans-serif"`(라틴 디스플레이는 라틴이 렌더, 한글만 Pretendard로 폴백. 가변 CSS 기준 이름). 정본이 라틴 단일값이면 Phase 5의 "토큰 그대로 사용"이 그 값을 전파해 한글이 깨진다(gotcha 041).
+  - **스택 순서 = 라틴 폰트의 운명(검증으로 확인, 2026-06-30)**: Pretendard는 라틴 글리프도 가지므로 **본문에 `"Pretendard Variable, Pretendard, DM Sans, sans-serif"`처럼 Pretendard를 앞에 두면 라틴 본문까지 Pretendard로 렌더되고, 뒤의 DM Sans는 lazy-load라 한 번도 다운로드되지 않아 죽은 폰트가 된다**(`document.fonts.check('"DM Sans"')` → false — 등록된 face가 안 쓰여 unloaded인 경우라 이 false는 맞다). 한·영을 한 목소리로 통일하려면(한글 우선 제품) Pretendard-first가 맞고 라틴 본문 폰트는 생략해도 된다. 반대로 **라틴 본문은 페어링 폰트(DM Sans)로 보이고 한글만 Pretendard로** 떨어뜨리려면 `"DM Sans, Pretendard Variable, Pretendard, sans-serif"`처럼 **라틴을 앞에** 둔다. 어느 쪽이든 위 판정 코드(face 로드 결과 + 렌더 폭)로 의도한 폰트가 실제로 쓰였는지 확인.
 - `components.*`는 `backgroundColor/textColor/typography/rounded/padding`를 가지며 토큰을 중괄호로 참조.
 - **대비 짝꿍 명시**: 컴포넌트의 `backgroundColor`/`textColor`가 한 쌍이어야 lint의 contrast 규칙(4.5:1)이 동작합니다. `on-primary` 같은 전경색을 colors에 정의하세요.
 
