@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.2.1] - 2026-10-18
+
+### Bug Fixes
+
+- **design-plan**: The DESIGN.md guide and the `ui-ux-auditor` typography check no longer treat `document.fonts.check()` as evidence that a web font loaded. It returns `true` for a family name that no `@font-face` declares, even while the text falls back, which let the Pretendard mistake fixed in 7.2.0 through; computed `font-family` only echoes the declaration. Both documents now say to copy the family name from the loaded CSS (Pretendard v1.3.9: variable `'Pretendard Variable'`, static `Pretendard`, GOV `'Pretendard GOV'`, checked against the CSS files) and to judge loading with `document.fonts.load()` plus a render-width comparison against the stack without the checked font. The guide includes a runnable snippet, the example stacks use the variable family, and the auditor grep pattern also catches the lowercase jsDelivr URL and `@font-face`. (513ba47)
+- **design-plan**: The guide pointed to `font-pairings.csv` rows #74–82 with Pretendard bodies; the Korean rows are #74–84 and none is Pretendard, which is not on Google Fonts. (513ba47)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs describe the fix under Recent changes. (15866bd)
+
+### Validation and Scope
+
+- Node: 265 of 265 passed.
+- The snippet was run verbatim from the guide in Chromium with Space Grotesk and the Pretendard variable CSS loaded, on a page without Korean text: the right name loaded 5 faces and reported the font applied; a wrong name loaded 0 faces and reported fallback.
+- A blind run gave a worker only the revised sections. It caught a planted defect (variable CSS, a `"Pretendard"` stack and a note claiming `check()` returned true) and wrote the variable family into the stacks. It also exposed a false positive in the first snippet: with a Latin font first and a spaced sentence measured against `sans-serif`, a wrong name still reported the font applied. This was reproduced and fixed before the commit.
+- Windows integrated installation (`install.bat --all`) passed all 12 final checks, and the installed copies of both documents for Claude Code, Codex and Antigravity match the source.
+- Not measured on a machine with a locally installed static Pretendard.
+
 ## [7.2.0] - 2026-10-18
 
 ### Features
