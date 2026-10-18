@@ -312,6 +312,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.2.1 — 字体加载验证不再以 `document.fonts.check()` 为依据
+
+字体加载验证说明不再信任 `document.fonts.check()`。对于没有任何 `@font-face` 声明的字体名，即使文字正在回退到系统字体，这个调用也会返回 `true`；v7.2.0 修复的 Pretendard 错误正是因此通过了检查，而 computed `font-family` 也只是原样返回声明值。Aphrodite 的 `DESIGN.md` 指南和 `ui-ux-auditor` 的排版检查现在要求从所加载的 CSS 中照抄 family 名称（jsDelivr 可变 CSS 为 `'Pretendard Variable'`，静态 CSS 为 `Pretendard`，GOV 为 `'Pretendard GOV'`），并以 `document.fonts.load()` 的结果加渲染宽度比较来判定；指南中附有可直接运行的判定代码。把修订后的段落单独交给执行者做盲测审查时，对方找出了预埋的缺陷，也发现了第一版判定代码的误判：拉丁字体在前的标题字体栈中，即使名称写错也会显示为已应用。现在判定代码以实际字重测量不含空格的句子，并与去掉待检字体后的字体栈比较。照原样运行指南中的代码，名称正确时加载 5 个 face，错误时为 0 个。265 项 Node 测试通过。
+
 ## v7.2.0 — 视频 brief 类型、应用宣传截取与信任优先设计配方
 
 `/video-maker` 新增 brief 类型和 Capture 阶段。默认是 `narrated`；`motion-short` 制作约 10 秒、无旁白和字幕的动态短片；`app-promo` 在写脚本前先录制真实界面：发布影片使用截取的页面，应用演示先确定性回放，再在后期加入虚拟镜头。截取失败时会停止，而不是伪造界面。韩语旁白有了安全默认值：没有韩语音色的 Kokoro 不再使用，Typecast 返回词级和字级时间戳，新增 Gemini TTS 提供方，已知 TTS 脚本时先做强制对齐，再考虑自由转写。渲染 QA 现在以数值测量冻结帧和响度，并为每个生成或截取的素材记录哈希。HeyGen HyperFrames 模块参照已对齐 v0.8.168：该版本移动了 storyboard 和 script 格式文件的位置，CLI 运行需要 `HYPERFRAMES_SKIP_SKILLS=1`。Aphrodite 的 `frontend-design` 模块新增 `corporate-trust` 风格配方，仅在面向受监管行业、B2B 或公共采购且有真实数据或认证时作为条件候选。信任优先的界面只要在 `DESIGN.md` 中写明理由，就可以使用系统字体栈或 Pretendard 500–600 字重的标题；Trust & Authority 风格不再使用闪动的指标，改为几乎静止的动效。10 个配方中的 36 处字体栈加入了 `Pretendard Variable`：jsDelivr 可变字体 CSS 只声明了这个名称，此前韩文会悄悄回退到系统黑体（同一句话宽 446.8px，而不是 389.3px），新的契约测试会发现这种错误。265 项 Node 测试通过。

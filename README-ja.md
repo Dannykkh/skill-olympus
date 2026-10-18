@@ -320,6 +320,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.2.1 — フォント読み込みの検証で `document.fonts.check()` を根拠にしない
+
+フォント読み込みの検証手順は `document.fonts.check()` を信頼しなくなりました。この呼び出しは、どの `@font-face` も宣言していない名前に対しても、文字がシステムフォントで代替表示されている間でも `true` を返します。v7.2.0 で修正した Pretendard の誤りが検証を通ったのはこのためで、computed の `font-family` も宣言値をそのまま返すだけです。Aphrodite の `DESIGN.md` ガイドと `ui-ux-auditor` のタイポグラフィ点検は、ファミリー名を読み込んだ CSS からそのまま写し（jsDelivr の可変 CSS は `'Pretendard Variable'`、静的 CSS は `Pretendard`、GOV は `'Pretendard GOV'`）、`document.fonts.load()` の結果と描画幅の比較で判定するよう案内します。ガイドにはそのまま実行できる判定コードを載せました。改訂部分だけを渡した作業者にブラインドで監査させたところ、仕込んだ欠陥を見つけ、最初の判定コードの誤判定も見つけました。ラテンフォントが先頭にある見出しスタックでは、名前が誤っていても適用済みと出ていました。判定コードは現在、空白のない文を実際の太さで測り、確認するフォントだけを除いたスタックと比較します。ガイドのコードをそのまま実行すると、正しい名前で 5 face、誤った名前で 0 face を読み込みます。Node テスト 265 件が通過しました。
+
 ## v7.2.0 — 動画のブリーフ種別とアプリ紹介キャプチャ、信頼重視のデザインレシピ
 
 `/video-maker` にブリーフ種別と Capture 段階を追加しました。既定は `narrated` で、`motion-short` は音声と字幕なしの約 10 秒のモーション短編を作り、`app-promo` は台本の前に実際の画面を撮影します。ローンチ映像はキャプチャしたページから、アプリデモは決定的な再生のあとに仮想カメラを加えて作ります。キャプチャに失敗した場合は偽の UI を作らずに停止します。韓国語ナレーションの既定値として、韓国語の音声がない Kokoro は使わず、Typecast は単語・文字単位のタイムスタンプを受け取り、Gemini TTS をプロバイダーに追加し、TTS 台本がある場合は自由な書き起こしより強制アラインメントを優先します。レンダー QA は静止したフレームとラウドネスを数値で測り、生成・キャプチャした素材ごとにハッシュを記録します。HeyGen HyperFrames バンドルの参照は v0.8.168 に合わせました。このバージョンでは storyboard・script 形式ファイルの場所が変わり、CLI の実行に `HYPERFRAMES_SKIP_SKILLS=1` が必要です。Aphrodite の `frontend-design` モジュールには `corporate-trust` スタイルレシピを追加しました。規制業界・B2B・公共調達向けで、実際の数値や認証がある場合にだけ使う条件付きの候補です。信頼を優先する画面では、`DESIGN.md` に理由を書けばシステムフォントや Pretendard 500〜600 の見出しを使えます。Trust & Authority スタイルは点滅する指標をやめ、ほぼ動かないモーションにしました。10 のレシピの 36 か所のフォント指定に `Pretendard Variable` を加えました。jsDelivr の可変 CSS が宣言する名前はこれだけで、これまで韓国語はシステムのゴシック体に置き換わっていました（同じ文が 389.3px ではなく 446.8px）。新しい契約テストがこの誤りを検出します。Node テスト 265 件が通過しました。
