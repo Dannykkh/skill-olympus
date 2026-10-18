@@ -30,7 +30,7 @@
 | 역할 | 스택 | 파라미터 |
 |------|------|----------|
 | Hero/인용 세리프 | `"Newsreader", "Gowun Batang", serif` | tracking `-0.02em`~`-0.04em` · leading `1.1` |
-| Body/UI | `"Pretendard", sans-serif` | leading `1.6` (한글 우선 제품 — Pretendard가 라틴도 렌더) |
+| Body/UI | `"Pretendard Variable", "Pretendard", sans-serif` | leading `1.6` (한글 우선 제품 — Pretendard가 라틴도 렌더) |
 | Mono (코드/키/메타) | `"JetBrains Mono", monospace` | Geist Mono 선호 시 별도 로드 후 스택 앞에 추가 |
 
 ```css
@@ -38,7 +38,7 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 ```
 
-라틴 본문을 별도 페어링으로 보이고 싶으면 `"Geist Sans, Pretendard, sans-serif"`처럼 라틴을 앞에.
+라틴 본문을 별도 페어링으로 보이고 싶으면 `"Geist Sans, Pretendard Variable, Pretendard, sans-serif"`처럼 라틴을 앞에.
 
 ## Visual Target
 
@@ -88,8 +88,8 @@ colors:
   muted: "#787774"
 typography:
   h1: { fontFamily: "Newsreader, Gowun Batang, serif", fontSize: 3.25rem, fontWeight: 500, lineHeight: 1.1, letterSpacing: "-0.03em" }
-  body-md: { fontFamily: "Pretendard, sans-serif", fontSize: 1rem, lineHeight: 1.6 }
-  label-caps: { fontFamily: "Pretendard, sans-serif", fontSize: 0.75rem, letterSpacing: "0.05em" }
+  body-md: { fontFamily: "Pretendard Variable, Pretendard, sans-serif", fontSize: 1rem, lineHeight: 1.6 }
+  label-caps: { fontFamily: "Pretendard Variable, Pretendard, sans-serif", fontSize: 0.75rem, letterSpacing: "0.05em" }
 rounded: { sm: 4px, md: 8px, lg: 12px }
 components:
   button-primary: { backgroundColor: "{colors.primary}", textColor: "{colors.on-primary}", rounded: "{rounded.sm}" }

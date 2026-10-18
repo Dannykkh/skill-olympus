@@ -31,8 +31,8 @@
 | 역할 | 스택 | 파라미터 |
 |------|------|----------|
 | Display | `"Cormorant", "Noto Serif KR", serif` | 대형·라이트 웨이트(400~500), tracking 0 ~ +0.01em |
-| Body | `"Jost", "Pretendard", sans-serif` | 가벼운 지오메트릭 |
-| Label | `"Jost", "Pretendard", sans-serif` | 대문자 + tracking `0.14em`~`0.2em` — 럭셔리의 시그니처 |
+| Body | `"Jost", "Pretendard Variable", "Pretendard", sans-serif` | 가벼운 지오메트릭 |
+| Label | `"Jost", "Pretendard Variable", "Pretendard", sans-serif` | 대문자 + tracking `0.14em`~`0.2em` — 럭셔리의 시그니처 |
 
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600&family=Noto+Serif+KR:wght@400;500;600&family=Jost:wght@300;400;500&display=swap');
@@ -86,8 +86,8 @@ colors:
   copy: "#6B6257"
 typography:
   h1: { fontFamily: "Cormorant, Noto Serif KR, serif", fontSize: "clamp(3rem, 6vw, 5.5rem)", fontWeight: 400, lineHeight: 1.15, letterSpacing: "0.005em" }
-  body-md: { fontFamily: "Jost, Pretendard, sans-serif", fontSize: 1.0625rem, fontWeight: 300, lineHeight: 1.7 }
-  label-caps: { fontFamily: "Jost, Pretendard, sans-serif", fontSize: 0.75rem, letterSpacing: "0.16em" }
+  body-md: { fontFamily: "Jost, Pretendard Variable, Pretendard, sans-serif", fontSize: 1.0625rem, fontWeight: 300, lineHeight: 1.7 }
+  label-caps: { fontFamily: "Jost, Pretendard Variable, Pretendard, sans-serif", fontSize: 0.75rem, letterSpacing: "0.16em" }
 rounded: { none: 0px, sm: 2px }
 spacing: { section: 128px, block: 48px }
 ```

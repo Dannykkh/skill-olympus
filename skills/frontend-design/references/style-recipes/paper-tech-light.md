@@ -30,8 +30,8 @@
 
 | 역할 | 스택 |
 |------|------|
-| Heading | `"Space Grotesk", "Pretendard", sans-serif` |
-| Body | `"Pretendard", sans-serif` |
+| Heading | `"Space Grotesk", "Pretendard Variable", "Pretendard", sans-serif` |
+| Body | `"Pretendard Variable", "Pretendard", sans-serif` |
 | Label/Step | `"JetBrains Mono", "IBM Plex Sans KR", monospace` |
 
 ```css
@@ -85,8 +85,8 @@ colors:
   on-neutral: "#1C1917"
   copy: "#57534E"
 typography:
-  h1: { fontFamily: "Space Grotesk, Pretendard, sans-serif", fontSize: 3.25rem, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-0.02em" }
-  body-md: { fontFamily: "Pretendard, sans-serif", fontSize: 1rem, lineHeight: 1.65 }
+  h1: { fontFamily: "Space Grotesk, Pretendard Variable, Pretendard, sans-serif", fontSize: 3.25rem, fontWeight: 600, lineHeight: 1.1, letterSpacing: "-0.02em" }
+  body-md: { fontFamily: "Pretendard Variable, Pretendard, sans-serif", fontSize: 1rem, lineHeight: 1.65 }
   label-mono: { fontFamily: "JetBrains Mono, IBM Plex Sans KR, monospace", fontSize: 0.75rem, letterSpacing: "0.08em" }
 rounded: { sm: 6px, md: 10px, lg: 14px }
 components:

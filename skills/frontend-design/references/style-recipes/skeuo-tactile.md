@@ -28,8 +28,8 @@
 
 | 역할 | 스택 |
 |------|------|
-| Heading/UI | `"Plus Jakarta Sans", "Pretendard", sans-serif` |
-| Body | `"Pretendard", sans-serif` |
+| Heading/UI | `"Plus Jakarta Sans", "Pretendard Variable", "Pretendard", sans-serif` |
+| Body | `"Pretendard Variable", "Pretendard", sans-serif` |
 
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
@@ -129,8 +129,8 @@ colors:
   on-primary: "#F8FAFC"
   on-neutral: "#334155"
 typography:
-  h1: { fontFamily: "Plus Jakarta Sans, Pretendard, sans-serif", fontSize: 3rem, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.02em" }
-  body-md: { fontFamily: "Pretendard, sans-serif", fontSize: 1rem, lineHeight: 1.5 }
+  h1: { fontFamily: "Plus Jakarta Sans, Pretendard Variable, Pretendard, sans-serif", fontSize: 3rem, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.02em" }
+  body-md: { fontFamily: "Pretendard Variable, Pretendard, sans-serif", fontSize: 1rem, lineHeight: 1.5 }
 rounded: { md: 14px, lg: 22px }
 ```
 

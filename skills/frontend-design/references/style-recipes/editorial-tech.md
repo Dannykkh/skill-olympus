@@ -30,7 +30,7 @@
 | 역할 | 스택 | 비고 |
 |------|------|------|
 | Headline | `"Fraunces", "Hahmlet", serif` | 고대비 세리프. 한글은 Hahmlet(9 weights)으로 폴백 |
-| Body | `"DM Sans", "Pretendard", sans-serif` | 라틴은 DM Sans, 한글은 Pretendard |
+| Body | `"DM Sans", "Pretendard Variable", "Pretendard", sans-serif` | 라틴은 DM Sans, 한글은 Pretendard |
 | Label/Meta | `"JetBrains Mono", "IBM Plex Sans KR", monospace` | 모노 유틸리티 — 스텝·타임스탬프·단위 |
 
 ```css
@@ -84,7 +84,7 @@ colors:
   copy: "#A1A1AA"
 typography:
   h1: { fontFamily: "Fraunces, Hahmlet, serif", fontSize: 4rem, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em" }
-  body-md: { fontFamily: "DM Sans, Pretendard, sans-serif", fontSize: 1.0625rem, lineHeight: 1.65 }
+  body-md: { fontFamily: "DM Sans, Pretendard Variable, Pretendard, sans-serif", fontSize: 1.0625rem, lineHeight: 1.65 }
   label-mono: { fontFamily: "JetBrains Mono, IBM Plex Sans KR, monospace", fontSize: 0.75rem, letterSpacing: "0.08em" }
 rounded: { sm: 2px, md: 6px, lg: 10px }
 ```

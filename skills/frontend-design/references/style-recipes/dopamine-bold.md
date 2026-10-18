@@ -31,7 +31,7 @@
 | 역할 | 스택 | 파라미터 |
 |------|------|----------|
 | Display | `"Space Grotesk", "Black Han Sans", sans-serif` | 700만 (Space Grotesk 최대 웨이트) — Regular 금지. 대문자. Black Han Sans는 단일 웨이트 |
-| Body | `"Pretendard", sans-serif` | 500~700 (가벼운 웨이트 금지 — 밀도 유지) |
+| Body | `"Pretendard Variable", "Pretendard", sans-serif` | 500~700 (가벼운 웨이트 금지 — 밀도 유지) |
 | Sticker/Tag | `"Space Grotesk", "Do Hyeon", sans-serif` | 대문자 + tracking 0.05em |
 
 ```css
@@ -118,7 +118,7 @@ colors:
   ink: "#141414"
 typography:
   h1: { fontFamily: "Space Grotesk, Black Han Sans, sans-serif", fontSize: "clamp(3rem, 8vw, 6rem)", fontWeight: 700, lineHeight: 0.95, letterSpacing: "-0.02em" }
-  body-md: { fontFamily: "Pretendard, sans-serif", fontSize: 1.0625rem, fontWeight: 500, lineHeight: 1.55 }
+  body-md: { fontFamily: "Pretendard Variable, Pretendard, sans-serif", fontSize: 1.0625rem, fontWeight: 500, lineHeight: 1.55 }
   label-caps: { fontFamily: "Space Grotesk, Do Hyeon, sans-serif", fontSize: 0.8125rem, letterSpacing: "0.05em" }
 rounded: { sm: 6px, md: 10px, lg: 12px, pill: 999px }
 components:
