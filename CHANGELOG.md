@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.3.0] - 2026-10-20
+
+### Features
+
+- **zephermine**: Plans carry a `### 트립와이어 (Tripwires)` block under `## 전략 선택`, defined in the new `references/tripwire-guide.md`. Each objective metric has a definition, a measurement location, a judgment cadence, a baseline and a judgment window (`구현 중` or `출시 후`); conditions are split without gaps or overlaps into continue, early signal, revise and stop review, and each stage has an action row with an owner. Every number carries `검증됨: <출처>` or `가정: <근거> → 검증: <방법·시점>`; a threshold chosen from a measured baseline is still an assumption. Rate metrics state a minimum sample, a judgment without enough data is recorded as `데이터 없음` (two in a row count as an early signal), revise rows include at least one scope-reduction option, and safety and legal metrics are switched off at once instead of waiting for review. The riskiest assumption is split into a dependency-free section so it is judged in Wave 1, and its section number is backfilled into the plan's `위험 가정:` line. Step 23 checks the block, and the external review prompt asks reviewers for metrics that cannot be measured, thresholds that overlap or leave gaps, and `검증됨` numbers without a real source. (a4ebf4e)
+- **agent-team / agent-team-codex**: A Wave-boundary tripwire check (Step 5A) runs after each Wave's code review and before the next Wave. Build-time metrics are judged; a revise or stop-review hit reports to the owner without starting the next Wave, after reflecting the finished Wave's evidence in `checklist-status.md`. The leader assigns the stage and does not lower it because a fix might help; the owner decides; one line goes to the fire record, and a stage already reached is never erased by recalibration. The final report gains a tripwire line. (a4ebf4e)
+- **workpm / workpm-mcp**: Phase 1 fixes the tripwires (from `plan.md`, or one to three build-time tripwires written into the proposal and the activity log) and names the risky-assumption task. That task runs first and is judged before the remaining tasks are dispatched (in the MCP flow, before they are even created, because workers claim any unblocked task), and the tripwires are judged again before the final process check. (a4ebf4e)
+- **auto-continue-loop (Chronos)**: When `plan.md` has tripwires, each cycle's LOG step judges them. A revise or stop-review hit parks the remaining in-scope issues as `제품 결정` and ends through the existing exit, so the loop still has only two ways to end. The log and final report record the judgments. (a4ebf4e)
+- **zeus**: A tripwire hit does not stop the pipeline. It is recorded in the `[ZEUS-AUTO:taste]` decision ledger for after-the-fact approval, and a stop-review hit goes to the top of the Phase 6 report. (a4ebf4e)
+- **ceo (Athena)**: GO and CONDITIONAL GO verdicts carry review conditions in the same format, with at least one continue and one stop-review condition on business metrics; the output template points at the zephermine guide instead of copying its catalogs. (a4ebf4e)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs describe the change under Recent changes. (92e9317)
+
+### Validation and Scope
+
+- Node: 272 of 272 passed, including the new `tripwire-contract.test.js` (7 tests), which checks that the guide defines the five elements and the evidence labels and that all six build harnesses point at its `## 구현 중 판정` procedure.
+- Blind runs on the guide and the harness wiring: one authoring run that surfaced 10 ambiguities, then audits of execution logs with planted defects that caught 7 of 7, 5 of 5 and 5 of 5, including a baseline lowered after a hit. The guide was revised after each run; the final wording edits were not re-run blind.
+- Windows integrated installation (`install.bat --all`) passed all 12 final checks, and the installed copies of the changed files for Claude Code, Codex and Antigravity match the source.
+- Not yet exercised on a real project plan run through agent-team, workpm or Chronos.
+
 ## [7.2.1] - 2026-10-18
 
 ### Bug Fixes
