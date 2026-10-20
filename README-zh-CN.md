@@ -312,6 +312,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.3.0 — 在计划中设定触发线，并在实现的每个节点判定
+
+Zephermine 的计划现在会设定触发线（tripwire）：在做决定时就事先定好的"重新审视条件"。在 `## 전략 선택` 下，计划要为客观指标写明计量位置和判定区间（实现中、上线后），再写出早期信号、继续条件、调整阈值和考虑停止的条件。每个数字都要标明是附有出处的"已验证"，还是写明验证方法和时间的"假设"；从实测基线中选出的阈值仍然是假设。风险最高的假设会拆成没有依赖的独立分节，在第一个 Wave 中判定。判定由实现编排器在各自的节点进行：Poseidon（`/agent-team`）在每个 Wave 的代码评审之后、下一个 Wave 开始之前判定，Daedalus（`workpm`）在风险假设任务完成后和工序检查前判定，Chronos 每个循环判定，一旦触及调整或停止审视线，就把剩余问题作为产品决策搁置。Zeus 不会停下，而是记入决策台账，并把停止审视放在报告最前面。阶段由负责人标定，决定由判定者做出；已经触及的阶段不会因事后移动阈值而被抹去。安全和法律类指标不等审视，立即关闭。Athena 也会给 GO 和 CONDITIONAL GO 的结论附上同样格式的触发线。让只拿到指南的执行者做盲测审查时，对方找出了示例执行记录中预埋的全部缺陷，包括看到结果后才调低的基线。272 项 Node 测试通过。
+
 ## v7.2.1 — 字体加载验证不再以 `document.fonts.check()` 为依据
 
 字体加载验证说明不再信任 `document.fonts.check()`。对于没有任何 `@font-face` 声明的字体名，即使文字正在回退到系统字体，这个调用也会返回 `true`；v7.2.0 修复的 Pretendard 错误正是因此通过了检查，而 computed `font-family` 也只是原样返回声明值。Aphrodite 的 `DESIGN.md` 指南和 `ui-ux-auditor` 的排版检查现在要求从所加载的 CSS 中照抄 family 名称（jsDelivr 可变 CSS 为 `'Pretendard Variable'`，静态 CSS 为 `Pretendard`，GOV 为 `'Pretendard GOV'`），并以 `document.fonts.load()` 的结果加渲染宽度比较来判定；指南中附有可直接运行的判定代码。把修订后的段落单独交给执行者做盲测审查时，对方找出了预埋的缺陷，也发现了第一版判定代码的误判：拉丁字体在前的标题字体栈中，即使名称写错也会显示为已应用。现在判定代码以实际字重测量不含空格的句子，并与去掉待检字体后的字体栈比较。照原样运行指南中的代码，名称正确时加载 5 个 face，错误时为 0 个。265 项 Node 测试通过。
