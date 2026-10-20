@@ -107,6 +107,7 @@ frontend와 integration에 흩어져 그게 불가능해집니다. 따라서 **�
 | 공유 기반 (`section-01-foundation`) | 예외 | 둘 이상의 기능 섹션이 실제로 공유하는 것만. index.md에 **공유하는 섹션 목록을 사유로 기록** |
 | 레이어 (`section-api-layer`) | 금지 | 기능이 흩어짐. 기존 코드베이스가 이미 레이어로 강제돼 있을 때만 사유와 함께 허용 |
 | 역할 전용 화면 | 기본 | `spec.md` 시스템 역할 표의 `화면` 열이 '별도 화면'인 역할은 독립 섹션 |
+| 위험 가정 확인 (`section-02-spike-llm-quality`) | 조건부 | plan.md 트립와이어의 `위험 가정:` 줄이 있을 때. Dependencies 없음(Wave 1). 기능 코드가 아니라 가정 확인 결과를 지표 값으로 남기는 섹션. 번호를 정하면 plan.md `위험 가정:` 줄의 확인 섹션에 backfill — [tripwire-guide.md](tripwire-guide.md) |
 
 공유 기반 섹션은 최소화합니다. "나중에 쓸 것 같아서" 만든 공통 모듈은 사용처가 하나면 그 기능
 섹션 안으로 넣습니다.

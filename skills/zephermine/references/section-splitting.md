@@ -111,6 +111,8 @@ Include all necessary background, requirements, and implementation details withi
 
 **MCP가 있는 프로젝트**: 섹션의 기능을 감싸는 `mcp-spec.md` `## Tools` 도구 블록(구성 대상·허용 역할·annotations·호출 한도·에이전트 설명·모델용 에러 문구)과 `## Conventions` 중 해당 규약, `## Server`의 기록 방식을 함께 옮깁니다. REST가 없는 로컬 프로그램은 그 도구들이 쓰는 `## Internal Commands` 행도 옮깁니다. UI와 도구가 같은 명령을 부르지 않으면 도구 쪽 검증이 빠집니다.
 
+**트립와이어 계측**: plan.md `### 트립와이어`의 `#### 계측 작업` W 항목은 그 계측이 붙는 기능의 섹션에 작업과 AC로 옮깁니다(W 번호와 지표 ID를 함께 적음). 계측이 섹션 어디에도 없으면 트립와이어는 판정할 지표가 없어 발동하지 않습니다. `위험 가정:` 줄의 가정은 그것만 확인하는 섹션(스파이크)으로 떼고 Dependencies를 비워 Wave 1에 들어가게 합니다. 그 섹션의 AC는 확인 결과를 트립와이어 지표 값으로 남기는 것입니다(예: 평가셋 50문항 통과율 출력).
+
 ### Section File Template
 
 ```markdown

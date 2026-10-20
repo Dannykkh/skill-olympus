@@ -42,6 +42,7 @@ Identify:
 - Performance issues
 - Architectural problems
 - Unclear or ambiguous requirements
+- Tripwires under "전략 선택": metrics that cannot actually be measured, thresholds that overlap or leave gaps, and numbers marked 검증됨 without a real source
 
 Be specific and actionable. Reference specific sections.
 Return the review only. Do not create or modify files; the caller captures your response in its uniquely assigned review file.

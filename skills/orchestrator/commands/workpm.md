@@ -221,6 +221,7 @@ Job:
 11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고, `checklist-status.md` 장부를 모든 행 `missing`으로 만든다. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`
 12. **API 규약 고정** — 작업에 HTTP API가 있으면 planning_dir의 `api-spec.md`가 있으면 그것을, 없으면 젭마인 `references/api-spec-guide.md`의 `## Conventions`(목록 페이지네이션·크기 상한·정렬 허용 컬럼, 공통 에러 형식, 이름·날짜 형식)를 이 작업의 API 규약으로 삼는다. 목록 API가 있으면 완료 기준에 페이지네이션 동작(크기 상한, 허용 안 된 정렬은 400)을 AC로 넣는다. 설계 없이 구현하는 경로라도 목록을 한 번에 다 돌려주는 API를 만들지 않기 위해서다
 13. **MCP 규약 고정** — 작업이 MCP 서버나 도구를 만들거나 바꾸면 planning_dir의 `mcp-spec.md`가 있으면 그것을, 없으면 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`(노출 기본 꺼짐, 구성 대상 경유·DB 직접 접근 금지, 권한은 구성 대상 이하, annotations, 호출 한도·중복 방지, 에이전트 경유 기록, 모델용 에러 문구)를 이 작업의 MCP 규약으로 삼는다. 새로 여는 도구는 승인할 제안서에 도구 이름·구성 대상·위험 표시를 적는다 — 노출을 켜는 것은 사용자 확인 대상이기 때문이다. 프로젝트에 MCP 서버가 있는데 사람이 쓰는 기능을 새로 만들면 그 기능을 도구로 열지를 제안서에서 정하고, 열지 않으면 사유를 한 줄 적는다
+14. **트립와이어 고정** — planning_dir의 `plan.md`에 `### 트립와이어`가 있으면 그것을 쓴다. 없으면 승인할 제안서에 `구현 중` 트립와이어 1~3개를 젭마인 `references/tripwire-guide.md` 형식(지표·계속/초기 신호/수정/중단 검토·근거 `검증됨`/`가정 → 검증`)으로 적고, 승인 후 activity log의 `## Tripwires` 표로 옮긴다. 틀리면 제안서 전체가 헛수고가 되는 가정(AI 품질, 외부 API 지원, 성능 한계)이 있으면 그것을 확인하는 **위험 가정 작업**을 따로 두고 그 결과를 지표로 삼는다
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
@@ -305,6 +306,7 @@ Job:
 ```
 
 **Phase 4 리더 체크리스트:**
+0. **위험 가정 먼저** — Phase 1에서 위험 가정 작업을 정했으면 그 작업만 먼저 투입하고, 결과로 트립와이어를 판정한 뒤 나머지를 투입한다. 수정 임계점·중단 검토 조건이면 나머지를 투입하지 않고 사용자에게 보고한다(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속. 판정 절차: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`)
 1. 현재 CLI의 구현 역할로 작업자 spawn. 런타임 모델·effort 설정을 상속
 2. 승인된 제안서 + **도면 경로** + 태스크 배분 + **담당 AC ID** + **API 규약**(API 작업만) + **MCP 규약**(MCP 작업만) (SendMessage)
 3. 태스크별 담당 파일 영역 명시 (충돌 방지)
@@ -324,7 +326,7 @@ Job:
    - 린트/타입 체크도 함께 실행 (`tsc --noEmit`, `eslint`, `ruff check` 등)
    - 목록 API는 크기 상한·허용 안 된 정렬(400) 경계 테스트를 포함
 9. 테스트 결과로 `checklist-status.md`를 갱신 (실행 증거가 있으면 proved, 코드만 있으면 weak)
-10. 자재검사 + 테스트 모두 통과 → Phase 5 공정 점검 실행
+10. 자재검사 + 테스트 모두 통과 → **트립와이어 판정**(`구현 중` 지표 전부. 계속·초기 신호면 진행, 수정 임계점·중단 검토 조건이면 Phase 5로 가지 않고 사용자 보고. 초기 신호 이상은 plan.md `#### 발동 기록` 또는 activity log `## Tripwires`에 Lead만 한 줄) → Phase 5 공정 점검 실행
 
 **Phase 4 에러 복구 전략:**
 
@@ -368,7 +370,7 @@ Job:
 4. PARTIAL MATCH인 경우 → 누락 노드를 남은 팀원에게 추가 구현 지시
 5. PARTIAL/MISMATCH가 추가 구현 2라운드 내 해결되지 않으면 → "미완"으로 명시 보고 (통과로 올리지 않음, 소진=미완)
 6. 재검증 → FULL MATCH 달성 시 최종 보고
-7. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목, 완료 기준 M/N proved와 남은 AC ID). `checklist-status.md`에 proved가 아닌 행이 남으면 완료로 보고하지 않음
+7. 최종 보고서에 **검증 결과 포함** (매칭률, 누락 항목, 완료 기준 M/N proved와 남은 AC ID, 트립와이어 판정 결과). `checklist-status.md`에 proved가 아닌 행이 남으면 완료로 보고하지 않음
 8. activity log에 최종 검증 결과 기록
 9. 실행 중 작업자를 현재 런타임의 shutdown/interrupt 절차로 종료. `TeamDelete`나 런타임 디렉터리 수동 삭제는 하지 않음
 

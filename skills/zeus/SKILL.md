@@ -228,6 +228,7 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 사용자 질문�
 - zephermine Step 6: **합성 트랜스크립트 생성** / Step 9: **셀프 리뷰** / Step 12~13: 수용+즉시 승인
 - zephermine Step 21~22: SKILLS-CATALOG.md 참조, 추가 설치 불필요 (글로벌 스킬)
 - argos: 결과 즉시 승인 / agent-team: Wave Plan 즉시 실행, 실패 섹션 재시도
+- agent-team·workpm 트립와이어(plan.md `### 트립와이어`의 `구현 중` 지표): 수정 임계점·중단 검토 조건에 닿아도 멈추지 않고 `[ZEUS-AUTO:taste]`로 지표·값·단계·되돌리는 법(plan.md 행동 표의 할 일)을 결정 장부에 기록한 뒤 계속한다 — 절차 정본: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`
 - minos: 전체 시나리오, docker-compose 우선, 없으면 dev server 자동 실행
 
 **Step 6 합성 인터뷰 생성**: Phase 0 파싱 결과 + 산업별 프리셋 조합으로 CPS Phase C/P/S + Gate 1/2/3 구조의 인터뷰 트랜스크립트를 자동 생성.
@@ -371,7 +372,7 @@ Zero-interaction 규칙 때문에 모듈의 질문 단계는 Phase 0 파싱 결�
 
 `docs/zeus/zeus-report.md`에 저장. Phase 0~5 실행 증거가 모두 있어야 진입 가능.
 
-리포트에는 Decision Ledger와 함께 **완료 계약 요구사항→증거 표**(Phase별 `proved`/`weak`/`missing`/`contradicted`)를 포함한다. 5개 Phase가 모두 `proved`가 아니면 SUCCESS로 표기하지 않는다(완료 계약 규칙).
+중단 검토 조건에 닿은 트립와이어가 있으면 리포트 맨 위(판정 위)에 지표·값과 그 뒤에 지은 Wave를 먼저 적는다 — 멈추지 않고 진행했으므로 사용자가 가장 먼저 결재해야 할 항목이다. 리포트에는 Decision Ledger와 함께 **완료 계약 요구사항→증거 표**(Phase별 `proved`/`weak`/`missing`/`contradicted`)를 포함한다. 5개 Phase가 모두 `proved`가 아니면 SUCCESS로 표기하지 않는다(완료 계약 규칙).
 
 ---
 

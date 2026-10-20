@@ -162,6 +162,8 @@ Phase별 질문, 헤르메스 시너지 가이드, 판정 기준: See [challenge
 
 만들지 말아야 할 이유 3가지 vs 만들어야 할 이유 3가지 → 최종 판정.
 
+**GO·CONDITIONAL GO에는 재검토 조건(트립와이어)을 붙인다.** 판정은 지금 가진 정보로 내린 것이므로, 무엇이 보이면 이 판정을 다시 열지 지금 정한다. 수요·전환·리텐션·단위 경제학 같은 사업 지표로 계속 조건과 중단 검토 조건을 각 1개 이상 두고, 지표마다 계측 위치·판정 주기를, 수치마다 `검증됨: <출처>` 또는 `가정: <근거> → 검증: <방법·시점>`을 적는다. 형식은 `skills/zephermine/references/tripwire-guide.md`를 읽어 따르고, 젭마인은 이 조건을 plan.md 트립와이어로 이어받는다. NO-GO는 무엇이 확인되면 다시 검토할지 한 줄만 적는다.
+
 ### Phase 6: 도메인 명확성 점검 (Domain Clarity Check)
 > "고객이 우리 제품을 어떻게 부르고 있어?"
 
@@ -244,4 +246,5 @@ Phase별 질문, 헤르메스 시너지 가이드, 판정 기준: See [challenge
 | `skills/biz-strategy/SKILL.md` | 헤르메스 — 사업성 분석 (선행 스킬) |
 | `skills/game-changing-features/SKILL.md` | 10x 기회 발굴 |
 | `skills/zephermine/SKILL.md` | 젭마인 — 기술 설계 (후행 스킬) |
+| `skills/zephermine/references/tripwire-guide.md` | Phase 5 재검토 조건(트립와이어) 형식 정본 |
 | `skills/estimate/SKILL.md` | 견적서 생성 |

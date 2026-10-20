@@ -383,7 +383,7 @@ PASS stub을 만들지 않고 `NOT RUN`과 Owner Decision Brief를 남깁니다.
    - **드라이("할 게 없음") 판정도 도구로**: lint/typecheck/테스트가 빨간 상태면 "할 게 없음"을 선언하지 않는다 — 정적 신호가 모두 초록일 때만 in-scope 작업 0건이 성립한다(모델 기억이 아니라 도구 출력 기준).
 2. **FIX**: 최소 변경 원칙 — 이슈 해결에 필요한 최소한의 코드만 수정
 3. **VERIFY**: 검증 게이트 명령 실행. **수정이 통합 경계를 건드렸으면 게이트 전에 경계면 교차비교를 1회**(웹: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) — "빌드/테스트 통과 ≠ 정상"(TS 제네릭이 런타임 mismatch를 숨김), 양쪽 파일을 동시에 읽어 계약을 대조한다. 실패 시 같은 사이클 내 최대 3회 재시도. 3회 실패 → [에스컬레이션 사다리](#에스컬레이션-사다리--사람에게-주차하기-전-능력을-한-칸-올린다)(능력 1회 상향) → 그래도 실패 → 주차(PARK)
-4. **LOG**: `docs/chronos/chronos-log.md`에 append
+4. **LOG**: `docs/chronos/chronos-log.md`에 append. 스코프의 plan.md에 트립와이어가 있으면 여기서 [트립와이어 판정](#트립와이어-판정--계획이-정한-재검토-조건)을 한다
 
 ### 검증 게이트가 없는 산출물 — 교차모델 수렴 (034, 선별적)
 
@@ -438,6 +438,21 @@ Critical(보안) > High(버그/데이터 무결성) > Medium(구조/스코프) >
 - 남은 이슈가 전부 주차 상태면 루프를 끝낼 수 있다 — 단, 최종 보고에서 주차 이슈마다
   [Owner Decision Brief](#owner-decision-brief--주차-이슈-보고-규격)를 작성해야 한다.
 
+### 트립와이어 판정 — 계획이 정한 재검토 조건
+
+스코프(또는 인자로 받은 planning_dir)의 `plan.md`에 `### 트립와이어`가 있으면, 매 사이클 LOG 단계에서 `구간`이 `구현 중`인
+지표를 판정한다. 이슈를 하나씩 고치는 루프는 방향이 틀어져도 초록 테스트를 계속 쌓을 수 있다 — 계획 단계에서 정한 조건을
+루프가 보지 않으면 막을 장치가 없다. 판정 절차·행동의 정본은 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`이다.
+plan.md에 트립와이어가 없으면 이 단계는 없다(지킬 전략 결정이 없으므로 루프가 새로 짓지 않는다).
+
+- 지표 값은 계측 위치(`checklist-status.md`, `chronos-log.md`의 재시도·주차 기록, 위험 가정 섹션의 테스트·평가 출력)에서 읽는다.
+- **계속 조건** → 다음 사이클. **초기 신호** → 계속하되 원인을 다음 FIND 후보로 올린다. 데이터가 모자라면 단계를 매기지 않고 `데이터 없음`으로 남긴다.
+  루프가 단계를 낮추거나("다음 사이클에 고치면 오를 것") 결과를 본 뒤 조건 표의 선을 옮기지 않는다 — 재보정 값은 판정자(사람)가 확정한다.
+- **수정 임계점·중단 검토 조건** → 남은 in-scope 이슈를 모두 `제품 결정` 사유로 주차한다(사유에 지표·값·단계를 적음).
+  주차만 남았으므로 종료 조건 1로 최종 보고하고, Owner Decision Brief에 plan.md 행동 표의 할 일(다시 채점할 후보·범위 조정안 또는 `/athena --mode kill`)을 담는다.
+  루프의 종료 방법을 새로 만들지 않는다.
+- 초기 신호 이상이면 로그의 `Tripwire:` 줄과 함께 plan.md `#### 발동 기록`에 한 줄 덧붙인다. 그 절 밖은 고치지 않는다.
+
 ### 로그 기록
 
 ```bash
@@ -449,12 +464,14 @@ echo 'Engine: {네이티브 /goal | /loop 심장박동 | 훅·notify | 직접}' 
 echo 'Scope: {스코프}' >> docs/chronos/chronos-log.md
 echo 'Gate: {검증 게이트 명령}' >> docs/chronos/chronos-log.md
 echo 'Promise: {완료 조건 — 없으면 "작업 소진 시 종료"}' >> docs/chronos/chronos-log.md
+echo 'Tripwires: {plan.md의 구현 중 지표 ID — 없으면 "NOT APPLICABLE"}' >> docs/chronos/chronos-log.md
 
 # 매 사이클
 echo '── Cycle N ──────────────────────────' >> docs/chronos/chronos-log.md
 echo 'Issue: ...' >> docs/chronos/chronos-log.md
 echo 'Fix:   ...' >> docs/chronos/chronos-log.md
 echo 'Verify: ... → PASS' >> docs/chronos/chronos-log.md
+echo 'Tripwire: {지표}={값} → {계속|초기 신호|수정|중단 검토}' >> docs/chronos/chronos-log.md  # 트립와이어가 있을 때만
 echo '────────────────────────────────────────' >> docs/chronos/chronos-log.md
 
 # 주차 발생 시 (사유는 주차 표의 4가지 중 하나)
@@ -496,7 +513,7 @@ echo 'Parked: {이슈} — 사유: {검증 실패|권한 경계|외부 접근 �
 - scope 밖 파일 수정 금지
 - 사이클 사이에 멈추거나 대기 금지
 - "다음으로는 X를 추천합니다" 같은 문장으로 마무리 금지
-- `docs/chronos/` 외의 상태/로그 파일 조작 금지
+- `docs/chronos/` 외의 상태/로그 파일 조작 금지 (예외: 완료 계약의 `checklist-status.md`, 트립와이어 판정의 plan.md `#### 발동 기록` 한 줄)
 
 ---
 
@@ -546,6 +563,7 @@ Iterations: {N} (엔진 재투입 횟수)
 Fixed: {N}건
 Parked: {N}건
 Remaining: {N}건
+Tripwires: {마지막 판정 — 지표별 단계 | NOT APPLICABLE}
 
 Fixed Issues:
   ✅ {이슈} ({파일})

@@ -265,6 +265,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 5. 구현 컨텍스트 매칭 ([expert-matching.md](references/expert-matching.md) 참조)
 6. **Step 2 (Build Wave Plan)**의 사용자 확인 출력으로 합류
 7. planning_dir이 없으므로 태스크별 완료 기준을 같은 형식(`AC-<태스크번호>-k`, 관찰 가능한 동작·검증)으로 정해 Step 2 실행 계획에 함께 출력하고, 이행 장부는 activity log의 `## Acceptance` 표로 둔다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
+8. 같은 실행 계획에 `구현 중` 트립와이어 1~2개(틀리면 작업 전체가 헛수고가 되는 가정이 있으면 그 확인을 Wave 1 태스크로 두고 결과를 지표로)를 정하고, 장부는 activity log의 `## Tripwires` 표로 둔다 (형식: 젭마인 `references/tripwire-guide.md`)
 
 **자유 모드 태스크 분해 원칙:**
 - 파일 충돌 없도록 담당 파일을 명확히 분리
@@ -293,6 +294,7 @@ See [artifacts-review.md](references/artifacts-review.md)
 4. 보조 문서 (api-spec.md, db-schema.md 등) — teammate 전달 레퍼런스 등록
 5. 완료 기준 계약 — `checklist.md` 확인(없으면 섹션 AC에서 기계적으로 생성), `checklist-status.md` 장부 생성 또는 재개
 6. 영향도 분석 (기존 코드가 있는 경우) — 교차 영향 파일 경고
+7. 트립와이어 — `plan.md` `### 트립와이어`의 `구간`이 `구현 중`인 지표와 `위험 가정:` 확인 섹션을 확인해 Step 5A 판정 대상으로 등록. 없으면 `Tripwire: NOT APPLICABLE — plan.md에 없음`을 activity log에 남김
 
 ### Step 1: Parse Sections
 
@@ -366,7 +368,7 @@ Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEA
 1. 선행 Task의 blockedBy 해소 여부 확인
 2. teammate/agent에게 지시 (담당 파일, 도면 노드, 파일 소유권 규칙 포함)
 3. 진행 상황 모니터링 (Claude: shared task list/메시지, Codex: 현재 wait 도구, Antigravity/Grok: subagent 반환 — 모든 요약을 체크리스트·파일 실존과 대조)
-4. 모든 Task completed → 다음 Wave로 진행
+4. 모든 Task completed → Step 5 코드리뷰와 Step 5A 트립와이어 판정을 거쳐 다음 Wave로 진행
 
 **teammate 지시 핵심 요소:**
 - 프로젝트 기반 역할·근거, 섹션 내용, 담당 파일 목록
@@ -393,6 +395,17 @@ Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEA
 4. 미통과 시 → 수정 지시 → 재리뷰 (최대 2회)
 
 **검수 항목:** 기능/책임 단위 분리, 보안 취약점, 타입, SRP, DRY
+
+### Step 5A: Tripwire Check (Wave 경계 판정)
+
+코드리뷰를 통과한 Wave마다, 다음 Wave를 시작하기 전에 Step 0에서 등록한 `구현 중` 지표를 판정한다. 판정 절차·기록 위치·행동의 정본은 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`이다. Wave가 끝날 때마다 보지 않으면 방향이 틀어진 채 남은 Wave가 그 위에 쌓인다.
+
+1. 지표 값을 계측 위치(`checklist-status.md`, activity log 재지시 기록, 위험 가정 섹션의 테스트·평가 출력 등)에서 읽는다. `출시 후`만인 지표는 판정하지 않는다. 데이터가 모자라면 단계를 매기지 않고 `데이터 없음 — <사유>`로 남긴다.
+2. 계속 조건 → 다음 Wave. 초기 신호 → 다음 Wave로 가되 원인을 조사하고 그 지표를 작업자 완료 보고마다 확인.
+3. 수정 임계점·중단 검토 조건 → 다음 Wave를 시작하지 않고 사용자에게 보고한다(지표·값, plan.md 행동 표의 다시 채점할 후보·범위 조정안 또는 `/athena --mode kill`). 끝난 Wave의 작업자 증거는 `checklist-status.md`에 반영하고 멈춘다. "다음 Wave에서 고치면 오를 것" 같은 이유로 단계를 낮추거나 진행을 결정하지 않는다 — 결정은 판정자(사람)가 한다.
+4. 초기 신호 이상·데이터 없음이면 plan.md `#### 발동 기록`(자유 모드: activity log `## Tripwires`)에 한 줄 덧붙인다. Lead만 쓰고 그 절 밖은 고치지 않는다(판정자가 확정한 재보정 값을 조건 표에 옮기는 것만 예외). 이미 닿은 단계는 재보정으로 없애지 않는다.
+
+질문할 수 없는 호출자(제우스)에서는 3 대신 호출자 규칙을 따른다 — 제우스는 `[ZEUS-AUTO:taste]` 결정 장부에 기록하고 계속한다. 4의 발동 기록은 그대로 남긴다.
 
 ### Step 6: Verify Results — 완료 기준 장부 대조
 
@@ -438,6 +451,7 @@ while (checklist-status.md에 proved가 아닌 행 존재):
 📋 완료 기준 (checklist-status.md): M/N proved (XX%) — 남은 ID: …
 📐 도면 매칭: K개 노드 중 J개 구현 (YY%)
 ⏱️ 총 Wave: W개 | 검증 루프: R회
+트립와이어: {Wave별 판정 — 계속/초기 신호/수정/중단 검토, 발동 지표·값 | NOT APPLICABLE}
 내부 모듈: code-reviewer {LOADED|NOT RUN} | orchestrator MCP {NOT SELECTED|LOADED|NOT RUN}
 
 섹션별 결과:

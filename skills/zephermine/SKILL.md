@@ -499,6 +499,9 @@ plan.md 하나를 바로 쓰면 외부 리뷰(Step 13)는 "그 하나"를 다듬
 
 **plan.md 필수 머리 섹션 — `## 전략 선택 (Strategy Decision)`:** 채택 전략 + 채점표 + 기각한 후보와 사유 + (해당 시) 남은 트레이드오프를 기록한다. 이는 외부 리뷰(Step 13)·감리(argos)가 "왜 이 접근인가"를 검증하는 앵커이며, 후속 세션이 결정을 되짚을 수 있게 한다.
 
+**`## 전략 선택` 필수 하위 섹션 — `### 트립와이어 (Tripwires)`:** 채택 전략이 틀렸다는 신호를 결정하는 지금 정해 두고, 구현 하네스가 Wave 경계마다 판정한다. 객관 지표(`M1`…)를 `구간`(`구현 중`/`출시 후`)과 함께 먼저 정의하고 — `구현 중` 지표 1개 이상, 가장 위험한 가정은 그것만 확인하는 의존성 없는 섹션으로 떼어 Wave 1에서 판정되게 한다 — 지표마다 계속 조건·초기 신호·수정 임계점·중단 검토 조건을 빈틈·겹침 없이 나눈다. 모든 수치에 `검증됨: <출처>` 또는 `가정: <근거> → 검증: <방법·시점>`을 붙이고, 지표마다 계측 위치·판정 주기를 적는다. AI 기능이 있으면 품질·비용·안전 지표를 각 1개 이상 둔다. 수정 임계점의 행동은 위 채점표의 기각 후보를 다시 채점하는 것이다.
+See [tripwire-guide.md](references/tripwire-guide.md)
+
 ### 13. External Review
 
 See [external-review.md](references/external-review.md)
@@ -677,6 +680,7 @@ Verify all files were created successfully:
   섹션이나 QA를 고쳤으면 `checklist.md`를 다시 만들고 무엇을 왜 고쳤는지 `integration-notes.md`에 기록한다
 - **화면↔API 대응** — `api-spec.md`의 Screen Data Requirements 기준으로 모든 표시 데이터·액션이 엔드포인트에 대응하는지, 모든 엔드포인트에 Frontend Caller(또는 `external`/`webhook`/`batch`/`system`/`mcp`, 화면 재료가 빠지면 `TBD (화면 누락)` + 미결)가 있는지, 모든 목록 엔드포인트가 Pagination을 선언하고 필터·정렬 컬럼이 `db-schema.md` 인덱스 표에 있는지, 에러 응답이 공통 에러 형식인지. 빠진 것은 두 문서에 보완하고 `integration-notes.md`에 기록. 화면 표가 `NOT APPLICABLE: no UI`이면 Pagination·인덱스 검사만 수행
 - **에이전트 작업↔도구 대응** — `mcp-spec.md`가 있으면 가이드의 대응 검사를 다시 돌린다: 모든 에이전트 작업이 도구에 대응, 모든 도구의 구성 대상이 `api-spec.md` 엔드포인트나 `## Internal Commands`에 실재, `api-spec.md` Summary `MCP Tool` 열↔`## Tools` 1:1, Frontend Caller `mcp`인 엔드포인트마다 도구 존재, DB·파일 직접 접근 도구 없음, 도구 권한 ⊆ 구성 대상 권한, `annotations`·호출 한도·감사 기록·모델용 에러 문구. 빠진 것은 해당 문서에 보완하고 `integration-notes.md`에 기록. `NOT APPLICABLE: no MCP`면 사유가 적혀 있는지만 확인
+- **트립와이어** — `plan.md`의 `## 전략 선택` 아래 `### 트립와이어`가 [tripwire-guide.md](references/tripwire-guide.md)의 최소 구성(지표 2개 이상 중 `구현 중` 1개 이상, 계속 조건·중단 검토 조건 각 1개 이상)을 갖췄는지, `위험 가정:` 줄의 확인 섹션이 `sections/index.md`에서 의존성 없이 있는지, `구현 중` 지표의 계측 위치가 구현 하네스가 남기는 기록인지, 모든 지표에 계측 위치·판정 주기가 있는지, 같은 지표의 칸이 빈틈·겹침 없이 나뉘는지, 모든 수치에 `검증됨`/`가정 → 검증` 표시가 있는지, 조건 칸을 채운 지표마다 그 단계의 행동 행이 있고 수정 임계점 행에 범위 조정안이 있는지, AI 기능이 있으면 품질·비용·안전 지표가 각 1개 이상인지. `#### 계측 작업`의 W 항목이 해당 섹션 작업·AC로 옮겨졌는지. 빠진 것은 plan.md에 보완하고, 섹션에 AC를 더했으면 위 완료 기준 계약대로 `checklist.md`를 다시 만든 뒤 `integration-notes.md`에 기록
 - **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
 - `api-spec.md` (API가 있는 프로젝트)
 - `mcp-spec.md` (건너뛴 프로젝트는 `NOT APPLICABLE: no MCP — <사유>` 한 줄)
@@ -759,6 +763,7 @@ Other options:
 | [persona-journey-guide.md](references/persona-journey-guide.md) | Step 9 페르소나/여정맵 형식 상세 |
 | [team-review-protocol.md](references/team-review-protocol.md) | Step 10 전문가별 분석 프롬프트, Phase A/B 상세 |
 | [domain-confirmation-guide.md](references/domain-confirmation-guide.md) | Step 11 도메인 전문가 제안 + 사전 변경 + 글로벌 반영 충돌 해결 |
+| [tripwire-guide.md](references/tripwire-guide.md) | Step 12 plan.md 트립와이어 다섯 요소 형식, 판정 구간(구현 중·출시 후)과 구현 하네스 판정 절차, 위험 가정 섹션, 수치 근거 표시, 구현 중·AI 기능 지표 |
 | [external-review.md](references/external-review.md) | Step 13 Antigravity/Codex 외부 리뷰 프롬프트 |
 | [schema-design-guide.md](references/schema-design-guide.md) | Step 16 DB 스키마 설계 절차, ERD/DDL 형식 |
 | [api-spec-guide.md](references/api-spec-guide.md) | Step 17 API 명세 형식, 엔드포인트 작성 규칙 |

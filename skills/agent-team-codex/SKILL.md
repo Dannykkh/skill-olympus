@@ -85,6 +85,7 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
    - `db-schema.md` → DB 관련 worker에게 전달
    - `design-system.md` → 프론트엔드 worker에게 전달
 5. 완료 기준 계약 — `checklist.md` 확인(없으면 섹션 AC에서 기계적으로 생성), `checklist-status.md` 장부 생성 또는 재개. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`
+6. 트립와이어 — `plan.md` `### 트립와이어`의 `구간`이 `구현 중`인 지표와 `위험 가정:` 확인 섹션을 Step 4 Wave 경계 판정 대상으로 등록. 없으면 `Tripwire: NOT APPLICABLE — plan.md에 없음`을 activity log에 남김
 
 **자유 모드에서는 건너뜀.**
 
@@ -93,6 +94,7 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 1. 목표를 3~8개의 독립 태스크로 분할
 2. 태스크별 담당 파일 범위를 고정
 3. 의존성 있는 태스크는 후행 Wave로 배치
+4. 자유 모드는 `구현 중` 트립와이어 1~2개(틀리면 작업 전체가 헛수고가 되는 가정이 있으면 그 확인을 Wave 1 태스크로 두고 결과를 지표로)를 정하고, 장부는 activity log의 `## Tripwires` 표로 둔다 (형식: 젭마인 `references/tripwire-guide.md`)
 
 상세 규칙: `references/role-mapping.md`
 
@@ -124,6 +126,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 1. 진행 중 실패 태스크를 우선 확인
 2. 실패 원인을 한 번에 하나씩 재시도
 3. 3회 이상 반복 실패 시 아키텍처 이슈로 분류 후 사용자 보고
+4. **Wave 경계 트립와이어 판정** — Wave의 worker가 모두 반환하면 다음 Wave를 spawn하기 전에 Step 0(자유 모드: Step 1)에서 등록한 `구현 중` 지표를 판정한다. 계속 → 다음 Wave, 초기 신호 → 진행하며 원인 조사·worker 반환마다 확인, 수정 임계점·중단 검토 조건 → 다음 Wave를 spawn하지 않고 사용자 보고(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속). 단계를 낮추거나 판정자 대신 진행을 결정하지 않는다. `출시 후`만인 지표는 판정하지 않고, 데이터가 모자라면 `데이터 없음`으로 남긴다. 초기 신호 이상·데이터 없음은 plan.md `#### 발동 기록`(자유 모드: activity log `## Tripwires`)에 Lead만 한 줄 — 그 절 밖은 판정자가 확정한 재보정 값 반영만 예외. 절차 정본: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`
 
 ### Step 5: Activity Log Summary
 
