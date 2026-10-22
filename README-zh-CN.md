@@ -312,6 +312,12 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.4.0 — 在执行过程中调整方法，分别记录任务恢复与改进效果
+
+Poseidon 和 Daedalus 在重试前先判断失败原因。明确的实现缺陷直接修复；有证据表明上下文、任务拆分或工具顺序存在问题时，才在原有重试预算内比较调整方案，并保留当前执行引擎。即使任务恢复成功，如果输入条件已改变，也会记为 `recovered + unverified`，不把成功直接归因于执行方法的改进。Mnemo 在交接时保存证据和适用条件。本次更新补充的是技能执行流程，没有新增执行引擎。
+
+Minos 根据当前需求和规范决定修改实现还是测试。Zephermine 保留需求尚未验证的状态，把可复现的 AI 评估条件传入各节验收标准，再由 Argos 核查证据。Daedalus 对不改变处理流程的小范围修改使用现有契约和测试进行验证。相关回归检查 56 项通过；执行调整的两类案例共运行 3 次，也验证了 Codex 通过全局目录加载模块的路径。尚未证明普遍的质量、速度或成本提升。[验证记录](docs/research/2026-10-22-execution-adjustment-validation.md)・[Builder 工作流比较](docs/research/2026-10-22-builder-workflow-implementation-validation.md)。
+
 ## v7.3.0 — 在计划中设定触发线，并在实现的每个节点判定
 
 Zephermine 的计划现在会设定触发线（tripwire）：在做决定时就事先定好的"重新审视条件"。在 `## 전략 선택` 下，计划要为客观指标写明计量位置和判定区间（实现中、上线后），再写出早期信号、继续条件、调整阈值和考虑停止的条件。每个数字都要标明是附有出处的"已验证"，还是写明验证方法和时间的"假设"；从实测基线中选出的阈值仍然是假设。风险最高的假设会拆成没有依赖的独立分节，在第一个 Wave 中判定。判定由实现编排器在各自的节点进行：Poseidon（`/agent-team`）在每个 Wave 的代码评审之后、下一个 Wave 开始之前判定，Daedalus（`workpm`）在风险假设任务完成后和工序检查前判定，Chronos 每个循环判定，一旦触及调整或停止审视线，就把剩余问题作为产品决策搁置。Zeus 不会停下，而是记入决策台账，并把停止审视放在报告最前面。阶段由负责人标定，决定由判定者做出；已经触及的阶段不会因事后移动阈值而被抹去。安全和法律类指标不等审视，立即关闭。Athena 也会给 GO 和 CONDITIONAL GO 的结论附上同样格式的触发线。让只拿到指南的执行者做盲测审查时，对方找出了示例执行记录中预埋的全部缺陷，包括看到结果后才调低的基线。272 项 Node 测试通过。

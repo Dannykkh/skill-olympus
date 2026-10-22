@@ -402,6 +402,10 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
+**v7.4.0:** Poseidon and Daedalus now classify failures before retrying. Clear implementation defects get direct fixes; evidence of missing context, poor task decomposition or tool ordering can trigger a bounded comparison within the existing retry budget. The shared policy preserves the selected execution engine and records task recovery separately from evidence that the execution strategy improved. A successful retry with different inputs remains `recovered + unverified`. Mnemo retains the evidence and applicability conditions at handoff; this adds skill instructions, not a new runtime engine.
+
+Minos chooses whether to fix implementation or tests against the current requirements and specification. Zephermine preserves unvalidated demand assumptions and carries reproducible AI evaluation criteria into section acceptance checks; Argos checks that evidence. Daedalus uses the existing contract and tests for small changes that leave the flow unchanged. Targeted regression checks passed 56/56, and two execution-adjustment scenarios ran three times, including the installed Codex catalog path. General quality, speed and cost gains have not been established. See the [execution adjustment validation](docs/research/2026-10-22-execution-adjustment-validation.md) and [Builder workflow comparison](docs/research/2026-10-22-builder-workflow-implementation-validation.md).
+
 **v7.3.0:** Zephermine plans now set tripwires: conditions, fixed while the decision is made, for when to look at it again. Under `## 전략 선택`, a plan names objective metrics with where each is measured and when it is judged (during the build or after launch), then the early signal, the condition to keep going, the threshold to revise and the condition to review stopping. Every number is marked either as verified, with its source, or as an assumption, with how and when it will be checked; a threshold picked from a measured baseline is still an assumption. The riskiest assumption becomes a section with no dependencies, so it is judged in the first Wave. The build harnesses judge at their own boundaries: Poseidon (`/agent-team`) after each Wave's code review and before the next Wave starts, Daedalus (`workpm`) right after the risky-assumption task and before its process check, and Chronos every cycle, parking the remaining issues as product decisions once a revise or stop line is reached. Zeus does not stop; it records the hit in its decision ledger and puts any stop review at the top of its report. The leader assigns the stage, the named owner decides, and a stage already reached is never erased by moving the line afterwards. Safety and legal metrics are switched off at once instead of waiting for review. Athena attaches the same format to GO and CONDITIONAL GO verdicts. In blind audits, workers who saw only the guide caught every defect planted in sample execution logs, including a baseline lowered after the result was in. 272 Node tests passed.
 
 **v7.2.1:** Aphrodite's font-loading guidance no longer trusts `document.fonts.check()`. The call returns `true` for a family name that no `@font-face` declares, even while the text falls back, which is how the Pretendard mistake fixed in v7.2.0 passed review; computed `font-family` only echoes the declaration. The `DESIGN.md` guide and the `ui-ux-auditor` typography check now say to copy the family name from the loaded CSS (`'Pretendard Variable'` for the jsDelivr variable build, `Pretendard` for the static build, `'Pretendard GOV'` for GOV) and to judge loading with `document.fonts.load()` plus a render-width comparison; the guide includes a snippet you can run as is. In a blind run, a worker who saw only the revised text caught a planted defect and exposed a false positive in the first snippet: a heading stack with a Latin font first reported the font as applied under a wrong name. The snippet now measures an unspaced sentence at the real weight against the stack without the checked font. Run verbatim, it loads 5 faces for the right name and 0 for the wrong one. 265 Node tests passed.
@@ -533,6 +537,12 @@ without silently adding the optional business, CEO, or documentation stages.
 - **Process:** research → 3 proposals scored on fit/risk/effort → the approved proposal's completion criteria fixed into `checklist.md` → flow diagram → implement → verify (tests/lint, bounded retries); progress kept in `checklist-status.md`, activity log externalized for resume. API work follows zephermine's list and error conventions (paginated lists, size cap, sort allow-list, one coded error format) even without a spec, and the review checks them along with N+1 queries and filter/sort indexes. MCP work follows the `mcp-spec-guide.md` conventions the same way.
 - **Output:** working code + decision/activity log.
 - **Next:** `/argos`, `/minos`.
+
+Both build harnesses can adjust task context, decomposition, or tool order when execution evidence
+points to a workflow problem. They use the shared [execution adjustment contract](skills/orchestrator/references/execution-adjustment.md)
+within the existing retry budget. Task recovery and evidence that a strategy improved are recorded
+separately; normal implementation defects still use direct fixes. Mnemo later retains the evidence
+and applicability conditions. Reading this contract does not select the MCP runtime.
 
 ### Verify — prove it works
 
@@ -922,4 +932,4 @@ Crash recovery, persistent data after restart, and database restoration **still 
 
 ---
 
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-22
