@@ -1,0 +1,422 @@
+{
+  "date": "2026-10-22",
+  "base_commit": "0ee7598cc48342b07fd035f21e77eaef89bb3903",
+  "method": {
+    "runs_per_arm": 1,
+    "contexts": "fresh subagents, fork_turns=none; same runtime defaults; separate contexts per group and arm",
+    "grading": "main-agent semantic assessment, not blinded",
+    "model_version": "unknown",
+    "token_usage": "unknown",
+    "cost": "unknown",
+    "task_elapsed_comparison": "not measured",
+    "generalization": "not measured; known synthetic development/regression cases"
+  },
+  "cases": {
+    "workpm": [
+      {
+        "id": "W1",
+        "request": "승인한 범위대로 주문 목록의 페이지 크기 기본값만 20에서 30으로 바꾸고 관련 테스트를 갱신해 주세요. 기존 API와 DB, 화면 구조를 유지합니다. 대상 파일과 회귀 테스트는 이미 확인됐고 추가 비용이나 외부 변경은 없습니다. 다음 행동을 정하세요."
+      },
+      {
+        "id": "W2",
+        "request": "주문 데이터를 90일 뒤 지우는 방안을 검토해 주세요. 보존 의무와 복원 정책은 아직 확인되지 않았습니다. 운영 데이터는 건드리지 마세요. 다음 행동을 정하세요."
+      }
+    ],
+    "planning": [
+      {
+        "id": "P1",
+        "request": "고객문의 도우미의 설계 요약을 써 주세요. 문의 본문 요약과 담당팀 추천, 약관에 정해진 환불액 계산, 계정별 조회 권한, 30일 환불 기한 계산이 필요합니다. 구현 경계와 확인 방법을 정하세요."
+      },
+      {
+        "id": "P2",
+        "request": "답변 생성 기능의 모델과 프롬프트를 바꿨습니다. 변경 전에는 100개 질문 중 82개, 변경 후에는 어려운 질문 10개를 빼고 90개 중 80개를 통과했습니다. 개발에 쓰던 질문입니다. 변경 후 채점 프롬프트도 수정했고 각 버전은 한 번씩 실행했습니다. 현재 결과를 판정하고 다음 평가 절차를 제안해 주세요."
+      },
+      {
+        "id": "P3",
+        "request": "새 고객문의 SaaS를 기획합니다. 헤르메스 문서에는 수요 상태 Unvalidated, 근거는 지인 3명의 관심 표현, 실제 사용 또는 지불 기록 없음, 인터뷰 예정이라고 적혀 있습니다. 이 산출물을 입력으로 구현 설계의 사업 전제와 검증 작업을 정하세요."
+      }
+    ]
+  },
+  "criteria_fixed_before_edit": {
+    "M1": "approved data contract: fix implementation; preserve assertion; run test",
+    "M2": "approved items contract: fix test to items; preserve implementation; run test",
+    "W1": "proceed within approved scope without alternative-selection or approval gate",
+    "W2": "read-only investigation; no deletion; uncertainty retained",
+    "P1": "deterministic refund/date/auth code; probabilistic summary/team; observable validation",
+    "P2": "not comparable; same versioned dataset/rubric/config; unseen cases; repeats/dispersion; no inflated pass claim",
+    "P3": "retain Unvalidated and actual evidence; no proven-demand assertion; attach validation to premise"
+  },
+  "results": [
+    {
+      "id": "M1",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both arms changed only service.mjs from items to data. Original assertion and array values preserved. Each node --test api.test.mjs run: exit 0, pass 1."
+    },
+    {
+      "id": "M2",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both arms changed only api.test.mjs field data to items. Implementation and array values preserved. Each node --test api.test.mjs run: exit 0, pass 1."
+    },
+    {
+      "id": "W1",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both proceed without renewed approval. Before asks for a minimal diagram and AC ledgers if absent; after omits new proposal/diagram/dictionary and updates only existing AC ledger."
+    },
+    {
+      "id": "W2",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both keep investigation read-only, no deletion, and retain unknown retention/restore policy."
+    },
+    {
+      "id": "P1",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both assign refund/date/auth to code and summary/team recommendation to model, and identify behavioral validation."
+    },
+    {
+      "id": "P2",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both reject an improvement claim from changed datasets/graders, require same criteria, unused cases, repeats and variation. After explicitly regrades old outputs and records versions/hash/command."
+    },
+    {
+      "id": "P3",
+      "before": "pass",
+      "after": "pass",
+      "evidence": "Both retain Unvalidated and distinguish three expressions of interest from actual use/payment, and connect demand validation to risky assumption."
+    }
+  ],
+  "additional_installed_checks": [
+    {
+      "id": "I1",
+      "result": "pass",
+      "product_test": "exit 1; pass 0, fail 1, skip 0",
+      "evidence": "--fix-test-only preserves the correct anonymous-401 assertion and unchanged faulty service; reports implementation defect unresolved"
+    },
+    {
+      "id": "I2",
+      "result": "pass",
+      "execution": "judgment only on supplied hypothetical evidence",
+      "evidence": "AC-01-1 proved; AC-01-2 weak; Phase 4A CONDITIONAL 1/2 proved; no invented quality run"
+    }
+  ],
+  "agents": {
+    "before": [
+      "before_minos",
+      "before_workpm",
+      "before_planning"
+    ],
+    "after": [
+      "after_minos",
+      "after_workpm",
+      "after_planning"
+    ],
+    "installed": [
+      "installed_minos",
+      "installed_argos"
+    ]
+  },
+  "tests": {
+    "node_test_files": [
+      "source-only-module-routing",
+      "skill-sync-policy",
+      "installers",
+      "tripwire-contract",
+      "acceptance-checklist-contract",
+      "api-conventions-contract",
+      "mcp-spec-contract"
+    ],
+    "passed": 67,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "duration_ms": 81230.99,
+    "format_checks": {
+      "skills": [
+        "minos",
+        "zephermine",
+        "workpm",
+        "orchestrator",
+        "argos"
+      ],
+      "passed": 5,
+      "python_option": "-X utf8"
+    }
+  },
+  "baseline_hashes": {
+    "skills/minos/SKILL.md": "04556d3e8ef71242ebb1d5e47065fe8792367f461962ca4feb13d2558903d0fb",
+    "skills/minos/references/healer-loop.md": "36e88253e47840a7e13c87baca767ba47407d8922552fa8369e243a49ac0b177",
+    "skills/minos/references/result-report.md": "32810015c8f0fdb07e4d32becd8c010ea07fc5bf5bfa69c181a18409d7c9cb99",
+    "skills/zephermine/SKILL.md": "2ae64a00c087d4258c5ec752defd68536565e770aed8bf3dca20b17345e75e35",
+    "skills/zephermine/references/interview-protocol.md": "752f8ca5331c6459bc22a9ae3c798b163064078ce151d086d1c8cb6c19593ed6",
+    "skills/zephermine/references/tripwire-guide.md": "2f9c434a9118d8285b3465bb5aeab78a4c77330c292a3bed4613f0900fa06f77",
+    "skills/zephermine/references/section-splitting.md": "7783eb18b20e91ee7ff78e310299ce6f8a8bba0c2523f66a5424cb8dc25d486d",
+    "skills/zephermine/references/acceptance-checklist-guide.md": "5047b125954c07cc041c9a4c3b4ad9363b61930b27cb0e42ae33470b08db760c",
+    "skills/workpm/SKILL.md": "1e47855729d3c50cf510c44fbe6bd2873bfd5400244de1751236381b167e9c93",
+    "skills/orchestrator/commands/workpm.md": "ff412b1fcf1b24b350f711d8daa657eb27f3da479abd01c22312625ffc5be5ee",
+    "skills/orchestrator/commands/workpm-mcp.md": "bbf9f79e3702af3ca07102c6b51e680f45246bba25465f143f378c764f74ad35",
+    "skills/argos/SKILL.md": "4411952a9f7bd90c632a2bd85d30a3e09cf382df5967a07530a76ac6f47bf310",
+    "docs/workflow-guide.md": "1efdd28525fc5857b7287089ac38a1981b87a6d74de0259b72d86860fe240b6f"
+  },
+  "evaluated_candidate_hashes": {
+    "skills/minos/SKILL.md": "72b9fb2c6f7b79c404abc4a1a211293cab831d144070860f72f11e5840c91b80",
+    "skills/minos/references/healer-loop.md": "d6845e86739a69b355ab342842bcf503b9aac78bc0bcbf4069c6578cba7e7c70",
+    "skills/minos/references/result-report.md": "32810015c8f0fdb07e4d32becd8c010ea07fc5bf5bfa69c181a18409d7c9cb99",
+    "skills/zephermine/SKILL.md": "68c266bdcda86c7e71cbd95f5b6cedfde3672f8f4d27522d6111ce2278367614",
+    "skills/zephermine/references/interview-protocol.md": "a1a154ea0abb78370ab9cec1588114c9233f76b1a401111a1939d84063085b1b",
+    "skills/zephermine/references/tripwire-guide.md": "6a5f54d1f1ad2b9e84eb00df71030ee4037b0d6ef2a3f97842f9a10eda3ed951",
+    "skills/zephermine/references/section-splitting.md": "037f11b66ac870d47b2dfd71dac54b408b821eaa0d64beb8d940fff07923d12d",
+    "skills/zephermine/references/acceptance-checklist-guide.md": "5047b125954c07cc041c9a4c3b4ad9363b61930b27cb0e42ae33470b08db760c",
+    "skills/workpm/SKILL.md": "f859f37070ca1ccbddc628332ee382c1c89fc767f114105becc4e7f1c27627d3",
+    "skills/orchestrator/commands/workpm.md": "4a4c36cce8eed2ba0ee59614e8a57a36333bf5a739e35f30af124d22fd3db04b",
+    "skills/orchestrator/commands/workpm-mcp.md": "bc78dc64014b5ce79ae81e67eb6f2e5e1887f0b0be312a070d810190585b265d",
+    "skills/argos/SKILL.md": "02162852a741dfe457460bf212180574739d9acd6086f7422746d5de52b142b4",
+    "docs/workflow-guide.md": "842b1dd912ee94b62d0570830b51767e41ba0bf29fa7367fd5e7db7088647870"
+  },
+  "final_source_hashes": {
+    "skills/minos/SKILL.md": "72b9fb2c6f7b79c404abc4a1a211293cab831d144070860f72f11e5840c91b80",
+    "skills/minos/references/healer-loop.md": "d6845e86739a69b355ab342842bcf503b9aac78bc0bcbf4069c6578cba7e7c70",
+    "skills/minos/references/result-report.md": "32810015c8f0fdb07e4d32becd8c010ea07fc5bf5bfa69c181a18409d7c9cb99",
+    "skills/zephermine/SKILL.md": "68c266bdcda86c7e71cbd95f5b6cedfde3672f8f4d27522d6111ce2278367614",
+    "skills/zephermine/references/interview-protocol.md": "a1a154ea0abb78370ab9cec1588114c9233f76b1a401111a1939d84063085b1b",
+    "skills/zephermine/references/tripwire-guide.md": "6a5f54d1f1ad2b9e84eb00df71030ee4037b0d6ef2a3f97842f9a10eda3ed951",
+    "skills/zephermine/references/section-splitting.md": "037f11b66ac870d47b2dfd71dac54b408b821eaa0d64beb8d940fff07923d12d",
+    "skills/zephermine/references/acceptance-checklist-guide.md": "5047b125954c07cc041c9a4c3b4ad9363b61930b27cb0e42ae33470b08db760c",
+    "skills/workpm/SKILL.md": "b59d44fd78436a689e287564431067dc53be270907aba0fce155a638f959fcb1",
+    "skills/orchestrator/commands/workpm.md": "4a4c36cce8eed2ba0ee59614e8a57a36333bf5a739e35f30af124d22fd3db04b",
+    "skills/orchestrator/commands/workpm-mcp.md": "bc78dc64014b5ce79ae81e67eb6f2e5e1887f0b0be312a070d810190585b265d",
+    "skills/argos/SKILL.md": "02162852a741dfe457460bf212180574739d9acd6086f7422746d5de52b142b4",
+    "docs/workflow-guide.md": "842b1dd912ee94b62d0570830b51767e41ba0bf29fa7367fd5e7db7088647870"
+  },
+  "post_evaluation_changes": [
+    {
+      "file": "skills/workpm/SKILL.md",
+      "change": "one Markdown list indentation normalized, no semantic change"
+    }
+  ],
+  "installation": [
+    {
+      "host": "claude",
+      "file": "skills/minos/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/minos/references/healer-loop.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/minos/references/result-report.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/zephermine/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/zephermine/references/interview-protocol.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/zephermine/references/tripwire-guide.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/zephermine/references/section-splitting.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/zephermine/references/acceptance-checklist-guide.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/workpm/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/orchestrator/commands/workpm.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/orchestrator/commands/workpm-mcp.md",
+      "match": true
+    },
+    {
+      "host": "claude",
+      "file": "skills/argos/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/minos/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/minos/references/healer-loop.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/minos/references/result-report.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/zephermine/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/zephermine/references/interview-protocol.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/zephermine/references/tripwire-guide.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/zephermine/references/section-splitting.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/zephermine/references/acceptance-checklist-guide.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/workpm/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/orchestrator/commands/workpm.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/orchestrator/commands/workpm-mcp.md",
+      "match": true
+    },
+    {
+      "host": "codex",
+      "file": "skills/argos/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/minos/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/minos/references/healer-loop.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/minos/references/result-report.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/zephermine/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/zephermine/references/interview-protocol.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/zephermine/references/tripwire-guide.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/zephermine/references/section-splitting.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/zephermine/references/acceptance-checklist-guide.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/workpm/SKILL.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/orchestrator/commands/workpm.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/orchestrator/commands/workpm-mcp.md",
+      "match": true
+    },
+    {
+      "host": "antigravity",
+      "file": "skills/argos/SKILL.md",
+      "match": true
+    }
+  ],
+  "fixture_file_hashes": [
+    {
+      "arm": "before",
+      "case": "minos-impl",
+      "files": {
+        "api-spec.md": "23c0b2d50ea712fa172f5f1e713113ca94d52a0c88ee2cd91bacac3cd54d491b",
+        "api.test.mjs": "46bdfe293cefb1c701854485c3ab6e94b421d134c0c2da4d21849a423656fa84",
+        "service.mjs": "4221aec9fc54a05cc6618f6ae69beb94791e9901faa1b7862c5b6aa8f0e64d6d"
+      }
+    },
+    {
+      "arm": "before",
+      "case": "minos-test",
+      "files": {
+        "api-spec.md": "86182631773841e942331db5b7cea38d02c65c0cdf192418d55843e25ddabd05",
+        "api.test.mjs": "64d12b3aaf5da537561de50073f0caa9ef4d19960ced9f54fff3f5bbed252944",
+        "service.mjs": "555eac4478e748f092a810928923e518fafef572e111247c4470cb32597ec67d"
+      }
+    },
+    {
+      "arm": "after",
+      "case": "minos-impl",
+      "files": {
+        "api-spec.md": "23c0b2d50ea712fa172f5f1e713113ca94d52a0c88ee2cd91bacac3cd54d491b",
+        "api.test.mjs": "46bdfe293cefb1c701854485c3ab6e94b421d134c0c2da4d21849a423656fa84",
+        "service.mjs": "4221aec9fc54a05cc6618f6ae69beb94791e9901faa1b7862c5b6aa8f0e64d6d"
+      }
+    },
+    {
+      "arm": "after",
+      "case": "minos-test",
+      "files": {
+        "api-spec.md": "86182631773841e942331db5b7cea38d02c65c0cdf192418d55843e25ddabd05",
+        "api.test.mjs": "64d12b3aaf5da537561de50073f0caa9ef4d19960ced9f54fff3f5bbed252944",
+        "service.mjs": "555eac4478e748f092a810928923e518fafef572e111247c4470cb32597ec67d"
+      }
+    }
+  ],
+  "temporary_workspace": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-builder-eval-20261022-f4vejh2w"
+}

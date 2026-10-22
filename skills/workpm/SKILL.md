@@ -115,7 +115,7 @@ MCP 파일을 읽지 못하면 안전하게 직렬화 가능한 작업만 메인
 4. **모듈 미가용 시 즉석 생성** (bounded native fallback):
    - 글로벌 사전(`~/.agent-memory/domain-dictionaries/{도메인}.md`, `AGENT_DOMAIN_DICTIONARY_HOME` override 가능) 후보 용어를 번호 목록으로 시드 (있으면)
    - 사용자 지시문에서 핵심 용어 5~10개 추출
-   - 사용자 1회 확인 후 마스터 사전 v1 생성
+   - 현재 요구·기존 코드로 확정한 용어는 바로 사용하고, 의미가 갈려 구현을 바꾸는 용어만 확인 후 마스터 사전 v1 생성
    - 이후 시공 중 새 용어 발견 시 사전 자동 갱신 (델타 없이 마스터 직접)
    - 상태를 `dictionary-module: NOT RUN (native fallback)`으로 기록
 5. **비적용 조건**: 사용자 지시가 5줄 미만의 trivial 작업이면 `NOT APPLICABLE: trivial task`로 기록
@@ -133,6 +133,11 @@ MCP 파일을 읽지 못하면 안전하게 직렬화 가능한 작업만 메인
 - 위반 발견 시 해당 teammate에게 재시공 지시 (rename은 자동 수정 가능)
 
 ## 워크플로우
+
+구현·검증 중 실행 방식의 문제가 관찰되면 이미 해석한 `orchestrator_root`의
+`references/execution-adjustment.md`를 읽습니다. 네이티브·순차·MCP 경로 모두 같은 비교 계약을
+사용하며, 구현 결함의 일반 수정과 실행 방식 변경을 구분합니다. 현재 작업의 비교 결과는 활동
+로그에 남기고, 므네모 핸드오프는 이후 교훈 정제에 사용합니다.
 
 경로에 따라 단계 수가 다릅니다.
 

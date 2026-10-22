@@ -37,18 +37,22 @@ max_concurrent_threads_per_session = 6
    추측하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모입니다. 모듈의 `references/`, `scripts/`,
    `commands/`는 모두 이 루트에서 해석합니다.
-5. Step 6 코드 리뷰에 도달했을 때만 `code_reviewer_root`를 만듭니다. hard file lock,
-   외부 ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
-   `orchestrator_root`를 만들고 `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다.
+5. Step 6 코드 리뷰에 도달했을 때만 `code_reviewer_root`를 만듭니다. 실행 방식 변경 가설이 있으면
+   `orchestrator_root`를 해석해 `${orchestrator_root}/references/execution-adjustment.md`만 읽습니다.
+   hard file lock, 외부 ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
+   `${orchestrator_root}/commands/workpm-mcp.md`를 읽고 MCP 도구를 사용합니다.
 
 이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
 모듈 이름을 slash command로 실행하지 않습니다.
 
 code-reviewer를 읽지 못하면 `codex review` 1회와 explorer의 bounded 품질·보안·타입
 체크만 실행하고 `policy module: NOT RUN (native fallback)`, gate `DEGRADED`를 기록합니다.
-orchestrator/MCP를 읽지 못하면 파일 소유권을 직렬화할 수 있는 경우에만 메인 순차 경로로
+MCP 분기를 선택했는데 orchestrator/MCP를 읽지 못하면 파일 소유권을 직렬화할 수 있는 경우에만 메인 순차 경로로
 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock이 필수이면 해당 Wave는 `BLOCKED`입니다.
 어느 누락도 PASS로 처리하지 않습니다.
+
+실행 방식 비교 문서만 읽는 경로는 `MCP: NOT SELECTED`입니다. 그 문서를 읽지 못하면
+`adjustment: not-run (module unavailable)`을 남기고 기존 구현 수정·검증을 수행합니다.
 
 ## Modes
 
@@ -67,7 +71,7 @@ orchestrator/MCP를 읽지 못하면 파일 소유권을 직렬화할 수 있는
 기본 경로는 Codex native agent이며, agent가 없으면 메인 컨텍스트 순차 실행입니다. hard file
 lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항일 때만 MCP 분기를 선택하고,
 그때 위 resolver로 `orchestrator` 모듈과 `${orchestrator_root}/commands/workpm-mcp.md`를
-읽습니다. 선택 전에는 모듈·서버·활동 로그 도구를 로드하지 않습니다.
+읽습니다. 실행 방식 비교용 reference를 읽어도 MCP 서버·활동 로그 도구는 로드하지 않습니다.
 
 ## Workflow
 
@@ -124,8 +128,8 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 ### Step 4: 모니터링
 
 1. 진행 중 실패 태스크를 우선 확인
-2. 실패 원인을 한 번에 하나씩 재시도
-3. 3회 이상 반복 실패 시 아키텍처 이슈로 분류 후 사용자 보고
+2. 실패 명령·출력·부분 변경으로 원인을 확인. 구현 결함은 바로 수정하고, 실행 방식 변경이 필요하면 `references/role-mapping.md`의 실패 처리에 따라 비교
+3. 동일 실패의 재시도 상한에 닿으면 미완료와 차단 근거를 보고. 실패 횟수만으로 아키텍처 문제라 단정하거나 작업자 교체로 횟수를 초기화하지 않음
 4. **Wave 경계 트립와이어 판정** — Wave의 worker가 모두 반환하면 다음 Wave를 spawn하기 전에 Step 0(자유 모드: Step 1)에서 등록한 `구현 중` 지표를 판정한다. 계속 → 다음 Wave, 초기 신호 → 진행하며 원인 조사·worker 반환마다 확인, 수정 임계점·중단 검토 조건 → 다음 Wave를 spawn하지 않고 사용자 보고(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속). 단계를 낮추거나 판정자 대신 진행을 결정하지 않는다. `출시 후`만인 지표는 판정하지 않고, 데이터가 모자라면 `데이터 없음`으로 남긴다. 초기 신호 이상·데이터 없음은 plan.md `#### 발동 기록`(자유 모드: activity log `## Tripwires`)에 Lead만 한 줄 — 그 절 밖은 판정자가 확정한 재보정 값 반영만 예외. 절차 정본: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`
 
 ### Step 5: Activity Log Summary
@@ -154,7 +158,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
    - flow-diagrams 노드 매핑 (있는 경우) — 담당 노드가 구현되었는지
 3. source module 미가용 시 native review + 위 세 항목만 bounded fallback으로 실행하고
    `policy module: NOT RUN`, `review gate: DEGRADED`를 보고합니다.
-4. 미통과 항목 → 해당 worker 재spawn하여 수정 (최대 2회)
+4. 미통과 항목 → Step 4의 원인 판별을 거쳐 수정·재검증 (최대 2회; 실행 방식 비교도 같은 상한에 포함)
 5. 2회 후에도 미통과 → 사용자 보고
 
 ### Step 7: 통합 게이트 (완료 권한 — 필수)
@@ -170,7 +174,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
    3. (가능하면) 통합/E2E 1회 실행
 4. 게이트 결과에 따라:
    - 전부 통과하고 `checklist-status.md`의 모든 행이 `proved`(게이트 뒤 재확인) → 완료 선언 가능. 아니면 "M/N proved, 남은 ID"로 보고
-   - 실패 → 해당 worker 재spawn하여 수정 후 게이트 재실행
+   - 실패 → Step 4의 원인 판별과 기존 재시도 상한 안에서 수정 후 게이트 재실행
    - **빌드/테스트 도구가 없으면** 그 사실을 명시하고 사용자에게 수동 확인을 요청 (자동 PASS 금지)
 5. 남은 리스크/미해결 항목 정리
 

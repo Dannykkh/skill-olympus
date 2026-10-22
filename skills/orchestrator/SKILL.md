@@ -1,11 +1,15 @@
 ---
 name: orchestrator
-description: PM-Worker 패턴의 Multi-AI 오케스트레이션 (MCP 기반). 네이티브 멀티에이전트의 폴백 + 정책 레이어 (hard file lock, 외부 태스크 보드, 크로스-CLI 혼합). /daedalus --mcp로 실행. 일반 프로젝트는 네이티브 모드 권장.
+description: 네이티브 PM·실행 방식 비교의 공통 계약과 조건부 MCP 오케스트레이션. hard file lock, 외부 태스크 보드, 크로스-CLI 혼합이 필요할 때 /daedalus --mcp로 실행한다.
 ---
 
 # Orchestrator - Multi-AI 병렬 작업 시스템 (MCP 대규모 모드)
 
 PM (Project Manager)이 태스크를 분배하고, Worker들이 병렬로 수행합니다.
+
+공통 PM 절차는 `commands/workpm.md`에 있습니다. 실행 중 문맥·작업 분할·도구 순서를 바꿔야 한다는
+근거가 있으면 [실행 방식 비교](references/execution-adjustment.md)를 읽습니다. 이 계약은 네이티브·
+메인 순차·MCP 경로가 공유하며, 문서 로드만으로 MCP 서버를 실행하거나 MCP 모드로 전환하지 않습니다.
 
 > **참고:** 일반 프로젝트는 `/daedalus` (네이티브 모드)를 권장합니다.
 > 이 MCP 모드는 대규모(섹션 10+), 크로스-CLI 혼합, 장시간 작업에 적합합니다.
@@ -51,6 +55,8 @@ orchestrator/
 │   ├── workpm.md               # 공통 5단계 PM 계약 + CLI별 네이티브 역할
 │   ├── workpm-mcp.md           # PM 명령어 (MCP 전용, 모든 CLI)
 │   └── pmworker.md             # Worker 명령어 (모든 CLI)
+├── references/
+│   └── execution-adjustment.md # 현재 태스크의 실행 방식 비교 (모든 실행 경로)
 └── docs/
     └── orchestrator-guide.md   # 상세 가이드
 ```

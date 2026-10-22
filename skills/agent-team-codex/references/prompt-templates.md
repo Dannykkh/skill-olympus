@@ -14,6 +14,10 @@ spawn worker for {owned_files}. implement {task_goal}. run related tests. edit o
 
 ## 3) 리드 통합 지시
 
+실패한 worker는 실패 명령·출력 또는 로그 경로, 시도한 변경, 부족했던 입력을 반환합니다.
+실행 방식 변경은 Lead가 판단합니다. 비교 태스크에는 Lead가 고정한 시작 상태·입력·검증 기준·
+남은 상한과 변경 가설 하나를 전달하고, worker는 실제 산출물·실행 결과·관측 비용을 반환합니다.
+
 ```text
 summarize all active agent outputs, list conflicts by file, then produce a merge-ready final plan.
 ```

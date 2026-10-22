@@ -74,26 +74,27 @@ npx playwright test --reporter=json > test-results.json
 | 2 | **API 경로 오류** | `404 Not Found`, `405 Method Not Allowed` | 구현 또는 테스트 |
 | 3 | **응답 스키마 불일치** | `expect(received).toEqual(expected)`, JSON 구조 차이 | 테스트 또는 구현 |
 | 4 | **타이밍 이슈** | `Timeout`, `waiting for`, `net::ERR_CONNECTION_REFUSED` | 테스트 코드 |
-| 5 | **인증 실패** | `401 Unauthorized`, `403 Forbidden` | 테스트 코드 (토큰 설정) |
+| 5 | **인증 실패** | `401 Unauthorized`, `403 Forbidden` | 계약상 허용·거부 여부와 토큰 설정을 대조해 결정 |
 | 6 | **테스트 데이터** | `null`, `undefined`, 빈 배열 | 테스트 코드 (fixture) |
 | 7 | **비즈니스 로직** | 잘못된 값 반환, 상태 불일치 | 구현 코드 |
 | 8 | **인프라 문제** | `ECONNREFUSED`, `ENOTFOUND`, 포트 충돌 | 사용자 안내 |
 
 ### 수정 대상 결정 규칙
 
-```
-1. 테스트 코드 문제가 명백 → 테스트 코드 수정
-   (잘못된 셀렉터, 잘못된 기대값, 누락된 대기)
+현재 사용자 요구와 승인된 AC·QA 시나리오·API 명세에서 기대 동작을 먼저 찾습니다.
+실제 응답과 구현 코드는 관측값이며, 그 자체가 정답의 근거는 아닙니다.
 
-2. 구현 코드 버그가 명백 → 구현 코드 수정
-   (라우트 오타, 필수 필드 검증 누락, 잘못된 HTTP 상태 코드)
+| 계약 대조 결과 | 행동 |
+|---|---|
+| 구현이 계약과 다름 | 구현 수정. 계약을 검증하는 assertion 유지 |
+| 테스트가 현재 계약과 다름 | 테스트 수정. 기대값을 바꾼 계약의 위치·변경 근거를 수정 이력에 기록 |
+| 셀렉터·대기·fixture만 잘못됨 | 검증하려는 동작과 assertion 강도를 유지하며 테스트 수정 |
+| 계약이 없거나 서로 모순됨 | 기존 기대값을 보존하고 미해결로 보고. 필요한 결정만 사용자에게 확인 |
+| 인프라 문제 | 환경 증거와 필요한 조치를 보고 |
 
-3. 원인이 불명확 → 테스트 코드 먼저 확인
-   (구현이 의도대로라면 테스트 기대값이 잘못된 것)
-
-4. 인프라 문제 → 수정하지 않고 사용자에게 보고
-   (DB 연결, 외부 API, 포트 충돌)
-```
+통과를 위해 assertion 삭제·완화, 거부 테스트에 허용 토큰 추가, 실패 사례 제외를 하지 않습니다.
+요구사항 자체를 바꾸는 일은 Healer 수정 범위 밖입니다. 이미 승인된 계약 변경은 그 근거로 반영합니다.
+`--fix-test-only`에서 구현 결함을 발견하면 테스트를 맞추지 않고 미해결로 남깁니다.
 
 ## Phase 3: 수정 패턴
 
@@ -146,22 +147,26 @@ await expect(page.getByRole('listitem')).toHaveCount(5);
 // Before: 잘못된 경로
 const response = await request.get('/api/user');
 
-// After: 실제 경로 (구현 코드 확인 후)
+// After: 현재 승인된 api-spec.md의 경로가 /api/v1/users인 경우
 const response = await request.get('/api/v1/users');
 ```
 
 ```typescript
-// Before: 잘못된 응답 구조 기대
+// api-spec.md가 items를 요구하고 테스트만 구버전 data를 검사하는 경우
 expect(body.data).toBeDefined();
 
-// After: 실제 응답 구조에 맞춤
+// After: 현재 계약의 위치를 수정 이력에 기록하고 테스트 수정
 expect(body.items).toBeDefined();
 ```
+
+반대로 명세가 `data`를 요구하는데 구현이 `items`를 반환한다면 구현을 고치고
+`expect(body.data)`는 유지합니다. 응답에 키가 있다는 검사만으로 부족한 계약은 값·형식도 검증합니다.
 
 ### 패턴 4: 인증 처리
 
 ```typescript
-// Before: 인증 없이 API 호출
+// 성공 시나리오인데 fixture의 인증 토큰이 누락된 경우에만 적용
+// 인증 없는 요청의 거부를 확인하는 시나리오에는 토큰을 추가하지 않음
 const response = await request.get('/api/admin/users');
 
 // After: 인증 토큰 포함
@@ -210,13 +215,16 @@ npx playwright test --last-failed --workers=50%
 
 > **참고**: `--workers` 값은 SKILL.md 옵션에서 사용자가 지정한 값을 사용합니다. 기본값 50%.
 
+수정 중에는 실패 테스트를 좁혀 재실행합니다. 마지막 수정 후에는 영향받는 정상·거부·회귀
+테스트를 함께 실행해 통과를 확인합니다. 같은 코드에서 이미 통과한 범위는 중복 실행하지 않습니다.
+
 ## 종료 조건
 
 ### 성공 종료
 
 ```
-모든 테스트 통과 → PASS
-  결과: 수정 이력 기록 + Step 5 보고
+원래 대상 테스트 + 영향받는 회귀 테스트 통과, 미해결 0 → PASS
+  결과: 수정 이력 기록 + Step 7 보고
 ```
 
 ### 최대 반복 도달
@@ -224,8 +232,8 @@ npx playwright test --last-failed --workers=50%
 ```
 retry >= max_retries (기본 5) → 중단
   1. 남은 실패 테스트에 test.fixme() 마킹
-  2. 실패 원인 요약
-  3. 수동 확인 권장 사항 제시
+  2. exhausted(미해결)로 집계하고 실패 원인 요약 — 통과로 세지 않음
+  3. 수동 확인 권장 사항 제시. 최종 등급은 SKILL.md의 판정 기준 적용
 ```
 
 ### test.fixme() 처리
@@ -252,6 +260,7 @@ interface HealerLog {
   target: 'test' | 'impl'; // 수정 대상
   file: string;          // 수정한 파일
   change: string;        // 수정 내용 요약
+  contractEvidence: string; // 기대 동작의 근거 위치; 없으면 미해결 사유
   result: 'fixed' | 'still_failing'; // 수정 결과
 }
 ```

@@ -1,0 +1,27 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createService } from './service.mjs';
+import { serve } from './test-support.mjs';
+
+test('default page size', async t => {
+  const api = await serve(t, createService);
+  const response = await api.request('/orders', { token: 'staff-a' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.data.length, 20);
+  assert.equal(response.body.page.limit, 20);
+  assert.equal(response.body.page.total, 70);
+});
+
+test('explicit page size and tenant scope', async t => {
+  const api = await serve(t, createService);
+  const response = await api.request('/orders?limit=7', { token: 'staff-b' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.data.length, 7);
+  assert.ok(response.body.data.every(order => order.tenant === 'b'));
+});
+
+test('invalid limit and anonymous access', async t => {
+  const api = await serve(t, createService);
+  assert.equal((await api.request('/orders?limit=101', { token: 'staff-a' })).status, 400);
+  assert.equal((await api.request('/orders')).status, 401);
+});

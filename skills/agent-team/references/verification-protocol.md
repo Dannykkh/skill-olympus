@@ -180,6 +180,11 @@ for each section with diagram:
 
 검증 실패 섹션이 있으면:
 
+먼저 실패 명령·출력·부분 변경으로 원인을 판별한다. 명확한 구현 결함은 아래 수정 절차를 사용한다.
+문맥·작업 분할·도구 순서 변경이 필요하면 상위 SKILL.md의 resolver로 `orchestrator_root`를 정하고
+`${orchestrator_root}/references/execution-adjustment.md`를 읽는다. 비교 실행도 아래 재시도 상한에
+포함한다. 과제 복구와 실행 방식 개선 판정은 구분하고, 비교 점수로 통합 게이트를 대체하지 않는다.
+
 1. **실패 내용 정리:**
    ```
    section-04-api 검증 실패:

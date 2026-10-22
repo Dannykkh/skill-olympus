@@ -43,7 +43,7 @@ Antigravity에서는 네이티브 workflow가 단순 요청을 먼저 소유합�
 |-------|------|-----------------|-----|
 | **설계** | zephermine | 현재 CLI의 네이티브 계획·탐색 및 artifact-writer | Tavily/Exa (선택 리서치), 설치된 Codex/Antigravity 외부 리뷰 프로세스 (선택) |
 | **아키텍처** | documentation-and-adrs, mermaid-diagrams (source-only 직접 로드) | 네이티브 계획·검토 | 공식 기술 문서 (필요 시) |
-| **구현** | agent-team/workpm (활성), orchestrator (MCP 분기에서만 source-only 직접 로드) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (라이브러리 문서) |
+| **구현** | agent-team/workpm (활성), orchestrator (공통 PM·실행 방식 비교를 source-only 직접 로드, MCP는 조건부) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (라이브러리 문서) |
 | **검증** | minos (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
 | **배포** | docker-deploy (source-only 직접 로드) | — | — |
 | **공통** | mnemo·hestia (활성), commit-work·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
@@ -218,6 +218,28 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 
 읽기 전용 탐색은 Claude `Explore` / Codex `explorer` / Antigravity `research` / Grok `explore`, 파일 변경과 명령 실행은 Claude `general-purpose` / Codex `worker` / Antigravity Main 또는 명시적으로 정의한 쓰기 에이전트 / Grok `general-purpose`로 매핑합니다. 메인 컨텍스트가 공유 장부와 완료 판정을 소유하고, 위임이 없거나 병렬 이득이 없으면 같은 절차를 순차 실행합니다.
 
+WorkPM은 범위가 명확하거나 방향이 이미 선택됐으면 단일 실행안으로 진행합니다. 의미 있는 설계
+선택이 남았을 때만 대안을 비교하며, 이미 허용된 가역적 작업을 다시 승인받지 않습니다. 흐름·분기·
+모듈 경계가 그대로인 국소 수정은 기존 계약과 테스트로 검증하고 새 제안서·도면·사전을 만들지 않습니다.
+상세 기준은 [제안 규모와 진행 판단](../skills/orchestrator/commands/workpm.md#제안-규모와-진행-판단)입니다.
+
+AI 기능은 젭마인의 [처리 경계와 평가 재현성](../skills/zephermine/references/tripwire-guide.md#처리-경계와-평가-재현성)을
+plan·섹션 AC로 전달합니다. 구현 하네스가 같은 평가를 실행하고 아르고스가 증거를 재확인합니다.
+미노스의 Healer는 승인된 요구사항·명세로 구현과 테스트 중 수정 대상을 정하며, 실제 응답만 보고
+기대값을 바꾸지 않습니다. 신규 제품의 수요 검증 상태도 헤르메스에서 젭마인으로 그대로 전달합니다.
+
+### 실행 중 실행 방식 조정
+
+포세이돈·다이달로스는 실패 증거로 구현 결함·환경 문제·실행 방식 문제를 구분합니다. 구현 결함은
+직접 수정하며, 문맥·작업 분할·도구 순서 변경이 필요할 때만 기존 재시도 예산 안에서 가설 하나를
+비교합니다. 정본은 orchestrator의 [실행 방식 비교](../skills/orchestrator/references/execution-adjustment.md)이며,
+네이티브·메인 순차·MCP 경로가 공유합니다. 이 문서를 읽는 것으로 MCP 서버를 선택하지 않습니다.
+
+기준점과 후보의 시작 코드·입력·환경·검증 기준을 맞추고 실제 산출물을 비교합니다. 조건이 다르면
+과제 복구와 방식 개선을 분리해 `recovered + unverified`로 기록할 수 있습니다. 비교 결과는 기존
+activity log에 남기며 완료 권한은 기존 통합 게이트에 있습니다. 므네모는 핸드오프에서 근거와
+적용 조건을 정제하고, 영구적인 스킬 수정은 별도 평가 사례가 있는 개선 작업에서 검증합니다.
+
 ### `/agent-team` 사용 시 리소스
 
 | 종류 | 이름 | 역할 |
@@ -242,7 +264,7 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | 종류 | 이름 | 역할 |
 |------|------|------|
 | **스킬** | workpm | 네이티브 PM 흐름, 역할 분배, 검증 |
-| **source-only 모듈** | orchestrator | MCP 분기를 선택했을 때만 카탈로그에서 직접 읽는 정책 레이어, 태스크 보드, 파일 락 |
+| **source-only 모듈** | orchestrator | 공통 PM·실행 방식 비교 계약. MCP를 선택한 경우에만 태스크 보드·파일 락 사용 |
 | **커맨드** | workpm | PM 모드 (현재 CLI의 네이티브 작업자, 없으면 메인 순차 실행) |
 | **커맨드** | workpm-mcp | hard lock·외부 태스크 보드·혼합 CLI가 필요할 때의 MCP 정책 모드 |
 | **커맨드** | pmworker | 명시적 MCP 모드 Worker (Claude/Codex/Antigravity) |

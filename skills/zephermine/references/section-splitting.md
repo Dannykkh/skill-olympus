@@ -115,6 +115,11 @@ Include all necessary background, requirements, and implementation details withi
 
 ### Section File Template
 
+AI 기능이 있는 섹션은 plan.md의 처리 경계·모델 출력 검증·실패 시 행동을 `Module Contract`에,
+평가셋·채점 기준·실행 명령·품질 지표 ID를 해당 AC에 옮깁니다. 형식은
+[tripwire-guide.md](tripwire-guide.md)의 `처리 경계와 평가 재현성`을 따릅니다.
+포세이돈 작업자가 이 섹션만으로 같은 평가를 실행할 수 있어야 합니다.
+
 ```markdown
 # Section NN: {Section Name}
 

@@ -1,0 +1,24 @@
+import { once } from 'node:events';
+
+export async function serve(t, createService) {
+  const app = createService();
+  app.server.listen(0, '127.0.0.1');
+  await once(app.server, 'listening');
+  t.after(() => new Promise((resolve, reject) => {
+    app.server.closeAllConnections();
+    app.server.close(error => error ? reject(error) : resolve());
+  }));
+  const base = `http://127.0.0.1:${app.server.address().port}`;
+  return {
+    snapshot: app.snapshot,
+    async request(path, { token, body, key, method = 'GET' } = {}) {
+      const headers = { 'content-type': 'application/json' };
+      if (token) headers.authorization = `Bearer ${token}`;
+      if (key) headers['idempotency-key'] = key;
+      const response = await fetch(base + path, {
+        method, headers, body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      return { status: response.status, body: await response.json() };
+    },
+  };
+}

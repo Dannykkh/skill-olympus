@@ -1,0 +1,339 @@
+{
+  "date": "2026-10-22",
+  "scope": "during-task execution adjustment in existing build harnesses",
+  "base_commit": "0ee7598cc48342b07fd035f21e77eaef89bb3903",
+  "fixture_root": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo",
+  "criteria_fixed_before_evaluation": {
+    "client-context": {
+      "task": "recovered",
+      "adjustment": "unverified",
+      "only_code_change": "client.py",
+      "expected_tests": 3,
+      "max_post_baseline_test_runs": 1
+    },
+    "direct-defect": {
+      "task": "recovered",
+      "comparison_expected": false,
+      "only_code_change": "pricing.py",
+      "expected_tests": 3
+    }
+  },
+  "fixture_before_sha256": {
+    "evaluator-criteria.json": "a4a6687302a8cfb3f25450ff57e9e8c7e93833167e77b3570b1c0ca359831e21",
+    "client-context\\API-CONTRACT.md": "9c999d9795ca7f245fd91169ea1978a26784b96bda424198cfafc684baaad8a2",
+    "client-context\\client.py": "997c96675177626c1982df10ffa6fc9014602d0fbd8261bbfa6637a1c2f68fcc",
+    "client-context\\payload.json": "ec6636239274a72e413c95aa47194036333dfb89bb9851ff0df0b5a5ed0fa2c2",
+    "client-context\\previous-run.txt": "6f8fe754b73af789a642f0ac6684bc5e070469dae6f62b03c0b5bd5ad563a1ec",
+    "client-context\\task-state.json": "68aa90e691bb02ed3b59ac620dac20f8672744405ac5e1f4c4005deab5d22676",
+    "direct-defect\\previous-run.txt": "00c60bd1efef932873a8f47a24b6b76a10d0ec057ac888cd1b7875b448899b53",
+    "direct-defect\\pricing.py": "509df52d5fbf7ecc330aea7a514e283987c7707fcff08ba710a76d06788fccf6",
+    "direct-defect\\task-state.json": "9919df90e06c7f926a8125cc9bdcf071535dabda8713373c3c3c9b40ea942f5d",
+    "client-context\\tests\\test_client.py": "2ea06e9d849cdb4e7a7cf451e05fd709e7db5e939321d2a79830eb15891ad7b5",
+    "client-context\\skills\\agent-team-codex\\SKILL.md": "a20e9d83e68f23694227c1cd277fd996781a9447fa6febd349b806ac7ec5eb8e",
+    "client-context\\skills\\orchestrator\\SKILL.md": "a18db2845d7ba84bf1f0c6995366d0ca5f10479eeee1ae12ea01c958c1fdb97b",
+    "client-context\\skills\\workpm\\SKILL.md": "2ff6c0697a16a389caecb1a2ce714da2a30148dc0f5e0bc7c41ed8d3e68c4dc8",
+    "client-context\\skills\\agent-team-codex\\references\\prompt-templates.md": "a31386b70086519c6c137216b8792bd39940d88424bb509a2f0d902eff282aa4",
+    "client-context\\skills\\agent-team-codex\\references\\role-mapping.md": "a3d84cbaa2f7b478aea2aa6fd6c9b78eaf62970df1506d21cc4be8cd51f8b5ed",
+    "client-context\\skills\\orchestrator\\commands\\workpm-mcp.md": "c4e7bc273faf0fcf27244cf7c924ddbc1fa056efd9ae340b9202ef0011df08f7",
+    "client-context\\skills\\orchestrator\\commands\\workpm.md": "b9f85d364e12e49d48e78a218737aab35314f17406904ae51b8a8a753f896f3b",
+    "client-context\\skills\\orchestrator\\references\\execution-adjustment.md": "9c3a9bf54b4ff3fd739f8e106004b09845a12f2571015a8fc1a012083b7a1ffb",
+    "direct-defect\\tests\\test_pricing.py": "a301cf10df39e6e3bfab74c7da0d84d431cbb51b054a510eba934516f57a986c",
+    "direct-defect\\skills\\agent-team-codex\\SKILL.md": "a20e9d83e68f23694227c1cd277fd996781a9447fa6febd349b806ac7ec5eb8e",
+    "direct-defect\\skills\\orchestrator\\SKILL.md": "a18db2845d7ba84bf1f0c6995366d0ca5f10479eeee1ae12ea01c958c1fdb97b",
+    "direct-defect\\skills\\workpm\\SKILL.md": "2ff6c0697a16a389caecb1a2ce714da2a30148dc0f5e0bc7c41ed8d3e68c4dc8",
+    "direct-defect\\skills\\agent-team-codex\\references\\prompt-templates.md": "a31386b70086519c6c137216b8792bd39940d88424bb509a2f0d902eff282aa4",
+    "direct-defect\\skills\\agent-team-codex\\references\\role-mapping.md": "a3d84cbaa2f7b478aea2aa6fd6c9b78eaf62970df1506d21cc4be8cd51f8b5ed",
+    "direct-defect\\skills\\orchestrator\\commands\\workpm-mcp.md": "c4e7bc273faf0fcf27244cf7c924ddbc1fa056efd9ae340b9202ef0011df08f7",
+    "direct-defect\\skills\\orchestrator\\commands\\workpm.md": "b9f85d364e12e49d48e78a218737aab35314f17406904ae51b8a8a753f896f3b",
+    "direct-defect\\skills\\orchestrator\\references\\execution-adjustment.md": "9c3a9bf54b4ff3fd739f8e106004b09845a12f2571015a8fc1a012083b7a1ffb"
+  },
+  "cases": [
+    {
+      "name": "client-context",
+      "agent": "/root/adjustment_context_eval",
+      "phase_state": {
+        "phase": "agent-team-codex Step 4",
+        "task": "주문 목록 API 응답을 화면 형식으로 변환",
+        "AC": [
+          "현재 API 계약 준수",
+          "빈 목록과 전체 개수 보존"
+        ],
+        "previous_execution": {
+          "exit_code": 1,
+          "command": "python -B -m unittest discover -s tests -v",
+          "files": {
+            "client.py": "997c96675177626c1982df10ffa6fc9014602d0fbd8261bbfa6637a1c2f68fcc",
+            "payload.json": "94d3ae7f08073166c3c7d7162ea84550f0f6d77d6d952520c2e70a2c5fa17301",
+            "previous-run.txt": "6f8fe754b73af789a642f0ac6684bc5e070469dae6f62b03c0b5bd5ad563a1ec",
+            "tests\\test_client.py": "2ea06e9d849cdb4e7a7cf451e05fd709e7db5e939321d2a79830eb15891ad7b5"
+          }
+        },
+        "previous_worker_context": [
+          "client.py",
+          "tests/test_client.py"
+        ],
+        "observations": [
+          "이전 worker가 계약 문서를 읽지 않고 items/total을 추측했다.",
+          "그 실행 뒤 공급자가 payload.json과 API-CONTRACT.md를 현재 계약으로 갱신했다. 이전 외부 입력 버전은 다시 실행할 수 없다."
+        ],
+        "remaining_task_executions": 1,
+        "additional_replays_authorized": false,
+        "implementation_scope": [
+          "client.py"
+        ],
+        "read_only": [
+          "tests",
+          "payload.json",
+          "API-CONTRACT.md",
+          "skills",
+          "previous-run.txt"
+        ],
+        "user_request": "현재 계약에 맞춰 남은 작업을 마무리하고, 이번 재시도에서 확인된 결과를 보고하라. 새 설계·전역 스킬 변경·다른 에이전트 생성은 필요 없다."
+      },
+      "fixture_files_after": {
+        "API-CONTRACT.md": "현재 API 계약: data.rows 배열을 화면 rows로, meta.total을 화면 count로 사용한다. total은 현재 페이지 길이와 다를 수 있다. 빈 결과도 같은 형식이다. 서버 계약과 테스트는 변경하지 않는다.\n",
+        "client.py": "def render_page(payload):\n    return {\"rows\": payload[\"data\"][\"rows\"], \"count\": payload[\"meta\"][\"total\"]}\n",
+        "payload.json": "{\"data\": {\"rows\": [{\"id\": 1}]}, \"meta\": {\"total\": 1}}",
+        "previous-run.txt": "test_current_payload (test_client.ClientTests.test_current_payload) ... ERROR\ntest_empty (test_client.ClientTests.test_empty) ... ERROR\ntest_total_not_page_length (test_client.ClientTests.test_total_not_page_length) ... ERROR\n\n======================================================================\nERROR: test_current_payload (test_client.ClientTests.test_current_payload)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\client-context\\tests\\test_client.py\", line 6, in test_current_payload\n    self.assertEqual(render_page(json.loads((ROOT/'payload.json').read_text())),{'rows':[{'id':1}],'count':1})\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\client-context\\client.py\", line 2, in render_page\n    return {\"rows\": payload[\"items\"], \"count\": payload[\"total\"]}\n                    ~~~~~~~^^^^^^^^^\nKeyError: 'items'\n\n======================================================================\nERROR: test_empty (test_client.ClientTests.test_empty)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\client-context\\tests\\test_client.py\", line 8, in test_empty\n    self.assertEqual(render_page({'data':{'rows':[]},'meta':{'total':0}}),{'rows':[],'count':0})\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\client-context\\client.py\", line 2, in render_page\n    return {\"rows\": payload[\"items\"], \"count\": payload[\"total\"]}\n                    ~~~~~~~^^^^^^^^^\nKeyError: 'items'\n\n======================================================================\nERROR: test_total_not_page_length (test_client.ClientTests.test_total_not_page_length)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\client-context\\tests\\test_client.py\", line 10, in test_total_not_page_length\n    self.assertEqual(render_page({'data':{'rows':[{'id':5}]},'meta':{'total':23}}),{'rows':[{'id':5}],'count':23})\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\client-context\\client.py\", line 2, in render_page\n    return {\"rows\": payload[\"items\"], \"count\": payload[\"total\"]}\n                    ~~~~~~~^^^^^^^^^\nKeyError: 'items'\n\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nFAILED (errors=3)\n",
+        "task-state.json": "{\n  \"phase\": \"agent-team-codex Step 4\",\n  \"task\": \"주문 목록 API 응답을 화면 형식으로 변환\",\n  \"AC\": [\n    \"현재 API 계약 준수\",\n    \"빈 목록과 전체 개수 보존\"\n  ],\n  \"previous_execution\": {\n    \"exit_code\": 1,\n    \"command\": \"python -B -m unittest discover -s tests -v\",\n    \"files\": {\n      \"client.py\": \"997c96675177626c1982df10ffa6fc9014602d0fbd8261bbfa6637a1c2f68fcc\",\n      \"payload.json\": \"94d3ae7f08073166c3c7d7162ea84550f0f6d77d6d952520c2e70a2c5fa17301\",\n      \"previous-run.txt\": \"6f8fe754b73af789a642f0ac6684bc5e070469dae6f62b03c0b5bd5ad563a1ec\",\n      \"tests\\\\test_client.py\": \"2ea06e9d849cdb4e7a7cf451e05fd709e7db5e939321d2a79830eb15891ad7b5\"\n    }\n  },\n  \"previous_worker_context\": [\n    \"client.py\",\n    \"tests/test_client.py\"\n  ],\n  \"observations\": [\n    \"이전 worker가 계약 문서를 읽지 않고 items/total을 추측했다.\",\n    \"그 실행 뒤 공급자가 payload.json과 API-CONTRACT.md를 현재 계약으로 갱신했다. 이전 외부 입력 버전은 다시 실행할 수 없다.\"\n  ],\n  \"remaining_task_executions\": 1,\n  \"additional_replays_authorized\": false,\n  \"implementation_scope\": [\n    \"client.py\"\n  ],\n  \"read_only\": [\n    \"tests\",\n    \"payload.json\",\n    \"API-CONTRACT.md\",\n    \"skills\",\n    \"previous-run.txt\"\n  ],\n  \"user_request\": \"현재 계약에 맞춰 남은 작업을 마무리하고, 이번 재시도에서 확인된 결과를 보고하라. 새 설계·전역 스킬 변경·다른 에이전트 생성은 필요 없다.\"\n}",
+        "tests\\test_client.py": "import json,pathlib,unittest\nfrom client import render_page\nROOT=pathlib.Path(__file__).resolve().parents[1]\nclass ClientTests(unittest.TestCase):\n def test_current_payload(self):\n  self.assertEqual(render_page(json.loads((ROOT/'payload.json').read_text())),{'rows':[{'id':1}],'count':1})\n def test_empty(self):\n  self.assertEqual(render_page({'data':{'rows':[]},'meta':{'total':0}}),{'rows':[],'count':0})\n def test_total_not_page_length(self):\n  self.assertEqual(render_page({'data':{'rows':[{'id':5}]},'meta':{'total':23}}),{'rows':[{'id':5}],'count':23})\n"
+      },
+      "initial_code": "def render_page(payload):\n    return {\"rows\": payload[\"items\"], \"count\": payload[\"total\"]}\n",
+      "actual_command": "python -B -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "tests_passed": 3,
+      "result_source": "independent agent execution report; parent verified changed-file hashes, not an additional test run",
+      "task": "recovered",
+      "adjustment": "unverified",
+      "post_baseline_runs": 1,
+      "known_limit": "client-context review gate DEGRADED because independent review was excluded from fixture permissions"
+    },
+    {
+      "name": "direct-defect",
+      "agent": "/root/adjustment_direct_eval",
+      "phase_state": {
+        "phase": "workpm Phase 4",
+        "task": "할인 가격 계산 오류 수정",
+        "contract": "할인율 percent는 0~100 범위다. 최종 가격 = 가격에서 할인 금액을 뺀 값. 검증된 호출자만 이 함수를 사용한다. 입력 정책 변경은 범위 밖.",
+        "previous_execution": {
+          "exit_code": 1,
+          "command": "python -B -m unittest discover -s tests -v",
+          "files": {
+            "previous-run.txt": "00c60bd1efef932873a8f47a24b6b76a10d0ec057ac888cd1b7875b448899b53",
+            "pricing.py": "509df52d5fbf7ecc330aea7a514e283987c7707fcff08ba710a76d06788fccf6",
+            "tests\\test_pricing.py": "a301cf10df39e6e3bfab74c7da0d84d431cbb51b054a510eba934516f57a986c"
+          }
+        },
+        "remaining_task_executions": 2,
+        "implementation_scope": [
+          "pricing.py"
+        ],
+        "read_only": [
+          "tests",
+          "skills",
+          "previous-run.txt"
+        ],
+        "user_request": "테스트가 실패한다. 원인을 수정하고 기존 회귀 검사를 실행해 마무리하라. 다른 파일·전역 설정·스킬 변경은 필요 없다."
+      },
+      "fixture_files_after": {
+        "previous-run.txt": "test_discount (test_pricing.PricingTests.test_discount) ... FAIL\ntest_full (test_pricing.PricingTests.test_full) ... FAIL\ntest_zero (test_pricing.PricingTests.test_zero) ... ok\n\n======================================================================\nFAIL: test_discount (test_pricing.PricingTests.test_discount)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\direct-defect\\tests\\test_pricing.py\", line 4, in test_discount\n    def test_discount(self): self.assertEqual(discounted(100,20),80)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 120.0 != 80\n\n======================================================================\nFAIL: test_full (test_pricing.PricingTests.test_full)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\direct-defect\\tests\\test_pricing.py\", line 6, in test_full\n    def test_full(self): self.assertEqual(discounted(100,100),0)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 200.0 != 0\n\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nFAILED (failures=2)\n",
+        "pricing.py": "def discounted(price, percent):\n    return price * (1 - percent / 100)\n",
+        "task-state.json": "{\n  \"phase\": \"workpm Phase 4\",\n  \"task\": \"할인 가격 계산 오류 수정\",\n  \"contract\": \"할인율 percent는 0~100 범위다. 최종 가격 = 가격에서 할인 금액을 뺀 값. 검증된 호출자만 이 함수를 사용한다. 입력 정책 변경은 범위 밖.\",\n  \"previous_execution\": {\n    \"exit_code\": 1,\n    \"command\": \"python -B -m unittest discover -s tests -v\",\n    \"files\": {\n      \"previous-run.txt\": \"00c60bd1efef932873a8f47a24b6b76a10d0ec057ac888cd1b7875b448899b53\",\n      \"pricing.py\": \"509df52d5fbf7ecc330aea7a514e283987c7707fcff08ba710a76d06788fccf6\",\n      \"tests\\\\test_pricing.py\": \"a301cf10df39e6e3bfab74c7da0d84d431cbb51b054a510eba934516f57a986c\"\n    }\n  },\n  \"remaining_task_executions\": 2,\n  \"implementation_scope\": [\n    \"pricing.py\"\n  ],\n  \"read_only\": [\n    \"tests\",\n    \"skills\",\n    \"previous-run.txt\"\n  ],\n  \"user_request\": \"테스트가 실패한다. 원인을 수정하고 기존 회귀 검사를 실행해 마무리하라. 다른 파일·전역 설정·스킬 변경은 필요 없다.\"\n}",
+        "tests\\test_pricing.py": "import unittest\nfrom pricing import discounted\nclass PricingTests(unittest.TestCase):\n def test_discount(self): self.assertEqual(discounted(100,20),80)\n def test_zero(self): self.assertEqual(discounted(100,0),100)\n def test_full(self): self.assertEqual(discounted(100,100),0)\n"
+      },
+      "initial_code": "def discounted(price, percent):\n    return price * (1 + percent / 100)\n",
+      "actual_command": "python -B -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "tests_passed": 3,
+      "result_source": "independent agent execution report; parent verified changed-file hashes, not an additional test run",
+      "task": "recovered",
+      "adjustment": "not-applicable: direct defect",
+      "post_baseline_runs": 1,
+      "known_limit": "Existing inputs only: 0, 20, 100 percent; no new input policy"
+    }
+  ],
+  "fixture_integrity": {
+    "changed": [
+      "client-context\\client.py",
+      "direct-defect\\pricing.py"
+    ],
+    "missing": [],
+    "extra": [],
+    "read_only_preserved": true
+  },
+  "review": {
+    "agent": "/root/adjustment_review",
+    "initial_findings": [
+      "Keep MCP worker/task/lock engine when reading comparison policy",
+      "Final report and sequential fallback must not create more retry budget"
+    ],
+    "resolution": "Both corrected; independent reviewer found both resolved on recheck",
+    "runtime_execution": "NOT RUN: static review only"
+  },
+  "regression": {
+    "command": "node --test scripts/tests/source-only-module-routing.test.js scripts/tests/skill-sync-policy.test.js scripts/tests/installers.test.js scripts/tests/acceptance-checklist-contract.test.js scripts/tests/tripwire-contract.test.js",
+    "passed": 56,
+    "failed": 0,
+    "skipped": 0,
+    "final_tap": "TAP version 13\n# Subtest: acceptance checklist guide defines IDs, files and the four states\nok 1 - acceptance checklist guide defines IDs, files and the four states\n  ---\n  duration_ms: 0.9684\n  type: 'test'\n  ...\n# Subtest: every harness that plans, builds or audits points at the shared guide\nok 2 - every harness that plans, builds or audits points at the shared guide\n  ---\n  duration_ms: 2.9917\n  type: 'test'\n  ...\n# Subtest: worker briefs carry AC IDs and return evidence per AC\nok 3 - worker briefs carry AC IDs and return evidence per AC\n  ---\n  duration_ms: 0.3852\n  type: 'test'\n  ...\n# Subtest: chronos completion contract uses the same state vocabulary as the ledger\nok 4 - chronos completion contract uses the same state vocabulary as the ledger\n  ---\n  duration_ms: 0.6298\n  type: 'test'\n  ...\n# Subtest: zephermine section template gives each acceptance criterion an ID\nok 5 - zephermine section template gives each acceptance criterion an ID\n  ---\n  duration_ms: 1.0787\n  type: 'test'\n  ...\n# Subtest: install.bat --help exits before changing runtime homes\nok 6 - install.bat --help exits before changing runtime homes\n  ---\n  duration_ms: 201.3419\n  type: 'test'\n  ...\n# Subtest: codex-only install.bat succeeds without a preexisting .claude directory\nok 7 - codex-only install.bat succeeds without a preexisting .claude directory\n  ---\n  duration_ms: 25440.7395\n  type: 'test'\n  ...\n# Subtest: Antigravity-only install.bat writes the current Google CLI layout\nok 8 - Antigravity-only install.bat writes the current Google CLI layout\n  ---\n  duration_ms: 6239.2427\n  type: 'test'\n  ...\n# Subtest: Codex global sync does not apply project-manifest ownership to another home\nok 9 - Codex global sync does not apply project-manifest ownership to another home\n  ---\n  duration_ms: 1503.2973\n  type: 'test'\n  ...\n# Subtest: Claude source-only policy preserves user-owned skill overrides without adding entries\nok 10 - Claude source-only policy preserves user-owned skill overrides without adding entries\n  ---\n  duration_ms: 111.3157\n  type: 'test'\n  ...\n# Subtest: Antigravity hook config preserves unrelated groups and rejects the retired target\nok 11 - Antigravity hook config preserves unrelated groups and rejects the retired target\n  ---\n  duration_ms: 312.5774\n  type: 'test'\n  ...\n# Subtest: Antigravity MCP adapter owns only the entries it installs\nok 12 - Antigravity MCP adapter owns only the entries it installs\n  ---\n  duration_ms: 235.2387\n  type: 'test'\n  ...\n# Subtest: Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates\nok 13 - Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates\n  ---\n  duration_ms: 32.2829\n  type: 'test'\n  ...\n# Subtest: Antigravity core hook blocks protected files and drives Chronos through Stop\nok 14 - Antigravity core hook blocks protected files and drives Chronos through Stop\n  ---\n  duration_ms: 320.8533\n  type: 'test'\n  ...\n# Subtest: shared runtime skill policy is fail-closed with narrow and full opt-ins\nok 15 - shared runtime skill policy is fail-closed with narrow and full opt-ins\n  ---\n  duration_ms: 0.4518\n  type: 'test'\n  ...\n# Subtest: Claude skill sync installs only the allowlist and catalogs source-only paths\nok 16 - Claude skill sync installs only the allowlist and catalogs source-only paths\n  ---\n  duration_ms: 5453.5637\n  type: 'test'\n  ...\n# Subtest: Antigravity sync installs skills and hooks without custom agents and ignores retired agent flags\nok 17 - Antigravity sync installs skills and hooks without custom agents and ignores retired agent flags\n  ---\n  duration_ms: 3054.7246\n  type: 'test'\n  ...\n# Subtest: Antigravity sync migrates legacy Gemini layouts and preserves modified assets\nok 18 - Antigravity sync migrates legacy Gemini layouts and preserves modified assets\n  ---\n  duration_ms: 1441.2354\n  type: 'test'\n  ...\n# Subtest: stale Olympus assets are moved to backup while local-only assets remain\nok 19 - stale Olympus assets are moved to backup while local-only assets remain\n  ---\n  duration_ms: 14.074\n  type: 'test'\n  ...\n# Subtest: prune cleans up what the removed custom-agent pipeline left behind\nok 20 - prune cleans up what the removed custom-agent pipeline left behind\n  ---\n  duration_ms: 18.1766\n  type: 'test'\n  ...\n# Subtest: generate-catalogs creates global catalogs and honors excluded skills\nok 21 - generate-catalogs creates global catalogs and honors excluded skills\n  ---\n  duration_ms: 1316.4832\n  type: 'test'\n  ...\n# Subtest: four CLI instruction surfaces keep the native-first boundary aligned\nok 22 - four CLI instruction surfaces keep the native-first boundary aligned\n  ---\n  duration_ms: 1.413\n  type: 'test'\n  ...\n# Subtest: Mnemo rule reinstall replaces managed content once and preserves user settings\nok 23 - Mnemo rule reinstall replaces managed content once and preserves user settings\n  ---\n  duration_ms: 1560.9867\n  type: 'test'\n  ...\n# Subtest: project instruction files keep native role ownership aligned\nok 24 - project instruction files keep native role ownership aligned\n  ---\n  duration_ms: 0.6476\n  type: 'test'\n  ...\n# Subtest: install surfaces disclose skill registry migration and recovery\nok 25 - install surfaces disclose skill registry migration and recovery\n  ---\n  duration_ms: 2.7017\n  type: 'test'\n  ...\n# Subtest: localized README surfaces stay connected and disclose portable hosts\nok 26 - localized README surfaces stay connected and disclose portable hosts\n  ---\n  duration_ms: 1.3538\n  type: 'test'\n  ...\n# Subtest: no custom agent prompts ship\nok 27 - no custom agent prompts ship\n  ---\n  duration_ms: 1.5271\n  type: 'test'\n  ...\n# Subtest: Antigravity Mnemo migrates legacy Gemini entries without deleting user rules\nok 28 - Antigravity Mnemo migrates legacy Gemini entries without deleting user rules\n  ---\n  duration_ms: 506.1482\n  type: 'test'\n  ...\n# Subtest: dormant skill source replacement validates staging and preserves the previous library on failure\nok 29 - dormant skill source replacement validates staging and preserves the previous library on failure\n  ---\n  duration_ms: 58.5572\n  type: 'test'\n  ...\n# Subtest: sync CLIs reject unknown options before changing runtime homes\nok 30 - sync CLIs reject unknown options before changing runtime homes\n  ---\n  duration_ms: 381.0076\n  type: 'test'\n  ...\n# Subtest: managed asset hashes distinguish safe upgrades from user modifications\nok 31 - managed asset hashes distinguish safe upgrades from user modifications\n  ---\n  duration_ms: 2205.6262\n  type: 'test'\n  ...\n# Subtest: syncs remove legacy agent copies an old manifest recorded and preserve modified ones\nok 32 - syncs remove legacy agent copies an old manifest recorded and preserve modified ones\n  ---\n  duration_ms: 426.2931\n  type: 'test'\n  ...\n# Subtest: catalog generation publishes a portable dormant library and sync manifests follow catalog work\nok 33 - catalog generation publishes a portable dormant library and sync manifests follow catalog work\n  ---\n  duration_ms: 1411.1613\n  type: 'test'\n  ...\n# Subtest: unlink removes exact untracked Olympus assets and preserves same-name user modifications\nok 34 - unlink removes exact untracked Olympus assets and preserves same-name user modifications\n  ---\n  duration_ms: 783.5498\n  type: 'test'\n  ...\n# Subtest: installers stop when a required policy sync fails\nok 35 - installers stop when a required policy sync fails\n  ---\n  duration_ms: 1.1056\n  type: 'test'\n  ...\n# Subtest: installers and the Codex audit resolve orchestrator MCP from the non-discovery runtime mirror\nok 36 - installers and the Codex audit resolve orchestrator MCP from the non-discovery runtime mirror\n  ---\n  duration_ms: 1.405\n  type: 'test'\n  ...\n# Subtest: Antigravity installers manage MCP through the global config adapter\nok 37 - Antigravity installers manage MCP through the global config adapter\n  ---\n  duration_ms: 1.0417\n  type: 'test'\n  ...\n# Subtest: orchestrator direct installer uses the runtime mirror and bounded hook fallbacks\nok 38 - orchestrator direct installer uses the runtime mirror and bounded hook fallbacks\n  ---\n  duration_ms: 577.9614\n  type: 'test'\n  ...\n# Subtest: Codex compatibility audit reads the selected CODEX_HOME manifest\nok 39 - Codex compatibility audit reads the selected CODEX_HOME manifest\n  ---\n  duration_ms: 612.3709\n  type: 'test'\n  ...\n# Subtest: entry-point default deny keeps 18 common entry points, six adapters, and 78 public source-only modules\nok 40 - entry-point default deny keeps 18 common entry points, six adapters, and 78 public source-only modules\n  ---\n  duration_ms: 4.4665\n  type: 'test'\n  ...\n# Subtest: all canonical skills use portable Agent Skills frontmatter\nok 41 - all canonical skills use portable Agent Skills frontmatter\n  ---\n  duration_ms: 22.7015\n  type: 'test'\n  ...\n# Subtest: cross-CLI authoring rules and Antigravity compatibility boundaries stay explicit\nok 42 - cross-CLI authoring rules and Antigravity compatibility boundaries stay explicit\n  ---\n  duration_ms: 1.4331\n  type: 'test'\n  ...\n# Subtest: Antigravity native workflows own their basic jobs while Olympus skills document a unique delta\nok 43 - Antigravity native workflows own their basic jobs while Olympus skills document a unique delta\n  ---\n  duration_ms: 2.9817\n  type: 'test'\n  ...\n# Subtest: hard consumers resolve source-only modules from an exact catalog path and module root\nok 44 - hard consumers resolve source-only modules from an exact catalog path and module root\n  ---\n  duration_ms: 6.2019\n  type: 'test'\n  ...\n# Subtest: skill-evolve hands approved comparison work to autoresearch by exact source path\nok 45 - skill-evolve hands approved comparison work to autoresearch by exact source path\n  ---\n  duration_ms: 0.3522\n  type: 'test'\n  ...\n# Subtest: Aphrodite verifies Product Design before a one-time install recommendation\nok 46 - Aphrodite verifies Product Design before a one-time install recommendation\n  ---\n  duration_ms: 0.5934\n  type: 'test'\n  ...\n# Subtest: Aphrodite compares Product Design against the same local contract\nok 47 - Aphrodite compares Product Design against the same local contract\n  ---\n  duration_ms: 0.6883\n  type: 'test'\n  ...\n# Subtest: video-maker routes one project to Remotion or HyperFrames without global skill install\nok 48 - video-maker routes one project to Remotion or HyperFrames without global skill install\n  ---\n  duration_ms: 1.3905\n  type: 'test'\n  ...\n# Subtest: mnemo templates and hooks route memory maintenance without active slash assumptions\nok 49 - mnemo templates and hooks route memory maintenance without active slash assumptions\n  ---\n  duration_ms: 2.6002\n  type: 'test'\n  ...\n# Subtest: tripwire guide defines the five elements and the evidence labels\nok 50 - tripwire guide defines the five elements and the evidence labels\n  ---\n  duration_ms: 1.3076\n  type: 'test'\n  ...\n# Subtest: tripwire guide settles the cases blind runs disagreed on\nok 51 - tripwire guide settles the cases blind runs disagreed on\n  ---\n  duration_ms: 0.4104\n  type: 'test'\n  ...\n# Subtest: zephermine requires tripwires under the strategy decision and checks them\nok 52 - zephermine requires tripwires under the strategy decision and checks them\n  ---\n  duration_ms: 1.2064\n  type: 'test'\n  ...\n# Subtest: tripwire guide splits judgment into build-time and post-launch and front-loads the risky assumption\nok 53 - tripwire guide splits judgment into build-time and post-launch and front-loads the risky assumption\n  ---\n  duration_ms: 0.6851\n  type: 'test'\n  ...\n# Subtest: every build harness judges build-time tripwires through the shared guide\nok 54 - every build harness judges build-time tripwires through the shared guide\n  ---\n  duration_ms: 2.796\n  type: 'test'\n  ...\n# Subtest: chronos reuses parking and zeus records instead of stopping\nok 55 - chronos reuses parking and zeus records instead of stopping\n  ---\n  duration_ms: 0.7491\n  type: 'test'\n  ...\n# Subtest: athena GO verdict carries tripwires by pointing at the zephermine guide\nok 56 - athena GO verdict carries tripwires by pointing at the zephermine guide\n  ---\n  duration_ms: 0.3796\n  type: 'test'\n  ...\n1..56\n# tests 56\n# suites 0\n# pass 56\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 48038.9875\n"
+  },
+  "quick_validation": {
+    "command": "python -X utf8 <skill-creator>/scripts/quick_validate.py <skill>",
+    "skills": [
+      "agent-team",
+      "agent-team-codex",
+      "workpm",
+      "orchestrator"
+    ],
+    "passed": 4
+  },
+  "installation": [
+    {
+      "runtime": "codex",
+      "markdown_files_compared": 12,
+      "mismatches": [],
+      "catalog_row": "| orchestrator | source-only | 네이티브 PM·실행 방식 비교의 공통 계약과 조건부 MCP 오케스트레이션. hard file lock, 외부 태스크 보드, 크로스-CLI 혼합이 필요할 때 /daedalus --mcp로 실행한다. | C:/Users/Administrator/.codex/.olympus/source-skills/orchestrator/SKILL.md |",
+      "reference_sha256": "37e6fdbe3c41a6a35f8ed9303e10f14ef70c4734491fe6a81b5aa190387ef1c3",
+      "orchestrator_active": false
+    },
+    {
+      "runtime": "claude",
+      "markdown_files_compared": 17,
+      "mismatches": [],
+      "catalog_row": "| orchestrator | source-only | 네이티브 PM·실행 방식 비교의 공통 계약과 조건부 MCP 오케스트레이션. hard file lock, 외부 태스크 보드, 크로스-CLI 혼합이 필요할 때 /daedalus --mcp로 실행한다. | C:/Users/Administrator/.claude/.olympus/source-skills/orchestrator/SKILL.md |",
+      "reference_sha256": "37e6fdbe3c41a6a35f8ed9303e10f14ef70c4734491fe6a81b5aa190387ef1c3",
+      "orchestrator_active": false
+    },
+    {
+      "runtime": "antigravity",
+      "markdown_files_compared": 17,
+      "mismatches": [],
+      "catalog_row": "| orchestrator | source-only | 네이티브 PM·실행 방식 비교의 공통 계약과 조건부 MCP 오케스트레이션. hard file lock, 외부 태스크 보드, 크로스-CLI 혼합이 필요할 때 /daedalus --mcp로 실행한다. | C:/Users/Administrator/.gemini/antigravity-cli/.olympus/source-skills/orchestrator/SKILL.md |",
+      "reference_sha256": "37e6fdbe3c41a6a35f8ed9303e10f14ef70c4734491fe6a81b5aa190387ef1c3",
+      "orchestrator_active": false
+    }
+  ],
+  "packages": [
+    {
+      "skill": "agent-team",
+      "zip": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\packages\\agent-team.zip",
+      "sha256": "824cb740e3c3655374448156c6ab98bf56bff2aab137df43ad373e25eefd90cc",
+      "integrity": "pass"
+    },
+    {
+      "skill": "agent-team-codex",
+      "zip": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\packages\\agent-team-codex.zip",
+      "sha256": "cf16acd41c696cd8cd9dc00735efd7a0da5d4178c1297b8ac3d9d13606d9f552",
+      "integrity": "pass"
+    },
+    {
+      "skill": "workpm",
+      "zip": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\packages\\workpm.zip",
+      "sha256": "ab1cd1a0249582cbefcffcc606427798ffab9a4d99c27c32195355ff2377073c",
+      "integrity": "pass"
+    },
+    {
+      "skill": "orchestrator",
+      "zip": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\olympus-execution-adjustment-20261022-4p85hgvo\\packages\\orchestrator.zip",
+      "sha256": "072c50a6d00bd1b6f64a9b6a6807c39d6b440cf1dd525673686ef369c03b4ed8",
+      "integrity": "pass"
+    }
+  ],
+  "final_source_sha256": {
+    "README.md": "dd1fcfbcc67ee0218282f510d106b02bc647a26be01da83a3a20e510563702ac",
+    "docs/workflow-guide.md": "5f9b06dc58489b729a84201b0a504f8bd10f40110d693f2de9ed323a436fa563",
+    "skills/agent-team/SKILL.md": "146213bb9a8a56d3a073d51bfe308470d6d69dc71b5bfcdc431614101fc87996",
+    "skills/agent-team/references/wave-executor.md": "3bc1c8edf5ac78fb4545c0dc23b921a43d8e177b4183a8f73ee936ea06a95b17",
+    "skills/agent-team/references/verification-protocol.md": "e30a5684900bdf235617581d6df81f053e29ac8c7df8e235da0a2c3dd038a750",
+    "skills/agent-team-codex/SKILL.md": "b5a4d2ac3e6377f219799a9652a20ef0aedd1659d58f1cd1b01e5a4f48a653cc",
+    "skills/agent-team-codex/references/role-mapping.md": "a3d84cbaa2f7b478aea2aa6fd6c9b78eaf62970df1506d21cc4be8cd51f8b5ed",
+    "skills/agent-team-codex/references/prompt-templates.md": "a31386b70086519c6c137216b8792bd39940d88424bb509a2f0d902eff282aa4",
+    "skills/workpm/SKILL.md": "2ff6c0697a16a389caecb1a2ce714da2a30148dc0f5e0bc7c41ed8d3e68c4dc8",
+    "skills/orchestrator/SKILL.md": "230cd4efacd46ca99bb6ec2f6e66296e5bd062ae1028dbd4e63e5c34a3004b7c",
+    "skills/orchestrator/commands/workpm.md": "b9f85d364e12e49d48e78a218737aab35314f17406904ae51b8a8a753f896f3b",
+    "skills/orchestrator/commands/workpm-mcp.md": "987f3ca29292f94ccb68e7ef164a4c7fdbef1be72ad0003352fb9f62ab8fad09",
+    "skills/orchestrator/references/execution-adjustment.md": "37e6fdbe3c41a6a35f8ed9303e10f14ef70c4734491fe6a81b5aa190387ef1c3"
+  },
+  "limitations": [
+    "Synthetic behavior checks, not a controlled old/new skill performance comparison",
+    "Only current Codex agents executed tasks; Claude/Antigravity/Grok/MCP execution NOT RUN",
+    "Candidate acceptance and rejection under controlled comparable runs not exercised",
+    "Tokens and model-level cost unknown",
+    "Fixtures scoped by agent instructions, not an OS security sandbox"
+  ],
+  "installed_codex_execution": {
+    "agent": "/root/adjustment_installed_eval",
+    "state": {
+      "phase": "agent-team-codex Step 4",
+      "task": "주문 목록 API 응답을 화면 형식으로 변환",
+      "AC": [
+        "현재 API 계약 준수",
+        "빈 목록과 전체 개수 보존"
+      ],
+      "previous_execution": {
+        "exit_code": 1,
+        "command": "python -B -m unittest discover -s tests -v",
+        "files": {
+          "client.py": "997c96675177626c1982df10ffa6fc9014602d0fbd8261bbfa6637a1c2f68fcc",
+          "payload.json": "94d3ae7f08073166c3c7d7162ea84550f0f6d77d6d952520c2e70a2c5fa17301",
+          "previous-run.txt": "6f8fe754b73af789a642f0ac6684bc5e070469dae6f62b03c0b5bd5ad563a1ec",
+          "tests\\test_client.py": "2ea06e9d849cdb4e7a7cf451e05fd709e7db5e939321d2a79830eb15891ad7b5"
+        }
+      },
+      "previous_worker_context": [
+        "client.py",
+        "tests/test_client.py"
+      ],
+      "observations": [
+        "이전 worker가 계약 문서를 읽지 않고 items/total을 추측했다.",
+        "그 실행 뒤 공급자가 payload.json과 API-CONTRACT.md를 현재 계약으로 갱신했다. 이전 외부 입력 버전은 다시 실행할 수 없다."
+      ],
+      "remaining_task_executions": 1,
+      "additional_replays_authorized": false,
+      "implementation_scope": [
+        "client.py"
+      ],
+      "read_only": [
+        "tests",
+        "payload.json",
+        "API-CONTRACT.md",
+        "previous-run.txt"
+      ],
+      "user_request": "현재 계약에 맞춰 남은 작업을 마무리하고, 이번 재시도에서 확인된 결과를 보고하라. 새 설계·전역 스킬 변경·다른 에이전트 생성은 필요 없다."
+    },
+    "fixture_before_sha256": {
+      "API-CONTRACT.md": "9c999d9795ca7f245fd91169ea1978a26784b96bda424198cfafc684baaad8a2",
+      "client.py": "997c96675177626c1982df10ffa6fc9014602d0fbd8261bbfa6637a1c2f68fcc",
+      "payload.json": "ec6636239274a72e413c95aa47194036333dfb89bb9851ff0df0b5a5ed0fa2c2",
+      "previous-run.txt": "6f8fe754b73af789a642f0ac6684bc5e070469dae6f62b03c0b5bd5ad563a1ec",
+      "task-state.json": "d0c02ed9192443e4f0e15a1183c771b4e7befdef7986937f36b5adc77514730e",
+      "tests\\test_client.py": "2ea06e9d849cdb4e7a7cf451e05fd709e7db5e939321d2a79830eb15891ad7b5"
+    },
+    "final_code": "def render_page(payload: dict) -> dict:\n    return {\"rows\": payload[\"data\"][\"rows\"], \"count\": payload[\"meta\"][\"total\"]}\n",
+    "changed_files": [
+      "client.py"
+    ],
+    "added_files": [],
+    "syntax_compile": {
+      "exit_code": 0,
+      "output": "client.py syntax: PASS"
+    },
+    "test_command": "python -B -m unittest discover -s tests -v",
+    "test_exit_code": 0,
+    "tests_passed": 3,
+    "test_runs": 1,
+    "task": "recovered",
+    "adjustment": "unverified",
+    "review_gate": "DEGRADED",
+    "MCP": "NOT SELECTED",
+    "cost_tokens": "unknown",
+    "modules_read": [
+      "C:/Users/Administrator/.codex/.olympus/source-skills/orchestrator/SKILL.md",
+      "C:/Users/Administrator/.codex/.olympus/source-skills/orchestrator/references/execution-adjustment.md",
+      "C:/Users/Administrator/.codex/.olympus/source-skills/code-reviewer/SKILL.md",
+      "C:/Users/Administrator/.codex/.olympus/source-skills/code-reviewer/references/security-audit.md"
+    ],
+    "result_source": "independent agent execution report; parent independently checked file hashes",
+    "limit": "No native external/subagent review under fixture restrictions; no static type checker"
+  }
+}

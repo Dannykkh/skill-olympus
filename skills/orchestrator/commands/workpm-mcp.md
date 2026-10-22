@@ -91,6 +91,10 @@ Worker끼리 대화할 수 없으므로, **태스크 설계가 품질의 90%를 
 
 ## 4단계 워크플로우
 
+제안 개수·재승인·국소 수정의 산출물 범위는 같은 모듈의
+[workpm.md](workpm.md) `제안 규모와 진행 판단`을 공통 계약으로 읽습니다.
+MCP 사용 자체가 추가 승인이나 새 제안서 세 개를 요구하지 않습니다.
+
 ### Phase 1: 리서치 & 제안
 
 ```
@@ -109,11 +113,11 @@ PM: blindspot pass 수행
   → unknown unknowns, implicit assumptions, architecture-changing questions 정리
   → 가장 영향 큰 질문은 사용자에게 먼저 확인
   ↓
-PM: 종합 분석 + 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort)
+PM: 실행안 작성; 의미 있는 선택이 남으면 2~3안 비교(fit/risk/effort)
   ↓
-PM: 채점표 + 추천안을 사용자에게 제안 (현재 CLI의 질문 방식)
+PM: 선택 근거와 완료 기준 기록; 공통 진행 판단상 필요한 결정만 질문
   ↓
-PM: 승인 결과를 activity log에 기록
+PM: 허용된 범위에서 진행하고 결정 근거를 activity log에 기록
 ```
 
 **Phase 1 체크리스트:**
@@ -125,20 +129,22 @@ PM: 승인 결과를 activity log에 기록
 6. 완료 결과 수집 (`orchestrator_get_task_summary`)
 7. **Blindspot pass** — 명시 요구사항, 미정 결정, 암묵 기대, unknown unknowns, 아키텍처 변경 질문을 정리하고 activity log에 기록
 8. 답에 따라 아키텍처가 바뀌는 질문이 있으면 가장 큰 것부터 사용자에게 확인 (한 번에 한 질문)
-9. 서로 다른 3가지 제안서 작성 → 루브릭 채점(fit/risk/effort, 근거 한 줄씩) → 현재 CLI의 질문 방식으로 채점표+추천안 제시·승인 (채점 없이 나열 금지)
-10. 승인 결과 기록 (`orchestrator_log_activity`)
+9. 공통 `제안 규모와 진행 판단`에 따라 단일 실행안 또는 2~3안 비교. 필요한 미정 결정만 질문
+10. 선택 근거와 남은 가정 기록 (`orchestrator_log_activity`)
 11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고 `checklist-status.md`를 모든 행 `missing`으로 만든다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
 12. **API 규약 고정** — 작업에 HTTP API가 있으면 planning_dir의 `api-spec.md`가 있으면 그것을, 없으면 젭마인 `references/api-spec-guide.md`의 `## Conventions`(목록 페이지네이션·크기 상한·정렬 허용 컬럼, 공통 에러 형식, 이름·날짜 형식)를 이 작업의 API 규약으로 삼는다. 목록 API가 있으면 완료 기준에 페이지네이션 동작(크기 상한, 허용 안 된 정렬은 400)을 AC로 넣는다. 설계 없이 구현하는 경로라도 목록을 한 번에 다 돌려주는 API를 만들지 않기 위해서다
 13. **MCP 규약 고정** — 작업이 MCP 서버나 도구를 만들거나 바꾸면 planning_dir의 `mcp-spec.md`가 있으면 그것을, 없으면 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`(노출 기본 꺼짐, 구성 대상 경유·DB 직접 접근 금지, 권한은 구성 대상 이하, annotations, 호출 한도·중복 방지, 에이전트 경유 기록, 모델용 에러 문구)를 이 작업의 MCP 규약으로 삼는다. 새로 여는 도구는 승인할 제안서에 도구 이름·구성 대상·위험 표시를 적는다 — 노출을 켜는 것은 사용자 확인 대상이기 때문이다. 프로젝트에 MCP 서버가 있는데 사람이 쓰는 기능을 새로 만들면 그 기능을 도구로 열지를 제안서에서 정하고, 열지 않으면 사유를 한 줄 적는다
-14. **트립와이어 고정** — planning_dir의 `plan.md`에 `### 트립와이어`가 있으면 그것을 쓴다. 없으면 승인할 제안서에 `구현 중` 트립와이어 1~3개를 젭마인 `references/tripwire-guide.md` 형식으로 적고 승인 후 activity log의 `## Tripwires` 표로 옮긴다(`orchestrator_log_activity`). 틀리면 제안서 전체가 헛수고가 되는 가정(AI 품질, 외부 API 지원, 성능 한계)이 있으면 그것을 확인하는 **위험 가정 태스크**를 따로 두고 그 결과를 지표로 삼는다
+14. **트립와이어 고정** — planning_dir의 `plan.md`에 `### 트립와이어`가 있으면 그것을 쓴다. 없으면 실행안에 `구현 중` 트립와이어 1~3개를 젭마인 `references/tripwire-guide.md` 형식으로 적고 activity log의 `## Tripwires` 표로 옮긴다(`orchestrator_log_activity`). 틀리면 실행안 전체가 헛수고가 되는 가정(AI 품질, 외부 API 지원, 성능 한계)이 있으면 그것을 확인하는 **위험 가정 태스크**를 따로 두고 그 결과를 지표로 삼는다. AI 작업자의 처리 경계·평가 AC는 같은 가이드의 `처리 경계와 평가 재현성`을 따른다
 
 ### Phase 2: 프로세스 도면 확보 (설계도)
 
 > **PM은 설계도 없이 공사하지 않는다.**
 > 이 도면이 Phase 3의 **공정 기준선**이 된다.
 
+공통 진행 판단에서 `NOT APPLICABLE: unchanged flow`인 국소 수정은 도면을 생성하지 않습니다.
+
 ```
-사용자 승인 완료
+실행 범위 확정 (현재 요청·기존 승인 또는 필요한 추가 결정)
   ↓
 PM: planning_dir에서 flow-diagrams/ 존재 여부 확인 (Read)
   ├─ ✅ 젭마인 도면 있음 → 도면 읽고 제안서와 정합성 확인
@@ -209,6 +215,12 @@ PM: Phase 4 실행
 ```
 
 **Phase 3 체크리스트:**
+
+실패 분기는 명령·출력·실제 변경으로 원인을 먼저 판별한다. 구현 결함은 담당 Worker가 수정하고 환경 문제는
+복구 또는 차단 조건을 기록한다. 문맥·작업 분할·도구 순서 변경이 필요하다는 근거가 있으면
+`${orchestrator_root}/references/execution-adjustment.md`를 읽고 같은 재시도 상한 안에서 비교한다.
+비교 문서가 없으면 `adjustment: not-run`으로 남긴다. 태스크 재생성·Worker 교체로 상한을 초기화하지 않는다.
+
 0. **위험 가정 먼저** — 위험 가정 태스크가 있으면 그 태스크만 먼저 생성·완료시키고, 결과로 트립와이어를 판정한 뒤 나머지 태스크를 생성한다(Worker는 의존성이 풀린 태스크를 바로 가져가므로 판정 전에는 나머지를 만들지 않는다). 수정 임계점·중단 검토 조건이면 나머지를 만들지 않고 사용자에게 보고한다(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속. 판정 절차: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`)
 1. 승인된 제안서 기반 태스크 분해
 2. `orchestrator_create_task` — prompt에 **도면 경로**, **담당 AC ID**, **API 규약**(API 작업만), **MCP 규약**(MCP 작업만) 포함, scope, depends_on 설정
@@ -225,6 +237,8 @@ PM: Phase 4 실행
 9. 자재검사 통과 → **트립와이어 판정**(`구현 중` 지표 전부. 수정 임계점·중단 검토 조건이면 Phase 4로 가지 않고 사용자 보고. 초기 신호 이상은 plan.md `#### 발동 기록` 또는 activity log `## Tripwires`에 PM만 한 줄) → Phase 4 공정 점검으로 진행
 
 ### Phase 4: 공정 점검 (준공 검사)
+
+Phase 2가 `NOT APPLICABLE: unchanged flow`이면 도면 검증 태스크를 만들지 않고 승인 범위·기존 AC·회귀 실행 증거로 마무리합니다. 그 밖의 작업은 아래 절차를 따릅니다.
 
 > **공사가 설계도대로 진행되었는지 확인한다.**
 > 다이어그램의 모든 노드/분기가 실제 코드에 구현되었는지 검증한다.
@@ -282,7 +296,7 @@ PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
    - 리서치 태스크로 생성하여 Worker에게 분석 위임
 
 4. **Phase 1 실행** → 리서치 & 제안
-5. **사용자 승인 대기** → 현재 CLI의 질문 방식
+5. **진행 판단** → 공통 계약에 따라 허용된 범위는 계속하고 필요한 미정 결정만 질문
 6. **Phase 2 실행** → 프로세스 도면 확보 (설계도)
 7. **Phase 3 실행** → 구현 (도면 기반)
 8. **Phase 4 실행** → 공정 점검 (준공 검사)
@@ -407,7 +421,8 @@ Worker 생성 후 진행 상황 확인:
 
 2. while (미완료_태스크_존재) {
      orchestrator_get_progress()
-     // 실패 태스크 → 원인 분석 → 재생성 또는 스킵
+     // 실패 태스크 → Phase 3의 원인 분류·실행 방식 비교 분기로 처리
+     // 재생성해도 같은 실패의 예산은 유지. 필수 미해결 태스크는 스킵해 완료로 처리하지 않음
      // 전체 완료 → 다음 Phase로
      wait(30초)
    }

@@ -120,9 +120,10 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
    `.olympus/source-skills` 아래여도 조합하거나 추측하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모입니다. `references/`, `scripts/`, `commands/`는
    모두 이 루트에서 해석합니다.
-5. Step 5 코드 리뷰 분기에 도달했을 때만 `code_reviewer_root`를 만듭니다. hard file lock,
-   외부 task ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
-   `orchestrator_root`를 만들고 `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다.
+5. Step 5 코드 리뷰 분기에 도달했을 때만 `code_reviewer_root`를 만듭니다. 실행 방식 변경 가설이 있으면
+   `orchestrator_root`를 해석해 `${orchestrator_root}/references/execution-adjustment.md`만 읽습니다.
+   hard file lock, 외부 task ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
+   `${orchestrator_root}/commands/workpm-mcp.md`를 읽고 MCP 도구를 사용합니다.
 
 이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
 모듈 이름을 slash command로 실행하지 않습니다.
@@ -130,9 +131,12 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 code-reviewer를 읽지 못하면 현재 CLI의 네이티브 review 1회와 아래 bounded 검수 항목만
 실행하고 `policy module: NOT RUN (native fallback)` 및 게이트 `DEGRADED`를 기록합니다.
 네이티브 review도 없으면 읽기 전용 작업자가 같은 bounded 항목을 점검하되 source module PASS를
-주장하지 않습니다. orchestrator/MCP를 읽지 못하면 편집을 직렬화할 수 있는 범위만 메인 순차
+주장하지 않습니다. MCP 분기를 선택했는데 orchestrator/MCP를 읽지 못하면 편집을 직렬화할 수 있는 범위만 메인 순차
 경로로 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock이 필수이면 해당 Wave는 `BLOCKED`입니다.
 누락된 모듈을 조용히 PASS 처리하지 않습니다.
+
+실행 방식 비교 문서만 읽는 경로는 `MCP: NOT SELECTED`입니다. 그 문서를 읽지 못하면
+`adjustment: not-run (module unavailable)`을 남기고 기존 구현 수정·검증을 수행합니다.
 
 ### CLI 감지 방법
 
@@ -172,16 +176,20 @@ Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니
 
 1. **기존 테스트 실행**: `npm test`, `pytest`, `go test` 등 프로젝트 테스트 프레임워크 실행
 2. **린트/타입 체크**: `tsc --noEmit`, `eslint`, `ruff check` 등
-3. **실패 시**: 구현 팀원에게 수정 지시 → 재실행 (최대 3회)
-4. **3회 연속 실패**: 해당 작업자를 중단하고 새 general-write 작업자로 교체한 뒤, 실패 원인 분석부터 재시작
+3. **실패 시**: 실패 명령·출력·부분 변경으로 원인 판별 → 구현 결함 수정·환경 복구 또는 아래 실행 방식 비교 → 재실행 (최대 3회; 더 작은 기존 상한 우선)
+4. **반복 실패**: 근거를 다시 확인하고 남은 상한 안에서만 재시도. 소진하면 미완료 보고하며 작업자 교체로 횟수를 초기화하지 않음
+
+문맥·작업 분할·도구 순서가 원인이라는 근거가 있으면 위 resolver로 `orchestrator_root`를 정하고
+`${orchestrator_root}/references/execution-adjustment.md`를 읽습니다. Lead가 현재 태스크의 변경
+가설·같은 조건의 재실행·채택을 소유합니다. 단순 구현 결함이나 정상 Wave에는 비교를 추가하지 않습니다.
 
 ### 에러 복구 전략
 
 | 상황 | 조치 |
 |------|------|
 | 팀원이 잘못된 파일 수정 | 소유권 기준점 대비 변경 목록(verification-protocol.md 3단계)으로 확인 → revert 지시 |
-| 테스트 3회 연속 실패 | 작업자 중단 → 새 general-write 작업자로 교체 → 원인 분석부터 |
-| 자재검사 2회 미통과 | 구현 팀원 교체 → 리뷰 지적사항 포함 재구현 |
+| 테스트 반복 실패 | 원인 재분류 → 근거 있는 실행 변경은 공통 비교 계약 적용. 기존 상한 소진 시 미완료 보고 |
+| 자재검사 2회 미통과 | 리뷰 지적과 실패 근거 보고. 작업자 교체로 재시도 상한을 초기화하지 않음 |
 | 팀원 무응답 (1분+) | shutdown → 재스폰 (최대 2회) |
 
 ### Codex 모드
@@ -392,7 +400,7 @@ Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEA
    - Grok: bundled `review`; 실패하면 `explore` subagent에 같은 gate 전달
 3. source module을 읽지 못하면 위 resolver의 bounded native fallback만 실행하고
    `policy module: NOT RUN`, `review gate: DEGRADED`로 남깁니다.
-4. 미통과 시 → 수정 지시 → 재리뷰 (최대 2회)
+4. 미통과 시 → 위 실패 원인 판별과 실행 방식 비교 분기를 거쳐 수정 → 재리뷰 (최대 2회; 비교도 같은 상한에 포함)
 
 **검수 항목:** 기능/책임 단위 분리, 보안 취약점, 타입, SRP, DRY
 
@@ -462,7 +470,9 @@ Lead 의사결정 로그: conversations/{date}-team-poseidon.md
 ═══════════════════════════════════════
 ```
 
-실패 섹션은 같은 범위를 1회 재시도합니다. 그래도 실패하고 대화형 실행이면 사용자에게 재시도 또는 실패 상태 종료를 한 문장으로 묻습니다. Zeus 같은 무중단 호출에서는 메인 순차 폴백 후 실패를 보고하며 성공으로 가장하지 않습니다.
+실패 섹션의 재시도·메인 순차 폴백은 남은 동일 실패 예산 안에서만 수행합니다. 최종 보고 단계가
+추가 시도권을 만들지 않습니다. 상한을 소진하면 미완료와 실패 근거를 보고합니다. Zeus 호출도
+같은 상한을 따르며, 실패 섹션을 성공으로 표시하지 않습니다.
 
 ---
 
@@ -502,14 +512,14 @@ Step {N} complete: {summary}
 | SECTION_MANIFEST 파싱 실패 | 사용자에게 index.md 형식 확인 요청 |
 | 순환 의존성 발견 | 경고 출력 + 관련 섹션 목록 표시 |
 | teammate 상태 변화 없음 | 런타임 상태와 담당 파일·테스트 증거 확인 → 작업 범위를 줄여 1회 재위임; permission mode는 변경하지 않음 |
-| teammate/agent 실패 | 오류와 부분 변경을 확인 → 같은 범위를 새 작업자에게 1회 재위임 → 실패 시 메인 순차 폴백 또는 사용자 보고 |
+| teammate/agent 실패 | 오류와 부분 변경을 확인 → 남은 동일 실패 예산 안에서 1회 재위임 또는 메인 순차 폴백. 소진 시 미완료 보고 |
 | 파일 충돌 감지 | 두 teammate/agent가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
 | 컨텍스트 한도 초과 | 현재 Wave까지 결과와 ledger를 저장 → 실행 중 작업자를 안전하게 중단 → 사용자에게 새 세션에서 재개 안내 |
 | Codex spawn 실패 | 현재 세션의 multi-agent 가용성·thread cap·sandbox를 확인 → 범위를 줄여 재시도; 승인 우회 금지 |
 | Codex wait 타임아웃 | 현재 interrupt 도구로 중단 → 부분 변경 확인 → 범위를 줄여 재spawn |
 | Antigravity 에이전트 미인식 | TUI `/agents`와 현재 도구 목록으로 확인 → `invoke_subagent`가 없으면 Wave 내 메인 컨텍스트 순차 실행; hard lock 등이 필수일 때만 source-only resolver를 거친 orchestrator MCP 분기 |
 | spawn_subagent 실패 (Grok) | `grok inspect --json`으로 네이티브 서브에이전트 레지스트리 확인 → 재spawn 1회 → 실패 시 사용자 보고 |
-| 재시도 후에도 실패 | 해당 섹션을 메인 컨텍스트에서 순차 실행하거나 사용자에게 보고 |
+| 재시도 후에도 실패 | 남은 동일 실패 예산이 있으면 메인 순차 실행, 소진했으면 추가 실행 없이 미완료 보고 |
 
 ## 작업자 정리
 

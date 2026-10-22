@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createService } from './service.mjs';
+import { serve } from './test-support.mjs';
+
+test('successful refund returns its identifier and amount', async t => {
+  const api = await serve(t, createService);
+  const response = await api.request('/orders/a-open/refunds', {
+    method: 'POST', token: 'support-a', key: 'success', body: { amountCents: 500 },
+  });
+  assert.equal(response.status, 201);
+  assert.equal(response.body.refund.orderId, 'a-open');
+  assert.equal(response.body.refund.amountCents, 500);
+  assert.match(response.body.refund.id, /^refund-/);
+});
+
+test('customer cannot issue a refund', async t => {
+  const api = await serve(t, createService);
+  const before = api.snapshot();
+  const response = await api.request('/orders/a-open/refunds', {
+    method: 'POST', token: 'customer-a', key: 'customer', body: { amountCents: 500 },
+  });
+  assert.equal(response.status, 403);
+  assert.deepEqual(api.snapshot(), before);
+});
+
+test('another tenant is not visible', async t => {
+  const api = await serve(t, createService);
+  const before = api.snapshot();
+  const response = await api.request('/orders/b-open/refunds', {
+    method: 'POST', token: 'support-a', key: 'tenant', body: { amountCents: 500 },
+  });
+  assert.equal(response.status, 404);
+  assert.deepEqual(api.snapshot(), before);
+});
+
+test('amount must be a JSON number', async t => {
+  const api = await serve(t, createService);
+  const before = api.snapshot();
+  const response = await api.request('/orders/a-open/refunds', {
+    method: 'POST', token: 'support-a', key: 'type', body: { amountCents: '500' },
+  });
+  assert.equal(response.status, 400);
+  assert.deepEqual(api.snapshot(), before);
+});

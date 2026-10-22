@@ -263,6 +263,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 4
 3. 감리는 구현 장부를 고치지 않습니다. 감리 판정은 보고서에만 적습니다.
 4. 집계: AC별 감리 판정(proved/weak/missing/contradicted), 장부 상태와 다른 행, 미이행 AC(감리 판정이 `proved`가 아닌 행).
 5. 원인을 나눕니다: 두 AC가 서로 모순되면(가이드의 '계약 모순') **설계 결함 — 계약 변경 필요**, 그 밖은 **구현 미이행**.
+6. AI 품질 AC는 젭마인 `references/tripwire-guide.md`의 `처리 경계와 평가 재현성`으로 평가 조건과 사례별 실행 증거를 대조합니다. UI/API 테스트만으로 품질을 증명하지 않습니다. 재현 불가·평가셋/채점 기준이 다른 비교는 `weak`, 고정 기준에서 실제 실패하면 `contradicted`입니다. 품질 AC 자체가 빠졌으면 설계 보완으로 보고하고 AI 품질 검증을 PASS로 표시하지 않습니다.
 
 **등급 영향:** `missing`·`contradicted`가 1개라도 있으면 FAIL, `weak`만 남으면 CONDITIONAL. FAIL 사유에 원인 구분을 적어 재시공(구현 미이행)과 계약 변경(설계 결함)을 섞지 않습니다.
 
