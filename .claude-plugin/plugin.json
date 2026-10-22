@@ -1,7 +1,7 @@
 {
   "name": "skill-olympus",
   "description": "Twelve Greek gods. One command. A working SaaS. 103 public skill sources with a lightweight entrypoint-only registry and native-agent orchestration for Claude Code, Codex CLI, Google Antigravity CLI, and Grok Build. No custom agent prompts are deployed.",
-  "version": "7.3.0",
+  "version": "7.4.0",
   "author": {
     "name": "Dannykkh"
   },

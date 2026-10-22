@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.4.0] - 2026-10-22
+
+### Features
+
+- **agent-team / agent-team-codex / workpm**: Classify failures from commands, outputs and partial changes before retrying. Clear implementation defects use direct fixes; evidence of missing context, poor decomposition or tool ordering can trigger one bounded comparison through the shared `orchestrator/references/execution-adjustment.md` policy. Baseline and candidate runs use the same starting code, inputs, environment and limits. Task recovery is recorded separately from `accepted`, `rejected`, `unverified` or `not-run` adjustment evidence. A successful recovery under different conditions remains unverified. The current engine, ownership rules, MCP locks and completion gates remain in force. Mnemo receives evidence and applicability conditions at handoff; no new runtime engine or active skill is added. (6de5f4c)
+- **zephermine / argos**: Preserve demand-validation uncertainty and the user's architecture constraints. Define deterministic-code versus model-inference boundaries and reproducible AI evaluation conditions in the existing plan and section acceptance criteria. Argos distinguishes UI/API test success from AI-quality evidence and reports incomparable or missing evidence explicitly. (6de5f4c)
+- **workpm**: Use one execution plan when the scope or direction is already decided, and compare alternatives only when a meaningful choice remains. Small changes that leave the flow unchanged use existing contracts and regression evidence without new proposals, diagrams or dictionaries. Native, sequential and MCP paths share the same scope and approval rules. (6de5f4c)
+
+### Bug Fixes
+
+- **minos**: Choose implementation or test repairs against current requirements, acceptance criteria and API specifications instead of treating the observed response as the expected behavior. Keep assertions and rejection cases intact; implementation defects in `--fix-test-only` remain unresolved. Require affected regression checks and record the contract evidence for expectation changes. (6de5f4c)
+- **agent-team / workpm**: Worker replacement, task splitting, final-report retries and sequential fallbacks no longer grant a fresh retry budget for the same failure. An adjustment performed in an MCP workflow keeps its Worker, task ledger and lock path. (6de5f4c)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs explain execution adjustment, contract-based repairs and validation limits. The workflow guide links the shared policy. Synthetic evaluation fixtures and original results are included under `docs/research/`. (6de5f4c, 24b5a67)
+
+### Validation and Scope
+
+- Workflow validation before release: 56 targeted Node checks and four skill-format checks passed. Two synthetic execution-adjustment scenarios ran three times, including a fresh agent using the installed Codex catalog path; each run passed its three existing tests, preserved read-only inputs and kept recovery separate from unverified strategy effects.
+- Release checks: 12 version-synchronization and installation-policy tests passed. Windows integrated installation (`install.bat --all`) passed all 12 final checks; 15 changed skill files in each of the Claude, Codex and Antigravity installations match the source. Grok uses the Claude compatibility surface.
+- Earlier Builder comparisons retain their original failures, transport-helper correction and coverage gaps. These are bounded synthetic observations, not evidence of general quality, speed or cost gains. Actual product workflows, controlled candidate acceptance/rejection, and execution-adjustment tasks on Claude, Antigravity, Grok or MCP were not exercised.
+- Details: [execution adjustment validation](docs/research/2026-10-22-execution-adjustment-validation.md), [Builder workflow comparison](docs/research/2026-10-22-builder-workflow-implementation-validation.md).
+
 ## [7.3.0] - 2026-10-20
 
 ### Features
