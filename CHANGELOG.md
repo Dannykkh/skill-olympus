@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.4.1] - 2026-10-25
+
+### Bug Fixes
+
+- **agent-team / agent-team-codex / workpm**: Keep the main agent responsible for task allocation, dependency coordination, evidence checks and final integration. Workers own implementation and related tests. Replace fixed worker, task and file counts with coherent responsibilities, available capacity and useful parallelism. Related fixes and retests stay with the same worker; dependent tasks use one worker or sequential assignments. Direct implementation by the main agent remains an explicit fallback for unavailable or failed delegation. Remove nested worker creation and separate workers for individual search, installation or test commands. Preserve ownership rules, acceptance criteria, retry budgets and MCP locks. (7422984)
+- **agent-team / zeus / orchestrator**: Resolve conflicting task-state instructions by making the lead own state updates after checking worker evidence. Connect Wave transitions to the existing review and tripwire gates. Zeus uses the same sequential assignment rules and loads the common PM contract for workpm; only the MCP contract is conditional. Missing required contracts remain blocked. (7422984)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs describe PM responsibilities, worker reuse, sequential assignments and validation limits. Update the workflow guide and orchestrator references to match. (7422984, 2e27d32)
+
+### Validation and Scope
+
+- Workflow validation: 73 regression checks and five skill-format checks passed. After the final role, Wave and Zeus wording changes, the affected subset of 39 checks passed again. Independent allocation scenarios covered related files, limited slots, retests, unavailable delegation, required-lock failures and sequential Zeus assignments; the identified document conflicts were corrected and rechecked.
+- Release validation: 12 version-synchronization and installation-policy checks passed. Windows integrated installation (`install.bat --all`) passed all 12 final rule, registration and installed-hook checks. All 26 applicable changed files match their catalog-resolved installations: Claude 9, Codex 8 and Antigravity 9. Grok uses the Claude compatibility surface.
+- Allocation scenarios were instruction-level reviews, not product execution or controlled performance comparisons. Product quality, speed and cost improvements have not been measured.
+
 ## [7.4.0] - 2026-10-22
 
 ### Features
