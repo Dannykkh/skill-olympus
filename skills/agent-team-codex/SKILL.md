@@ -8,6 +8,10 @@ description: Codex CLI의 내장 default, explorer, worker를 조합해 병렬 �
 Codex CLI의 stable multi-agent 기능을 사용해 작업을 병렬 분배하는 운영 스킬입니다.
 Codex의 `default/explorer/worker` 역할을 기준으로 실행하며 특정 모델을 강제하지 않습니다.
 
+정상 위임 경로에서 메인은 업무 분장·의존성 조율·사용자 소통·검증과 통합을 맡고, 구현과
+관련 테스트는 worker가 수행합니다. 작업이 하나면 한 worker에게 배정하고, 관련 후속 작업은
+같은 worker가 이어받습니다. 메인 직접 구현은 명시된 순차 폴백에서만 수행합니다.
+
 ## Prerequisites
 
 1. 현재 Codex에서 subagent 도구가 노출되는지 확인합니다. 현행 Codex는 `[agents].enabled` 기본값이 `true`입니다.
@@ -95,9 +99,9 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 
 ### Step 1: 작업 분해
 
-1. 목표를 3~8개의 독립 태스크로 분할
+1. 목표를 함께 판단·검증할 책임 단위로 묶고, 독립적으로 완료할 수 있는 경계에서만 분할. 최소 태스크 수나 파일 수에 맞추지 않음
 2. 태스크별 담당 파일 범위를 고정
-3. 의존성 있는 태스크는 후행 Wave로 배치
+3. 의존성 있는 태스크는 후행 Wave로 배치. 관련 태스크는 같은 worker가 이어받되 태스크별 AC·소유권·Wave 검증은 유지하고, 동시성은 병렬 이득·가용 슬롯·기존 예산으로 결정
 4. 자유 모드는 `구현 중` 트립와이어 1~2개(틀리면 작업 전체가 헛수고가 되는 가정이 있으면 그 확인을 Wave 1 태스크로 두고 결과를 지표로)를 정하고, 장부는 activity log의 `## Tripwires` 표로 둔다 (형식: 젭마인 `references/tripwire-guide.md`)
 
 상세 규칙: `references/role-mapping.md`

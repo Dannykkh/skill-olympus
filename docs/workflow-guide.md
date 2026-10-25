@@ -75,7 +75,7 @@ Antigravity에서는 네이티브 workflow가 단순 요청을 먼저 소유합�
 ```
 
 1. **`/zephermine`**: 요구사항 정리 → 영향 분석 → 섹션 분리
-2. **구현**: 섹션이 2~3개면 수동, 4개 이상이면 `/agent-team`
+2. **구현**: 독립 작업의 분장·통합 관리가 필요하면 `/agent-team`, 그 계약이 필요 없는 작은 작업은 수동 구현. 섹션 개수만으로 선택하지 않음
 3. **`/minos`**: 기능 테스트 + 회귀 테스트
 
 **예시**: 결제 기능 추가, 알림 시스템 도입, OAuth 연동
@@ -216,7 +216,13 @@ AskUserQuestion 호출 없이 자동 응답 테이블로 모든 결정을 처리
 | **입력** | sections/index.md | 사용자 지시 | 사용자 지시 |
 | **병렬** | Wave 기반 | PM이 독립 작업만 분배 | 외부 보드에서 분배 |
 
-읽기 전용 탐색은 Claude `Explore` / Codex `explorer` / Antigravity `research` / Grok `explore`, 파일 변경과 명령 실행은 Claude `general-purpose` / Codex `worker` / Antigravity Main 또는 명시적으로 정의한 쓰기 에이전트 / Grok `general-purpose`로 매핑합니다. 메인 컨텍스트가 공유 장부와 완료 판정을 소유하고, 위임이 없거나 병렬 이득이 없으면 같은 절차를 순차 실행합니다.
+읽기 전용 탐색은 Claude `Explore` / Codex `explorer` / Antigravity `research` / Grok `explore`, 파일 변경과 명령 실행은 Claude `general-purpose` / Codex `worker` / Antigravity Main 또는 명시적으로 정의한 쓰기 에이전트 / Grok `general-purpose`로 매핑합니다.
+
+정상 위임 경로에서 메인은 업무 분장·의존성 조율·사용자 소통·검증과 통합을 맡고, 구현·관련
+테스트는 작업자가 수행합니다. 한 계약·판단에 묶인 작업은 함께 배정하고, 독립적으로 완료·검증할
+작업만 병렬화합니다. 작업이 하나면 한 작업자에게 맡기며, 관련 후속 작업은 담당자를 유지합니다.
+인원·파일 개수에 맞추기 위한 분할과 중첩 작업자 생성은 하지 않습니다. 현재 가용 슬롯과 기존
+예산이 동시성의 상한이며, 메인 직접 구현은 위임 불가·실패 등 명시된 순차 폴백으로 한정합니다.
 
 WorkPM은 범위가 명확하거나 방향이 이미 선택됐으면 단일 실행안으로 진행합니다. 의미 있는 설계
 선택이 남았을 때만 대안을 비교하며, 이미 허용된 가역적 작업을 다시 승인받지 않습니다. 흐름·분기·

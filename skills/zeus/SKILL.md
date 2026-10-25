@@ -82,9 +82,10 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
    기본 경로가 보통 `.olympus/source-skills` 아래여도 직접 조합하거나 추측하지 않습니다.
 4. `module_root`는 그 `SKILL.md`의 부모입니다. 모듈의 `references/`, `scripts/`,
    `commands/`는 모두 이 루트를 기준으로 해석합니다.
-5. Phase 4에 도달했을 때만 `docker_deploy_root`를 만듭니다. Phase 2에서 hard lock,
-   외부 ledger, 크로스-CLI 혼합 분기를 실제 선택했을 때만 `orchestrator_root`를 만들고
-   `${orchestrator_root}/commands/workpm-mcp.md`를 읽습니다. 선택하지 않은 모듈은 로드하지 않습니다.
+5. Phase 4에 도달했을 때만 `docker_deploy_root`를 만듭니다. Phase 2에서 workpm 경로를
+   선택하면 `orchestrator_root`를 만들고 필수 공통 계약 `${orchestrator_root}/commands/workpm.md`를 읽습니다.
+   hard lock·외부 ledger·크로스-CLI 혼합이 필요해 MCP 분기를 선택한 경우에만
+   `${orchestrator_root}/commands/workpm-mcp.md`를 추가로 읽습니다. 선택하지 않은 계약은 로드하지 않습니다.
 
 이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 가용성 근거로
 호출하거나 모듈 이름을 slash command로 실행하지 않습니다.
@@ -95,6 +96,7 @@ Phase 4의 `docker-deploy` 계약은 필수입니다. 카탈로그 행이나 `�
 SUCCESS로 표시하지 않습니다. MCP 분기가 선택됐지만 `orchestrator`를 읽지 못하면 동시 편집을
 직렬화할 수 있는 경우에만 메인 순차 경로로 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock
 자체가 필수이면 Phase 2를 `BLOCKED`로 남깁니다. 어느 경우도 모듈 미발견을 PASS로 기록하지 않습니다.
+workpm 경로의 공통 `commands/workpm.md` 자체를 읽지 못하면 `BLOCKED: workpm source contract unavailable`이며, 메인 순차 폴백으로 필수 계약 누락을 우회하지 않습니다.
 
 ### CLI Auto-Continue Contract
 
@@ -241,7 +243,7 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 사용자 질문�
 
 ---
 
-## Phase 2: Implementation (포세이돈 → 메인 순차 폴백)
+## Phase 2: Implementation (포세이돈 / workpm 배정 → 메인 순차 폴백)
 
 구현 도구를 자동 선택합니다:
 
@@ -250,10 +252,10 @@ Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
     ▼
 독립 섹션 + 네이티브 위임 도구 + 병렬 이득이 있는가?
   ├── 예 → 포세이돈(agent-team / Codex: agent-team-codex) — 섹션 기반 병렬 구현
-  └── 아니오 → workpm의 동일 계약을 메인 컨텍스트에서 순차 실행
+  └── 아니오 → workpm — 한 작업자 또는 순차 배정; 위임 불가·실패 시 메인 순차 폴백
 ```
 
-**판별 방법**: Phase 2 시작 시 섹션별 파일 범위가 독립적인지와 현재 CLI의 네이티브 위임 기능을 함께 확인합니다. 위임 자체가 가능해도 같은 파일을 순서대로 고쳐야 하면 메인 순차 경로를 선택합니다.
+**판별 방법**: Phase 2 시작 시 섹션별 파일 범위가 독립적인지와 현재 CLI의 네이티브 위임 기능을 함께 확인합니다. 같은 파일을 순서대로 고쳐야 하면 workpm에서 한 작업자에게 묶거나 순차 배정합니다. 메인 직접 구현은 위임 불가·실패 시 폴백에 한정합니다.
 
 | 의미 역할 | Claude | Codex | Antigravity | Grok |
 |-----------|--------|-------|--------|------|
@@ -266,13 +268,13 @@ Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
 - Claude: `skills/agent-team/SKILL.md` / Codex: `skills/agent-team-codex/SKILL.md`
 - Step 0(산출물 검토) → Step 1(index 파싱) → Step 2(Wave Plan, [ZEUS-AUTO] 즉시 "실행") → Step 3~4(Task + Wave) → Step 5(Code Review) → Step 6(체크리스트) → Step 7(Activity Log) → Step 8(Final Report)
 
-**경로 B — workpm 메인 순차 실행** (위임 부재 또는 병렬 이득 없음):
-- 활성 `workpm` 하네스의 5단계 계약 중 Phase 2부터 메인 컨텍스트에서 순차 실행합니다.
-  젭마인 산출물이 있으므로 Phase 1 리서치는 다시 하지 않습니다. hard lock·외부 task ledger·혼합
-  CLI가 실제로 필요할 때만 위 source-only resolver로 `orchestrator` 모듈을 읽고 MCP 분기를 사용합니다.
+**경로 B — workpm 순차 배정 또는 폴백** (병렬 이득 없음 또는 위임 불가·실패):
+- 활성 `workpm` 하네스의 5단계 계약 중 Phase 2부터 따릅니다. 위임이 가능하면 작업자가 구현·관련 테스트를 담당하고, 불가·실패 시 메인 컨텍스트에서 순차 실행합니다.
+  젭마인 산출물이 있으므로 Phase 1 리서치는 다시 하지 않습니다. 위 resolver로 `orchestrator`의 공통
+  `commands/workpm.md`를 읽고, hard lock·외부 task ledger·혼합 CLI가 실제로 필요할 때만 MCP 계약을 추가로 읽습니다.
 
 **공통 규칙:**
-- 병렬 경로에서는 Lead가 조정에 집중하고, 메인 순차 경로에서는 같은 Lead가 실행자 역할도 소유
+- 정상 배정에서는 Lead가 업무 분장·조정·검증과 통합을 맡고, 명시된 메인 순차 폴백에서만 실행자 역할도 소유
 - zeus-log.md에 선택된 경로(A/B) + 완료 기준 proved 비율(`checklist-status.md`) + 도면 매칭률 기록
 - 구현 중 섹션에 없는 작업이 필요해 보이면 스코프 게이트(CRITICAL RULES 8) 판정 후 진행 — 무단 스코프 확장 금지
 

@@ -65,8 +65,8 @@ section-04-api 구현 담당
 - section-03: src/types/index.ts (RequestDTO, ResponseDTO)
 
 ## Task Reference
-Task #4를 확인하세요. 구현 완료 시:
-TaskUpdate({ taskId: "4", status: "completed" })
+Task #4를 확인하세요. 구현 완료 시 변경 파일·AC별 검증 증거·남은 문제를 Lead에게 반환하세요.
+Task 상태는 Lead가 증거를 확인한 뒤 갱신합니다.
 
 ## Boundaries
 - 위 File Ownership의 파일만 수정
