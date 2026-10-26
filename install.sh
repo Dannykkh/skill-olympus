@@ -541,15 +541,15 @@ node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/ski
 
 # MCP 서버 자동 설치 (코어)
 echo ""
-echo "[6/7] MCP 서버 설치 중... (Claude, 무료만 자동 설치) [코어]"
+echo "[6/7] 기본 MCP 서버 설치 중... (Claude: playwright) [코어]"
 if [ "$HAS_CLAUDE_CLI" = "1" ]; then
     echo ""
     echo "      사용 가능한 MCP 서버:"
     node "$SCRIPT_DIR/install-mcp.js" --list
     echo ""
-    echo "      무료 MCP 자동 설치를 시작합니다..."
+    echo "      기본 MCP 자동 설치를 시작합니다: playwright"
     echo ""
-    node "$SCRIPT_DIR/install-mcp.js" context7 playwright
+    node "$SCRIPT_DIR/install-mcp.js" playwright
     echo ""
     echo "      완료! (추가: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
     CLAUDE_MCP_RESULT="설치 완료"
@@ -657,7 +657,7 @@ echo "  Codex MCP 설치 중... [코어]"
 if true; then
     if command -v codex >/dev/null 2>&1; then
         if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-codex.js" context7 playwright && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
+            node "$SCRIPT_DIR/install-mcp-codex.js" playwright && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
         else
             CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
         fi
@@ -760,7 +760,7 @@ fi
 echo ""
 echo "  Antigravity MCP 설치 중..."
 if [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
-    if node "$SCRIPT_DIR/install-mcp-antigravity.js" context7 playwright; then
+    if node "$SCRIPT_DIR/install-mcp-antigravity.js" playwright; then
         ANTIGRAVITY_MCP_RESULT="설치 완료"
     else
         ANTIGRAVITY_MCP_RESULT="설치 실패"

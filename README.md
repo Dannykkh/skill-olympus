@@ -152,12 +152,12 @@ save its turns to `conversations/*-devin.md`. To install or inspect only this ad
 Assistant capture requires Python 3 and access to Devin's local session database; a live Windows
 Devin turn has been verified. macOS and Linux runtime capture still needs verification.
 
-The default MCP set for Claude, Codex, and Antigravity is `context7` and `playwright`.
-Chrome DevTools MCP is optional; install it with `node install-mcp.js chrome-devtools`
-(Claude), `node install-mcp-codex.js chrome-devtools` (Codex), or
-`node install-mcp-antigravity.js chrome-devtools` (Antigravity). See the
-[MCP setup guide](mcp-configs/README.md). A normal reinstall leaves an existing Chrome DevTools
-registration in place.
+The default MCP for Claude, Codex, and Antigravity is `playwright`.
+Context7 and Chrome DevTools MCP are optional; install either with `node install-mcp.js <name>`
+(Claude), `node install-mcp-codex.js <name>` (Codex), or
+`node install-mcp-antigravity.js <name>` (Antigravity), using `context7` or `chrome-devtools`.
+Check project dependency versions and official documentation first; Context7 is an optional lookup tool.
+See the [MCP setup guide](mcp-configs/README.md). A normal reinstall preserves existing optional MCP registrations.
 
 ### Try a workflow
 
@@ -401,6 +401,8 @@ and her remembering crosses every session, every CLI, every dawn.
 ---
 
 ## Recent changes
+
+**v7.4.2:** Context7 is optional. The integrated installers register only Playwright by default for Claude, Codex and Antigravity; Grok shares the Claude surface. Existing Context7 registrations, explicit installation and the standalone MCP scripts' `--all` option remain available. Zephermine's section template now checks project dependency versions, existing code and the matching official documentation first, without requiring Context7. Setup guides and resource recommendations follow the same policy. Validation: 53 installer, policy, portable-frontmatter and module-routing checks passed. See the [MCP setup guide](mcp-configs/README.md).
 
 **v7.4.1:** Poseidon and Daedalus keep the main agent responsible for task allocation, dependencies, verification and final integration, while workers implement and run related tests. Tasks follow coherent responsibilities instead of fixed worker or file counts. Related fixes and retests stay with the same worker; dependent work uses one worker or sequential assignments. Direct implementation by the main agent remains a fallback for unavailable or failed delegation. Zeus follows the same contract, including loading the common PM instructions before any optional MCP path. Wave state updates belong to the lead, and review and tripwire gates remain required. Validation covered 73 regression checks, five skill-format checks and independent allocation scenarios; product quality, speed and cost gains have not been measured. See the [workflow guide](docs/workflow-guide.md).
 

@@ -128,11 +128,12 @@ chmod +x install.sh && ./install.sh
 读取助手回复需要 Python 3 和本地会话数据库。已通过 Windows 上的真实 Devin 回合验证；
 macOS 和 Linux 的运行时保存尚未验证。
 
-Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `context7` 和 `playwright`。
-如需 Chrome DevTools MCP，可分别运行 `node install-mcp.js chrome-devtools`（Claude）、
-`node install-mcp-codex.js chrome-devtools`（Codex）或
-`node install-mcp-antigravity.js chrome-devtools`（Antigravity）。详见
-[MCP 设置指南](mcp-configs/README.md)。正常重新安装不会删除已有的 Chrome DevTools 注册。
+Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `playwright`。
+Context7 和 Chrome DevTools MCP 均为可选项，可分别运行 `node install-mcp.js <name>`（Claude）、
+`node install-mcp-codex.js <name>`（Codex）或
+`node install-mcp-antigravity.js <name>`（Antigravity），将 `<name>` 替换为 `context7` 或 `chrome-devtools`。
+优先核对项目依赖版本并查阅官方文档，按需使用 Context7。
+详见 [MCP 设置指南](mcp-configs/README.md)。正常重新安装会保留已有的可选 MCP 注册。
 
 ### 先试试这些工作流
 
@@ -311,6 +312,10 @@ node --test scripts/tests/*.test.js
 **最后更新：** 2026-10-18
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.4.2 — Context7 改为可选安装
+
+集成安装器现在只为 Claude、Codex 和 Antigravity 默认注册 Playwright，Grok 共享 Claude 的安装。已有的 Context7 注册、指定名称的安装和独立 MCP 脚本的 `--all` 选项均保留。Zephermine 的章节模板取消了 Context7 必需项，优先核对项目依赖版本、现有代码并查阅对应版本的官方文档。安装指南和资源推荐同步更新。安装器、策略、通用 frontmatter 和模块路径检查共 53 项通过。详见 [MCP 设置指南](mcp-configs/README.md)。
 
 ## v7.4.1 — 主智能体负责分工，工作者负责实现与相关测试
 

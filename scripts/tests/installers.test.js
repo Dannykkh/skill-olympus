@@ -545,7 +545,8 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
     const mcp = JSON.parse(
       fs.readFileSync(path.join(googleHome, "config", "mcp_config.json"), "utf8"),
     );
-    assert.ok(mcp.mcpServers.context7);
+    assert.ok(mcp.mcpServers.playwright);
+    assert.equal(Object.prototype.hasOwnProperty.call(mcp.mcpServers, "context7"), false);
     assert.match(output, /\[Antigravity\]/);
     assert.doesNotMatch(output, /not recognized as an internal or external command/i);
   } finally {

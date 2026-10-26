@@ -75,6 +75,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
   } = options;
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-sh-test-"));
   const shimDir = path.join(tempHome, "bin");
+  const mcpCallsFile = path.join(tempHome, "mcp-calls.log");
   const codexHome = useCodexHomeOverride
     ? path.join(tempHome, "custom-codex-home")
     : path.join(tempHome, ".codex");
@@ -84,7 +85,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
     const realNode = shellPath(process.execPath).replaceAll("'", "'\\''");
     writeExecutable(
       path.join(shimDir, "node"),
-      `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */install-state.js) [ "\${2:-}" = "begin" ] && echo '-' ;;\n  */verify-install.js) [ "\${FAIL_VERIFY:-0}" = "1" ] && exit 87 ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
+      `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */install-state.js) [ "\${2:-}" = "begin" ] && echo '-' ;;\n  */install-mcp*.js) printf '%s\\n' "$*" >> "$MCP_CALLS_FILE" ;;\n  */verify-install.js) [ "\${FAIL_VERIFY:-0}" = "1" ] && exit 87 ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
     );
     for (const command of ["claude", "codex", "agy", "jq"]) {
       writeExecutable(path.join(shimDir, command), "#!/usr/bin/env bash\nexit 0\n");
@@ -107,18 +108,25 @@ function runIsolatedInstaller(bash, args, options = {}) {
       GROK_HOME: shellPath(path.join(tempHome, ".grok")),
       FAIL_PRUNE: failPrune ? "1" : "0",
       FAIL_VERIFY: failVerify ? "1" : "0",
+      MCP_CALLS_FILE: shellPath(mcpCallsFile),
       OLYMPUS_UPDATE_CHECK_DISABLE: "1",
       PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
     };
     if (useCodexHomeOverride) env.CODEX_HOME = shellPath(codexHome);
     else delete env.CODEX_HOME;
 
-    return spawnSync(
+    const result = spawnSync(
       bash,
       ["--noprofile", "--norc", "-u", shellPath(installSh), ...args],
       // Git Bash process startup varies on Windows; keep the installer assertions unchanged.
       { cwd: repoRoot, env, encoding: "utf8", timeout: process.platform === "win32" ? 120_000 : 30_000 },
     );
+    return {
+      ...result,
+      mcpCalls: fs.existsSync(mcpCallsFile)
+        ? fs.readFileSync(mcpCallsFile, "utf8").trim().split(/\r?\n/)
+        : [],
+    };
   } finally {
     fs.rmSync(tempHome, { recursive: true, force: true });
   }
@@ -192,6 +200,14 @@ for (const scenario of [
       assert.match(output, /LLM: claude,codex,antigravity,grok/);
       assert.doesNotMatch(output, /unbound variable/);
       assert.doesNotMatch(output, /unexpected npm invocation/);
+
+      for (const adapter of ["install-mcp.js", "install-mcp-codex.js", "install-mcp-antigravity.js"]) {
+        assert.ok(
+          result.mcpCalls.some((call) => call.endsWith(`/${adapter} playwright`)),
+          `Missing default Playwright registration: ${adapter}\n${result.mcpCalls.join("\n")}`,
+        );
+      }
+      assert.doesNotMatch(result.mcpCalls.join("\n"), /context7|chrome-devtools/);
 
       const codexSummary = output.match(
         /\n  \[Codex\]\n([\s\S]*?)(?:\n  \[(?:Antigravity|Grok)\]|\n  If a same-name asset)/,

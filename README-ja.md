@@ -128,11 +128,12 @@ DevinはClaudeのスキル（`/mnemo`を含む）を読み、専用の`UserPromp
 応答本文の取得にはPython 3とローカルセッションDBが必要です。Windowsの実際のDevinターンで
 動作を確認済みで、macOS・Linuxでの実行検証は未実施です。
 
-Claude、Codex、Antigravityで標準登録されるMCPは`context7`と`playwright`です。
-Chrome DevTools MCPは必要な場合だけ、Claudeでは`node install-mcp.js chrome-devtools`、
-Codexでは`node install-mcp-codex.js chrome-devtools`、Antigravityでは
-`node install-mcp-antigravity.js chrome-devtools`で追加できます。
-[MCP設定ガイド](mcp-configs/README.md)も参照してください。通常の再インストールでは既存のChrome DevTools登録は削除されません。
+Claude、Codex、Antigravityで標準登録されるMCPは`playwright`です。
+Context7とChrome DevTools MCPは任意で追加できます。Claudeでは`node install-mcp.js <name>`、
+Codexでは`node install-mcp-codex.js <name>`、Antigravityでは
+`node install-mcp-antigravity.js <name>`を実行し、`<name>`に`context7`または`chrome-devtools`を指定してください。
+まずプロジェクトの依存バージョンと公式ドキュメントを確認し、Context7は必要に応じて使います。
+[MCP設定ガイド](mcp-configs/README.md)も参照してください。通常の再インストールでは既存の任意MCP登録は保持されます。
 
 ### 最初に試すワークフロー
 
@@ -319,6 +320,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 **最終更新:** 2026-10-18
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.4.2 — Context7を任意インストールに変更
+
+統合インストーラーがClaude、Codex、Antigravityに標準登録するMCPはPlaywrightのみになりました。GrokはClaudeのインストールを共有します。既存のContext7登録、名前を指定した追加、個別MCPスクリプトの`--all`は引き続き使えます。ZephermineのセクションテンプレートからContext7の必須指定を外し、プロジェクトの依存バージョン、既存コード、そのバージョンの公式ドキュメントを先に確認する手順にしました。セットアップガイドとリソースの推奨設定も更新しました。インストーラー、ポリシー、共通frontmatter、モジュール解決の検査53件が通過しています。[MCP設定ガイド](mcp-configs/README.md)を参照してください。
 
 ## v7.4.1 — メインは業務分担、ワーカーは実装と関連テストを担当
 

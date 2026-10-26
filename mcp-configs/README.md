@@ -6,7 +6,7 @@ Pre-configured MCP server settings for Claude Code, Codex, and Antigravity.
 
 | Name | Description | API Key | Package |
 |------|-------------|---------|---------|
-| context7 | Latest library docs search | Not required | `@upstash/context7-mcp` |
+| context7 | Latest library docs search; optional | Not required | `@upstash/context7-mcp` |
 | playwright | Browser automation and E2E testing | Not required | `@playwright/mcp` |
 | chrome-devtools | Chrome DevTools integration (network/console/performance); optional | Not required | `chrome-devtools-mcp` |
 | fetch | Fetch URL content (HTML/JSON/MD) | Not required | `uvx mcp-server-fetch` |
@@ -14,7 +14,9 @@ Pre-configured MCP server settings for Claude Code, Codex, and Antigravity.
 
 ## Installation
 
-The main installers (`install.bat` and `install.sh`) install `context7` and `playwright` by default. Install `chrome-devtools` explicitly when needed. Rerunning a main installer does not remove an existing `chrome-devtools` registration. The standalone MCP scripts' `--all` option includes it.
+The main installers (`install.bat` and `install.sh`) install only `playwright` by default. Install `context7` or `chrome-devtools` explicitly when needed. Rerunning a main installer preserves existing optional registrations. The standalone MCP scripts' explicit `--all` option includes both optional servers.
+
+Check the project's dependency versions, existing code, and official documentation first. Context7 is an optional documentation lookup tool, not a prerequisite for implementation.
 
 ### Codex CLI (recommended)
 
@@ -22,8 +24,11 @@ The main installers (`install.bat` and `install.sh`) install `context7` and `pla
 # List available MCP servers
 node install-mcp-codex.js --list
 
-# Install specific MCP
-node install-mcp-codex.js context7 playwright
+# Install the default MCP
+node install-mcp-codex.js playwright
+
+# Optional Context7 MCP
+node install-mcp-codex.js context7
 
 # Optional Chrome DevTools MCP
 node install-mcp-codex.js chrome-devtools
@@ -42,8 +47,11 @@ node install-mcp-codex.js --uninstall context7
 # List available MCP servers
 node install-mcp.js --list
 
-# Install specific MCP
-node install-mcp.js context7 playwright
+# Install the default MCP
+node install-mcp.js playwright
+
+# Optional Context7 MCP
+node install-mcp.js context7
 
 # Optional Chrome DevTools MCP
 node install-mcp.js chrome-devtools
@@ -62,6 +70,9 @@ node install-mcp.js --scope local context7
 ### Antigravity CLI
 
 ```bash
+node install-mcp-antigravity.js playwright
+# Optional MCP servers
+node install-mcp-antigravity.js context7
 node install-mcp-antigravity.js chrome-devtools
 ```
 

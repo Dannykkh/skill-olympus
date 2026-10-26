@@ -43,7 +43,7 @@ Antigravity에서는 네이티브 workflow가 단순 요청을 먼저 소유합�
 |-------|------|-----------------|-----|
 | **설계** | zephermine | 현재 CLI의 네이티브 계획·탐색 및 artifact-writer | Tavily/Exa (선택 리서치), 설치된 Codex/Antigravity 외부 리뷰 프로세스 (선택) |
 | **아키텍처** | documentation-and-adrs, mermaid-diagrams (source-only 직접 로드) | 네이티브 계획·검토 | 공식 기술 문서 (필요 시) |
-| **구현** | agent-team/workpm (활성), orchestrator (공통 PM·실행 방식 비교를 source-only 직접 로드, MCP는 조건부) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (라이브러리 문서) |
+| **구현** | agent-team/workpm (활성), orchestrator (공통 PM·실행 방식 비교를 source-only 직접 로드, MCP는 조건부) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (선택 문서 조회) |
 | **검증** | minos (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
 | **배포** | docker-deploy (source-only 직접 로드) | — | — |
 | **공통** | mnemo·hestia (활성), commit-work·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
@@ -255,7 +255,7 @@ activity log에 남기며 완료 권한은 기존 통합 게이트에 있습니�
 | **네이티브 작업자** | Java/Spring 구현 | build manifest·BOM·기존 계층·설정·테스트 계약 |
 | **네이티브 작업자** | DB 구현 | 실제 DB 버전·schema·migration 도구·실행 계획·테스트 계약 |
 | **스킬** | naming-analyzer | 이름 검토가 필요할 때 명시 호출 |
-| **MCP** | Context7 | 라이브러리 문서 실시간 검색 |
+| **MCP (선택)** | Context7 | 공식 문서 직접 조회를 보조하는 라이브러리 문서 검색 |
 | **MCP** | Playwright | E2E 테스트 실행 |
 
 파일 패턴에 따라 네이티브 작업자에게 프로젝트 계약이 자동 매칭됩니다:

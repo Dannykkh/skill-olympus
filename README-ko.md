@@ -151,11 +151,12 @@ Claude 스킬을 읽고, 자체 `UserPromptSubmit`·`Stop`·`SessionEnd` 훅으�
 응답 저장에는 Python 3와 Devin 로컬 세션 DB 접근이 필요합니다. Windows 실제 턴에서 검증했고,
 macOS·Linux 런타임 저장은 아직 검증하지 않았습니다.
 
-Claude·Codex·Antigravity의 기본 MCP는 `context7`과 `playwright`입니다. Chrome DevTools MCP는
-선택 설치로 바뀌었습니다. 필요할 때 Claude는 `node install-mcp.js chrome-devtools`, Codex는
-`node install-mcp-codex.js chrome-devtools`, Antigravity는
-`node install-mcp-antigravity.js chrome-devtools`를 실행하세요. 자세한 내용은
-[MCP 설정 안내](mcp-configs/README.md)를 참고하세요. 일반 재설치는 기존 Chrome DevTools 등록을 제거하지 않습니다.
+Claude·Codex·Antigravity의 기본 MCP는 `playwright`입니다. Context7과 Chrome DevTools MCP는
+선택 설치입니다. 필요할 때 Claude는 `node install-mcp.js <name>`, Codex는
+`node install-mcp-codex.js <name>`, Antigravity는
+`node install-mcp-antigravity.js <name>`를 실행하며, `<name>`에 `context7` 또는 `chrome-devtools`를 넣으세요.
+문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선하고 Context7은 선택적으로 사용합니다.
+자세한 내용은 [MCP 설정 안내](mcp-configs/README.md)를 참고하세요. 일반 재설치는 기존 선택 MCP 등록을 보존합니다.
 
 ### 먼저 써볼 워크플로우
 
@@ -400,6 +401,8 @@ Olympus 버전의 `SKILL.md`와 부속 파일을 그대로 보존하되, CLI의 
 ---
 
 ## 최근 변경
+
+**v7.4.2:** Context7을 선택 설치로 바꿨습니다. 통합 설치기는 Claude·Codex·Antigravity에 Playwright만 기본 등록하며, Grok은 Claude 설치를 공유합니다. 기존 Context7 등록과 명시적 설치, 독립 MCP 스크립트의 `--all` 옵션은 유지합니다. 젭마인 섹션 템플릿은 Context7을 요구하지 않고 프로젝트 의존성 버전·기존 코드·해당 버전의 공식 문서를 먼저 확인하도록 수정했습니다. 설치 안내와 리소스 추천도 같은 정책을 따릅니다. 설치·정책·공통 frontmatter·모듈 라우팅 검사 53건을 통과했습니다. [MCP 설정 안내](mcp-configs/README.md)에서 자세히 확인할 수 있습니다.
 
 **v7.4.1:** 포세이돈과 다이달로스의 메인은 업무 분장·의존성 조율·검증·최종 통합을 맡고, 작업자는 구현과 관련 테스트를 수행합니다. 고정 인원이나 파일 수에 맞춰 나누지 않고 함께 판단할 책임 단위로 배정합니다. 관련 수정·재시험은 같은 작업자가 이어받으며, 순서 의존성이 있으면 한 작업자에게 묶거나 순차 배정합니다. 메인 직접 구현은 위임 불가·실패 시 폴백으로 유지합니다. 제우스도 같은 계약을 따르며, MCP 선택과 별개로 공통 PM 지침을 먼저 읽습니다. 작업 상태는 메인이 갱신하고 Wave별 리뷰·트립와이어 게이트를 유지합니다. 회귀 검사 73건·스킬 형식 검사 5건과 독립 분장 사례를 확인했으며, 실제 제품의 품질·속도·비용 개선은 측정하지 않았습니다. [워크플로우 가이드](docs/workflow-guide.md)에서 자세히 확인할 수 있습니다.
 
