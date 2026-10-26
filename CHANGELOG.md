@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.4.2] - 2026-10-26
+
+### Bug Fixes
+
+- **installer**: Register only Playwright by default for Claude, Codex and Antigravity. Context7 remains available by explicit installation and through the standalone MCP scripts' `--all` option. Normal reinstalls preserve existing Context7 registrations; full uninstall still recognizes the previous default. Grok continues to share the Claude surface. (bc0628c)
+- **zephermine**: Remove the Context7 requirement from generated implementation sections. Check project dependency versions and existing code, then consult the matching official documentation; use Context7 optionally when installed. Mark its setup-registry recommendation as optional. (bc0628c)
+
+### Documentation
+
+- English, Korean, Japanese and Chinese READMEs explain the optional Context7 policy. Update setup instructions, MCP guides, resource documentation and the workflow guide. (bc0628c)
+
+### Validation and Scope
+
+- Installer, policy, portable-frontmatter and module-routing regression checks: 53 passed. Release version-synchronization and installation-policy checks: 12 passed. Skill-format validation, Bash syntax validation and whitespace checks passed.
+- Windows integrated installation (`install.bat --all`) passed all 12 final rule, registration and installed-hook execution checks. The installed Zephermine section template matches its canonical source at all three catalog-resolved paths: Claude, Codex and Antigravity. Grok uses the Claude compatibility surface; the detected Devin-Mnemo adapter was also installed and its configuration check passed.
+- Git Bash default and `--all` installer paths were tested with isolated runtime homes and CLI shims. Native macOS/Linux execution and live Context7 documentation queries were not run. Devin runtime turn capture was not retested.
+
 ## [7.4.1] - 2026-10-25
 
 ### Bug Fixes
