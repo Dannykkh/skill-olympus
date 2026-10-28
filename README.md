@@ -262,13 +262,19 @@ runtime use, tested, and reported without handing an unverified next step back t
 Chronos persistence, drives Zephermine planning, routes implementation through the current CLI's native
 workers, and requires Argos, Docker, Minos, and a final evidence report before SUCCESS is allowed.
 
+Zephermine and Daedalus first use existing code, documents and domain research to present evidence,
+a recommended approach and its tradeoffs. They reuse earlier answers across phases and resumes,
+asking only for unresolved decisions or internal facts that the available material cannot settle.
+Work that does not depend on those answers can continue within the agreed scope.
+
 <p align="center">
   <img src="docs/assets/skill-olympus-system-overview.svg" alt="Skill Olympus v6 system overview: four integrated CLIs, two skills-only hosts, the six-stage Zeus delivery harness, and the Chronos persistence and Mnemo memory rails" width="1100">
 </p>
 
 Chronos is the loop layer under that harness. It prefers native `/goal`, uses runtime-specific continuation
-when needed, and returns to READ → FIND → FIX → VERIFY → LOG. Exhaustion is incomplete, and blocked work
-is parked with an Owner Decision Brief instead of being reported as success.
+when needed, and returns to READ → FIND → FIX → VERIFY → LOG. `Complete` requires proved requirements
+and passing verification; `Blocked` and `Exhausted` remain incomplete. Parked issues carry an Owner
+Decision Brief, and retries retain their original limits across phases and resumes.
 
 ---
 
@@ -297,7 +303,7 @@ Below stand the immortals. Call upon one — or call upon all.
 
 | Skill | Name | Epithet | Domain |
 |-------|------|---------|--------|
-| `/zephermine` | **Zephermine** (젭마인) | *Breath of the West Wind, Bringer of Spring* | The Architect — 26-step deep interview, spec generation, 6-expert team review |
+| `/zephermine` | **Zephermine** (젭마인) | *Breath of the West Wind, Bringer of Spring* | The Architect — research-led planning, implementation specs and domain review |
 | `/zeus` | **Zeus** (제우스) | *Cloud-Gatherer, Hurler of Thunderbolts, Father of Gods and Men* | The Sovereign — Zero-interaction full pipeline; at his nod the council convenes |
 | `/agent-team` / `/poseidon` | **Poseidon** (포세이돈) | *Earth-Shaker, Lord of the Wine-Dark Sea, Trident-Bearer* | The Sea Lord — Reads dependency graphs as a sailor reads tides; sends the fleet in waves |
 | `/workpm` | **Daedalus** (다이달로스) | *The Master Builder, Maker of the Labyrinth, Father of Wings* | The Hands-On Builder — Where there is no plan, he becomes the plan |
@@ -402,6 +408,8 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
+**v7.4.3:** Planning leads with evidence, a recommendation and tradeoffs, reusing answers across phases and resumes. Argos and Minos use the shared root-cause debugging procedure within existing repair limits; Zeus preserves their final grades, exploratory QA failures and spent budgets, and checks legacy-state recovery before resuming. Chronos distinguishes `Complete`, `Blocked` and `Exhausted`. Reviews and worker handoffs retain their original scope and baseline, while autoresearch rejects unsupported changes and contaminated evaluation results. See the [workflow improvements](docs/research/2026-10-28-superpowers-olympus-improvements.md) and [planning and resume validation](docs/research/2026-10-28-olympus-proposal-first-improvements.md) for checks and limits. Shorter interviews and full product-pipeline execution across all CLIs have not been demonstrated.
+
 **v7.4.2:** Context7 is optional. The integrated installers register only Playwright by default for Claude, Codex and Antigravity; Grok shares the Claude surface. Existing Context7 registrations, explicit installation and the standalone MCP scripts' `--all` option remain available. Zephermine's section template now checks project dependency versions, existing code and the matching official documentation first, without requiring Context7. Setup guides and resource recommendations follow the same policy. Validation: 53 installer, policy, portable-frontmatter and module-routing checks passed. See the [MCP setup guide](mcp-configs/README.md).
 
 **v7.4.1:** Poseidon and Daedalus keep the main agent responsible for task allocation, dependencies, verification and final integration, while workers implement and run related tests. Tasks follow coherent responsibilities instead of fixed worker or file counts. Related fixes and retests stay with the same worker; dependent work uses one worker or sequential assignments. Direct implementation by the main agent remains a fallback for unavailable or failed delegation. Zeus follows the same contract, including loading the common PM instructions before any optional MCP path. Wave state updates belong to the lead, and review and tripwire gates remain required. Validation covered 73 regression checks, five skill-format checks and independent allocation scenarios; product quality, speed and cost gains have not been measured. See the [workflow guide](docs/workflow-guide.md).
@@ -503,9 +511,9 @@ without silently adding the optional business, CEO, or documentation stages.
 **`/zephermine` — Deep design (Architect)**
 - **When:** a feature/product needs a thorough spec before implementation.
 - **Use:** `/zephermine [spec-path]` (aliases: 젭마인, 제퍼마인)
-- **Process:** 26-step pipeline — research → interview → spec synthesis (incl. the Role Inventory that fixes every downstream role ID) → 6-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios → role-name consistency check.
+- **Process:** 26-step pipeline — research → recommendations and focused clarification → spec synthesis (incl. the Role Inventory that fixes every downstream role ID) → 6-expert team review → strategy-candidate scoring (ToT) → plan → DB schema / API spec / flow diagrams → section split → operation & QA scenarios → role-name consistency check.
 - **Output:** `docs/plan/<feature>/` → `spec.md`, `plan.md`, `db-schema.md`, `api-spec.md`, `mcp-spec.md`, `flow-diagrams/`, `sections/`, `operation-scenarios.md`, `qa-scenarios.md`, `checklist.md`.
-- **Role interview:** step 6 asks which principals sign in, what each one does, what it must never do, and whether it needs a separate screen or only different permissions on a shared one. The screen answer is escalated to a critical question. A full-access superadmin, role inheritance, and owner-level access are applied as defaults without asking.
+- **Role interview:** step 6 builds on research and existing answers to identify who signs in, their work and prohibited actions, then recommends shared or separate screens. Only unresolved internal facts or scope choices become critical questions; agreed decisions are not asked again. Role defaults are marked `[inferred]` and follow the [interview protocol](skills/zephermine/references/interview-protocol.md).
 - **Roles:** the Role Inventory in `spec.md` is the single source of role IDs. `api-spec.md` lists allowed roles per endpoint, `flow-diagrams/` splits role lanes with permission-denial paths, and `operation-scenarios.md` carries the RBAC matrix (role x resource x CRUD) plus denial behaviour. Single-role or unauthenticated projects record `NOT APPLICABLE: single role` and skip all of it.
 - **Acceptance checklist:** every section's Acceptance Criteria carry a stable ID (`AC-NN-k`), an observable behaviour, a trace (problem, screen, endpoint, role) and a verification (test, QA case, command). Step 22A collects them into `checklist.md` — the contract between design and build — and the final check verifies every problem has an AC and every AC can be verified. Poseidon, Daedalus and Chronos record progress in the shared `checklist-status.md` ledger (`proved`/`weak`/`missing`/`contradicted`, evidence required for `proved`); Argos re-checks the evidence and Clio counts unmet AC as a NO-GO blocker.
 - **API contract:** `api-spec.md` starts from a screen data-requirements table (what each screen shows, does, filters and sorts) and derives endpoints from it plus the DB CRUD, so screens that need joined or aggregated data do not force the backend to be rebuilt mid-implementation. Conventions are fixed up front: every list endpoint is paginated (offset `page`/`size` + `total` by default, cursor for feeds; size cap, sort allow-list), every error uses `{ "error": CODE, "message", "details" }`, and list filter/sort columns are backfilled into the `db-schema.md` index table. Section files carry these rules to implementers, and the final check verifies screen↔API coverage.
@@ -936,4 +944,4 @@ Crash recovery, persistent data after restart, and database restoration **still 
 
 ---
 
-**Last Updated:** 2026-10-22
+**Last Updated:** 2026-10-29

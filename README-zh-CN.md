@@ -200,6 +200,10 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
 测试并生成证据报告。Chronos 保存持续状态，Zephermine 产出设计，当前 CLI 的原生工作者
 负责实现。只有 Argos、Docker 和 Minos 的验证证据齐备后，流程才允许返回 SUCCESS。
 
+Zephermine 和 Daedalus 先查阅现有代码、文档和领域研究，给出依据、推荐方案及其取舍。
+阶段切换或恢复执行时会沿用已有回答，只询问资料无法解决的决策或内部事实。
+不依赖这些回答的工作可在已约定的范围内继续。
+
 <p align="center">
   <img src="docs/assets/skill-olympus-system-overview.svg" alt="Skill Olympus v6 全景图：4 个集成 CLI、2 个 skills-only 主机、Zeus 六阶段交付流程，以及 Chronos 持续性轨道和 Mnemo 记忆轨道" width="1100">
 </p>
@@ -214,6 +218,9 @@ Zeus 是整个流程的控制层：它把请求拆成设计任务，推进实现
   → Minos：Playwright 运行验证
   → 带证据的最终报告
 ```
+
+Chronos 的 `Complete` 要求所有需求均有证据且验证通过；`Blocked` 和 `Exhausted` 仍表示未完成。
+搁置的问题会附上 Owner Decision Brief，阶段切换或恢复执行不会重置原有重试上限。
 
 ---
 
@@ -309,9 +316,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-10-18
+**最后更新：** 2026-10-29
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.4.3 — 先给出研究与推荐方案，保留失败和恢复状态
+
+设计先给出依据、推荐方案及其取舍，并在阶段切换与恢复执行时沿用已有回答。Argos 和 Minos 在原有修复上限内使用共通的根因调试流程；Zeus 保留最终评级、探索性 QA 失败和已用重试次数，核对旧路径状态的恢复依据后再继续。Chronos 区分 `Complete`、`Blocked` 和 `Exhausted`。评审和工作者交接保留原有范围与基线，autoresearch 不采纳缺乏依据的修改或受到优化反馈污染的评估结果。[工作流改进记录](docs/research/2026-10-28-superpowers-olympus-improvements.md)和[设计与恢复验证记录](docs/research/2026-10-28-olympus-proposal-first-improvements.md)说明了检查结果与边界。尚未证明访谈耗时缩短，也未在所有 CLI 上运行完整的产品开发流程。
 
 ## v7.4.2 — Context7 改为可选安装
 

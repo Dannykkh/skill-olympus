@@ -205,6 +205,10 @@ Zeusは、依頼を設計へ分解し、実装、監査、実行環境の準備�
 備えるネイティブワーカーで実装します。Argos、Docker、Minosの証拠がそろうまで、
 SUCCESSを返しません。
 
+ZephermineとDaedalusは、既存のコード・文書・ドメイン調査をもとに、根拠、推奨案とその制約を先に示します。
+工程やセッションが変わっても回答を引き継ぎ、資料では解決できない判断や社内の事実だけを確認します。
+その回答に依存しない作業は、合意した範囲で続けます。
+
 <p align="center">
   <img src="docs/assets/skill-olympus-system-overview.svg" alt="4つの統合CLI、2つのskills-onlyホスト、Zeusの6段階デリバリーハーネス、Chronosの継続性レール、Mnemoの記憶レールを示すSkill Olympus v6の全体図" width="1100">
 </p>
@@ -219,6 +223,10 @@ SUCCESSを返しません。
   → Minos: Playwrightによる実行検証
   → 根拠付き最終レポート
 ```
+
+Chronosの`Complete`には、すべての要件を満たす証拠と検証の通過が必要です。`Blocked`と
+`Exhausted`は未完了として扱い、保留した問題にはOwner Decision Briefを残します。
+工程の切り替えや再開によって、元の再試行上限がリセットされることはありません。
 
 ---
 
@@ -317,9 +325,13 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 ---
 
-**最終更新:** 2026-10-18
+**最終更新:** 2026-10-29
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.4.3 — 調査と推奨案を先に示し、失敗と再開状態を引き継ぐ
+
+設計では根拠・推奨案・制約を先に示し、工程や再開をまたいで既存の回答を引き継ぎます。ArgosとMinosは既存の修正上限内で共通の原因調査手順を使い、Zeusは最終判定・探索的QAの失敗・使用済みの試行回数を保持し、旧パスの状態を復旧した根拠を確認して再開します。Chronosは`Complete`・`Blocked`・`Exhausted`を区別します。レビューとワーカーへの引き継ぎは元の対象範囲・基準点を保ち、autoresearchは根拠のない変更や独立性を失った評価結果を採用しません。検査結果と限界は[ワークフローの改善記録](docs/research/2026-10-28-superpowers-olympus-improvements.md)と[設計・再開の検証記録](docs/research/2026-10-28-olympus-proposal-first-improvements.md)にまとめています。聞き取り時間の短縮や、すべてのCLIでの製品開発フロー全体の実行は実証していません。
 
 ## v7.4.2 — Context7を任意インストールに変更
 
