@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [7.4.3] - 2026-10-29
+
+### Bug Fixes
+
+- **planning / delegation**: Present research evidence, a recommended approach and tradeoffs before unresolved user decisions. Reuse answers and question budgets across phases and resumes. Keep worker context focused on exact references, acceptance criteria and ownership; preserve the original run, dependency boundaries and repair budgets. (a5e37ce)
+- **review / debugging**: Preserve staged, unstaged, untracked and task-specific review scope, including distinct index and worktree baselines. Connect Argos and Minos to the shared root-cause procedure, retain test-only and report-only boundaries, and verify the original symptom and affected regressions. Correct `find-polluter` failure and preexisting-artifact handling. (a5e37ce)
+- **zeus**: Aggregate final Argos/Minos grades, exploratory QA failures, unexecuted checks and spent repair budgets. Recover legacy state without losing the original run; distinguish a verified recovery copy from conflicting or changed state. Permit honest blocked reports without converting them to successful completion. (a5e37ce)
+- **chronos**: Separate proved completion, parked work and exhausted limits. Stop owned fallback loops as incomplete when work is parked. Recognize a Blocked header only on the first nonblank report line, so code examples and later subheadings cannot stop an active loop. Read Windows PowerShell transcripts explicitly as UTF-8. (a5e37ce)
+- **skill evaluation**: Require demonstrated task failures or measured costs before adding rules, reject unsupported tied candidates, and keep evaluation feedback out of final acceptance evidence. Distinguish body execution from catalog or parent-harness entry testing. (a5e37ce)
+
+### Documentation
+
+- Update English, Korean, Japanese and Chinese READMEs, the workflow guide and two detailed validation reports. Replace the misleading description of Zephermine as a 26-step interview with its research and design workflow. Normalize machine-specific paths in public evidence records. (a5e37ce, 9dec96e)
+
+### Validation and Scope
+
+- Earlier implementation checks: 71 related regression checks passed; Git review-scope fixtures, debugging-tool behavior and five Zeus report/resume cases are documented in the linked reports.
+- Pre-release Chronos checks reproduced 14 false terminations before the final header correction; all 56 source cases and all 56 installed-path cases passed afterward. Codex continuation was exercised through dry-run prompt generation, without restarting the live CLI.
+- Version/policy checks: 12 passed. Localized README check: one passed. Windows integrated installation (`install.bat --all`) passed all 12 final checks; all 123 applicable changed installed files match their canonical sources. Grok shares the Claude surface; the detected Devin-Mnemo adapter was also installed.
+- No full product pipeline, browser E2E or native-goal runtime test was performed for this release. Shorter interviews and general quality, speed or cost gains have not been established.
+- Details: [workflow and debugging validation](docs/research/2026-10-28-superpowers-olympus-improvements.md), [planning, resume and terminal-state validation](docs/research/2026-10-28-olympus-proposal-first-improvements.md).
+
 ## [7.4.2] - 2026-10-26
 
 ### Bug Fixes
