@@ -254,6 +254,13 @@ function chronos(payload) {
   const promiseSatisfied = promise && promise !== "null" && promiseMatch && (
     promiseMatch[1].trim().includes(promise) || promise.includes(promiseMatch[1].trim())
   );
+  // A parked report is terminal but incomplete, even if its body discusses completion.
+  // Only the first nonblank line can be a terminal report heading.
+  const firstReportLine = output.split(/\r?\n/).find((line) => line.trim()) || "";
+  if (/^[ \t#=*═_-]*Chronos[ \t]+Blocked(?:[ \t\r:=*_═—-]|$)/i.test(firstReportLine)) {
+    fs.rmSync(statePath, { force: true });
+    return { decision: "allow", reason: "Chronos Blocked: unresolved requirements are parked; loop stopped incomplete (not success). See the Owner Decision Brief." };
+  }
   if (/Chronos Complete/i.test(output) || promiseSatisfied) {
     fs.rmSync(statePath, { force: true });
     return { decision: "allow" };
@@ -267,7 +274,7 @@ function chronos(payload) {
   const content = fs.readFileSync(statePath, "utf8").replace(/^iteration:\s*\d+$/m, `iteration: ${next}`);
   fs.writeFileSync(statePath, content, "utf8");
   const maxLabel = maximum > 0 ? String(maximum) : "unlimited";
-  let reason = `${parsed.prompt}\n\nChronos loop ${next}/${maxLabel}: verify the previous result and continue with the next highest-priority issue. Report Chronos Complete only after external verification.`;
+  let reason = `${parsed.prompt}\n\nChronos loop ${next}/${maxLabel}: verify the previous result and continue with the next highest-priority issue. Report Chronos Complete only after every requirement is proved and external verification passes. If only parked unproved requirements remain, start the report with Chronos Blocked and include an Owner Decision Brief per parked issue; do not output a completion promise.`;
   if (promise && promise !== "null") reason += ` Verified completion may be reported as <promise>${promise}</promise>.`;
   return { decision: "continue", reason };
 }

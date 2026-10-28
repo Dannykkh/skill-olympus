@@ -51,29 +51,22 @@ API·인증/권한·입력 스키마·데이터 바인딩·업무 상태·공통
 보강하고 중복 발견은 합칩니다. 위임 프롬프트에도 해당 계약을 전달하며 메인이 커버리지를 확인합니다.
 실제 실행 근거가 없는 부분은 `UNVERIFIED`/`NOT RUN`으로 보고합니다.
 
-## Step 0: 베이스 브랜치 감지
+## Step 0: 요청 범위 확인
 
-```bash
-# 플랫폼 감지
-_REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "unknown")
-# 베이스 브랜치 결정
-_BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
-[ -z "$_BASE" ] && git rev-parse --verify origin/main &>/dev/null && _BASE="main"
-[ -z "$_BASE" ] && git rev-parse --verify origin/master &>/dev/null && _BASE="master"
-[ -z "$_BASE" ] && _BASE="main"
-echo "BASE: $_BASE"
-echo "BRANCH: $(git branch --show-current 2>/dev/null)"
-```
+사용자가 지정한 커밋·base·파일 범위, 또는 호출 하네스가 넘긴 작업 기준점을 먼저 확인합니다.
+지정하지 않은 경우 `git status --short`로 미커밋 변경 여부를 봅니다. 원격 base는 브랜치 비교에만
+필요합니다. 존재하는 ref를 확인하고, 최신 원격이 필요하거나 ref가 없을 때만 fetch합니다.
+로컬 이름과 원격 이름이 같은 브랜치라도 같은 커밋이라고 가정하지 않습니다.
 
 ---
 
 ## Step 1: 리뷰 대상 확인
 
-1. `git status --short`로 staged, unstaged, untracked 변경을 먼저 확인합니다.
-2. 작업 트리에 변경이 있으면 현재 브랜치가 base여도 `--uncommitted` 범위로 검토합니다.
-3. 작업 트리가 깨끗하면 기존 `origin/$_BASE` ref와 `git diff origin/$_BASE...HEAD --stat`을 사용합니다.
-4. ref가 없거나 사용자가 최신 원격 기준을 요청한 경우에만 `git fetch origin $_BASE --quiet`를 실행합니다.
-5. 두 범위 모두 diff가 없을 때만 **"리뷰할 변경이 없습니다."**로 중단합니다.
+[리뷰 범위 계약](references/review-scope.md)을 읽고 `review_scope`를 한 번 정합니다.
+명시 범위가 없으면 미커밋 변경을 우선하고, 없을 때 브랜치 변경을 봅니다.
+선택한 범위의 기준점·변경 파일·patch·새 파일 본문을 모든 엔진과 후속 패스에 전달합니다.
+범위를 바꿔야 하면 이유를 기록하고 관련 결과를 갱신합니다. 새 파일까지 확인한 뒤에만
+"리뷰할 변경이 없습니다"라고 보고합니다.
 
 ---
 
@@ -93,6 +86,7 @@ echo "BRANCH: $(git branch --show-current 2>/dev/null)"
 
 1. Claude는 활성 review 기능이 확인된 경우에만 호출하고, Grok은 bundled `review`를 사용합니다.
 2. 기본 리뷰는 읽기 전용입니다. 수정 옵션을 암묵적으로 전달하지 않습니다.
+   Step 1의 `review_scope`를 전달하고 네이티브 엔진이 실제로 같은 범위를 검사했는지 확인합니다.
 3. **ultra는 호출 금지** — 원격/과금형 멀티에이전트 리뷰는 사용자 트리거 전용입니다.
    스킬은 호출하지 않으며 권유 안내도 하지 않는다
 4. 네이티브 발견을 정규화하여 수집:
@@ -100,8 +94,10 @@ echo "BRANCH: $(git branch --show-current 2>/dev/null)"
 
 ### 경로 B — Codex 네이티브 엔진
 
-1. `codex review --base $_BASE` 실행 — 베이스 브랜치 대비 diff 리뷰.
-   커밋 전 변경만 보려면 `codex review --uncommitted` (staged/unstaged/untracked 포함)
+1. Step 1의 범위에 맞춰 `codex review --uncommitted`, `codex review --base <확인한 base ref>`,
+   또는 `codex review --commit <SHA>`를 선택합니다. 옵션은 현재 CLI의 `--help`로 확인합니다.
+   하네스의 작업 기준점·파일 제외 등 선택한 범위를 네이티브 옵션으로 표현할 수 없으면
+   범위를 넓혀 성공으로 보고하지 말고, 같은 `review_scope`를 사용하는 경로 C로 전환합니다.
 2. 자동화 파이프라인에서 구조화 출력이 필요하면 `codex exec review` 사용
    (`codex review`에는 `--json` 옵션이 없음)
 3. 발견을 경로 A와 동일 형식으로 정규화 (`source: "native"`)
@@ -124,7 +120,9 @@ Scope 감지 → Critical Pass → Specialist dispatch → Adversarial Review.
 **계획 대비 실제 구현 검증** — 빠진 것과 초과한 것을 찾습니다. 네이티브 엔진에는 없는 검사입니다.
 
 1. 의도 소스 수집:
-   - 커밋 메시지: `git log origin/$_BASE..HEAD --oneline`
+   - 현재 사용자 요구·호출 하네스의 AC/계획을 우선합니다.
+   - 브랜치/커밋 범위일 때만 해당 범위의 커밋 메시지를 읽습니다. 미커밋 변경의 의도를
+     관련 없는 이전 커밋 메시지로 대체하지 않습니다.
    - PR 설명: `gh pr view --json body -q .body 2>/dev/null || true`
    - TODOS.md (있으면)
 2. diff의 변경 파일과 의도를 대비하여 평가:
@@ -238,6 +236,7 @@ RECOMMENDATION: 모두 수정 권장 — #1은 실제 경쟁 조건, #2는 침�
 ═══════════════════════════════════════
 Pre-Landing Review: N issues (X critical, Y informational)
 Engine: [native:claude review / native:codex review / bundled:grok review / full-pass]
+Scope: [mode, base/head 또는 작업 기준점, staged/unstaged/new 범위, 미검토 항목]
 Specialist: Z개 디스패치 (names)        ← 경로 C만
 ═══════════════════════════════════════
 
@@ -290,28 +289,15 @@ PR Quality Score: X/10
 
 ### C-1: Scope 감지
 
-```bash
-# 변경된 파일 분석
-_DIFF_STAT=$(git diff origin/$_BASE...HEAD --stat)
-_DIFF_LINES=$(git diff origin/$_BASE...HEAD --numstat | awk '{add+=$1; del+=$2} END {print add+del+0}')
-echo "DIFF_LINES: $_DIFF_LINES"
-
-# 스코프 시그널
-_HAS_BACKEND=false; _HAS_FRONTEND=false; _HAS_API=false
-_HAS_MIGRATIONS=false; _HAS_AUTH=false
-_CHANGED_FILES=$(git diff origin/$_BASE...HEAD --name-only)
-echo "$_CHANGED_FILES" | grep -qiE '\.(py|rb|java|go|cs|rs|kt)$' && _HAS_BACKEND=true
-echo "$_CHANGED_FILES" | grep -qiE '\.(tsx?|jsx?|vue|svelte|css|scss)$' && _HAS_FRONTEND=true
-echo "$_CHANGED_FILES" | grep -qiE '(controller|route|endpoint|api|handler)' && _HAS_API=true
-echo "$_CHANGED_FILES" | grep -qiE '(migrat|schema|alembic|flyway)' && _HAS_MIGRATIONS=true
-echo "$_CHANGED_FILES" | grep -qiE '(auth|login|session|token|permission|role)' && _HAS_AUTH=true
-
-echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrations=$_HAS_MIGRATIONS auth=$_HAS_AUTH"
-```
+Step 1의 `review_scope`에 포함된 변경 파일·patch·새 파일 본문으로 변경량과
+backend/frontend/API/migration/auth 신호를 판단합니다. 여기서 origin diff를 새로 만들지 않습니다.
+새 파일의 본문도 변경량에 포함하고, 바이너리·읽지 못한 파일을 0줄로 세어 검토를 생략하지 않습니다.
+파일명은 보조 신호이며 실제 변경된 계약과 호출 경로를 함께 봅니다.
 
 ### C-2: Critical Pass (핵심 리뷰)
 
-`git diff origin/$_BASE`의 전체 diff를 가져와 아래 카테고리를 검사합니다.
+`review_scope`의 patch와 새 파일 본문에 아래 카테고리를 적용합니다. staged와 unstaged에 같은
+파일이 있으면 각각의 버전을 구분합니다. 범위 밖 코드는 구체적인 의존·호출 위험을 확인할 때만 읽습니다.
 
 #### Pass 1 — CRITICAL (최고 심각도)
 
@@ -354,7 +340,8 @@ echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrati
 ### C-3: Specialist 병렬 Dispatch
 
 #### 50줄 미만 diff
-"소규모 diff ($_DIFF_LINES줄) — specialist 생략." → 정책 레이어로.
+새 파일을 포함한 전체 범위를 확인했고 50줄 미만이면 specialist를 생략할 수 있습니다.
+검토 불가 파일이나 미확인 변경량은 작은 diff로 간주하지 않습니다. API·인가 필수 검토는 유지합니다.
 
 #### Specialist 선택
 
@@ -379,7 +366,9 @@ echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrati
 각 검토 역할 프롬프트:
 ```
 [specialist name] specialist 코드 리뷰어로서 활동하세요.
-아래 체크리스트를 읽고, `git diff origin/[base]`로 diff를 가져와 체크리스트를 적용하세요.
+전달한 review_scope와 patch·새 파일 본문을 읽고 아래 체크리스트를 적용하세요.
+입력은 파일 경로로 전달하며 읽을 수 없을 때만 필요한 본문을 포함합니다.
+origin/base를 추측하거나 다른 diff를 만들지 마세요. 필요한 증거가 없으면 누락을 보고하세요.
 
 발견 시 한 줄에 하나씩 JSON 출력:
 {"severity":"CRITICAL|INFORMATIONAL","confidence":N,"path":"file","line":N,"category":"[category]","summary":"설명","fix":"수정 방법","specialist":"[name]"}
@@ -405,7 +394,7 @@ echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrati
 
 프롬프트:
 ```
-이 브랜치의 diff를 `git diff origin/[base]`로 읽으세요.
+전달한 review_scope와 patch·새 파일 본문을 읽으세요. 다른 기준점의 diff로 바꾸지 마세요.
 공격자와 카오스 엔지니어의 관점으로 이 코드가 프로덕션에서 실패할 방법을 찾으세요.
 엣지 케이스, 경쟁 조건, 보안 취약점, 리소스 누수, 침묵 데이터 손상, 에러 삼킴.
 칭찬 없이 문제만. 각 발견을 FIXABLE(수정 방법 알음) 또는 INVESTIGATE(사람 판단 필요)로 분류.
@@ -415,9 +404,10 @@ echo "SCOPE: backend=$_HAS_BACKEND frontend=$_HAS_FRONTEND api=$_HAS_API migrati
 
 ## 포세이돈(agent-team) 연동
 
-agent-team Step 5(자재검사)의 reviewer teammate는 Skill 도구 접근이 보장되지 않으므로
-**경로 C 체크리스트(C-2 + specialist)를 teammate 프롬프트에 임베드하여 직접 적용**합니다.
-네이티브 엔진 위임은 메인 세션에서 이 스킬을 직접 실행할 때만 사용합니다.
+호출 하네스가 확정한 작업 기준점·파일 소유권·review_scope를 그대로 사용합니다.
+리뷰어가 공유 파일을 읽을 수 있으면 이 문서와 필요한 체크리스트의 정확한 경로를 전달합니다.
+파일 접근이 불가능할 때만 필요한 본문을 포함합니다. Skill 도구가 없다는 이유로 전체 문서를
+복사하지 않습니다. 네이티브 엔진 선택은 Lead가 담당합니다.
 
 ---
 

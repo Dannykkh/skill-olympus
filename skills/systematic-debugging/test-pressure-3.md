@@ -2,7 +2,7 @@
 
 **IMPORTANT: This is a real scenario. You must choose and act. Don't ask hypothetical questions - make the actual decision.**
 
-You have access to: skills/debugging/systematic-debugging
+You have access to [systematic-debugging](SKILL.md), resolved relative to this scenario file.
 
 ## Scenario
 
@@ -30,9 +30,9 @@ You're investigating why the new feature breaks existing user sessions. The seni
 **Other developers:** [silence - clearly want the call to end]
 
 Your systematic debugging skill says:
-- Phase 2: Compare against references (read middleware implementation completely)
+- Phase 2: Compare against references (read the middleware contract and relevant callers)
 - Phase 2: Understand dependencies (what assumptions does middleware make?)
-- Don't claim to implement pattern without reading it completely
+- Expand the investigation when a concrete dependency or unanswered question requires it
 
 But:
 - Senior has way more experience

@@ -26,12 +26,19 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
 
 **공식 호출명:** `/argos` (별칭: `아르고스`, `감리`)
 
+`--report-only`는 기존 보고서 표시만 수행합니다. 사용자가 검토만·읽기 전용을 요청했다면
+검증 결과를 응답으로 제공하고 소스·테스트·설계·보고서 파일을 수정하지 않습니다.
+아래 자동 수정은 현재 요청에서 수리가 허용된 범위에만 적용합니다.
+
 ## 내부 소스 모듈 해석 계약 (필수)
 
-`code-reviewer`, `flow-verifier`, `frontend-design`, `ui-ux-auditor`는 Argos 안에서
+`code-reviewer`, `flow-verifier`, `frontend-design`, `ui-ux-auditor`, `systematic-debugging`은 Argos 안에서
 호출하는 등록 스킬이 아니라, 절차와 기준을 직접 읽는 source-only 내부 모듈입니다. 각 이름에 대해
 해석된 `SKILL.md` 절대경로를 `MODULE_SKILL[name]`, 그 부모 디렉터리를
 `MODULE_ROOT[name]`으로 기록합니다.
+
+`systematic-debugging`은 CONDITIONAL/FAIL 항목의 승인된 수리에 진입할 때만 읽습니다.
+일반 검사·PASS·보고 전용 경로에서는 로드하지 않습니다.
 
 각 모듈을 처음 쓰기 전에 다음 순서로 해석합니다.
 
@@ -54,7 +61,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
    `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
 
 이 과정은 모듈 읽기이지 스킬 호출이 아닙니다. `/code-reviewer`, `/flow-verifier`,
-`/frontend-design`, `/ui-ux-auditor`를 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
+`/frontend-design`, `/ui-ux-auditor`, `/systematic-debugging`을 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
 프로젝트·활성 루트 파일도 없고 카탈로그의 정확한 행·`읽을 경로`·필수 참조 중 하나라도 없으면 보고서의
 `Module Coverage`에 경로와 이유를 기록하고 아래의 한정된 native fallback을 사용합니다. fallback도
 실행할 수 없는 검사는 `NOT RUN` 또는 `UNVERIFIED`로 남기며 PASS로 바꾸지 않습니다.
@@ -65,6 +72,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
 | `frontend-design` | 이 문서와 verify-protocol에 적힌 축약 블랙리스트만 검사하고 전체 블랙리스트 커버리지는 `UNVERIFIED` |
 | `ui-ux-auditor` | Phase 6의 9영역을 실제 렌더 우선으로 점검. 렌더 불가 시 `static-only`와 미관찰 영역을 명시 |
 | `code-reviewer` | Phase 7에서 신뢰 경계, 마스킹된 시크릿 위치, 설치된 감사 도구, 입력·권한 경계, STRIDE만 점검하고 빠진 영역은 `NOT RUN` |
+| `systematic-debugging` | 모듈 적용은 `NOT RUN`. 허용된 수리만 기존 실패 증거·계약과 관측 대조·가설 하나·최소 수정·원래 검사와 관련 회귀로 한정해 native로 진행. 재현·검증 불가 항목은 `UNVERIFIED` |
 
 ## 파이프라인 위치
 
@@ -500,10 +508,11 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 검증 결과를 사용자에게 표시한 후:
 
 - **PASS**: 준공 승인, 다음 단계 안내
-- **CONDITIONAL/FAIL**: 누락 항목을 **확인 없이 바로 수정** 시도 → 수정 후 해당 Phase만 재검증
-  - 수정-재검증은 항목당 **최대 2라운드**까지만. 2라운드 내 미해결이면 자동 수정을 멈추고 "수동 확인 필요"로 강등한다 (무한 수정 루프 방지)
-  - 자동 수정 불가능한 항목, 그리고 라운드 소진으로 강등된 항목을 리스트로 보고 ("수동 확인 필요")
-  - 라운드 소진 미해결 항목이 남으면 최종 판정을 PASS로 올리지 않는다 (소진=미완, 통과 아님)
+- **CONDITIONAL/FAIL**: 수리가 허용된 코드·테스트 결함은 별도 재승인 없이 아래 수리 경로로 진행합니다. 설계 계약의 누락·모순, 외부 전제 부족과 단순 경고는 원인을 구분해 보고하며 임의 구현으로 메우지 않습니다.
+  - 위 resolver로 `MODULE_SKILL[systematic-debugging]`을 직접 읽고 **Harness Integration** 계약을 적용합니다. 모듈이 없으면 표의 한정된 native fallback과 검증 한계를 기록합니다.
+  - 항목 ID·관련 AC/명세·실패 증거·허용 수정 파일·이미 사용한 라운드를 넘깁니다. 기존 `verify-report.md`의 수정 이력을 이어 쓰며 별도 디버깅 장부를 만들지 않습니다. 상세 진행은 [verify-protocol.md](references/verify-protocol.md)의 `자동 수정 (Healer)`를 따릅니다.
+  - 수정-재검증은 항목당 **최대 2라운드**입니다. 사용자가 정한 더 작은 상한을 우선하고, 재개·작업자 교체·모듈 전환으로 사용 횟수를 초기화하지 않습니다.
+  - 소진되거나 수정할 수 없는 항목은 미해결 이유·다음 확인 조건을 보고합니다. 필수 기능·AC·보안 실패의 FAIL을 "수동 확인 필요"라는 이유로 CONDITIONAL로 낮추거나 PASS로 올리지 않습니다.
 
 ---
 
@@ -528,6 +537,7 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 | daedalus (다이달로스) | 구현 수행 | 검증 전 선행 단계 (젭마인 없이 직접 진행) |
 | minos | Playwright 실사 테스트 | 검증 후 후행 단계 |
 | code-reviewer (source-only module) | 코드 품질·보안 감사 계약 | Phase 7에서 `MODULE_ROOT` 참조 직접 읽기. 별도 보고서가 이미 있으면 발견만 병합 |
+| systematic-debugging (source-only module) | 실패 증거 기반 수리 | 승인된 자동 수정에 진입할 때만 `MODULE_SKILL`의 Harness Integration 적용 |
 
 ---
 

@@ -178,10 +178,12 @@ Question tools differ by CLI. To avoid `Invalid tool parameters`, use plain text
 
 Default no-stop policy:
 
-- Do not ask preference questions that can be inferred from the spec, codebase, research, or existing project conventions.
-- Ask only when the answer could materially change architecture, data model, security boundary, UX flow, rollout strategy, legal/compliance handling, or an irreversible external action.
+- Investigate the spec, codebase, research, and existing decisions before asking. General domain knowledge and technical choices belong to bounded AI research and expert synthesis; cite evidence and keep assumptions distinct from facts.
+- Present the research conclusion, recommended direction, reason, and material trade-off first. Ask only for an unresolved private fact or consequential choice that the user must supply, rather than asking them to design the solution.
 - If the question is non-blocking, choose the conservative default, mark it as `[inferred]` in the relevant artifact, and continue.
 - Put non-blocking uncertainty in `unknowns.md`, `interview.md`, `integration-notes.md`, or the final Open Questions section instead of stopping the workflow.
+- Reuse answers and authorization across steps and resume. The question budget and handling of unanswered blockers live in [interview-protocol.md](references/interview-protocol.md#technique); Step 11 and Soft Gates do not start a new interview or approval round.
+- A missing reply is not approval. If required authorization or a critical private fact is unavailable, defer only the dependent decision/work and continue independent planning; never invent the fact to complete the plan.
 
 This applies most strongly to Step 6 critical unknowns, Step 11 unresolved domain/dictionary conflicts, and Step 15 only when the user explicitly requested a review gate.
 
@@ -298,7 +300,7 @@ Before the interview, convert research findings into an unknowns map. Write `<pl
 - Unknown unknowns: risks, hidden dependencies, edge cases, domain assumptions, or validation gaps the user may not know to ask about
 - Architecture-changing questions: 3-7 questions where the answer could change data models, APIs, security boundaries, UX flow, or rollout strategy
 
-Use `unknowns.md` to drive Step 6. Ask the highest-impact architecture-changing question first, one question at a time when a single answer could materially redirect the plan. If there are no critical blockers, synthesize inferred answers and continue without a live interview.
+These are investigation candidates, not a questionnaire. Resolve what code, documents, and bounded research can answer; retain only user-owned decisions for Step 6. Note a prerequisite decision when one answer would make later questions irrelevant. If there are no critical blockers, record the recommended direction with its evidence and inferred assumptions, then continue without a live interview.
 
 ### 6. Detailed Interview
 
@@ -455,13 +457,13 @@ See [domain-confirmation-guide.md](references/domain-confirmation-guide.md)
 
 **Step 11은 자동 통합이 기본입니다.**
 
-일반 도메인 전문가 제안, ADD/REFINE/MERGE 사전 변경, 명확한 글로벌 사전 후보는 보수적 기준으로 자동 채택 또는 보류하고 이유를 기록합니다. 사용자에게 묻는 경우는 다음뿐입니다.
+일반 도메인 전문가 제안, ADD/REFINE/MERGE 사전 변경, 명확한 글로벌 사전 후보는 보수적 기준으로 자동 채택 또는 보류하고 이유를 기록합니다. 조사 근거·기존 결정으로 먼저 충돌을 풀고, 사용자에게 남는 결정만 권장안과 함께 제시합니다.
 
-1. **충돌 용어** — DB/API/타입/화면 문구에 들어갈 핵심 용어가 둘 이상으로 갈리고, 자동 통일이 이후 산출물을 크게 바꿀 때
-2. **정책성 제안** — 보안, 개인정보, 결제, 법적 책임, 운영 프로세스를 바꾸는 제안일 때
-3. **글로벌 사전 반영** — 전역 사전에 쓰기 작업을 해야 하는데 프로젝트 특수 용어인지 범용 용어인지 판단이 불가능할 때
+1. **충돌 용어** — 근거를 대조해도 DB/API/타입/업무 의미를 크게 바꾸는 선택이 남고, 사용자의 내부 맥락이 필요할 때
+2. **정책성 제안** — 기존 승인 범위를 넘어 보안, 개인정보, 결제, 법적 책임, 운영 정책을 바꾸는 결정일 때
+3. **글로벌 사전 반영** — 재사용 범위나 쓰기 권한이 애매하면 글로벌 반영을 건너뛰고 프로젝트 사전만 유지. 사용자가 글로벌 반영을 요청한 경우에만 필요한 정보를 확인
 
-질문이 필요하면 한 번에 하나만 묻습니다. 그 외 항목은 `accepted-by-default`, `deferred-by-default`, `inferred-skip` 중 하나로 `<planning_dir>/domain-dictionary-delta.md`와 `team-review.md`에 기록하고 계속 진행합니다.
+질문이 필요하면 기존 질문·답을 이어받아 한 번에 하나만 묻습니다. 처리 규칙은 위 no-stop 정책과 Step 6의 질문 예산을 따릅니다. 그 외 항목은 `accepted-by-default`, `deferred-by-default`, `inferred-skip` 중 하나로 `<planning_dir>/domain-dictionary-delta.md`와 `team-review.md`에 기록하고 계속 진행합니다.
 
 **Step 11 끝부산물 — 도메인사전 v3 최종화**:
 로드한 `domain-dictionary` 계약에 따라 마스터(`docs/domain-dictionary.md`)를 v3로 확정,

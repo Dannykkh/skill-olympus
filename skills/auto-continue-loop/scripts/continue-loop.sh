@@ -398,6 +398,17 @@ if [ "$MAX_ITERATIONS" -gt 0 ] && [ "$ITERATION" -ge "$MAX_ITERATIONS" ]; then
     exit 0
 fi
 
+# An explicit report heading stops parked work without claiming success.
+# Only the first nonblank line can be a terminal report heading.
+FIRST_REPORT_LINE=""
+while IFS= read -r FIRST_REPORT_LINE; do
+    [[ "$FIRST_REPORT_LINE" =~ ^[[:space:]]*$ ]] || break
+done <<< "$LAST_OUTPUT"
+if printf '%s\n' "$FIRST_REPORT_LINE" | grep -qiE '^[[:space:]#=*═_-]*Chronos[[:blank:]]+Blocked([[:space:]:=*_═—-]|$)'; then
+    remove_state_file "loop-blocked: unresolved requirements parked (not success)"
+    exit 0
+fi
+
 if should_stop_loop "$LAST_OUTPUT" "$COMPLETION_PROMISE"; then
     remove_state_file "loop-complete: assistant signalled completion"
     exit 0
@@ -438,9 +449,9 @@ LOG_FILE="$DOCS_DIR/codex-resume.log"
     printf -- "- Park blocked issues in docs/chronos/chronos-log.md with a reason ('Parked: {issue} - {reason}') and move on; parked issues do not count as actionable work.\n"
     printf -- '- Do not ask the user to continue.\n'
     printf -- '- Keep changes inside the saved scope and avoid unrelated refactors.\n'
-    printf -- "- If no actionable in-scope work remains, output 'Chronos Complete' with the final report (one Owner Decision Brief per parked issue).\n"
+    printf -- "- Report 'Chronos Complete' only when every requirement is proved and the verification gate passes. If no actionable work remains but unproved requirements are parked, start the report with 'Chronos Blocked' and include an Owner Decision Brief per parked issue; do not output a completion promise.\n"
     if [ -n "$COMPLETION_PROMISE" ] && [ "$COMPLETION_PROMISE" != "null" ]; then
-        printf -- '- Only after the verification gate actually passes, output <promise>%s</promise>. Never output a promise that is not literally true.\n' "$COMPLETION_PROMISE"
+        printf -- '- Only after every requirement is proved and the verification gate actually passes, output <promise>%s</promise>. Never output a promise that is not literally true.\n' "$COMPLETION_PROMISE"
     fi
     if [ "$MAX_ITERATIONS" -gt 0 ] && [ "$NEXT_ITERATION" -ge "$MAX_ITERATIONS" ]; then
         printf -- '- NOTE: this is the final allowed iteration (%s/%s). If the work is not done, stop changing things and report the current state honestly as EXHAUSTED (incomplete): leave a requirement-to-evidence table, and do NOT output <promise> or "Chronos Complete" unless the verification gate actually passed.\n' "$NEXT_ITERATION" "$MAX_ITERATIONS"

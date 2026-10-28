@@ -2,6 +2,19 @@
 
 테스트 실패 시 자동으로 원인을 분석하고 수정하는 반복 루프입니다.
 
+## 디버깅 모듈 연결
+
+실제 실패 또는 수리 가능한 탐색 이슈를 처리할 때 한 번 `systematic-debugging`을 해석한다.
+프로젝트의 `skills/systematic-debugging/SKILL.md` → 현재 CLI 활성 스킬 루트 → 전역
+`SKILLS-CATALOG.md`의 첫 셀이 정확히 `systematic-debugging`인 유일한 행의 `읽을 경로` 순서다.
+파일 존재와 frontmatter 이름을 확인한 exact `SKILL.md` 전체를 읽고 `Harness Integration`을 적용한다.
+참조는 읽은 파일의 부모인 `module_root` 기준이며 slash 호출·전역 활성화는 하지 않는다.
+
+모듈이 없으면 `debugging module: NOT RUN`을 기록하고 네이티브 기능으로 재현·계약/관측 대조·
+근거 있는 가설 하나·최소 수정·원래 검사와 관련 회귀만 수행한다. 그 검사도 못 하면
+해당 이슈는 `UNVERIFIED`로 남긴다. 모듈 읽기가 성공했다는 사실을 결함 해결로 세지 않는다.
+새 장부 없이 아래 수정 이력에 기록하며 기존 수정 권한·상한·사용 횟수를 그대로 이어간다.
+
 ## 루프 흐름
 
 ```
@@ -10,27 +23,34 @@
 └──────────────┬───────────────────────────────────────┘
                │
          ┌─────▼─────┐
-         │ 전체 통과? │──── Yes ──→ ✅ PASS → Step 5 보고
+         │ 미해결 0? │──── Yes ──→ 회귀 확인 → Step 7 보고
          └─────┬─────┘
                │ No
          ┌─────▼─────┐
-         │ retry < 5? │──── No ──→ ⚠️ fixme 처리 → Step 5 보고
+         │ 남은 예산? │──── No ──→ exhausted 기록 → Step 7 보고
          └─────┬─────┘
                │ Yes
     ┌──────────▼──────────┐
-    │ 1. 실패 로그 분석    │
-    │ 2. 원인 분류         │
-    │ 3. 수정 적용         │
-    │ 4. 실패 테스트만 재실행│
+    │ 1. 원래 재현·증거 확인 │
+    │ 2. 계약 대조·가설 확인 │
+    │ 3. 허용된 최소 수정    │
+    │ 4. 원래 검사/탐색 재현 │
     │ 5. retry++           │
     └──────────┬──────────┘
                │
          ┌─────▼─────┐
-         │ 전체 통과? │──── Yes ──→ ✅ PASS
+         │ 미해결 0? │──── Yes ──→ 영향 회귀 확인 → Step 7 보고
          └─────┬─────┘
                │ No
                └──→ 루프 반복
 ```
+
+미해결 집합에는 테스트 실패와 Step 5의 수리 가능한 탐색 이슈가 모두 들어간다.
+테스트가 green이어도 탐색 이슈가 남으면 종료하지 않는다. 소스 수정 전 그 이슈를 다시 확인할
+재현 명령·요청·화면 관찰을 정하고, 해당 증거와 관련 회귀까지 확인한 뒤 해결로 바꾼다.
+실행할 수 없으면 환경 차단으로 남기며 재현 없는 추측 수정을 반복하지 않는다.
+권한 밖·전제 부족으로 차단된 이슈는 실행 대기에서 빼고 미해결 집계에는 유지한다.
+다른 수리 가능한 이슈를 계속 처리하고, 그런 이슈가 없으면 현재 근거로 결과를 보고한다.
 
 ## Phase 1: 실패 로그 분석
 
@@ -64,7 +84,7 @@ npx playwright test --reporter=json > test-results.json
 
 ## Phase 2: 원인 분류
 
-에러 패턴에 따라 원인을 분류합니다.
+에러 패턴은 조사 후보를 정합니다. 실행 증거로 원인을 확인한 뒤 수정 대상을 결정합니다.
 
 ### 분류 체계
 
@@ -73,7 +93,7 @@ npx playwright test --reporter=json > test-results.json
 | 1 | **셀렉터 불일치** | `locator resolved to N elements`, `waiting for selector` | 테스트 코드 |
 | 2 | **API 경로 오류** | `404 Not Found`, `405 Method Not Allowed` | 구현 또는 테스트 |
 | 3 | **응답 스키마 불일치** | `expect(received).toEqual(expected)`, JSON 구조 차이 | 테스트 또는 구현 |
-| 4 | **타이밍 이슈** | `Timeout`, `waiting for`, `net::ERR_CONNECTION_REFUSED` | 테스트 코드 |
+| 4 | **타이밍 이슈 후보** | `Timeout`, `waiting for` | 서버·요청·UI 진행 상태를 확인한 뒤 결정 |
 | 5 | **인증 실패** | `401 Unauthorized`, `403 Forbidden` | 계약상 허용·거부 여부와 토큰 설정을 대조해 결정 |
 | 6 | **테스트 데이터** | `null`, `undefined`, 빈 배열 | 테스트 코드 (fixture) |
 | 7 | **비즈니스 로직** | 잘못된 값 반환, 상태 불일치 | 구현 코드 |
@@ -231,21 +251,16 @@ npx playwright test --last-failed --workers=50%
 
 ```
 retry >= max_retries (기본 5) → 중단
-  1. 남은 실패 테스트에 test.fixme() 마킹
+  1. 남은 테스트/탐색 이슈를 기존 보고서에 미해결로 기록
   2. exhausted(미해결)로 집계하고 실패 원인 요약 — 통과로 세지 않음
   3. 수동 확인 권장 사항 제시. 최종 등급은 SKILL.md의 판정 기준 적용
 ```
 
-### test.fixme() 처리
+### 테스트 제외와 미해결 상태
 
-```typescript
-// 자동 수정 불가 시 fixme로 마킹
-test.fixme('TC-012: 외부 메일 서버 의존', async ({ page }) => {
-  // 원래 테스트 코드 유지
-  // 원인: 외부 SMTP 서버 연결 필요
-  // 권장: mock 서버 도입 또는 통합 테스트 환경 구성
-});
-```
+예산 소진이나 환경 문제만으로 테스트를 `skip`/`fixme`로 바꾸지 않는다. 원래 실패 검사를
+남겨 다음 실행에서도 드러나게 한다. 기존 또는 별도 승인된 제외 사례도 미해결 집계에서 지우지
+않으며, 테스트가 없는 탐색 이슈는 원래 issue ID와 재현 증거로 추적한다.
 
 ## 수정 이력 추적
 
@@ -254,20 +269,24 @@ test.fixme('TC-012: 외부 메일 서버 의존', async ({ page }) => {
 ```typescript
 interface HealerLog {
   retry: number;         // 반복 회차
-  failedTest: string;    // 실패한 테스트 ID
+  failedTest: string;    // 실패한 테스트 또는 탐색 이슈 ID
+  reproduction: string; // 원래 실패 명령/요청/관찰, 코드·환경 참조
   errorMessage: string;  // 에러 메시지
-  rootCause: string;     // 원인 분류
+  rootCause: string;     // 확인된 원인 또는 미확인 가설
+  causeEvidence: string; // 가설을 지지/반박한 실행 근거
   target: 'test' | 'impl'; // 수정 대상
   file: string;          // 수정한 파일
   change: string;        // 수정 내용 요약
   contractEvidence: string; // 기대 동작의 근거 위치; 없으면 미해결 사유
-  result: 'fixed' | 'still_failing'; // 수정 결과
+  verification: string; // 원래 검사 및 영향받는 회귀 명령·결과
+  remainingRetries: number; // 원래 실행에서 남은 수정 횟수
+  result: 'fixed' | 'still_failing' | 'blocked' | 'unverified';
 }
 ```
 
 ## 안전장치
 
-- **구현 코드 수정 시**: 수정 전 상태를 기억하고, 수정 후에도 실패하면 원복
-- **무한 루프 방지**: 같은 에러가 3회 연속 발생하면 해당 테스트 fixme 처리
+- **구현 코드 수정 시**: 사용자·다른 작업자 변경을 보존한다. 복구가 필요하면 확인된 기준점에 대한 이번 시도의 변경만 복구
+- **무한 루프 방지**: 새 근거 없이 같은 실패를 반복하지 않는다. 사용자 지정 상한(기본 5)과 기존 더 작은 상한을 지키며, 작업자·세션·모듈 전환으로 사용 횟수를 초기화하지 않음
 - **파일 수정 범위**: 테스트 파일 + 직접 관련된 구현 파일만 수정
 - **`--fix-test-only`**: 구현 코드 수정을 완전히 금지하는 안전 모드

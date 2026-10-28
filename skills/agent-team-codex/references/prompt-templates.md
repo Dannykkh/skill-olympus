@@ -8,8 +8,12 @@ spawn explorer to analyze {target_scope}, map dependency risks, and propose a wa
 
 ## 2) Worker 스폰
 
+공유 파일 접근이 가능하면 프로젝트 루트·섹션·참조의 정확한 절대경로를 전달하고 직접 읽게 합니다.
+프롬프트에는 목표·AC ID·필수 제약·소유권·선행 계약·검증 명령과 아래 반환 형식을 남깁니다.
+접근할 수 없을 때만 담당 범위에 필요한 원문을 포함하고, 부족한 입력은 Lead에게 반환하게 합니다.
+
 ```text
-spawn worker for {owned_files}. implement {task_goal}. run related tests. edit only {owned_files}. if an edge case forces a deviation from the plan, choose the conservative option and include reason/alternative/affected files under "Deviations" in the final report. return only changed files, tests, deviations, and remaining risks. do not edit shared activity logs or implementation-notes.md; the lead owns them. if docs/domain-dictionary.md exists, follow it strictly: use its english identifiers for code symbols, korean labels for UI strings, and never use forbidden terms listed in the dictionary.
+spawn worker for {owned_files} in {project_root_absolute}. read {input_absolute_paths}. implement {task_goal} with {ac_ids}, {essential_constraints}, and {dependency_contracts}. run {related_verification_commands}. edit only {owned_files}. if an edge case forces a deviation from the plan, choose the conservative option and include reason/alternative/affected files under "Deviations" in the final report. return changed files, commands/results, AC ID | evidence | proposed state, deviations, and remaining risks. do not edit shared activity logs or implementation-notes.md; the lead owns them. if docs/domain-dictionary.md exists, follow it strictly: use its english identifiers for code symbols, korean labels for UI strings, and never use forbidden terms listed in the dictionary.
 ```
 
 ## 3) 리드 통합 지시
@@ -25,11 +29,11 @@ summarize all active agent outputs, list conflicts by file, then produce a merge
 ## 4) 섹션 모드 템플릿
 
 ```text
-spawn explorer to parse docs/plan/{plan_name}/sections/index.md, extract dependencies, and return wave groups. no edits.
+spawn explorer to parse {sections_index_absolute}, extract dependencies, and return wave groups. flag missing dependency targets; never drop unresolved dependencies. no edits.
 ```
 
 ```text
-spawn worker for {section_files}. implement section {section_id} from docs/plan/{plan_name}/sections/{section_file}. edit only assigned files and run tests. if an edge case forces a deviation from the section plan, choose the conservative option and return reason/alternative/affected files under "Deviations". return only changed files, tests, deviations, and remaining risks. do not edit shared activity logs or implementation-notes.md; the lead owns them. if docs/domain-dictionary.md exists, follow it strictly: english identifiers for code, korean labels for UI, no forbidden terms.
+spawn worker for {section_files} in {project_root_absolute}. read {section_file_absolute} and {reference_absolute_paths}; implement section {section_id}, preserving {ac_ids}, {essential_constraints}, and {dependency_contracts}. edit only assigned files and run {related_verification_commands}. if an edge case forces a deviation from the section plan, choose the conservative option and return reason/alternative/affected files under "Deviations". return changed files, commands/results, AC ID | evidence | proposed state, deviations, and remaining risks. do not edit shared activity logs or implementation-notes.md; the lead owns them. if docs/domain-dictionary.md exists, follow it strictly: english identifiers for code, korean labels for UI, no forbidden terms.
 ```
 
 ## 5) 도메인사전 컨텍스트 (모든 worker 공통)

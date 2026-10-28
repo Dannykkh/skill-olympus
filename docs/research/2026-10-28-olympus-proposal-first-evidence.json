@@ -1,0 +1,1527 @@
+{
+  "date": "2026-10-28",
+  "status": "complete",
+  "temporary_evidence_root": "{proposal-evidence-root}",
+  "tests": [
+    {
+      "command": "node --test scripts/tests/{source-only-module-routing,skill-sync-policy,portable-skill-hosts,acceptance-checklist-contract,tripwire-contract,agent-routing,installers}.test.js (explicit filenames)",
+      "passed": 71,
+      "failed": 0,
+      "scope": "existing contracts and isolated installer behavior",
+      "exec_session": 98464
+    },
+    {
+      "command": "node --test scripts/tests/chronos-terminal-state.test.js",
+      "passed": 42,
+      "failed": 0,
+      "executor": "implement_chronos_contract",
+      "scope": "7 actual source script paths x 6 cases; Codex dry-run prompt generation",
+      "source_tool_evidence": "exec session 88130, completion chunk 5662a8; no retained stdout file"
+    },
+    {
+      "command": "node --test {proposal-evidence-root}/installed-chronos.test.cjs",
+      "passed": 42,
+      "failed": 0,
+      "scope": "same suite routed only to installed hook/notify paths; no real Codex process resumed",
+      "stdout": "{proposal-evidence-root}/installed-chronos.tap",
+      "stdout_sha256": "baabbe0a0c90f3bfc2854b0826c796eaad5e9e82bd21674d9c4bcc81241b283f"
+    },
+    {
+      "command": "node --test scripts/tests/{acceptance-checklist-contract,tripwire-contract,source-only-module-routing}.test.js (explicit filenames)",
+      "passed": 22,
+      "failed": 0,
+      "scope": "after final Zeus resume document change"
+    }
+  ],
+  "proposal_comparison": {
+    "executor_context": "fresh same-default-model contexts, before vs after; main reviewed actual artifacts",
+    "not_holdout": true,
+    "not_independent_scoring": true,
+    "known": {
+      "questions_before": 0,
+      "questions_after": 0,
+      "response_characters_before": 557,
+      "response_characters_after": 722,
+      "preserved_scope_and_prior_answers": true,
+      "candidate_explicit_tradeoff": true
+    },
+    "unknown": {
+      "questions_before": 0,
+      "questions_after": 0,
+      "response_characters_before": 531,
+      "response_characters_after": 776,
+      "preserved_private_policy_uncertainty_and_independent_design": true
+    },
+    "conclusion": "No measured question/time reduction. Remove conflicting lower-level interview rules per user direction; do not claim an autoresearch optimization win."
+  },
+  "zeus_cases": [
+    {
+      "case": "final_report",
+      "expected": "PARTIAL",
+      "observed": "PARTIAL",
+      "repair_history_preserved": true,
+      "status": "PASS",
+      "new_product_execution": false
+    },
+    {
+      "case": "legacy_resume",
+      "expected": "PARTIAL",
+      "observed": "PARTIAL",
+      "repair_history_preserved": true,
+      "status": "PASS",
+      "new_product_execution": false,
+      "legacy_preserved": true,
+      "run_identity_preserved": true
+    },
+    {
+      "case": "conflict_resume",
+      "expected": "BLOCKED",
+      "observed": "BLOCKED",
+      "repair_history_preserved": true,
+      "status": "PASS",
+      "new_product_execution": false,
+      "both_states_preserved": true
+    },
+    {
+      "case": "recorded_migration",
+      "expected": "PARTIAL",
+      "observed": "PARTIAL",
+      "preserved": [
+        "docs/zeus/zeus-state.json",
+        "planning/docs/zeus/zeus-state.json",
+        "planning/minos-repairs.md"
+      ],
+      "status": "PASS",
+      "input": "synthetic recovery witness plus actual prior-run report/state",
+      "new_product_execution": false
+    },
+    {
+      "case": "changed_legacy",
+      "expected": "BLOCKED",
+      "observed": "BLOCKED",
+      "preserved": [
+        "docs/zeus/zeus-state.json",
+        "planning/docs/zeus/zeus-state.json",
+        "planning/minos-repairs.md",
+        "docs/zeus/zeus-log.md",
+        "docs/zeus/zeus-report.md"
+      ],
+      "status": "PASS",
+      "input": "synthetic recovery witness plus actual prior-run report/state",
+      "new_product_execution": false
+    }
+  ],
+  "install_checks": [
+    {
+      "cli": "claude",
+      "source": "skills/zephermine/SKILL.md",
+      "installed": "{claude-home}\\skills\\zephermine\\SKILL.md",
+      "match": true,
+      "source_sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01",
+      "installed_sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zephermine/SKILL.md",
+      "installed": "{codex-home}\\skills\\zephermine\\SKILL.md",
+      "match": true,
+      "source_sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01",
+      "installed_sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zephermine/SKILL.md",
+      "installed": "{antigravity-home}\\skills\\zephermine\\SKILL.md",
+      "match": true,
+      "source_sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01",
+      "installed_sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zephermine/references/domain-confirmation-guide.md",
+      "installed": "{claude-home}\\skills\\zephermine\\references\\domain-confirmation-guide.md",
+      "match": true,
+      "source_sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0",
+      "installed_sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zephermine/references/domain-confirmation-guide.md",
+      "installed": "{codex-home}\\skills\\zephermine\\references\\domain-confirmation-guide.md",
+      "match": true,
+      "source_sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0",
+      "installed_sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zephermine/references/domain-confirmation-guide.md",
+      "installed": "{antigravity-home}\\skills\\zephermine\\references\\domain-confirmation-guide.md",
+      "match": true,
+      "source_sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0",
+      "installed_sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zephermine/references/interview-protocol.md",
+      "installed": "{claude-home}\\skills\\zephermine\\references\\interview-protocol.md",
+      "match": true,
+      "source_sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b",
+      "installed_sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zephermine/references/interview-protocol.md",
+      "installed": "{codex-home}\\skills\\zephermine\\references\\interview-protocol.md",
+      "match": true,
+      "source_sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b",
+      "installed_sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zephermine/references/interview-protocol.md",
+      "installed": "{antigravity-home}\\skills\\zephermine\\references\\interview-protocol.md",
+      "match": true,
+      "source_sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b",
+      "installed_sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zephermine/references/team-review-protocol.md",
+      "installed": "{claude-home}\\skills\\zephermine\\references\\team-review-protocol.md",
+      "match": true,
+      "source_sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b",
+      "installed_sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zephermine/references/team-review-protocol.md",
+      "installed": "{codex-home}\\skills\\zephermine\\references\\team-review-protocol.md",
+      "match": true,
+      "source_sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b",
+      "installed_sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zephermine/references/team-review-protocol.md",
+      "installed": "{antigravity-home}\\skills\\zephermine\\references\\team-review-protocol.md",
+      "match": true,
+      "source_sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b",
+      "installed_sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zeus/SKILL.md",
+      "installed": "{claude-home}\\skills\\zeus\\SKILL.md",
+      "match": true,
+      "source_sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817",
+      "installed_sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zeus/SKILL.md",
+      "installed": "{codex-home}\\skills\\zeus\\SKILL.md",
+      "match": true,
+      "source_sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817",
+      "installed_sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zeus/SKILL.md",
+      "installed": "{antigravity-home}\\skills\\zeus\\SKILL.md",
+      "match": true,
+      "source_sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817",
+      "installed_sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zeus/commands/zeus.md",
+      "installed": "{claude-home}\\skills\\zeus\\commands\\zeus.md",
+      "match": true,
+      "source_sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee",
+      "installed_sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zeus/commands/zeus.md",
+      "installed": "{codex-home}\\skills\\zeus\\commands\\zeus.md",
+      "match": true,
+      "source_sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee",
+      "installed_sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zeus/commands/zeus.md",
+      "installed": "{antigravity-home}\\skills\\zeus\\commands\\zeus.md",
+      "match": true,
+      "source_sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee",
+      "installed_sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zeus/references/archive-procedure.md",
+      "installed": "{claude-home}\\skills\\zeus\\references\\archive-procedure.md",
+      "match": true,
+      "source_sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0",
+      "installed_sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zeus/references/archive-procedure.md",
+      "installed": "{codex-home}\\skills\\zeus\\references\\archive-procedure.md",
+      "match": true,
+      "source_sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0",
+      "installed_sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zeus/references/archive-procedure.md",
+      "installed": "{antigravity-home}\\skills\\zeus\\references\\archive-procedure.md",
+      "match": true,
+      "source_sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0",
+      "installed_sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zeus/references/final-report-format.md",
+      "installed": "{claude-home}\\skills\\zeus\\references\\final-report-format.md",
+      "match": true,
+      "source_sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c",
+      "installed_sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zeus/references/final-report-format.md",
+      "installed": "{codex-home}\\skills\\zeus\\references\\final-report-format.md",
+      "match": true,
+      "source_sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c",
+      "installed_sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zeus/references/final-report-format.md",
+      "installed": "{antigravity-home}\\skills\\zeus\\references\\final-report-format.md",
+      "match": true,
+      "source_sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c",
+      "installed_sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/zeus/references/phase-transitions.md",
+      "installed": "{claude-home}\\skills\\zeus\\references\\phase-transitions.md",
+      "match": true,
+      "source_sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728",
+      "installed_sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/zeus/references/phase-transitions.md",
+      "installed": "{codex-home}\\skills\\zeus\\references\\phase-transitions.md",
+      "match": true,
+      "source_sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728",
+      "installed_sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/zeus/references/phase-transitions.md",
+      "installed": "{antigravity-home}\\skills\\zeus\\references\\phase-transitions.md",
+      "match": true,
+      "source_sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728",
+      "installed_sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/auto-continue-loop/SKILL.md",
+      "installed": "{claude-home}\\skills\\auto-continue-loop\\SKILL.md",
+      "match": true,
+      "source_sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4",
+      "installed_sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/auto-continue-loop/SKILL.md",
+      "installed": "{codex-home}\\skills\\auto-continue-loop\\SKILL.md",
+      "match": true,
+      "source_sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4",
+      "installed_sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/auto-continue-loop/SKILL.md",
+      "installed": "{antigravity-home}\\skills\\auto-continue-loop\\SKILL.md",
+      "match": true,
+      "source_sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4",
+      "installed_sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+      "installed": "{claude-home}\\skills\\auto-continue-loop\\scripts\\continue-loop.ps1",
+      "match": true,
+      "source_sha256": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5",
+      "installed_sha256": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+      "installed": "{codex-home}\\skills\\auto-continue-loop\\scripts\\continue-loop.ps1",
+      "match": true,
+      "source_sha256": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5",
+      "installed_sha256": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+      "installed": "{antigravity-home}\\skills\\auto-continue-loop\\scripts\\continue-loop.ps1",
+      "match": true,
+      "source_sha256": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5",
+      "installed_sha256": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/auto-continue-loop/scripts/continue-loop.sh",
+      "installed": "{claude-home}\\skills\\auto-continue-loop\\scripts\\continue-loop.sh",
+      "match": true,
+      "source_sha256": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38",
+      "installed_sha256": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/auto-continue-loop/scripts/continue-loop.sh",
+      "installed": "{codex-home}\\skills\\auto-continue-loop\\scripts\\continue-loop.sh",
+      "match": true,
+      "source_sha256": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38",
+      "installed_sha256": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/auto-continue-loop/scripts/continue-loop.sh",
+      "installed": "{antigravity-home}\\skills\\auto-continue-loop\\scripts\\continue-loop.sh",
+      "match": true,
+      "source_sha256": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38",
+      "installed_sha256": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/orchestrator/commands/workpm.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm.md",
+      "match": true,
+      "source_sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f",
+      "installed_sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/orchestrator/commands/workpm.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm.md",
+      "match": true,
+      "source_sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f",
+      "installed_sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/orchestrator/commands/workpm.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm.md",
+      "match": true,
+      "source_sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f",
+      "installed_sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/autoresearch/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\autoresearch\\SKILL.md",
+      "match": true,
+      "source_sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d",
+      "installed_sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/autoresearch/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\autoresearch\\SKILL.md",
+      "match": true,
+      "source_sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d",
+      "installed_sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/autoresearch/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\autoresearch\\SKILL.md",
+      "match": true,
+      "source_sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d",
+      "installed_sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d"
+    },
+    {
+      "cli": "claude",
+      "source": "skills/skill-evolve/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\skill-evolve\\SKILL.md",
+      "match": true,
+      "source_sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6",
+      "installed_sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6"
+    },
+    {
+      "cli": "codex",
+      "source": "skills/skill-evolve/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\skill-evolve\\SKILL.md",
+      "match": true,
+      "source_sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6",
+      "installed_sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6"
+    },
+    {
+      "cli": "antigravity",
+      "source": "skills/skill-evolve/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\skill-evolve\\SKILL.md",
+      "match": true,
+      "source_sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6",
+      "installed_sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6"
+    },
+    {
+      "cli": "claude",
+      "source": "hooks/loop-stop.sh",
+      "installed": "{claude-home}\\hooks\\loop-stop.sh",
+      "match": true,
+      "source_sha256": "f717cc64bbbca7f3872df9020c9df9eb89f49aca528734686bf23990c3e4d19d",
+      "installed_sha256": "f717cc64bbbca7f3872df9020c9df9eb89f49aca528734686bf23990c3e4d19d"
+    },
+    {
+      "cli": "claude",
+      "source": "hooks/loop-stop.ps1",
+      "installed": "{claude-home}\\hooks\\loop-stop.ps1",
+      "match": true,
+      "source_sha256": "634a67bb3e5f4e74ed6cdf6f5d1959db164b3e67f4a1fa1cbba6aa15a78d94ac",
+      "installed_sha256": "634a67bb3e5f4e74ed6cdf6f5d1959db164b3e67f4a1fa1cbba6aa15a78d94ac"
+    },
+    {
+      "cli": "antigravity",
+      "source": "hooks/antigravity-hook.js",
+      "installed": "{antigravity-config}\\hooks\\antigravity-hook.js",
+      "match": true,
+      "source_sha256": "bd57796689d6dc113062ae3ae93b47299dbf3833fdf1300e4faa0f02881a5f9f",
+      "installed_sha256": "bd57796689d6dc113062ae3ae93b47299dbf3833fdf1300e4faa0f02881a5f9f"
+    }
+  ],
+  "changed_files_since_task_snapshot": [
+    {
+      "path": "skills/zephermine/SKILL.md",
+      "before": "68c266bdcda86c7e71cbd95f5b6cedfde3672f8f4d27522d6111ce2278367614",
+      "after": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01"
+    },
+    {
+      "path": "skills/zephermine/references/domain-confirmation-guide.md",
+      "before": "3c2d010d7eb7aeb4c939281551bc3711c8308a26fb6e33c1faa10da3da4c3051",
+      "after": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0"
+    },
+    {
+      "path": "skills/zephermine/references/interview-protocol.md",
+      "before": "a1a154ea0abb78370ab9cec1588114c9233f76b1a401111a1939d84063085b1b",
+      "after": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b"
+    },
+    {
+      "path": "skills/zephermine/references/team-review-protocol.md",
+      "before": "899aaf1fa79862c478ad294755a7548b913491bbc84497ddb1aaf46e0880178b",
+      "after": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b"
+    },
+    {
+      "path": "skills/zeus/SKILL.md",
+      "before": "fc915542de3340ad6512867801859e54e214335778465767aeeb852dc7bbe2b9",
+      "after": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817"
+    },
+    {
+      "path": "skills/zeus/commands/zeus.md",
+      "before": "747108a418f503ccd99aac5759470463a2cff969ad3c22d5a0d9e956c769c7d7",
+      "after": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee"
+    },
+    {
+      "path": "skills/zeus/references/archive-procedure.md",
+      "before": "ae0cea46dbfbaae7c95fbb65b54d3465b7ad156b20b12262af10d26668cc6c86",
+      "after": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0"
+    },
+    {
+      "path": "skills/zeus/references/final-report-format.md",
+      "before": "158147808638374ddd1072f4dfacb5d3746580355661c1a0e41c34e3f27b7e11",
+      "after": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c"
+    },
+    {
+      "path": "skills/zeus/references/phase-transitions.md",
+      "before": "dcec23b16bd092712dedc884f458716471e7c0c8e60c4106162ec2cfcc564510",
+      "after": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728"
+    },
+    {
+      "path": "skills/auto-continue-loop/SKILL.md",
+      "before": "e3d274b8f90baed0a7f8f496df5efedb518938c8d59ca26ea2eb4808dbe0068a",
+      "after": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4"
+    },
+    {
+      "path": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+      "before": "1e768b5379e987b97f035088b521b8bbfd501c26ba95eea4501772ba7015e749",
+      "after": "b4346bc9319076e5401bd9916446ad1e9346e16ef13dd68429d2ce07d6ef04e5"
+    },
+    {
+      "path": "skills/auto-continue-loop/scripts/continue-loop.sh",
+      "before": "26e8a100c59cb4d59be7f892136e4ea5d96afc814d0f7c415a1ffcb218d6b2d5",
+      "after": "46590c743ddf89c7c33873db287a4f165f5365f1ae6bc358e1ee34539ac39f38"
+    },
+    {
+      "path": "skills/orchestrator/commands/workpm.md",
+      "before": "a9f038ae116185a0908dd4e250acf799eaf72497ddca4b20db9f3c0f9d431765",
+      "after": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f"
+    },
+    {
+      "path": "skills/autoresearch/SKILL.md",
+      "before": "0afe8bfc2e8dfdec65152bc203152665501088a3157f49ab907b551287461752",
+      "after": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d"
+    },
+    {
+      "path": "skills/skill-evolve/SKILL.md",
+      "before": "6740b3916198d02e4d5675ba0a73a7314fc6f367814d9b817682d7414d9bab1e",
+      "after": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6"
+    },
+    {
+      "path": "hooks/loop-stop.sh",
+      "before": "3d9ac53cb5d257ee713b8ac19c06071a655cf356e9c1fe0d0cead0ff35e23148",
+      "after": "f717cc64bbbca7f3872df9020c9df9eb89f49aca528734686bf23990c3e4d19d"
+    },
+    {
+      "path": "hooks/loop-stop.ps1",
+      "before": "36421117bbb93fda50c0056c82131da76852edbe6da51357c7e3699e7de28a0f",
+      "after": "634a67bb3e5f4e74ed6cdf6f5d1959db164b3e67f4a1fa1cbba6aa15a78d94ac"
+    },
+    {
+      "path": "hooks/antigravity-hook.js",
+      "before": "33f1a7c3946d540f6b81efec8bc8baf7c1802a0f3295a16664940cfad6b2ab54",
+      "after": "bd57796689d6dc113062ae3ae93b47299dbf3833fdf1300e4faa0f02881a5f9f"
+    },
+    {
+      "path": "docs/workflow-guide.md",
+      "before": "0d4cb22d3f785682156f015750fa6cb8dc4de37e4000656455d1db7c539f6424",
+      "after": "f741358b0ae6c285433a665a6cff2261b385d91f19514a654e8edf8029c93798"
+    },
+    {
+      "path": "scripts/tests/chronos-terminal-state.test.js",
+      "before": null,
+      "after": "dc3b0db79879b05fd5109999294db87ff1c25a8d1719cd586742d93ba1b81426",
+      "new": true
+    }
+  ],
+  "packages": [
+    {
+      "name": "auto-continue-loop.zip",
+      "sha256": "5df906886fc53e2b3ab4b282751cb8e0737569f119593572ce8667b9b40cd571",
+      "crc": "PASS"
+    },
+    {
+      "name": "autoresearch.zip",
+      "sha256": "c30e9969e648cafd156b17975a7ed9e1c14db5b39ac035127967c92bf4828848",
+      "crc": "PASS"
+    },
+    {
+      "name": "orchestrator.zip",
+      "sha256": "e4a6505e57098aa8c3a8dead3e49cb88a7e9b5d674c973467a52d063ac4a0b5a",
+      "crc": "PASS"
+    },
+    {
+      "name": "skill-evolve.zip",
+      "sha256": "202dc0e826c2f7a1fba2daa5902c17c044b4f2bc93321cef79d4904c4c233b6a",
+      "crc": "PASS"
+    },
+    {
+      "name": "zephermine.zip",
+      "sha256": "07726b0320baaae0d663742d3ccb5383b8177e1ff1b776fa7de25ca386b75870",
+      "crc": "PASS"
+    },
+    {
+      "name": "zeus.zip",
+      "sha256": "c38a04a7edaa83aaf4dfd9cc68013a7cb806587cfc01c6ef204716aeb75d1bdb",
+      "crc": "PASS"
+    }
+  ],
+  "artifact_sha256": {
+    "fixtures/changed_legacy-baseline.json": "3578a6a735ead502a897cab109816268a61d6a12cb8522bfc6be218e56ec0160",
+    "fixtures/recorded_migration-baseline.json": "e54ed60bfefa6350a750311a68460f50e970d4190f9c159c8d500fbcb20cc621",
+    "fixtures/proposal_known/interview.md": "6328b85017e66d2fe95edd714c3f920e071c3c895a869cffd217e32a73721eec",
+    "fixtures/proposal_known/research.md": "0fb2c889cd73aa7175c89f8203f7215413db9418ba930031ad9cd2c474c5351b",
+    "fixtures/proposal_known/spec.md": "599503a15ee396875859b9364f6ff98d2220523e5d1a92b7c4a0529c6dc10745",
+    "fixtures/proposal_known/stage.md": "e780044f3ac8272a2a735eb3f5117dc2f2315e812fcd34504ffdc32df6a09f75",
+    "fixtures/proposal_known/unknowns.md": "fb77eb2e78063e766ad66e0f8172ede640db6960be03d35b459e6488ed131e33",
+    "fixtures/proposal_known/user.md": "5704b6b2e344f1b543b8d86c6f6880ffb6912e365c6a5f95bb841d589b5708d2",
+    "fixtures/proposal_unknown/interview.md": "44b7d65b9ed02ebb236d8035697460b8d15b1779c7a1de55fac4b1345297cfee",
+    "fixtures/proposal_unknown/research.md": "f1c1a02aafb3d9210f99c0853ef415b689adf3a25e7c9ff3c594d79dd8d6dff3",
+    "fixtures/proposal_unknown/spec.md": "b38eca1a00a846fb7185ef1bc17d95751e3d8c2d95019f82b14b42f49cc7d6da",
+    "fixtures/proposal_unknown/stage.md": "537d69bd704482e64e31e76d44b357667a27299446e853ccfe2f5f2a2c9b84e1",
+    "fixtures/proposal_unknown/unknowns.md": "4f234409810d460af1d23c6d5297b56bea046d93ce6d6d767abaac77b4b15e41",
+    "fixtures/proposal_unknown/user.md": "ecc25e67b845e6e64b1b9dce828f0a309dde951acca27ffaa19e6088380d63de",
+    "fixtures/zeus/conflict_resume/user.md": "81efc42d232a6ac455390f9f614b6634a7c93803d65fc703139c809e3b9d0e7a",
+    "fixtures/zeus/final_report/user.md": "7e8dbd5f5d21b8118e92a64303c372a2d2494b7d7d8008c369f2966347a09e82",
+    "fixtures/zeus/legacy_resume/user.md": "81efc42d232a6ac455390f9f614b6634a7c93803d65fc703139c809e3b9d0e7a",
+    "fixtures/zeus/conflict_resume/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "fixtures/zeus/conflict_resume/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "fixtures/zeus/conflict_resume/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "fixtures/zeus/conflict_resume/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "fixtures/zeus/conflict_resume/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "fixtures/zeus/conflict_resume/docs/zeus/zeus-log.md": "859949bc38859f12cd8c2bee166f00923bdfbcac8dcc81e50a56646af8e85aa4",
+    "fixtures/zeus/conflict_resume/docs/zeus/zeus-state.json": "97fcbc1fd4379bfad6aa07f6a03dace6e9c20c404cef30baa69635fac349eee9",
+    "fixtures/zeus/conflict_resume/planning/docs/zeus/zeus-state.json": "ad7e8ef64e4fa5c8ab738f4dd926eb3c20b2b65da2676040ed5ddb33027b5a9c",
+    "fixtures/zeus/final_report/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "fixtures/zeus/final_report/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "fixtures/zeus/final_report/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "fixtures/zeus/final_report/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "fixtures/zeus/final_report/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "fixtures/zeus/final_report/docs/zeus/zeus-log.md": "859949bc38859f12cd8c2bee166f00923bdfbcac8dcc81e50a56646af8e85aa4",
+    "fixtures/zeus/final_report/docs/zeus/zeus-state.json": "ad7e8ef64e4fa5c8ab738f4dd926eb3c20b2b65da2676040ed5ddb33027b5a9c",
+    "fixtures/zeus/legacy_resume/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "fixtures/zeus/legacy_resume/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "fixtures/zeus/legacy_resume/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "fixtures/zeus/legacy_resume/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "fixtures/zeus/legacy_resume/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "fixtures/zeus/legacy_resume/docs/zeus/zeus-log.md": "859949bc38859f12cd8c2bee166f00923bdfbcac8dcc81e50a56646af8e85aa4",
+    "fixtures/zeus/legacy_resume/planning/docs/zeus/zeus-state.json": "ad7e8ef64e4fa5c8ab738f4dd926eb3c20b2b65da2676040ed5ddb33027b5a9c",
+    "behavior/run-a/proposal_known/decisions.md": "3184e4f2ba87941fdb516c46ef2ab62c0a7ac543e8b9d98796fedc31b0dab977",
+    "behavior/run-a/proposal_known/response.md": "0f00e76b7dc9b80d80da988faf5f400f40c48bae18bf0b1412d4975c5e9b611f",
+    "behavior/run-a/proposal_unknown/decisions.md": "5c935736707c2a4db9ef6287da13d66ca77860be6a851b15c3f2f4863b1932db",
+    "behavior/run-a/proposal_unknown/response.md": "89205329515ae4c1dd3dd79fe7598e8a749350b0d69e4ce9fff2261cd5d83198",
+    "behavior/run-b/proposal_known/decisions.md": "c3b41cc45d15a8c767677c0833945c4e097374d721188d60d13e6b72870f99c1",
+    "behavior/run-b/proposal_known/response.md": "b24b19182419f3cb827631eb60da59834f3059ca8f664764777c1f6accb63edb",
+    "behavior/run-b/proposal_unknown/decisions.md": "5f46bd29e1bbd87bd981decdb06cc63f4ac03e28ce609aaa8b6bb00d5d9eadfd",
+    "behavior/run-b/proposal_unknown/response.md": "b77f645479cd9b86ff9357473db5b311ef2f73c5b73e4a9cfe8c25755629369b",
+    "behavior/zeus/conflict_resume/response.md": "c1a1d5e3f28dcaf6914e5260e39f9f570f8948d2e8f90b9d0da37de6c74598b2",
+    "behavior/zeus/conflict_resume/user.md": "81efc42d232a6ac455390f9f614b6634a7c93803d65fc703139c809e3b9d0e7a",
+    "behavior/zeus/final_report/response.md": "73b3ff3bf0e1b19950e6132378260a56155e9b68f04c4b49e7859882f8906d29",
+    "behavior/zeus/final_report/user.md": "7e8dbd5f5d21b8118e92a64303c372a2d2494b7d7d8008c369f2966347a09e82",
+    "behavior/zeus/legacy_resume/response.md": "ac8187453b1c97814c6ba7f3b1941c10baa2f4bdf24522415ac7e98dffc64531",
+    "behavior/zeus/legacy_resume/user.md": "81efc42d232a6ac455390f9f614b6634a7c93803d65fc703139c809e3b9d0e7a",
+    "behavior/zeus/conflict_resume/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "behavior/zeus/conflict_resume/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "behavior/zeus/conflict_resume/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "behavior/zeus/conflict_resume/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "behavior/zeus/conflict_resume/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "behavior/zeus/conflict_resume/docs/zeus/zeus-log.md": "d667dcbd59f15b094e1f153e749883effd604a8e110071ff343ae5a5be69e3e2",
+    "behavior/zeus/conflict_resume/docs/zeus/zeus-report.md": "ec74d30c33faed142aeb42455bd0aa03cdc4bb5f008e09df7814389b4a4479c9",
+    "behavior/zeus/conflict_resume/docs/zeus/zeus-state.json": "97fcbc1fd4379bfad6aa07f6a03dace6e9c20c404cef30baa69635fac349eee9",
+    "behavior/zeus/conflict_resume/planning/docs/zeus/zeus-state.json": "ad7e8ef64e4fa5c8ab738f4dd926eb3c20b2b65da2676040ed5ddb33027b5a9c",
+    "behavior/zeus/final_report/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "behavior/zeus/final_report/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "behavior/zeus/final_report/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "behavior/zeus/final_report/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "behavior/zeus/final_report/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "behavior/zeus/final_report/docs/zeus/zeus-log.md": "a4e2754e8c50f0b6e65cd90d714306982e358a656621ec5f433ecec534158cdc",
+    "behavior/zeus/final_report/docs/zeus/zeus-report.md": "06675ce48f24e92a8ce07d930aeb5d032c34ee5d198d44f2589a10af8a03edd7",
+    "behavior/zeus/final_report/docs/zeus/zeus-state.json": "41242252b2df9c92fa965e2f2460cebef1d0e35701665c9c6fb07376d16747d5",
+    "behavior/zeus/legacy_resume/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "behavior/zeus/legacy_resume/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "behavior/zeus/legacy_resume/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "behavior/zeus/legacy_resume/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "behavior/zeus/legacy_resume/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "behavior/zeus/legacy_resume/docs/zeus/zeus-log.md": "387b08bd4a75bb8ecccb2432b72c8b0d392171475c9d8a9f7e4a62f934f3bc1b",
+    "behavior/zeus/legacy_resume/docs/zeus/zeus-report.md": "47042467b5fc0e332ede273561352e466ca646fcf86aefc5fcaf2558d8de3122",
+    "behavior/zeus/legacy_resume/docs/zeus/zeus-state.json": "41242252b2df9c92fa965e2f2460cebef1d0e35701665c9c6fb07376d16747d5",
+    "behavior/zeus/legacy_resume/planning/docs/zeus/zeus-state.json": "ad7e8ef64e4fa5c8ab738f4dd926eb3c20b2b65da2676040ed5ddb33027b5a9c",
+    "behavior/zeus-reentry/changed_legacy/reentry-response.md": "9ebd1cee32a2e0ebb4c063c640dfc5c60c4b02d709ffa3d91bade32ea0c6e02e",
+    "behavior/zeus-reentry/changed_legacy/response.md": "ac8187453b1c97814c6ba7f3b1941c10baa2f4bdf24522415ac7e98dffc64531",
+    "behavior/zeus-reentry/changed_legacy/user.md": "c2496a5a38bd30deec0a0aab8af81b4b61ee111318f979c15b18bdfc6aa5aed3",
+    "behavior/zeus-reentry/recorded_migration/reentry-response.md": "af73dd8c7b0f1fa9f6d4b15a26f3adc6278954e1f06ace69320ef751e3d144b4",
+    "behavior/zeus-reentry/recorded_migration/response.md": "ac8187453b1c97814c6ba7f3b1941c10baa2f4bdf24522415ac7e98dffc64531",
+    "behavior/zeus-reentry/recorded_migration/user.md": "c2496a5a38bd30deec0a0aab8af81b4b61ee111318f979c15b18bdfc6aa5aed3",
+    "behavior/zeus-reentry/changed_legacy/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "behavior/zeus-reentry/changed_legacy/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "behavior/zeus-reentry/changed_legacy/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "behavior/zeus-reentry/changed_legacy/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "behavior/zeus-reentry/changed_legacy/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "behavior/zeus-reentry/changed_legacy/docs/zeus/zeus-log.md": "db8dd717d933723428348ee09656081b495e53ffba40a6987444f7a2e114eae4",
+    "behavior/zeus-reentry/changed_legacy/docs/zeus/zeus-report.md": "47042467b5fc0e332ede273561352e466ca646fcf86aefc5fcaf2558d8de3122",
+    "behavior/zeus-reentry/changed_legacy/docs/zeus/zeus-state.json": "41242252b2df9c92fa965e2f2460cebef1d0e35701665c9c6fb07376d16747d5",
+    "behavior/zeus-reentry/changed_legacy/planning/docs/zeus/zeus-state.json": "be6dd7edac37f086263789965a3cb1fb96fe88ca5eeb20913660144fb8937cc4",
+    "behavior/zeus-reentry/recorded_migration/planning/minos-repairs.md": "78c1c06696c42ebaf280d38305134287224ae478b266b049f23d9ebdfb20bbb5",
+    "behavior/zeus-reentry/recorded_migration/planning/minos-result.md": "67a894fcda92961ee263b4122398486db3f60b986d6641f143d311f646f0da63",
+    "behavior/zeus-reentry/recorded_migration/planning/plan.md": "66746aa5b176bff19709b5efd57798e63ca9944942069f96e3d597eaaebc6acc",
+    "behavior/zeus-reentry/recorded_migration/planning/qa-scenarios.md": "7fe654307969e3d2d0c1ded06a81544f99993f95b9b350b74f45d54697077580",
+    "behavior/zeus-reentry/recorded_migration/planning/verify-report.md": "5f23183eec580c24905cb9ff1019b4c33216a788ff258600860859fca5dc046e",
+    "behavior/zeus-reentry/recorded_migration/docs/zeus/zeus-log.md": "94ec2bed883b7a940dd45a0a324018e04fc61c87f189bb33bef71e68e8da3c50",
+    "behavior/zeus-reentry/recorded_migration/docs/zeus/zeus-report.md": "c63acc0f71fcf5d6e93e2a5469fdd3e6f6f27fc8402d5dec8bf2b337be533279",
+    "behavior/zeus-reentry/recorded_migration/docs/zeus/zeus-state.json": "41242252b2df9c92fa965e2f2460cebef1d0e35701665c9c6fb07376d16747d5",
+    "behavior/zeus-reentry/recorded_migration/planning/docs/zeus/zeus-state.json": "ad7e8ef64e4fa5c8ab738f4dd926eb3c20b2b65da2676040ed5ddb33027b5a9c"
+  },
+  "limitations": [
+    "No full product pipeline in any CLI",
+    "No native goal runtime test",
+    "No browser E2E in this follow-up task",
+    "Codex PowerShell stdin Unicode fallback unchanged; actual notify payload-file route tested",
+    "Zeus behavior uses supplied historical execution records, not new product execution"
+  ],
+  "publication_note": "Machine-specific paths use placeholders; raw local evidence is not bundled. Case results and file digests are retained. These are dated validation records, not a general performance benchmark.",
+  "release_followup": {
+    "date": "2026-10-29",
+    "version": "7.4.3",
+    "correction": "Blocked headers are recognized only on the first nonblank report line; code examples and later subheadings do not stop the loop.",
+    "new_negative_cases_before": {
+      "passed": 0,
+      "failed": 14,
+      "skipped": 0,
+      "stdout_sha256": "eb8b0831c1eb3b45517cf6e4621a10afa270cbbaf6657f9a5ab2d0087b72b482"
+    },
+    "source_after": {
+      "passed": 56,
+      "failed": 0,
+      "skipped": 0,
+      "command": "node --test scripts/tests/chronos-terminal-state.test.js",
+      "stdout_sha256": "d592e2fd671da12f531b641ff151e64b83878bf0afefe6923d440346fe8d277f"
+    },
+    "installed_after": {
+      "passed": 56,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "same 7 script paths routed to installed files, 8 cases each; Codex dry-run",
+      "stdout_sha256": "4561f8fe8889e276d35e9def935dfa68803b196d536a0dd4f77b5d704a1cc991"
+    },
+    "integrated_install": {
+      "command": "install.bat --all",
+      "exit": 0,
+      "final_checks": 12,
+      "stdout_sha256": "87a6c146600052ffb3dbf38163bc0794e50e3b1b4eb6d9a46e4e06596bf74acb"
+    },
+    "version_and_policy_checks": {
+      "passed": 12,
+      "failed": 0
+    },
+    "localized_readme_check": {
+      "passed": 1,
+      "failed": 0
+    },
+    "installed_file_checks": [
+      {
+        "cli": "codex",
+        "source": "skills/agent-team-codex/SKILL.md",
+        "sha256": "3b5c8421a8c48845bd83882431714f2c424ce1548fedd289d80d0fc80cb2171e",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/agent-team-codex/references/prompt-templates.md",
+        "sha256": "0408b8f9e8996737d6c936f7a045133ddc81995e3444e3230b4d6edeca690224",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/agent-team/SKILL.md",
+        "sha256": "a90e723d62ee65800d72b5baae2663f84636deb6c2213aa40cde6f249007db4c",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/agent-team/SKILL.md",
+        "sha256": "a90e723d62ee65800d72b5baae2663f84636deb6c2213aa40cde6f249007db4c",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/agent-team/references/section-parser.md",
+        "sha256": "b9d710c48f85e8a7c42d4594ca37c2edace468e488cd277817748b073094c5a1",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/agent-team/references/section-parser.md",
+        "sha256": "b9d710c48f85e8a7c42d4594ca37c2edace468e488cd277817748b073094c5a1",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/agent-team/references/teammate-context-template.md",
+        "sha256": "3df787196c1f4f40e291b3fb6baebd6444654fde11f48d1dda00a1e65d8881b6",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/agent-team/references/teammate-context-template.md",
+        "sha256": "3df787196c1f4f40e291b3fb6baebd6444654fde11f48d1dda00a1e65d8881b6",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/agent-team/references/verification-protocol.md",
+        "sha256": "63e92bac24aebf9c37d4cddf39f6a80afe0411d40c0e800df8d75929dee581c8",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/agent-team/references/verification-protocol.md",
+        "sha256": "63e92bac24aebf9c37d4cddf39f6a80afe0411d40c0e800df8d75929dee581c8",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/agent-team/references/wave-executor.md",
+        "sha256": "ada85dca0c265ae34d61af351a41ee7bad6ce6b5057de85c73311f3e3a77796e",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/agent-team/references/wave-executor.md",
+        "sha256": "ada85dca0c265ae34d61af351a41ee7bad6ce6b5057de85c73311f3e3a77796e",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/argos/SKILL.md",
+        "sha256": "bf7d34079d333588d45a3713d8fb8e746a2f897b78960b388d0ed5fd3dabb4c2",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/argos/SKILL.md",
+        "sha256": "bf7d34079d333588d45a3713d8fb8e746a2f897b78960b388d0ed5fd3dabb4c2",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/argos/SKILL.md",
+        "sha256": "bf7d34079d333588d45a3713d8fb8e746a2f897b78960b388d0ed5fd3dabb4c2",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/argos/commands/argos.md",
+        "sha256": "94e74ea88332ef5d2925c4a1eaddcb743de43422f40c47114bc5a925259be3d7",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/argos/commands/argos.md",
+        "sha256": "94e74ea88332ef5d2925c4a1eaddcb743de43422f40c47114bc5a925259be3d7",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/argos/commands/argos.md",
+        "sha256": "94e74ea88332ef5d2925c4a1eaddcb743de43422f40c47114bc5a925259be3d7",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/argos/references/verify-protocol.md",
+        "sha256": "21477dc7564b2d3125fcbc3e80ab6ace153762557c5f4a10f35e1c5ac23467b3",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/argos/references/verify-protocol.md",
+        "sha256": "21477dc7564b2d3125fcbc3e80ab6ace153762557c5f4a10f35e1c5ac23467b3",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/argos/references/verify-protocol.md",
+        "sha256": "21477dc7564b2d3125fcbc3e80ab6ace153762557c5f4a10f35e1c5ac23467b3",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/auto-continue-loop/SKILL.md",
+        "sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/auto-continue-loop/SKILL.md",
+        "sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/auto-continue-loop/SKILL.md",
+        "sha256": "088a88c7f4bece11cc4d82d36ab8f6243f35704cea33553b1e3d8056800f0fd4",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+        "sha256": "76442aeae32605b507616b64100fa455eab519366e0417822025b5365c6f7e82",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+        "sha256": "76442aeae32605b507616b64100fa455eab519366e0417822025b5365c6f7e82",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/auto-continue-loop/scripts/continue-loop.ps1",
+        "sha256": "76442aeae32605b507616b64100fa455eab519366e0417822025b5365c6f7e82",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/auto-continue-loop/scripts/continue-loop.sh",
+        "sha256": "a74d6fac91cc6f10b0fbb461f7541b7fcacf61cb9608db44433b5e5f3bb789db",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/auto-continue-loop/scripts/continue-loop.sh",
+        "sha256": "a74d6fac91cc6f10b0fbb461f7541b7fcacf61cb9608db44433b5e5f3bb789db",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/auto-continue-loop/scripts/continue-loop.sh",
+        "sha256": "a74d6fac91cc6f10b0fbb461f7541b7fcacf61cb9608db44433b5e5f3bb789db",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/autoresearch/SKILL.md",
+        "sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/autoresearch/SKILL.md",
+        "sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/autoresearch/SKILL.md",
+        "sha256": "576a4df9c48287d013a6eb5e1fdf9e4a90773a533a8c22843a89be8115bbf33d",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/code-reviewer/SKILL.md",
+        "sha256": "f2e40c1b50aa3c56482d18b617d49f919c38495ddb183070b4646befc9bc0cc6",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/code-reviewer/SKILL.md",
+        "sha256": "f2e40c1b50aa3c56482d18b617d49f919c38495ddb183070b4646befc9bc0cc6",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/code-reviewer/SKILL.md",
+        "sha256": "f2e40c1b50aa3c56482d18b617d49f919c38495ddb183070b4646befc9bc0cc6",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/code-reviewer/references/review-scope.md",
+        "sha256": "c13ecf84a122aed3f401d42577ff9d0b585fe07cf12d34468c085241c5709ff3",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/code-reviewer/references/review-scope.md",
+        "sha256": "c13ecf84a122aed3f401d42577ff9d0b585fe07cf12d34468c085241c5709ff3",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/code-reviewer/references/review-scope.md",
+        "sha256": "c13ecf84a122aed3f401d42577ff9d0b585fe07cf12d34468c085241c5709ff3",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/minos/SKILL.md",
+        "sha256": "339433cd0cf1e1d122ef2ef8a204a3a82474f9a3e7841d1e26de09452bc186cc",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/minos/SKILL.md",
+        "sha256": "339433cd0cf1e1d122ef2ef8a204a3a82474f9a3e7841d1e26de09452bc186cc",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/minos/SKILL.md",
+        "sha256": "339433cd0cf1e1d122ef2ef8a204a3a82474f9a3e7841d1e26de09452bc186cc",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/minos/commands/minos.md",
+        "sha256": "2ff25c5b5feeebc7363be3d7020ad7e96c7db7fc9e4fb2cda8a539cd3bad597c",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/minos/commands/minos.md",
+        "sha256": "2ff25c5b5feeebc7363be3d7020ad7e96c7db7fc9e4fb2cda8a539cd3bad597c",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/minos/commands/minos.md",
+        "sha256": "2ff25c5b5feeebc7363be3d7020ad7e96c7db7fc9e4fb2cda8a539cd3bad597c",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/minos/references/healer-loop.md",
+        "sha256": "26ee877e4a867cbce2b07722bcae1686c8ecbdd4b86f473044439c5338a75687",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/minos/references/healer-loop.md",
+        "sha256": "26ee877e4a867cbce2b07722bcae1686c8ecbdd4b86f473044439c5338a75687",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/minos/references/healer-loop.md",
+        "sha256": "26ee877e4a867cbce2b07722bcae1686c8ecbdd4b86f473044439c5338a75687",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/minos/references/result-report.md",
+        "sha256": "cf4967c17e6303b9de43ae28be9a8f772a5f0857d89c8e77223638e148a39b15",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/minos/references/result-report.md",
+        "sha256": "cf4967c17e6303b9de43ae28be9a8f772a5f0857d89c8e77223638e148a39b15",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/minos/references/result-report.md",
+        "sha256": "cf4967c17e6303b9de43ae28be9a8f772a5f0857d89c8e77223638e148a39b15",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/orchestrator/commands/workpm-mcp.md",
+        "sha256": "d2ad677f8a75fe521c0cfa4aba62b571ed7bb33553350d1ab1581af76339683f",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/orchestrator/commands/workpm-mcp.md",
+        "sha256": "d2ad677f8a75fe521c0cfa4aba62b571ed7bb33553350d1ab1581af76339683f",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/orchestrator/commands/workpm-mcp.md",
+        "sha256": "d2ad677f8a75fe521c0cfa4aba62b571ed7bb33553350d1ab1581af76339683f",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/orchestrator/commands/workpm.md",
+        "sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/orchestrator/commands/workpm.md",
+        "sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/orchestrator/commands/workpm.md",
+        "sha256": "7be19c530053c3716217b0a6e4b63df1eb531c5147413da0fb282174d854108f",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/skill-evolve/SKILL.md",
+        "sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/skill-evolve/SKILL.md",
+        "sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/skill-evolve/SKILL.md",
+        "sha256": "89c3dc00d3cae58b4f57655e9dbafbaac5d548b9104c31b98c6775d78dcdedb6",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/CREATION-LOG.md",
+        "sha256": "36707a4e0eae8627291c417c864951716c4462be266401d7677fd5da97d8fb7e",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/CREATION-LOG.md",
+        "sha256": "36707a4e0eae8627291c417c864951716c4462be266401d7677fd5da97d8fb7e",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/CREATION-LOG.md",
+        "sha256": "36707a4e0eae8627291c417c864951716c4462be266401d7677fd5da97d8fb7e",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/SKILL.md",
+        "sha256": "9f08a31a8bd8e17c7df980630fa6e3ec774d406f16b069d8ea025691614c157d",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/SKILL.md",
+        "sha256": "9f08a31a8bd8e17c7df980630fa6e3ec774d406f16b069d8ea025691614c157d",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/SKILL.md",
+        "sha256": "9f08a31a8bd8e17c7df980630fa6e3ec774d406f16b069d8ea025691614c157d",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/condition-based-waiting.md",
+        "sha256": "b06c63d102c674d49192fe7e64dc3b52520706ff37131e1496fee812551a5597",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/condition-based-waiting.md",
+        "sha256": "b06c63d102c674d49192fe7e64dc3b52520706ff37131e1496fee812551a5597",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/condition-based-waiting.md",
+        "sha256": "b06c63d102c674d49192fe7e64dc3b52520706ff37131e1496fee812551a5597",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/defense-in-depth.md",
+        "sha256": "0df1c98803596cac74e84a933f0d991326f2b0ad0bfca912db84fcbe735df02a",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/defense-in-depth.md",
+        "sha256": "0df1c98803596cac74e84a933f0d991326f2b0ad0bfca912db84fcbe735df02a",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/defense-in-depth.md",
+        "sha256": "0df1c98803596cac74e84a933f0d991326f2b0ad0bfca912db84fcbe735df02a",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/find-polluter.sh",
+        "sha256": "e54c6d42f41acff81d2890d7ab7ba6e4eb3e4307a6440931a7367208d0a1c652",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/find-polluter.sh",
+        "sha256": "e54c6d42f41acff81d2890d7ab7ba6e4eb3e4307a6440931a7367208d0a1c652",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/find-polluter.sh",
+        "sha256": "e54c6d42f41acff81d2890d7ab7ba6e4eb3e4307a6440931a7367208d0a1c652",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/root-cause-tracing.md",
+        "sha256": "00af2ae3c70a3d7531a758124f647c90e41f47c0b7fef3f5ce46eeb624e73ccb",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/root-cause-tracing.md",
+        "sha256": "00af2ae3c70a3d7531a758124f647c90e41f47c0b7fef3f5ce46eeb624e73ccb",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/root-cause-tracing.md",
+        "sha256": "00af2ae3c70a3d7531a758124f647c90e41f47c0b7fef3f5ce46eeb624e73ccb",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/test-pressure-1.md",
+        "sha256": "94649bd815495c6634f863ba9aa95bec896a64557f85a15af7248609980f4c2d",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/test-pressure-1.md",
+        "sha256": "94649bd815495c6634f863ba9aa95bec896a64557f85a15af7248609980f4c2d",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/test-pressure-1.md",
+        "sha256": "94649bd815495c6634f863ba9aa95bec896a64557f85a15af7248609980f4c2d",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/test-pressure-2.md",
+        "sha256": "3fef1a1b5c8e5b3261e165fa7bac6b03e09a1da20e9c48d2b7252f1e78c847f2",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/test-pressure-2.md",
+        "sha256": "3fef1a1b5c8e5b3261e165fa7bac6b03e09a1da20e9c48d2b7252f1e78c847f2",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/test-pressure-2.md",
+        "sha256": "3fef1a1b5c8e5b3261e165fa7bac6b03e09a1da20e9c48d2b7252f1e78c847f2",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/systematic-debugging/test-pressure-3.md",
+        "sha256": "543f4d110c40607250a092ccfc175255e3a162c31e7dc1113a895f29a516bc1f",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/systematic-debugging/test-pressure-3.md",
+        "sha256": "543f4d110c40607250a092ccfc175255e3a162c31e7dc1113a895f29a516bc1f",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/systematic-debugging/test-pressure-3.md",
+        "sha256": "543f4d110c40607250a092ccfc175255e3a162c31e7dc1113a895f29a516bc1f",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/test-driven-development/SKILL.md",
+        "sha256": "d0afeadc8a9c864ca3f1894af471b4b9e1026f795e7bb0a16d29b86a2e4a5aa6",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/test-driven-development/SKILL.md",
+        "sha256": "d0afeadc8a9c864ca3f1894af471b4b9e1026f795e7bb0a16d29b86a2e4a5aa6",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/test-driven-development/SKILL.md",
+        "sha256": "d0afeadc8a9c864ca3f1894af471b4b9e1026f795e7bb0a16d29b86a2e4a5aa6",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/workpm/SKILL.md",
+        "sha256": "14a755aa6072bf160566636a452c307d2c62ca54a3e43e804bff206e8adc1918",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/workpm/SKILL.md",
+        "sha256": "14a755aa6072bf160566636a452c307d2c62ca54a3e43e804bff206e8adc1918",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/workpm/SKILL.md",
+        "sha256": "14a755aa6072bf160566636a452c307d2c62ca54a3e43e804bff206e8adc1918",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zephermine/SKILL.md",
+        "sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zephermine/SKILL.md",
+        "sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zephermine/SKILL.md",
+        "sha256": "f1f073906c3de0b92a08c679167df05a803f778f7552f5e21c608a803fc37f01",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zephermine/references/domain-confirmation-guide.md",
+        "sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zephermine/references/domain-confirmation-guide.md",
+        "sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zephermine/references/domain-confirmation-guide.md",
+        "sha256": "f2a827a4802719912177df89df0b7f7de3100b1f8194f249d63fa4a5fe841fb0",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zephermine/references/interview-protocol.md",
+        "sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zephermine/references/interview-protocol.md",
+        "sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zephermine/references/interview-protocol.md",
+        "sha256": "e491a617428650d8bf553040670a4f34c23f0aa736a7333c3628e6ddb775de6b",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zephermine/references/team-review-protocol.md",
+        "sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zephermine/references/team-review-protocol.md",
+        "sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zephermine/references/team-review-protocol.md",
+        "sha256": "6257ccaaab30cd5b8294d3214ab126c45302047dd82309f0a3da5cf0c549045b",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zeus/SKILL.md",
+        "sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zeus/SKILL.md",
+        "sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zeus/SKILL.md",
+        "sha256": "b17f3dad82c8a09043510588de645d3a05b5b223ff4d271ae6f22faa4d85a817",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zeus/commands/zeus.md",
+        "sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zeus/commands/zeus.md",
+        "sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zeus/commands/zeus.md",
+        "sha256": "0fba17a8f849a925305687cb4434d3edfed927da0cf81ab7e115b68bfb885eee",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zeus/references/archive-procedure.md",
+        "sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zeus/references/archive-procedure.md",
+        "sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zeus/references/archive-procedure.md",
+        "sha256": "ded6e4dd3f591bbc077ed639a681cc5044c60632f1c869e2537cfe29106043a0",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zeus/references/final-report-format.md",
+        "sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zeus/references/final-report-format.md",
+        "sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zeus/references/final-report-format.md",
+        "sha256": "262858042e9bd22a3151b834c937adced89475449b9e4163cb856c820769030c",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "skills/zeus/references/phase-transitions.md",
+        "sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728",
+        "match": true
+      },
+      {
+        "cli": "codex",
+        "source": "skills/zeus/references/phase-transitions.md",
+        "sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "skills/zeus/references/phase-transitions.md",
+        "sha256": "088008ec0f2c83e5057bebc898b809ce56623c4972fbd177bef3729b8b517728",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "hooks/loop-stop.ps1",
+        "sha256": "52f20aa57ef7838ff2c08fd1410928363685a53d9d227d377776839e365adbb1",
+        "match": true
+      },
+      {
+        "cli": "claude",
+        "source": "hooks/loop-stop.sh",
+        "sha256": "d434e0d9d5fd4ab6a71e1109f70402f4362912433713df5e148004c6f41a2be5",
+        "match": true
+      },
+      {
+        "cli": "antigravity",
+        "source": "hooks/antigravity-hook.js",
+        "sha256": "56909bbcbebbb896a816b71ea33a67daed25e0721feb2544b620de21c98294c7",
+        "match": true
+      }
+    ]
+  }
+}

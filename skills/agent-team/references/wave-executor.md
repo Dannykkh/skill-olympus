@@ -7,11 +7,11 @@ Wave별 teammate 조율 및 실행 프로토콜.
 ```
 Wave 1: [section-01, section-02, section-03] ──→ 병렬 실행
                                                     │
-                                              모든 Task completed
+                                              실행 결과 검증·소비 의존성 확인
                                                     │
 Wave 2: [section-04, section-05] ──────────────→ 병렬 실행
                                                     │
-                                              모든 Task completed
+                                              실행 결과 검증·소비 의존성 확인
                                                     │
 Wave 3: [section-06] ─────────────────────────→ 순차 실행
 ```
@@ -22,19 +22,23 @@ Wave 3: [section-06] ───────────────────�
 
 ```
 for each task in wave:
-  - blockedBy 목록의 모든 Task가 completed인지 확인
-  - 하나라도 미완료 → 해당 Task 스킵 (다음 폴링에서 재확인)
+  - blockedBy 대상이 실제 존재하고, 해당 결과와 후속 소비 계약이 검증됐는지 확인
+  - 누락·미완료·검증 실패 → 해당 소비자만 BLOCKED로 남기고 독립 작업은 계속
+  - 완료 표시만으로 의존성을 해소하지 않음; verification-protocol.md의 후속 Wave 소비 경계 확인 적용
 ```
 
 ### 2. Teammate 생성 및 지시
 
 각 Task에 대해 teammate에게 자연어로 지시:
 
+선행 계약이 확인되어 실행 가능한 Task만 배정한다. BLOCKED Task에는 작업자를 만들지 않는다.
+
 ```
 "Section NN: {name}을 구현해줘.
 
 먼저 Task #{taskId}를 TaskGet으로 읽어서 상세 내용을 확인해.
-description에 구현해야 할 전체 내용이 있어.
+description의 섹션·참조 절대경로를 직접 읽고 AC·필수 제약을 확인해.
+파일 접근이 불가능하면 누락 입력을 Lead에게 반환해.
 
 담당 파일:
 - src/core/foundation.ts
@@ -53,6 +57,7 @@ description에 구현해야 할 전체 내용이 있어.
 5. 완료 시 Lead에게 다음만 반환할 것
    - 변경 파일
    - 실행한 테스트와 결과
+   - 담당 AC별 ID | 증거 | 상태 제안
    - 계획 이탈과 이유
    - 남은 위험
 
@@ -73,40 +78,41 @@ Lead만 conversations/{YYYY-MM-DD}-team-poseidon.md에 activity log를 기록한
 ### 4. 모니터링 루프
 
 ```
-while (wave의 모든 Task가 completed가 아님):
+while (실행 중 Task가 있거나, 선행 계약이 확인된 미배정 Task가 있음):
   1. 현재 런타임의 task/agent 상태 확인
   2. 각 Task 상태 확인:
      - in_progress: 새 출력이나 상태 전이가 있으면 계속 대기
      - 완료 보고 수신: 반환 보고와 실제 파일·AC별 테스트 증거를 대조한 뒤 Lead가 Task 상태 갱신
+     - BLOCKED: 원인과 해제 조건을 장부에 유지하고 대기 대상에서 제외
      - 장시간 상태 변화 없음:
        a. 담당 파일과 실행 로그에서 부분 진행 여부 확인
        b. 작업자에게 상태 요청 또는 현재 interrupt 기능으로 중단
        c. 범위를 줄여 새 작업자에게 1회 재위임
   3. permission mode나 sandbox를 자동 완화하지 않음
+  4. 결과 검증 후 준비된 독립 Task를 배정; Wave 번호만으로 실행을 막지 않음
+실행 가능한 Task가 더 없으면 루프 종료. 남은 BLOCKED는 완료로 바꾸지 않고 미완료 보고.
 ```
 
-### 5. Wave 완료 처리
+### 5. Wave 결과 처리
 
-모든 Task가 completed되면:
+작업자 결과를 수집하면:
 
 1. **결과 수집**: 각 섹션에서 생성/수정된 파일 목록 확인
-2. **Wave 게이트**: [SKILL.md](../SKILL.md)의 Step 5 코드리뷰와 Step 5A 트립와이어 판정을 수행. 계속 조건을 만족한 뒤 다음 Wave를 배정합니다.
+2. **Wave 게이트**: [verification-protocol.md](verification-protocol.md)의 후속 Wave 소비 경계 확인과 [SKILL.md](../SKILL.md) Step 5A 트립와이어 판정을 수행. 의존성이 풀린 작업만 배정하고, 최종 전체 코드 리뷰는 모든 Wave 이후 Step 5에서 한 번 수행합니다.
 3. **선행 컨텍스트 준비**: 다음 Wave의 teammate에게 전달할 정보 구성
    - 이번 Wave에서 생성된 파일 경로
-   - 주요 export/interface/type 정보 (파일 헤드 읽기)
+   - 소비자가 사용할 export/interface/type의 실제 계약과 관련 검증 증거
 4. **로그 출력**:
    ```
-   Wave {N} 완료: {M}개 섹션 성공
+   Wave {N} 결과: {M}개 섹션 성공, {B}개 BLOCKED
    생성된 파일: {file_count}개
    다음 Wave: {next_wave_sections}
    ```
 5. **컨텍스트 체크 (Wave 전환 시 필수)**:
    - 남은 Wave 수 대비 현재 대화 길이를 판단
-   - 대화가 매우 길어졌다면 (응답이 느려지거나, compact가 이미 실행되었거나):
-     - 현재까지 결과를 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 저장
-     - 실행 중 작업자를 현재 런타임의 정상 종료/interrupt 절차로 중단
-     - `zeus-state.json` 또는 핸드오프 파일에 "Wave {N+1}부터 재개" 기록
-     - 사용자에게 "새 세션에서 `/agent-team`을 다시 실행하면 Wave {N+1}부터 재개됩니다" 안내
+   - Wave 전환·수정 재시도·압축 전에는 같은 activity log의 실행 식별, task/worker 상태, 검증 증거 위치, 남은 재시도와 다음 행동을 갱신
+   - 압축 후에는 [verification-protocol.md](verification-protocol.md)의 재개 절차로 현재 런타임 작업을 이어감. 압축됐다는 이유만으로 작업자를 종료하거나 완료 작업을 재생성하지 않음
+   - 실제 새 세션 인계가 필요하면 진행 중 작업을 정상 중단하고 같은 로그의 절대경로와 실행 ID를 핸드오프에 연결. 제우스가 관리 중인 경우에만 기존 `zeus-state.json`도 갱신
    - 여유가 있고 Wave 게이트의 계속 조건을 만족하면 다음 Wave로 진행
 
 ## 선행 섹션 컨텍스트 전달
@@ -142,7 +148,7 @@ Lead는 실패 명령·출력·부분 변경을 확인해 구현 결함과 환�
 | teammate 에러 발생 | 에러와 부분 변경 확인 → 같은 담당자에게 후속 수정 배정. 역할·컨텍스트 문제로 교체가 필요하면 같은 소유 범위로 1회 재위임 |
 | 재시도 후에도 실패 | 남은 동일 실패 예산이 있으면 메인 순차 실행, 소진했으면 추가 실행 없이 미완료 보고 |
 | 파일 충돌 감지 | Lead가 소유권 기준점 대비 변경 목록(verification-protocol.md 3단계)으로 확인 → merge 또는 사용자 판단 요청 |
-| Wave 전체 실패 | 이후 Wave도 중단, 실행 중 작업자를 정상 종료한 뒤 사용자에게 보고 |
+| Wave 전체 실패 | 실패 결과에 의존하는 작업은 BLOCKED. 다른 준비된 독립 작업은 계속; 실행 가능한 작업이 없거나 공통 안전 조건이 깨졌으면 정상 중단 후 미완료 보고 |
 | 작업 완료 또는 중단 | 실행 중 작업자만 정상 종료/interrupt하고 런타임 상태 디렉터리는 수동 삭제하지 않음 |
 
 ## CLI별 실행 형식

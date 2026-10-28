@@ -106,10 +106,8 @@ await new Promise(r => setTimeout(r, 200));   // Then: wait for timed behavior
 2. Based on known timing (not guessing)
 3. Comment explaining WHY
 
-## Real-World Impact
+## Verification
 
-From debugging session (2025-10-03):
-- Fixed 15 flaky tests across 3 files
-- Pass rate: 60% → 100%
-- Execution time: 40% faster
-- No more race conditions
+Verify the intended condition, timeout path, and the execution conditions that originally
+failed. If comparing reliability or duration, record the same code/environment and the
+actual runs; a passing run alone does not demonstrate that all races are eliminated.

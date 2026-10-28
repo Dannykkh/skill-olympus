@@ -129,7 +129,7 @@ PM: 허용된 범위에서 진행하고 결정 근거를 activity log에 기록
 8. 답에 따라 아키텍처가 바뀌는 질문이 있으면 가장 큰 것부터 사용자에게 확인 (한 번에 한 질문)
 9. 공통 `제안 규모와 진행 판단`에 따라 단일 실행안 또는 2~3안 비교. 필요한 미정 결정만 질문
 10. 선택 근거와 남은 가정 기록 (`orchestrator_log_activity`)
-11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고 `checklist-status.md`를 모든 행 `missing`으로 만든다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
+11. **완료 기준 고정** — planning_dir에 젭마인 `checklist.md`가 있으면 그것이 완료 기준이다. 없으면 승인된 제안서의 완료 기준을 `AC-<작업단위 번호>-k` 형식으로 `<planning_dir>/checklist.md`에 고정하고 새 `checklist-status.md`만 모든 행 `missing`으로 만든다. 같은 실행의 기존 장부는 이어 쓴다 (형식: 젭마인 `references/acceptance-checklist-guide.md`)
 12. **API 규약 고정** — 작업에 HTTP API가 있으면 planning_dir의 `api-spec.md`가 있으면 그것을, 없으면 젭마인 `references/api-spec-guide.md`의 `## Conventions`(목록 페이지네이션·크기 상한·정렬 허용 컬럼, 공통 에러 형식, 이름·날짜 형식)를 이 작업의 API 규약으로 삼는다. 목록 API가 있으면 완료 기준에 페이지네이션 동작(크기 상한, 허용 안 된 정렬은 400)을 AC로 넣는다. 설계 없이 구현하는 경로라도 목록을 한 번에 다 돌려주는 API를 만들지 않기 위해서다
 13. **MCP 규약 고정** — 작업이 MCP 서버나 도구를 만들거나 바꾸면 planning_dir의 `mcp-spec.md`가 있으면 그것을, 없으면 젭마인 `references/mcp-spec-guide.md`의 `## Conventions`(노출 기본 꺼짐, 구성 대상 경유·DB 직접 접근 금지, 권한은 구성 대상 이하, annotations, 호출 한도·중복 방지, 에이전트 경유 기록, 모델용 에러 문구)를 이 작업의 MCP 규약으로 삼는다. 새로 여는 도구는 승인할 제안서에 도구 이름·구성 대상·위험 표시를 적는다 — 노출을 켜는 것은 사용자 확인 대상이기 때문이다. 프로젝트에 MCP 서버가 있는데 사람이 쓰는 기능을 새로 만들면 그 기능을 도구로 열지를 제안서에서 정하고, 열지 않으면 사유를 한 줄 적는다
 14. **트립와이어 고정** — planning_dir의 `plan.md`에 `### 트립와이어`가 있으면 그것을 쓴다. 없으면 실행안에 `구현 중` 트립와이어 1~3개를 젭마인 `references/tripwire-guide.md` 형식으로 적고 activity log의 `## Tripwires` 표로 옮긴다(`orchestrator_log_activity`). 틀리면 실행안 전체가 헛수고가 되는 가정(AI 품질, 외부 API 지원, 성능 한계)이 있으면 그것을 확인하는 **위험 가정 태스크**를 따로 두고 그 결과를 지표로 삼는다. AI 작업자의 처리 경계·평가 AC는 같은 가이드의 `처리 경계와 평가 재현성`을 따른다
@@ -221,12 +221,12 @@ PM: Phase 4 실행
 
 0. **위험 가정 먼저** — 위험 가정 태스크가 있으면 그 태스크만 먼저 생성·완료시키고, 결과로 트립와이어를 판정한 뒤 나머지 태스크를 생성한다(Worker는 의존성이 풀린 태스크를 바로 가져가므로 판정 전에는 나머지를 만들지 않는다). 수정 임계점·중단 검토 조건이면 나머지를 만들지 않고 사용자에게 보고한다(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속. 판정 절차: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`)
 1. 승인된 제안서 기반 태스크 분해
-2. `orchestrator_create_task` — prompt에 **도면 경로**, **담당 AC ID**, **API 규약**(API 작업만), **MCP 규약**(MCP 작업만) 포함, scope, depends_on 설정
+2. `orchestrator_create_task` — prompt에 제안서·도면·필요 참조의 **정확한 절대경로**, 목표·필수 제약, **담당 AC ID**, **API 규약**(API 작업만), **MCP 규약**(MCP 작업만), 검증 명령·반환 형식 포함, scope, depends_on 설정. 공유 파일을 읽을 수 있으면 원문을 반복하지 않고 접근 불가 때만 필요한 본문 전달
 3. 태스크별 담당 다이어그램 노드 명시 (어떤 노드를 구현하는 태스크인지)
 4. Worker는 계획 이탈 사유·대안·영향 파일을 완료 결과로 반환하고 공유 `implementation-notes.md`를 직접 수정하지 않음. PM만 반환 결과를 취합해 `Deviations`에 기록
 5. Provider routing (`ai_provider`는 근거가 있을 때만 지정, 미지정 시 provider-agnostic)
 6. `orchestrator_spawn_workers` — Worker 생성
-7. `orchestrator_get_progress` — 반복 모니터링
+7. `orchestrator_get_progress` — 반복 모니터링. [workpm.md](workpm.md)의 `후속 소비 계약 확인`을 PM이 수행한 뒤에만 의존 소비자 태스크를 생성한다. Worker가 completed로 바꾸면 자동 소비될 수 있으므로 검증 전에는 후속 태스크를 큐에 넣지 않으며, 누락 의존성을 지우지 않고 독립 작업만 계속
 8. 전체 완료 → **자재검사** (코드리뷰 태스크 생성)
    - `skills/code-reviewer/SKILL.md` 참조 지시
    - API가 있으면 목록 페이지네이션·크기 상한·정렬 허용 컬럼, 반복문 안 쿼리(N+1) 없음, 목록 필터·정렬 컬럼 인덱스(마이그레이션 포함), 공통 에러 형식을 확인 (규약: 젭마인 `references/api-spec-guide.md`의 `## Conventions`)
@@ -279,6 +279,8 @@ PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
 
 ## 시작 절차
 
+재개에서는 [workpm.md](workpm.md)의 `실행 식별과 재개`를 먼저 적용하고 같은 실행에 연결된 MCP task/worker 상태를 대조합니다. 완료 태스크를 다시 만들거나 소유권 기준점·재시도 횟수를 초기화하지 않습니다.
+
 1. **AI Provider 감지**
    ```
    orchestrator_detect_providers
@@ -287,7 +289,7 @@ PM: 최종 보고서 작성 (검증 결과 포함) → 사용자 전달
 
 2. **플랜 파일 로드**
    $ARGUMENTS (경로가 주어진 경우)
-   - 경로 없으면 `orchestrator_get_latest_plan`으로 자동 로드
+   - 경로 없으면 원래 실행 기록의 계획부터 확인. 연결된 계획이 없을 때만 `orchestrator_get_latest_plan` 후보를 현재 요청과 대조하며, 단순히 최신이라는 이유로 다른 계획을 재개하지 않음
    - zephermine 산출물이 있으면 [산출물 활용](#zephermine-산출물-활용) 참조
 
 3. **프로젝트 분석** — ⚠️ Worker 태스크로 위임
@@ -342,6 +344,8 @@ orchestrator_create_task({
 
 ## Activity Log 활용
 
+실행 ID·계획 절대경로·원래 소유권 기준점·진행 상태·소진 예산은 [workpm.md](workpm.md)의 `실행 식별과 재개` 계약을 따릅니다. MCP 로그와 task ID도 같은 실행에 연결하고 다른 계획의 태스크를 섞지 않습니다.
+
 ### Decision 로깅
 
 ```
@@ -365,7 +369,7 @@ orchestrator_log_activity({
 
 ### 컨텍스트 복구
 
-기억이 압축되거나 새 세션에서 이어받을 때:
+기억이 압축되거나 새 세션에서 이어받을 때 먼저 실행 식별을 확인한 뒤, 아래 결과를 실제 파일·기존 AC 증거와 대조합니다. 진행 중 태스크는 재연결하고 수정 중이면 남은 라운드부터 이어갑니다:
 ```
 orchestrator_get_activity_log({ type: "decision" })
 orchestrator_get_progress()

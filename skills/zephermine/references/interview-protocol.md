@@ -28,16 +28,21 @@ If research was done, use it to:
 ## Technique
 
 - Default to no live interview when the spec, research, and `unknowns.md` are enough to form a conservative plan
-- Ask at most 3 blocking questions total before proceeding, unless the user explicitly asks for a deeper interview
-- Ask one question at a time when the answer could change architecture, data models, security boundaries, UX flow, or rollout strategy
+- Use a shared default budget of at most 3 design questions for the planning run unless the user requests a deeper interview. Count Step 6, Soft Gates, Step 11, and resumed sessions together in the existing `interview.md`; these are not separate allowances.
+- Before asking, check the existing answers and cited research. Investigate public domain/technical facts with the bounded research or expert work items; a company-specific fact cannot be established by model agreement.
+- Carry remaining public-domain investigation to the existing Step 10 expert work when it can be resolved there; do not add a second research pass or make the user fill that gap.
+- Show a concise proposal: **finding + source → recommendation and reason → material trade-off → remaining user decision**, omitting parts that add no information. A low-impact choice within the authorized scope proceeds with a recorded assumption, without a confirmation question.
+- Ask one unresolved question at a time only when a private fact or user-owned choice could materially change the plan. Resolve its prerequisite first; do not ask downstream questions whose relevance depends on that answer.
 - Use plain text numbered questions for open-ended interview prompts
 - Use a structured question tool only for short bounded choices
-- Prefer a recommended default inside the question: "I will assume X unless you say Y"
+- Explain the recommended option and its impact inside a necessary question; keep a required answer/authorization pending rather than treating silence as acceptance
 - Don't ask obvious questions already in spec
 - Dig deeper only when answers reveal a new critical unknown
 - Summarize as `[inferred]` assumptions in `interview.md`; do not require confirmation by default
 - Prefer questions from `unknowns.md` over generic interview prompts; highest-impact unknowns come first
 - **쉬운 말로 질문하기**: 전문용어를 쓸 때는 반드시 괄호 안에 풀어서 설명을 붙여라. 사용자가 개발자가 아닐 수 있다. 초등학생도 이해할 수 있는 수준으로 질문하되, 전문성은 유지하라.
+
+The budget limits interview burden, not required authorization. At the limit, do not open another question round under a new phase name: record remaining decisions and what depends on them, continue independent planning, and report the specific input needed. A required permission still requires explicit authorization. Revisit an answered decision only when new evidence changes it; explain that change instead of asking again from scratch.
 
 ## Structured Tool Compatibility
 
@@ -46,12 +51,12 @@ If research was done, use it to:
 | 상황 | 처리 |
 |------|------|
 | 자유 답변이 필요한 질문 | 구조화 도구를 쓰지 말고 일반 텍스트로 질문 |
-| 질문이 4개 이상 | 2-3개씩 나누어 순차 질문 |
+| 후보 질문이 4개 이상 | 자료·조사로 먼저 해소하고 같은 실행의 질문 예산 안에서 차단 질문만 선택 |
 | 구조화 도구 사용 | 한 번에 최대 3개 question, 각 question은 2-3개 선택지만 사용 |
 | 다중 선택이 필요한 선택 | CLI가 명시 지원할 때만 구조화 UI를 사용. 아니면 번호 목록으로 묻고 복수 번호 답변을 받음 |
 | `Invalid tool parameters` 1회 발생 | 같은 도구 재시도 금지. 즉시 일반 텍스트 질문으로 전환 |
 
-예: "핵심 4가지를 묻습니다"는 구조화 도구 한 번으로 호출하지 않습니다. `1-2번`을 먼저 묻고 답변 후 `3-4번`을 묻거나, 일반 텍스트 번호 목록으로 한 번에 제시합니다.
+도구의 호출당 한도는 인터뷰 예산을 늘리지 않습니다. 여러 호출로 나눠 전체 질문 목록을 소진하지 않습니다.
 
 ## 질문 작성 규칙
 
@@ -122,7 +127,7 @@ Phase C 초반 `[Industry: {산업군}]`을 확정한 직후부터 **이후 모�
 - Phase C/P/S 질문 목록은 체크리스트입니다. 전부 묻지 않습니다.
 - `unknowns.md`의 Architecture-changing questions 중 Critical 항목만 우선합니다.
 - 각 Gate는 사용자 승인 절차가 아니라 `interview.md`에 남기는 요약 섹션입니다.
-- Gate에서 막는 경우는 그 결정을 틀리면 이후 설계가 크게 바뀌는 경우뿐입니다.
+- Gate에서 남은 차단 결정이 있으면 위 Technique의 권장안 형식으로 그 결정만 다룹니다. 전체 요약의 재승인을 받지 않습니다.
 - 막히지 않는 항목은 `[inferred]`로 표시하고 다음 Phase로 진행합니다.
 
 > **젭마인의 CPS = 구현 관점 CPS.**
@@ -155,10 +160,10 @@ Phase C에 가져오고 이미 답한 질문은 반복하지 않습니다. `Unva
 - **숨겨진 동기**: "이걸 만들어야겠다고 결심한 계기가 있나요? 어떤 불편이나 기회를 봤나요?"
 - **성공의 정의**: "6개월 후 '이건 정말 잘 만들었다'고 느끼려면, 어떤 상태여야 하나요?"
 - **적용 산업/분야**: "이 서비스가 어떤 분야(산업)에서 쓰이나요? (예: 의료, 금융, 교육, 물류, 제조, 이커머스, 부동산 등)"
-- **핵심 업무 프로세스**: "그 분야에서 가장 중요한 업무 흐름(프로세스)이 뭔가요? 이 서비스가 그 중 어디에 해당하나요?"
+- **핵심 업무 프로세스**: AI가 자료·도메인 조사로 업무 흐름을 먼저 제안하고, 설계를 바꾸는 회사 내부 예외만 확인
 - **이해관계자**: "이 서비스를 쓰는 사람, 관리하는 사람, 돈을 내는/결정하는 사람이 각각 누군가요?"
 - **에코시스템**: "이 서비스가 동작하려면 연결되어야 하는 다른 시스템/앱이 있나요? (결제, 지도, CRM, 기사앱, 관리자페이지 등)"
-- **기존 환경**: "이미 만들어진 코드나 시스템이 있나요? 기술 스택은 정해져 있나요?"
+- **기존 환경**: AI가 저장소·문서·설정을 먼저 확인하고, 접근할 수 없는 외부 시스템 정보만 필요 시 확인
 - **구현 범위**: "아이디어 단계인가요, MVP인가요, 기존 서비스 리뉴얼인가요?"
 
 탐색 기법:
@@ -167,7 +172,7 @@ Phase C에 가져오고 이미 답한 질문은 반복하지 않습니다. `Unva
   인터뷰 트랜스크립트에 `[Industry: {산업군}]` 태그를 명시적으로 기록.
 - 이해관계자가 여러 명이면, 각 역할별로 별도 앱/화면이 필요한지 반드시 검토하고 필요 시 Critical 질문으로 승격
 - 이해관계자 답변이 나오면 곧바로 아래 **C-R 블록**으로 넘어가 시스템 역할을 확정. 이해관계자 목록 자체는 역할 표가 아님
-- 에코시스템 질문에서 "없다"는 답이 나와도, 업무 흐름상 필요한 연동을 되물어 확인
+- 기존 답과 조사 근거가 충돌할 때만 해당 연동의 필요성·권장안·영향을 설명하고 남은 결정을 확인
 
 #### C-R. 시스템 역할과 권한 (Role Inventory)
 
@@ -183,7 +188,7 @@ Phase C에 가져오고 이미 답한 질문은 반복하지 않습니다. `Unva
 `{직책}`·`{특정 버튼}`·`{도메인 사례}`는 위 어휘 출처 우선순위로 채웁니다. 채우지 못한 채
 `{역할}`,`{리소스}` 같은 자리표시자를 그대로 사용자에게 보여주지 않습니다.
 
-**화면 분리 답변은 Critical 질문으로 승격합니다.** 역할별 별도 화면이 필요하면 섹션 수와 구현 범위가 크게 달라지므로, 추론으로 넘기지 않고 확인합니다.
+**화면 분리는 범위를 바꾸는 설계 결정입니다.** 기존 답·화면·역할별 업무로 판단하고 공용/별도 화면의 권장안과 근거를 제시합니다. 이미 정해진 구성을 재승인받지 않으며, 회사 내부 사용 방식이나 범위 선택이 미정일 때만 Critical 질문으로 남깁니다.
 
 묻지 않고 적용하는 기본값 (`[inferred]`로 표시하고 계속 진행):
 
@@ -202,8 +207,8 @@ Phase C에 가져오고 이미 답한 질문은 반복하지 않습니다. `Unva
 Phase C 체크가 끝나면, 파악한 내용을 **구조화된 요약**으로 정리하여 `interview.md`에 기록합니다. 사용자 확인은 기본값이 아닙니다.
 
 ```
-Plain confirmation question only when the premise is blocking:
-"지금까지 파악한 구현 전제를 정리했습니다:
+interview.md 기록 예시 (전체 요약의 사용자 승인을 요구하지 않음):
+지금까지 파악한 구현 전제:
 
 📌 목표: {궁극적 목표}
 📌 산업: {산업/분야} | 구현 범위: {MVP/풀/리뉴얼}
@@ -230,12 +235,11 @@ Plain confirmation question only when the premise is blocking:
 
 📌 기존 환경: {기술 스택/기존 코드 요약}
 
-이 전제가 맞나요? 빠진 게 있으면 알려주세요.
-(수정할 부분이 있으면 말씀해주세요 / 맞으면 '확인')"
+미해결 결정: {없음 | 근거로 해결되지 않은 항목과 그에 의존하는 설계}
 ```
 
 → 차단 이슈가 아니면 `[inferred]` 표시 후 Phase P로 진행
-→ 차단 이슈라면 한 질문만 묻고, 답을 받은 뒤 진행
+→ 차단 이슈는 Technique의 공유 예산·권장안 형식으로 해당 결정만 확인. 답이 없으면 그에 의존하는 설계를 보류
 
 ---
 
@@ -248,23 +252,23 @@ Plain confirmation question only when the premise is blocking:
 - **고객 pain point**: "고객(사용자)이 지금 가장 불편해하는 구체적인 상황을 묘사해주세요"
 - **비즈니스 pain point**: "이 문제 때문에 비즈니스에서 잃고 있는 것은? (비용, 시간, 기회)"
 - **현재 대안의 한계**: "지금 고객이 이 문제를 어떻게 해결하고 있고, 뭐가 부족한가요?"
-- **기술적 난제**: "만들면서 가장 어려울 것 같은 부분이 있나요? (실시간 처리, 복잡한 로직, 대용량 등)"
-- **연동 리스크**: "기존에 만들어둔 시스템과 잘 맞물리는지(호환성) 걱정되는 부분이 있나요?"
+- **기술적 난제**: AI가 코드·요구사항·조사로 실시간 처리, 복잡한 로직, 대용량 등의 위험과 해결안을 도출
+- **연동 리스크**: AI가 기존 시스템의 계약·실행 근거를 확인하고, 공개 자료나 접근 가능한 코드에 없는 내부 제약만 필요 시 확인
 - **팀/일정 제약**: "마감이 있나요? 개발 인원이나 기술 역량에 제한이 있나요?"
 
 탐색 기법:
-- **5 Whys**: 첫 답변에서 "왜 그게 중요한가요?"를 2~3번 더 파고들기
-- 사용자가 "그냥 필요해서"라고 답하면, 구체적 시나리오로 유도: "어떤 상황에서 가장 절실하게 필요한가요?"
+- 원인 분석은 코드·로그·조사와 기존 답으로 먼저 수행. 새 차단 결정이 발견될 때만 그 근거를 설명하고 질문
+- 목표가 추상적이면 AI가 구체적 사용 시나리오와 성공 기준을 제안하고, 방향을 바꾸는 미확인 전제만 확인
 - 감정 단어에 주목 — "답답한", "느린", "불안한" 등이 나오면 거기가 핵심 pain point
-- 기술적 난제가 "없다"는 답이 나와도, Phase C의 에코시스템을 보며 연동 복잡도를 되물어 확인
+- 기술적 난제와 연동 복잡도는 AI가 조사·분석해 제안에 반영. 사용자에게 일반 기술 지식을 설명하도록 요구하지 않음
 
 #### Soft Gate 2: 핵심 문제 요약
 
 Phase P 체크가 끝나면, 핵심 문제를 **1~3개로 수렴**하여 `interview.md`에 기록합니다. 사용자 확인은 기본값이 아닙니다.
 
 ```
-Plain confirmation question only when the problem priority is blocking:
-"인터뷰를 통해 파악한 핵심 문제입니다:
+interview.md 기록 예시 (전체 요약의 사용자 승인을 요구하지 않음):
+자료·조사·기존 답으로 파악한 핵심 문제:
 
 | # | 핵심 문제 | 영향 | 우선순위 |
 |---|-----------|------|----------|
@@ -272,12 +276,11 @@ Plain confirmation question only when the problem priority is blocking:
 | P2 | {문제2} | {영향} | 🟠 중요 |
 | P3 | {문제3} | {영향} | 🟡 있으면 좋음 |
 
-이 문제 정의와 우선순위가 맞나요?
-(수정/추가/삭제할 문제가 있으면 말씀해주세요 / 맞으면 '확인')"
+미해결 결정: {없음 | 사용자 목표 사이의 충돌과 권장 우선순위}
 ```
 
 → 차단 이슈가 아니면 `[inferred]` 표시 후 Phase S로 진행
-→ 차단 이슈라면 한 질문만 묻고, 답을 받은 뒤 진행
+→ 차단 이슈는 Technique의 공유 예산·권장안 형식으로 해당 결정만 확인. 답이 없으면 그에 의존하는 설계를 보류
 
 ---
 
@@ -299,11 +302,11 @@ Phase S는 프로젝트 특성에 따라 해당하는 카테고리만 선택적�
 - **안티 패턴**: "절대 이런 디자인은 싫다, 하는 예시가 있나요?"
 
 탐색 기법:
-- 사용자가 "잘 모르겠다"면, 2-3개 대비되는 사이트/스타일을 제시하고 선택하게 유도
-- "예쁜 것"이라는 답변이 나오면, "어떤 종류의 예쁨인가요? Apple처럼 미니멀한 예쁨? 혹은 Dribbble에서 볼 수 있는 화려한 예쁨?"으로 구체화
+- 사용자가 "잘 모르겠다"거나 선호가 추상적이면 기존 디자인·사용자 과업·벤치마크를 근거로 한 방향을 권장하고 제약을 설명. 선택을 반복 요구하지 않음
 - 벤치마킹 사이트가 있으면 URL을 기록해 두고, 이후 spec에 반영
 
 #### S-2. 기술적 구현 (Technical Implementation)
+다음 항목은 AI가 조사해 권장안을 만드는 기준입니다. 사용자에게 설계 근거나 일반 기술 해법을 답하게 하지 않습니다.
 - 구조(아키텍처)를 왜 이렇게 잡았는지, 다른 방법도 고려했는지
 - 사용자가 늘어나도 괜찮을지(확장성), 속도 목표(성능)
 - 다른 서비스와 데이터를 주고받을 일(외부 연동)이 있는지, 데이터 양은 얼마나 되는지
@@ -334,8 +337,8 @@ Phase S는 프로젝트 특성에 따라 해당하는 카테고리만 선택적�
 Phase S 체크가 끝나면, 솔루션 방향을 **요약**하여 `interview.md`에 기록합니다. 사용자 확인은 기본값이 아닙니다.
 
 ```
-Plain confirmation question only when the solution direction is blocking:
-"솔루션 방향을 정리했습니다:
+interview.md 기록 예시 (전체 요약의 사용자 승인을 요구하지 않음):
+권장 솔루션 방향과 근거:
 
 📌 차별화: {차별화 포인트}
 📌 디자인 톤: {디자인 비전 요약}
@@ -343,12 +346,11 @@ Plain confirmation question only when the solution direction is blocking:
 📌 MVP 범위: {포함/제외 기능}
 📌 주요 트레이드오프: {선택한 방향 vs 포기한 것}
 
-이 방향으로 설계를 진행할까요?
-(수정할 부분이 있으면 말씀해주세요 / 맞으면 '확인')"
+미해결 결정: {없음 | 권장안의 전제 중 사용자 판단이 필요한 항목}
 ```
 
 → 차단 이슈가 아니면 `[inferred]` 표시 후 인터뷰 종료, 다음 스텝으로 진행
-→ 차단 이슈라면 한 질문만 묻고, 답을 받은 뒤 진행
+→ 차단 이슈는 Technique의 공유 예산·권장안 형식으로 해당 결정만 확인. 답이 없으면 그에 의존하는 설계를 보류
 
 ---
 
@@ -356,15 +358,11 @@ Plain confirmation question only when the solution direction is blocking:
 
 **Critical blocker가 없으면 인터뷰를 시작하지 않고 종료할 수 있습니다.**
 
-인터뷰를 종료하고 다음 단계로 진행하는 조건:
-1. `unknowns.md`에 Critical architecture-changing question이 없음
-2. Critical 질문을 최대 3개까지 물었고 답을 받음
-3. 사용자가 "모르겠다", "알아서 해줘", "추천대로"라고 답함
-4. 남은 질문이 Plan의 Open Questions에 남겨도 되는 비차단 항목임
-
-사용자가 대부분의 질문에 "모르겠다" 또는 "알아서 해줘"로 답하면:
-- 보수적 기본값을 선택하고 `[inferred]`로 표시
-- 사용자가 직접 확인을 요청하지 않는 한 멈추지 않음
+자료와 기존 답으로 충분하거나, 질문 예산에 도달했거나, 사용자가 "모르겠다"/"알아서 해줘"라고 하면 일반 인터뷰를 끝냅니다.
+- 기술적·되돌리기 쉬운 설계 판단은 근거 있는 권장안으로 진행하고 미확인 가정은 `[inferred]`로 표시합니다.
+- 회사 내부의 핵심 정책·필수 입력을 대신 지어내지 않습니다. 해결되지 않은 결정과 그에 의존하는 부분만 보류하고, 독립된 설계는 계속합니다.
+- "알아서"는 설계 판단의 위임입니다. 기존 승인 범위를 넘는 외부 실행이나 필수 권한의 승인을 대신하지 않으며, 미응답도 승인으로 세지 않습니다.
+- 남은 비차단 항목은 기존 Open Questions에 기록합니다. 새 인터뷰 문서나 별도 승인 장부를 만들지 않습니다.
 
 ## Saving the Transcript
 
@@ -421,4 +419,4 @@ CPS Phase 구분과 Soft Gate 결과를 포함하여 저장:
 - MVP: {범위}
 ```
 
-Questions are numbered sequentially across all phases (Q1, Q2, ... Qn).
+Questions are numbered sequentially across all phases and resume (Q1, Q2, ... Qn). The template's sections are storage slots, not a requirement to ask a question in every phase. Keep `Questions Asked`, existing answers, and unresolved dependent decisions here so Step 11 reuses them.

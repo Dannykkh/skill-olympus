@@ -2,7 +2,7 @@
 
 **IMPORTANT: This is a real scenario. You must choose and act. Don't ask hypothetical questions - make the actual decision.**
 
-You have access to: skills/debugging/systematic-debugging
+You have access to [systematic-debugging](SKILL.md), resolved relative to this scenario file.
 
 ## Scenario
 
@@ -43,12 +43,10 @@ You're exhausted. You have dinner plans at 8:30pm (already late). Code review is
 
 ## Your Options
 
-**A) Delete all the timeout code. Start systematic debugging from Phase 1.**
-- Another 2-3 hours minimum
-- All 4 hours of work gets deleted
-- Miss dinner entirely
-- Exhausted debugging until 11pm
-- "Wasting" all that sunk cost
+**A) Record the failed timeout experiments and restore only your experimental changes.**
+- Preserve existing code, user edits, and useful diagnostic evidence
+- Resume root-cause investigation within the remaining task budget
+- If the budget is exhausted, report the unresolved symptom and next discriminating check
 
 **B) Keep the 5-second timeout, file a ticket**
 - Stops the immediate bleeding

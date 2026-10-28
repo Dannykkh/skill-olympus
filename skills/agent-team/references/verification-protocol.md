@@ -1,6 +1,19 @@
 # Verification Protocol
 
-모든 Wave 완료 후 결과를 검증하는 프로토콜. 0단계만 Wave 1 시작 전에 실행합니다.
+후속 Wave가 소비할 계약을 먼저 확인하고, 모든 Wave 완료 후 전체 결과를 검증하는 프로토콜입니다. 0단계는 새 실행의 Wave 1 시작 전에만 수행합니다.
+
+## 실행 식별과 재개
+
+Lead는 기존 activity log(`conversations/{YYYY-MM-DD}-team-poseidon.md`)의 실행별 절에 다음을 연결합니다. 같은 날짜에 여러 실행이 있어도 기록을 덮어쓰거나 별도 전역 장부를 만들지 않습니다.
+
+- 실행 ID(시작 시각 또는 네이티브 run ID), 프로젝트 루트, 계획·sections/index.md의 절대경로. 자유 모드는 목표와 입력 경로를 기록
+- activity log 자체의 절대경로, 원래 `Ownership baseline`의 worktree·index SHA와 기존 untracked 목록
+- Wave·task·worker 식별자와 담당 파일, 완료/진행/차단 상태, 다음 행동. AC 증거는 기존 `checklist-status.md`를 연결
+- 실패별 소진한 재시도·남은 상한, 실패 명령/출력과 직전 수정·재검토 상태
+
+재개 시 이 기록을 먼저 읽고 현재 요청의 계획·실행 ID와 대조합니다. 다른 계획의 기록이나 단순히 최신인 로그를 이어 쓰지 않습니다. 같은 실행이면 날짜가 바뀌어도 원래 로그·기준점·AC 장부·재시도 예산을 유지합니다.
+
+현재 런타임의 task/worker 상태와 실제 파일·검증 증거를 대조해 완료 작업은 재배정하지 않고 진행 중 작업은 재연결합니다. 관련 코드가 바뀌어 증거가 무효이면 해당 AC만 `weak`로 내려 재검증하고, 수정 중이던 작업은 남은 라운드에서 이어갑니다. 상태 조회가 불가하면 부분 변경과 로그부터 확인해 같은 파일의 중복 작업을 피합니다. 원래 기준점을 복구할 수 없으면 소유권 검증을 `NOT RUN`으로 남기며 현재 트리를 새 시작점으로 삼아 기존 변경을 숨기지 않습니다.
 
 ## 0단계: 소유권 기준점 기록 (Wave 1 시작 전)
 
@@ -10,12 +23,24 @@
 ```bash
 git stash create                            # 출력된 SHA = 기준점 (작업 트리가 깨끗하면 빈 출력 → 아래 HEAD 사용)
 git rev-parse HEAD                          # 빈 출력일 때의 기준점
-git ls-files --others --exclude-standard    # 이미 있던 새 파일(untracked) 목록
+git ls-files --others --exclude-standard -z # 이미 있던 새 파일(untracked) 목록
 ```
 
 - `git stash create`는 작업 트리를 건드리지 않고, 이미 있던 미커밋 수정을 포함한 상태를 커밋 객체로만 만듭니다. 그래서 사용자가 작업 전부터 고치던 파일이 오탐되지 않습니다.
-- 기준점 SHA와 기존 untracked 목록은 Lead가 activity log(`conversations/{YYYY-MM-DD}-team-poseidon.md`)의 `## Ownership baseline`에 적습니다. 컨텍스트가 압축돼도 3단계에서 다시 읽기 위해서입니다.
+- worktree 기준점 SHA와 별도로 index 기준점도 기록합니다. stash 객체가 있으면 `git rev-parse <stash-sha>^2`가 시작 index이고, 깨끗한 시작이면 시작 HEAD가 두 기준점입니다. 두 기준점·기존 untracked 목록은 Lead가 activity log(`conversations/{YYYY-MM-DD}-team-poseidon.md`)의 실행 ID에 연결한 `Ownership baseline`에 적습니다. 재개 시 새로 만들지 않고 이 원래 값을 3단계에서 다시 읽습니다.
+- 기존 untracked를 수정할 예정이면 해당 파일의 시작 내용/해시도 보존합니다. 이름만 기록한 파일의 변경은 비교 근거가 없으면 `UNVERIFIED`입니다.
 - git 저장소가 아니면 `ownership baseline: NOT APPLICABLE (no git)`으로 적고, 3단계는 작업자가 반환한 변경 파일 목록만으로 수행합니다.
+
+## 후속 Wave 소비 경계 확인
+
+작업자 결과를 받은 뒤 다음 의존 작업을 배정하기 전에 적용합니다. 전체 코드 리뷰나 전체 테스트 스위트를 Wave마다 추가하는 절차가 아닙니다.
+
+1. 의존성 그래프에서 다음 작업이 소비할 선행 산출물(파일·export·스키마·설정·도면 계약)과 관련 AC ID를 고릅니다. 대상 자체가 누락되면 해당 소비자를 `BLOCKED`로 남깁니다.
+2. 아래 1~3단계의 파일·AC 증거·소유권 대조를 그 산출물에 한정하고, 4.5단계 방식으로 실제 producer와 consumer가 기대하는 계약을 함께 읽습니다. consumer 미구현 시 섹션/API 계약을 사용합니다. 파일 존재나 task의 completed 표시는 계약 충족 증거를 대신하지 않습니다.
+3. 담당 작업자가 반환한 관련 검증 명령·결과가 현재 산출물을 다루는지 확인합니다. 유효한 증거는 재사용하고, 변경·실패·미해결 의심이 있을 때만 해당 검사를 실행합니다. 미실행은 `NOT RUN`이며 PASS로 올리지 않습니다.
+4. 불일치·증거 부족은 해당 소비자와 그 후속 작업만 보류하고 선행 담당자가 기존 재시도 예산 안에서 수정합니다. 영향 없는 작업은 계속합니다. Lead는 기존 activity log와 AC 장부에 경계·판정·근거·다음 행동을 기록합니다.
+
+경계가 없으면 이 확인은 `NOT APPLICABLE`입니다. Wave 통과가 최종 완료를 뜻하지 않으며, 모든 Wave 이후 최종 코드 리뷰와 아래 5단계 통합 게이트는 유지합니다.
 
 ## 검증 절차
 
@@ -57,10 +82,11 @@ for each section:
 
 0단계 기준점 대비 실제로 바뀐 파일을 구한 뒤, 섹션 소유와 작업자 보고에 대조합니다.
 
-**변경 파일 = 아래 둘의 합집합:**
+**변경 파일 = 아래 셋의 합집합(경로는 NUL 구분으로 해석):**
 ```bash
-git diff --name-only {기준점 SHA}             # 추적 파일: 커밋 여부와 무관하게 기준점 이후 바뀐 파일
-git ls-files --others --exclude-standard     # 새 파일 — 0단계 기존 untracked 목록에 있던 것은 제외
+git diff --name-only -z {worktree 기준점 SHA} # 작업 트리 기준점 이후 변경
+git diff --cached --name-only -z {index 기준점 SHA} # index만 바뀌고 작업 트리는 원복된 변경도 포함
+git ls-files --others --exclude-standard -z  # 새 파일 — 0단계 기존 untracked 목록에 있던 것은 제외
 ```
 
 **대조:**
@@ -80,7 +106,8 @@ for each changed_file:
 ```
 
 - `UNOWNED`·`UNREPORTED`는 해당 Wave 작업자의 반환 내용과 diff를 보고 원인을 판단합니다. 근거 없는 변경이면 revert를 지시하고, 필요한 변경이면 섹션 소유에 추가한 뒤 activity log에 기록합니다.
-- 기존 untracked 파일을 작업 중에 수정한 경우는 이 방식으로 잡히지 않습니다. 해당 파일이 있으면 0단계에서 이름을 적어 두고 3단계에서 직접 diff를 확인합니다.
+- 두 patch의 버전을 구분해 검토합니다. index 변경도 조립 지점의 추가 줄뿐인지 따로 확인합니다. 재개 시 index 기준점은 원래 stash 객체의 두 번째 부모에서 복구할 수 있지만, 근거가 없으면 현재 HEAD를 대신 쓰지 않고 `UNVERIFIED`로 남깁니다.
+- 기존 untracked를 수정했다면 0단계에 보존한 내용과 직접 비교합니다. 이름만 있는 경우 변경 구간 검증은 `UNVERIFIED`입니다.
 
 ### 4단계: 도면 노드 검증 (flow-diagrams 존재 시)
 
@@ -193,11 +220,11 @@ for each section with diagram:
    - Acceptance Criteria 2개 미충족
    ```
 
-2. **재시도 Task 생성:**
+2. **기존 담당자에게 수정 재지시:** 기존 task/worker를 이어 쓰고 실패 근거·원본 경로·남은 재시도 예산을 전달합니다. 런타임상 새 Task가 필요한 경우에만 기존 ID와 실패 횟수를 연결해 생성합니다:
    ```
    TaskCreate({
      subject: "Section 04: API (재시도)",
-     description: "[원본 section 내용] + [실패 피드백 추가]",
+     description: "[섹션 절대경로·AC·소유권] + [실패 명령/출력·수정 범위] + [원래 Task ID·남은 재시도]",
      activeForm: "Section 04 재구현 중"
    })
    ```

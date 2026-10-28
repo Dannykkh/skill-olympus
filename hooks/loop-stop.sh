@@ -106,6 +106,18 @@ if [ $JQ_EXIT -ne 0 ]; then
     exit 0
 fi
 
+# 주차 종료는 성공과 구분한다. 본문에서 마커를 언급한 것만으로 멈추지 않는다.
+# Only the first nonblank line can be a terminal report heading.
+FIRST_REPORT_LINE=""
+while IFS= read -r FIRST_REPORT_LINE; do
+    [[ "$FIRST_REPORT_LINE" =~ ^[[:space:]]*$ ]] || break
+done <<< "$LAST_OUTPUT"
+if printf '%s\n' "$FIRST_REPORT_LINE" | grep -qiE '^[[:space:]#=*═_-]*Chronos[[:blank:]]+Blocked([[:space:]:=*_═—-]|$)'; then
+    rm "$STATE_FILE"
+    jq -n --arg msg "Chronos Blocked: unresolved requirements are parked; loop stopped incomplete (not success). See the Owner Decision Brief." '{systemMessage: $msg}'
+    exit 0
+fi
+
 # 완료 감지 1: AI가 'Chronos Complete' 마커 출력
 # 명시적 마커만 검사하므로 tail-500 가드는 불필요 (전체 출력 검사).
 # 가드가 있으면 마커 뒤에 긴 설명/표/태그가 붙을 때 미탐(끝 500자 밖으로 밀림)이 발생.
@@ -152,10 +164,10 @@ mv "$TEMP_FILE" "$STATE_FILE"
 
 # 시스템 메시지 구성
 MAX_LABEL=$([ "$MAX_ITERATIONS" -gt 0 ] && echo "${MAX_ITERATIONS}회" || echo "무제한")
-COMMON_MSG="Chronos loop ${NEXT_ITERATION}/${MAX_LABEL} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 막힌 이슈는 사유와 함께 로그에 주차(Parked:)하고 다음 이슈로 넘어가세요 — 주차된 이슈는 할 작업으로 세지 않습니다. 더 이상 할 작업이 없으면 반드시 'Chronos Complete'를 포함한 최종 보고(주차 이슈마다 Owner Decision Brief)를 출력하세요."
+COMMON_MSG="Chronos loop ${NEXT_ITERATION}/${MAX_LABEL} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 막힌 이슈는 사유와 함께 로그에 주차(Parked:)하고 다음 이슈로 넘어가세요 — 주차된 이슈는 할 작업으로 세지 않습니다. 모든 요구사항이 proved이고 검증 게이트가 PASS일 때만 'Chronos Complete'로 보고하세요. 실행할 이슈가 없고 미증명 요구사항이 주차되어 있으면 첫 줄에 'Chronos Blocked'를 쓰고 주차 이슈마다 Owner Decision Brief를 남기세요. 주차는 미완료이며 완료 promise를 출력하지 마세요."
 
 if [ "$COMPLETION_PROMISE" != "null" ] && [ -n "$COMPLETION_PROMISE" ]; then
-    SYSTEM_MSG="${COMMON_MSG} 또는 완료 조건 달성 시(검증 PASS를 실제로 확인한 후에만): <promise>$COMPLETION_PROMISE</promise>"
+    SYSTEM_MSG="${COMMON_MSG} 완료 조건 달성 시(모든 요구사항 proved와 검증 PASS를 실제로 확인한 후에만): <promise>$COMPLETION_PROMISE</promise>"
 else
     SYSTEM_MSG="$COMMON_MSG"
 fi

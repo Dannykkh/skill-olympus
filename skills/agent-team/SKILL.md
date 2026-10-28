@@ -128,10 +128,12 @@ teammate가 "완료"라고 보고해도 Lead가 직접 체크리스트를 대조
 이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
 모듈 이름을 slash command로 실행하지 않습니다.
 
-code-reviewer를 읽지 못하면 현재 CLI의 네이티브 review 1회와 아래 bounded 검수 항목만
-실행하고 `policy module: NOT RUN (native fallback)` 및 게이트 `DEGRADED`를 기록합니다.
-네이티브 review도 없으면 읽기 전용 작업자가 같은 bounded 항목을 점검하되 source module PASS를
-주장하지 않습니다. MCP 분기를 선택했는데 orchestrator/MCP를 읽지 못하면 편집을 직렬화할 수 있는 범위만 메인 순차
+code-reviewer를 읽지 못해도 원래 worktree·index 기준점과 기존 untracked 제외를 유지합니다.
+네이티브 review가 같은 범위를 표현하면 1회 실행하고 아래 bounded 항목을 보강합니다.
+표현할 수 없거나 엔진이 없으면 `native review: NOT RUN`으로 남기고 읽기 전용 작업자가 같은
+patch·파일 범위의 bounded 항목을 점검합니다(위임 불가면 메인 순차 검토).
+모든 모듈 누락 경로는 `policy module: NOT RUN (bounded fallback)`, 게이트 `DEGRADED`이며
+source module PASS를 주장하지 않습니다. MCP 분기를 선택했는데 orchestrator/MCP를 읽지 못하면 편집을 직렬화할 수 있는 범위만 메인 순차
 경로로 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock이 필수이면 해당 Wave는 `BLOCKED`입니다.
 누락된 모듈을 조용히 PASS 처리하지 않습니다.
 
@@ -164,7 +166,7 @@ Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니
 |-----------|----------|-----------|
 | **Wave 0: 도메인 분석** | 아키텍처 조사, 기술 스택 평가, DB 스키마 설계 | 높은 추론 강도 |
 | **Wave N: 구현** | 기능 코딩, 파일 생성, 테스트 작성 | 균형형 실행 |
-| **Wave N: 자재검사** | 네이티브 읽기 전용 리뷰 + code-reviewer 정책 | 높은 추론 강도 |
+| **최종 자재검사** | 네이티브 읽기 전용 리뷰 + code-reviewer 정책 | 높은 추론 강도 |
 | **Wave N: 테스트 실행** | 테스트 러너, 린트, 타입 체크 | 빠른 실행 |
 | **최종 검증** | AC 대조, 공정 점검 | 높은 추론 강도 |
 
@@ -172,10 +174,10 @@ Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니
 
 ### Wave 완료 후 테스트 검증 (필수)
 
-각 Wave 구현 완료 시, Lead는 테스트 팀원을 투입한다:
+각 Wave 구현 완료 시, 담당 작업자의 관련 테스트 증거를 Lead가 확인한다. 별도 환경이나 독립 검증이 필요한 경우에만 검증 작업자를 배정한다:
 
-1. **기존 테스트 실행**: `npm test`, `pytest`, `go test` 등 프로젝트 테스트 프레임워크 실행
-2. **린트/타입 체크**: `tsc --noEmit`, `eslint`, `ruff check` 등
+1. **기존 관련 테스트**: 변경 및 후속 Wave가 소비할 계약을 다루는 테스트 결과 확인. 같은 코드에 유효한 증거가 있으면 재사용
+2. **린트/타입 체크**: 변경 범위에 필요한 프로젝트 검사 실행. 전체 테스트 스위트는 모든 Wave가 합쳐진 최종 통합 게이트에서 실행
 3. **실패 시**: 실패 명령·출력·부분 변경으로 원인 판별 → 구현 결함 수정·환경 복구 또는 아래 실행 방식 비교 → 재실행 (최대 3회; 더 작은 기존 상한 우선)
 4. **반복 실패**: 근거를 다시 확인하고 남은 상한 안에서만 재시도. 소진하면 미완료 보고하며 작업자 교체로 횟수를 초기화하지 않음
 
@@ -203,7 +205,7 @@ Phase 0 시작 시 제품명보다 현재 도구 레지스트리를 우선합니
 - 읽기 전용 조사는 `research`, 구현은 메인 또는 쓰기 도구를 명시한 사용자 정의 서브에이전트에 맡깁니다.
 - 공식 `invoke_subagent`와 필요 시 `define_subagent`를 사용합니다. 메시지·상태·중단 기능은 현재
   런타임이 실제 노출한 도구만 사용하고 이름을 추측하지 않습니다.
-- 구현 전문성은 전역 페르소나가 아니라 섹션 내용·프로젝트 설정·인접 코드·테스트를 위임 프롬프트에 임베딩해 전달합니다. 병렬 실행이 불가하면 Wave 내 순차 위임으로 축소합니다.
+- 구현 근거는 읽을 수 있는 섹션·프로젝트 설정·인접 코드·테스트의 정확한 경로와 필수 계약으로 전달합니다. 병렬 실행이 불가하면 Wave 내 순차 위임으로 축소합니다.
 
 ### Grok 모드
 - Grok Build는 네이티브 `general-purpose`, `explore`, `plan` 서브에이전트를 제공. Olympus source-only 프롬프트는 기본 설치하지 않음
@@ -287,7 +289,7 @@ teammate 생성 시 이 팀명을 사용하세요.
 
 ### Pre-Step: 런타임 상태 확인
 
-현재 세션에 남아 있는 실행 중 작업자와 task를 조회합니다. 이전 세션의 팀 디렉터리를 수동 삭제하거나 정리 명령을 추측해 호출하지 않습니다. 재사용 가능한 작업자가 없으면 새 작업자를 만들고, 런타임 상태 조회가 불가능하면 현재 Wave ledger를 기준으로 진행합니다.
+먼저 [verification-protocol.md](references/verification-protocol.md)의 `실행 식별과 재개`에 따라 기존 activity log와 계획을 연결합니다. 현재 세션의 task·작업자 상태와 실제 파일·검증 증거를 대조한 뒤 미완료 작업만 배정합니다. 이전 세션의 팀 디렉터리를 수동 삭제하거나 정리 명령을 추측해 호출하지 않습니다. 런타임 상태를 조회할 수 없으면 기록과 파일로 확인하며, 같은 파일의 진행 중 작업을 중복 배정하지 않습니다.
 
 ### Step 0: 산출물 검토 (PM 게이트)
 
@@ -352,54 +354,55 @@ Wave Plan 출력 후 **확인 없이 바로 Step 3으로 진행** (사용자가 
 See [teammate-context-template.md](references/teammate-context-template.md)
 
 #### Claude 모드 (TaskCreate)
-모든 섹션을 TaskCreate로 등록하고 blockedBy 관계 설정. `description`에 섹션 파일 전체 내용 임베딩.
+미완료 섹션을 TaskCreate로 등록하거나 기존 Task를 재사용하고 blockedBy 관계 설정. `description`에 아래 공통 전달 계약 포함.
 
 #### Codex 모드 (spawn_agent)
-Wave 단위로 agent spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 프로젝트 기반 구현 계약 포함.
+Wave 단위로 agent spawn. `prompt`에 아래 공통 전달 계약 포함.
 
 #### Antigravity 모드 (서브에이전트 위임)
-Wave 단위로 기본/범용 서브에이전트를 호출하고, 섹션 파일 전체 내용 + 담당 파일 +
-프로젝트 기반 구현 계약 + 파일 소유권 규칙을 위임 프롬프트로 전달.
+Wave 단위로 기본/범용 서브에이전트를 호출하고 아래 공통 전달 계약을 위임 프롬프트로 전달.
 
 #### Grok 모드 (spawn_subagent)
-Wave 단위로 spawn. `prompt`에 섹션 파일 전체 내용 + 담당 파일 + 프로젝트 기반 구현 계약을 포함하고,
+Wave 단위로 spawn. `prompt`에 아래 공통 전달 계약을 포함하고,
 일반 구현의 `subagent_type`은 `general-purpose`를 사용.
 
-**핵심 규칙**: teammate/agent는 lead의 대화 히스토리를 상속하지 않으므로, description/prompt에 섹션 파일 전체 내용을 반드시 임베딩해야 함.
+**공통 전달 계약**: 대화 상속에 기대지 않고 프로젝트 루트·섹션·필요 참조의 정확한 절대경로, 목표, 담당 AC ID와 필수 제약, 파일 소유권, 선행 산출물 계약, 검증 명령·반환 형식을 명시합니다. 작업자가 공유 파일을 읽을 수 있으면 해당 파일을 직접 읽도록 하고 전체 본문을 재임베딩하지 않습니다. 파일 접근이 불가능할 때만 구현에 필요한 원문을 전달하고 누락 입력은 Lead에게 반환하게 합니다. 상세 형식은 위 템플릿을 따릅니다.
 
 ### Step 4: Execute Waves
 
 See [wave-executor.md](references/wave-executor.md)
 
-Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEAD + 기존 untracked 목록)을 activity log에 기록 — [verification-protocol.md](references/verification-protocol.md) 0단계.
+새 실행의 Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEAD + 기존 untracked 목록)을 activity log에 기록 — [verification-protocol.md](references/verification-protocol.md) 0단계. 재개는 같은 실행의 원래 기준점을 유지합니다.
 
 각 Wave별 실행 사이클:
-1. 선행 Task의 blockedBy 해소 여부 확인
+1. 선행 Task의 blockedBy와 후속 소비 계약 해소 여부 확인. 누락·미검증 의존성의 소비자만 보류하고 독립 작업은 계속
 2. teammate/agent에게 지시 (담당 파일, 도면 노드, 파일 소유권 규칙 포함)
 3. 진행 상황 모니터링 (Claude: shared task list/메시지, Codex: 현재 wait 도구, Antigravity/Grok: subagent 반환 — 모든 요약을 체크리스트·파일 실존과 대조)
-4. 모든 Task completed → Step 5 코드리뷰와 Step 5A 트립와이어 판정을 거쳐 다음 Wave로 진행
+4. 결과 수집 → Step 5의 후속 소비 경계 확인과 Step 5A 트립와이어 판정을 거쳐 준비된 다음 작업 배정. 모든 Wave가 끝나면 최종 코드 리뷰
 
 **teammate 지시 핵심 요소:**
-- 프로젝트 기반 역할·근거, 섹션 내용, 담당 파일 목록
+- 프로젝트 기반 역할·근거, 섹션 절대경로·필수 제약, 담당 파일 목록
 - 담당 섹션의 AC ID 목록 — 완료 보고에 AC ID별 증거(테스트 이름·명령 결과)와 상태 제안을 포함
 - 📐 프로세스 도면 경로 + 담당 노드 ID (도면 있는 경우)
 - ⚠️ 파일 소유권 규칙 (다른 teammate 파일 수정 금지)
 - 작업자는 변경 파일·테스트·이탈 사유를 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`에 activity log를 기록
 
-### Step 5: Code Review Gate (자재검사)
+### Step 5: Wave 경계 확인과 최종 Code Review Gate (자재검사)
 
-각 Wave 완료 후, 다음 Wave 진행 전 코드리뷰 실행.
+각 Wave에서는 [verification-protocol.md](references/verification-protocol.md)의 `후속 Wave 소비 경계 확인`만 수행합니다. 선행 산출물·관련 AC·검증 증거를 확인해 잘못된 계약이 다음 작업으로 전파되는 것을 막습니다. 매 Wave 전체 코드 리뷰를 반복하지 않습니다.
+
+모든 Wave 구현이 끝나면 변경 범위 전체에 아래 최종 코드 리뷰를 한 번 수행합니다. 수정 후 재검토는 바뀐 부분과 영향 범위를 대상으로 합니다.
 
 1. 이 Step에 도달한 뒤 전역 카탈로그의 `code-reviewer` 행을 해석하고
    `${code_reviewer_root}/SKILL.md`를 읽습니다. 이 모듈의 포세이돈 연동·정책 레이어를 적용하되,
-   등록 스킬을 호출하지 않습니다. 보안 감사 reference가 필요한 Wave만
+   등록 스킬을 호출하지 않습니다. 보안 감사 reference가 필요한 범위만
    `${code_reviewer_root}/references/security-audit.md`를 추가로 읽습니다.
-2. 리뷰 엔진은 native-first로 선택합니다.
+2. 원래 worktree·index 기준점과 기존 untracked 제외를 `review_scope: task`로 전달하고, 같은 범위를 표현할 수 있는 리뷰 엔진을 native-first로 선택합니다. 표현할 수 없으면 모듈의 같은 범위 풀 경로를 사용합니다.
    - Claude: 내장 `/review`; 병렬화가 필요하면 읽기 전용 Explore 작업자에 로드한 gate 전달
    - Codex: `/review` 또는 `codex review`; 읽기 전용 explorer에 로드한 gate 전달 가능
    - Antigravity: 읽기 전용 `research` subagent에 로드한 경로 C gate 전달
    - Grok: bundled `review`; 실패하면 `explore` subagent에 같은 gate 전달
-3. source module을 읽지 못하면 위 resolver의 bounded native fallback만 실행하고
+3. source module을 읽지 못하면 위 resolver의 동일 범위 bounded fallback만 실행하고
    `policy module: NOT RUN`, `review gate: DEGRADED`로 남깁니다.
 4. 미통과 시 → 위 실패 원인 판별과 실행 방식 비교 분기를 거쳐 수정 → 재리뷰 (최대 2회; 비교도 같은 상한에 포함)
 
@@ -407,7 +410,7 @@ Wave 1 시작 전 한 번: 소유권 기준점(`git stash create` SHA 또는 HEA
 
 ### Step 5A: Tripwire Check (Wave 경계 판정)
 
-코드리뷰를 통과한 Wave마다, 다음 Wave를 시작하기 전에 Step 0에서 등록한 `구현 중` 지표를 판정한다. 판정 절차·기록 위치·행동의 정본은 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`이다. Wave가 끝날 때마다 보지 않으면 방향이 틀어진 채 남은 Wave가 그 위에 쌓인다.
+Wave 경계 확인 후, 다음 Wave를 시작하기 전에 Step 0에서 등록한 `구현 중` 지표를 판정한다. 판정 절차·기록 위치·행동의 정본은 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`이다. Wave가 끝날 때마다 보지 않으면 방향이 틀어진 채 남은 Wave가 그 위에 쌓인다.
 
 1. 지표 값을 계측 위치(`checklist-status.md`, activity log 재지시 기록, 위험 가정 섹션의 테스트·평가 출력 등)에서 읽는다. `출시 후`만인 지표는 판정하지 않는다. 데이터가 모자라면 단계를 매기지 않고 `데이터 없음 — <사유>`로 남긴다.
 2. 계속 조건 → 다음 Wave. 초기 신호 → 다음 Wave로 가되 원인을 조사하고 그 지표를 작업자 완료 보고마다 확인.
@@ -515,7 +518,7 @@ Step {N} complete: {summary}
 | teammate 상태 변화 없음 | 런타임 상태와 담당 파일·테스트 증거 확인 → 작업 범위를 줄여 1회 재위임; permission mode는 변경하지 않음 |
 | teammate/agent 실패 | 오류와 부분 변경을 확인 → 남은 동일 실패 예산 안에서 1회 재위임 또는 메인 순차 폴백. 소진 시 미완료 보고 |
 | 파일 충돌 감지 | 두 teammate/agent가 같은 파일 수정 → Lead가 merge 또는 사용자에게 보고 |
-| 컨텍스트 한도 초과 | 현재 Wave까지 결과와 ledger를 저장 → 실행 중 작업자를 안전하게 중단 → 사용자에게 새 세션에서 재개 안내 |
+| 컨텍스트 압축·한도 대응 | 실행 ID에 연결한 로그를 갱신하고 네이티브 재개. 실제 세션 교체가 필요할 때만 작업자를 안전하게 중단하고 로그 절대경로·다음 행동을 인계 |
 | Codex spawn 실패 | 현재 세션의 multi-agent 가용성·thread cap·sandbox를 확인 → 범위를 줄여 재시도; 승인 우회 금지 |
 | Codex wait 타임아웃 | 현재 interrupt 도구로 중단 → 부분 변경 확인 → 범위를 줄여 재spawn |
 | Antigravity 에이전트 미인식 | TUI `/agents`와 현재 도구 목록으로 확인 → `invoke_subagent`가 없으면 Wave 내 메인 컨텍스트 순차 실행; hard lock 등이 필수일 때만 source-only resolver를 거친 orchestrator MCP 분기 |

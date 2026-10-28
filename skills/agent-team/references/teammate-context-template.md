@@ -33,10 +33,12 @@ See [expert-matching.md](expert-matching.md)
 "section-04-api 구현을 담당합니다."
 ```
 
-### 2. Section Content (전체 임베딩)
+### 2. Section Input (경로와 필수 계약)
 
-Task의 `description`에 해당 section-NN.md 파일 전체 내용을 임베딩합니다.
-이것이 teammate의 유일한 구현 지침서입니다.
+공유 파일을 읽을 수 있으면 프로젝트 루트·섹션·필요 참조의 정확한 절대경로를 전달하고
+작업자가 직접 읽습니다. 프롬프트에는 목표, AC ID와 필수 제약, 소유권, 선행 산출물,
+검증 명령·반환 형식을 남깁니다. 파일 접근이 불가능한 환경에서만 필요한 원문을 포함합니다.
+경로가 없거나 읽지 못하면 추측 구현하지 않고 부족한 입력을 Lead에게 반환합니다.
 
 **TaskCreate 시:**
 ```
@@ -50,8 +52,13 @@ TaskCreate({
 ## Mission
 section-04-api 구현 담당
 
-## Section Content
-[section-04-api.md 파일 전체 내용을 여기에 붙여넣기]
+## Section Input
+프로젝트 루트: {project_root_absolute}
+먼저 읽을 섹션: {section_file_absolute}
+필요 참조: {api_spec_absolute}, {project_rules_absolute}
+담당 AC: AC-04-1, AC-04-2 — 섹션의 정의를 읽고 변경하지 않을 것
+필수 제약: {이번 작업에 적용되는 제약}
+검증 명령: {관련 테스트 명령}
 
 ## File Ownership
 이 파일들만 생성/수정 가능:
@@ -65,7 +72,7 @@ section-04-api 구현 담당
 - section-03: src/types/index.ts (RequestDTO, ResponseDTO)
 
 ## Task Reference
-Task #4를 확인하세요. 구현 완료 시 변경 파일·AC별 검증 증거·남은 문제를 Lead에게 반환하세요.
+Task #4를 확인하세요. 구현 완료 시 변경 파일·실행 명령/결과·AC별 검증 증거와 상태 제안·이탈 사유·남은 문제를 Lead에게 반환하세요.
 Task 상태는 Lead가 증거를 확인한 뒤 갱신합니다.
 
 ## Boundaries
@@ -93,7 +100,7 @@ Task 상태는 Lead가 증거를 확인한 뒤 갱신합니다.
 **전달 규칙:**
 - section-parser에서 추출한 `diagram`과 `diagramNodes` 사용
 - `diagram`이 null이면 이 항목 생략
-- 도면 파일 경로는 planning_dir 기준 상대 경로
+- 도면 파일 경로는 planning_dir에서 해석한 정확한 절대경로
 - teammate가 Read로 `.mmd` 파일을 직접 읽어 참조하도록 지시
 
 ### 4. Reference Documents (보조 문서)
@@ -241,12 +248,12 @@ Job ID: {job_id}
 
 | 항목 | 크기 관리 |
 |------|-----------|
-| Section Content | 전체 임베딩 (필수 — 유일한 지침서) |
+| Section Input | 읽을 수 있는 절대경로 + AC ID·필수 제약; 접근 불가 때만 필요한 원문 |
 | File Ownership | 파일 목록만 (간결) |
 | Dependencies | export 시그니처만 (전체 파일 X) |
 | Boundaries | 규칙 5줄 (고정) |
 
-**총 description 크기 목표:** 섹션 파일 크기 + ~500자 오버헤드
+**크기 원칙:** 원문을 중복 복사하지 않고 독립 실행에 필요한 계약만 전달합니다. 원문 폴백에서도 이번 담당 범위에 필요한 내용만 포함합니다.
 
 ## Plan Approval 활용
 

@@ -98,13 +98,27 @@ npm test 2>&1 | grep 'DEBUG git init'
 
 If something appears during tests but you don't know which test:
 
-Use the bisection script `find-polluter.sh` in this directory:
+Use the optional [find-polluter.sh](find-polluter.sh) helper under `module_root`
+only when the project's `npm test -- <file>` command selects one test file.
+Run it from that project's working directory with a quoted glob:
 
 ```bash
-./find-polluter.sh '.git' 'src/**/*.test.ts'
+bash "<module_root>/find-polluter.sh" 'packages/core/.git' 'src/**/*.test.ts'
 ```
 
-Runs tests one-by-one, stops at first polluter. See script for usage.
+The helper requires Bash 4+ and npm (Git Bash on Windows; an appropriate Bash on
+Linux/macOS). It runs selected files sequentially; it is not binary bisection.
+The target must be absent before the run. It never removes that target or resets
+other state; use a disposable test workspace when the test itself has side effects.
+
+- Exit 0: every selected test command passed and the target remained absent.
+- Exit 1: the named test created the target; its runner status is also reported.
+- Exit 2: invalid input, no matches, an existing target, missing npm, or runner failure;
+  this is unverified, not clean. Remaining tests are not run after a failure.
+
+For other runners or unavailable Bash, use the project's native test-selection command
+and observe the target before and after each test. A clean isolated run does not rule
+out order-dependent pollution; reproduce the original order when evidence points there.
 
 ## Real Example: Empty projectDir
 
@@ -136,8 +150,8 @@ digraph principle {
     "Trace backwards" [shape=box];
     "Is this the source?" [shape=diamond];
     "Fix at source" [shape=box];
-    "Add validation at each layer" [shape=box];
-    "Bug impossible" [shape=doublecircle];
+    "Validate relevant boundaries" [shape=box];
+    "Regression checks pass" [shape=doublecircle];
     "NEVER fix just the symptom" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
     "Found immediate cause" -> "Can trace one level up?";
@@ -146,8 +160,8 @@ digraph principle {
     "Trace backwards" -> "Is this the source?";
     "Is this the source?" -> "Trace backwards" [label="no - keeps going"];
     "Is this the source?" -> "Fix at source" [label="yes"];
-    "Fix at source" -> "Add validation at each layer";
-    "Add validation at each layer" -> "Bug impossible";
+    "Fix at source" -> "Validate relevant boundaries";
+    "Validate relevant boundaries" -> "Regression checks pass";
 }
 ```
 
@@ -157,13 +171,12 @@ digraph principle {
 
 **In tests:** Use `console.error()` not logger - logger may be suppressed
 **Before operation:** Log before the dangerous operation, not after it fails
-**Include context:** Directory, cwd, environment variables, timestamps
+**Include context:** Relevant directory, cwd, timestamps, and configuration presence;
+redact sensitive values and avoid dumping the full environment.
 **Capture stack:** `new Error().stack` shows complete call chain
 
-## Real-World Impact
+## Verification
 
-From debugging session (2025-10-03):
-- Found root cause through 5-level trace
-- Fixed at source (getter validation)
-- Added 4 layers of defense
-- 1847 tests passed, zero pollution
+Record the failing test or sequence, the boundary where the invalid value originates,
+and the regression command/result after the fix. A traced example is not evidence that
+the current project is free of pollution.

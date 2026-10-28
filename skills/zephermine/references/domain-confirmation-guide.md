@@ -11,7 +11,7 @@ Default behavior:
 1. Auto-accept low-risk domain expert suggestions that align with `spec.md`, `interview.md`, `research.md`, and existing code conventions.
 2. Auto-merge dictionary ADD/REFINE/MERGE updates from Step 10.
 3. Auto-skip ambiguous global dictionary writes unless they are clearly reusable across projects.
-4. Ask the user only for unresolved conflicts that would materially change plan, naming, security, compliance, data model, API, UI wording, or business workflow.
+4. Resolve conflicting claims against sources and existing decisions first; model agreement is not new evidence. Ask only for remaining private facts or user-owned choices that materially change the plan.
 
 ## Inputs
 
@@ -32,7 +32,8 @@ Read these files:
 | Critical suggestion fixes a clear requirement gap | Accept by default |
 | Suggestion is useful but non-blocking | Defer by default; add to Open Questions or Future Work |
 | Suggestion adds scope without strong evidence | Defer by default |
-| Suggestion changes security, legal, payment, privacy, operations, or rollout | Ask one blocking question |
+| Suggestion changes an already authorized design within its constraints | Integrate the evidence-backed recommendation; do not reapprove it |
+| Suggestion needs a private policy decision or exceeds existing security/payment/privacy/operations authorization | Present evidence, recommendation and trade-off, then ask for the specific unresolved decision |
 
 ### Dictionary Changes
 
@@ -41,7 +42,7 @@ Read these files:
 | ADD new term with no conflict | Accept by default |
 | REFINE definition for clarity | Accept by default |
 | MERGE synonyms with clear dominant term | Accept by default |
-| CONFLICT on a term used in DB/API/type names/UI labels | Ask one blocking question |
+| CONFLICT on a term used in DB/API/type names/UI labels | Check sources and existing code/decisions; ask only if a consequential meaning choice still belongs to the user |
 | CONFLICT on a minor description | Pick the conservative/default project wording and mark `[inferred]` |
 
 ### Global Dictionary Sync
@@ -55,23 +56,19 @@ Read these files:
 
 ## Asking Policy
 
-If a question is required:
+Use [interview-protocol.md](interview-protocol.md#technique) for the shared question budget, prerequisite decisions, and handling of unanswered blockers. Read the existing `interview.md` before any question; Step 11 is not a fresh allowance.
 
-- Ask exactly one question.
-- Include the recommended default.
-- Explain the impact in one sentence.
-- Do not use multi-select unless the current CLI explicitly supports it.
+If a new question is required, explain the finding/source, recommendation/reason, and trade-off, then ask only for the remaining decision. Otherwise integrate or defer within the authorized scope.
 
 Template:
 
 ```text
-Blocking domain decision: {term_or_policy}
-
-I recommend {default} because {reason}. This affects {DB/API/UI/security/plan}.
-Should I proceed with this default, or should we use {alternative}?
+Finding: {source-backed finding; name any still-unverified assumption}
+Recommendation: {direction} because {reason}; trade-off: {material constraint}.
+Decision needed: {one private fact or unresolved choice and what depends on it}
 ```
 
-If the user says "모르겠다", "알아서", or gives no actionable preference, use the recommended default and continue.
+If the user says "모르겠다" or "알아서", continue with the recommended reversible design where authorized. A critical private fact remains unknown, and required authorization remains pending without an explicit answer. Record the dependent decision in the existing artifacts and continue independent work.
 
 ## Outputs
 

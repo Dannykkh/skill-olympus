@@ -1,0 +1,931 @@
+{
+  "date": "2026-10-28",
+  "baseline_commit": "6c32a16",
+  "upstream_commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+  "environment": {
+    "os": "Windows",
+    "git": "2.49.0.windows.1",
+    "node": "v22.23.3",
+    "python": "3.12.4",
+    "bash": "5.2.37"
+  },
+  "regression": {
+    "command": "node --test scripts/tests/source-only-module-routing.test.js scripts/tests/skill-sync-policy.test.js scripts/tests/installers.test.js scripts/tests/acceptance-checklist-contract.test.js scripts/tests/tripwire-contract.test.js scripts/tests/agent-routing.test.js scripts/tests/systematic-debugging-tools.test.js",
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "post_review_contract_rerun": {
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    "final_module_missing_fallback_rerun": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "polluter_behavior": {
+    "baseline": {
+      "passed": 0,
+      "failed": 6
+    },
+    "candidate": {
+      "passed": 6,
+      "failed": 0
+    },
+    "cases": [
+      "direct/nested/spaces",
+      "dot-prefixed glob",
+      "no matches",
+      "runner failure",
+      "pollution evidence",
+      "preexisting target preservation"
+    ]
+  },
+  "git_scope": {
+    "passed": 5,
+    "failed": 0,
+    "cases": [
+      "index/worktree cancellation",
+      "preexisting distinct index/worktree",
+      "new index-only change",
+      "untracked Unicode/spaces",
+      "explicit branch excludes dirty"
+    ],
+    "limitation": "Actual Git commands; not native review engine behavior."
+  },
+  "frontmatter": [
+    {
+      "skill": "agent-team",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "agent-team-codex",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "autoresearch",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "code-reviewer",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "orchestrator",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "skill-evolve",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "systematic-debugging",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "test-driven-development",
+      "exit": 0,
+      "output": "Skill is valid!"
+    },
+    {
+      "skill": "workpm",
+      "exit": 0,
+      "output": "Skill is valid!"
+    }
+  ],
+  "installed_files": [
+    {
+      "runtime": "claude",
+      "file": "skills/agent-team/SKILL.md",
+      "installed": "{claude-home}\\skills\\agent-team\\SKILL.md",
+      "equal": true,
+      "sha256": "a90e723d62ee65800d72b5baae2663f84636deb6c2213aa40cde6f249007db4c"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/agent-team/references/section-parser.md",
+      "installed": "{claude-home}\\skills\\agent-team\\references\\section-parser.md",
+      "equal": true,
+      "sha256": "b9d710c48f85e8a7c42d4594ca37c2edace468e488cd277817748b073094c5a1"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/agent-team/references/teammate-context-template.md",
+      "installed": "{claude-home}\\skills\\agent-team\\references\\teammate-context-template.md",
+      "equal": true,
+      "sha256": "3df787196c1f4f40e291b3fb6baebd6444654fde11f48d1dda00a1e65d8881b6"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/agent-team/references/verification-protocol.md",
+      "installed": "{claude-home}\\skills\\agent-team\\references\\verification-protocol.md",
+      "equal": true,
+      "sha256": "63e92bac24aebf9c37d4cddf39f6a80afe0411d40c0e800df8d75929dee581c8"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/agent-team/references/wave-executor.md",
+      "installed": "{claude-home}\\skills\\agent-team\\references\\wave-executor.md",
+      "equal": true,
+      "sha256": "ada85dca0c265ae34d61af351a41ee7bad6ce6b5057de85c73311f3e3a77796e"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/autoresearch/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\autoresearch\\SKILL.md",
+      "equal": true,
+      "sha256": "0afe8bfc2e8dfdec65152bc203152665501088a3157f49ab907b551287461752"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/code-reviewer/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\code-reviewer\\SKILL.md",
+      "equal": true,
+      "sha256": "f2e40c1b50aa3c56482d18b617d49f919c38495ddb183070b4646befc9bc0cc6"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/orchestrator/commands/workpm-mcp.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm-mcp.md",
+      "equal": true,
+      "sha256": "d2ad677f8a75fe521c0cfa4aba62b571ed7bb33553350d1ab1581af76339683f"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/orchestrator/commands/workpm.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm.md",
+      "equal": true,
+      "sha256": "a9f038ae116185a0908dd4e250acf799eaf72497ddca4b20db9f3c0f9d431765"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/skill-evolve/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\skill-evolve\\SKILL.md",
+      "equal": true,
+      "sha256": "6740b3916198d02e4d5675ba0a73a7314fc6f367814d9b817682d7414d9bab1e"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/CREATION-LOG.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\CREATION-LOG.md",
+      "equal": true,
+      "sha256": "36707a4e0eae8627291c417c864951716c4462be266401d7677fd5da97d8fb7e"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\SKILL.md",
+      "equal": true,
+      "sha256": "c74c6c631483fcaefc48b5a46e4525386968c14f428258ed8cd5e3ad45f56d3d"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/condition-based-waiting.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\condition-based-waiting.md",
+      "equal": true,
+      "sha256": "b06c63d102c674d49192fe7e64dc3b52520706ff37131e1496fee812551a5597"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/defense-in-depth.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\defense-in-depth.md",
+      "equal": true,
+      "sha256": "0df1c98803596cac74e84a933f0d991326f2b0ad0bfca912db84fcbe735df02a"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/find-polluter.sh",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\find-polluter.sh",
+      "equal": true,
+      "sha256": "e54c6d42f41acff81d2890d7ab7ba6e4eb3e4307a6440931a7367208d0a1c652"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/root-cause-tracing.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\root-cause-tracing.md",
+      "equal": true,
+      "sha256": "00af2ae3c70a3d7531a758124f647c90e41f47c0b7fef3f5ce46eeb624e73ccb"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/test-pressure-1.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-1.md",
+      "equal": true,
+      "sha256": "94649bd815495c6634f863ba9aa95bec896a64557f85a15af7248609980f4c2d"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/test-pressure-2.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-2.md",
+      "equal": true,
+      "sha256": "3fef1a1b5c8e5b3261e165fa7bac6b03e09a1da20e9c48d2b7252f1e78c847f2"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/systematic-debugging/test-pressure-3.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-3.md",
+      "equal": true,
+      "sha256": "543f4d110c40607250a092ccfc175255e3a162c31e7dc1113a895f29a516bc1f"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/test-driven-development/SKILL.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\test-driven-development\\SKILL.md",
+      "equal": true,
+      "sha256": "d0afeadc8a9c864ca3f1894af471b4b9e1026f795e7bb0a16d29b86a2e4a5aa6"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/workpm/SKILL.md",
+      "installed": "{claude-home}\\skills\\workpm\\SKILL.md",
+      "equal": true,
+      "sha256": "14a755aa6072bf160566636a452c307d2c62ca54a3e43e804bff206e8adc1918"
+    },
+    {
+      "runtime": "claude",
+      "file": "skills/code-reviewer/references/review-scope.md",
+      "installed": "{claude-home}\\.olympus\\source-skills\\code-reviewer\\references\\review-scope.md",
+      "equal": true,
+      "sha256": "c13ecf84a122aed3f401d42577ff9d0b585fe07cf12d34468c085241c5709ff3"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/agent-team-codex/SKILL.md",
+      "installed": "{codex-home}\\skills\\agent-team-codex\\SKILL.md",
+      "equal": true,
+      "sha256": "3b5c8421a8c48845bd83882431714f2c424ce1548fedd289d80d0fc80cb2171e"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/agent-team-codex/references/prompt-templates.md",
+      "installed": "{codex-home}\\skills\\agent-team-codex\\references\\prompt-templates.md",
+      "equal": true,
+      "sha256": "0408b8f9e8996737d6c936f7a045133ddc81995e3444e3230b4d6edeca690224"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/autoresearch/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\autoresearch\\SKILL.md",
+      "equal": true,
+      "sha256": "0afe8bfc2e8dfdec65152bc203152665501088a3157f49ab907b551287461752"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/code-reviewer/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\code-reviewer\\SKILL.md",
+      "equal": true,
+      "sha256": "f2e40c1b50aa3c56482d18b617d49f919c38495ddb183070b4646befc9bc0cc6"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/orchestrator/commands/workpm-mcp.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm-mcp.md",
+      "equal": true,
+      "sha256": "d2ad677f8a75fe521c0cfa4aba62b571ed7bb33553350d1ab1581af76339683f"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/orchestrator/commands/workpm.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm.md",
+      "equal": true,
+      "sha256": "a9f038ae116185a0908dd4e250acf799eaf72497ddca4b20db9f3c0f9d431765"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/skill-evolve/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\skill-evolve\\SKILL.md",
+      "equal": true,
+      "sha256": "6740b3916198d02e4d5675ba0a73a7314fc6f367814d9b817682d7414d9bab1e"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/CREATION-LOG.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\CREATION-LOG.md",
+      "equal": true,
+      "sha256": "36707a4e0eae8627291c417c864951716c4462be266401d7677fd5da97d8fb7e"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\SKILL.md",
+      "equal": true,
+      "sha256": "c74c6c631483fcaefc48b5a46e4525386968c14f428258ed8cd5e3ad45f56d3d"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/condition-based-waiting.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\condition-based-waiting.md",
+      "equal": true,
+      "sha256": "b06c63d102c674d49192fe7e64dc3b52520706ff37131e1496fee812551a5597"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/defense-in-depth.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\defense-in-depth.md",
+      "equal": true,
+      "sha256": "0df1c98803596cac74e84a933f0d991326f2b0ad0bfca912db84fcbe735df02a"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/find-polluter.sh",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\find-polluter.sh",
+      "equal": true,
+      "sha256": "e54c6d42f41acff81d2890d7ab7ba6e4eb3e4307a6440931a7367208d0a1c652"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/root-cause-tracing.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\root-cause-tracing.md",
+      "equal": true,
+      "sha256": "00af2ae3c70a3d7531a758124f647c90e41f47c0b7fef3f5ce46eeb624e73ccb"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/test-pressure-1.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-1.md",
+      "equal": true,
+      "sha256": "94649bd815495c6634f863ba9aa95bec896a64557f85a15af7248609980f4c2d"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/test-pressure-2.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-2.md",
+      "equal": true,
+      "sha256": "3fef1a1b5c8e5b3261e165fa7bac6b03e09a1da20e9c48d2b7252f1e78c847f2"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/systematic-debugging/test-pressure-3.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-3.md",
+      "equal": true,
+      "sha256": "543f4d110c40607250a092ccfc175255e3a162c31e7dc1113a895f29a516bc1f"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/test-driven-development/SKILL.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\test-driven-development\\SKILL.md",
+      "equal": true,
+      "sha256": "d0afeadc8a9c864ca3f1894af471b4b9e1026f795e7bb0a16d29b86a2e4a5aa6"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/workpm/SKILL.md",
+      "installed": "{codex-home}\\skills\\workpm\\SKILL.md",
+      "equal": true,
+      "sha256": "14a755aa6072bf160566636a452c307d2c62ca54a3e43e804bff206e8adc1918"
+    },
+    {
+      "runtime": "codex",
+      "file": "skills/code-reviewer/references/review-scope.md",
+      "installed": "{codex-home}\\.olympus\\source-skills\\code-reviewer\\references\\review-scope.md",
+      "equal": true,
+      "sha256": "c13ecf84a122aed3f401d42577ff9d0b585fe07cf12d34468c085241c5709ff3"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/agent-team/SKILL.md",
+      "installed": "{antigravity-home}\\skills\\agent-team\\SKILL.md",
+      "equal": true,
+      "sha256": "a90e723d62ee65800d72b5baae2663f84636deb6c2213aa40cde6f249007db4c"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/agent-team/references/section-parser.md",
+      "installed": "{antigravity-home}\\skills\\agent-team\\references\\section-parser.md",
+      "equal": true,
+      "sha256": "b9d710c48f85e8a7c42d4594ca37c2edace468e488cd277817748b073094c5a1"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/agent-team/references/teammate-context-template.md",
+      "installed": "{antigravity-home}\\skills\\agent-team\\references\\teammate-context-template.md",
+      "equal": true,
+      "sha256": "3df787196c1f4f40e291b3fb6baebd6444654fde11f48d1dda00a1e65d8881b6"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/agent-team/references/verification-protocol.md",
+      "installed": "{antigravity-home}\\skills\\agent-team\\references\\verification-protocol.md",
+      "equal": true,
+      "sha256": "63e92bac24aebf9c37d4cddf39f6a80afe0411d40c0e800df8d75929dee581c8"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/agent-team/references/wave-executor.md",
+      "installed": "{antigravity-home}\\skills\\agent-team\\references\\wave-executor.md",
+      "equal": true,
+      "sha256": "ada85dca0c265ae34d61af351a41ee7bad6ce6b5057de85c73311f3e3a77796e"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/autoresearch/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\autoresearch\\SKILL.md",
+      "equal": true,
+      "sha256": "0afe8bfc2e8dfdec65152bc203152665501088a3157f49ab907b551287461752"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/code-reviewer/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\code-reviewer\\SKILL.md",
+      "equal": true,
+      "sha256": "f2e40c1b50aa3c56482d18b617d49f919c38495ddb183070b4646befc9bc0cc6"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/orchestrator/commands/workpm-mcp.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm-mcp.md",
+      "equal": true,
+      "sha256": "d2ad677f8a75fe521c0cfa4aba62b571ed7bb33553350d1ab1581af76339683f"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/orchestrator/commands/workpm.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\orchestrator\\commands\\workpm.md",
+      "equal": true,
+      "sha256": "a9f038ae116185a0908dd4e250acf799eaf72497ddca4b20db9f3c0f9d431765"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/skill-evolve/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\skill-evolve\\SKILL.md",
+      "equal": true,
+      "sha256": "6740b3916198d02e4d5675ba0a73a7314fc6f367814d9b817682d7414d9bab1e"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/CREATION-LOG.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\CREATION-LOG.md",
+      "equal": true,
+      "sha256": "36707a4e0eae8627291c417c864951716c4462be266401d7677fd5da97d8fb7e"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\SKILL.md",
+      "equal": true,
+      "sha256": "c74c6c631483fcaefc48b5a46e4525386968c14f428258ed8cd5e3ad45f56d3d"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/condition-based-waiting.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\condition-based-waiting.md",
+      "equal": true,
+      "sha256": "b06c63d102c674d49192fe7e64dc3b52520706ff37131e1496fee812551a5597"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/defense-in-depth.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\defense-in-depth.md",
+      "equal": true,
+      "sha256": "0df1c98803596cac74e84a933f0d991326f2b0ad0bfca912db84fcbe735df02a"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/find-polluter.sh",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\find-polluter.sh",
+      "equal": true,
+      "sha256": "e54c6d42f41acff81d2890d7ab7ba6e4eb3e4307a6440931a7367208d0a1c652"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/root-cause-tracing.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\root-cause-tracing.md",
+      "equal": true,
+      "sha256": "00af2ae3c70a3d7531a758124f647c90e41f47c0b7fef3f5ce46eeb624e73ccb"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/test-pressure-1.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-1.md",
+      "equal": true,
+      "sha256": "94649bd815495c6634f863ba9aa95bec896a64557f85a15af7248609980f4c2d"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/test-pressure-2.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-2.md",
+      "equal": true,
+      "sha256": "3fef1a1b5c8e5b3261e165fa7bac6b03e09a1da20e9c48d2b7252f1e78c847f2"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/systematic-debugging/test-pressure-3.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\test-pressure-3.md",
+      "equal": true,
+      "sha256": "543f4d110c40607250a092ccfc175255e3a162c31e7dc1113a895f29a516bc1f"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/test-driven-development/SKILL.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\test-driven-development\\SKILL.md",
+      "equal": true,
+      "sha256": "d0afeadc8a9c864ca3f1894af471b4b9e1026f795e7bb0a16d29b86a2e4a5aa6"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/workpm/SKILL.md",
+      "installed": "{antigravity-home}\\skills\\workpm\\SKILL.md",
+      "equal": true,
+      "sha256": "14a755aa6072bf160566636a452c307d2c62ca54a3e43e804bff206e8adc1918"
+    },
+    {
+      "runtime": "antigravity",
+      "file": "skills/code-reviewer/references/review-scope.md",
+      "installed": "{antigravity-home}\\.olympus\\source-skills\\code-reviewer\\references\\review-scope.md",
+      "equal": true,
+      "sha256": "c13ecf84a122aed3f401d42577ff9d0b585fe07cf12d34468c085241c5709ff3"
+    }
+  ],
+  "packaging": {
+    "count": 9,
+    "crc_passed": 9,
+    "location": "{superpowers-evidence-root}\\packages",
+    "preexisting_source_zips": "untouched"
+  },
+  "continuation": {
+    "status": "complete",
+    "protocol": "same fixture inputs; separate fresh same-model contexts per policy version; no expected verdict supplied; main grades file state and logs",
+    "initial_run": "excluded: fixture SHA256 values used LF strings but files were CRLF; both arms restarted with hashes and byte counts from actual files; policy and scores unchanged",
+    "scope": "synthetic checkpoint continuation decisions and one real slug output; not actual historical holdout scores or generalization proof",
+    "results": [
+      {
+        "arm": "run-x",
+        "policy_sha256": "083d30db5e19f9c7909801b6fcaf01c21d2c8d07be8a9c7409373aa3fe5426c0",
+        "readonly_unchanged": true,
+        "cases": [
+          {
+            "case": "feedback",
+            "target_sha256": "2ca417f9af3d03eabfe8cfa048e29c28e5f462aa9a79a598e38a38d8afd5fb9e",
+            "target_matches_original": false,
+            "log_sha256": "365d5ceb7eaf7bbe5829bde805f8aec34f01f1146e9ef04bb37073fc5274d107"
+          },
+          {
+            "case": "tie",
+            "target_sha256": "2ca417f9af3d03eabfe8cfa048e29c28e5f462aa9a79a598e38a38d8afd5fb9e",
+            "target_matches_original": false,
+            "log_sha256": "3f16bff0e5edb75209cfb056921627fb73f337d6189a692426c062f5a8da8d94"
+          },
+          {
+            "case": "scan",
+            "target_sha256": "1bea2a8cfedff718556a2d0aaaf5519089e1c32002417c3b6e7494a334903481",
+            "target_matches_original": true,
+            "log_sha256": "2ab97e7e1a948de47fd5175fe13cc0a0bb570b9706d03ccf01e21cf60a0411e7"
+          }
+        ],
+        "scan_actual_output": "deployment-notes"
+      },
+      {
+        "arm": "run-y",
+        "policy_sha256": "0afe8bfc2e8dfdec65152bc203152665501088a3157f49ab907b551287461752",
+        "readonly_unchanged": true,
+        "cases": [
+          {
+            "case": "feedback",
+            "target_sha256": "1bea2a8cfedff718556a2d0aaaf5519089e1c32002417c3b6e7494a334903481",
+            "target_matches_original": true,
+            "log_sha256": "da56bd29fe5af97f9f0c9728c232b3deb2892ed485b9b4f2404828f53f9ad77c"
+          },
+          {
+            "case": "tie",
+            "target_sha256": "1bea2a8cfedff718556a2d0aaaf5519089e1c32002417c3b6e7494a334903481",
+            "target_matches_original": true,
+            "log_sha256": "595bd9c6e6dc51e70e513084013e152a7210d1514cd2840d9de13c86f565898c"
+          },
+          {
+            "case": "scan",
+            "target_sha256": "1bea2a8cfedff718556a2d0aaaf5519089e1c32002417c3b6e7494a334903481",
+            "target_matches_original": true,
+            "log_sha256": "6b76a8ba5431e703a68d9209f5a3b684e15574a97fa0f9bcf93362f43bd6e800"
+          }
+        ],
+        "scan_actual_output": "deployment-notes"
+      }
+    ],
+    "verdicts": {
+      "feedback": {
+        "baseline": "kept V2 using reused H1",
+        "candidate": "deferred; restored original; no budget reset"
+      },
+      "tie": {
+        "baseline": "kept neutral candidate",
+        "candidate": "rejected; restored original"
+      },
+      "scan": {
+        "baseline": "unchanged because score 44 outside auto-low threshold; task output correct",
+        "candidate": "unchanged because no demonstrated task/cost failure; task output correct"
+      }
+    },
+    "limitation": "One pair of independent same-model contexts, three synthetic checkpoint continuations each; policy author knew case hypotheses, no new holdout generalization test. Two discriminating cases and one preservation/output regression. Costs not measured."
+  },
+  "installed_resume": {
+    "status": "complete",
+    "cases_checked": 6,
+    "passed": 6,
+    "observations": [
+      "original alpha run selected instead of newer beta",
+      "completed task preserved without reassignment",
+      "producer retries remain 2/2; no retry",
+      "contract mismatch and missing dependency consumers blocked",
+      "independent later-Wave documentation implemented; node verify.cjs exit 0",
+      "all immutable fixture inputs unchanged; 2/5 proved, whole run incomplete reported"
+    ],
+    "executed_skill_sha256": "ae47b8b93405e4709d7edb4ed1b9a31af37664f702bf1944abc4c6862a608653",
+    "post_run_change": "Only missing-review-module fallback wording changed after this test. Resume path unchanged; final scope fallback regression tests 16/16 passed.",
+    "limitation": "Installed Codex policy applied by isolated agent in main-context fallback, no native worker lifecycle or MCP execution."
+  },
+  "temporary_raw_evidence_root": "{superpowers-evidence-root}",
+  "qa_debug_followup": {
+    "scope": "Argos/Minos debugging connection follow-up",
+    "regressions": {
+      "pass": 45,
+      "fail": 0,
+      "skip": 0
+    },
+    "validation": [
+      {
+        "skill": "argos",
+        "exit": 0,
+        "result": "Skill is valid!"
+      },
+      {
+        "skill": "minos",
+        "exit": 0,
+        "result": "Skill is valid!"
+      },
+      {
+        "skill": "systematic-debugging",
+        "exit": 0,
+        "result": "Skill is valid!"
+      }
+    ],
+    "installed": [
+      {
+        "cli": "claude",
+        "file": "skills/argos/SKILL.md",
+        "installed": "{claude-home}\\skills\\argos\\SKILL.md",
+        "sha256": "bf7d34079d333588d45a3713d8fb8e746a2f897b78960b388d0ed5fd3dabb4c2",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/argos/commands/argos.md",
+        "installed": "{claude-home}\\skills\\argos\\commands\\argos.md",
+        "sha256": "94e74ea88332ef5d2925c4a1eaddcb743de43422f40c47114bc5a925259be3d7",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/argos/references/verify-protocol.md",
+        "installed": "{claude-home}\\skills\\argos\\references\\verify-protocol.md",
+        "sha256": "21477dc7564b2d3125fcbc3e80ab6ace153762557c5f4a10f35e1c5ac23467b3",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/minos/SKILL.md",
+        "installed": "{claude-home}\\skills\\minos\\SKILL.md",
+        "sha256": "339433cd0cf1e1d122ef2ef8a204a3a82474f9a3e7841d1e26de09452bc186cc",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/minos/commands/minos.md",
+        "installed": "{claude-home}\\skills\\minos\\commands\\minos.md",
+        "sha256": "2ff25c5b5feeebc7363be3d7020ad7e96c7db7fc9e4fb2cda8a539cd3bad597c",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/minos/references/healer-loop.md",
+        "installed": "{claude-home}\\skills\\minos\\references\\healer-loop.md",
+        "sha256": "26ee877e4a867cbce2b07722bcae1686c8ecbdd4b86f473044439c5338a75687",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/minos/references/result-report.md",
+        "installed": "{claude-home}\\skills\\minos\\references\\result-report.md",
+        "sha256": "cf4967c17e6303b9de43ae28be9a8f772a5f0857d89c8e77223638e148a39b15",
+        "equal": true
+      },
+      {
+        "cli": "claude",
+        "file": "skills/systematic-debugging/SKILL.md",
+        "installed": "{claude-home}\\.olympus\\source-skills\\systematic-debugging\\SKILL.md",
+        "sha256": "9f08a31a8bd8e17c7df980630fa6e3ec774d406f16b069d8ea025691614c157d",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/argos/SKILL.md",
+        "installed": "{codex-home}\\skills\\argos\\SKILL.md",
+        "sha256": "bf7d34079d333588d45a3713d8fb8e746a2f897b78960b388d0ed5fd3dabb4c2",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/argos/commands/argos.md",
+        "installed": "{codex-home}\\skills\\argos\\commands\\argos.md",
+        "sha256": "94e74ea88332ef5d2925c4a1eaddcb743de43422f40c47114bc5a925259be3d7",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/argos/references/verify-protocol.md",
+        "installed": "{codex-home}\\skills\\argos\\references\\verify-protocol.md",
+        "sha256": "21477dc7564b2d3125fcbc3e80ab6ace153762557c5f4a10f35e1c5ac23467b3",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/minos/SKILL.md",
+        "installed": "{codex-home}\\skills\\minos\\SKILL.md",
+        "sha256": "339433cd0cf1e1d122ef2ef8a204a3a82474f9a3e7841d1e26de09452bc186cc",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/minos/commands/minos.md",
+        "installed": "{codex-home}\\skills\\minos\\commands\\minos.md",
+        "sha256": "2ff25c5b5feeebc7363be3d7020ad7e96c7db7fc9e4fb2cda8a539cd3bad597c",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/minos/references/healer-loop.md",
+        "installed": "{codex-home}\\skills\\minos\\references\\healer-loop.md",
+        "sha256": "26ee877e4a867cbce2b07722bcae1686c8ecbdd4b86f473044439c5338a75687",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/minos/references/result-report.md",
+        "installed": "{codex-home}\\skills\\minos\\references\\result-report.md",
+        "sha256": "cf4967c17e6303b9de43ae28be9a8f772a5f0857d89c8e77223638e148a39b15",
+        "equal": true
+      },
+      {
+        "cli": "codex",
+        "file": "skills/systematic-debugging/SKILL.md",
+        "installed": "{codex-home}\\.olympus\\source-skills\\systematic-debugging\\SKILL.md",
+        "sha256": "9f08a31a8bd8e17c7df980630fa6e3ec774d406f16b069d8ea025691614c157d",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/argos/SKILL.md",
+        "installed": "{antigravity-home}\\skills\\argos\\SKILL.md",
+        "sha256": "bf7d34079d333588d45a3713d8fb8e746a2f897b78960b388d0ed5fd3dabb4c2",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/argos/commands/argos.md",
+        "installed": "{antigravity-home}\\skills\\argos\\commands\\argos.md",
+        "sha256": "94e74ea88332ef5d2925c4a1eaddcb743de43422f40c47114bc5a925259be3d7",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/argos/references/verify-protocol.md",
+        "installed": "{antigravity-home}\\skills\\argos\\references\\verify-protocol.md",
+        "sha256": "21477dc7564b2d3125fcbc3e80ab6ace153762557c5f4a10f35e1c5ac23467b3",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/minos/SKILL.md",
+        "installed": "{antigravity-home}\\skills\\minos\\SKILL.md",
+        "sha256": "339433cd0cf1e1d122ef2ef8a204a3a82474f9a3e7841d1e26de09452bc186cc",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/minos/commands/minos.md",
+        "installed": "{antigravity-home}\\skills\\minos\\commands\\minos.md",
+        "sha256": "2ff25c5b5feeebc7363be3d7020ad7e96c7db7fc9e4fb2cda8a539cd3bad597c",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/minos/references/healer-loop.md",
+        "installed": "{antigravity-home}\\skills\\minos\\references\\healer-loop.md",
+        "sha256": "26ee877e4a867cbce2b07722bcae1686c8ecbdd4b86f473044439c5338a75687",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/minos/references/result-report.md",
+        "installed": "{antigravity-home}\\skills\\minos\\references\\result-report.md",
+        "sha256": "cf4967c17e6303b9de43ae28be9a8f772a5f0857d89c8e77223638e148a39b15",
+        "equal": true
+      },
+      {
+        "cli": "antigravity",
+        "file": "skills/systematic-debugging/SKILL.md",
+        "installed": "{antigravity-home}\\.olympus\\source-skills\\systematic-debugging\\SKILL.md",
+        "sha256": "9f08a31a8bd8e17c7df980630fa6e3ec774d406f16b069d8ea025691614c157d",
+        "equal": true
+      }
+    ],
+    "readonly_case": {
+      "file_count": 8,
+      "unchanged": true,
+      "reported_grade": "FAIL",
+      "tests_rerun": false
+    },
+    "repair_cases": [
+      {
+        "case": "minos-repair",
+        "changed_existing_files": [
+          "run-log.md",
+          "server.cjs"
+        ],
+        "test_and_contract_hashes_preserved": true,
+        "independent_main_rechecks": [
+          {
+            "command": "node qa.cjs automated",
+            "exit": 0,
+            "output": "automated: 3 assertions PASS"
+          },
+          {
+            "command": "node qa.cjs persistence",
+            "exit": 0,
+            "output": "persistence: saved item visible PASS"
+          }
+        ],
+        "source_sha256": "5db1e002b9cd80707595ea63f107b29272c5388a29ffb3506a37f5c44471a762",
+        "report": "{superpowers-evidence-root}\\qa-debug-followup\\minos-repair\\result.md",
+        "scope": "local HTTP fixture; no browser run"
+      },
+      {
+        "case": "argos-repair",
+        "changed_existing_files": [
+          "run-log.md",
+          "server.cjs",
+          "plan\\verify-report.md"
+        ],
+        "test_and_contract_hashes_preserved": true,
+        "independent_main_rechecks": [
+          {
+            "command": "node qa.cjs automated",
+            "exit": 0,
+            "output": "automated: 3 assertions PASS"
+          },
+          {
+            "command": "node qa.cjs persistence",
+            "exit": 0,
+            "output": "persistence: saved item visible PASS"
+          }
+        ],
+        "source_sha256": "5db1e002b9cd80707595ea63f107b29272c5388a29ffb3506a37f5c44471a762",
+        "report": "{superpowers-evidence-root}\\qa-debug-followup\\argos-repair\\result.md",
+        "scope": "local HTTP fixture; no browser run"
+      }
+    ],
+    "runtime": "Windows, Node v22.23.3; fresh Codex subagents read global installed skills; local HTTP only",
+    "packages": {
+      "count": 3,
+      "crc_passed": 3,
+      "directory": "{superpowers-evidence-root}\\qa-debug-followup\\packages"
+    },
+    "test_only_case": {
+      "grade": "FAIL",
+      "issue": "EXP-01/P1 blocked; implementation outside allowed scope",
+      "changed_existing_files": [
+        "run-log.md"
+      ],
+      "source_and_test_unchanged": true,
+      "repairs_used_before": 1,
+      "repairs_used_after": 1,
+      "limit": 2,
+      "actual_commands": [
+        {
+          "command": "node qa.cjs persistence",
+          "exit": 1
+        },
+        {
+          "command": "node qa.cjs automated",
+          "exit": 0
+        }
+      ],
+      "report": "{superpowers-evidence-root}\\qa-debug-followup\\minos-test-only\\result.md"
+    },
+    "post_review_regressions": {
+      "pass": 16,
+      "fail": 0,
+      "skip": 0
+    },
+    "limitations": "Four independent current-model contexts on local HTTP fixtures and read-only reporting; no browser, full product audit, other-CLI runtime, or generalized cost/quality comparison. Final post-test doc edits only clarify existing blocked/severity reporting."
+  },
+  "publication_note": "Machine-specific paths use placeholders; raw local evidence is not bundled. Case results and file digests are retained. These are dated validation records, not a general performance benchmark."
+}

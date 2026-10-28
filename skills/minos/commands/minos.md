@@ -18,7 +18,8 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
    - Step 5: 브라우저 탐색 QA (references/browser-explorer.md 참조, 탐색 스크립트 생성·실행 → 이슈 회수. `--explore-mcp` 시 Playwright MCP fallback)
    - Step 6: Healer Loop (references/healer-loop.md 참조)
    - Step 7: 결과 보고
-3. 각 단계에서 실패하면 사용자에게 보고하고 다음 단계 진행 여부를 확인합니다.
+3. 승인된 수정 범위의 실패는 Step 6의 디버깅·Healer 절차로 이어갑니다. 검사만 요청,
+   `--fix-test-only`, 기존 재시도 상한을 지키며 범위 밖 변경이나 필요한 입력만 확인합니다.
 
 ## 사용 예시
 

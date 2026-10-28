@@ -4,14 +4,12 @@
 
 When you fix a bug caused by invalid data, adding validation at one place feels sufficient. But that single check can be bypassed by different code paths, refactoring, or mocks.
 
-**Core principle:** Validate at EVERY layer data passes through. Make the bug structurally impossible.
+**Core principle:** Validate at the boundaries that can admit invalid data or bypass an
+earlier check. Each check should enforce a distinct contract or independent entry path.
 
 ## Why Multiple Layers
 
-Single validation: "We fixed the bug"
-Multiple layers: "We made the bug impossible"
-
-Different layers catch different cases:
+Different boundaries can catch different cases:
 - Entry validation catches most bugs
 - Business logic catches edge cases
 - Environment guards prevent context-specific dangers
@@ -53,13 +51,18 @@ function initializeWorkspace(projectDir: string, sessionId: string) {
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```typescript
+import { realpathSync } from 'node:fs';
+import { isAbsolute, relative, sep } from 'node:path';
+import { tmpdir } from 'node:os';
+
 async function gitInit(directory: string) {
   // In tests, refuse git init outside temp directories
   if (process.env.NODE_ENV === 'test') {
-    const normalized = normalize(resolve(directory));
-    const tmpDir = normalize(resolve(tmpdir()));
+    const normalized = realpathSync(directory);
+    const tmpDir = realpathSync(tmpdir());
 
-    if (!normalized.startsWith(tmpDir)) {
+    const relativeDirectory = relative(tmpDir, normalized);
+    if (relativeDirectory === '..' || relativeDirectory.startsWith(`..${sep}`) || isAbsolute(relativeDirectory)) {
       throw new Error(
         `Refusing git init outside temp dir during tests: ${directory}`
       );
@@ -90,7 +93,7 @@ When you find a bug:
 
 1. **Trace the data flow** - Where does bad value originate? Where used?
 2. **Map all checkpoints** - List every point data passes through
-3. **Add validation at each layer** - Entry, business, environment, debug
+3. **Assign validation to the relevant boundaries** - Entry, business, environment; logging observes failures but does not reject invalid data
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
 ## Example from Session
@@ -109,14 +112,16 @@ Bug: Empty `projectDir` caused `git init` in source code
 - Layer 3: `WorktreeManager` refuses git init outside tmpdir in tests
 - Layer 4: Stack trace logging before git init
 
-**Result:** All 1847 tests passed, bug impossible to reproduce
+This is an illustrative boundary design. Verify each relevant bypass path and report
+the actual test commands/results in the target project.
 
 ## Key Insight
 
-All four layers were necessary. During testing, each layer caught bugs the others missed:
+Reasons to retain more than one check include:
 - Different code paths bypassed entry validation
 - Mocks bypassed business logic checks
 - Edge cases on different platforms needed environment guards
 - Debug logging identified structural misuse
 
-**Don't stop at one validation point.** Add checks at every layer.
+Add another check when a distinct bypass path or responsibility justifies it;
+do not duplicate the same validation across every internal call by default.

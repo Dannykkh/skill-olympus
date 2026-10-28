@@ -95,7 +95,7 @@ if (-not $transcriptPath -or -not (Test-Path $transcriptPath)) {
     exit 0
 }
 
-$lastLines = Get-Content $transcriptPath -Tail 500 | Where-Object { $_ -match '"role":"assistant"' }
+$lastLines = Get-Content $transcriptPath -Encoding UTF8 -Tail 500 | Where-Object { $_ -match '"role":"assistant"' }
 if (-not $lastLines) {
     Write-Error "loop: assistant 메시지를 찾을 수 없습니다. 루프를 중단합니다."
     Remove-Item $stateFile -Force
@@ -109,6 +109,15 @@ try {
 } catch {
     Write-Error "loop: JSON 파싱 실패. 루프를 중단합니다."
     Remove-Item $stateFile -Force
+    exit 0
+}
+
+# 주차 종료는 성공과 구분한다. 본문에서 마커를 언급한 것만으로 멈추지 않는다.
+# Only the first nonblank line can be a terminal report heading.
+$firstReportLine = $lastOutput -split '\r?\n' | Where-Object { $_.Trim() } | Select-Object -First 1
+if ($firstReportLine -match '(?i)^[ \t#=*═_-]*Chronos[ \t]+Blocked(?:[ \t\r:=*_═—-]|$)') {
+    Remove-Item $stateFile -Force
+    @{ systemMessage = "Chronos Blocked: unresolved requirements are parked; loop stopped incomplete (not success). See the Owner Decision Brief." } | ConvertTo-Json -Compress
     exit 0
 }
 
@@ -164,10 +173,10 @@ Set-Content -Path $stateFile -Value $newContent -NoNewline
 
 # 시스템 메시지 구성
 $maxLabel = if ($maxIter -gt 0) { "${maxIter}회" } else { "무제한" }
-$commonMsg = "Chronos loop ${nextIter}/${maxLabel} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 막힌 이슈는 사유와 함께 로그에 주차(Parked:)하고 다음 이슈로 넘어가세요 — 주차된 이슈는 할 작업으로 세지 않습니다. 더 이상 할 작업이 없으면 반드시 'Chronos Complete'를 포함한 최종 보고(주차 이슈마다 Owner Decision Brief)를 출력하세요."
+$commonMsg = "Chronos loop ${nextIter}/${maxLabel} | 이전 작업 결과를 확인하고 다음 할 일을 찾아 진행하세요. 막힌 이슈는 사유와 함께 로그에 주차(Parked:)하고 다음 이슈로 넘어가세요 — 주차된 이슈는 할 작업으로 세지 않습니다. 모든 요구사항이 proved이고 검증 게이트가 PASS일 때만 'Chronos Complete'로 보고하세요. 실행할 이슈가 없고 미증명 요구사항이 주차되어 있으면 첫 줄에 'Chronos Blocked'를 쓰고 주차 이슈마다 Owner Decision Brief를 남기세요. 주차는 미완료이며 완료 promise를 출력하지 마세요."
 
 if ($completionPromise -and $completionPromise -ne "null") {
-    $sysMsg = "${commonMsg} 또는 완료 조건 달성 시(검증 PASS를 실제로 확인한 후에만): <promise>$completionPromise</promise>"
+    $sysMsg = "${commonMsg} 완료 조건 달성 시(모든 요구사항 proved와 검증 PASS를 실제로 확인한 후에만): <promise>$completionPromise</promise>"
 } else {
     $sysMsg = $commonMsg
 }

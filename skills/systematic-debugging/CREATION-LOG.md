@@ -2,6 +2,10 @@
 
 Reference example of extracting, structuring, and bulletproofing a critical skill.
 
+Historical upstream authoring notes. Original paths and reported test results below
+describe that context; they are not Olympus routing instructions or verification of
+the currently installed skill. Evaluate the current module with its actual scenarios.
+
 ## Source Material
 
 Extracted debugging framework from `/Users/jesse/.claude/CLAUDE.md`:

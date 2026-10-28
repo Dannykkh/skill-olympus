@@ -130,4 +130,4 @@ sections:
 | SECTION_MANIFEST 없음 | "index.md에 SECTION_MANIFEST 블록이 필요합니다" 에러 |
 | Dependency Graph 테이블 없음 | MANIFEST 순서를 순차 의존성으로 가정 (01→02→03...) |
 | 섹션 파일 누락 | 경고 출력, 해당 섹션은 skip 가능 여부 사용자에게 확인 |
-| 의존성 대상 섹션이 MANIFEST에 없음 | 경고 출력, 해당 의존성 무시 |
+| 의존성 대상 섹션이 MANIFEST에 없음 | 해당 소비자와 그 후속 작업을 `BLOCKED: unresolved dependency`로 표시. 실제 선행 산출물·외부 의존성 근거로 해소하기 전에는 의존성을 제거하지 않으며, 영향 없는 독립 작업은 계속 |

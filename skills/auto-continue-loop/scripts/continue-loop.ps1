@@ -121,7 +121,7 @@ function Should-StopLoop([string]$lastOutput, [string]$completionPromise) {
     if (-not $lastOutput) { return $false }
 
     # 느슨한 서술형 패턴은 진행 보고를 완료로 오인해 조기 종료시킨다.
-    # 종료 계약은 'Chronos Complete' 마커와 <promise> 태그뿐.
+    # 성공 계약은 'Chronos Complete' 마커와 <promise> 태그뿐 (Blocked는 별도 처리).
     $donePatterns = @(
         'Chronos Complete'
     )
@@ -288,6 +288,14 @@ if ($maxIter -gt 0 -and $iter -ge $maxIter) {
     exit 0
 }
 
+# An explicit report heading stops parked work without claiming success.
+# Only the first nonblank line can be a terminal report heading.
+$firstReportLine = $lastOutput -split '\r?\n' | Where-Object { $_.Trim() } | Select-Object -First 1
+if ($firstReportLine -match '(?i)^[ \t#=*═_-]*Chronos[ \t]+Blocked(?:[ \t\r:=*_═—-]|$)') {
+    Remove-StateFile $stateFile "loop-blocked: unresolved requirements parked (not success)"
+    exit 0
+}
+
 if (Should-StopLoop $lastOutput $completionPromise) {
     Remove-StateFile $stateFile "loop-complete: assistant signalled completion"
     exit 0
@@ -322,11 +330,11 @@ $resumePrompt = @(
     "- Park blocked issues in docs/chronos/chronos-log.md with a reason ('Parked: {issue} - {reason}') and move on; parked issues do not count as actionable work.",
     "- Do not ask the user to continue.",
     "- Keep changes inside the saved scope and avoid unrelated refactors.",
-    "- If no actionable in-scope work remains, output 'Chronos Complete' with the final report (one Owner Decision Brief per parked issue)."
+    "- Report 'Chronos Complete' only when every requirement is proved and the verification gate passes. If no actionable work remains but unproved requirements are parked, start the report with 'Chronos Blocked' and include an Owner Decision Brief per parked issue; do not output a completion promise."
 )
 
 if ($completionPromise -and $completionPromise -ne "null") {
-    $resumePrompt += "- Only after the verification gate actually passes, output <promise>$completionPromise</promise>. Never output a promise that is not literally true."
+    $resumePrompt += "- Only after every requirement is proved and the verification gate actually passes, output <promise>$completionPromise</promise>. Never output a promise that is not literally true."
 }
 
 if ($maxIter -gt 0 -and $nextIter -ge $maxIter) {

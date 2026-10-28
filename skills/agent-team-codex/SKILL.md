@@ -49,8 +49,11 @@ max_concurrent_threads_per_session = 6
 이 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리를 근거로 호출하거나
 모듈 이름을 slash command로 실행하지 않습니다.
 
-code-reviewer를 읽지 못하면 `codex review` 1회와 explorer의 bounded 품질·보안·타입
-체크만 실행하고 `policy module: NOT RUN (native fallback)`, gate `DEGRADED`를 기록합니다.
+code-reviewer를 읽지 못해도 원래 worktree·index 기준점과 기존 untracked 제외를 유지합니다.
+`codex review`가 같은 범위를 표현하면 1회 실행하고 explorer의 bounded 품질·보안·타입 검토를
+보강합니다. 표현할 수 없거나 엔진이 없으면 `native review: NOT RUN`으로 남기고 같은 patch·파일
+범위만 explorer가 검토합니다(위임 불가면 메인 순차 검토). 모든 모듈 누락 경로는
+`policy module: NOT RUN (bounded fallback)`, gate `DEGRADED`이며 모듈 PASS를 주장하지 않습니다.
 MCP 분기를 선택했는데 orchestrator/MCP를 읽지 못하면 파일 소유권을 직렬화할 수 있는 경우에만 메인 순차 경로로
 축소하고 `MCP: NOT RUN`을 기록합니다. hard lock이 필수이면 해당 Wave는 `BLOCKED`입니다.
 어느 누락도 PASS로 처리하지 않습니다.
@@ -79,6 +82,20 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 
 ## Workflow
 
+### Pre-Step: 실행 식별과 네이티브 재개
+
+기존 `conversations/{YYYY-MM-DD}-team-poseidon.md`의 실행별 절에 실행 ID, 프로젝트 루트,
+계획·sections/index.md·activity log의 절대경로(자유 모드는 목표·입력 경로), 원래 소유권
+기준점·기존 untracked 목록, task/worker·담당 파일·Wave 상태·다음 행동을 연결합니다.
+AC 증거는 기존 `checklist-status.md`에 두고, 실패별 소진한 재시도·남은 상한과 직전 수정·재검토 상태는 activity log에 남깁니다.
+
+재개 시 계획·실행 ID를 먼저 대조합니다. 다른 계획이나 단순 최신 로그를 재사용하지 않으며,
+같은 실행은 날짜가 바뀌어도 원래 로그·기준점·재시도 예산을 유지합니다. 현재 agent/task 상태와
+실제 파일·검증 증거를 확인해 완료 작업은 재배정하지 않고 진행 중 작업을 이어갑니다. 관련 코드가
+바뀌어 증거가 무효이면 해당 AC만 `weak`로 내려 재검증합니다. 네이티브 상태 조회가 안 되면
+부분 변경·로그부터 확인해 같은 파일에 중복 작업을 배정하지 않습니다. 원래 기준점을 복구하지
+못하면 소유권 검증은 `NOT RUN`이며, 재기준점으로 이전 변경을 숨기지 않습니다.
+
 ### Step 0: 산출물 검토 (PM 게이트)
 
 > Claude 버전 agent-team의 Step 0과 동일한 역할. 설계 없이 구현을 시작하지 않는다.
@@ -102,6 +119,7 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 1. 목표를 함께 판단·검증할 책임 단위로 묶고, 독립적으로 완료할 수 있는 경계에서만 분할. 최소 태스크 수나 파일 수에 맞추지 않음
 2. 태스크별 담당 파일 범위를 고정
 3. 의존성 있는 태스크는 후행 Wave로 배치. 관련 태스크는 같은 worker가 이어받되 태스크별 AC·소유권·Wave 검증은 유지하고, 동시성은 병렬 이득·가용 슬롯·기존 예산으로 결정
+   - 의존성 대상이 없거나 계약이 미확정이면 해당 소비자와 후속 작업을 `BLOCKED: unresolved dependency`로 남깁니다. 의존성을 무시하지 않고, 영향 없는 독립 작업은 계속합니다.
 4. 자유 모드는 `구현 중` 트립와이어 1~2개(틀리면 작업 전체가 헛수고가 되는 가정이 있으면 그 확인을 Wave 1 태스크로 두고 결과를 지표로)를 정하고, 장부는 activity log의 `## Tripwires` 표로 둔다 (형식: 젭마인 `references/tripwire-guide.md`)
 
 상세 규칙: `references/role-mapping.md`
@@ -117,14 +135,15 @@ lock, 외부 task ledger, 크로스-CLI 혼합 중 하나가 실제 요구사항
 Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 템플릿은 `references/prompt-templates.md`를 사용합니다.
 
-스폰 전 한 번: 소유권 기준점을 기록합니다. `git stash create` 출력 SHA(빈 출력이면 `git rev-parse HEAD`)와
-`git ls-files --others --exclude-standard`의 기존 untracked 목록을 Lead가 activity log의 `## Ownership baseline`에 적습니다.
+새 실행의 첫 스폰 전 한 번: 소유권 기준점을 기록합니다. 재개에서는 원래 값을 유지합니다. `git stash create` 출력 SHA(빈 출력이면 `git rev-parse HEAD`)와
+`git ls-files --others --exclude-standard -z`의 기존 untracked 목록을 Lead가 activity log의 `## Ownership baseline`에 적습니다. index 기준점도 별도로 기록합니다(stash 객체의 두 번째 부모, 깨끗한 시작이면 시작 HEAD). 수정할 기존 untracked의 시작 내용/해시도 보존합니다.
 작업 중에는 커밋하지 않으므로 Step 7의 충돌 확인은 커밋 이력이 아니라 이 기준점과 비교합니다.
 `git stash create`는 작업 트리를 바꾸지 않고, 작업 전부터 있던 미커밋 수정을 기준점에 포함합니다.
 
 핵심 규칙:
 
 - 각 worker는 파일 소유권 범위를 벗어나지 않음
+- 공유 파일을 읽을 수 있으면 섹션·참조의 정확한 절대경로와 목표·AC ID·필수 제약·소유권·선행 계약·검증 반환 형식을 전달. 접근 불가 때만 필요한 원문을 포함하며 누락 입력은 Lead에게 반환
 - explorer는 코드 수정 금지
 - 충돌 가능성이 있으면 즉시 `default`가 재분배
 - 각 worker는 담당 AC ID 목록을 받고, 변경 파일·테스트·계획 이탈·남은 위험과 AC별 `ID | 증거 | 상태 제안`을 반환하고, Lead만 `conversations/{YYYY-MM-DD}-team-poseidon.md`와 공유 `implementation-notes.md`를 기록
@@ -134,7 +153,9 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 1. 진행 중 실패 태스크를 우선 확인
 2. 실패 명령·출력·부분 변경으로 원인을 확인. 구현 결함은 바로 수정하고, 실행 방식 변경이 필요하면 `references/role-mapping.md`의 실패 처리에 따라 비교
 3. 동일 실패의 재시도 상한에 닿으면 미완료와 차단 근거를 보고. 실패 횟수만으로 아키텍처 문제라 단정하거나 작업자 교체로 횟수를 초기화하지 않음
-4. **Wave 경계 트립와이어 판정** — Wave의 worker가 모두 반환하면 다음 Wave를 spawn하기 전에 Step 0(자유 모드: Step 1)에서 등록한 `구현 중` 지표를 판정한다. 계속 → 다음 Wave, 초기 신호 → 진행하며 원인 조사·worker 반환마다 확인, 수정 임계점·중단 검토 조건 → 다음 Wave를 spawn하지 않고 사용자 보고(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속). 단계를 낮추거나 판정자 대신 진행을 결정하지 않는다. `출시 후`만인 지표는 판정하지 않고, 데이터가 모자라면 `데이터 없음`으로 남긴다. 초기 신호 이상·데이터 없음은 plan.md `#### 발동 기록`(자유 모드: activity log `## Tripwires`)에 Lead만 한 줄 — 그 절 밖은 판정자가 확정한 재보정 값 반영만 예외. 절차 정본: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`
+4. **후속 Wave 소비 경계 확인** — 다음 작업이 소비할 선행 파일·export·스키마·설정과 관련 AC를 고르고, Step 7의 소유권·AC 증거·경계면 대조를 그 범위에 적용합니다. 실제 producer와 consumer의 기대 계약을 함께 읽고(consumer 미구현이면 섹션/API 계약), 담당 worker의 관련 검증 명령·결과가 현재 산출물을 다루는지 확인합니다. 유효한 증거는 재사용하고 변경·실패·미해결 의심 때만 해당 검사를 실행합니다. 누락·불일치·증거 부족은 소비자와 후속 작업만 보류하고 선행 담당자가 남은 예산에서 수정하며 독립 작업은 계속합니다. 결과는 기존 activity log·AC 장부에 기록하고 미실행을 PASS로 올리지 않습니다. 소비 경계가 없으면 `NOT APPLICABLE`; 전체 리뷰·전체 스위트는 Step 6~7에서 수행합니다.
+5. **Wave 경계 트립와이어 판정** — Wave의 worker가 모두 반환하면 다음 Wave를 spawn하기 전에 Step 0(자유 모드: Step 1)에서 등록한 `구현 중` 지표를 판정한다. 계속 → 의존성이 해소된 다음 작업, 초기 신호 → 진행하며 원인 조사·worker 반환마다 확인, 수정 임계점·중단 검토 조건 → 다음 Wave를 spawn하지 않고 사용자 보고(제우스 호출이면 `[ZEUS-AUTO:taste]` 기록 후 계속). 단계를 낮추거나 판정자 대신 진행을 결정하지 않는다. `출시 후`만인 지표는 판정하지 않고, 데이터가 모자라면 `데이터 없음`으로 남긴다. 초기 신호 이상·데이터 없음은 plan.md `#### 발동 기록`(자유 모드: activity log `## Tripwires`)에 Lead만 한 줄 — 그 절 밖은 판정자가 확정한 재보정 값 반영만 예외. 절차 정본: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`
+6. Wave 전환·재시도·압축 전 activity log의 상태·증거 위치·소진 예산·다음 행동을 갱신. 압축 후에는 Pre-Step으로 네이티브 작업을 이어가며 완료 작업과 예산을 초기화하지 않음
 
 ### Step 5: Activity Log Summary
 
@@ -155,12 +176,13 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
    `${code_reviewer_root}/SKILL.md`의 Codex native 경로와 포세이돈 정책 레이어를 읽습니다.
    등록 스킬로 호출하지 않습니다. 보안 감사 reference가 필요한 범위만
    `${code_reviewer_root}/references/security-audit.md`를 추가로 읽습니다.
-2. native-first로 `codex review --uncommitted` 또는 적절한 base review를 실행하고, 필요한
+2. 원래 worktree·index 기준점과 기존 untracked 제외를 `review_scope: task`로 전달합니다.
+   네이티브 옵션이 같은 범위를 표현하면 실행하고, 그렇지 않으면 모듈의 같은 범위 풀 경로를 사용합니다. 필요한
    보강 검토를 **explorer 에이전트**에게 위임합니다:
    - 각 worker가 생성한 파일의 품질, 보안, 타입 안전성 확인
    - Acceptance Criteria 대조 (Step 0에서 추출한 마스터 체크리스트)
    - flow-diagrams 노드 매핑 (있는 경우) — 담당 노드가 구현되었는지
-3. source module 미가용 시 native review + 위 세 항목만 bounded fallback으로 실행하고
+3. source module 미가용 시 위 resolver의 동일 범위 bounded fallback으로 위 세 항목을 검토하고
    `policy module: NOT RUN`, `review gate: DEGRADED`를 보고합니다.
 4. 미통과 항목 → Step 4의 원인 판별을 거쳐 수정·재검증 (최대 2회; 실행 방식 비교도 같은 상한에 포함)
 5. 2회 후에도 미통과 → 사용자 보고
@@ -170,7 +192,7 @@ Codex 프롬프트에서 자연어로 spawn 지시를 보냅니다.
 > **I-1**: 병렬 구현 후 "함수가 존재하는가"를 Grep/Read로 확인하는 코드-존재 검증은 자기 판단이며,
 > 컴파일/통합되지 않는 코드도 통과시킬 수 있다. 빌드/타입체크는 선택이 아니다.
 
-1. 파일 충돌 여부 확인 — 변경 파일 = `git diff --name-only {기준점 SHA}` ∪ (`git ls-files --others --exclude-standard` − 기준점의 기존 untracked). 각 파일을 담당 worker 소유와 worker가 반환한 변경 파일에 대조해, 같은 Wave의 둘 이상이 소유하면 `CONFLICT`(다른 Wave가 순차로 고친 공유 파일은 `SHARED` — 각자 맡은 부분만 바꿨는지 diff 확인), Lead 기록(activity log·`checklist-status.md`·`implementation-notes.md`)은 제외하고, 소유자가 없으면 `UNOWNED`(조립 지점에서 기준점 대비 diff에 `-` 줄 없이 등록 줄만 추가된 경우 제외), 아무도 보고하지 않았으면 `UNREPORTED`로 표시합니다. 근거 없는 변경은 revert하고, 필요한 변경은 소유에 추가해 activity log에 기록합니다
+1. 파일 충돌 여부 확인 — 변경 파일 = `git diff --name-only -z {worktree 기준점 SHA}` ∪ `git diff --cached --name-only -z {index 기준점 SHA}` ∪ (`git ls-files --others --exclude-standard -z` − 기준점의 기존 untracked). NUL 구분으로 경로를 해석하고 두 patch의 버전을 구분합니다. 원래 index 기준점은 stash 객체의 두 번째 부모로 복구할 수 있지만 근거가 없으면 `UNVERIFIED`; 기존 untracked 수정도 보존한 이전 내용과 비교할 수 없으면 `UNVERIFIED`입니다. 각 파일을 담당 worker 소유와 worker가 반환한 변경 파일에 대조해, 같은 Wave의 둘 이상이 소유하면 `CONFLICT`(다른 Wave가 순차로 고친 공유 파일은 `SHARED` — 각자 맡은 부분만 바꿨는지 diff 확인), Lead 기록(activity log·`checklist-status.md`·`implementation-notes.md`)은 제외하고, 소유자가 없으면 `UNOWNED`(두 patch 모두 조립 지점의 등록 줄 추가뿐인 경우 제외), 아무도 보고하지 않았으면 `UNREPORTED`로 표시합니다. 근거 없는 이번 작업 변경만 복구하고, 필요한 변경은 소유에 추가해 activity log에 기록합니다
 2. **사전 점검(PRE-CHECK, 완료 권한 아님):** 코드-존재 / Acceptance Criteria grep 대조 — 빠뜨린 작업 식별용일 뿐, 이것만으로 완료 선언 금지. AC는 proved/weak/missing/contradicted로 채점(028 완료 계약)해 Lead가 `checklist-status.md`에 증거와 함께 기록 — 코드는 있으나 동작 증거가 약하면 `weak`로 분리(존재=완료 둔갑 방지). 또한 **경계면 정합성 교차 비교**(웹앱: API 응답 shape↔훅 타입·경로↔href·엔드포인트↔훅 1:1 / 비웹: 해당 경계 / 없으면 skip) — 빌드 통과가 숨기는 런타임 mismatch를 게이트 전에 정적으로 거른다(양쪽 동시 읽기)
 3. **병합 결과에 대해 통합 게이트를 1회 실행 (이 게이트만이 완료 권한):**
    1. 빌드 / 타입체크

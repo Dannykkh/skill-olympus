@@ -1,19 +1,51 @@
 ---
 name: systematic-debugging
 description: |
-  Explicit `/systematic-debugging` reference for a structured root-cause audit.
-  Use only when the user requests this workflow; routine diagnosis stays native.
+  Structured root-cause investigation when explicitly requested, or as an internal
+  reference in Argos/Minos authorized repair loops. Routine diagnosis stays native.
 ---
 
 # Systematic Debugging
+
+## Invocation and Resource Paths
+
+This module is source-only by default. A user request for this workflow is enough;
+do not assume its slash command is registered. Resolve its exact `SKILL.md` from
+the project, the current runtime's active skill root, then the matching
+`SKILLS-CATALOG.md` row. `module_root` is the directory containing that file;
+read supporting documents relative to it, regardless of the project working directory.
+
+## Harness Integration
+
+Argos and Minos read this module when an observed failure enters their authorized repair
+loop. They retain ownership of scope, issue IDs, reports, retry budgets, and final grades.
+Reading this module does not start another loop, request TDD, or grant permission to edit.
+Inspection-only requests remain read-only; a report-only command only displays the existing report.
+
+- Reuse the recorded failing check when its code, input, and environment still match.
+  For an exploratory issue without a test, identify a repeatable observation or focused check first.
+- Separate the current requirement/AC from the actual response or state. An error label is a clue,
+  not a root cause: a timeout may be a server failure rather than a reason to add a wait.
+- Record one testable cause and the observation that supports or would disprove it before editing.
+  If existing evidence already establishes the cause, fix it directly without repeating the investigation.
+- Make the smallest authorized change, then rerun the original check and affected regression checks.
+  A source-code edit alone or green tests that never covered the reported issue do not close it.
+- If the attempt fails, preserve its evidence, restore only that attempt's known changes when needed,
+  and return to the unanswered question within the caller's remaining budget. Do not reset counts by
+  changing workers, sessions, issue labels, or entering this module. Repeated identical output without
+  new evidence is a blocker to report, not a reason for another speculative patch.
+
+Put `issue/AC, reproduction, contract vs actual, hypothesis/evidence, change, verification,
+remaining budget` in the caller's existing repair history. Do not create a second report or ledger.
+Missing prerequisites are `NOT RUN`/`UNVERIFIED`; an unresolved issue retains its actual severity.
+Use the phases below only as far as the remaining uncertainty requires.
 
 ## Overview
 
 Random fixes waste time and create new bugs. Quick patches mask underlying issues.
 
-**Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.
-
-**Violating the letter of this process is violating the spirit of debugging.**
+**Core principle:** Investigate the cause before choosing a fix, and distinguish
+evidence-backed diagnosis from temporary symptom mitigation.
 
 ## The Iron Law
 
@@ -21,11 +53,14 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 ```
 
-If you haven't completed Phase 1, you cannot propose fixes.
+Gather enough evidence for a testable hypothesis before changing behavior.
+During an incident, an authorized rollback or containment may precede full diagnosis;
+record it as mitigation and preserve the evidence needed to investigate the cause.
 
 ## The Four Phases
 
-You MUST complete each phase before proceeding to the next.
+Use the phases to reduce uncertainty. Reuse evidence already established for this
+code and environment; a clear local failure does not require a multi-component investigation.
 
 ### Phase 1: Root Cause Investigation
 
@@ -53,11 +88,10 @@ You MUST complete each phase before proceeding to the next.
 
    **WHEN system has multiple components (CI → build → signing, API → service → database):**
 
-   **BEFORE proposing fixes, add diagnostic instrumentation:**
+   **When existing evidence does not locate the failing boundary, add focused instrumentation:**
    ```
    For EACH component boundary:
-     - Log what data enters component
-     - Log what data exits component
+     - Record non-sensitive input/output shapes or redacted diagnostic values
      - Verify environment/config propagation
      - Check state at each layer
 
@@ -68,21 +102,13 @@ You MUST complete each phase before proceeding to the next.
 
    **Example (multi-layer system):**
    ```bash
-   # Layer 1: Workflow
-   echo "=== Secrets available in workflow: ==="
-   echo "IDENTITY: ${IDENTITY:+SET}${IDENTITY:-UNSET}"
-
-   # Layer 2: Build script
-   echo "=== Env vars in build script: ==="
-   env | grep IDENTITY || echo "IDENTITY not in environment"
-
-   # Layer 3: Signing script
-   echo "=== Keychain state: ==="
-   security list-keychains
-   security find-identity -v
-
-   # Layer 4: Actual signing
-   codesign --sign "$IDENTITY" --verbose=4 "$APP"
+   # Run the same presence check at the workflow and build-script boundaries.
+   # Report configuration presence without printing its value or the full environment.
+   if [ -n "${IDENTITY:-}" ]; then
+     echo "IDENTITY: SET"
+   else
+     echo "IDENTITY: UNSET"
+   fi
    ```
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
@@ -91,7 +117,7 @@ You MUST complete each phase before proceeding to the next.
 
    **WHEN error is deep in call stack:**
 
-   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
+   Read [root-cause-tracing.md](root-cause-tracing.md) under `module_root` for the complete backward tracing technique.
 
    **Quick version:**
    - Where does bad value originate?
@@ -108,9 +134,8 @@ You MUST complete each phase before proceeding to the next.
    - What works that's similar to what's broken?
 
 2. **Compare Against References**
-   - If implementing pattern, read reference implementation COMPLETELY
-   - Don't skim - read every line
-   - Understand the pattern fully before applying
+   - Read the reference implementation and callers needed to understand the affected contract.
+   - Expand the search only when a concrete dependency or unanswered question requires it.
 
 3. **Identify Differences**
    - What's different between working and broken?
@@ -156,7 +181,11 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the project's existing test framework or a reproducible check for the original symptom.
+   - Requesting this debugging workflow does not also request strict TDD. Only if the user explicitly
+     requests TDD, resolve `test-driven-development` by the same project → active root → exact catalog
+     path order above and read its `SKILL.md` directly. If unavailable, report that guidance as
+     `NOT RUN` and continue the authorized reproduction and verification with project-native tools.
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -165,32 +194,26 @@ You MUST complete each phase before proceeding to the next.
    - No bundled refactoring
 
 3. **Verify Fix**
-   - Test passes now?
-   - No other tests broken?
-   - Issue actually resolved?
+   - Run the original reproduction against the changed code and verify the expected response,
+     persisted state, and relevant side effects; a changed file is not proof that the symptom is fixed.
+   - Run the project's required tests/build plus regression checks for the affected behavior.
+     Record the command, target revision or working-tree state, environment, exit code, and result.
+   - Reuse an existing result only when code, environment, and checked conditions still match;
+     rerun affected checks after a change or when a specific unresolved doubt requires it.
+   - Report `NOT RUN` with the missing prerequisite when execution is unavailable. Distinguish
+     passing checks, failing checks, and unverified requirements before claiming completion.
 
 4. **If Fix Doesn't Work**
-   - STOP
-   - Count: How many fixes have you tried?
-   - If < 3: Return to Phase 1, re-analyze with new information
-   - **If ≥ 3: STOP and question the architecture (step 5 below)**
-   - DON'T attempt Fix #4 without architectural discussion
-
-5. **If 3+ Fixes Failed: Question Architecture**
-
-   **Pattern indicating architectural problem:**
-   - Each fix reveals new shared state/coupling/problem in different place
-   - Fixes require "massive refactoring" to implement
-   - Each fix creates new symptoms elsewhere
-
-   **STOP and question fundamentals:**
-   - Is this pattern fundamentally sound?
-   - Are we "sticking with it through sheer inertia"?
-   - Should we refactor architecture vs. continue fixing symptoms?
-
-   **Discuss with your human partner before attempting more fixes**
-
-   This is NOT a failed hypothesis - this is a wrong architecture.
+   - Record the hypothesis, change, and observed result before choosing another experiment.
+   - Restore only this experiment's changes when the baseline is known; preserve existing user
+     changes and other work. Do not reset files or discard a branch to restart the process.
+   - Return to the earliest unanswered question. A missing prerequisite, wrong assumption,
+     implementation error, test defect, and architecture problem need different responses.
+   - Repeated failure warrants reassessment; the number of attempts alone does not diagnose
+     the architecture. Shared-state coupling or incompatible contracts must be demonstrated.
+   - Follow the current task's retry/time budget. Continue an authorized, evidence-backed fix;
+     report the blocker and next discriminating check if further attempts only repeat guesses.
+     Discuss scope-changing architectural work before undertaking it.
 
 ## Red Flags - STOP and Follow Process
 
@@ -204,12 +227,10 @@ If you catch yourself thinking:
 - "Pattern says X but I'll adapt it differently"
 - "Here are the main problems: [lists fixes without investigation]"
 - Proposing solutions before tracing data flow
-- **"One more fix attempt" (when already tried 2+)**
+- **"One more fix attempt" without a new observation or testable hypothesis**
 - **Each fix reveals new problem in different place**
 
 **ALL of these mean: STOP. Return to Phase 1.**
-
-**If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
 ## your human partner's Signals You're Doing It Wrong
 
@@ -221,14 +242,6 @@ If you catch yourself thinking:
 - "We're stuck?" (frustrated) - Your approach isn't working
 
 **When you see these:** STOP. Return to Phase 1.
-
-## Why Speed Arguments Fail
-
-"Systematic is slower" is the most common rationalization. The data disagrees:
-- Systematic: 15-30 minutes to fix, ~95% first-time fix rate
-- Random fixes: 2-3 hours of thrashing, ~40% first-time fix rate, new bugs introduced
-
-"Emergency, no time for process" inverts the truth — emergencies are exactly when guessing is most expensive. Systematic debugging is faster than thrashing, not slower.
 
 ## Quick Reference
 
@@ -248,17 +261,17 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 3. Implement appropriate handling (retry, timeout, error message)
 4. Add monitoring/logging for future investigation
 
-**But:** 95% of "no root cause" cases are incomplete investigation.
+State the unresolved alternatives and evidence limits. An exhausted investigation is
+not proof of an external cause, and a successful mitigation is not proof of a root-cause fix.
 
 ## Supporting Techniques
 
 These techniques are part of systematic debugging and available in this directory:
 
-- **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
-- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
-- **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
+- [root-cause-tracing.md](root-cause-tracing.md) - Trace bugs backward through call stack to find original trigger
+- [defense-in-depth.md](defense-in-depth.md) - Add validation at multiple layers after finding root cause
+- [condition-based-waiting.md](condition-based-waiting.md) - Replace arbitrary timeouts with condition polling
 
-**Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+Strict TDD is an optional, explicitly requested source module (Phase 4, Step 1).
+Completion evidence is owned by **Phase 4, Step 3** above; no external verification skill is required.
 

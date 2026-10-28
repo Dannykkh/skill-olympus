@@ -55,9 +55,9 @@ Phase 6: Final Report ─────────── docs/zeus/zeus-report.md
      Phase 6 리포트의 Decision Ledger 섹션에 모아서 표시 — 사용자가 사후 결재(검토 후 뒤집기)할 수 있게 유지.
      가능하면 되돌리기 쉬운(reversible) 기본값을 우선 선택한다.
    - 예: `[ZEUS-AUTO:taste] 인증 JWT 선택 | 근거: SPA 표준, 무상태 확장 | 대안: 세션(서버 상태 필요) | 되돌리기: auth 모듈 교체, API 계약 변경 없음`
-5. **재개 지원** — docs/zeus/zeus-state.json으로 중단 지점부터 재개
-6. **모든 Phase 강제 실행** — Phase 0~6 모두 최소 1회 실행 시도 필수. "건너뜀"은 물리적 불가(Docker 미설치 등)일 때만 허용하며, 그 경우에도 폴백 경로를 실행
-7. **완료 전 최종 응답 금지** — Phase 0~5 실행 증거가 없으면 "다음 구현 순서"를 사용자에게 넘기지 않는다. 실행 가능한 다음 작업은 즉시 수행하고, 불가능하면 `zeus-state.json`과 핸드오프를 남긴다.
+5. **재개 지원** — 대상 프로젝트 루트의 `docs/zeus/zeus-state.json`을 먼저 확인하고 중단 지점부터 재개. 재개를 새 실행으로 처리해 산출물이나 예산을 초기화하지 않는다.
+6. **모든 Phase 강제 실행** — Phase 0~6 모두 최소 1회 실행 시도 필수. 물리적 불가이면 가능한 폴백을 실행하며, 상태 충돌·필수 전제 부재·예산 소진으로 실행할 수 없는 범위는 [비성공 종결 보고](references/final-report-format.md#phase-6-진입-조건-필수-체크)에 실제 사유를 남긴다.
+7. **완료 전 최종 응답 금지** — Phase 0~5 실행 증거가 없으면 "다음 구현 순서"를 사용자에게 넘기지 않는다. 실행 가능한 다음 작업은 즉시 수행한다. 더 진행할 수 없으면 비성공 종결 보고와 재개 조건을 남기며, 충돌하거나 읽을 수 없는 기존 상태는 덮어쓰지 않는다.
 8. **스코프 게이트 (pass/reduce/hold)** — zero-interaction에는 스코프 확장을 승인해줄 사용자가 없으므로, `plan.md`/`sections/` 확정 이후 계획에 없던 태스크·기능·신규 의존성을 추가하기 전에 자문 3개를 통과시킨다:
    - 사용자의 한 줄 목표에 직접 기여하는가? / 지금 필요하게 만든 관찰된 근거(실패한 테스트, 감리 지적, 명시 요청)가 있는가? / 기존 산출물 재사용이나 더 작은 변경으로 같은 결과가 나오는가?
    - 판정은 셋 중 하나로 결정 장부에 기록: `pass`(최소 범위로 진행) / `reduce`(축소 후 진행) / `hold`(실행 보류 — Phase 6 리포트 Decision Ledger에 Deferred로 표시, 사용자가 사후 승격)
@@ -115,6 +115,7 @@ CLI별 재개 방식:
 - 사용자 요청이 Zeus 자체 점검/문서 수정이 아니라 제품/기능 구현 파이프라인일 것
 - `auto-continue-loop/scripts/setup-loop.ps1` 또는 `.sh`를 찾을 수 있을 것. 현재 프로젝트의 `skills/auto-continue-loop/`를 먼저 쓰고, 없으면 현재 CLI의 글로벌 스킬 경로를 사용한다.
 - 이미 현재 CLI의 상태 파일(Claude: `.claude/loop-state.md`, Codex: `.codex/loop-state.md`, Antigravity: `.chronos/loop-state.md`)이 활성 상태면 새로 만들지 말고 기존 루프를 존중할 것. 다른 CLI의 오래된 상태 파일은 현재 CLI의 Zeus 부트스트랩을 막지 않는다.
+- 기존 로그와 부트스트랩 실행 결과로 새로 시작한 가드와 재사용한 엔진을 구분한다. 현재 실행의 `zeus-log.md`에 엔진·CLI·세션/실행 식별자·시작 시각·setup 결과를 기록하고 재개 시 이어받는다. 상태 충돌 확인은 부트스트랩보다 먼저 하며, 충돌이면 새 가드를 만들지 않는다. 소유 근거 없이 기존 루프를 Zeus 소유로 간주하지 않는다.
 
 **Windows PowerShell:**
 ```powershell
@@ -132,7 +133,7 @@ bash skills/auto-continue-loop/scripts/setup-loop.sh \
   "Zeus pipeline: {사용자 원문}. Run zephermine through minos and final report. Execute missing Phase 0-6 from docs/zeus/zeus-state.json; do not stop at next steps."
 ```
 
-Phase 6에서만 완료 조건을 출력합니다:
+Phase 6에서 최종 결과가 `SUCCESS`이고 모든 Phase 증거가 `proved`일 때만 완료 조건을 출력합니다. `PARTIAL`/`BLOCKED`/`FAILED` 보고서 생성은 완료 promise의 근거가 아닙니다:
 
 ```text
 <promise>Zeus Phase 0-6 complete</promise>
@@ -140,9 +141,17 @@ Phase 6에서만 완료 조건을 출력합니다:
 
 중간에 컨텍스트가 부족하면 `docs/zeus/zeus-state.json`의 `currentPhase`를 다음 누락 phase로 저장하고 핸드오프를 생성한 뒤 종료합니다. 이 경우 완료 promise를 출력하지 않습니다.
 
+### 비성공 종료와 자동 재개 해제
+
+최종 결과가 `PARTIAL`/`BLOCKED`/`FAILED`이고, 남은 범위에서 **독립적으로 진행 가능한 작업과 사용 가능한 원래 예산이 더 없을 때** [종결 보고 규칙](references/final-report-format.md#phase-6-진입-조건-필수-체크)을 적용한다. 단순 컨텍스트 부족이나 아직 실행 가능한 다른 Phase가 있으면 종료 신호를 보내지 않고 이어간다.
+
+- 기존 로그와 현재 재개 경로로 **이번 Zeus 실행이 새로 시작한 훅 폴백**임이 확인될 때만 최종 응답 첫 줄에 `Chronos Blocked`를 출력한다. 기존 Chronos 엔진이 현재 CLI의 폴백을 비성공 종료로 처리한다. 이어서 Zeus의 실제 결과, 소진/차단 사유, 미해결 이슈/AC와 기존 예산, 재개 조건을 보고한다. 이 헤더는 엔진 종료 신호이며 Zeus 등급이나 AC 증거 상태를 바꾸지 않는다.
+- 재사용한 사용자 루프·네이티브 goal이거나 소유를 확인할 수 없으면 이 종료 신호를 보내지 않는다. 미완료 결과를 보고하고 원래 엔진의 차단·상한 정책을 따른다. goal 상태를 임의로 완료/중단 처리하지 않는다.
+- `cancel-loop`는 3개 CLI 상태를 모두 삭제하므로 이 경로에서 호출하지 않는다. `loop-state.md`를 직접 수정·삭제하지 않으며, 성공 promise도 출력하지 않는다.
+
 ### 실행 보장 게이트 (Phase 6 시작 전 필수)
 
-모든 Phase의 실행 증거가 있어야 Phase 6를 시작할 수 있습니다:
+Phase 6 전에 아래 증거를 확인하고 실행 가능한 누락 Phase를 이어갑니다:
 
 - Phase 1: `plan.md` 존재
 - Phase 2: `docs/zeus/zeus-log.md`에 agent-team 실행 기록 (완료 기준 장부 `checklist-status.md`의 proved 비율과 남은 AC ID)
@@ -150,7 +159,7 @@ Phase 6에서만 완료 조건을 출력합니다:
 - Phase 4: `docs/zeus/zeus-log.md`에 Docker/dev-server 시도 기록
 - Phase 5: QA 결과 파일 또는 `docs/zeus/zeus-log.md`에 minos 실행 기록
 
-위 중 하나라도 없으면 Phase 6을 시작하지 말고, 누락된 phase를 먼저 실행.
+누락 증거가 있어도 독립적으로 진행 가능한 작업과 원래 예산이 남아 있으면 해당 phase를 먼저 실행한다. 초기 상태 충돌이나 필수 전제 부재 등으로 더 진행할 수 없는 경우에는 [비성공 종결 보고 규칙](references/final-report-format.md#phase-6-진입-조건-필수-체크)을 따른다.
 컨텍스트가 부족하여 누락 phase 실행이 불가능하면: `zeus-state.json`의 `currentPhase`를 누락 phase로 설정하고 핸드오프.
 
 ### 완료 계약 (Completion Contract) — Phase별 증거 채점
@@ -161,7 +170,7 @@ Phase 6에서만 완료 조건을 출력합니다:
 
 | 상태 | 의미 |
 |------|------|
-| `proved` | 증거가 현재 산출물에서 재현됨 (예: minos 통과율 100%, argos 통과 수치 충족) |
+| `proved` | 증거가 현재 산출물에서 재현됨 (예: minos 최종 PASS와 필수 범위 검증, argos PASS) |
 | `weak` | 실행은 됐으나 증거가 불충분 (예: 통과율 일부, 정적 분석만) |
 | `missing` | 해당 Phase 증거 없음 |
 | `contradicted` | 증거가 실패를 가리킴 (예: 빌드 실패, 테스트 레드) |
@@ -206,7 +215,9 @@ Phase 6에서만 완료 조건을 출력합니다:
 → projectName: "shopping-mall"
 ```
 
-**이전 실행 아카이브**: Phase 0의 첫 번째 동작으로 이전 산출물을 타임스탬프 디렉토리로 이동합니다.
+**실행 위치**: 대상 프로젝트의 절대 `project_root`를 고정합니다. 이 문서의 `docs/zeus/...`는 항상 그 루트 기준이며, 설계 산출물의 `planning_dir`나 현재 셸 디렉터리에 따라 바뀌지 않습니다. Phase 0 전에 아래 재개 규칙으로 기존 실행을 확인합니다.
+
+**이전 실행 아카이브**: 재개가 아니라 새 실행으로 판정된 경우에만 이전 Zeus 소유 산출물을 타임스탬프 디렉토리로 이동합니다.
 [상세 아카이브 절차 → references/archive-procedure.md](references/archive-procedure.md)
 
 파싱 완료 시 `docs/zeus/zeus-state.json` 생성 (재개 지원용).
@@ -229,7 +240,7 @@ zephermine SKILL.md를 읽고 26단계를 따르되, **모든 사용자 질문�
 - zephermine: 코드 리서치(코드 있으면 YES), GitHub 유사 프로젝트(YES), 웹 리서치(ALL)
 - zephermine Step 6: **합성 트랜스크립트 생성** / Step 9: **셀프 리뷰** / Step 12~13: 수용+즉시 승인
 - zephermine Step 21~22: SKILLS-CATALOG.md 참조, 추가 설치 불필요 (글로벌 스킬)
-- argos: 결과 즉시 승인 / agent-team: Wave Plan 즉시 실행, 실패 섹션 재시도
+- argos: 최종 등급을 유지하고 후속 단계 진행 / agent-team: Wave Plan 즉시 실행, 실패 섹션은 원래 남은 예산 안에서 재개
 - agent-team·workpm 트립와이어(plan.md `### 트립와이어`의 `구현 중` 지표): 수정 임계점·중단 검토 조건에 닿아도 멈추지 않고 `[ZEUS-AUTO:taste]`로 지표·값·단계·되돌리는 법(plan.md 행동 표의 할 일)을 결정 장부에 기록한 뒤 계속한다 — 절차 정본: 젭마인 `references/tripwire-guide.md`의 `## 구현 중 판정`
 - minos: 전체 시나리오, docker-compose 우선, 없으면 dev server 자동 실행
 
@@ -291,8 +302,8 @@ Phase 1 완료 (plan.md + sections/ + flow-diagrams/)
 시공 완료 후 설계 대비 준공검사.
 
 1. `<planning_dir>` 경로를 Phase 1에서 받아서 전달
-2. argos Phase 0~7 순차 실행 → `verify-report.md` 생성 (Phase 6은 design-system.md 있을 때만, Phase 7 보안은 항상)
-3. 검증 결과 자동 승인 (zeus는 무중단) — 단, argos 통과/미통과 **항목 수치**를 zeus-log.md에 기록. "실행됨"이 아니라 통과 수치가 SUCCESS 판정의 근거다 (→ references/final-report-format.md 판정 기준)
+2. argos Phase 0~8 실행 → `verify-report.md` 생성. 각 Phase의 적용 조건은 argos 정본을 따른다.
+3. argos의 최종 등급, 통과/미통과 수치, 미해결 이슈·AC ID, 미실행 범위와 수리 이력 경로를 zeus-log.md에 기록한다. 무중단 진행은 결과 승인과 다르며, 자식의 FAIL/CONDITIONAL을 PASS로 바꾸지 않는다 (→ references/final-report-format.md 판정 기준).
 
 **교차모델 수렴 게이트 (034, 위험 트리거 시에만):**
 
@@ -356,15 +367,18 @@ Zero-interaction 규칙 때문에 모듈의 질문 단계는 Phase 0 파싱 결�
 
 1. `qa-scenarios.md` 존재 확인 (Phase 1에서 생성됨)
 2. Playwright 미설치 시 `npx playwright install` 자동 실행
-3. minos Step 1~6 실행:
+3. minos Step 1~7 실행:
    - Step 3: Phase 4에서 서버 이미 실행 중이면 헬스체크만
-   - Step 5: Healer 루프 (최대 5회)
-4. 결과 집계 — minos **통과율(통과/전체)**을 zeus-log.md에 기록 (SUCCESS 판정의 필수 근거. 통과율 없이 SUCCESS 금지)
+   - Step 5: 브라우저 탐색 QA와 발견 이슈 회수
+   - Step 6: 기존 Healer 이슈 ID·이력·할당 예산·사용 횟수를 이어서 수리. 새 실행의 기본값은 minos 정본을 따르고 더 작은 사용자 상한을 유지한다.
+   - Step 7: 최종 등급과 미해결·미실행 범위 보고, minos가 시작한 서버만 정리
+4. `zeus-log.md`에 minos **최종 등급(PASS/CONDITIONAL/FAIL)**, 자동 테스트 통과/전체 수치, 탐색 QA 결과, 미해결 이슈·AC ID와 심각도, `exhausted`/`blocked`/`NOT RUN`/`UNVERIFIED` 범위, 결과·Healer 이력 경로를 함께 기록한다. 기존 결과 파일을 참조하며 별도 수리 장부를 만들지 않는다.
+5. 통과율 100%여도 탐색 QA 실패나 필수 미검증이 남으면 SUCCESS가 아니다. 최종 등급을 그대로 유지하고 Phase 증거는 [결과 판정 기준](references/final-report-format.md)에 따라 채점한다.
 
 **폴백 조건 (Phase 5는 skip 금지):**
 - 서버 시작 불가 → `--api-only` 모드로 minos 실행
 - QA 시나리오 미존재 → 프로젝트 구조에서 기본 시나리오 현장 생성 후 실행
-- Playwright 설치 실패 → 실패 원인과 재실행 명령을 minos Step 1/2/6로 리포트
+- Playwright 설치 실패 → 실패 원인·미실행 범위·재실행 명령을 minos Step 7에서 보고. 실행하지 못한 테스트의 통과율을 0%나 100%로 만들어내지 않는다.
 
 ---
 
@@ -372,7 +386,7 @@ Zero-interaction 규칙 때문에 모듈의 질문 단계는 Phase 0 파싱 결�
 
 [리포트 형식 및 결과 판정 기준 → references/final-report-format.md](references/final-report-format.md)
 
-`docs/zeus/zeus-report.md`에 저장. Phase 0~5 실행 증거가 모두 있어야 진입 가능.
+`docs/zeus/zeus-report.md`에 저장. 진입은 위 실행 보장 게이트와 연결된 비성공 종결 보고 규칙을 따른다.
 
 중단 검토 조건에 닿은 트립와이어가 있으면 리포트 맨 위(판정 위)에 지표·값과 그 뒤에 지은 Wave를 먼저 적는다 — 멈추지 않고 진행했으므로 사용자가 가장 먼저 결재해야 할 항목이다. 리포트에는 Decision Ledger와 함께 **완료 계약 요구사항→증거 표**(Phase별 `proved`/`weak`/`missing`/`contradicted`)를 포함한다. 5개 Phase가 모두 `proved`가 아니면 SUCCESS로 표기하지 않는다(완료 계약 규칙).
 
@@ -386,19 +400,21 @@ Zero-interaction 규칙 때문에 모듈의 질문 단계는 Phase 0 파싱 결�
 |------|------|------|
 | FATAL | 디스크 쓰기 불가 | 즉시 중단 + 메시지 |
 | PHASE_FALLBACK | plan 미생성, 서버 시작 불가 | phase 폴백 경로 실행 + 로그 |
-| STEP_RETRY | 개별 task 실패, 테스트 실패 | 1회 재시도 후 실패 내역 기록 |
+| STEP_RETRY | 개별 task 실패, 테스트 실패 | 자식의 남은 예산 안에서만 재개; 아래 예산 보존 규칙 적용 |
 | RECOVERABLE | 네트워크 타임아웃 | 1회 재시도 후 폴백 |
 
 모든 에러는 `docs/zeus/zeus-log.md`에 타임스탬프와 함께 기록.
+
+**자식 수리 예산 보존:** agent-team/workpm·argos·minos의 기존 이슈/AC ID, 할당 예산, 사용 횟수와 수리 이력 경로를 전달한다. 재개·작업자 교체·Phase 이동·같은 결함의 새 ID 발급으로 횟수를 초기화하지 않는다. `exhausted`이거나 수리 권한/전제가 없는 항목은 추가 수리 없이 미해결로 보고하고 가능한 다른 작업을 진행한다. 기존 예산이 확인되지 않으면 남은 횟수를 추측하지 않고 `UNVERIFIED`로 남긴다. 자식 수리와 무관한 일시적 실행 오류만 1회 재시도할 수 있으며, 이를 코드 수정 기회로 사용하지 않는다.
 
 ---
 
 ## Resume Support (재개)
 
 `/zeus` 재실행 시:
-1. `docs/zeus/zeus-state.json` 존재 확인
-2. 존재하면: 현재 phase 확인 → 해당 phase부터 재개
-3. 존재하지 않으면: 새로 시작
+1. 대상 `project_root`를 고정하고 `<project_root>/docs/zeus/zeus-state.json`을 확인한다.
+2. [상태 해석·재개 규칙](references/phase-transitions.md#재개-로직)으로 실행 식별, 구경로, 충돌을 확인한다. 원래 Phase 증거·자식 수리 이력과 예산을 복원한 뒤 재개한다.
+3. 유효한 기존 실행이 없고 구경로 확인에도 문제가 없을 때만 새 Phase 0을 시작한다. 모호하거나 읽을 수 없는 상태는 원본을 보존하고 `BLOCKED: resume state unresolved`로 보고하며, 새 실행으로 덮어쓰지 않는다.
 
 **상세 전환 규칙**: [references/phase-transitions.md](references/phase-transitions.md)
 
