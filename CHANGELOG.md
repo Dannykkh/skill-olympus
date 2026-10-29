@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.5.1] - 2026-10-30
+
+### Bug Fixes
+
+- **humanizer**: Include the upstream MIT license notices. The skill adapts blader/humanizer (English patterns) and epoko77-ai/im-not-ai (Korean module) but only linked them, although the README states that vendored components keep their upstream license files. Both LICENSE files are added unchanged as `LICENSE.upstream-humanizer` and `LICENSE.upstream-im-not-ai` (im-not-ai at the synced commit `b37e020`), and the Reference section points to them. Skill rules are unchanged. (f26d73a)
+
+### Validation and Scope
+
+- Both files match their upstream Git blob hashes. Windows integrated installation (`install.bat --all`) passed all 12 checks, and the two license files and `SKILL.md` match the source in the Claude, Codex and Antigravity source-only copies.
+- Full test suite: 333 of 334 passed. The remaining failure, `Mnemo rule reinstall replaces managed content once and preserves user settings`, is preexisting and also fails on the v7.4.3 tree.
+
 ## [7.5.0] - 2026-10-30
 
 ### Bug Fixes
