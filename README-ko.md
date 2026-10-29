@@ -407,6 +407,8 @@ Owner Decision Brief를 남기고, 단계·재개가 바뀌어도 원래 재시�
 
 ## 최근 변경
 
+**v7.5.1:** humanizer 스킬에 바탕이 된 두 프로젝트([blader/humanizer](https://github.com/blader/humanizer), [im-not-ai](https://github.com/epoko77-ai/im-not-ai))의 MIT 라이선스 원문을 `LICENSE.upstream-humanizer`·`LICENSE.upstream-im-not-ai`로 넣었습니다. 원문은 고치지 않았고 스킬과 함께 설치됩니다. 스킬 규칙은 바뀌지 않았습니다.
+
 **v7.5.0:** humanizer 한국어 모듈을 [im-not-ai](https://github.com/epoko77-ai/im-not-ai) `b37e020` 기준으로 다시 맞췄습니다. 패턴은 84개이며, 실측에서 가장 강한 신호인 "A가 아니라 B" 구문을 추가했습니다. 추측·당위 표현은 단정이나 제안으로 바꾸지 않고 형태를 바꾸거나 위치만 옮기며, 의학·법률·정책·협상 문서는 완곡 표현을 그대로 둡니다. 사람이 AI보다 더 자주 쓰는 표현은 몰려 있을 때만 고칩니다. 자가검증은 완곡·의무 표지와 연결어미 쉼표의 개수를 비교하고, 내용 앵커(반드시 남아야 할 사실·수치·이름)가 남았는지 확인합니다. 이 규칙과 어긋나던 예시는 다시 썼습니다. 업스트림 스크립트와 다중 에이전트 구조는 옮기지 않았고, 업스트림 코퍼스 기준의 윤문 품질은 측정하지 않았습니다.
 
 **v7.4.3:** 설계는 근거·권장안·제약을 먼저 제시하고 단계·재개 사이에 기존 답변을 이어받습니다. 아르고스·미노스는 기존 수리 상한 안에서 공통 근본원인 디버깅 절차를 적용하며, 제우스는 최종 등급·탐색 QA 실패·사용 예산을 보존하고 구경로 상태 복구를 확인한 뒤 재개합니다. 크로노스는 `Complete`·`Blocked`·`Exhausted`를 구분합니다. 리뷰와 작업자 인계는 원래 범위·기준점을 유지하고, autoresearch는 근거 없는 변경과 오염된 평가 결과를 채택하지 않습니다. 검사 결과와 한계는 [워크플로우 보완](docs/research/2026-10-28-superpowers-olympus-improvements.md)과 [설계·재개 검증](docs/research/2026-10-28-olympus-proposal-first-improvements.md)에 기록했습니다. 인터뷰 시간 단축과 모든 CLI의 전체 제품 파이프라인 실행은 입증하지 않았습니다.

@@ -329,6 +329,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.1 — humanizerに上流のライセンス表示を同梱
+
+humanizerスキルの元になった2つのプロジェクト([blader/humanizer](https://github.com/blader/humanizer)、[im-not-ai](https://github.com/epoko77-ai/im-not-ai))のMITライセンス原文を、`LICENSE.upstream-humanizer`と`LICENSE.upstream-im-not-ai`として同梱しました。原文は変更しておらず、スキルと一緒にインストールされます。スキルの規則は変わっていません。
+
 ## v7.5.0 — humanizerの韓国語モジュールをim-not-aiの最新版に合わせる
 
 humanizerの韓国語モジュールを[im-not-ai](https://github.com/epoko77-ai/im-not-ai) `b37e020`に合わせて更新しました。パターンは84個で、実測で最も強い信号である「A가 아니라 B」(AではなくB)構文を追加しています。推量や当為の表現は断定や提案に置き換えず、形を変えるか位置を移すだけにとどめます。医療・法律・政策・交渉の文書では婉曲表現を残します。AIより人がよく使う表現は、密集している場合にだけ直します。自己検査では婉曲・義務の表現と連結語尾の読点の数を比べ、内容アンカー(必ず残すべき事実・数値・名前)が残っていることを確認します。これらの規則と食い違っていた例文は書き直しました。上流のスクリプトとマルチエージェント構成は移植しておらず、上流コーパスに対する書き直しの品質は測定していません。
