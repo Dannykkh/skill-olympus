@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **humanizer (Korean)**: Resync the Korean module to `epoko77-ai/im-not-ai@b37e020` (main, 2026-10-12, after v2.3.2). The reference file had stayed at the June v2.0 taxonomy, and several of its examples now turned hedges into assertions, recast obligations as suggestions, broke up three-item lists, or added facts that were not in the source. Hedges and obligations now keep their mood: a repeated form is varied or moved rather than converted. Medical, legal, policy and negotiation text keeps its hedges. Expressions that people use more than AI (`~에 대해`, `~를 통해`, `~을 위해`, `것이다`, pronouns, sentence-initial conjunctions) are changed only when they cluster. Pronouns are judged by antecedent context rather than frequency.
+
+### Features
+
+- **humanizer (Korean)**: Add the strongest measured signal, C-8 negative/symmetric parallelism ("A가 아니라 B", 9~12× in the upstream corpus), plus 18 more patterns (A-20~A-24, C-4, C-6, D-8~D-14, E-5, E-6, F-7, I-7), for 84 listed patterns plus one held. Add content anchors, a rule against reintroducing tells while fixing others, and a general ban on inserting stock phrases. Self-checks now compare counts of hedges, obligation markers and connective commas, and confirm that one parallelism and every anchor remain. A new section lists human-writing markers to preserve and AI signals that may only be observed, because fixing them would mean inventing content. Upstream scripts and multi-agent routing were not ported; the module remains a single-pass rulebook.
+
 ## [7.4.3] - 2026-10-29
 
 ### Bug Fixes
