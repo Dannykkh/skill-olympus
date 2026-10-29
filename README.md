@@ -408,6 +408,8 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
+**v7.5.0:** The humanizer's Korean module now follows [im-not-ai](https://github.com/epoko77-ai/im-not-ai) `b37e020`. It lists 84 patterns, including the strongest measured signal, the "A가 아니라 B" (not A but B) construction. Hedges and obligations keep their mood: a repeated form is varied or moved rather than turned into an assertion or a suggestion, and medical, legal, policy and negotiation text keeps its hedges. Expressions that people use more often than AI are changed only where they cluster. Self-checks compare counts of hedges, obligation markers and connective commas, and confirm that content anchors (facts, figures and names that must survive) remain. Examples that contradicted these rules were rewritten. Upstream scripts and multi-agent routing were not ported, and rewrite quality has not been measured against the upstream corpus.
+
 **v7.4.3:** Planning leads with evidence, a recommendation and tradeoffs, reusing answers across phases and resumes. Argos and Minos use the shared root-cause debugging procedure within existing repair limits; Zeus preserves their final grades, exploratory QA failures and spent budgets, and checks legacy-state recovery before resuming. Chronos distinguishes `Complete`, `Blocked` and `Exhausted`. Reviews and worker handoffs retain their original scope and baseline, while autoresearch rejects unsupported changes and contaminated evaluation results. See the [workflow improvements](docs/research/2026-10-28-superpowers-olympus-improvements.md) and [planning and resume validation](docs/research/2026-10-28-olympus-proposal-first-improvements.md) for checks and limits. Shorter interviews and full product-pipeline execution across all CLIs have not been demonstrated.
 
 **v7.4.2:** Context7 is optional. The integrated installers register only Playwright by default for Claude, Codex and Antigravity; Grok shares the Claude surface. Existing Context7 registrations, explicit installation and the standalone MCP scripts' `--all` option remain available. Zephermine's section template now checks project dependency versions, existing code and the matching official documentation first, without requiring Context7. Setup guides and resource recommendations follow the same policy. Validation: 53 installer, policy, portable-frontmatter and module-routing checks passed. See the [MCP setup guide](mcp-configs/README.md).
@@ -842,6 +844,8 @@ Olympus uses the open `SKILL.md` model and learns from the broader agent-skills 
 - [Vercel skills CLI](https://github.com/vercel-labs/skills) — cross-agent discovery and installation ecosystem
 - [Superpowers](https://github.com/obra/superpowers) — methodology-first agent workflows
 - [Paperthin](https://github.com/LilMGenius/paperthin) — low-level, cross-agent design patterns
+- [humanizer](https://github.com/blader/humanizer) — English AI-writing patterns behind the `humanizer` skill
+- [im-not-ai](https://github.com/epoko77-ai/im-not-ai) — Korean AI-writing taxonomy and corpus measurements behind the humanizer's Korean module
 
 Vendored components keep their upstream license files inside the relevant skill directories.
 
@@ -944,4 +948,4 @@ Crash recovery, persistent data after restart, and database restoration **still 
 
 ---
 
-**Last Updated:** 2026-10-29
+**Last Updated:** 2026-10-30

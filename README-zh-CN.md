@@ -316,9 +316,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-10-29
+**最后更新：** 2026-10-30
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.5.0 — humanizer 韩语模块与 im-not-ai 最新版对齐
+
+humanizer 的韩语模块已按 [im-not-ai](https://github.com/epoko77-ai/im-not-ai) `b37e020` 重新同步。模式共 84 个，新增了实测中最强的信号——“A가 아니라 B”（不是 A 而是 B）句式。推测和义务表达不再改成断定或建议，只变换形式或移动位置；医疗、法律、政策和谈判文书保留委婉表达。人比 AI 更常用的表达只在密集出现时才修改。自检会比较委婉标记、义务标记和连接词尾逗号的数量，并确认内容锚点（必须保留的事实、数字和名称）仍在。与这些规则矛盾的示例已重写。上游脚本和多代理结构没有移植，也没有用上游语料测量改写质量。
 
 ## v7.4.3 — 先给出研究与推荐方案，保留失败和恢复状态
 
