@@ -241,4 +241,6 @@ Provide (붙여넣기 모드 기준):
 
 Based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup.
 
+Licenses: this skill adapts two MIT-licensed projects. The original notices are kept unchanged in [LICENSE.upstream-humanizer](LICENSE.upstream-humanizer) ([blader/humanizer](https://github.com/blader/humanizer), English patterns) and [LICENSE.upstream-im-not-ai](LICENSE.upstream-im-not-ai) ([epoko77-ai/im-not-ai](https://github.com/epoko77-ai/im-not-ai) `b37e020`, Korean module).
+
 Key insight: "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
