@@ -2,15 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [7.5.0] - 2026-10-30
 
 ### Bug Fixes
 
-- **humanizer (Korean)**: Resync the Korean module to `epoko77-ai/im-not-ai@b37e020` (main, 2026-10-12, after v2.3.2). The reference file had stayed at the June v2.0 taxonomy, and several of its examples now turned hedges into assertions, recast obligations as suggestions, broke up three-item lists, or added facts that were not in the source. Hedges and obligations now keep their mood: a repeated form is varied or moved rather than converted. Medical, legal, policy and negotiation text keeps its hedges. Expressions that people use more than AI (`~에 대해`, `~를 통해`, `~을 위해`, `것이다`, pronouns, sentence-initial conjunctions) are changed only when they cluster. Pronouns are judged by antecedent context rather than frequency.
+- **humanizer (Korean)**: Resync the Korean module to `epoko77-ai/im-not-ai@b37e020` (main, 2026-10-12, after v2.3.2). The reference file had stayed at the June v2.0 taxonomy, and several of its examples now turned hedges into assertions, recast obligations as suggestions, broke up three-item lists, or added facts that were not in the source. Hedges and obligations now keep their mood: a repeated form is varied or moved rather than converted. Medical, legal, policy and negotiation text keeps its hedges. Expressions that people use more than AI (`~에 대해`, `~를 통해`, `~을 위해`, `것이다`, pronouns, sentence-initial conjunctions) are changed only when they cluster. Pronouns are judged by antecedent context rather than frequency. (fb008d6)
 
 ### Features
 
-- **humanizer (Korean)**: Add the strongest measured signal, C-8 negative/symmetric parallelism ("A가 아니라 B", 9~12× in the upstream corpus), plus 18 more patterns (A-20~A-24, C-4, C-6, D-8~D-14, E-5, E-6, F-7, I-7), for 84 listed patterns plus one held. Add content anchors, a rule against reintroducing tells while fixing others, and a general ban on inserting stock phrases. Self-checks now compare counts of hedges, obligation markers and connective commas, and confirm that one parallelism and every anchor remain. A new section lists human-writing markers to preserve and AI signals that may only be observed, because fixing them would mean inventing content. Upstream scripts and multi-agent routing were not ported; the module remains a single-pass rulebook.
+- **humanizer (Korean)**: Add the strongest measured signal, C-8 negative/symmetric parallelism ("A가 아니라 B", 9~12× in the upstream corpus), plus 18 more patterns (A-20~A-24, C-4, C-6, D-8~D-14, E-5, E-6, F-7, I-7), for 84 listed patterns plus one held. Add content anchors, a rule against reintroducing tells while fixing others, and a general ban on inserting stock phrases. Self-checks now compare counts of hedges, obligation markers and connective commas, and confirm that one parallelism and every anchor remain. A new section lists human-writing markers to preserve and AI signals that may only be observed, because fixing them would mean inventing content. Upstream scripts and multi-agent routing were not ported; the module remains a single-pass rulebook. (fb008d6)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Chinese READMEs, and credit blader/humanizer and epoko77-ai/im-not-ai in the English and Korean ecosystem sections. (159c4a7)
+
+### Validation and Scope
+
+- Full test suite: 332 of 334 passed. No code changed since v7.4.3, and both failures are preexisting: `Mnemo rule reinstall replaces managed content once and preserves user settings` also fails on the v7.4.3 tree, and `concurrent Codex processes store complete records and deduplicate replayed turns` is intermittent ("Unsafe Mnemo storage", one failure in three isolated runs).
+- Windows integrated installation (`install.bat --all`) passed all 12 checks. The humanizer `SKILL.md` and Korean reference match the source in the Claude, Codex and Antigravity source-only copies.
+- The worked example's change rate (about 47%) was computed by edit distance. No rewrite-quality evaluation against the upstream corpus and no blind comparison were run.
 
 ## [7.4.3] - 2026-10-29
 
