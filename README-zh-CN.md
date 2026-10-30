@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.2 — 修复 Windows 上 Mnemo 并发保存偶尔失败的问题
+
+当另一个进程正在删除或重命名待处理文件或锁文件夹时，Windows 可能返回 `EBADF` 或 `EPERM`，而不是"不存在"，存储边界检查因此拒绝了项目根目录。在同时保存 13 条记录的测试中，60 轮里有 5 轮（约 8%）出现这种失败；由于发生在写入待处理文件之前，失败的那一轮对话也不会进入重试队列。现在会短暂等待后重新检查，始终无法读取的条目仍会被拒绝。五个 CLI 适配器均已适用。
+
 ## v7.5.1 — humanizer 附带上游许可证声明
 
 humanizer 技能所基于的两个项目（[blader/humanizer](https://github.com/blader/humanizer)、[im-not-ai](https://github.com/epoko77-ai/im-not-ai)）的 MIT 许可证原文已作为 `LICENSE.upstream-humanizer` 和 `LICENSE.upstream-im-not-ai` 加入。原文未作修改，会随技能一起安装。技能规则没有变化。

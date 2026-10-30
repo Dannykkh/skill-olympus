@@ -329,6 +329,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.2 — WindowsでMnemoの同時保存がまれに失敗する問題を修正
+
+別のプロセスが保留ファイルやロックフォルダーを削除・名前変更している最中、Windowsは「見つからない」ではなく`EBADF`や`EPERM`を返すことがあり、保存先の境界検査がプロジェクトルートを拒否していました。13件を同時に保存するテストでは60回中5回(約8%)でこの失敗が起き、保留ファイルを書く前だったため、失敗したターンは再試行キューにも残りませんでした。現在は少し待って再確認し、最後まで読めない項目は引き続き拒否します。5つのCLIアダプターすべてに適用されます。
+
 ## v7.5.1 — humanizerに上流のライセンス表示を同梱
 
 humanizerスキルの元になった2つのプロジェクト([blader/humanizer](https://github.com/blader/humanizer)、[im-not-ai](https://github.com/epoko77-ai/im-not-ai))のMITライセンス原文を、`LICENSE.upstream-humanizer`と`LICENSE.upstream-im-not-ai`として同梱しました。原文は変更しておらず、スキルと一緒にインストールされます。スキルの規則は変わっていません。
