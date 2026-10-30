@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.5.3] - 2026-10-31
+
+### Bug Fixes
+
+- **mnemo**: Retry state-file renames that Windows rejects while another process has the target open. Storage validation runs before the write lock and briefly opens each file under `conversations/`, so when the lock holder renamed a temp file over a state file such as `.grok-events.json` at that moment, Windows returned `EPERM` and the hook exited with an error. The record was already queued in `.mnemo-pending` and was written by the next save, but the state-file update for that event was skipped. `atomicJson` now retries on `EPERM`, `EACCES` or `EBUSY` on Windows with 5/10/20/40/80/160 ms waits and rethrows if the target stays open. The shared module is used by the Claude, Codex, Antigravity, Devin and Grok adapters. (e524997)
+- **mnemo install**: Make `skills/mnemo/install.js --check` compare the `CLAUDE.md` rules block with the template. `install.bat` and `install.sh` write `~/.claude` and reach `CLAUDE_CONFIG_DIR` (for example a TermSnap account folder) only through the repair install that runs when this check fails, and the check looked only for the block markers. A release that changed the template but no Mnemo hook therefore left the old rules in `CLAUDE_CONFIG_DIR`. The check now reports DRIFT when the block body differs from the template (ignoring line endings and surrounding whitespace) or appears twice. Text outside the block is preserved. (215f4c0)
+
+### Tests
+
+- Pin `CLAUDE_CONFIG_DIR` and `DEVIN_CONFIG_DIR` in fake-home tests. Tests that swapped only `HOME` and `USERPROFILE` inherited `CLAUDE_CONFIG_DIR` and `APPDATA`, which the Mnemo, Grok-Mnemo and Devin-Mnemo installers read before `HOME`. Passing install tests wrote to the real Claude and Devin config, and `Mnemo rule reinstall replaces managed content once and preserves user settings` failed because it checked an untouched temp file; earlier releases listed it as a preexisting failure. A new `isolatedHomeEnv()` helper sets both variables, 16 environments in 9 test files use it, and a guard test rejects hand-built `USERPROFILE` environments. (447c68e)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Chinese READMEs. (e997985)
+
+### Validation and Scope
+
+- The Grok concurrent-delivery test, run 120 times in 4 parallel streams, failed 9 times before the fix and 0 times after. In a separate run of 3,000 renames with three processes continuously checking the target, 742 failed with `EPERM` without retries and 1 failed with five retries, so the retry reduces but does not eliminate the failure under sustained checking.
+- New regression tests: a state file that another process holds open for 100 ms is replaced, and one held for 1.5 s fails with `EPERM` without leaving a temp file (Windows only); a stale or duplicated rules block fails `--check`, passes after reinstall, and text outside the block survives. Both tests failed before the fix. A block written by `install-claude-md.js` passes the new check.
+- Full test suite under Git Bash: 340 of 340 passed. During the run, none of the 2,433 managed files in the real Claude (`~/.claude` and `CLAUDE_CONFIG_DIR`), Codex, Gemini, Grok and Devin config folders changed.
+- Windows integrated installation (`install.bat --all`) passed all 12 checks. The Mnemo check found the old `mnemo-record-store.js` in `CLAUDE_CONFIG_DIR` and repaired it. The installed `mnemo-record-store.js` matches the source in the Claude, Codex, Antigravity, Grok and Devin hook and skill directories, and `--check` passes for both `~/.claude` and `CLAUDE_CONFIG_DIR`.
+
 ## [7.5.2] - 2026-10-30
 
 ### Bug Fixes
