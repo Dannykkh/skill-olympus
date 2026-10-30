@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.5.2] - 2026-10-30
+
+### Bug Fixes
+
+- **mnemo**: Stop rejecting the project root while another process deletes a pending file or lock folder on Windows. Windows can report such an entry as `EBADF` (`realpathSync.native`) or `EPERM` (`readdirSync`) instead of `ENOENT`, and storage validation treated it as unsafe. In the 13-process concurrent-save test, 5 of 60 rounds (about 8%) failed with "Unsafe Mnemo storage" before the pending file was written, so the failed turn was not queued for retry. `EBADF` and `EPERM` are now rechecked three times with 5/10/20 ms waits, and an entry that is still present is rejected. A still-present entry is rejected in place instead of being thrown to its parent, and a recheck rolls back the visited marks of the failed attempt; previously a parent rescan could skip an unchecked child folder. The shared module is used by the Claude, Codex, Antigravity, Devin and Grok adapters. (8f03136)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Chinese READMEs. (302d432)
+
+### Validation and Scope
+
+- The concurrent-save harness (13 processes per round) passed 100 rounds with no failure, and the original concurrent test passed 20 repeated runs. New regression tests cover a pending file reporting `EBADF` and a lock folder reporting `EPERM` while being deleted, and an entry that keeps reporting `EPERM`, which is still rejected.
+- Full test suite under Git Bash: 336 of 337 passed. The remaining failure, `Mnemo rule reinstall replaces managed content once and preserves user settings`, is preexisting. The intermittent concurrent-save failure noted in 7.5.0 did not occur in this run.
+- Windows integrated installation (`install.bat --all`) passed all 12 checks. The installed `mnemo-project-root.js` matches the source in the Claude, Codex, Antigravity, Grok and Devin hook and skill directories.
+
 ## [7.5.1] - 2026-10-30
 
 ### Bug Fixes
