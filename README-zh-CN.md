@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.3 — 修复 Mnemo 在 Windows 上的保存错误，以及 CLAUDE_CONFIG_DIR 中规则未更新的问题
+
+在 Windows 上，Mnemo 替换状态文件（如 `.grok-events.json`）的瞬间，如果另一个 Mnemo 进程正在检查该文件，保存会以 `EPERM` 失败。以 4 个并行方式运行测试时，Grok 并发保存测试 120 次中失败 9 次。内容已在待处理文件夹中，会在下一次保存时写入，但钩子以错误结束。现在会短暂等待后重试，同样条件下 120 次中失败 0 次。另外，当 Claude Code 使用 `CLAUDE_CONFIG_DIR`（如 TermSnap 账户文件夹）时，安装程序只在 `mnemo install.js --check` 失败时才更新该文件夹的 `CLAUDE.md`，而这项检查只确认规则块是否存在。因此，只修改了规则模板的版本不会同步到该文件夹。现在会将规则块内容与模板比较，下次安装时即会更新，规则块之外你自己写的内容保持不变。测试在设置了 `CLAUDE_CONFIG_DIR` 或 `APPDATA` 的环境中也不再写入真实的 Claude 和 Devin 配置。
+
 ## v7.5.2 — 修复 Windows 上 Mnemo 并发保存偶尔失败的问题
 
 当另一个进程正在删除或重命名待处理文件或锁文件夹时，Windows 可能返回 `EBADF` 或 `EPERM`，而不是"不存在"，存储边界检查因此拒绝了项目根目录。在同时保存 13 条记录的测试中，60 轮里有 5 轮（约 8%）出现这种失败；由于发生在写入待处理文件之前，失败的那一轮对话也不会进入重试队列。现在会短暂等待后重新检查，始终无法读取的条目仍会被拒绝。五个 CLI 适配器均已适用。

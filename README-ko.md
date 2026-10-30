@@ -407,6 +407,8 @@ Owner Decision Brief를 남기고, 단계·재개가 바뀌어도 원래 재시�
 
 ## 최근 변경
 
+**v7.5.3:** Mnemo 문제 두 가지를 고쳤습니다. Windows에서 상태 파일(예: `.grok-events.json`)을 새 내용으로 바꾸는 순간 다른 Mnemo 프로세스가 그 파일을 검사하고 있으면 `EPERM`으로 저장이 실패했습니다. 테스트를 4개씩 병렬로 돌리면 Grok 동시 저장 테스트가 120회 중 9회 실패했습니다. 내용은 이미 대기 폴더에 있어 다음 저장 때 기록됐지만, 훅은 오류로 끝났습니다. 이제 잠깐 기다렸다 다시 시도하며, 같은 조건에서 120회 중 0회 실패했습니다. 또 Claude Code가 `CLAUDE_CONFIG_DIR`(예: TermSnap 계정 폴더)을 쓰면 설치기는 `mnemo install.js --check`가 실패할 때만 그 폴더의 `CLAUDE.md`를 갱신하는데, 이 검사는 규칙 블록이 있는지만 봤습니다. 그래서 규칙 템플릿만 바뀐 릴리즈는 그 폴더에 반영되지 않았습니다. 이제 블록 내용을 템플릿과 비교하므로 다음 설치에서 갱신되며, 블록 밖에 직접 쓴 내용은 그대로 남습니다. 테스트도 `CLAUDE_CONFIG_DIR`·`APPDATA`가 설정된 환경에서 실제 Claude·Devin 설정에 쓰지 않게 했습니다.
+
 **v7.5.2:** Windows에서 Mnemo 저장이 동시에 몰릴 때 가끔 실패하던 문제를 고쳤습니다. 다른 프로세스가 대기 파일이나 잠금 폴더를 지우거나 이름을 바꾸는 중이면 Windows가 "없음" 대신 `EBADF`·`EPERM`을 돌려주는데, 저장 경계 검사가 이때 프로젝트 루트를 거부했습니다. 13개를 동시에 저장하는 검사에서 60회 중 5회(약 8%)가 이렇게 실패했고, 대기 파일을 쓰기 전이라 실패한 턴은 재시도 큐에도 남지 않았습니다. 이제 잠깐 기다려 다시 확인하며, 끝까지 읽을 수 없는 항목은 계속 거부합니다. 다섯 CLI 어댑터 모두에 적용됩니다.
 
 **v7.5.1:** humanizer 스킬에 바탕이 된 두 프로젝트([blader/humanizer](https://github.com/blader/humanizer), [im-not-ai](https://github.com/epoko77-ai/im-not-ai))의 MIT 라이선스 원문을 `LICENSE.upstream-humanizer`·`LICENSE.upstream-im-not-ai`로 넣었습니다. 원문은 고치지 않았고 스킬과 함께 설치됩니다. 스킬 규칙은 바뀌지 않았습니다.
