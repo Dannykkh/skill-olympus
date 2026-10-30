@@ -23,6 +23,7 @@ const isWindows = process.platform === "win32";
 
 // Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
+const claudeMdTemplate = path.join(sourceDir, "templates", "claude-md-rules.md");
 
 // Claude global directory
 const claudeDir = process.env.CLAUDE_CONFIG_DIR
@@ -141,6 +142,17 @@ function installClaudeMdRules(claudeMdPath, templatePath) {
 
   ensureDir(path.dirname(claudeMdPath));
   fs.writeFileSync(claudeMdPath, content, "utf8");
+}
+
+// 설치된 블록이 지금 템플릿과 같은지 본다. install-claude-md.js와 이 스크립트는 둘 다
+// `START\n템플릿\nEND`로 쓰므로 줄바꿈 형식과 앞뒤 공백만 맞춰 비교한다.
+function rulesBlockMatchesTemplate(content, templatePath) {
+  if (!fs.existsSync(templatePath)) return true; // 템플릿 없는 사본에서는 블록이 있는지만 본다
+  const normalize = (text) => text.replace(/\r\n/g, "\n").trim();
+  const start = content.indexOf(MARKER_START);
+  const end = content.indexOf(MARKER_END, start);
+  return content.split(MARKER_START).length === 2 && end > start &&
+    normalize(content.slice(start + MARKER_START.length, end)) === normalize(fs.readFileSync(templatePath, "utf8"));
 }
 
 function uninstallClaudeMdRules(claudeMdPath) {
@@ -319,7 +331,7 @@ function install() {
 
   // [3/3] Install CLAUDE.md rules
   console.log("\n[3/3] Installing CLAUDE.md long-term memory rules...");
-  const templatePath = path.join(sourceDir, "templates", "claude-md-rules.md");
+  const templatePath = claudeMdTemplate;
   if (fs.existsSync(templatePath)) {
     installClaudeMdRules(claudeMdPath, templatePath);
     console.log("      Done!");
@@ -517,11 +529,17 @@ function check() {
   console.log("\n[3/4] Checking CLAUDE.md long-term memory rules...");
   try {
     const claudeMdContent = fs.readFileSync(claudeMdPath, "utf8");
-    if (claudeMdContent.includes(MARKER_START) && claudeMdContent.includes(MARKER_END)) {
-      console.log("      ✅ Mnemo rules block present");
-    } else {
+    if (!claudeMdContent.includes(MARKER_START) || !claudeMdContent.includes(MARKER_END)) {
       console.log("      ❌ Mnemo rules block missing");
       issues++;
+    } else if (!rulesBlockMatchesTemplate(claudeMdContent, claudeMdTemplate)) {
+      // install.bat·install.sh는 CLAUDE_CONFIG_DIR 쪽 CLAUDE.md를 이 검사가 실패할 때만 다시 쓴다.
+      // 블록이 있는지만 보면 템플릿만 바뀐 릴리즈가 그 폴더에 닿지 않는다 (gotcha 120).
+      console.log("      DRIFT CLAUDE.md Mnemo rules block (differs from template or duplicated)");
+      console.log("         → Fix: node skills/mnemo/install.js  (reinstall)");
+      issues++;
+    } else {
+      console.log("      ✅ Mnemo rules block matches template");
     }
   } catch {
     console.log("      ❌ CLAUDE.md file missing");

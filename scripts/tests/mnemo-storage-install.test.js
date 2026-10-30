@@ -36,13 +36,34 @@ function fixture(t, initialSettings) {
   const probe = spawnSync(process.execPath, ['-e', 'process.stdout.write(require("node:os").homedir())'], { env, encoding: 'utf8', windowsHide: true });
   assert.equal(probe.status, 0, probe.stderr);
   assert.equal(path.resolve(probe.stdout), path.resolve(home));
+  const run = (...args) => spawnSync(process.execPath, [installer, ...args], { cwd: home, env, encoding: 'utf8', timeout: 30000, windowsHide: true });
   const invoke = (...args) => {
-    const result = spawnSync(process.execPath, [installer, ...args], { cwd: home, env, encoding: 'utf8', timeout: 30000, windowsHide: true });
+    const result = run(...args);
     assert.equal(result.status, 0, result.stderr + result.stdout);
     assert.deepEqual(fs.readFileSync(nativeMemory), originalMemory, 'installation must preserve existing native memory');
   };
-  return { claude, statePath, invoke, readSettings: () => JSON.parse(fs.readFileSync(settingsPath, 'utf8')) };
+  return { claude, statePath, invoke, check: () => run('--check'), readSettings: () => JSON.parse(fs.readFileSync(settingsPath, 'utf8')) };
 }
+
+test('Mnemo --check fails on a stale or duplicated CLAUDE.md rules block so install.bat repairs it', t => {
+  // install.bat·install.sh는 CLAUDE_CONFIG_DIR 쪽 CLAUDE.md를 이 검사가 실패할 때만 다시 쓴다.
+  // 블록이 있는지만 보면 템플릿만 바뀐 릴리즈가 그 폴더에 닿지 않는다(gotcha 120).
+  const { claude, invoke, check } = fixture(t, {});
+  invoke();
+  assert.equal(check().status, 0);
+  const rules = path.join(claude, 'CLAUDE.md');
+  const current = fs.readFileSync(rules, 'utf8');
+  const block = current.slice(current.indexOf('<!-- MNEMO:START -->'));
+  fs.writeFileSync(rules, `personal rule\n${current.replace(/(<!-- MNEMO:START -->\n)[\s\S]*?(\n<!-- MNEMO:END -->)/, '$1obsolete policy$2')}`);
+  const stale = check();
+  assert.notEqual(stale.status, 0);
+  assert.match(stale.stdout, /DRIFT CLAUDE\.md/);
+  invoke(); // install.bat의 복구 설치와 같은 호출
+  assert.equal(check().status, 0);
+  assert.match(fs.readFileSync(rules, 'utf8'), /^personal rule\n/);
+  fs.appendFileSync(rules, `\n${block}`);
+  assert.notEqual(check().status, 0, 'a second copy of the block must count as drift');
+});
 
 for (const initialPreference of [true, undefined]) {
   test(`Mnemo install restores ${initialPreference === undefined ? 'absent' : 'enabled'} native-memory preference after repeat install and uninstall`, t => {
