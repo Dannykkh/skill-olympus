@@ -191,3 +191,23 @@ test('A malformed pending record does not block valid text containing an HTML co
   assert.deepEqual((await store.storeRecords(root,[entry])).statuses,['duplicate']);
   assert.equal(count(history(root,'grok'),'literal <!-- comment --> and \\n'),1);
 });
+// storageSafe는 잠금 밖에서 conversations/ 파일을 하나씩 잠깐 연다. 그동안 다른 프로세스가 같은 상태 파일을
+// 덮어쓰면 Windows가 rename을 EPERM으로 거부한다(gotcha 121). 다른 프로세스가 대상 파일을 열어 두게 한다.
+async function holdOpen(file,ms) {
+  const child=spawn(process.execPath,['-e',"const fs=require('fs');const fd=fs.openSync(process.argv[1],'r');process.stdout.write('open');setTimeout(()=>fs.closeSync(fd),Number(process.argv[2]))",file,String(ms)],{windowsHide:true});
+  const closed=once(child,'close'); await once(child.stdout,'data');
+  return {closed}; // Promise를 그대로 돌려주면 await가 자식 종료까지 기다린다
+}
+test('Shared state writes wait out a short-lived handle on the target and still fail when it stays open',{skip:process.platform!=='win32'},async t=>{
+  const root=fixture(t),dir=path.join(root,'conversations'),file=path.join(dir,'.grok-events.json');
+  fs.mkdirSync(dir,{recursive:true}); fs.writeFileSync(file,'{}');
+  let {closed}=await holdOpen(file,100);
+  store.atomicJson(file,{version:1}); // 동기 재시도 중에도 다른 프로세스의 핸들은 제때 닫힌다
+  await closed;
+  assert.deepEqual(JSON.parse(fs.readFileSync(file,'utf8')),{version:1});
+  ({closed}=await holdOpen(file,1500));
+  assert.throws(()=>store.atomicJson(file,{version:2}),{code:'EPERM'}); // 끝까지 막히면 호출자가 대기 레코드를 남기도록 던진다
+  await closed;
+  assert.deepEqual(JSON.parse(fs.readFileSync(file,'utf8')),{version:1});
+  assert.deepEqual(fs.readdirSync(dir).filter(name=>name.endsWith('.tmp')),[]);
+});

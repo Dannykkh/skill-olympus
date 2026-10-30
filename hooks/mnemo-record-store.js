@@ -11,12 +11,27 @@ const hash = value => crypto.createHash("sha256").update(value).digest("hex");
 const redact = value => String(value || "").replace(/<private>[\s\S]*?<\/private>/gi, "[PRIVATE]").trim();
 const runtimes = new Set(["claude", "codex", "grok", "antigravity", "devin"]);
 
+// Windows는 다른 프로세스가 대상 파일을 열어 둔 동안 덮어쓰는 rename을 EPERM 등으로 거부한다.
+// 잠금 밖의 storageSafe가 conversations/ 파일을 하나씩 잠깐 여는 것이 그런 경우다(gotcha 121).
+// 그 핸들은 곧 닫히므로 잠깐 기다렸다 다시 시도하고, 끝까지 막히면 원래 오류를 던진다.
+const renameWaitsMs = [5, 10, 20, 40, 80, 160];
+const renameBusyCodes = new Set(["EPERM", "EACCES", "EBUSY"]);
+function pauseSync(ms) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); }
+function replaceFile(from, to) {
+  for (let attempt = 0; ; attempt++) {
+    try { return fs.renameSync(from, to); } catch (error) {
+      if (process.platform !== "win32" || !renameBusyCodes.has(error.code) || attempt === renameWaitsMs.length) throw error;
+      pauseSync(renameWaitsMs[attempt]);
+    }
+  }
+}
+
 function atomicJson(file, value) {
   const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
   const fd = fs.openSync(temporary, "wx", 0o600);
   try { fs.writeFileSync(fd, JSON.stringify(value, null, 2) + "\n"); fs.fsyncSync(fd); }
   finally { fs.closeSync(fd); }
-  try { fs.renameSync(temporary, file); }
+  try { replaceFile(temporary, file); }
   finally { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); }
 }
 
