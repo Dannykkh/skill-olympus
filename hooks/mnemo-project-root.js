@@ -57,9 +57,24 @@ function validatePath(candidate, options = {}) {
   } catch { return null; }
 }
 
+// 다른 프로세스가 지우는 중인 항목의 오류 코드. Windows는 삭제·이름 변경 중인 항목에
+// ENOENT 대신 EBADF(realpath)·EPERM(readdir)을 돌려준다(2026-10-30, 동시 13개 실측).
+// 사라졌는지 잠깐 기다려 다시 보고, 끝까지 남아 있으면 지금처럼 거부한다.
+const vanishingCodes = new Set(["ENOENT", "EBADF", "EPERM"]);
+const recheckWaitsMs = [5, 10, 20];
+function pauseSync(ms) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms); }
+
 function storageSafe(root) {
   const visited = new Set();
+  // 재확인할 때 실패한 시도가 방문 처리한 항목을 되돌린다. 남겨 두면 다시 훑을 때
+  // 확인하지 못한 하위 폴더를 이미 확인한 것으로 보고 건너뛴다.
+  const order = [];
   function visit(target, rechecks = 0) {
+    const mark = order.length;
+    const recheck = () => {
+      for (const seen of order.splice(mark)) visited.delete(seen);
+      return visit(target, rechecks + 1);
+    };
     try {
       const resolved = realPath(target);
       if (!contained(root, resolved)) {
@@ -69,19 +84,25 @@ function storageSafe(root) {
         const entry = fs.lstatSync(target, { throwIfNoEntry: false });
         if (entry?.isSymbolicLink() || !contained(root, realPath(path.dirname(target)))) return false;
         if (!entry) return true;
-        if (rechecks < 3) { visited.delete(target); return visit(target, rechecks + 1); }
+        if (rechecks < 3) return recheck();
         return false;
       }
       if (!fs.existsSync(resolved) || visited.has(resolved)) return true;
       visited.add(resolved);
+      order.push(resolved);
       if (!fs.statSync(resolved).isDirectory()) return true;
       return fs.readdirSync(resolved).every((name) => visit(path.join(resolved, name)));
     } catch (error) {
       // 동시 notify가 대기 파일·잠금 폴더를 지울 수 있다. 실제로 사라진 항목만 허용하며,
       // 남아 있는 dangling symlink와 프로젝트 밖 부모는 계속 거부한다.
-      if (error.code !== "ENOENT") throw error;
-      if (rechecks < 3) { visited.delete(target); return visit(target, rechecks + 1); }
-      if (fs.lstatSync(target, { throwIfNoEntry: false })) throw error;
+      if (!vanishingCodes.has(error.code)) throw error;
+      if (rechecks < 3) {
+        // 삭제 대기는 상대 프로세스가 핸들을 닫아야 끝나므로 ENOENT가 아닐 때만 기다린다.
+        if (error.code !== "ENOENT") pauseSync(recheckWaitsMs[rechecks]);
+        return recheck();
+      }
+      // 끝까지 남은 항목은 여기서 거부한다. 오류로 던지면 상위 폴더가 사라지는 중으로 보고 다시 훑는다.
+      if (fs.lstatSync(target, { throwIfNoEntry: false })) return false;
       return contained(root, realPath(path.dirname(target)));
     }
   }

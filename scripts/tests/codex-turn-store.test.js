@@ -86,6 +86,42 @@ test('storage validation rechecks an unlinked Windows file resolved into NTFS de
   assert.equal(removed,true);
 });
 
+// Windows는 삭제·이름 변경 중인 항목에 ENOENT 대신 EBADF(realpath)·EPERM(readdir)을 돌려준다.
+for (const [label, owner, name, code, make, remove] of [
+  ['a pending file that reports EBADF', fs.realpathSync, 'native', 'EBADF',
+    t => { fs.mkdirSync(path.dirname(t), { recursive: true }); fs.writeFileSync(t, '{}'); }, t => fs.unlinkSync(t)],
+  ['a lock folder that reports EPERM', fs, 'readdirSync', 'EPERM',
+    t => { fs.mkdirSync(t, { recursive: true }); fs.writeFileSync(path.join(t, 'owner.json'), '{}'); }, t => fs.rmSync(t, { recursive: true })],
+]) {
+  test(`storage validation rechecks ${label} while another process deletes it`, t => {
+    const root = fixture(t);
+    const target = path.join(root, 'conversations', code === 'EBADF' ? '.mnemo-pending/queued.json' : '.mnemo-write.lock');
+    make(target);
+    const original = owner[name];
+    let removed = false;
+    owner[name] = function(file, ...args) {
+      if (!removed && file === target) { removed = true; remove(target); throw Object.assign(new Error(`${code}: injected`), { code }); }
+      return original.call(this, file, ...args);
+    };
+    try { assert.equal(require('../../hooks/mnemo-project-root.js').resolveRoot(root), root); }
+    finally { owner[name] = original; }
+    assert.equal(removed, true);
+  });
+}
+
+test('storage validation still rejects an entry that keeps reporting EPERM', t => {
+  const root = fixture(t);
+  const target = path.join(root, 'conversations', 'unreadable');
+  fs.mkdirSync(target, { recursive: true });
+  const original = fs.readdirSync;
+  fs.readdirSync = function(file, ...args) {
+    if (file === target) throw Object.assign(new Error('EPERM: injected'), { code: 'EPERM' });
+    return original.call(this, file, ...args);
+  };
+  try { assert.equal(require('../../hooks/mnemo-project-root.js').resolveRoot(root), null); }
+  finally { fs.readdirSync = original; }
+});
+
 test('partial write failure rolls back before retrying the complete record', async t => {
   const root = fixture(t);
   const original = fs.writeSync;
