@@ -9,6 +9,7 @@ const {
   latestTurn: latestAntigravityTurn,
 } = require("../../skills/antigravity-mnemo/hooks/save-turn");
 const { pruneStaleAssets } = require("../prune-stale-assets");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 const {
   DEFAULT_COMMON_RUNTIME_SKILLS,
   DEFAULT_DISABLED_BROAD_CODING_SKILLS,
@@ -123,14 +124,11 @@ test("install.bat --help exits before changing runtime homes", () => {
   }
 
   const tempHome = makeTempHome("ccc-install-help-test-");
-  const env = {
-    ...process.env,
-    HOME: tempHome,
-    USERPROFILE: tempHome,
+  const env = isolatedHomeEnv(tempHome, {
     CODEX_HOME: path.join(tempHome, ".codex"),
     ANTIGRAVITY_HOME: path.join(tempHome, ".gemini"),
     OLYMPUS_UPDATE_CHECK_DISABLE: "1",
-  };
+  });
 
   try {
     const command = `call "${installBat}" --help`;
@@ -161,15 +159,12 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   }
 
   const tempHome = makeTempHome("ccc-install-test-");
-  const env = {
-    ...process.env,
-    HOME: tempHome,
-    USERPROFILE: tempHome,
+  const env = isolatedHomeEnv(tempHome, {
     // Codex CLI on Windows does not consistently derive its state directory
     // from a replaced USERPROFILE. Pin CODEX_HOME so installer tests cannot
     // rewrite the developer's real ~/.codex/config.toml.
     CODEX_HOME: path.join(tempHome, ".codex"),
-  };
+  });
   // Grok has no independent Olympus sync target and reads ~/.claude through
   // compat.claude. A Codex-only selection must still prepare that shared home
   // when Grok is installed.
@@ -455,15 +450,12 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
   // Dependency installation is not part of this layout test. A failed optional
   // orchestrator build must not prevent the core Antigravity assets from landing.
   fs.writeFileSync(path.join(shimDir, "npm.cmd"), "@exit /b 97\r\n", "utf8");
-  const env = {
-    ...process.env,
-    HOME: tempHome,
-    USERPROFILE: tempHome,
+  const env = isolatedHomeEnv(tempHome, {
     ANTIGRAVITY_HOME: googleHome,
     CODEX_HOME: path.join(tempHome, ".codex"),
     OLYMPUS_UPDATE_CHECK_DISABLE: "1",
     PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
-  };
+  });
 
   try {
     const command = `echo.| call "${installBat}" --llm antigravity`;
@@ -1330,12 +1322,11 @@ test("four CLI instruction surfaces keep the native-first boundary aligned", () 
 
 test("Mnemo rule reinstall replaces managed content once and preserves user settings", () => {
   const home = makeTempHome("ccc-mnemo-rules-reinstall-");
-  const env = {
-    ...process.env, HOME: home, USERPROFILE: home,
+  const env = isolatedHomeEnv(home, {
     CODEX_HOME: path.join(home, ".codex"),
     ANTIGRAVITY_HOME: path.join(home, ".gemini"),
     GROK_HOME: path.join(home, ".grok"),
-  };
+  });
   const cases = [
     ["mnemo", ".claude/CLAUDE.md", "claude-md-rules.md", "MNEMO"],
     ["codex-mnemo", ".codex/AGENTS.md", "agents-md-rules.md", "CODEX-MNEMO"],
@@ -1377,6 +1368,27 @@ test("Mnemo rule reinstall replaces managed content once and preserves user sett
   const settings = JSON.parse(fs.readFileSync(path.join(home, ".claude/settings.json"), "utf8"));
   assert.equal(settings.autoMemoryEnabled, false);
   assert.equal(settings.userPreference, "keep");
+});
+
+test("fake-home test environments pin the config dirs that outrank HOME", () => {
+  // HOME·USERPROFILE만 바꾸면 TermSnap의 CLAUDE_CONFIG_DIR과 Devin의 APPDATA를 물려받아
+  // 설치기가 사용자의 실제 설정에 쓴다(gotcha 120). 가짜 홈 환경은 도우미로만 만든다.
+  const handBuilt = fs.readdirSync(__dirname)
+    .filter((name) => name.endsWith(".test.js"))
+    .filter((name) => /\bUSERPROFILE\s*[:=]/.test(fs.readFileSync(path.join(__dirname, name), "utf8")));
+  assert.deepEqual(handBuilt, [], "build fake-home environments with isolatedHomeEnv() from isolated-home-env.js");
+
+  const inherited = process.env.CLAUDE_CONFIG_DIR;
+  const home = path.join(os.tmpdir(), "olympus-fake-home");
+  let env;
+  process.env.CLAUDE_CONFIG_DIR = path.join(os.tmpdir(), "real-claude-config");
+  try { env = isolatedHomeEnv(home); }
+  finally {
+    if (inherited === undefined) delete process.env.CLAUDE_CONFIG_DIR;
+    else process.env.CLAUDE_CONFIG_DIR = inherited;
+  }
+  assert.equal(env.CLAUDE_CONFIG_DIR, path.join(home, ".claude"));
+  assert.equal(env.DEVIN_CONFIG_DIR, path.join(home, ".config", "devin"));
 });
 
 test("project instruction files keep native role ownership aligned", () => {

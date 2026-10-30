@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { copyMnemoSupportFiles } = require('../skill-catalog');
+const { isolatedHomeEnv } = require('./isolated-home-env');
 
 const repo = path.resolve(__dirname, '../..');
 const installer = path.join(repo, 'skills/mnemo/install.js');
@@ -26,11 +27,10 @@ function fixture(t, initialSettings) {
   fs.writeFileSync(nativeMemory, 'Preserve existing native memory.\n');
   const originalMemory = fs.readFileSync(nativeMemory);
   const statePath = path.join(claude, '.mnemo-native-memory.json');
-  const env = {
-    ...process.env, HOME: home, USERPROFILE: home,
+  const env = isolatedHomeEnv(home, {
     CLAUDE_CONFIG_DIR: claude, CODEX_HOME: path.join(home, '.codex'),
     ANTIGRAVITY_HOME: path.join(home, '.gemini'), GROK_HOME: path.join(home, '.grok'),
-  };
+  });
   // Verify the spawned Node runtime sees our isolated home before an installer
   // can touch settings; never depend on the real profile's current environment.
   const probe = spawnSync(process.execPath, ['-e', 'process.stdout.write(require("node:os").homedir())'], { env, encoding: 'utf8', windowsHide: true });

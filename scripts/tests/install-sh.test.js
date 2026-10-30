@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const installSh = path.join(repoRoot, "install.sh");
@@ -100,10 +101,8 @@ function runIsolatedInstaller(bash, args, options = {}) {
     seedOrchestratorRuntime(path.join(tempHome, ".gemini", "antigravity-cli"));
     if (createGrokHome) fs.mkdirSync(path.join(tempHome, ".grok"), { recursive: true });
 
-    const env = {
-      ...process.env,
+    const env = isolatedHomeEnv(tempHome, {
       HOME: shellPath(tempHome),
-      USERPROFILE: tempHome,
       ANTIGRAVITY_HOME: shellPath(path.join(tempHome, ".gemini")),
       GROK_HOME: shellPath(path.join(tempHome, ".grok")),
       FAIL_PRUNE: failPrune ? "1" : "0",
@@ -111,7 +110,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
       MCP_CALLS_FILE: shellPath(mcpCallsFile),
       OLYMPUS_UPDATE_CHECK_DISABLE: "1",
       PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
-    };
+    });
     if (useCodexHomeOverride) env.CODEX_HOME = shellPath(codexHome);
     else delete env.CODEX_HOME;
 
@@ -155,14 +154,12 @@ test(
         path.join(shimDir, "node"),
         "#!/usr/bin/env bash\necho 'unexpected node invocation' >&2\nexit 93\n",
       );
-      const env = {
-        ...process.env,
+      const env = isolatedHomeEnv(tempHome, {
         HOME: shellPath(tempHome),
-        USERPROFILE: tempHome,
         CODEX_HOME: shellPath(path.join(tempHome, ".codex")),
         ANTIGRAVITY_HOME: shellPath(path.join(tempHome, ".gemini")),
         PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
-      };
+      });
       const result = spawnSync(
         bash,
         ["--noprofile", "--norc", "-u", shellPath(installSh), "--help"],

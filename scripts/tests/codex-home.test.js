@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const mnemoRoot = path.join(repoRoot, "skills", "codex-mnemo");
@@ -13,12 +14,7 @@ function read(relativePath) {
 }
 
 function isolatedEnv(fakeHome, codexHome) {
-  return {
-    ...process.env,
-    HOME: fakeHome,
-    USERPROFILE: fakeHome,
-    CODEX_HOME: codexHome,
-  };
+  return isolatedHomeEnv(fakeHome, { CODEX_HOME: codexHome });
 }
 
 function writeRollout(root, projectRoot, fileName, touchedFile, message) {
@@ -207,7 +203,7 @@ test("Mnemo installer falls back to ~/.codex when CODEX_HOME is unset", () => {
   fs.mkdirSync(fakeHome, { recursive: true });
 
   try {
-    const env = { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome };
+    const env = isolatedHomeEnv(fakeHome);
     delete env.CODEX_HOME;
     const result = spawnSync(process.execPath, [path.join(mnemoRoot, "install.js")], {
       cwd: repoRoot,

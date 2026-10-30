@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { bundleImprovement } = require('../../skills/mnemo/scripts/bundle-improvement');
+const { isolatedHomeEnv } = require('./isolated-home-env');
 
 const repo = path.resolve(__dirname, '../..');
 function fixture(t) {
@@ -21,9 +22,9 @@ test('Devin uses shared Claude Mnemo to upgrade and recall its installed produce
   const root = fixture(t);
   const claude = path.join(root, 'claude');
   const devin = path.join(root, 'devin');
-  const env = { ...process.env, HOME: root, USERPROFILE: root,
+  const env = isolatedHomeEnv(root, {
     CLAUDE_CONFIG_DIR: claude, DEVIN_CONFIG_DIR: devin,
-    GROK_HOME: path.join(root, 'grok') };
+    GROK_HOME: path.join(root, 'grok') });
   for (const name of ['mnemo', 'devin-mnemo']) {
     const run = spawnSync(process.execPath, [path.join(repo, 'skills', name, 'install.js'), '--force'],
       { env, cwd: root, encoding: 'utf8', timeout: 30000, windowsHide: true });
@@ -78,9 +79,9 @@ for (const name of ['mnemo', 'codex-mnemo', 'antigravity-mnemo', 'grok-mnemo']) 
       'antigravity-mnemo': path.join(google, 'antigravity-cli/skills/antigravity-mnemo'),
       'grok-mnemo': path.join(claude, 'skills/grok-mnemo'),
     };
-    const env = { ...process.env, HOME: root, USERPROFILE: root,
+    const env = isolatedHomeEnv(root, {
       CLAUDE_CONFIG_DIR: claude, CODEX_HOME: codex, ANTIGRAVITY_HOME: google,
-      GROK_HOME: path.join(root, 'grok') };
+      GROK_HOME: path.join(root, 'grok') });
     const run = spawnSync(process.execPath, [path.join(repo, 'skills', name, 'install.js'), '--force'],
       { env, cwd: root, encoding: 'utf8', timeout: 30000, windowsHide: true });
     assert.equal(run.status, 0, run.stderr + run.stdout);

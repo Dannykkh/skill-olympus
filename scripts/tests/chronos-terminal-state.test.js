@@ -6,6 +6,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 
 const repoRoot = path.resolve(__dirname, "../..");
 const fixturePrefix = "olympus-chronos-terminal-";
@@ -84,7 +85,7 @@ function runFixture(runner, output, { iteration = 0, maximum = 4, promise = "nul
       fs.writeFileSync(payloadPath, JSON.stringify(payload));
       args.push(runner.bash ? shellPath(payloadPath) : payloadPath);
     }
-    const env = { ...process.env, HOME: home, USERPROFILE: home, CHRONOS_DRY_RUN: "1" };
+    const env = isolatedHomeEnv(home, { CHRONOS_DRY_RUN: "1" });
     delete env.GROK_HOOK_EVENT;
     delete env.DEVIN_PROJECT_DIR;
     const result = spawnSync(runner.command, args, {

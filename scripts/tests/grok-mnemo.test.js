@@ -5,6 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync, spawn } = require("node:child_process");
 const { appendEvent } = require("../../skills/grok-mnemo/hooks/append-event");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 
 function fixture(t, parent = os.tmpdir()) {
   const root = fs.mkdtempSync(path.join(parent, "olympus-grok-events-test-"));
@@ -87,7 +88,7 @@ test("Grok installer deploys and validates the shared event helper", (t) => {
   const grok = path.join(root, ".grok");
   fs.mkdirSync(grok);
   const installer = path.resolve(__dirname, "../../skills/grok-mnemo/install.js");
-  const env = { ...process.env, GROK_HOME: grok, HOME: root, USERPROFILE: root };
+  const env = isolatedHomeEnv(root, { GROK_HOME: grok });
   const run = (...args) => spawnSync(process.execPath, [installer, ...args], { env, encoding: "utf8" });
   assert.equal(run().status, 0);
   assert.equal(run("--check").status, 0);

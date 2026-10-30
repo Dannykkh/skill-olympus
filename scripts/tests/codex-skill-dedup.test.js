@@ -7,6 +7,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { reconcileCodexSkillDuplicates } = require("../codex-skill-dedup");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-skill-dedup-"));
@@ -218,7 +219,7 @@ test("Codex sync integrates dedup for custom CODEX_HOME and unlink without needi
   fs.writeFileSync(path.join(repository, "skills", "design-plan", "SKILL.md"), '---\nname: design-plan\ndescription: fixture\n---\n');
   const [retained, duplicate] = f.pair();
   const run = (...args) => spawnSync(process.execPath, [path.join(scripts, "sync-codex-assets.js"), ...args], {
-    env: { ...process.env, HOME: f.userHome, USERPROFILE: f.userHome, CODEX_HOME: f.codexHome },
+    env: isolatedHomeEnv(f.userHome, { CODEX_HOME: f.codexHome }),
     encoding: "utf8", windowsHide: true,
   });
   const installed = run();

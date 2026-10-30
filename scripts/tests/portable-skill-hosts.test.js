@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const { isolatedHomeEnv } = require("./isolated-home-env");
 const {
   DEFAULT_COMMON_RUNTIME_SKILLS,
   RUNTIME_SKILL_ADDITIONS,
@@ -329,17 +330,14 @@ test(
     try {
       fs.mkdirSync(shimDirectory, { recursive: true });
       fs.writeFileSync(path.join(shimDirectory, "jq.cmd"), "@exit /b 0\r\n", "utf8");
-      const env = {
-        ...process.env,
-        HOME: tempRoot,
-        USERPROFILE: tempRoot,
+      const env = isolatedHomeEnv(tempRoot, {
         CODEX_HOME: path.join(tempRoot, ".codex"),
         ANTIGRAVITY_HOME: path.join(tempRoot, ".gemini"),
         OPENCLAW_HOME: openclawHome,
         HERMES_HOME: hermesHome,
         OLYMPUS_UPDATE_CHECK_DISABLE: "1",
         PATH: `${shimDirectory}${path.delimiter}${process.env.PATH || ""}`,
-      };
+      });
       const command = `echo.| call "${path.join(repoRoot, "install.bat")}" --llm openclaw,hermes`;
       const result = spawnSync("cmd.exe", ["/d", "/c", command], {
         cwd: repoRoot,
@@ -389,17 +387,15 @@ test(
     try {
       fs.mkdirSync(shimDirectory, { recursive: true });
       writeExecutable(path.join(shimDirectory, "jq"), "#!/usr/bin/env bash\nexit 0\n");
-      const env = {
-        ...process.env,
+      const env = isolatedHomeEnv(tempRoot, {
         HOME: shellPath(tempRoot),
-        USERPROFILE: tempRoot,
         CODEX_HOME: shellPath(path.join(tempRoot, ".codex")),
         ANTIGRAVITY_HOME: shellPath(path.join(tempRoot, ".gemini")),
         OPENCLAW_HOME: shellPath(openclawHome),
         HERMES_HOME: shellPath(hermesHome),
         OLYMPUS_UPDATE_CHECK_DISABLE: "1",
         PATH: `${shimDirectory}${path.delimiter}${process.env.PATH || ""}`,
-      };
+      });
       const result = spawnSync(
         bash,
         [
