@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.5.4] - 2026-11-01
+
+### Build System
+
+- **plugin**: Remove the Claude Code plugin manifests (`.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`) and `scripts/build_plugins.py`, which only read them and had no callers. The plugin route, added in 90c0e34 and never documented in the README, installed a different product than `install.bat` / `install.sh`: a plugin loads every `skills/*/SKILL.md`, so all 103 public skills became active as `/skill-olympus:<name>` (the installer activates only the entry-point skills and keeps 78 as source-only modules), and it brought no Mnemo hooks, MCP servers or `CLAUDE.md` rules. The manifests only cost a version bump per release and once fell behind (stuck at 6.14.1 while releases moved on). Anyone who added this repository with `/plugin marketplace add` keeps the plugin copy already cached on their machine, but it receives no further updates; remove it in `/plugin` and use the installer. (3024e64)
+- **release**: `scripts/bump_version.py` bumps `VERSION` only, and the release files are `CHANGELOG.md` and `VERSION`. (3024e64)
+
+### Tests
+
+- `version-sync.test.js` now checks that `VERSION` matches the newest `## [x.y.z]` heading in `CHANGELOG.md` and that no root `.claude-plugin/` manifest ships. The two manifest wording asserts in `source-only-module-routing.test.js` are removed. (3024e64)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Chinese READMEs. (0830166)
+
+### Validation and Scope
+
+- Full test suite under Git Bash: 341 of 341 passed (the version test file went from one test to two).
+- `scripts/bump_version.py patch` was run on a scratch copy before the release and wrote `7.5.4` with an LF line ending.
+- Windows integrated installation (`install.bat --all`) passed all 12 checks, and `skills/mnemo/install.js --check` passed. The installer never read the removed files, so installed skills, hooks and MCP settings are unchanged.
+- No skill, hook, MCP or Mnemo behavior changed.
+
 ## [7.5.3] - 2026-10-31
 
 ### Bug Fixes
