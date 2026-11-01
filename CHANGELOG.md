@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.5.5] - 2026-11-01
+
+### Bug Fixes
+
+- **mnemo**: Save Claude Code messages typed while an answer is still running. Since v7.0.5 (94ae631), `claude-event-store.js` drops a prompt whose `prompt_id` equals the previous input's without comparing the text. Such messages most likely arrive with the in-flight turn's `prompt_id`. This is an inference: the hook docs describe `prompt_id` as the prompt currently being processed and don't say when a queued message triggers `UserPromptSubmit`. Sessions after 10-12 lost 8 of 9 mid-turn or queued messages; earlier sessions on the same Claude Code 2.1.286 saved all 15. The Stop hook now reads the transcript after the last Stop for human inputs (`promptSource` typed/suggestion_accepted/queued, and `queued_command` attachments with `origin.kind: "human"`). It saves the ones not yet in the log, before the answer and at their original time. Prompt lines reuse the hook's identity (session + `promptId`), so nothing is saved twice; hook saves made without a `prompt_id` are matched by text within the same Stop window. The prompt hook also logs `same prompt_id with a different prompt` to `.claude/mnemo-errors.log`, so the next mid-turn message confirms or refutes the cause. (ef9ec4a)
+- **mnemo reconcile**: `reconcile_conversations.py` now scans `CLAUDE_CONFIG_DIR` as well as `~/.claude`; before this, a TermSnap account folder reported `assistant_turns=0`. Missed human inputs are recovered through `claude-event-store.js backfill`, which shares the Stop hook's filter and record marker. For legacy sessions without markers, an input counts as saved when that day's file already has a User record with the same text. Answers are recovered as each finished turn's final answer only, not every assistant text line. A turn ends at `stop_hook_summary` or the next prompt, and progress notes between tool calls are skipped. An open last turn in a transcript changed within 10 minutes is left for the next run, because SessionStart also fires on compaction. The summary line adds `user_inputs`, `user_written` and `user_error`. On this repository the 7-day dry run went from 145 assistant writes to 0 and found 3 missed user inputs. (ef9ec4a)
+- **mnemo hooks**: The stdin watchdogs in `save-conversation.ps1`/`.sh` and `save-response.ps1` log `stdin-timeout` or `stdin-empty` instead of exiting silently. The comments claiming that SessionStart reconcile backfilled lost prompts are corrected. (ef9ec4a)
+
+### Tests
+
+- Five regression tests in `mnemo-save-integrity.test.js`:
+  - Stop catch-up under PowerShell and under Bash: a missed input is saved once, before the answer.
+  - A hook save without a `prompt_id` is not duplicated.
+  - Reconcile reads `CLAUDE_CONFIG_DIR` and backfills with the hook marker, skipping progress notes and open turns.
+  - The prompt hook's stdin watchdog writes a log line.
+
+  With the previous `claude-event-store.js`, 3 of them fail. (ef9ec4a)
+
+### Documentation
+
+- `skills/mnemo/SKILL.md` and `docs/global-agent-rules.md` describe the Stop catch-up, the `CLAUDE_CONFIG_DIR` transcript path and final-answer-only recovery. (ef9ec4a)
+- Update the English, Korean, Japanese and Chinese READMEs. (9ef2b7a)
+
+### Validation and Scope
+
+- Full test suite: 346 of 346 passed. With `MNEMO_TEST_INSTALLED=1`, the 17 save-integrity tests passed against the installed hooks.
+- Windows integrated installation (`install.bat --all`) passed all 12 checks. The hooks, `reconcile_conversations.py` and `SKILL.md` in `~/.claude` and in the `CLAUDE_CONFIG_DIR` account folder match the repository.
+- Claude only: Codex, Antigravity, Grok and Devin saving is unchanged. `save-response.sh` still has no stdin watchdog.
+- Inputs lost more than 7 days ago are outside the automatic window. To recover them, run `reconcile_conversations.py --project-root <project> --days <n>`.
+
 ## [7.5.4] - 2026-11-01
 
 ### Build System
