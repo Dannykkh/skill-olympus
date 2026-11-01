@@ -240,29 +240,7 @@ claude mcp add filesystem -- npx -y @anthropic-ai/mcp-server-filesystem /path/to
 
 ---
 
-### 6. GitHub - GitHub API 접근
-
-GitHub 리포지토리, 이슈, PR 관리를 위한 MCP 서버입니다.
-
-**설정:**
-
-```json
-{
-  "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here"
-      }
-    }
-  }
-}
-```
-
----
-
-### 7. Stitch MCP - Google Stitch UI 디자인
+### 6. Stitch MCP - Google Stitch UI 디자인
 
 [Google Stitch](https://stitch.withgoogle.com/)와 연동하여 AI 기반 UI/UX 디자인을 생성하는 MCP 서버입니다.
 
@@ -325,7 +303,7 @@ User: 아프로디테 --stitch 로그인 → 대시보드 플로우를 생성해
 
 > API 키 불필요, 로컬에서 실행되는 오픈소스 MCP 서버들
 
-### 8. Office-PowerPoint-MCP - PPT 자동화 (⭐ 추천)
+### 7. Office-PowerPoint-MCP - PPT 자동화 (⭐ 추천)
 
 [Office-PowerPoint-MCP](https://github.com/GongRzhe/Office-PowerPoint-MCP-Server)는 python-pptx 기반의 가장 기능이 풍부한 PowerPoint MCP 서버입니다.
 
@@ -372,7 +350,7 @@ User: 차트와 표가 포함된 프레젠테이션 생성해줘
 
 ---
 
-### 9. PPT-MCP (Node.js) - 크로스 플랫폼
+### 8. PPT-MCP (Node.js) - 크로스 플랫폼
 
 [PPT-MCP](https://github.com/guangxiangdebizi/PPT-MCP)는 순수 JavaScript/TypeScript로 구현된 PowerPoint MCP 서버입니다.
 
@@ -405,7 +383,7 @@ npm install -g ppt-mcp
 
 ---
 
-### 10. pptx-xlsx-mcp - PPT + Excel 통합
+### 9. pptx-xlsx-mcp - PPT + Excel 통합
 
 [pptx-xlsx-mcp](https://github.com/jenstangen1/pptx-xlsx-mcp)는 PowerPoint와 Excel을 동시에 다루는 MCP 서버입니다.
 
@@ -440,7 +418,7 @@ pip install -r requirements.txt
 
 ---
 
-### 11. mcp-pandoc - 문서 변환 (⭐ 추천)
+### 10. mcp-pandoc - 문서 변환 (⭐ 추천)
 
 [mcp-pandoc](https://github.com/vivekVells/mcp-pandoc)는 Pandoc 기반의 문서 포맷 변환 MCP 서버입니다. **공식 MCP 프로젝트에 포함**되어 있습니다.
 
@@ -490,7 +468,7 @@ User: 문서를 회사 템플릿 스타일로 변환해줘
 
 ---
 
-### 12. markdownify-mcp - 모든 것을 마크다운으로
+### 11. markdownify-mcp - 모든 것을 마크다운으로
 
 [markdownify-mcp](https://github.com/zcaceres/markdownify-mcp)는 다양한 파일과 웹 콘텐츠를 마크다운으로 변환하는 MCP 서버입니다.
 
@@ -525,7 +503,7 @@ pip install markdownify-mcp
 
 ## 🎬 비디오 & 애니메이션 (무료, 로컬 실행)
 
-### 13. manim-mcp-server - 수학/교육 애니메이션
+### 12. manim-mcp-server - 수학/교육 애니메이션
 
 [manim-mcp-server](https://github.com/abhiemj/manim-mcp-server)는 3Blue1Brown 스타일의 수학 애니메이션을 생성하는 MCP 서버입니다.
 
@@ -572,7 +550,7 @@ User: 미적분 개념 설명 애니메이션 만들어줘
 
 ---
 
-### 14. blender-mcp - 3D 모델링 & 애니메이션
+### 13. blender-mcp - 3D 모델링 & 애니메이션
 
 [blender-mcp](https://github.com/ahujasid/blender-mcp)는 Blender를 제어하여 3D 모델링과 애니메이션을 생성하는 MCP 서버입니다.
 
@@ -611,7 +589,7 @@ pip install -r requirements.txt
 
 ---
 
-### 15. video-editing-mcp - 비디오 편집
+### 14. video-editing-mcp - 비디오 편집
 
 [video-editing-mcp](https://github.com/burningion/video-editing-mcp)는 비디오 편집, 분석, 검색 기능을 제공하는 MCP 서버입니다.
 
@@ -689,13 +667,6 @@ PM-Worker 패턴의 멀티AI 오케스트레이션 MCP 서버입니다.
         "@anthropic-ai/mcp-server-filesystem",
         "/path/to/your/projects"
       ]
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token"
-      }
     }
   }
 }
@@ -715,9 +686,6 @@ claude mcp add playwright -- npx -y @playwright/mcp@latest
 
 # Stitch - UI 디자인 (자동 설정)
 npx -p stitch-mcp-auto stitch-mcp-auto-setup
-
-# GitHub
-claude mcp add github -- npx -y @modelcontextprotocol/server-github
 
 # ========== 무료 로컬 실행 (아래는 pip 설치 후 수동 설정) ==========
 

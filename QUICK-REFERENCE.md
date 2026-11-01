@@ -146,12 +146,6 @@
 |-----|------|------|
 | **Playwright** | 웹 자동화, E2E 테스트 (Microsoft) | `claude mcp add playwright -- npx -y @playwright/mcp@latest` |
 
-### GitHub
-
-| MCP | 설명 | 설치 |
-|-----|------|------|
-| **GitHub** | PR, Issue, API 접근 (공식) | `claude mcp add github -- npx -y @modelcontextprotocol/server-github` |
-
 ### 문서 변환
 
 | MCP | 설명 | 설치 |

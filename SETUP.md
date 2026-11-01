@@ -12,7 +12,7 @@
 
 Devin CLI가 감지되면 Claude 스킬을 공유하는 상태에서 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)의 전용 대화 저장 훅도 설치합니다. 이 어댑터만 별도로 설치·점검하려면 `node skills/devin-mnemo/install.js`와 `node skills/devin-mnemo/install.js --check`를 사용하세요. 응답 저장에는 Python 3가 필요하며, Windows 실제 Devin 턴만 검증했습니다. Devin은 `--llm devin` 선택 대상이나 네 통합 CLI와 같은 전체 동기화 대상이 아닙니다.
 
-기본 MCP 등록은 Claude·Codex·Antigravity에 `playwright`만 적용합니다. Context7과 Chrome DevTools MCP는 [MCP 설정 안내](mcp-configs/README.md)에 따라 필요할 때 수동 설치합니다. 문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선합니다. 기존 등록은 일반 재설치로 제거되지 않습니다.
+기본 MCP 등록은 Claude·Codex·Antigravity에 `playwright`만 적용합니다. Context7 MCP는 [MCP 설정 안내](mcp-configs/README.md)에 따라 필요할 때 수동 설치합니다. 문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선합니다. 기존 등록은 일반 재설치로 제거되지 않습니다.
 
 ```bash
 # 모든 CLI
@@ -444,13 +444,6 @@ claude plugin install pg-aiguide
     "stitch": {
       "command": "npx",
       "args": ["-y", "stitch-mcp"]
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token"
-      }
     }
   }
 }
@@ -470,9 +463,6 @@ claude mcp add playwright -- npx -y @playwright/mcp@latest
 
 # Stitch - UI 디자인 (자동 설정)
 npx -p stitch-mcp-auto stitch-mcp-auto-setup
-
-# GitHub
-claude mcp add github -- npx -y @modelcontextprotocol/server-github
 ```
 
 ---

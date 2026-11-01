@@ -29,7 +29,6 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **Toss Payments MCP** | PG 결제 연동 (10분) | [상세](./toss-payments-mcp.md) |
 | **Context7 MCP** | 라이브러리 문서 실시간 검색 | [상세](./context7-mcp.md) |
 | **Playwright MCP** | 브라우저 자동화 (Microsoft) | [상세](./playwright-mcp.md) |
-| **GitHub MCP** | GitHub API 통합 (공식) | [상세](./github-mcp.md) |
 | **Office-PowerPoint-MCP** | PPT 자동화 (32 도구, 25 템플릿) | [상세](./office-powerpoint-mcp.md) |
 | **mcp-pandoc** | 문서 변환 (MD→PDF/DOCX) | [상세](./mcp-pandoc.md) |
 
@@ -79,7 +78,6 @@ Claude Code 외부 리소스에 대한 상세 문서 모음.
 | **종합 설정** | [everything-claude-code](./everything-claude-code.md) |
 | **스킬 검색** | [skills.sh](./skills-sh.md) |
 | **에이전트 컬렉션** | [awesome-claude-code-subagents](./awesome-claude-code-subagents.md) |
-| **GitHub 자동화** | [GitHub MCP](./github-mcp.md) |
 | **라이브러리 문서** | [Context7 MCP](./context7-mcp.md) |
 | **세션 핸드오프** | [softaworks/agent-toolkit](./softaworks-agent-toolkit.md) |
 | **문서 인식/OCR** | [OCR & 문서 인식 가이드](./ocr-document-recognition.md) |

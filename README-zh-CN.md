@@ -129,9 +129,9 @@ chmod +x install.sh && ./install.sh
 macOS 和 Linux 的运行时保存尚未验证。
 
 Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `playwright`。
-Context7 和 Chrome DevTools MCP 均为可选项，可分别运行 `node install-mcp.js <name>`（Claude）、
-`node install-mcp-codex.js <name>`（Codex）或
-`node install-mcp-antigravity.js <name>`（Antigravity），将 `<name>` 替换为 `context7` 或 `chrome-devtools`。
+Context7 MCP 为可选项，可分别运行 `node install-mcp.js context7`（Claude）、
+`node install-mcp-codex.js context7`（Codex）或
+`node install-mcp-antigravity.js context7`（Antigravity）进行安装。
 优先核对项目依赖版本并查阅官方文档，按需使用 Context7。
 详见 [MCP 设置指南](mcp-configs/README.md)。正常重新安装会保留已有的可选 MCP 注册。
 

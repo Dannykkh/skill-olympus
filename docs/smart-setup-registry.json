@@ -135,16 +135,6 @@
       "priority": "recommended"
     },
     {
-      "id": "github",
-      "name": "GitHub MCP",
-      "description": "GitHub API 통합 (이슈, PR, 저장소 접근)",
-      "installCommand": "claude mcp add github -- npx -y @modelcontextprotocol/server-github",
-      "url": "https://github.com/modelcontextprotocol/servers",
-      "tags": ["github-actions"],
-      "priority": "optional",
-      "note": "GITHUB_PERSONAL_ACCESS_TOKEN 환경변수 필요"
-    },
-    {
       "id": "tosspayments",
       "name": "Toss Payments MCP",
       "description": "토스페이먼츠 결제 연동 가이드 (10분 완료)",

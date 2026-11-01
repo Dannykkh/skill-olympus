@@ -153,9 +153,9 @@ Assistant capture requires Python 3 and access to Devin's local session database
 Devin turn has been verified. macOS and Linux runtime capture still needs verification.
 
 The default MCP for Claude, Codex, and Antigravity is `playwright`.
-Context7 and Chrome DevTools MCP are optional; install either with `node install-mcp.js <name>`
-(Claude), `node install-mcp-codex.js <name>` (Codex), or
-`node install-mcp-antigravity.js <name>` (Antigravity), using `context7` or `chrome-devtools`.
+Context7 MCP is optional; install it with `node install-mcp.js context7`
+(Claude), `node install-mcp-codex.js context7` (Codex), or
+`node install-mcp-antigravity.js context7` (Antigravity).
 Check project dependency versions and official documentation first; Context7 is an optional lookup tool.
 See the [MCP setup guide](mcp-configs/README.md). A normal reinstall preserves existing optional MCP registrations.
 

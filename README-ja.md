@@ -129,9 +129,9 @@ DevinはClaudeのスキル（`/mnemo`を含む）を読み、専用の`UserPromp
 動作を確認済みで、macOS・Linuxでの実行検証は未実施です。
 
 Claude、Codex、Antigravityで標準登録されるMCPは`playwright`です。
-Context7とChrome DevTools MCPは任意で追加できます。Claudeでは`node install-mcp.js <name>`、
-Codexでは`node install-mcp-codex.js <name>`、Antigravityでは
-`node install-mcp-antigravity.js <name>`を実行し、`<name>`に`context7`または`chrome-devtools`を指定してください。
+Context7 MCPは任意で追加できます。Claudeでは`node install-mcp.js context7`、
+Codexでは`node install-mcp-codex.js context7`、Antigravityでは
+`node install-mcp-antigravity.js context7`を実行してください。
 まずプロジェクトの依存バージョンと公式ドキュメントを確認し、Context7は必要に応じて使います。
 [MCP設定ガイド](mcp-configs/README.md)も参照してください。通常の再インストールでは既存の任意MCP登録は保持されます。
 

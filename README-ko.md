@@ -151,10 +151,10 @@ Claude 스킬을 읽고, 자체 `UserPromptSubmit`·`Stop`·`SessionEnd` 훅으�
 응답 저장에는 Python 3와 Devin 로컬 세션 DB 접근이 필요합니다. Windows 실제 턴에서 검증했고,
 macOS·Linux 런타임 저장은 아직 검증하지 않았습니다.
 
-Claude·Codex·Antigravity의 기본 MCP는 `playwright`입니다. Context7과 Chrome DevTools MCP는
-선택 설치입니다. 필요할 때 Claude는 `node install-mcp.js <name>`, Codex는
-`node install-mcp-codex.js <name>`, Antigravity는
-`node install-mcp-antigravity.js <name>`를 실행하며, `<name>`에 `context7` 또는 `chrome-devtools`를 넣으세요.
+Claude·Codex·Antigravity의 기본 MCP는 `playwright`입니다. Context7 MCP는
+선택 설치입니다. 필요할 때 Claude는 `node install-mcp.js context7`, Codex는
+`node install-mcp-codex.js context7`, Antigravity는
+`node install-mcp-antigravity.js context7`을 실행하세요.
 문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선하고 Context7은 선택적으로 사용합니다.
 자세한 내용은 [MCP 설정 안내](mcp-configs/README.md)를 참고하세요. 일반 재설치는 기존 선택 MCP 등록을 보존합니다.
 

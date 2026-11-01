@@ -1,9 +1,0 @@
-{
-  "name": "chrome-devtools",
-  "description": "Chrome DevTools integration - browser control, debugging, performance analysis (free, no API key required)",
-  "requiresApiKey": false,
-  "config": {
-    "command": "npx",
-    "args": ["-y", "chrome-devtools-mcp@latest"]
-  }
-}
