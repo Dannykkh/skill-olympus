@@ -325,9 +325,13 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 ---
 
-**最終更新:** 2026-10-30
+**最終更新:** 2026-11-01
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.5.4 — Claude Codeプラグインマーケットプレイスとしての配布を廃止
+
+このリポジトリをClaude Codeプラグインマーケットプレイスとして使う経路を廃止しました。`.claude-plugin/marketplace.json`・`plugin.json`と、この2つを読むだけだった`scripts/build_plugins.py`を削除しました。プラグインとしてインストールすると、公開スキル103個がすべて`/skill-olympus:名前`として有効になり(インストーラーはエントリーポイントのスキルだけを有効にし、残り78個はsource-onlyモジュールのままにします)、Mnemoフック・MCP・ルールは一切入りませんでした。インストール経路は`install.bat`・`install.sh`だけになりました。`/plugin marketplace add`でこのリポジトリを登録していた場合、手元のコピーはそのまま動きますが、今後は更新されません。`/plugin`から削除してインストーラーを実行してください。バージョンは`VERSION`だけで管理し(`scripts/bump_version.py`)、テストがCHANGELOGの最新リリースと一致するかを確認します。
 
 ## v7.5.3 — MnemoのWindows保存エラーとCLAUDE_CONFIG_DIRのルール更新漏れを修正
 

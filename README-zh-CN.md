@@ -316,9 +316,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-10-30
+**最后更新：** 2026-11-01
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.5.4 — 不再作为 Claude Code 插件市场分发
+
+本仓库不再作为 Claude Code 插件市场使用。已删除 `.claude-plugin/marketplace.json`、`plugin.json`，以及只读取这两个文件的 `scripts/build_plugins.py`。通过插件方式安装时，103 个公开技能会全部以 `/skill-olympus:名称` 启用（安装器只启用入口技能，其余 78 个保持为 source-only 模块），而且不会安装任何 Mnemo 钩子、MCP 和规则。现在唯一的安装方式是 `install.bat`/`install.sh`。如果你曾用 `/plugin marketplace add` 添加过本仓库，本机已有的副本仍可使用，但不会再更新；请在 `/plugin` 中删除它，然后运行安装器。版本只由 `VERSION` 管理（`scripts/bump_version.py`），测试会检查它与 CHANGELOG 最新版本一致。
 
 ## v7.5.3 — 修复 Mnemo 在 Windows 上的保存错误，以及 CLAUDE_CONFIG_DIR 中规则未更新的问题
 
