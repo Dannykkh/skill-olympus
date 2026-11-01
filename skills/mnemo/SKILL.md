@@ -104,7 +104,7 @@ mnemo/
 
 ```
 [SessionStart 훅] reconcile-conversations
-    → 지난 세션에서 놓친 assistant 턴을 JSONL 기준으로 backfill (멱등)
+    → 지난 세션에서 놓친 답·사용자 입력을 JSONL 기준으로 backfill (멱등)
     ↓
 사용자 입력
     ↓
@@ -119,10 +119,18 @@ Claude 도구 호출
 Claude 응답 (끝에 #tags 포함)
     ↓
 [Stop 훅] save-response
+    → 프롬프트 훅이 놓친 사용자 입력을 transcript에서 따라잡음 (답 진행 중 보낸 입력 포함)
     → CLI last_assistant_message 우선, 없으면 transcript → 대기 저장 → 대화 파일 append
 ```
 
 **원본 세션** (마지막 단계에서 필요한 대화만 파싱·복구): `~/.claude/projects/<encoded>/*.jsonl`
+(`CLAUDE_CONFIG_DIR`을 쓰면 `<그 폴더>/projects/<encoded>/*.jsonl`. 복구 도구는 두 곳을 모두 본다)
+
+**사용자 입력 따라잡기** (소스 저장소 gotcha 123):
+답이 진행 중일 때 보낸 입력은 `UserPromptSubmit` 훅으로 저장되지 않을 수 있다. Stop 훅과 SessionStart 복구가
+원본 세션의 사람 입력(`promptSource`가 typed·suggestion_accepted·queued인 줄, `origin.kind=human`인
+`queued_command` 첨부)을 훅과 같은 표식(세션 + `promptId`, 첨부는 줄 uuid)으로 저장해 서로의 기록을 알아본다.
+판별은 `hooks/claude-event-store.js` 한 곳에 있고, 복구 도구도 이 파일의 `backfill` 모드를 부른다.
 **검색 대상** (사람이 읽고 Claude가 grep): `conversations/YYYY-MM-DD-claude.md`
 **멱등 인덱스**: `conversations/.mnemo-index.json` (JSONL 줄 uuid 기반)
 
@@ -149,8 +157,10 @@ python "<module_root>/scripts/reconcile_conversations.py" --project-root "<proje
 `--dry-run`은 쓰기 예정 요약이며 대화 전체 추출이 아닙니다. 원본 전체를 컨텍스트에 읽지 말고,
 읽기 전용 요청에서는 복구 쓰기를 하지 않습니다. 추가 근거는 실제 파서의 사용자·응답 텍스트만 제한해 추출하고,
 그 경로가 없으면 도구의 한계를 알립니다.
-현재 reconcile 파서는 assistant 텍스트를 복구합니다. 사용자 질문이 필요하면 해당 세션의 사용자 레코드를
-별도로 제한해 파싱하며, assistant 복구 성공을 전체 대화 복구로 보고하지 않습니다.
+reconcile은 각 턴의 최종 답과 사람 입력을 복구합니다. 도구 호출 사이의 중간 진행 문장은 복구하지 않고,
+최근 10분 안에 바뀐 원본의 끝나지 않은 마지막 턴은 다음 실행으로 미룹니다. 요약의 `user_inputs`·`user_written`이 사용자 입력 쪽이고,
+`user_error`가 있으면 사용자 입력 복구는 실행되지 않은 것입니다(답 복구만 된 상태를 전체 복구로 보고하지 않습니다).
+도구 결과·작업 알림·다른 세션의 메시지는 사용자 입력으로 보지 않습니다.
 
 ## 기능 2: MEMORY.md 관리
 

@@ -145,15 +145,30 @@ EOF
     fi
 }
 
+# stdin이 오지 않으면 입력에서 루트를 얻을 수 없다. 훅 실행 위치(CLAUDE_PROJECT_DIR, 없으면 cwd)로 정해
+# 한 줄 남긴다. 이 로그가 없으면 프롬프트를 놓쳐도 아무도 모른다(gotcha 123).
+log_stdin_miss() {
+    local dir="${CLAUDE_PROJECT_DIR:-$(pwd -W 2>/dev/null || pwd)}"
+    command -v jq >/dev/null 2>&1 || return 0
+    PROJECT_ROOT=$(INPUT_JSON="$(jq -n --arg cwd "$dir" '{cwd:$cwd}')" get_claude_project_root)
+    log_mnemo_error "$1" "$2"
+}
+
 # stdin 워치독: 활성 턴 진행 중 제출된 프롬프트는 stdin이 전달되지 않을 수 있어
-# 무한 대기 → 훅 타임아웃(60s) 에러가 발생함. 15초 내 미도착 시 fail-open으로 조용히 종료.
-# (미저장분은 SessionStart reconcile이 transcript에서 backfill)
+# 무한 대기 → 훅 타임아웃(60s) 에러가 발생함. 15초 내 미도착 시 로그 한 줄을 남기고 fail-open으로 종료한다.
+# 이 입력은 여기서 저장되지 않으며, Stop 훅이 원본 세션에서 따라잡고 SessionStart 복구가 한 번 더 확인한다.
 if command -v timeout >/dev/null 2>&1; then
-    INPUT_JSON=$(timeout 15 cat) || exit 0
+    if ! INPUT_JSON=$(timeout 15 cat); then
+        log_stdin_miss 'stdin-timeout' 'UserPromptSubmit stdin이 15초 안에 오지 않아 이 입력을 훅에서 저장하지 못함; Stop 훅이 원본 세션에서 따라잡음'
+        exit 0
+    fi
 else
     INPUT_JSON=$(cat)
 fi
-if [ -z "$INPUT_JSON" ]; then exit 0; fi
+if [ -z "$INPUT_JSON" ]; then
+    log_stdin_miss 'stdin-empty' 'UserPromptSubmit stdin이 비어 있어 이 입력을 훅에서 저장하지 못함; Stop 훅이 원본 세션에서 따라잡음'
+    exit 0
+fi
 
 if ! command -v jq >/dev/null 2>&1; then
     exit_mnemo_error 'missing-jq' 'jq가 설치되어 있지 않습니다'

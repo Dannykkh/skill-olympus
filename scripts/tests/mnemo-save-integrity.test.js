@@ -6,6 +6,7 @@ const os = require('node:os');
 const crypto = require('node:crypto');
 const { spawn, spawnSync } = require('node:child_process');
 const { once } = require('node:events');
+const { isolatedHomeEnv } = require('./isolated-home-env.js');
 const repo = path.resolve(__dirname, '../..');
 const installed = process.env.MNEMO_TEST_INSTALLED === '1';
 const home = os.homedir();
@@ -210,4 +211,104 @@ test('Shared state writes wait out a short-lived handle on the target and still 
   await closed;
   assert.deepEqual(JSON.parse(fs.readFileSync(file,'utf8')),{version:1});
   assert.deepEqual(fs.readdirSync(dir).filter(name=>name.endsWith('.tmp')),[]);
+});
+
+// 답이 진행 중일 때 보낸 입력은 프롬프트 훅으로 저장되지 않는다(gotcha 123). Stop 훅이 원본 세션에서
+// 따라잡고, SessionStart 복구도 같은 표식으로 확인해 세 경로가 서로의 기록을 알아본다.
+const sid='integrity-test';
+const at=seconds=>new Date(Date.now()-seconds*1000).toISOString();
+const promptLine=(uuid,promptId,text,source='typed',seconds=50)=>({type:'user',uuid,sessionId:sid,promptId,promptSource:source,timestamp:at(seconds),message:{role:'user',content:text}});
+const midTurnLine=(uuid,text,kind='human',seconds=40)=>({type:'attachment',uuid,sessionId:sid,timestamp:at(seconds),attachment:{type:'queued_command',prompt:text,origin:{kind},commandMode:'prompt',timestamp:at(seconds+1)}});
+const answerLine=(uuid,text)=>({type:'assistant',uuid,sessionId:sid,timestamp:at(5),message:{role:'assistant',content:[{type:'text',text}]}});
+const writeLines=(file,lines)=>fs.writeFileSync(file,lines.map(line=>JSON.stringify(line)).join('\n')+'\n');
+const headingTime=iso=>new Date(iso).toTimeString().slice(0,8);
+for(const shell of ['PowerShell','Bash']) {
+  test(`${shell} Claude Stop catches up inputs the prompt hook missed, once and before the answer`,{skip:shell==='Bash'?!hasBash:!hasPs},t=>{
+    const root=fixture(t),transcript=path.join(root,'transcript.jsonl');
+    const midTurn=midTurnLine('a1','mid-turn note');
+    const lines=[promptLine('u1','p1','first typed prompt'),midTurn,midTurnLine('a2','<task-notification>bg</task-notification>','task-notification'),
+      {type:'user',uuid:'t1',sessionId:sid,promptId:'p1',timestamp:at(35),message:{role:'user',content:[{type:'tool_result',tool_use_id:'x',content:'tool output'}]}},
+      promptLine('s1','p9','<task-notification>done</task-notification>','system',30),answerLine('r1','first answer')];
+    claude(root,shell,'save-conversation',{prompt:'first typed prompt',prompt_id:'p1'});
+    claude(root,shell,'save-conversation',{prompt:'mid-turn note',prompt_id:'p1'}); // 진행 중인 턴의 prompt_id로 온 입력
+    writeLines(transcript,lines);
+    claude(root,shell,'save-response',{transcript_path:transcript,last_assistant_message:'first answer'});
+    const queued=promptLine('u2','p2','queued follow-up','queued',20);
+    writeLines(transcript,[...lines,queued,answerLine('r2','second answer')]);
+    claude(root,shell,'save-response',{transcript_path:transcript,last_assistant_message:'second answer'});
+    claude(root,shell,'save-response',{transcript_path:transcript,last_assistant_message:'second answer'}); // 재전달
+    const saved=history(root,'claude');
+    for(const text of ['first typed prompt','mid-turn note','queued follow-up','first answer','second answer']) assert.equal(count(saved,`\n${text}\n`),1,text);
+    assert.ok(!saved.includes('<task-notification>')&&!saved.includes('tool output'));
+    assert.ok(saved.indexOf('mid-turn note')<saved.indexOf('first answer'));
+    assert.ok(saved.indexOf('queued follow-up')<saved.indexOf('second answer'));
+    assert.ok(saved.includes(`## [${headingTime(midTurn.attachment.timestamp)}] User\n\nmid-turn note`)); // 보낸 시각을 남긴다
+    assert.ok(saved.includes(`## [${headingTime(queued.timestamp)}] User\n\nqueued follow-up`));
+    assert.match(fs.readFileSync(path.join(root,'.claude','mnemo-errors.log'),'utf8'),/same prompt_id with a different prompt/);
+  });
+}
+test('Claude Stop does not duplicate a prompt the hook saved without prompt_id',{skip:!hasPs},t=>{
+  const root=fixture(t),transcript=path.join(root,'transcript.jsonl');
+  const first=[promptLine('u1','p1','prompt without id'),answerLine('r1','answer')];
+  claude(root,'PowerShell','save-conversation',{prompt:'prompt without id'});
+  writeLines(transcript,first);
+  claude(root,'PowerShell','save-response',{transcript_path:transcript,last_assistant_message:'answer'});
+  // 커서가 생긴 다음 턴에서, 원본과 다른 식별자로 저장된 훅 기록을 문장으로 짝짓는지 본다.
+  claude(root,'PowerShell','save-conversation',{prompt:'second without id'});
+  writeLines(transcript,[...first,promptLine('u2','p2','second without id','typed',10),answerLine('r2','answer two')]);
+  claude(root,'PowerShell','save-response',{transcript_path:transcript,last_assistant_message:'answer two'});
+  const saved=history(root,'claude');
+  assert.equal(count(saved,'\nprompt without id\n'),1);
+  assert.equal(count(saved,'\nsecond without id\n'),1);
+});
+function reconcile(root,config,args=[]) {
+  const script=installed ? path.join(home,'.claude/skills/mnemo/scripts/reconcile_conversations.py') : path.join(repo,'skills/mnemo/scripts/reconcile_conversations.py');
+  const fakeHome=path.join(root,'home');
+  fs.mkdirSync(fakeHome,{recursive:true});
+  // 실제 ~/.claude와 CLAUDE_CONFIG_DIR의 원본 세션을 읽지 않도록 둘 다 바꾼다(gotcha 120).
+  const env=isolatedHomeEnv(fakeHome,{CLAUDE_CONFIG_DIR:config,MNEMO_DISABLE:'0'});
+  for (const cmd of process.platform==='win32'?['python','py','python3']:['python3','python']) {
+    const result=spawnSync(cmd,[...(cmd==='py'?['-3']:[]),'-B','-X','utf8',script,'--project-root',root,...args],{encoding:'utf8',env,windowsHide:true,timeout:60000});
+    if (!result.error && (result.status===0||result.status===1)) return result;
+  }
+  throw new Error('Python reconcile could not run');
+}
+test('SessionStart reconcile reads CLAUDE_CONFIG_DIR and backfills missed user inputs with the hook marker',t=>{
+  const root=fixture(t),config=path.join(root,'config');
+  let encoded=root.replace(/[\\/:]/g,'-'); while(encoded.includes('---')) encoded=encoded.replace('---','--');
+  const dir=path.join(config,'projects',encoded),transcript=path.join(dir,`${sid}.jsonl`);
+  fs.mkdirSync(dir,{recursive:true});
+  // 첫 턴: 중간 진행 문장 → 최종 답 → 턴 끝 표시. 둘째 턴은 아직 열려 있다(파일이 방금 바뀜).
+  writeLines(transcript,[promptLine('u1','p1','already saved prompt'),answerLine('i1','progress note'),midTurnLine('a1','lost mid-turn'),
+    answerLine('r1','answer one'),{type:'system',subtype:'stop_hook_summary',uuid:'stop1',sessionId:sid,timestamp:at(25)},
+    promptLine('u2','p2','lost queued prompt','queued',20),answerLine('r2','answer two')]);
+  if (hasPs) claude(root,'PowerShell','save-conversation',{prompt:'already saved prompt',prompt_id:'p1'});
+  const first=reconcile(root,config,['--days','1']);
+  assert.equal(first.status,0,first.stderr);
+  assert.match(first.stdout,new RegExp(`user_inputs=3 user_written=${hasPs?2:3}`));
+  assert.match(first.stdout,/assistant_turns=1 .*newly_written=1 /); // 끝난 턴의 최종 답만
+  assert.match(reconcile(root,config,['--days','1']).stdout,/user_written=0/);
+  let saved=history(root,'claude');
+  assert.equal(count(saved,'answer one'),1); // 답 복구도 같은 설정 폴더에서 찾는다
+  assert.ok(!saved.includes('progress note')); // 도구 호출 사이의 중간 문장은 복구하지 않는다
+  assert.ok(!saved.includes('answer two')); // 진행 중일 수 있는 열린 턴은 건너뛴다
+  if (hasPs) {
+    claude(root,'PowerShell','save-response',{transcript_path:transcript,last_assistant_message:'answer two'});
+    const old=new Date(Date.now()-11*60*1000);
+    fs.utimesSync(transcript,old,old); // 열린 턴이 오래되면 끝난 것으로 보지만, Stop이 이미 저장했으면 다시 쓰지 않는다
+    assert.match(reconcile(root,config,['--days','1']).stdout,/assistant_turns=2 .*newly_written=0 /);
+  }
+  saved=history(root,'claude');
+  for(const text of ['already saved prompt','lost mid-turn','lost queued prompt']) assert.equal(count(saved,`\n${text}\n`),1,text);
+  if (hasPs) assert.equal(count(saved,'answer two'),1);
+});
+test('PowerShell prompt hook logs a stdin that never arrives instead of exiting silently',{skip:!hasPs},async t=>{
+  const root=fixture(t),base=installed ? path.join(home,'.claude/hooks') : path.join(repo,'hooks');
+  const env={...process.env,MNEMO_DISABLE:'0',CLAUDE_PROJECT_DIR:root};
+  for(const key of ['GROK_HOOK_EVENT','DEVIN_PROJECT_DIR']) delete env[key];
+  const child=spawn(ps,['-NoProfile','-File',path.join(base,'save-conversation.ps1')],{cwd:root,env,windowsHide:true}); // stdin을 닫지 않는다
+  const [code]=await once(child,'close');
+  child.stdin.destroy();
+  assert.equal(code,0);
+  assert.match(fs.readFileSync(path.join(root,'.claude','mnemo-errors.log'),'utf8'),/\[stdin-timeout\]/);
 });

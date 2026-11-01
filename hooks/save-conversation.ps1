@@ -59,6 +59,17 @@ function Get-ClaudeProjectRoot {
     return $null
 }
 
+# stdin이 오지 않으면 입력에서 루트를 얻을 수 없다. 훅 실행 위치(CLAUDE_PROJECT_DIR, 없으면 cwd)로 정해
+# 한 줄 남긴다. 이 로그가 없으면 프롬프트를 놓쳐도 아무도 모른다(gotcha 123).
+function Write-MnemoStdinMiss {
+    param([string]$Context, [string]$Message)
+    try {
+        $dir = if ($env:CLAUDE_PROJECT_DIR) { $env:CLAUDE_PROJECT_DIR } else { (Get-Location).Path }
+        $script:ProjectRoot = Get-ClaudeProjectRoot -Payload ([pscustomobject]@{ cwd = $dir })
+        Write-MnemoError -Context $Context -Message $Message
+    } catch {}
+}
+
 function Ensure-MemoryScaffold {
     param(
         [Parameter(Mandatory = $true)][string]$BaseDir
@@ -170,7 +181,8 @@ try {
     # 기존 워치독(StreamReader.ReadToEndAsync + Wait)은 PS 5.1(.NET Framework)에서
     # ReadToEndAsync가 동기 블로킹되어 Wait(timeout)에 도달하지 못해 무효였음 (실측: EOF까지 대기).
     # raw stream의 ReadAsync(byte[])는 PS 5.1/7 모두 진짜 비동기(실측) → chunk 루프 + deadline.
-    # 5초 내 미도착 시 fail-open으로 조용히 종료. (미저장분은 SessionStart reconcile이 backfill)
+    # 5초 내 미도착 시 로그 한 줄을 남기고 fail-open으로 종료한다. 이 입력은 여기서 저장되지 않으며,
+    # Stop 훅이 원본 세션에서 따라잡고 SessionStart 복구가 한 번 더 확인한다(gotcha 123).
     $mnemoDeadline = [DateTime]::UtcNow.AddSeconds(5)
     $mnemoStdin = [Console]::OpenStandardInput()
     $mnemoBuf = New-Object System.IO.MemoryStream
@@ -178,12 +190,18 @@ try {
     while ($true) {
         $mnemoReadTask = $mnemoStdin.ReadAsync($mnemoChunk, 0, $mnemoChunk.Length)
         $mnemoRemainMs = [int][Math]::Max(0, ($mnemoDeadline - [DateTime]::UtcNow).TotalMilliseconds)
-        if (-not $mnemoReadTask.Wait($mnemoRemainMs)) { exit 0 }
+        if (-not $mnemoReadTask.Wait($mnemoRemainMs)) {
+            Write-MnemoStdinMiss -Context 'stdin-timeout' -Message 'UserPromptSubmit stdin이 5초 안에 오지 않아 이 입력을 훅에서 저장하지 못함; Stop 훅이 원본 세션에서 따라잡음'
+            exit 0
+        }
         if ($mnemoReadTask.Result -le 0) { break }
         $mnemoBuf.Write($mnemoChunk, 0, $mnemoReadTask.Result)
     }
     $rawInput = [System.Text.Encoding]::UTF8.GetString($mnemoBuf.ToArray())
-    if (-not $rawInput) { exit 0 }
+    if (-not $rawInput) {
+        Write-MnemoStdinMiss -Context 'stdin-empty' -Message 'UserPromptSubmit stdin이 비어 있어 이 입력을 훅에서 저장하지 못함; Stop 훅이 원본 세션에서 따라잡음'
+        exit 0
+    }
     $json = $rawInput | ConvertFrom-Json
 } catch {
     Exit-MnemoError -Context 'stdin-json' -Message "stdin JSON 파싱 실패: $($_.Exception.Message)"

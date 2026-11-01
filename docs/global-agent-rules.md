@@ -157,7 +157,7 @@ Claude는 새 세션의 `/context`·`/memory`, Antigravity는 `/context`·`/hook
 
 네 CLI 모두 기억 → 대화 링크·태그 → 본문 → 범위를 좁힌 원본 확인 순서를 따른다. 상세 절차는 각 Mnemo 스킬을 읽는다.
 
-- Claude: `reconcile_conversations.py`가 assistant 텍스트를 복구한다. 프로젝트와 날짜를 지정한다. `--dry-run`은 쓰기 예정 요약이다.
+- Claude: `reconcile_conversations.py`가 각 턴의 최종 답과 사람 입력을 복구한다(`CLAUDE_CONFIG_DIR`과 `~/.claude`의 원본을 모두 본다). 프로젝트와 날짜를 지정한다. `--dry-run`은 쓰기 예정 요약이다.
 - Codex: `reconcile_codex_conversations.py`의 현재 파서와 인수를 사용한다. `--dry-run`은 대화 텍스트 추출 명령이 아니다.
 - Antigravity: `latestTurn(payload)`는 마지막 사용자·모델 쌍 추출용이다. 이전 턴 전체를 복구하는 CLI는 없다.
 - Grok: 현재 Mnemo에 일괄 복구 CLI가 없다. 다른 CLI용 reconcile을 대신 실행하지 않는다.
