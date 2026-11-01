@@ -183,16 +183,21 @@ async function backfillInputs(root, options = {}) {
   const select = () => {
     const saved = savedMarkers(root), entries = inputs.map(input => ({ input, entry: inputRecord(root, hash(input.session), input) }));
     // 표식은 2026-10-12부터 쓰였다. 그 전 세션은 훅 기록에 표식이 없으므로, 같은 날 파일에 같은 문장의
-    // User 기록이 있으면 저장된 것으로 본다.
+    // User 기록이 있으면 저장된 것으로 본다. 옛 훅은 제목 뒤에 빈 줄을 더 넣기도 해서 공백·줄바꿈 차이는 무시하고,
+    // 다른 입력의 앞부분만 같은 경우를 저장된 것으로 오인하지 않도록 User 기록 본문 전체를 비교한다.
     // minimal: 표식 없는 옛 세션에서 같은 날 같은 문장을 두 번 보냈으면 하나로 본다 — 옛 세션을 다시 복구해야 할 때 원본 줄 uuid 색인으로 바꾼다
     const marked = new Set(entries.filter(({ entry }) => saved.has(entry.marker)).map(({ input }) => input.session));
+    const squash = text => text.replace(/\s+/g, " ").trim();
     const daily = new Map(), seen = new Set();
     const legacy = input => {
       if (!daily.has(input.day)) {
-        const file = path.join(root, "conversations", `${input.day}-claude.md`);
-        daily.set(input.day, fs.existsSync(file) ? fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n") : "");
+        const file = path.join(root, "conversations", `${input.day}-claude.md`), bodies = new Set();
+        const text = fs.existsSync(file) ? fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n") : "";
+        // User 제목부터 다음 제목·저장 표식·파일 끝까지가 한 기록의 본문이다.
+        for (const match of text.matchAll(/^## \[[^\]\n]+\] User[ \t]*\n([\s\S]*?)(?=^## \[|^<!-- mnemo-|(?![\s\S]))/gm)) bodies.add(squash(match[1]));
+        daily.set(input.day, bodies);
       }
-      return daily.get(input.day).includes(`] User\n\n${input.text.replace(/\r\n/g, "\n")}\n`);
+      return daily.get(input.day).has(squash(input.text));
     };
     return entries.filter(({ input, entry }) => {
       if (saved.has(entry.marker) || seen.has(entry.marker)) return false;

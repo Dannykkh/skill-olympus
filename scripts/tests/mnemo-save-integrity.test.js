@@ -302,6 +302,23 @@ test('SessionStart reconcile reads CLAUDE_CONFIG_DIR and backfills missed user i
   for(const text of ['already saved prompt','lost mid-turn','lost queued prompt']) assert.equal(count(saved,`\n${text}\n`),1,text);
   if (hasPs) assert.equal(count(saved,'answer two'),1);
 });
+test('SessionStart reconcile treats a legacy User record with extra blank lines as saved, but not a prompt that only matches its start',t=>{
+  const root=fixture(t),config=path.join(root,'config');
+  let encoded=root.replace(/[\\/:]/g,'-'); while(encoded.includes('---')) encoded=encoded.replace('---','--');
+  const dir=path.join(config,'projects',encoded);
+  fs.mkdirSync(dir,{recursive:true});
+  writeLines(path.join(dir,`${sid}.jsonl`),[promptLine('u1','p1','legacy pasted\ntext',undefined,60),promptLine('u2','p2','legacy',undefined,50)]);
+  // 표식을 쓰기 전(2026-10-12 이전) 훅은 제목 뒤에 빈 줄을 더 넣고 표식 없이 저장했다.
+  const d=new Date(at(60)),day=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  fs.mkdirSync(path.join(root,'conversations'),{recursive:true});
+  fs.writeFileSync(path.join(root,'conversations',`${day}-claude.md`),`# ${day}\n\n## [02:15] User\n\n\n\nlegacy pasted\ntext\n\n\n## [02:16:05] Assistant\n\nold answer\n`);
+  const result=reconcile(root,config,['--days','1']);
+  assert.equal(result.status,0,result.stderr);
+  assert.match(result.stdout,/user_inputs=2 user_written=1/);
+  const saved=history(root,'claude');
+  assert.equal(count(saved,'legacy pasted\ntext'),1); // 공백 차이만 있는 옛 기록은 다시 쓰지 않는다
+  assert.equal(count(saved,'\nlegacy\n'),1); // 옛 기록의 앞부분과만 같은 새 입력은 저장한다
+});
 test('PowerShell prompt hook logs a stdin that never arrives instead of exiting silently',{skip:!hasPs},async t=>{
   const root=fixture(t),base=installed ? path.join(home,'.claude/hooks') : path.join(repo,'hooks');
   const env={...process.env,MNEMO_DISABLE:'0',CLAUDE_PROJECT_DIR:root};
