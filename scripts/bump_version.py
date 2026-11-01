@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Bump the version of the agent-skills plugin.
+Bump the Olympus release version in VERSION.
+
+VERSION is the only version source. The update check (scripts/update-check.ps1|sh)
+reads it, and CHANGELOG.md gets the matching section during the release.
+The repository is installed with install.bat / install.sh, not as a Claude Code
+plugin, so there is no plugin manifest to keep in step.
 
 Usage:
     python scripts/bump_version.py major|minor|patch
@@ -13,7 +18,6 @@ Examples:
 """
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -46,61 +50,25 @@ def bump_version(version: str, bump_type: str) -> str:
         raise ValueError(f"Invalid bump type: {bump_type}")
 
 
-def load_json(path: Path) -> dict:
-    """Load a JSON file."""
-    # 매니페스트에 한국어 설명이 있어 Windows 기본 인코딩(cp949)으로 읽으면 실패한다
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_json(path: Path, data: dict) -> None:
-    """Save a JSON file with proper formatting."""
-    # 한국어를 \uXXXX로 바꾸지 않고, Windows에서도 LF 줄바꿈을 유지한다
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-        f.write("\n")
-
-
-def bump_plugin_version(bump_type: str) -> None:
-    """Bump every public Olympus version source together."""
+def bump_release_version(bump_type: str) -> None:
+    """Bump VERSION, the single Olympus version source."""
     root = get_root()
-
-    marketplace_path = root / ".claude-plugin" / "marketplace.json"
-    plugin_path = root / ".claude-plugin" / "plugin.json"
     version_path = root / "VERSION"
 
-    required_paths = [marketplace_path, plugin_path, version_path]
-    missing_paths = [path for path in required_paths if not path.exists()]
-    if missing_paths:
-        print("Missing version source(s):")
-        for path in missing_paths:
-            print(f"  - {path}")
+    if not version_path.exists():
+        print(f"Missing version source: {version_path}")
         sys.exit(1)
 
-    marketplace = load_json(marketplace_path)
-    plugin = load_json(plugin_path)
-
+    # Windows 기본 인코딩(cp949)·CRLF에 기대지 않도록 UTF-8·LF로 읽고 쓴다
     current_version = version_path.read_text(encoding="utf-8").strip()
     new_version = bump_version(current_version, bump_type)
 
     print(f"Bumping skill-olympus: {current_version} -> {new_version}")
 
-    if "metadata" not in marketplace:
-        marketplace["metadata"] = {}
-    marketplace["metadata"]["version"] = new_version
-    for entry in marketplace.get("plugins", []):
-        if entry.get("name") == "skill-olympus":
-            entry["version"] = new_version
-    plugin["version"] = new_version
-
-    save_json(marketplace_path, marketplace)
-    save_json(plugin_path, plugin)
     version_path.write_text(f"{new_version}\n", encoding="utf-8", newline="\n")
-    print(f"[ok] Updated {marketplace_path}")
-    print(f"[ok] Updated {plugin_path}")
     print(f"[ok] Updated {version_path}")
 
-    release_files = "CHANGELOG.md VERSION .claude-plugin/plugin.json .claude-plugin/marketplace.json"
+    release_files = "CHANGELOG.md VERSION"
     print("\nVersion bumped successfully.")
     print("\nNext steps:")
     print("  1. Review changes: git diff")
@@ -126,7 +94,7 @@ def show_version() -> None:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Bump agent-skills plugin version",
+        description="Bump the Olympus release version (VERSION)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Semantic versioning:
@@ -165,7 +133,7 @@ Examples:
         parser.print_help()
         sys.exit(1)
 
-    bump_plugin_version(args.bump_type)
+    bump_release_version(args.bump_type)
 
 
 if __name__ == "__main__":

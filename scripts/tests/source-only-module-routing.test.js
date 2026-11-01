@@ -400,14 +400,6 @@ test("cross-CLI authoring rules and Antigravity compatibility boundaries stay ex
     /~\/\.gemini\/antigravity-cli\/\.olympus\/runtime-modules\/orchestrator/,
   );
   assert.doesNotMatch(readRepoFile("QUICK-REFERENCE.md"), /codebase_investigator|\bgeneralist\b/);
-  assert.doesNotMatch(
-    readRepoFile(".claude-plugin/plugin.json"),
-    /Codex CLI, Gemini CLI, and Grok Build/,
-  );
-  assert.doesNotMatch(
-    readRepoFile(".claude-plugin/marketplace.json"),
-    /Codex CLI, Gemini CLI, and Grok Build/,
-  );
 });
 
 test("Antigravity native workflows own their basic jobs while Olympus skills document a unique delta", () => {
