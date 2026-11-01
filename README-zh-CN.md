@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.5 — 修复 Claude Code 回答过程中发送的消息未写入对话记录的问题
+
+在 Claude Code 回答过程中发送的消息没有写入对话记录。从 v7.0.5 起，提示钩子会把与上一条 `prompt_id` 相同的输入当作重复丢弃，而不比较内容；回答过程中发送的消息很可能带着正在进行的轮次的 `prompt_id`（这是推断：官方文档没有说明排队的消息何时触发钩子）。此后的会话中，这类消息 9 条丢了 8 条，而同一 Claude Code 版本更早的会话 15 条全部保存。本应补上这些缺口的会话启动恢复只恢复回答文本，也找不到 `CLAUDE_CONFIG_DIR`（如 TermSnap 账户文件夹）下的原始会话，因此丢失没有任何提示。现在 Stop 钩子会在原始会话中查找上一次回答之后的用户输入，把漏存的输入按发送时间保存在回答之前。会话启动恢复会同时查看 `CLAUDE_CONFIG_DIR` 和 `~/.claude`，并补上漏存的用户输入。回答每轮只恢复最终回答：不写入工具调用之间的进度说明，最近 10 分钟内有更新的会话中未结束的轮次留到下次运行。保存钩子没有收到输入时，不再静默退出，而是记录到 `.claude/mnemo-errors.log`。自动恢复范围是最近 7 天；更早的缺口请运行 `skills/mnemo/scripts/reconcile_conversations.py --project-root <项目> --days <天数>`。其他 CLI 的保存方式没有变化。
+
 ## v7.5.4 — 不再作为 Claude Code 插件市场分发
 
 本仓库不再作为 Claude Code 插件市场使用。已删除 `.claude-plugin/marketplace.json`、`plugin.json`，以及只读取这两个文件的 `scripts/build_plugins.py`。通过插件方式安装时，103 个公开技能会全部以 `/skill-olympus:名称` 启用（安装器只启用入口技能，其余 78 个保持为 source-only 模块），而且不会安装任何 Mnemo 钩子、MCP 和规则。现在唯一的安装方式是 `install.bat`/`install.sh`。如果你曾用 `/plugin marketplace add` 添加过本仓库，本机已有的副本仍可使用，但不会再更新；请在 `/plugin` 中删除它，然后运行安装器。版本只由 `VERSION` 管理（`scripts/bump_version.py`），测试会检查它与 CHANGELOG 最新版本一致。

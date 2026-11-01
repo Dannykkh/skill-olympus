@@ -329,6 +329,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.5 — Claude Codeで回答中に送ったメッセージが会話記録に残らない問題を修正
+
+Claude Codeが回答している途中に送ったメッセージが、会話記録に残っていませんでした。v7.0.5以降、プロンプトフックは直前と同じ`prompt_id`の入力を、内容を比べずに重複として捨てていました。回答中に送ったメッセージは、進行中のターンの`prompt_id`を付けて届くと考えられます(推論です。キューに入ったメッセージでフックがいつ実行されるかは公式ドキュメントに書かれていません)。それ以降のセッションではこうしたメッセージ9件のうち8件が抜け、同じClaude Codeバージョンのそれ以前のセッションでは15件すべてが保存されていました。これを補うはずだったセッション開始時の復旧は回答テキストしか復旧せず、`CLAUDE_CONFIG_DIR`(例: TermSnapのアカウントフォルダー)の元セッションも見つけられなかったため、欠落は何の表示もなく残りました。現在はStopフックが元セッションから前回の回答以降の人の入力を探し、抜けていたものを回答より前に、送信した時刻で保存します。セッション開始時の復旧は`CLAUDE_CONFIG_DIR`と`~/.claude`の両方を見て、抜けたユーザー入力も補います。回答はターンごとに最終回答だけを復旧し、ツール呼び出しの間の途中経過の文は入れず、直近10分以内に更新されたセッションの終わっていないターンは次の実行に回します。保存フックが入力を受け取れなかった場合は、何も残さずに終了せず`.claude/mnemo-errors.log`に記録します。自動復旧の範囲は直近7日なので、それより古い欠落は`skills/mnemo/scripts/reconcile_conversations.py --project-root <プロジェクト> --days <日数>`で補ってください。ほかのCLIの保存方法は変わっていません。
+
 ## v7.5.4 — Claude Codeプラグインマーケットプレイスとしての配布を廃止
 
 このリポジトリをClaude Codeプラグインマーケットプレイスとして使う経路を廃止しました。`.claude-plugin/marketplace.json`・`plugin.json`と、この2つを読むだけだった`scripts/build_plugins.py`を削除しました。プラグインとしてインストールすると、公開スキル103個がすべて`/skill-olympus:名前`として有効になり(インストーラーはエントリーポイントのスキルだけを有効にし、残り78個はsource-onlyモジュールのままにします)、Mnemoフック・MCP・ルールは一切入りませんでした。インストール経路は`install.bat`・`install.sh`だけになりました。`/plugin marketplace add`でこのリポジトリを登録していた場合、手元のコピーはそのまま動きますが、今後は更新されません。`/plugin`から削除してインストーラーを実行してください。バージョンは`VERSION`だけで管理し(`scripts/bump_version.py`)、テストがCHANGELOGの最新リリースと一致するかを確認します。
