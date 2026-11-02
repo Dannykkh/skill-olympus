@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.6.0 — Aphrodite 实测韩文换行，新增多屏移动应用规则，不再重写未变化的对话文件
+
+本次有三项变化。第一，Aphrodite 现在会实测韩文换行。从 hanmariyang/giting-skills 的 hangul-wrap v0.2.2（MIT）移植的 `skills/design-plan/scripts/wrapcheck.mjs` 在 Chromium 系浏览器中读取每个字在屏幕上的位置来重建每一行，找出一个词被拆到两行的地方和溢出的文字；把 `--text` / `--zoom` 设为 200% 时，还会找出按钮文字被截断、点按落到别的元素上的地方。只需要 Node 22 及以上和 Chrome、Edge 或 Chromium，不用安装任何包。与原脚本相比改了四处：会查找 Windows 的 Edge 和用户目录下的 Chrome；等待网页字体超过 `--font-timeout`（默认 3000 ms）就停止（遇到永远加载不完的字体时，原脚本不会结束）；在 load 事件之后再等待 `--wait`；帮助中写明了这两个选项。`references/korean-line-break.md` 按位置给出处理方式（标题 `keep-all` + `text-wrap: balance`，正文 `keep-all` + `text-wrap: pretty`，窄单元格不加 `keep-all`，代码和 URL 用 `overflow-wrap: anywhere`，不用 `break-all`），Phase 6-4 在 360、390、768、1280 px 下测量。第二，对于用户会创建或预约某些东西的多屏移动应用，Aphrodite 会在固定阶段读取 `references/korean-mobile-app.md`。这份文档移植自 vmc-inner-circle/k-style-ui-ux v0.18.1（MIT）的规则，包括：为每个对象填写创建、查看、编辑和结尾（结果页）的流程闭环；决定每个页面信息顺序的人物卡；所有页面都引用的一张事实表；按首屏主角划分的首页 7 种、详情 6 种、列表 6 种页面类型（根据 37 个韩国应用和 57 个移动网站的 296 个页面归纳）；底部按钮、按钮文案、徽章、选中状态等韩国应用规则；只采用两个以上应用共有的市场惯例；以及 P0/P1 检查清单。Experience Contract 新增可选的 `## Object Flows` 和 `## Scenario Facts` 两节，校验脚本会判定没有结果页就结束的流程失败（最后一列是该对象自己的查看页、创建页或 `n/a`）。插件的脚本、品牌调色板和图片搜索都没有引入；其图片搜索会抓取 Bing 结果页并允许使用有版权的照片。第三，会话启动时的恢复不再重写未变化的文件。以前每次启动和压缩时，都会用相同内容重写 72 个 Codex 对话文件和索引，只改变了修改时间。现在只有字节不同时才写入日期文件，两个恢复脚本在索引的 JSON 值相同时都不再写入。
+
 ## v7.5.6 — 防止旧会话输入恢复时重复保存，移除 Chrome DevTools 和 GitHub MCP
 
 Mnemo 从没有记录标记的 2026-10-12 之前的会话中恢复漏存的用户输入时，会根据当天的对话文件里是否已有相同文字来判断是否已保存。这个比较只认 `User` 标题后恰好一个空行的情况，而旧钩子有时会多写几个空行，于是已保存的输入看起来像是漏存，全时段恢复（`--all`）可能会再保存一次。现在会忽略空格和换行的差异，比较整条 User 记录的正文；只与另一条记录开头相同的消息仍算作新输入。在本仓库上，全时段试运行现在写入 0 条。另外，删除了原本可选安装的 Chrome DevTools 和 GitHub MCP 配置。`install-mcp` 脚本的列表和按名称安装中不再提供它们，`--all` 也不再安装 Chrome DevTools。安装指南和智能设置推荐中也去掉了 GitHub MCP，可选 MCP 现在只有 Context7。已有的注册不受影响，完整卸载仍会清理旧的 `chrome-devtools` 注册。
