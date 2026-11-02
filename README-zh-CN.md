@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.5.6 — 防止旧会话输入恢复时重复保存，移除 Chrome DevTools 和 GitHub MCP
+
+Mnemo 从没有记录标记的 2026-10-12 之前的会话中恢复漏存的用户输入时，会根据当天的对话文件里是否已有相同文字来判断是否已保存。这个比较只认 `User` 标题后恰好一个空行的情况，而旧钩子有时会多写几个空行，于是已保存的输入看起来像是漏存，全时段恢复（`--all`）可能会再保存一次。现在会忽略空格和换行的差异，比较整条 User 记录的正文；只与另一条记录开头相同的消息仍算作新输入。在本仓库上，全时段试运行现在写入 0 条。另外，删除了原本可选安装的 Chrome DevTools 和 GitHub MCP 配置。`install-mcp` 脚本的列表和按名称安装中不再提供它们，`--all` 也不再安装 Chrome DevTools。安装指南和智能设置推荐中也去掉了 GitHub MCP，可选 MCP 现在只有 Context7。已有的注册不受影响，完整卸载仍会清理旧的 `chrome-devtools` 注册。
+
 ## v7.5.5 — 修复 Claude Code 回答过程中发送的消息未写入对话记录的问题
 
 在 Claude Code 回答过程中发送的消息没有写入对话记录。从 v7.0.5 起，提示钩子会把与上一条 `prompt_id` 相同的输入当作重复丢弃，而不比较内容；回答过程中发送的消息很可能带着正在进行的轮次的 `prompt_id`（这是推断：官方文档没有说明排队的消息何时触发钩子）。此后的会话中，这类消息 9 条丢了 8 条，而同一 Claude Code 版本更早的会话 15 条全部保存。本应补上这些缺口的会话启动恢复只恢复回答文本，也找不到 `CLAUDE_CONFIG_DIR`（如 TermSnap 账户文件夹）下的原始会话，因此丢失没有任何提示。现在 Stop 钩子会在原始会话中查找上一次回答之后的用户输入，把漏存的输入按发送时间保存在回答之前。会话启动恢复会同时查看 `CLAUDE_CONFIG_DIR` 和 `~/.claude`，并补上漏存的用户输入。回答每轮只恢复最终回答：不写入工具调用之间的进度说明，最近 10 分钟内有更新的会话中未结束的轮次留到下次运行。保存钩子没有收到输入时，不再静默退出，而是记录到 `.claude/mnemo-errors.log`。自动恢复范围是最近 7 天；更早的缺口请运行 `skills/mnemo/scripts/reconcile_conversations.py --project-root <项目> --days <天数>`。其他 CLI 的保存方式没有变化。
