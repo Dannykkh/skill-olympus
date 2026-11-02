@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -606,6 +607,41 @@ class ConversationMergeTests(unittest.TestCase):
         self.assertLess(staged.index("<!-- turn:turn-early -->"), staged.index("<!-- turn:turn-late -->"))
         self.assertTrue(merge["chronological_validation"]["passed"])
         self.assertEqual(0, merge["chronological_validation"]["inversion_count"])
+
+    def test_unchanged_files_and_index_are_not_rewritten(self) -> None:
+        # 세션 시작·압축마다 바뀐 것 없는 *-codex.md 72개의 수정 시각이 함께 바뀌던 회귀를 막는다.
+        turn = completed_turn("turn-stable", "2026-07-06T01:00:00Z", "2026-07-06T01:00:02Z", "stable request", "stable answer")
+        old_day = reconciler.conversation_header("2026-02-07", "claudecode") + "## [01:40:44] User\n\nold request\n"
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp)
+            (output / "2026-02-07-codex.md").write_bytes(("﻿" + old_day).encode("utf-8"))
+            result = reconciler.ScanResult(root_turns=[turn])
+            reconciler.reconcile_to_directory(result, output, "claudecode")
+            index_path = output / reconciler.INDEX_FILENAME
+            # 다른 작성자가 같은 값을 다른 형식(키 순서·끝 줄바꿈 없음)으로 쓴 상태를 흉내 낸다.
+            index_value = json.loads(index_path.read_text(encoding="utf-8"))
+            index_path.write_text(json.dumps(dict(reversed(list(index_value.items()))), indent=2), encoding="utf-8")
+            paths = sorted(output.glob("*-codex.md")) + [index_path]
+            self.assertEqual(3, len(paths))
+            old_ns = 1_000_000_000 * 1_000_000_000
+            for path in paths:
+                os.utime(path, ns=(old_ns, old_ns))
+            before = {path.name: path.read_bytes() for path in paths}
+
+            reconciler.reconcile_to_directory(result, output, "claudecode")
+
+            for path in paths:
+                self.assertEqual(old_ns, path.stat().st_mtime_ns, path.name)
+                self.assertEqual(before[path.name], path.read_bytes(), path.name)
+
+            # 내용이 바뀌는 날짜 파일만 다시 쓴다.
+            later = completed_turn("turn-new", "2026-07-06T03:00:00Z", "2026-07-06T03:00:02Z", "new request", "new answer")
+            reconciler.reconcile_to_directory(reconciler.ScanResult(root_turns=[turn, later]), output, "claudecode")
+            changed = output / reconciler.CONV_FILENAME_TEMPLATE.format(date=turn.local_date)
+            self.assertNotEqual(old_ns, changed.stat().st_mtime_ns)
+            self.assertEqual(old_ns, (output / "2026-02-07-codex.md").stat().st_mtime_ns)
+            self.assertNotEqual(old_ns, index_path.stat().st_mtime_ns)
+            self.assertIn("turn-new", json.loads(index_path.read_text(encoding="utf-8"))["codex"][turn.local_date])
 
 
 if __name__ == "__main__":

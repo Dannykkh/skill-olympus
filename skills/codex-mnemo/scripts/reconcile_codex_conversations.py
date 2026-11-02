@@ -744,7 +744,15 @@ def load_index(conv_dir: Path) -> dict[str, Any]:
 
 def save_index(conv_dir: Path, index: dict[str, Any]) -> None:
     conv_dir.mkdir(parents=True, exist_ok=True)
-    (conv_dir / INDEX_FILENAME).write_text(
+    path = conv_dir / INDEX_FILENAME
+    # 내용이 같으면 쓰지 않는다. 글자가 아니라 JSON 값으로 비교한다 — Claude 복구 스크립트와
+    # 저장 훅도 같은 파일을 다른 형식(키 정렬·끝 줄바꿈)으로 쓰므로, 글자 비교는 늘 "다름"이 된다.
+    try:
+        if json.loads(path.read_text(encoding="utf-8")) == index:
+            return
+    except (OSError, ValueError):
+        pass
+    path.write_text(
         json.dumps(index, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
@@ -1120,7 +1128,11 @@ def reconcile_to_directory(
     chronological_records_checked = 0
     for date, (prefix, records, trailing) in file_state.items():
         path = output_dir / CONV_FILENAME_TEMPLATE.format(date=date)
-        path.write_text(compose_conversation(prefix, records, trailing), encoding="utf-8", newline="\n")
+        composed = compose_conversation(prefix, records, trailing)
+        # 바이트가 같으면 다시 쓰지 않는다. file_state에는 기존 *-codex.md 날짜가 전부 들어 있어서,
+        # 예전에는 세션 시작·압축 때마다 바뀐 것 없는 파일 수십 개의 수정 시각이 함께 바뀌었다.
+        if not path.exists() or path.read_bytes() != composed.encode("utf-8"):
+            path.write_text(composed, encoding="utf-8", newline="\n")
         _, rendered_records, _ = parse_conversation(path.read_text(encoding="utf-8", errors="replace"), date)
         previous_id = ""
         previous_time = ""

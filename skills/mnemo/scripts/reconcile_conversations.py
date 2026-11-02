@@ -448,6 +448,13 @@ def load_index(conv_dir: Path) -> dict:
 def save_index(conv_dir: Path, index: dict) -> None:
     path = conv_dir / INDEX_FILENAME
     conv_dir.mkdir(parents=True, exist_ok=True)
+    # 내용이 같으면 쓰지 않는다. Codex 복구 스크립트·저장 훅이 같은 파일을 다른 형식으로 쓰므로
+    # 글자가 아니라 JSON 값으로 비교한다 — 세션 시작마다 수정 시각만 바뀌는 일을 막는다.
+    try:
+        if json.loads(path.read_text(encoding="utf-8")) == index:
+            return
+    except (OSError, ValueError):
+        pass
     path.write_text(
         json.dumps(index, indent=2, ensure_ascii=False),
         encoding="utf-8",
