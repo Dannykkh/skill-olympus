@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.5.6] - 2026-11-02
+
+### Bug Fixes
+
+- **mnemo reconcile**: Sessions before 2026-10-12 have no record marker, so an input counts as saved when the same day's conversation file has a User record with the same text. The check looked for `] User`, one blank line and the text, and missed records that older hooks wrote with extra blank lines after the heading. A 10-02 input already in the log looked missing, and a full-period run (`--all`) would have saved it a second time. `backfillInputs` in `claude-event-store.js` now compares whole User record bodies, ignoring spaces and line breaks; a prompt that only matches the start of another record still counts as new. On this repository the `--all` dry run went from 1 user write to `user_written=0`. (798a2ea)
+
+### Removed
+
+- **mcp**: Delete the optional `mcp-configs/chrome-devtools.json` and `github.json`. `install-mcp.js`, `install-mcp-codex.js` and `install-mcp-antigravity.js` no longer list them or install them by name, and their `--all` no longer installs Chrome DevTools (GitHub MCP needs an API key, so `--all` never included it). The main installers already registered only Playwright by default. Existing registrations are not touched; the full uninstall still removes an old `chrome-devtools` registration by name (`LEGACY_MCP_SERVERS`). (51f4405)
+
+### Documentation
+
+- Drop GitHub MCP from `QUICK-REFERENCE.md`, `SETUP.md`, `mcp-servers/README.md` (section 6 removed, later sections renumbered), `docs/smart-setup-registry.json` and `docs/resources/` (`github-mcp.md` removed). The READMEs, `SETUP.md` and `mcp-configs/README.md` name only Context7 as an optional MCP. `docs/references.md` still lists github-mcp-server among the projects consulted. (51f4405)
+- Update the English, Korean, Japanese and Chinese READMEs. (fb66b0e)
+
+### Tests
+
+- A regression test in `mnemo-save-integrity.test.js`: a legacy User record with extra blank lines after the heading counts as saved, while a prompt that only matches its start is still backfilled. It fails with the previous check. (798a2ea)
+
+### Validation and Scope
+
+- Full test suite: 347 of 347 passed. With `MNEMO_TEST_INSTALLED=1`, the 18 save-integrity tests passed against the installed hooks.
+- Windows integrated installation (`install.bat --all`) passed all 12 checks, and its MCP list shows only `context7`, `fetch` and `playwright`. Neither Chrome DevTools nor GitHub MCP was registered in any CLI on this machine, so no registration changed.
+- Claude only: saving in the other CLIs is unchanged.
+
 ## [7.5.5] - 2026-11-01
 
 ### Bug Fixes
