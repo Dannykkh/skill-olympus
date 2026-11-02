@@ -1,7 +1,7 @@
 ﻿# update-check.ps1 — 주기적 버전 체크
 #
 # 출력 (한 줄 또는 없음):
-#   UPGRADE_AVAILABLE <old> <new>   — 원격 VERSION이 로컬과 다름
+#   UPGRADE_AVAILABLE <old> <new>   — 원격 VERSION이 로컬보다 높음 (점으로 나눈 숫자 비교)
 #   (없음)                          — 최신 상태, 스누즈 중, 또는 체크 건너뜀
 #
 # 사용법:
@@ -57,6 +57,22 @@ function Test-Snoozed {
     } catch { return $false }
 }
 
+# ── 버전 비교 함수: $A가 $B보다 높으면 $true ──
+# 글자 비교가 아니라 숫자 묶음을 앞에서부터 비교한다(7.10.0 > 7.6.0). 숫자 아닌 꼬리(-dev)는 무시한다.
+function Test-VersionGreater {
+    param([string]$A, [string]$B)
+    $pa = @([regex]::Matches($A, '\d+') | ForEach-Object { [long]$_.Value })
+    $pb = @([regex]::Matches($B, '\d+') | ForEach-Object { [long]$_.Value })
+    $n = [Math]::Max($pa.Count, $pb.Count)
+    for ($i = 0; $i -lt $n; $i++) {
+        $x = if ($i -lt $pa.Count) { $pa[$i] } else { 0 }
+        $y = if ($i -lt $pb.Count) { $pb[$i] } else { 0 }
+        if ($x -gt $y) { return $true }
+        if ($x -lt $y) { return $false }
+    }
+    return $false
+}
+
 # ── Step 1: 로컬 버전 읽기 ──
 if (-not (Test-Path $VersionFile)) { exit 0 }
 $Local = (Get-Content $VersionFile -Raw).Trim()
@@ -77,7 +93,8 @@ if (-not $Force -and (Test-Path $CacheFile)) {
             $parts = $cached -split '\s+'
             $cachedOld = $parts[1]
             $cachedNew = $parts[2]
-            if ($cacheAge -lt $cacheTtl -and $cachedOld -eq $Local) {
+            # 고치기 전 버전이 남긴 "UPGRADE_AVAILABLE <로컬> <더 낮은 원격>" 캐시는 믿지 않고 다시 확인한다.
+            if ($cacheAge -lt $cacheTtl -and $cachedOld -eq $Local -and (Test-VersionGreater $cachedNew $Local)) {
                 if (Test-Snoozed $cachedNew) { exit 0 }
                 Write-Output $cached
                 exit 0
@@ -102,12 +119,14 @@ if (-not ($Remote -match '^\d+\.\d+[\d.]*$')) {
     exit 0
 }
 
-if ($Local -eq $Remote) {
+# 원격이 같거나 낮으면 최신이다. 릴리즈를 푸시한 직후에는 원격 파일 캐시가 몇 분간 옛 VERSION을
+# 주므로, "다르다"로 판단하면 로컬이 앞선 순간에 업그레이드를 안내하게 된다 (gotcha 126).
+if (-not (Test-VersionGreater $Remote $Local)) {
     "UP_TO_DATE $Local" | Set-Content $CacheFile -NoNewline
     exit 0
 }
 
-# 버전 다름 → 업그레이드 가능
+# 원격이 더 높음 → 업그레이드 가능
 $result = "UPGRADE_AVAILABLE $Local $Remote"
 $result | Set-Content $CacheFile -NoNewline
 

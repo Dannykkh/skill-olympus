@@ -2,7 +2,7 @@
 # update-check.sh — 주기적 버전 체크
 #
 # 출력 (한 줄 또는 없음):
-#   UPGRADE_AVAILABLE <old> <new>   — 원격 VERSION이 로컬과 다름
+#   UPGRADE_AVAILABLE <old> <new>   — 원격 VERSION이 로컬보다 높음 (점으로 나눈 숫자 비교)
 #   (없음)                          — 최신 상태, 스누즈 중, 또는 체크 건너뜀
 #
 # 사용법:
@@ -57,6 +57,24 @@ check_snooze() {
     return 1
 }
 
+# ── 버전 비교 함수: $1이 $2보다 높으면 참(0) ──
+# 글자 비교가 아니라 숫자 묶음을 앞에서부터 비교한다(7.10.0 > 7.6.0). 숫자 아닌 꼬리(-dev)는 무시한다.
+# sort -V는 macOS 기본 sort에 없을 수 있어 쓰지 않는다.
+version_gt() {
+    local -a pa pb
+    read -r -a pa <<< "$(printf '%s' "$1" | tr -c '0-9' ' ')"
+    read -r -a pb <<< "$(printf '%s' "$2" | tr -c '0-9' ' ')"
+    local n=${#pa[@]} i x y
+    [ "${#pb[@]}" -gt "$n" ] && n=${#pb[@]}
+    for (( i = 0; i < n; i++ )); do
+        x=$(( 10#${pa[i]:-0} ))
+        y=$(( 10#${pb[i]:-0} ))
+        [ "$x" -gt "$y" ] && return 0
+        [ "$x" -lt "$y" ] && return 1
+    done
+    return 1
+}
+
 # ── Step 1: 로컬 버전 읽기 ──
 [ ! -f "$VERSION_FILE" ] && exit 0
 LOCAL="$(cat "$VERSION_FILE" 2>/dev/null | tr -d '[:space:]')"
@@ -78,7 +96,8 @@ if [ "${1:-}" != "--force" ] && [ -f "$CACHE_FILE" ]; then
             if [ -z "$STALE" ]; then
                 CACHED_OLD="$(echo "$CACHED" | awk '{print $2}')"
                 CACHED_NEW="$(echo "$CACHED" | awk '{print $3}')"
-                if [ "$CACHED_OLD" = "$LOCAL" ]; then
+                # 고치기 전 버전이 남긴 "UPGRADE_AVAILABLE <로컬> <더 낮은 원격>" 캐시는 믿지 않고 다시 확인한다.
+                if [ "$CACHED_OLD" = "$LOCAL" ] && version_gt "$CACHED_NEW" "$LOCAL"; then
                     check_snooze "$CACHED_NEW" && exit 0
                     echo "$CACHED"
                     exit 0
@@ -101,12 +120,14 @@ if ! echo "$REMOTE" | grep -qE '^[0-9]+\.[0-9.]+$'; then
     exit 0
 fi
 
-if [ "$LOCAL" = "$REMOTE" ]; then
+# 원격이 같거나 낮으면 최신이다. 릴리즈를 푸시한 직후에는 원격 파일 캐시가 몇 분간 옛 VERSION을
+# 주므로, "다르다"로 판단하면 로컬이 앞선 순간에 업그레이드를 안내하게 된다 (gotcha 126).
+if ! version_gt "$REMOTE" "$LOCAL"; then
     echo "UP_TO_DATE $LOCAL" > "$CACHE_FILE"
     exit 0
 fi
 
-# 버전 다름 → 업그레이드 가능
+# 원격이 더 높음 → 업그레이드 가능
 RESULT="UPGRADE_AVAILABLE $LOCAL $REMOTE"
 echo "$RESULT" > "$CACHE_FILE"
 check_snooze "$REMOTE" && exit 0
