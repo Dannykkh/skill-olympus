@@ -106,6 +106,7 @@ components:
 
 ## Typography
 {serif headline + sans 본문 같은 위계 의도. Inter 기본값을 피한 이유.}
+{한국어 화면이면 자리별 줄바꿈 규칙 — 제목 keep-all+balance, 본문 keep-all+pretty, 좁은 칸은 keep-all 없음, 코드·주소 overflow-wrap:anywhere. 근거·실측은 korean-line-break.md}
 
 ## Layout
 {비대칭/그리드 전면화/의도된 밀도. 균일 3열 카드 회피.}

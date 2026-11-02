@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -100,6 +101,24 @@ SUCCESS — A user resumes in one action.
 """
 
 
+OBJECT_FLOWS = """
+## Object Flows
+| Object | Create | View | Edit | After |
+|---|---|---|---|---|
+| 수업 예약 | class-detail → booking-form | my-bookings | booking-cancel | booking-done (예약 완료) |
+| 리뷰 | review-write | class-detail | n/a — 작성 후 수정 없음(PRD F9) | review-done |
+
+## Scenario Facts
+| Fact | Value | Screens |
+|---|---|---|
+| 남은 수강 횟수 | 7회 | home, my-pass, booking-done |
+"""
+
+
+def with_object_flows(flows: str = OBJECT_FLOWS) -> str:
+    return VALID_BENCHMARK.replace("## Performance Budget", flows.strip() + "\n\n## Performance Budget")
+
+
 class ExperienceContractValidationTests(unittest.TestCase):
     def validate_text(self, text: str) -> dict[str, object]:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -159,6 +178,61 @@ class ExperienceContractValidationTests(unittest.TestCase):
         self.assertTrue(
             any("placeholder content" in warning for warning in result["warnings"])
         )
+
+    def test_complete_object_flows_pass(self) -> None:
+        result = self.validate_text(with_object_flows())
+        self.assertTrue(result["valid"], result)
+
+    def test_object_flow_ending_on_its_list_screen_fails(self) -> None:
+        # 업스트림 v14에서 끝 칸에 완료 화면 대신 목록 화면을 적어 형식만 통과한 실패를 막는다.
+        flows = OBJECT_FLOWS.replace("| booking-done (예약 완료) |", "| my-bookings |")
+        result = self.validate_text(with_object_flows(flows))
+        self.assertFalse(result["valid"])
+        self.assertTrue(
+            any("must end on a result screen" in error for error in result["errors"]),
+            result,
+        )
+
+    def test_after_with_reasoned_na_still_fails(self) -> None:
+        # 결과 화면을 그리지 않으려고 끝 칸에 이유 붙은 n/a를 적어도 통과하지 않는다.
+        flows = OBJECT_FLOWS.replace("| review-done |", "| n/a — 결과 화면 없음 |")
+        result = self.validate_text(with_object_flows(flows))
+        self.assertFalse(result["valid"])
+        self.assertTrue(
+            any("has no After screen" in error for error in result["errors"]),
+            result,
+        )
+
+    def test_object_flows_require_scenario_facts(self) -> None:
+        flows = OBJECT_FLOWS[: OBJECT_FLOWS.index("## Scenario Facts")]
+        result = self.validate_text(with_object_flows(flows))
+        self.assertFalse(result["valid"])
+        self.assertIn("scenario facts", result["missingSections"])
+
+    def test_bare_na_edit_and_missing_create_fail(self) -> None:
+        flows = OBJECT_FLOWS.replace("| n/a — 작성 후 수정 없음(PRD F9) |", "| n/a |")
+        flows = flows.replace("| review-write |", "| - |")
+        result = self.validate_text(with_object_flows(flows))
+        self.assertFalse(result["valid"])
+        errors = " ".join(result["errors"])
+        self.assertIn("needs an Edit screen", errors)
+        self.assertIn("has no Create screen", errors)
+
+    def test_korean_mobile_app_guide_examples_pass(self) -> None:
+        # 참조 문서의 예시를 그대로 넣었을 때 통과해야 문서와 검증기가 같은 계약을 말한다.
+        guide = Path(__file__).resolve().parent.parent / "references" / "korean-mobile-app.md"
+        blocks = re.findall(r"```markdown\r?\n(.*?)```", guide.read_text(encoding="utf-8"), re.DOTALL)
+        flows = [block for block in blocks if "## Object Flows" in block]
+        facts = [block for block in blocks if "## Scenario Facts" in block]
+        self.assertEqual((len(flows), len(facts)), (1, 1))
+        result = self.validate_text(with_object_flows(flows[0] + "\n" + facts[0]))
+        self.assertTrue(result["valid"], result)
+
+    def test_object_flows_not_applicable_skips_flow_checks(self) -> None:
+        flows = "## Object Flows\n- NOT APPLICABLE — single landing page\n"
+        result = self.validate_text(with_object_flows(flows))
+        self.assertTrue(result["valid"], result)
+        self.assertNotIn("scenario facts", result["missingSections"])
 
 
 if __name__ == "__main__":

@@ -149,6 +149,18 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 | error | | | | |
 | success | | | | |
 
+## Object Flows
+
+| Object | Create | View | Edit | After |
+|---|---|---|---|---|
+| {사용자가 만들거나 신청하는 대상} | {처음 만드는 화면} | {보는 화면} | {고치기·지우기·취소 화면 또는 n/a — 이유} | {그 행동의 결과 화면} |
+
+## Scenario Facts
+
+| Fact | Value | Screens |
+|---|---|---|
+| {날짜·인원·남은 횟수·금액·상태 이름} | {모든 화면이 인용할 값} | {이 값이 나오는 화면} |
+
 ## Performance Budget
 
 - 첫 화면 필수 자산:
@@ -216,6 +228,20 @@ SUCCESS —
 사용`이라고 기록합니다. 제목을 비워 두거나 출처 없는 값을 채우는 것보다 명시적 해당 없음이
 낫습니다.
 
+`Object Flows`와 `Scenario Facts`는 사용자가 무언가를 만들거나 신청·예약·주문하는 **여러 화면 앱**에서만
+씁니다. 단일 페이지·랜딩이면 두 절을 지우거나 `## Object Flows`에 `NOT APPLICABLE — {이유}`를 적습니다.
+`Object Flows`가 있고 해당 없음이 아니면 검증기는 다음을 요구합니다.
+
+- 표에 `Object`·`Create`·`View`·`Edit`·`After` 열이 있고 대상이 한 줄 이상
+- 행마다 `Create`·`View`·`After`가 비어 있지 않음. `Edit`은 화면 또는 `n/a — 이유`
+- `After`가 그 행의 `View`나 `Create` 화면과 같지 않음. 끝은 목록·상세가 아니라 그 행동의 결과 화면입니다
+- `## Scenario Facts` 절이 함께 있고 비어 있지 않음
+
+`Scenario Facts`는 `Product Facts`와 다릅니다. `Product Facts`는 사용자에게 사실로 내보이는 검증 가능한 주장이고,
+`Scenario Facts`는 시안 화면들이 함께 쓰는 시나리오 데이터(날짜·인원·남은 횟수·상태 이름)입니다. 모든 화면이
+이 표만 인용하고, `Content Integrity`에서는 `prototype`으로 분류합니다. 흐름 고리·사람 카드·사실 표의 작성
+규칙은 [korean-mobile-app.md](korean-mobile-app.md) 1~3절에 있습니다.
+
 `Content Integrity`의 분류 의미는 다음과 같습니다.
 
 | Classification | 의미 | 사용자 노출 규칙 |
@@ -271,6 +297,8 @@ SUCCESS —
 5. 키보드·포커스·reduced-motion·스크린리더 순서 확인
 6. 실제 자산으로 성능 측정
 7. `DESIGN.md`와 구현 토큰 드리프트 확인
+8. `Object Flows`가 있으면 대상마다 Create에서 After까지 실제 렌더로 따라가고, `Scenario Facts`와 모든 화면의
+   글자(날짜·인원·상태 이름)를 대조
 
 ## 7. 예시
 

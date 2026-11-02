@@ -64,7 +64,7 @@ body { font-family: var(--ct-font); word-break: keep-all; overflow-wrap: break-w
   로컬에 설치되지 않은 기기에서 한글이 시스템 고딕으로 대체된다(2026-10-18 실측: 같은 문장 폭 446.8px = 맑은 고딕, 389.3px = Pretendard Variable).
   스택의 `Pretendard`는 정적 Pretendard가 로컬에 설치된 경우를 위한 것이다.
 - 라틴도 Pretendard(Inter 기반 라틴 글리프)로 렌더된다 — 의도된 선택이다. 라틴 전용 폰트를 뒤에 붙이면 로드되지 않는 죽은 폰트가 된다(`design-md-guide.md` 스택 순서 규칙).
-- `word-break: keep-all`로 한글 어절 중간 줄바꿈을 막는다. 굵기는 400·500·600 세 가지까지. 세리프·이탤릭·대문자 헤더·12px 미만 텍스트(법적 고지 포함) 없음.
+- `word-break: keep-all`로 한글 어절 중간 줄바꿈을 막는다. `body`에 걸면 표 칸·배지·버튼까지 상속되므로, 좁은 칸은 `keep-all`을 풀거나 칸 폭을 넓히고 넘침을 다시 잰다(design-plan `references/korean-line-break.md`, `scripts/wrapcheck.mjs`). 굵기는 400·500·600 세 가지까지. 세리프·이탤릭·대문자 헤더·12px 미만 텍스트(법적 고지 포함) 없음.
 
 ## Visual Target
 

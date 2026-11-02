@@ -94,7 +94,7 @@ fallback도 실행할 수 없는 검사는 `NOT RUN`,
 | 정본·담당 | 소유하는 결정 |
 |---|---|
 | `DESIGN.md` | 색, 타이포, 간격, 표면, 컴포넌트 외관, 모션 원칙 |
-| Experience Contract | 과업, 메시지, CTA, 신뢰, 상태, 모바일 변환 |
+| Experience Contract | 과업, 메시지, CTA, 신뢰, 상태, 모바일 변환, 여러 화면 앱의 흐름 고리·사실 표 |
 | Layout Blueprint | 시각 탐색 전에 검증한 저충실도 와이어프레임, 페이지별 블록 순서, 그리드, anatomy, 첫 뷰포트 |
 | Aphrodite | UX 행동 명세, 상태 표현, 시각 구현, 렌더 비평 |
 | 앱 구현 파이프라인 | 라우팅, 상태 관리, 데이터, API, 비즈니스 로직 |
@@ -225,6 +225,12 @@ docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
 요구사항 자체가 불명확하면 `zephermine`에 인계합니다. 아프로디테는 디자인에 필요한 경험 가정을
 확정합니다.
 
+**여러 화면 모바일 앱**이면 [korean-mobile-app.md](references/korean-mobile-app.md)를 읽고 그 문서의
+단계표대로 적용합니다. 앱 시안이나 모바일 우선 웹앱에서 사용자가 무언가를 만들거나 신청·예약·주문하면
+여기에 해당합니다. 브리프에는 사람 카드 2~3명과 핵심 사람을 넣습니다(2절). 한국 사용자 대상이면 4~8절도
+적용합니다: 화면 유형, 국내 앱 규칙, 시장 관례, 여섯 질문, P0·P1 체크리스트. 단일 랜딩·데스크톱 업무 도구는
+해당하지 않습니다.
+
 ### 1-2. 벤치마크와 레퍼런스
 
 레퍼런스가 있으면 다음 파일을 순서대로 읽습니다.
@@ -238,6 +244,12 @@ docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
 레퍼런스가 없으면 제품 세계의 실물·도구·유물·어휘에서 색, 구조, 카피, 미디어의 근거를 유도합니다.
 카테고리 클리셰를 제품 근거로 착각하지 않습니다.
 
+한국 사용자 대상 모바일 앱이면 같은 문제를 푸는 국내 앱 3~5개의 관례를
+[korean-mobile-app.md](references/korean-mobile-app.md) 6절로 판정해 브리프의 `시장 관례` 절에 남깁니다.
+2개 이상 앱에서 본 구조만 기본값으로 삼고, 문구·그림·색은 가져오지 않습니다. 이 조사는 Source Mode를 바꾸지
+않습니다. 사용자가 특정 앱을 벤치마크로 지정했을 때만 benchmark 모드입니다. 앱을 보지 못했으면
+`시장 관례 NOT RUN`과 이유를 남깁니다.
+
 ## Phase 2: Architect the Experience
 
 페이지보다 사용자 과업을 먼저 설계합니다.
@@ -248,6 +260,9 @@ docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
 - 전역 내비게이션, 2차 내비게이션, 페이지 내 앵커
 - primary action과 현재 위치 신호
 - 페이지가 3개 이상이면 `MODULE_SKILL[mermaid-diagrams]`를 직접 읽은 문법으로 사이트맵 생성
+- 여러 화면 모바일 앱이면 사용자가 만들거나 신청하는 대상마다 흐름 고리(Create·View·Edit·After)를 채우고,
+  빈 칸의 화면을 목록에 더합니다. After는 목록·상세가 아니라 그 행동의 결과 화면입니다
+  ([korean-mobile-app.md](references/korean-mobile-app.md) 1절)
 
 산출물: `docs/design-refs/YYYY-MM-DD-sitemap-{slug}.md`
 
@@ -265,7 +280,10 @@ docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
 
 [experience-contract-guide.md](references/experience-contract-guide.md)의 필수 템플릿으로
 `docs/design-refs/YYYY-MM-DD-experience-{slug}.md`를 작성합니다. 벤치마크 모드면 근거 파일과
-Adopt·Adapt·Avoid를 포함합니다.
+Adopt·Adapt·Avoid를 포함합니다. 여러 화면 모바일 앱이면 `## Object Flows`와 `## Scenario Facts`를 채우고,
+`Audience and Tasks`에 사람 카드와 여정표를 둡니다. 화면에 나올 날짜·인원·상태 이름은 `Scenario Facts`
+한 곳에서만 정합니다. 넣을 기능·장치는 [korean-mobile-app.md](references/korean-mobile-app.md) 7절의
+여섯 질문으로 판정하고, PRD 요구를 빼거나 가볍게 하는 판정은 사용자에게 확인합니다.
 
 ### 2-4. Interface Mode
 
@@ -315,8 +333,11 @@ Adopt·Adapt·Avoid를 포함합니다.
 불명확하면 과업 흐름·정보 순서·문구·CTA를 고쳐 다시 확인합니다. 시각 시안에서 주 행동이
 처음 생겼다면 와이어프레임의 흐름이 아직 완성되지 않은 것입니다.
 역할이 둘 이상이면 `spec.md` 시스템 역할 표의 `화면` 열에 따라 공용 화면의 권한 차이 또는 별도
-역할 화면을 이 단계부터 그립니다. 주요 상태도 같은 구조 판단에 포함합니다. 이 게이트를 통과한
-뒤에만 Phase 3의 시각 방향을 탐색합니다.
+역할 화면을 이 단계부터 그립니다. 주요 상태도 같은 구조 판단에 포함합니다.
+모바일 앱의 홈·상세·목록 화면은 [korean-mobile-app.md](references/korean-mobile-app.md) 4절의 화면 유형을
+하나 고르고, 폰 폭 첫 화면에서 가장 큰 면적을 차지할 주인공과 고른 이유를 Layout Blueprint에 적습니다.
+Interface Mode와 별개로 정합니다. 사람 카드의 "알고 싶은 것"은 그 주인공 자리에 담을 내용을 정합니다.
+이 게이트를 통과한 뒤에만 Phase 3의 시각 방향을 탐색합니다.
 
 ## Phase 3: Explore Direction and System
 
@@ -347,7 +368,8 @@ Adopt·Adapt·Avoid를 포함합니다.
 1. 선택된 방향과 제품 근거
 2. 맞는 스타일 레시피 1개 또는 제품 유도 방향
 3. 지배색 1 + 액센트 1, 실제 대비
-4. 한글 글리프를 실제 로드하는 폰트 시스템
+4. 한글 글리프를 실제 로드하는 폰트 시스템과 자리별 줄바꿈 규칙
+   ([korean-line-break.md](references/korean-line-break.md) — 제목·본문·좁은 칸·코드)
 5. 밀도·간격·라운드·표면·모션 예산
 6. 기억에 남을 signature 요소 정확히 1개
 
@@ -430,6 +452,8 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 검증 실패 시 구현으로 넘어가지 않습니다. 이 스크립트는 완성도를 검사하며 아름다움과 사용성은
 Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT APPLICABLE`이 아니면
 `## Role Variants`도 함께 요구하며, 변형표가 `표시/숨김/비활성/읽기전용` 어휘를 쓰지 않으면 실패합니다.
+`## Object Flows`가 있고 `NOT APPLICABLE`이 아니면 대상마다 Create·View·Edit·After와 `## Scenario Facts`를
+요구합니다. After가 그 행의 View·Create 화면과 같거나 Edit이 이유 없는 `n/a`면 실패합니다.
 
 ## Phase 5: Build and Critique
 
@@ -440,9 +464,11 @@ Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT 
 1. 루트 `DESIGN.md` 전체
 2. 최신 brief·benchmark·experience·sitemap·direction·critique·layout
 3. 선택된 style recipe와 Interface Mode playbook
+4. 여러 화면 모바일 앱이면 [korean-mobile-app.md](references/korean-mobile-app.md) 2~5절
 
 Experience Contract의 `Prompt Contract`를 구현 지시로 사용합니다. `예쁘게`, `모던하게` 같은
-소원으로 대체하지 않습니다.
+소원으로 대체하지 않습니다. 여러 화면 모바일 앱을 작업자에게 나눠 맡기면 사람 카드, `Scenario Facts`,
+맡은 화면의 화면 유형 행을 함께 넘기고 "사실 표에 없는 날짜·숫자·상태를 지어내지 말 것"을 지시합니다.
 
 ### 5-2. 구현 어댑터
 
@@ -515,12 +541,16 @@ Experience Contract 및 아래 게이트에 연결합니다. 브라우저 capabi
 - signature 장면과 주변 요소의 절제
 - 모바일에서의 재구성 품질
 
-AI Slop이 없다는 것만으로 통과시키지 않습니다.
+AI Slop이 없다는 것만으로 통과시키지 않습니다. 한국 사용자 대상 모바일 앱이면
+[korean-mobile-app.md](references/korean-mobile-app.md) 8절의 P0·P1 체크리스트로 스크린샷을 보고,
+P0·P1은 완료 전에 고칩니다.
 
 ### 6-3. 과업·상태 검증
 
 주 과업을 시작→진행→완료와 실패→복구 두 경로로 실행합니다. 사이트맵, Experience Contract,
-실제 내비게이션과 상태가 일치해야 합니다.
+실제 내비게이션과 상태가 일치해야 합니다. `Object Flows`가 있으면 대상마다 Create에서 After까지 따라가고,
+읽기 전용 작업자 하나가 `Scenario Facts`와 모든 화면의 글자를 대조해 어긋난 사실과 누른 뒤 갈 곳이 없는
+조작만 돌려줍니다. 고치는 것은 메인입니다([korean-mobile-app.md](references/korean-mobile-app.md) 3절).
 
 ### 6-4. 품질 검증
 
@@ -531,6 +561,10 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 4. 키보드·포커스·레이블·상태 알림·reduced-motion 확인
 5. 실제 이미지·폰트·영상·스크립트로 성능 측정
 6. `DESIGN.md` lint는 대화형일 때만 보조 신호로 사용. 헤드리스 무출력은 통과로 간주하지 않음
+7. 한국어 텍스트가 있는 화면이면 `scripts/wrapcheck.mjs`로 한글 줄바꿈 실측. 폰 폭과 데스크톱 폭
+   (`360,390,768,1280`을 넘긴다. 검사기 자체 기본값은 390·768·1280), 폰 폭 하나는 `--text 200 --zoom 200`까지. 웹폰트 로드를 확인한 상태에서
+   재고, 고친 뒤 같은 조건으로 다시 잰다. 처방·보고·`NOT RUN` 조건은
+   [korean-line-break.md](references/korean-line-break.md)
 
 대표 모션·물리 반응·복제 작업은 Web Motion Contract의 장면별 입력·중간 상태·수렴 검사를
 실행합니다. `scripts/measure_web_motion.py` 또는 기존 프로젝트 테스트로 근거를 수집하고,
@@ -569,6 +603,10 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 - 데스크톱·모바일 구현 스크린샷
 - 미학 비평과 주 과업 검증
 - 접근성·성능·가이드라인 결과
+- 한국어 화면이면 한글 줄바꿈 실측 전후 수(쪼개짐·넘침·버튼 글자 잘림·안 눌림)와 잰 폭·브라우저·폰트,
+  또는 `NOT RUN` 이유. 한국어 텍스트가 없으면 `NOT APPLICABLE`
+- 여러 화면 모바일 앱이면 `Object Flows` 검증과 사실 대조 결과(어긋남 수와 고친 수). 한국 사용자 대상이면
+  P0·P1 체크리스트의 남은 항목과 시장 관례 판정 또는 `시장 관례 NOT RUN` 이유. 해당하지 않으면 `NOT APPLICABLE`
 - 잔여 이슈와 다음 진화 후보
 - `Product Design Gate`: `READY`/`ABSENT`/`RESTART_REQUIRED`/`UNKNOWN`/`UNSUPPORTED`, exact selector,
   marketplace·설치·세션 노출 근거, 추천·동의 결과,
@@ -605,6 +643,9 @@ AI Slop이 없다는 것만으로 통과시키지 않습니다.
 | [web-motion-contract.md](references/web-motion-contract.md) | 브라우저 실시간 모션이 있을 때만 |
 | [web-motion-engineering.md](references/web-motion-engineering.md) | 모션 중심 창작·물리 반응·Canvas/WebGL·원본 모션 계측과 복제 |
 | [design-md-guide.md](references/design-md-guide.md) | DESIGN.md 생성·마이그레이션·export |
+| [korean-line-break.md](references/korean-line-break.md) | 한국어 화면의 줄바꿈 규칙(Phase 3-2)과 실측(Phase 6-4) |
+| [korean-mobile-app.md](references/korean-mobile-app.md) | 여러 화면 모바일 앱의 흐름 고리·사람 카드·사실 표, 한국 앱의 화면 유형·UI 규칙·시장 관례·P0·P1 |
+| `scripts/wrapcheck.mjs` | 한글 줄바꿈·글자 키운 상태 실측. 원본 hangul-wrap v0.2.2(MIT), 라이선스 `scripts/LICENSE-hangul-wrap.txt` |
 | `MODULE_SKILL[frontend-design]` | Phase 3·5 시각 방향과 구현 |
 | `MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md` | Phase 4 구조 계약 |
 | `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md` | 기능형 Interface Mode |

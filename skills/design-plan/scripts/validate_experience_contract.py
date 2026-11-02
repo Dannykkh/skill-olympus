@@ -48,6 +48,14 @@ BENCHMARK_SECTIONS = (
 # unauthenticated products record NOT APPLICABLE and skip these.
 ROLE_SECTIONS = ("role variants",)
 
+# 사용자가 무언가를 만들거나 신청하는 여러 화면 앱에서만 요구한다. 단일 페이지는
+# `## Object Flows`에 NOT APPLICABLE을 적거나 절을 두지 않는다.
+FLOW_SECTIONS = ("scenario facts",)
+FLOW_COLUMNS = ("object", "create", "view", "edit", "after")
+NOT_APPLICABLE_MARKERS = ("not applicable", "해당 없음")
+# 빈 칸으로 보는 값. Edit만 이유를 붙인 n/a를 허용한다.
+EMPTY_CELL_VALUES = ("", "-", "—", "n/a", "na", "none", "없음")
+
 ROLE_VISIBILITY_OPERATIONS = (
     "표시",
     "숨김",
@@ -124,6 +132,91 @@ def contains_any(content: str, values: Iterable[str]) -> bool:
     return any(value in normalized for value in values)
 
 
+def is_not_applicable(content: str) -> bool:
+    normalized = normalize(content)
+    return any(marker in normalized for marker in NOT_APPLICABLE_MARKERS)
+
+
+def parse_table(content: str) -> tuple[list[str], list[list[str]]]:
+    """절 본문의 첫 Markdown 표를 (머리 칸, 데이터 행)으로 돌려준다. 구분 줄은 건너뛴다."""
+    header: list[str] = []
+    rows: list[list[str]] = []
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            if header:
+                break
+            continue
+        cells = [normalize(cell) for cell in stripped.strip("|").split("|")]
+        if any(cells) and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells if cell):
+            continue
+        if not header:
+            header = cells
+        else:
+            rows.append(cells)
+    return header, rows
+
+
+def is_empty_cell(value: str) -> bool:
+    return value in EMPTY_CELL_VALUES
+
+
+def is_missing_screen(value: str) -> bool:
+    # Create·View·After는 화면이 있어야 한다. `n/a — 결과 화면 없음`처럼 이유를 붙여도 빈 칸이다.
+    return is_empty_cell(value) or re.match(r"^n/?a\b", value) is not None
+
+
+def edit_cell_ok(value: str) -> bool:
+    # 고치기가 없는 대상은 `n/a — 이유`로 적는다. 이유 없는 n/a는 빈 칸과 같다.
+    if not is_empty_cell(value):
+        match = re.match(r"^(?:n/?a)\b[\s:—–-]*(.*)$", value)
+        return match is None or bool(match.group(1).strip())
+    return False
+
+
+def screen_names(value: str) -> set[str]:
+    # "class-detail → booking-form"처럼 여러 화면을 적은 칸을 화면 이름 집합으로 나눈다.
+    # 괄호 속 설명("booking-done (예약 완료)")은 화면 이름이 아니므로 뺀다.
+    value = re.sub(r"\([^)]*\)", " ", value)
+    parts = re.split(r"\s*(?:→|->|,|/|·)\s*", value)
+    return {part.strip() for part in parts if part.strip()}
+
+
+def validate_object_flows(content: str) -> list[str]:
+    errors: list[str] = []
+    header, rows = parse_table(content)
+    if not header or any(column not in header for column in FLOW_COLUMNS):
+        return [
+            "Object Flows must be a table with Object, Create, View, Edit, and After columns."
+        ]
+    if not rows:
+        return ["Object Flows must list at least one object."]
+
+    index = {column: header.index(column) for column in FLOW_COLUMNS}
+    for row in rows:
+        cells = {
+            column: row[position] if position < len(row) else ""
+            for column, position in index.items()
+        }
+        name = cells["object"] or "(unnamed object)"
+        for column in ("create", "view", "after"):
+            if is_missing_screen(cells[column]):
+                errors.append(f"Object Flows row '{name}' has no {column.capitalize()} screen.")
+        if not edit_cell_ok(cells["edit"]):
+            errors.append(
+                f"Object Flows row '{name}' needs an Edit screen or 'n/a — reason'."
+            )
+        # 끝 칸에 목록·상세를 적어 형식만 채우는 것을 막는다. 끝은 그 행동의 결과 화면이다.
+        if is_missing_screen(cells["after"]):
+            continue
+        after = screen_names(cells["after"])
+        if after and (after <= screen_names(cells["view"]) or after <= screen_names(cells["create"])):
+            errors.append(
+                f"Object Flows row '{name}' must end on a result screen, not its View or Create screen."
+            )
+    return errors
+
+
 def detect_mode(source_mode: str) -> str:
     match = re.search(r"\bmode\s*:\s*([a-z-]+)", source_mode, re.IGNORECASE)
     if match:
@@ -197,6 +290,24 @@ def validate_contract(path: Path) -> dict[str, object]:
             result["errors"].append(
                 "Role Variants must state per-role visibility (visible / hidden / disabled / read-only)."
             )
+
+    flows = sections.get("object flows")
+    if flows is not None and not is_not_applicable(flows):
+        if not flows:
+            empty.append("object flows")
+        elif has_placeholder(flows):
+            placeholders.append("object flows")
+        else:
+            result["errors"].extend(validate_object_flows(flows))
+        missing.extend(name for name in FLOW_SECTIONS if name not in sections)
+        empty.extend(
+            name for name in FLOW_SECTIONS if name in sections and not sections[name]
+        )
+        placeholders.extend(
+            name
+            for name in FLOW_SECTIONS
+            if name in sections and sections[name] and has_placeholder(sections[name])
+        )
 
     mobile = sections.get("mobile transformations", "")
     if mobile and not contains_any(mobile, MOBILE_OPERATIONS):
