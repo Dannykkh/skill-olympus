@@ -177,12 +177,15 @@ if "%MODE%" NEQ "uninstall" (
 
 REM ============================================
 REM   Update check (non-blocking)
+REM   record-repo-root.js stores this checkout path in the Olympus state dir so the
+REM   installed SessionStart hook can find scripts\update-check.ps1 (gotcha 127).
 REM ============================================
 if "%MODE%" NEQ "uninstall" (
+    node "%SCRIPT_DIR%scripts\record-repo-root.js"
     for /f "tokens=1,2,3" %%A in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%scripts\update-check.ps1" 2^>nul') do (
         if "%%A"=="UPGRADE_AVAILABLE" (
             echo   ================================================
-            echo     New version available: v%%B  -- v%%C
+            echo     New version available: v%%C, installed v%%B
             echo     Run: git pull ^&^& install.bat --all
             echo   ================================================
             echo.

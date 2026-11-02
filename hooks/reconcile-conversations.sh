@@ -118,21 +118,43 @@ case "${MNEMO_DISABLE:-}" in
         ;;
 esac
 
+# 사용자에게 보일 안내를 모은다. 끝에서 systemMessage JSON 한 줄로 내보낸다.
+# exit 0 훅의 stderr는 사용자 화면에 나온다는 보장이 없어서(공식 문서에 없음) 쓰지 않는다 (gotcha 127).
+USER_NOTICES=""
+add_notice() {
+    if [ -n "$USER_NOTICES" ]; then
+        USER_NOTICES="${USER_NOTICES}"$'\n'"$1"
+    else
+        USER_NOTICES="$1"
+    fi
+}
+
 # ── 업데이트 체크 (하루 1회, non-blocking) ──
-UPDATE_SCRIPT="$REPO_ROOT/scripts/update-check.sh"
-if [ ! -f "$UPDATE_SCRIPT" ]; then
-    UPDATE_SCRIPT="$HOME/.claude/skills/update-check.sh"
-fi
-if [ -f "$UPDATE_SCRIPT" ]; then
-    UPDATE_RESULT=$(bash "$UPDATE_SCRIPT" 2>/dev/null || true)
+# 설치된 훅은 CLI 설정 폴더(~/.claude/hooks 등)에서 돌아 저장소를 모른다. 저장소에서 바로 돌면 형제
+# scripts/, 아니면 OLYMPUS_DIR, 그다음 설치기가 남긴 저장소 위치(~/.skill-olympus/repo-root)를 쓴다.
+find_olympus_root() {
+    if [ -f "$REPO_ROOT/scripts/update-check.sh" ]; then echo "$REPO_ROOT"; return; fi
+    if [ -n "${OLYMPUS_DIR:-}" ] && [ -f "$OLYMPUS_DIR/scripts/update-check.sh" ]; then echo "$OLYMPUS_DIR"; return; fi
+    local record="${OLYMPUS_STATE_DIR:-$HOME/.skill-olympus}/repo-root" recorded
+    if [ -f "$record" ]; then
+        # Windows 설치기가 남긴 기록은 CRLF·역슬래시일 수 있다
+        recorded="$(tr -d '\r\n' < "$record" 2>/dev/null)"
+        recorded="${recorded//\\//}"
+        if [ -n "$recorded" ] && [ -f "$recorded/scripts/update-check.sh" ]; then echo "$recorded"; return; fi
+    fi
+}
+
+OLYMPUS_ROOT="$(find_olympus_root)"
+if [ -n "$OLYMPUS_ROOT" ]; then
+    UPDATE_RESULT=$(bash "$OLYMPUS_ROOT/scripts/update-check.sh" 2>/dev/null || true)
     if echo "$UPDATE_RESULT" | grep -q '^UPGRADE_AVAILABLE'; then
         OLD_VER=$(echo "$UPDATE_RESULT" | awk '{print $2}')
         NEW_VER=$(echo "$UPDATE_RESULT" | awk '{print $3}')
-        echo "[skill-olympus] 새 버전 v${NEW_VER} 사용 가능 (현재 v${OLD_VER}). git pull && ./install.sh --all 로 업데이트하세요." >&2
+        add_notice "[skill-olympus] 새 버전 v${NEW_VER} 사용 가능 (현재 v${OLD_VER}). ${OLYMPUS_ROOT} 에서 git pull 후 ./install.sh --all 로 업데이트하세요."
     fi
 fi
 
-# 세션 시작 시 누적된 에러 수를 STDERR로 안내 (최근 24시간)
+# 세션 시작 시 누적된 에러 수를 안내 (최근 24시간)
 ERR_LOG="$PROJECT_ROOT/.claude/mnemo-errors.log"
 if [ -f "$ERR_LOG" ]; then
     RECENT_COUNT=$(awk -v cutoff="$(date -d '24 hours ago' '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -v-24H '+%Y-%m-%d %H:%M:%S' 2>/dev/null)" '
@@ -142,8 +164,17 @@ if [ -f "$ERR_LOG" ]; then
         END { print count+0 }
     ' "$ERR_LOG" 2>/dev/null)
     if [ -n "$RECENT_COUNT" ] && [ "$RECENT_COUNT" -gt 0 ]; then
-        echo "[mnemo] 최근 24시간 내 mnemo 에러 ${RECENT_COUNT}건 (.claude/mnemo-errors.log 확인)" >&2
+        add_notice "[mnemo] 최근 24시간 내 mnemo 에러 ${RECENT_COUNT}건 (.claude/mnemo-errors.log 확인)"
     fi
+fi
+
+# SessionStart stdout은 JSON 객체 하나일 때만 구조화 출력으로 읽힌다. 안내가 없으면 아무것도 쓰지 않는다.
+if [ -n "$USER_NOTICES" ]; then
+    # JSON 문자열 이스케이프: 역슬래시·따옴표·줄바꿈 (안내 문구에 다른 제어 문자는 없다)
+    escaped="${USER_NOTICES//\\/\\\\}"
+    escaped="${escaped//\"/\\\"}"
+    escaped="${escaped//$'\n'/\\n}"
+    printf '{"systemMessage":"%s"}\n' "$escaped"
 fi
 
 exit 0

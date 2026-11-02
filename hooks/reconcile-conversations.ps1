@@ -140,23 +140,40 @@ if ($env:MNEMO_DISABLE -notmatch '^(1|true|yes)$') {
     Invoke-ReconcileScript -ScriptPath $codexScript -CliLabel 'codex'
 }
 
+# 사용자에게 보일 안내를 모은다. 끝에서 systemMessage JSON 한 줄로 내보낸다.
+# exit 0 훅의 stderr는 사용자 화면에 나온다는 보장이 없어서(공식 문서에 없음) 쓰지 않는다 (gotcha 127).
+$userNotices = New-Object System.Collections.Generic.List[string]
+
 # ── 업데이트 체크 (하루 1회, non-blocking) ──
-try {
-    $updateScript = Join-Path $repoRoot 'scripts\update-check.ps1'
-    if (-not (Test-Path $updateScript)) {
-        $updateScript = Join-Path $HOME '.claude\skills\update-check.ps1'
+# 설치된 훅은 CLI 설정 폴더(~/.claude/hooks 등)에서 돌아 저장소를 모른다. 저장소에서 바로 돌면 형제
+# scripts\, 아니면 OLYMPUS_DIR, 그다음 설치기가 남긴 저장소 위치(~/.skill-olympus/repo-root)를 쓴다.
+function Find-OlympusRepoRoot {
+    if (Test-Path (Join-Path $repoRoot 'scripts\update-check.ps1')) { return $repoRoot }
+    if ($env:OLYMPUS_DIR -and (Test-Path (Join-Path $env:OLYMPUS_DIR 'scripts\update-check.ps1'))) { return $env:OLYMPUS_DIR }
+    $userHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
+    $stateDir = if ($env:OLYMPUS_STATE_DIR) { $env:OLYMPUS_STATE_DIR } else { Join-Path $userHome '.skill-olympus' }
+    $record = Join-Path $stateDir 'repo-root'
+    if (Test-Path $record) {
+        $recorded = (Get-Content $record -Raw).Trim()
+        if ($recorded -and (Test-Path (Join-Path $recorded 'scripts\update-check.ps1'))) { return $recorded }
     }
-    if (Test-Path $updateScript) {
+    return $null
+}
+
+try {
+    $olympusRoot = Find-OlympusRepoRoot
+    if ($olympusRoot) {
+        $updateScript = Join-Path $olympusRoot 'scripts\update-check.ps1'
         $updateResult = & powershell -NoProfile -ExecutionPolicy Bypass -File $updateScript 2>$null
         if ($updateResult -match '^UPGRADE_AVAILABLE\s+(\S+)\s+(\S+)') {
             $oldVer = $Matches[1]
             $newVer = $Matches[2]
-            [Console]::Error.WriteLine("[skill-olympus] 새 버전 v${newVer} 사용 가능 (현재 v${oldVer}). git pull && install.bat --all 로 업데이트하세요.")
+            $userNotices.Add("[skill-olympus] 새 버전 v${newVer} 사용 가능 (현재 v${oldVer}). ${olympusRoot} 에서 git pull 후 install.bat --all 로 업데이트하세요.")
         }
     }
 } catch {}
 
-# 세션 시작 시 누적된 에러 수를 배너로 알림 (STDERR로 출력, 훅 출력은 무시됨)
+# 세션 시작 시 누적된 에러 수를 안내
 try {
     $errLog = Join-Path $ProjectRoot '.claude\mnemo-errors.log'
     if (Test-Path $errLog) {
@@ -171,9 +188,22 @@ try {
             return $false
         }
         if ($recent -and $recent.Count -gt 0) {
-            [Console]::Error.WriteLine("[mnemo] 최근 24시간 내 mnemo 에러 $($recent.Count)건 (.claude/mnemo-errors.log 확인)")
+            $userNotices.Add("[mnemo] 최근 24시간 내 mnemo 에러 $(@($recent).Count)건 (.claude/mnemo-errors.log 확인)")
         }
     }
 } catch {}
+
+# SessionStart stdout은 JSON 객체 하나일 때만 구조화 출력으로 읽힌다. 안내가 없으면 아무것도 쓰지 않는다.
+if ($userNotices.Count -gt 0) {
+    try {
+        $json = @{ systemMessage = ($userNotices -join "`n") } | ConvertTo-Json -Compress
+        # 위에서 지정한 Console UTF-8 인코딩은 Windows PowerShell 5.1에서 BOM을 앞에 붙일 수 있다.
+        # BOM이 붙으면 JSON으로 읽히지 않으므로 BOM 없는 바이트를 표준 출력에 직접 쓴다.
+        $bytes = (New-Object System.Text.UTF8Encoding $false).GetBytes($json + "`n")
+        $stdout = [Console]::OpenStandardOutput()
+        $stdout.Write($bytes, 0, $bytes.Length)
+        $stdout.Flush()
+    } catch {}
+}
 
 exit 0

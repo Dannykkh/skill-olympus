@@ -147,6 +147,8 @@ fi
 #   업데이트 체크 (non-blocking)
 # ============================================
 if [ "$MODE" != "uninstall" ]; then
+    # 설치된 세션 시작 훅이 저장소의 update-check.sh를 찾도록 저장소 위치를 상태 폴더에 남긴다 (gotcha 127).
+    node "$SCRIPT_DIR/scripts/record-repo-root.js" || true
     UPDATE_RESULT=$(bash "$SCRIPT_DIR/scripts/update-check.sh" 2>/dev/null || true)
     if echo "$UPDATE_RESULT" | grep -q '^UPGRADE_AVAILABLE'; then
         OLD_VER=$(echo "$UPDATE_RESULT" | awk '{print $2}')
