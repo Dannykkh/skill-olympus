@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.6.1] - 2026-11-02
+
+### Bug Fixes
+
+- **update-check**: `update-check.ps1` and `update-check.sh` returned `UPGRADE_AVAILABLE` whenever the remote `VERSION` differed from the local one. raw.githubusercontent.com can serve the previous `VERSION` for a few minutes after a push, so installing right after the v7.6.0 release printed "New version available: v7.6.0 -- v7.5.6". Both scripts now compare dotted numbers from left to right and report only a higher remote (7.10.0 is higher than 7.6.0); an equal or older remote caches `UP_TO_DATE <local>`. The cache is read with the same comparison, so an `UPGRADE_AVAILABLE <local> <older>` entry left by the old check (valid for 12 hours) is not replayed. (1777cc1)
+- **hooks**: The SessionStart update notice never ran. The installed `reconcile-conversations` hook runs from the CLI config folder (for example `CLAUDE_CONFIG_DIR/hooks`), looked for `scripts/update-check` next to it, and fell back to `~/.claude/skills/update-check.*`, which no install step has created since the check was added in April. It also wrote the notice to stderr; the hooks docs say Claude never sees stderr from a hook that exits 0 and name `systemMessage` as the way to show a message to the user. The new `scripts/record-repo-root.js` writes the checkout path to `~/.skill-olympus/repo-root` (or `OLYMPUS_STATE_DIR`), and `install.bat` and `install.sh` run it. The hook finds the checker next to itself, then through `OLYMPUS_DIR`, then through the recorded path. The update notice and the Mnemo error count are printed together as one `{"systemMessage": ...}` line, and nothing is printed when there is no notice. PowerShell writes the bytes without a BOM, because the Console UTF-8 setting can prepend one. `install.bat` now prints "New version available: vX, installed vY". (ca4bb90)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Chinese READMEs. They note that session start now actually contacts GitHub for the version (at most once an hour, 5-second timeout), as the privacy policy drafts already said, and that `OLYMPUS_UPDATE_CHECK_DISABLE=1` turns it off. (6e96bd0)
+
+### Tests
+
+- `update-check.test.js`: a local HTTP server stands in for the remote; both scripts are run for a higher remote, an older remote, a stale cache from the old check, and an equal version. The older-remote and stale-cache cases fail with the previous code. (1777cc1)
+- `session-start-update-notice.test.js`: the hooks are copied into a temporary config folder to reproduce an installed hook. Checks the recorded path, a single BOM-free `systemMessage` JSON for a newer version, empty output when up to date, and the Mnemo error notice joined into the same message. Three cases fail with the previous hooks. (ca4bb90)
+
+### Validation and Scope
+
+- Full Node suite: 367 of 367 passed. Mnemo Python: passed.
+- Windows integrated installation passed all 12 checks and recorded the repository path. The installed SessionStart hook, run with the real environment, finished in under a second with no output and cached `UP_TO_DATE 7.6.0`. Whether Claude Code shows the `systemMessage` in its UI has not been observed yet; it will be on the next release.
+- Claude only: Codex and Antigravity do not register this hook, and Grok and Devin exit at its first line.
+
 ## [7.6.0] - 2026-11-02
 
 ### Features
