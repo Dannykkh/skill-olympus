@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.6.0] - 2026-11-02
+
+### Features
+
+- **design-plan**: Aphrodite measures Korean line breaks. `scripts/wrapcheck.mjs` comes from hanmariyang/giting-skills hangul-wrap v0.2.2 (commit 131a8b3, MIT; notice in `scripts/LICENSE-hangul-wrap.txt`). It drives a Chromium-family browser over the DevTools protocol, rebuilds each line from the on-screen rect of every glyph, and reports words split across two lines, overflow and orphan lines. With `--text` / `--zoom` at 200% (WCAG 1.4.4) it also reports clipped button text and taps that land on another element. Exit codes are 0 (clean), 1 (issues) and 2 (could not run). It needs Node 22+ and Chrome, Edge or Chromium, with nothing to install. Four changes from upstream, listed in the file header: Windows Edge, per-user Chrome and Linux Edge candidates; `--font-timeout` (default 3000 ms) around `document.fonts.ready`, which never settled with a font that never loads (gotcha 056); a wait for the load event (at most 15 s) and then `--wait` (default 1200 ms); help text for both options. `references/korean-line-break.md` says when to measure (Phase 3-2, 5 and 6-4), gives a rule per role (headings `keep-all` + `text-wrap: balance`, body `keep-all` + `text-wrap: pretty`, no `keep-all` in narrow cells, `overflow-wrap: anywhere` for code and URLs, never `break-all`) and the report format. Phase 6-4 item 7 measures at 360, 390, 768 and 1280 px and one phone width with `--text 200 --zoom 200`, and Completion Evidence asks for the counts before and after, or `NOT RUN`. The fixture pages use system fonts, so their counts differ by OS: on Windows Chrome and Edge `before.html` gives 9 splits at 360 and 390 px, while the upstream README shows 11 splits and 2 overflows. (522933b)
+- **design-plan**: Rules for multi-screen mobile apps, adapted from vmc-inner-circle/k-style-ui-ux v0.18.1 (commit e8a9616, MIT; notice in `references/LICENSE-k-style-ui-ux.txt`). `references/korean-mobile-app.md` covers a flow loop per object (Create, View, Edit, and After = the result screen of the action), person cards whose questions set each screen's information order (without turning screens into Q&A blocks), one scenario-facts table that every screen quotes, 7 home, 6 detail and 6 list archetypes chosen by the first-viewport protagonist (the upstream study classified 296 screens of 37 Korean apps and 57 mobile sites), Korean app rules for bottom buttons, button wording pairs, one meaning per badge color, selection states and accent colors, market conventions followed only when two or more apps share them, six keep/cut questions, and a P0/P1 checklist. `SKILL.md` reads it at Phase 1-1, 1-2, 2-1, 2-3, 2-5, 5-1, 6-2 and 6-3 and in Completion Evidence. Market research does not change Source Mode; it goes into the brief. The plugin's scripts, brand palettes, image search, token and component files, icon and avatar packs and voice presets were not imported, and section 9 of the reference says why. (522933b)
+- **design-plan validator**: The Experience Contract gains optional `## Object Flows` and `## Scenario Facts` sections. When Object Flows is present and not `NOT APPLICABLE`, `validate_experience_contract.py` requires the Object, Create, View, Edit and After columns, a Create, View and After screen in every row (an `n/a` with a reason still counts as missing), an Edit screen or `n/a — reason`, an After that is not the row's View or Create screen, and a Scenario Facts section. Upstream v14 passed its own flow check by writing list screens in the last column; this rejects that. A contract with neither section validates as before. (522933b)
+
+### Bug Fixes
+
+- **mnemo reconcile**: Session-start recovery rewrote every Codex conversation file and the index on each start, resume, clear and compaction. `reconcile_to_directory` loads every existing `*-codex.md` date into `file_state` and called `write_text` for each one unconditionally, so the modified time of 72 files and `.mnemo-index.json` changed with identical bytes (a staging rerun matched 72 of 72). Day files are now written only when the composed UTF-8 bytes differ, and both `reconcile_codex_conversations.py` and `reconcile_conversations.py` skip the index when its JSON value is equal. The index has three writers with different formats, so the comparison is on the parsed value, not the text. (18b4f37)
+
+### Documentation
+
+- `design-md-guide.md` gains a line-break rule slot in the Typography template, and the `corporate-trust` recipe notes that body-wide `keep-all` also reaches narrow cells. `experience-contract-guide.md` documents the two new sections and how Scenario Facts differ from Product Facts. (522933b)
+- Update the English, Korean, Japanese and Chinese READMEs, with a "Korean screens" line in the English and Korean Aphrodite sections. (481fe0d)
+
+### Tests
+
+- `design-plan-wrapcheck.test.js`: the license and notice are present; the checker exits 1 on `before.html` and 0 on `after.html` (skipped when no browser is found); a page whose web font never loads finishes in under 30 s, which fails with the upstream script. (522933b)
+- `design-plan-korean-mobile-app.test.js`: the MIT notice and source pin, links from each phase that reads the rules, the two template headings, and no leftover plugin paths or script runs in the reference. (522933b)
+- Six validator tests: a complete flow passes; a flow ending on its own list screen, a reasoned `n/a` in After, a bare `n/a` in Edit with a missing Create, and a missing Scenario Facts section fail; `NOT APPLICABLE` skips the checks; and the reference's own examples pass. (522933b)
+- Mnemo: the Codex recovery test pins modified times to an old value and checks that a second run leaves files and index untouched while a new turn rewrites only its day file (it fails with the previous code); `test_reconcile_index_write.py` checks the same for the Claude recovery's index. (18b4f37)
+
+### Validation and Scope
+
+- Full Node suite: 353 of 353 passed. Experience Contract validator tests: 13 of 13. Mnemo Python: 261 passed; Codex Mnemo Python: 22 passed. The 8 `test_measure_web_motion` browser tests still error because the Playwright Chromium build is missing (gotcha 113), the same as before this release.
+- Windows integrated installation passed all 12 checks, and the installed `design-plan` copies for Claude, Codex and Antigravity match the source byte for byte. After the fix, recovery on this repository left the 72 Codex conversation files untouched.
+- Known limit: a literal `NOT APPLICABLE — {reason}` under Object Flows passes, as it already does under System Roles.
+
 ## [7.5.6] - 2026-11-02
 
 ### Bug Fixes
