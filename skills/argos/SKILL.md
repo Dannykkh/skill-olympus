@@ -87,7 +87,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
 
 ```
 아르고스(Argos) — 100개의 눈으로 감리 시작
-순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 3A (MCP) → Phase 4 (QA) → Phase 5 (도면) → Phase 6 (디자인) → Phase 7 (보안) → Phase 8 (도메인사전) → Report
+순서: Detect → Phase 0 (CPS 추적) → Phase 1 (정적) → Phase 2 (런타임) → Phase 3 (API) → Phase 3A (MCP) → Phase 4 (QA) → Phase 5 (도면) → Phase 6 (디자인) → Phase 7 (보안) → Phase 8 (도메인사전) → 수리 → 최종 재점검 → Report
 ```
 
 ### 2. Resolve Planning Directory
@@ -489,6 +489,10 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 
 ## 누락 항목 목록
 {전체 Phase에서 ❌인 항목 통합}
+
+## 최종 재점검
+{1차 발견·수정과 원래 재현 결과, 재점검 회차별 범위·실행 증거·새 발견,
+마지막 수정 이후 회귀 결과, 미해결·NOT RUN 및 사유}
 ```
 
 ### 판정 기준
@@ -507,12 +511,20 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 7
 
 검증 결과를 사용자에게 표시한 후:
 
-- **PASS**: 준공 승인, 다음 단계 안내
+- **PASS**: 수리를 건너뛰고 아래 최종 재점검으로 진행합니다.
 - **CONDITIONAL/FAIL**: 수리가 허용된 코드·테스트 결함은 별도 재승인 없이 아래 수리 경로로 진행합니다. 설계 계약의 누락·모순, 외부 전제 부족과 단순 경고는 원인을 구분해 보고하며 임의 구현으로 메우지 않습니다.
   - 위 resolver로 `MODULE_SKILL[systematic-debugging]`을 직접 읽고 **Harness Integration** 계약을 적용합니다. 모듈이 없으면 표의 한정된 native fallback과 검증 한계를 기록합니다.
   - 항목 ID·관련 AC/명세·실패 증거·허용 수정 파일·이미 사용한 라운드를 넘깁니다. 기존 `verify-report.md`의 수정 이력을 이어 쓰며 별도 디버깅 장부를 만들지 않습니다. 상세 진행은 [verify-protocol.md](references/verify-protocol.md)의 `자동 수정 (Healer)`를 따릅니다.
   - 수정-재검증은 항목당 **최대 2라운드**입니다. 사용자가 정한 더 작은 상한을 우선하고, 재개·작업자 교체·모듈 전환으로 사용 횟수를 초기화하지 않습니다.
   - 소진되거나 수정할 수 없는 항목은 미해결 이유·다음 확인 조건을 보고합니다. 필수 기능·AC·보안 실패의 FAIL을 "수동 확인 필요"라는 이유로 CONDITIONAL로 낮추거나 PASS로 올리지 않습니다.
+
+### 최종 재점검과 종료
+
+전체 감리는 1차 검사와 수리 후, 수리할 결함이 없었더라도 별도의 최종 재점검을 수행합니다.
+범위 지정 `--phase`는 선택한 범위만 재점검하며 전체 준공검사로 보고하지 않습니다.
+`--report-only`는 재점검을 실행하지 않고, 읽기 전용 요청은 허용된 기존 검사와 응답 보고만 합니다.
+재점검의 범위·실행·새 결함 처리·상한은 [verify-protocol.md](references/verify-protocol.md)의
+`최종 재점검`을 따릅니다. 마지막 수정 이후 필요한 재점검이 끝나기 전에는 최종 PASS를 내리지 않습니다.
 
 ---
 

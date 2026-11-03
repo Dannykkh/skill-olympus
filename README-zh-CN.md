@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.7.0 — Argos 最终复查
+
+Argos 完成初次检查和获准的修复后，即使没有发现缺陷，也会进行一次独立复查。它会重新审查选定范围，并再次运行适用的核心流程以及正常、拒绝和边界值案例。新发现的缺陷进入现有修复循环；最终复查默认最多两轮。报告分别记录发现、修复、复查证据和未运行的检查。修复后的最终复查未完成时，不会判为 PASS。只读和指定阶段的范围保持不变。说明和安装相关检查已通过，新的流程尚未在实际项目中验证。
+
 ## v7.6.1 — 修复两处更新提示（发布后立即安装时的误报、会话启动时从未出现的提示）
 
 第一，更新检查只要远程 `VERSION` 与本地不同就提示有新版本。推送后几分钟内，GitHub 原始文件可能仍返回旧的 `VERSION`，所以发布后立即安装时，会针对一个更低的版本显示“New version available”。现在按数字比较，只有远程更高时才提示（7.10.0 高于 7.6.0），并忽略旧检查留下的“指向更低版本”的缓存。第二，会话启动时的更新提示从未出现过。已安装的钩子在 CLI 配置目录（例如 `~/.claude/hooks`）中运行，却在旁边查找 `scripts/update-check`，而那里没有这个文件；它还把提示写到 stderr，而 Claude Code 并不保证会显示以退出码 0 结束的钩子的 stderr。现在安装程序会把仓库位置记录到 `~/.skill-olympus/repo-root`，钩子通过这条记录找到检查脚本，并把更新提示和 Mnemo 错误数提示合并成一个 `systemMessage` 返回，这是钩子文档指定的面向用户的消息字段。因此，会话启动时现在会真正向 GitHub 检查版本（最多每小时一次，5 秒超时），这与隐私政策草案中已写明的行为一致；如需关闭，请设置 `OLYMPUS_UPDATE_CHECK_DISABLE=1`。安装程序自己的提示改为“New version available: vX, installed vY”。请运行一次安装程序，以便记录仓库位置。
