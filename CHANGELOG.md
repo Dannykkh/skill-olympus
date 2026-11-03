@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.7.0] - 2026-11-03
+
+### Features
+
+- **argos**: After the initial inspection and permitted repairs, perform a separate final recheck of the selected scope, including applicable core flows and normal, rejection and boundary cases. New defects return to the existing repair loop. Final rechecks default to at most two; an incomplete final recheck after a repair cannot produce PASS. The report separates initial findings, repairs, recheck evidence and unrun checks. Read-only and selected-phase requests retain their scope. (e529fff)
+
+### Documentation
+
+- Update the four READMEs and workflow guide with the final recheck and its limits. (e529fff)
+
+### Validation and Scope
+
+- Existing Argos contract and skill synchronization tests: 33 passed. The Windows integrated installer passed 12 checks; installed Argos instructions and protocol match the source for Claude, Codex and Antigravity, with Grok using the Claude compatibility surface.
+- The new inspection and repair workflow has not yet been executed on a real project. Japanese automated prose lint was unavailable because its tokenizer dependency was absent; the added paragraph was checked manually.
+
 ## [7.6.1] - 2026-11-02
 
 ### Bug Fixes
