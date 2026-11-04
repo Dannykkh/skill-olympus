@@ -94,6 +94,16 @@ PLACEHOLDER_PATTERNS = (
     re.compile(r"\b(?:todo|tbd|fill me)\b", re.IGNORECASE),
 )
 
+CODE_SPAN = re.compile(r"`[^`\n]+`")
+
+# 정하지 못한 결정은 지어내지 않고 권장안과 함께 `## Open Decisions`에 올린다(선택 절).
+# 목적·범위(strategy·scope)가 미결이면 구현으로 넘어가지 않는다. 구조 이하는 경고로 남긴다.
+DECISION_COLUMNS = ("decision", "layer", "recommendation", "owner")
+DECISION_LAYERS = ("strategy", "scope", "structure", "skeleton", "surface")
+BLOCKING_LAYERS = ("strategy", "scope")
+# 본문에 흩어진 미결 표시. 장부(Open Decisions)가 없으면 경고한다.
+UNDECIDED_MARKERS = ("미결", "[확인 필요", "[빈칸", "undecided")
+
 CONTENT_CLASSIFICATIONS = (
     "verified",
     "prototype",
@@ -124,7 +134,10 @@ def parse_sections(text: str) -> dict[str, str]:
 
 
 def has_placeholder(content: str) -> bool:
-    return any(pattern.search(content) for pattern in PLACEHOLDER_PATTERNS)
+    # 코드 표기(`{프로젝트명} 보드`) 안의 중괄호는 런타임 보간이지 채우지 않은 칸이 아니다
+    # (2026-11-04 기준선 S3에서 Accessibility Contract를 이렇게 오탐했다).
+    prose = CODE_SPAN.sub("", content)
+    return any(pattern.search(prose) for pattern in PLACEHOLDER_PATTERNS)
 
 
 def contains_any(content: str, values: Iterable[str]) -> bool:
@@ -217,6 +230,48 @@ def validate_object_flows(content: str) -> list[str]:
     return errors
 
 
+def validate_open_decisions(content: str) -> tuple[list[str], list[str], list[str]]:
+    """Open Decisions 표를 검사해 (errors, warnings, 막는 결정 이름)을 돌려준다."""
+    header, rows = parse_table(content)
+    if not header or any(column not in header for column in DECISION_COLUMNS):
+        return (
+            ["Open Decisions must be a table with Decision, Layer, Recommendation, and Owner columns."],
+            [],
+            [],
+        )
+    errors: list[str] = []
+    warnings: list[str] = []
+    blocking: list[str] = []
+    index = {column: header.index(column) for column in DECISION_COLUMNS}
+    for row in rows:
+        cells = {
+            column: row[position] if position < len(row) else ""
+            for column, position in index.items()
+        }
+        name = cells["decision"] or "(unnamed decision)"
+        layer = cells["layer"]
+        if layer not in DECISION_LAYERS:
+            errors.append(
+                f"Open Decisions row '{name}' needs a layer: " + ", ".join(DECISION_LAYERS) + "."
+            )
+            continue
+        # 권장안 없는 미결은 사용자에게 설계를 떠넘기는 것이다(arch 092 권장안 우선).
+        if is_empty_cell(cells["recommendation"]):
+            errors.append(f"Open Decisions row '{name}' needs a recommendation.")
+        if is_empty_cell(cells["owner"]):
+            errors.append(f"Open Decisions row '{name}' needs an owner who decides.")
+        if layer in BLOCKING_LAYERS:
+            blocking.append(name)
+        else:
+            warnings.append(f"Open decision '{name}' ({layer}) is still undecided.")
+    if blocking:
+        errors.append(
+            "Strategy/Scope decisions are still open; get them decided before implementation: "
+            + ", ".join(blocking)
+        )
+    return errors, warnings, blocking
+
+
 def detect_mode(source_mode: str) -> str:
     match = re.search(r"\bmode\s*:\s*([a-z-]+)", source_mode, re.IGNORECASE)
     if match:
@@ -237,6 +292,7 @@ def validate_contract(path: Path) -> dict[str, object]:
         "missingSections": [],
         "emptySections": [],
         "placeholderSections": [],
+        "blockingDecisions": [],
         "errors": [],
         "warnings": [],
     }
@@ -289,6 +345,28 @@ def validate_contract(path: Path) -> dict[str, object]:
         if variants and not contains_any(variants, ROLE_VISIBILITY_OPERATIONS):
             result["errors"].append(
                 "Role Variants must state per-role visibility (visible / hidden / disabled / read-only)."
+            )
+
+    decisions = sections.get("open decisions")
+    if decisions and not is_not_applicable(decisions):
+        if has_placeholder(decisions):
+            placeholders.append("open decisions")
+        else:
+            decision_errors, decision_warnings, blocking = validate_open_decisions(decisions)
+            result["errors"].extend(decision_errors)
+            result["warnings"].extend(decision_warnings)
+            result["blockingDecisions"] = blocking
+    else:
+        # 장부 없이 본문 여기저기에 "미결"만 적으면 무엇이 남았는지 한곳에서 볼 수 없다.
+        marked = [
+            name
+            for name in COMMON_SECTIONS
+            if name in sections and contains_any(sections[name], UNDECIDED_MARKERS)
+        ]
+        if marked:
+            result["warnings"].append(
+                "Undecided markers appear in " + ", ".join(marked)
+                + "; list them under '## Open Decisions' with a recommendation and owner."
             )
 
     flows = sections.get("object flows")

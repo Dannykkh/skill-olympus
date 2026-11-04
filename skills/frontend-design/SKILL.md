@@ -135,7 +135,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | CSV/playbook을 hue family로 분산. 기본 초록/주황 0개 + 과사용 스톡 accent(Tailwind 기본 hex 등) 기본 제외(`--allow-stock`으로 해제) |
 | **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 10종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis/접근 가능한 로딩 상태 — 복붙 가능한 검증 값 |
 | **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 9개 | 산업별 색상 세트 (Primary~Border 18컬럼). 원 161행 중 과사용 스톡 accent 152행 삭제(2026-08-05) — 폴백은 플레이북 레인이 주력 |
-| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 47개 | Heading+Body 조합, Google Fonts URL 포함. 비한글 과사용 37행 삭제(2026-08-05), 한글 페어링 #74~84 전부 보존 |
+| **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 48개 | Heading+Body 조합, Google Fonts URL 포함. 비한글 과사용 37행 삭제(2026-08-05), 한글 페어링 #74~84 전부 보존. 붙어 있던 #85 Bauhaus Geometric 분리(2026-11-04), 형식은 `scripts/tests/design-db-csv-shape.test.js` |
 | **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트 |
 
 **사용법:**
@@ -147,7 +147,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 4. **색은 유도가 기본, DB는 폴백**: 제품의 세계에서 재료(실물·도메인 어휘 3~5개)를 뽑아 지배색+액센트를 유도하고 대비를 실측하는 것이 1차 경로입니다(카탈로그 선택은 "인터넷의 평균"으로 수렴 — 과사용 스톡 152행은 삭제 완료). 유도 재료가 없을 때만 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"` shortlist를 폴백으로 사용합니다(잔여 9행 + 플레이북 레인). 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
 5. 색상 CSV의 잔여 행에 해당 산업이 있으면 참조 가능하나, 대부분 삭제됐으므로 유도(4번)와 플레이북 레인이 실질 경로입니다
 6. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조 — 무드·체크리스트·기술 키워드만 참조하고 **Colors 컬럼의 hex는 복사 금지**(순수 #000000/#FFFFFF·보라 지정 행 존재 — 색 정본은 유도 값/DESIGN.md 토큰)
-7. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색 — 비한글 과사용 행은 삭제됨(47행 잔존). 한글 UI는 한글 행 #74~84 우선(전부 보존, 한글 커버리지 정보 보유) — 과사용 폰트(IBM Plex 계열) 포함 2건만 `ai-slop-blacklist.md` 교차 확인
+7. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색 — 비한글 과사용 행은 삭제됨(48행 잔존). 한글 UI는 한글 행 #74~84 우선(전부 보존, 한글 커버리지 정보 보유) — 과사용 폰트(IBM Plex 계열) 포함 2건만 `ai-slop-blacklist.md` 교차 확인
 8. 구현 중 그림자/blur/리빌/로딩 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조
 
 > Credits: Design databases from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT),

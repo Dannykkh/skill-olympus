@@ -188,6 +188,12 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 
 - {접근성·성능·제품 맥락·저작권 때문에 가져오지 않을 요소}
 
+## Open Decisions
+
+| Decision | Layer | Recommendation | Owner |
+|---|---|---|---|
+| {아직 정하지 못한 결정} | strategy/scope/structure/skeleton/surface | {AI 권장안과 근거 한 줄} | {정할 사람} |
+
 ## Prompt Contract
 
 GOAL —
@@ -241,6 +247,15 @@ SUCCESS —
 `Scenario Facts`는 시안 화면들이 함께 쓰는 시나리오 데이터(날짜·인원·남은 횟수·상태 이름)입니다. 모든 화면이
 이 표만 인용하고, `Content Integrity`에서는 `prototype`으로 분류합니다. 흐름 고리·사람 카드·사실 표의 작성
 규칙은 [korean-mobile-app.md](korean-mobile-app.md) 1~3절에 있습니다.
+
+`Open Decisions`는 선택 절입니다. 사용자·상류 문서 어디에도 없는 결정은 지어내지 않고 여기에
+권장안과 함께 올립니다. 정할 것이 없으면 절을 지우거나 `해당 없음`을 적습니다. 검증기는 다음을 봅니다.
+
+- `Layer`는 `strategy`(누구의 어떤 변화)·`scope`(넣을 것과 뺄 것)·`structure`(흐름·상태 연결)·`skeleton`(화면 구성)·`surface`(색·타입·모션) 중 하나
+- `Recommendation`과 `Owner`가 비어 있지 않음. 권장안 없는 미결은 설계를 사용자에게 떠넘기는 것입니다
+- `strategy`·`scope` 행이 남아 있으면 실패합니다. 목적·범위가 미결인 채로 구현에 들어가지 않습니다
+- `structure` 이하 행은 경고로 남고 통과합니다
+- 이 절 없이 본문에 `미결`·`[확인 필요`·`[빈칸`을 흩어 적으면 경고합니다
 
 `Content Integrity`의 분류 의미는 다음과 같습니다.
 

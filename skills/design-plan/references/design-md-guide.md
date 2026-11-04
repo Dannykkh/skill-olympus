@@ -117,13 +117,15 @@ components:
 
 ## 4. 아프로디테 파이프라인에서의 생성
 
-Phase 3의 DB 매칭(`MODULE_ROOT[frontend-design]/references/*.csv`) + 가중 루브릭 채점 결과를 그대로 DESIGN.md에 박습니다.
+Phase 3에서 실제 렌더로 고른 방향과 Phase 3-2의 시각 시스템을 DESIGN.md에 옮깁니다. 색·폰트는
+제품 근거에서 유도한 값이 1차이고, `MODULE_ROOT[frontend-design]/references/*.csv`는 유도가 막혔을
+때만 쓰는 폴백입니다. DB 행을 고른 순위나 점수를 그대로 결정으로 옮기지 않습니다.
 
-1. 선택된 **색상 팔레트** → `colors:` (Primary/Accent/Neutral + `on-*` 전경색)
-2. 선택된 **폰트 페어링** → `typography:` (heading/body/label)
+1. 선택된 **색상**(지배색 + 액센트 + 실측 대비) → `colors:` (Primary/Accent/Neutral + `on-*` 전경색)
+2. 선택된 **폰트 시스템**(한글 글리프 실제 로드 포함) → `typography:` (heading/body/label)
 3. 프리셋 파라미터(VARIANCE/MOTION/DENSITY) + 간격/라운드 → `spacing:` / `rounded:`
 4. 핵심 컴포넌트(button/card/input) → `components:`
-5. 채점 근거·선택 이유 → 산문 `##` 섹션
+5. 렌더 비평 근거·선택 이유·탈락 방향 → 산문 `##` 섹션
 
 > 상세 토큰(50~150개 스케일)이 필요하면 먼저 DESIGN.md에서 `export --format dtcg`로
 > `design-tokens.json`(W3C DTCG)을 파생합니다. 사용자가 디자인 시스템 scaffold를 명시적으로

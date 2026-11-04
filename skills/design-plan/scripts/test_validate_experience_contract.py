@@ -228,6 +228,61 @@ class ExperienceContractValidationTests(unittest.TestCase):
         result = self.validate_text(with_object_flows(flows[0] + "\n" + facts[0]))
         self.assertTrue(result["valid"], result)
 
+    def test_braces_inside_code_spans_are_not_placeholders(self) -> None:
+        # 기준선 S3: 링크 이름 표기 `{프로젝트명} 보드`(런타임 보간)를 빈칸으로 오탐했다.
+        line = "- Preserve heading order, keyboard focus, labels, and reduced motion."
+        coded = VALID_BENCHMARK.replace(line, line + " Row links read `{프로젝트명} 보드`.")
+        self.assertTrue(self.validate_text(coded)["valid"])
+        bare = VALID_BENCHMARK.replace(line, line + " Row links read {프로젝트명} 보드.")
+        result = self.validate_text(bare)
+        self.assertFalse(result["valid"])
+        self.assertIn("accessibility contract", result["placeholderSections"])
+
+    def with_open_decisions(self, rows: str) -> str:
+        table = (
+            "## Open Decisions\n"
+            "| Decision | Layer | Recommendation | Owner |\n|---|---|---|---|\n" + rows + "\n\n"
+        )
+        return VALID_BENCHMARK.replace("## Performance Budget", table + "## Performance Budget")
+
+    def test_open_structure_decision_passes_with_a_warning(self) -> None:
+        result = self.validate_text(
+            self.with_open_decisions("| 초대 링크 유효 기간 | structure | 7일 | 제품 소유자 |")
+        )
+        self.assertTrue(result["valid"], result)
+        self.assertTrue(any("초대 링크 유효 기간" in w for w in result["warnings"]), result)
+
+    def test_open_strategy_or_scope_decision_blocks_implementation(self) -> None:
+        result = self.validate_text(
+            self.with_open_decisions(
+                "| 첫 화면의 주인 | strategy | 프로젝트 0개인 신규 owner | 제품 소유자 |\n"
+                "| 팀 성과 탭 포함 여부 | scope | MVP 제외 유지 | 제품 소유자 |"
+            )
+        )
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["blockingDecisions"], ["첫 화면의 주인", "팀 성과 탭 포함 여부"])
+
+    def test_open_decision_needs_layer_recommendation_and_owner(self) -> None:
+        result = self.validate_text(
+            self.with_open_decisions(
+                "| 기간 기본값 | layout | 4주 | 제품 소유자 |\n| 집계 주기 | structure | - | - |"
+            )
+        )
+        self.assertFalse(result["valid"])
+        errors = " ".join(result["errors"])
+        self.assertIn("'기간 기본값' needs a layer", errors)
+        self.assertIn("'집계 주기' needs a recommendation", errors)
+        self.assertIn("'집계 주기' needs an owner", errors)
+
+    def test_undecided_markers_without_ledger_warn(self) -> None:
+        contract = VALID_BENCHMARK.replace(
+            "- Resume the most recent document.",
+            "- Resume the most recent document. 대상 사용자는 미결.",
+        )
+        result = self.validate_text(contract)
+        self.assertTrue(result["valid"], result)
+        self.assertTrue(any("Open Decisions" in w for w in result["warnings"]), result)
+
     def test_object_flows_not_applicable_skips_flow_checks(self) -> None:
         flows = "## Object Flows\n- NOT APPLICABLE — single landing page\n"
         result = self.validate_text(with_object_flows(flows))
