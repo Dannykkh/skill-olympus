@@ -186,9 +186,10 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
    한 장으로 읽고, 없으면 표의 해당 절만 찾아 읽습니다. `docs/` 전체를 훑지 않습니다.
 3. **정본에 없는 결정은 지어내지 않습니다.** 권장안과 함께 Experience Contract의 `## Open Decisions`에 올립니다.
 4. **상류의 제외 결정과 부딪히면 멈춥니다.** 요청이 `PRODUCT.md` 제외 목록, Soft Gate 3의 제외, 아테나
-   삭제 권고에 있으면 Phase 2로 가지 않습니다. 출처 원문과 `scope` 결정 행(권장안: 유지 또는 뒤집기와
-   이유, 정할 사람: 사용자)을 보고하고 결정을 받습니다. 명시적 요청이어도, `--plan-only`여도 같습니다.
-   사용자가 뒤집기로 정하면 그 답을 출처로 남기고 진행합니다.
+   삭제 권고의 항목을 직접 지목하면 1-1 brief에 판정 줄·출처 원문·`scope` 결정 행(권장안: 유지 또는
+   뒤집기와 이유, 정할 사람: 사용자)만 남기고 Phase 2로 가지 않습니다. 명시적 요청이어도, `--plan-only`여도
+   같습니다. 해석에 따라 제외 항목일 수 있는 요청("대시보드답게")은 제외하지 않는 해석으로 진행하고 그
+   해석을 `scope` 미결로 올립니다. 사용자가 뒤집기로 정하면 그 답을 출처로 남기고 진행합니다.
 5. **정본끼리 부딪히면** 사용자 과업·접근성 > Experience Contract > `DESIGN.md` > Layout Blueprint >
    anatomy·playbook 기본값 > 벤치마크 순으로 따릅니다.
 
@@ -309,7 +310,7 @@ Adopt·Adapt·Avoid를 포함합니다. 여러 화면 앱이면 `## Object Flows
 기능형 5종은
 `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`의 `1. 페이지 유형 게이트`,
 고른 Mode의 절, `7. 기능형 프롬프트 컴파일러`만 읽고 정보 구조와 효과 예산을 먼저 고정합니다.
-데이터가 0건인 첫 실행 화면은 가장 가까운 Mode를 고르되 첫 뷰포트의 주인공은 첫 행동입니다(anatomy `Dashboard`의 첫 실행 변형).
+데이터가 0건인 첫 실행 화면에 맞는 Mode가 없으면 `Mode: 없음 — 첫 실행`으로 적고, 첫 뷰포트의 주인공은 첫 행동입니다(anatomy `Dashboard`의 첫 실행 변형).
 
 ### 2-5. 저충실도 와이어프레임 판단 게이트
 
@@ -459,7 +460,7 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
   docs/design-refs/YYYY-MM-DD-experience-{slug}.md
 ```
 
-`PRODUCT.md`를 만들거나 고쳤으면 같은 스크립트에 `--product PRODUCT.md`로 함께 검증합니다.
+`PRODUCT.md`를 만들거나 고쳤으면 같은 스크립트를 `--product PRODUCT.md`로 한 번 더 실행해 검증합니다.
 검증 실패 시 구현으로 넘어가지 않습니다. 이 스크립트는 완성도를 검사하며 아름다움과 사용성은
 Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT APPLICABLE`이 아니면
 `## Role Variants`도 함께 요구하며, 변형표가 `표시/숨김/비활성/읽기전용` 어휘를 쓰지 않으면 실패합니다.
