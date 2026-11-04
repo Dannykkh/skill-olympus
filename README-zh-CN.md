@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.8.0 — Aphrodite 先判定请求涉及的决策层，并读取 PRODUCT.md
+
+Aphrodite 在读取任何内容之前，先判定请求涉及哪一层决策（strategy、scope、structure、skeleton、surface），写在简报第一行；该层详细读取，更基础的层只读摘要。摘要是新增的根目录 `PRODUCT.md`（不超过 60 行），记录目标用户、首要任务和不做的内容，每项决策标注 `사용자`（由人决定）、`AI 권장`（AI 推荐，未确认）或 `미결`（未决）。上游规划文档只有记录了人的确认时才算由人决定。如果请求的是上游已排除的功能，Aphrodite 会在线框图之前停下，只提交一项范围决策。Experience Contract 新增可选的 `## Open Decisions` 表，目的或范围未决时不进入实现。没有数据的用户的仪表盘不再默认以 4 张 KPI 卡片开始，修复了设计数据库中损坏的两行，并可通过 `/aphrodite <planning_dir>` 接收 Zephermine 规划。所有 CLI 在 UI 工作前都会同时读取 `DESIGN.md` 和 `PRODUCT.md`。在同一示例上进行的改造前后盲测中，每次运行读取的工具文档从 2,277–2,569 行降至 813–1,730 行（[评估](docs/research/2026-11-04-aphrodite-eval/after.md)）。
+
 ## v7.7.0 — Argos 最终复查
 
 Argos 完成初次检查和获准的修复后，即使没有发现缺陷，也会进行一次独立复查。它会重新审查选定范围，并再次运行适用的核心流程以及正常、拒绝和边界值案例。新发现的缺陷进入现有修复循环；最终复查默认最多两轮。报告分别记录发现、修复、复查证据和未运行的检查。修复后的最终复查未完成时，不会判为 PASS。只读和指定阶段的范围保持不变。说明和安装相关检查已通过，新的流程尚未在实际项目中验证。
