@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.8.0] - 2026-11-04
+
+### Features
+
+- **design-plan**: Route each request by decision layer. Phase 0-1 judges whether a request touches strategy, scope, structure, skeleton or surface, writes that judgment as the brief's first line, names the upstream files per layer (`PRODUCT.md`, else the Zephermine spec shared premise and Problem Statement, Athena, Hermes, interview Soft Gate 3), and reads foundational layers as a summary and the judged layer in detail. A request that names an upstream exclusion stops before Phase 2 with one scope decision. Reference-only steps read named sections without opening the module SKILL.md; Phase 5-1 keeps the consumption gate and reads the rest by layer. (bfeb134)
+- **design-plan**: Accept `/aphrodite <planning_dir>` and summarize strategy and scope in a root `PRODUCT.md` of at most 60 lines. Every row carries one of three source labels: 사용자 (a person decided), AI 권장 (AI-recommended, unconfirmed) or 미결 (open); upstream plans count as a person's decision only when they record a confirmation. `validate_experience_contract.py --product` checks it. When `operation-scenarios.md` is absent, spec prohibited actions carry into the role-variant vocabulary. Zephermine's spec shared premise gains a "만들지 않을 것" line. (c57e1d9)
+- **design-plan**: Stop defaulting first screens to KPI dashboards. The dashboard anatomy says when its KPI row does not apply and adds a first-run variant; the BI/Analytics style rows say they are not for first-run screens; the style DB is marked as a vocabulary, not a starting point. Person cards and the six include/exclude questions apply to any strategy or scope request regardless of device; flow loops and scenario facts apply to multi-screen apps including desktop tools. (5250190)
+- **mnemo**: The always-loaded UI rule on Claude, Codex and Antigravity reads `PRODUCT.md` (when present) before `DESIGN.md`. Grok shares the Claude rules. (448070a)
+
+### Bug Fixes
+
+- **design-plan**: Repair `design-styles.csv` row 77 (missing closing quote) and `font-pairings.csv`, where two rows were glued together (Bauhaus Geometric is now #85). The design-md guide no longer tells DESIGN.md to copy a DB match plus a scoring rubric that no longer exists. The Experience Contract validator stops treating braces inside code spans as placeholders, and an optional `## Open Decisions` table (layer, recommendation, owner) blocks implementation while strategy or scope is open. (f1680da)
+
+### Documentation
+
+- Asset inventory, a planted-defect fixture with fixed prompts, and blind baseline and re-evaluation runs of Aphrodite. (58d5fda, e4cf7f1)
+- README, README-ko, workflow guide and quick reference describe decision layers, `PRODUCT.md` and `/aphrodite <planning_dir>`; the four READMEs note this release. (ad1d252, c81ead5)
+
+### Tests
+
+- Contract tests for the decision-layer router and for design DB CSV row shape. (ad1d252, f1680da)
+
+### Validation and Scope
+
+- Full suite 376 passed; Experience Contract validator tests 23 passed. Old and new validators agree on 74 real contracts from other projects; the only changed verdict is the baseline false positive now passing.
+- Blind before/after runs on the same fixture and prompts (one run per scenario): every run now names its decision layer and labels decision sources; harness text read per run fell from 2,569, 2,409 and 2,277 lines to 1,702, 1,730 and 813; the excluded-feature request stops before wireframes (21 min to 6 min). Four wording fixes made after the re-evaluation were not re-measured.
+- The Windows integrated installer completed for Claude, Codex, Antigravity, Grok and Devin; installed design-plan, zephermine and frontend-design files match the source on Claude, Codex and Antigravity. Writing the root `PRODUCT.md` was not observed, because the evaluation limited writes to `docs/design-refs/`. Deleting `color-palettes.csv` was deferred because `select-diverse-palettes.js` reads it.
+
 ## [7.7.0] - 2026-11-03
 
 ### Features
