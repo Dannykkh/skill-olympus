@@ -123,7 +123,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 
 ## Design Database (참조 데이터)
 
-프리셋 선택 후 또는 직접 디자인 시, 아래 DB에서 프로젝트에 맞는 팔레트/폰트/스타일을 검색합니다.
+프리셋 선택 후 또는 직접 디자인 시, 아래 DB에서 프로젝트에 맞는 색상 레인·폰트·스타일을 검색합니다.
 
 | DB | 파일 | 항목 수 | 내용 |
 |----|------|---------|------|
@@ -132,9 +132,8 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | **코더 UI 패턴** | [references/coder-interface-pattern-playbook.md](references/coder-interface-pattern-playbook.md) | 유형 5종 | 데이터 도구·디렉터리·agent workbench·로딩·효과 stage의 정보 구조, 밀도, 상태, 모션 예산 |
 | **블록 해부 카탈로그** | [references/layout-block-anatomy.md](references/layout-block-anatomy.md) | 블록 30종 | Marketing/App/Ecommerce 블록별 구조 계약(요소 순서·잉크 위계·강조 규칙) + 페이지 시퀀스 템플릿 + 와이어프레임-퍼스트 청사진 절차 |
 | **코드 스캐폴드** | [references/scaffolds/](references/scaffolds/) | 블록 4종 | Hero/Navbar/Footer/Pricing의 렌더 검증된 시작 코드(HTML+CSS, DESIGN.md 토큰 바인딩) — anatomy를 산문이 아니라 실제 마크업으로 강제 |
-| **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | CSV/playbook을 hue family로 분산. 기본 초록/주황 0개 + 과사용 스톡 accent(Tailwind 기본 hex 등) 기본 제외(`--allow-stock`으로 해제) |
+| **색상 후보 도구** | [scripts/select-diverse-palettes.js](scripts/select-diverse-palettes.js) | JSON | 플레이북 색상 레인 11개를 hue family로 분산. 기본 초록/주황 0개 + 과사용 스톡 accent(Tailwind 기본 hex 등) 기본 제외(`--allow-stock`으로 해제) |
 | **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 10종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis/접근 가능한 로딩 상태 — 복붙 가능한 검증 값 |
-| **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 9개 | 산업별 색상 세트 (Primary~Border 18컬럼). 원 161행 중 과사용 스톡 accent 152행 삭제(2026-08-05) — 폴백은 플레이북 레인이 주력 |
 | **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 48개 | Heading+Body 조합, Google Fonts URL 포함. 비한글 과사용 37행 삭제(2026-08-05), 한글 페어링 #74~84 전부 보존. 붙어 있던 #85 Bauhaus Geometric 분리(2026-11-04), 형식은 `scripts/tests/design-db-csv-shape.test.js` |
 | **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트. **표현 어휘집이지 시작점이 아니다** — `Best For` 업종으로 고르지 않고, 대상·과업(`PRODUCT.md`)이 정해진 뒤 무드·체크리스트만 참조. BI 10행(No 28~37)은 현황 확인자 전제 |
 
@@ -144,8 +143,8 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 2. 방향이 모호하거나 결과 반복 불만이 있으면 `motion-first-prompt-playbook.md`를 읽고 구성·색·모션이 다른 방향 카드 3개를 만듭니다.
 2-1. 페이지/섹션을 새로 만들 때는 `layout-block-anatomy.md`에서 블록 시퀀스와 해당 블록의 anatomy 계약(필수 요소·강조 1개 규칙·CTA 문법)을 확인하고 마크업 구조를 먼저 고정합니다 — 레퍼런스가 없을 때 즉흥 구조 금지. Hero/Navbar/Footer/Pricing이면 `scaffolds/`의 렌더 검증된 코드부터 시작(처음부터 새로 짜지 않음).
 3. **레시피 우선**: 사용자의 레시피 라이브러리(`/recipe` — `CODE_RECIPES_DIR` 또는 `~/code-recipes`의 `ui/`)에 맞는 레시피가 있으면 그것을 먼저 기준으로 삼고(DESIGN.md 토큰으로 다시 구현, `recipe: <id>@<version>` 표시), 없으면 선택된 방향과 맞는 스타일 레시피가 있으면 그 레시피 1개 파일만 Read → 토큰/패턴을 시작점으로 (두 레시피 혼합 금지). 액센트는 색상 레인/CSV 팔레트로 변주 가능
-4. **색은 유도가 기본, DB는 폴백**: 제품의 세계에서 재료(실물·도메인 어휘 3~5개)를 뽑아 지배색+액센트를 유도하고 대비를 실측하는 것이 1차 경로입니다(카탈로그 선택은 "인터넷의 평균"으로 수렴 — 과사용 스톡 152행은 삭제 완료). 유도 재료가 없을 때만 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"` shortlist를 폴백으로 사용합니다(잔여 9행 + 플레이북 레인). 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
-5. 색상 CSV의 잔여 행에 해당 산업이 있으면 참조 가능하나, 대부분 삭제됐으므로 유도(4번)와 플레이북 레인이 실질 경로입니다
+4. **색은 유도가 기본, DB는 폴백**: 제품의 세계에서 재료(실물·도메인 어휘 3~5개)를 뽑아 지배색+액센트를 유도하고 대비를 실측하는 것이 1차 경로입니다(카탈로그 선택은 "인터넷의 평균"으로 수렴 — 업종별 팔레트 CSV는 2026-11-04 삭제, gotcha 063). 유도 재료가 없을 때만 `node "<이 스킬 디렉터리>/scripts/select-diverse-palettes.js" --type "{타입}" --seed "{slug}"` shortlist를 폴백으로 사용합니다(플레이북 색상 레인). 초록/주황이 필요하다는 근거가 있을 때만 `--max-signal 1`을 추가합니다.
+5. 색은 유도(4번)와 플레이북 색상 레인만 씁니다. 업종별 팔레트 CSV는 남은 9행이 특이 업종 클리셰라 삭제했습니다(2026-11-04)
 6. 프리셋 "럭셔리" → `design-styles.csv`에서 Minimalism, Neumorphism 참조 — 무드·체크리스트·기술 키워드만 참조하고 **Colors 컬럼의 hex는 복사 금지**(순수 #000000/#FFFFFF·보라 지정 행 존재 — 색 정본은 유도 값/DESIGN.md 토큰)
 7. 사용자가 "세련된 느낌" → `font-pairings.csv`에서 "elegant, luxury" 키워드 검색 — 비한글 과사용 행은 삭제됨(48행 잔존). 한글 UI는 한글 행 #74~84 우선(전부 보존, 한글 커버리지 정보 보유) — 과사용 폰트(IBM Plex 계열) 포함 2건만 `ai-slop-blacklist.md` 교차 확인
 8. 구현 중 그림자/blur/리빌/로딩 디테일 필요 시 → `technique-recipes.md` 해당 §만 참조

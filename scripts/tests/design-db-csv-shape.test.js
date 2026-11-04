@@ -11,7 +11,6 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const CSV_FILES = [
   "skills/frontend-design/references/design-styles.csv",
   "skills/frontend-design/references/font-pairings.csv",
-  "skills/frontend-design/references/color-palettes.csv",
   "skills/ui-ux-auditor/references/ux-guidelines.csv",
 ];
 

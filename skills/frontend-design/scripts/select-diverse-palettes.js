@@ -8,11 +8,11 @@ const SIGNAL_HUES = new Set(["green", "orange"]);
 const DEFAULT_COUNT = 3;
 const DEFAULT_MAX_SIGNAL = 0;
 
-// 과사용 스톡 accent 제외 (2026-08-05 분석: DB 161행 중 133행이 Tailwind 기본 hex —
-// docs/research/2026-08-05-deep-research-impeccable.md. "인터넷의 평균"을 후보에서 차단).
-// 판정 2중: (1) 아래 알려진 스톡 목록, (2) CSV 안에서 STOCK_FREQUENCY_THRESHOLD회 이상
-// 재사용된 accent (DB 자신의 중복이 과사용을 정의 — 목록 유지보수 불필요한 데이터 기반 규칙).
-const STOCK_FREQUENCY_THRESHOLD = 4;
+// 후보는 motion-first-prompt-playbook.md의 색상 레인만 쓴다. 업종별 팔레트 CSV는 2026-08-05에
+// 161행 중 152행을 지운 뒤 특이 업종 9행만 남아, 유형 없이 돌리면 근거 없는 클리셰 색을 섞었다
+// (2026-11-04 삭제, docs/research/2026-11-04-aphrodite-ux-5-planes-asset-inventory.md 7절).
+// 과사용 스톡 accent(Tailwind 기본 hex)는 레인이 늘어날 때를 대비해 계속 차단한다
+// (2026-08-05 분석: 옛 DB 161행 중 133행이 Tailwind 기본 hex — deep-research-impeccable.md).
 const KNOWN_STOCK_ACCENTS = new Set([
   // Tailwind 기본 팔레트 500-700 셰이드 (UI accent로 쓰이는 대역)
   "#EF4444", "#DC2626", "#B91C1C", // red
@@ -114,56 +114,6 @@ function parseArgs(argv) {
   return options;
 }
 
-function parseCsv(text) {
-  const records = [];
-  let record = [];
-  let field = "";
-  let quoted = false;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    const next = text[index + 1];
-
-    if (quoted) {
-      if (char === '"' && next === '"') {
-        field += '"';
-        index += 1;
-      } else if (char === '"') {
-        quoted = false;
-      } else {
-        field += char;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      quoted = true;
-    } else if (char === ",") {
-      record.push(field);
-      field = "";
-    } else if (char === "\n") {
-      record.push(field.replace(/\r$/, ""));
-      records.push(record);
-      record = [];
-      field = "";
-    } else {
-      field += char;
-    }
-  }
-
-  if (field.length > 0 || record.length > 0) {
-    record.push(field.replace(/\r$/, ""));
-    records.push(record);
-  }
-
-  const [headers, ...rows] = records.filter((row) => row.some((value) => value.length > 0));
-  if (!headers) return [];
-
-  return rows.map((row) =>
-    Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])),
-  );
-}
-
 function hexToRgb(hex) {
   const match = /^#([0-9a-f]{6})$/i.exec(hex || "");
   if (!match) return null;
@@ -230,20 +180,6 @@ function normalize(value) {
     .trim();
 }
 
-function relevanceScore(productType, query) {
-  const normalizedType = normalize(productType);
-  const normalizedQuery = normalize(query);
-  if (!normalizedQuery) return 0;
-  if (normalizedType === normalizedQuery) return 100;
-  if (normalizedType.includes(normalizedQuery) || normalizedQuery.includes(normalizedType)) {
-    return 80;
-  }
-
-  const typeTokens = new Set(normalizedType.split(" ").filter(Boolean));
-  const queryTokens = normalizedQuery.split(" ").filter(Boolean);
-  return queryTokens.reduce((score, token) => score + (typeTokens.has(token) ? 15 : 0), 0);
-}
-
 function stableHash(value) {
   let hash = 2166136261;
   for (let index = 0; index < value.length; index += 1) {
@@ -253,54 +189,8 @@ function stableHash(value) {
   return hash >>> 0;
 }
 
-function buildStockCheck(rows) {
-  const counts = {};
-  for (const row of rows) {
-    const accent = String(row.Accent || "").toUpperCase();
-    if (accent) counts[accent] = (counts[accent] || 0) + 1;
-  }
-  return (accentHex) => {
-    const accent = String(accentHex || "").toUpperCase();
-    return (
-      KNOWN_STOCK_ACCENTS.has(accent) ||
-      (counts[accent] || 0) >= STOCK_FREQUENCY_THRESHOLD
-    );
-  };
-}
-
-function prepareRows(rows, options, stockCheck) {
-  return rows
-    .map((row) => ({
-      ...row,
-      id: `csv:${row.No}`,
-      source: "color-palettes.csv",
-      hueFamily: classifyHue(row.Accent),
-      isStock: stockCheck(row.Accent),
-      mode: classifyMode(row.Background),
-      relevance: relevanceScore(row["Product Type"], options.type),
-      tieBreak: stableHash(
-        [
-          options.seed,
-          row.No,
-          row["Product Type"],
-          row.Primary,
-          row.Accent,
-          row.Background,
-        ].join("|"),
-      ),
-    }))
-    .filter((row) => !options.excludeHues.has(row.hueFamily))
-    .filter(
-      (row) =>
-        ![
-          row.Primary,
-          row["On Primary"],
-          row.Accent,
-          row["On Accent"],
-          row.Background,
-          row.Foreground,
-        ].some((value) => String(value).toUpperCase() === "#000000"),
-    );
+function isStockAccent(accentHex) {
+  return KNOWN_STOCK_ACCENTS.has(String(accentHex || "").toUpperCase());
 }
 
 function auditRows(rows) {
@@ -321,7 +211,7 @@ function auditRows(rows) {
   };
 }
 
-function loadPlaybookLanes(playbookPath, options, stockCheck) {
+function loadPlaybookLanes(playbookPath, options) {
   if (!fs.existsSync(playbookPath)) return [];
   const text = fs.readFileSync(playbookPath, "utf8");
   const lanePattern =
@@ -331,7 +221,6 @@ function loadPlaybookLanes(playbookPath, options, stockCheck) {
     .map((match) => {
       const [, laneName, background, foreground, accent, onAccent] = match;
       const hueFamily = classifyHue(accent);
-      const isStock = stockCheck(accent);
       return {
         id: `lane:${normalize(laneName).replace(/\s+/g, "-")}`,
         source: "motion-first-prompt-playbook.md",
@@ -354,6 +243,8 @@ function loadPlaybookLanes(playbookPath, options, stockCheck) {
         Ring: accent,
         Notes: "Curated semantic core; derive surface/muted/border scales in DESIGN.md.",
         hueFamily,
+        // 예전에는 계산만 하고 결과에 넣지 않아 레인에는 스톡 차단이 걸리지 않았다
+        isStock: isStockAccent(accent),
         mode: classifyMode(background),
         relevance: options.type ? 10 : 0,
         tieBreak: stableHash(`${options.seed}|${laneName}|${accent}`),
@@ -407,12 +298,8 @@ function pickDiverse(candidates, options) {
   return selected;
 }
 
-function selectRows(rows, playbookLanes, options, stockCheck) {
-  const preparedRows = prepareRows(rows, options, stockCheck);
-  const relevantCsvRows = options.type
-    ? preparedRows.filter((row) => row.relevance > 0)
-    : preparedRows;
-  const allCandidates = [...relevantCsvRows, ...playbookLanes];
+function selectRows(playbookLanes, options) {
+  const allCandidates = playbookLanes;
   const freshCandidates = allCandidates.filter((candidate) => !candidate.isStock);
 
   // 1차: 과사용 스톡 accent 제외한 풀에서 선택. 부족하면 스톡 포함 재시도 (무언 실패 금지).
@@ -462,25 +349,22 @@ function selectRows(rows, playbookLanes, options, stockCheck) {
 }
 
 const options = parseArgs(process.argv.slice(2));
-const csvPath = path.resolve(__dirname, "..", "references", "color-palettes.csv");
 const playbookPath = path.resolve(
   __dirname,
   "..",
   "references",
   "motion-first-prompt-playbook.md",
 );
-if (!fs.existsSync(csvPath)) fail(`palette database not found: ${csvPath}`);
+if (!fs.existsSync(playbookPath)) fail(`palette playbook not found: ${playbookPath}`);
 
-const rows = parseCsv(fs.readFileSync(csvPath, "utf8"));
-if (rows.length === 0) fail("palette database is empty or invalid");
+const playbookLanes = loadPlaybookLanes(playbookPath, options);
+if (playbookLanes.length === 0) fail("no color lanes found in the motion-first playbook");
 
-const stockCheck = buildStockCheck(rows);
-const audit = auditRows(rows);
-audit.stockAccentRows = rows.filter((row) => stockCheck(row.Accent)).length;
-const playbookLanes = loadPlaybookLanes(playbookPath, options, stockCheck);
+const audit = auditRows(playbookLanes);
+audit.stockAccentRows = playbookLanes.filter((lane) => lane.isStock).length;
 const result = options.auditOnly
   ? { selected: [], stockFallbackUsed: false, stockDropped: 0 }
-  : selectRows(rows, playbookLanes, options, stockCheck);
+  : selectRows(playbookLanes, options);
 const selection = result.selected;
 
 if (!options.auditOnly && selection.length < options.count) {
@@ -495,7 +379,7 @@ if (result.stockFallbackUsed) {
   );
 }
 console.error(
-  `[palette-select] rows=${audit.rows} stock_accents=${audit.stockAccentRows} green_orange=${audit.greenOrangeCount} (${audit.greenOrangePercent}%) dropped_stock=${result.stockDropped} selected=${selection.length}`,
+  `[palette-select] lanes=${audit.rows} stock_accents=${audit.stockAccentRows} green_orange=${audit.greenOrangeCount} (${audit.greenOrangePercent}%) dropped_stock=${result.stockDropped} selected=${selection.length}`,
 );
 process.stdout.write(
   `${JSON.stringify(
@@ -513,7 +397,6 @@ process.stdout.write(
         maxGreenOrangeCombined: options.maxSignal,
         excludeOverusedStock: !options.allowStock,
         stockFallbackUsed: result.stockFallbackUsed,
-        csvOrderIsRanking: false,
       },
       audit,
       selection,
