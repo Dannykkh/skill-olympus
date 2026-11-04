@@ -16,6 +16,7 @@ description: >
 
 ```text
 /aphrodite
+/aphrodite <planning_dir>        # 젭마인 산출 폴더를 상류 정본으로 받음
 /aphrodite --plan-only
 /aphrodite --review-only
 /aphrodite --benchmark <URL-or-file>
@@ -191,9 +192,11 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 5. **정본끼리 부딪히면** 사용자 과업·접근성 > Experience Contract > `DESIGN.md` > Layout Blueprint >
    anatomy·playbook 기본값 > 벤치마크 순으로 따릅니다.
 
-맞는 `ui` 레시피를 쓰기로 하면 `recipe: <id>@<version>`을 Experience Contract에 남기고, 견본은 기준일
-뿐 `DESIGN.md` 토큰으로 다시 구현합니다. 젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고
-새 역할명을 만들지 않습니다. 역할 표가 없는데 화면에 관리 기능이 보이면 역할 존재 여부를 `Open Decisions`에 올립니다.
+`/aphrodite <planning_dir>`로 받으면 표의 `docs/plan/*/`는 그 폴더 하나입니다. 맞는 `ui` 레시피를 쓰기로
+하면 `recipe: <id>@<version>`을 Experience Contract에 남기고, 견본은 기준일 뿐 `DESIGN.md` 토큰으로 다시
+구현합니다. 젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고 새 역할명을 만들지 않습니다.
+`operation-scenarios.md`가 없으면 spec 역할 표의 `금지 행동`을 4-1-1 어휘로 옮기고, 거기서도 정해지지
+않는 칸과 역할 표 없이 보이는 관리 기능은 `Open Decisions`(structure)에 올립니다.
 
 `DESIGN.md`가 있다는 이유만으로 Phase 1~5를 건너뛰지 않습니다. 기존 결과가 못생기거나 UX 문제가
 있으면 strategy 판정으로 Phase 1의 가정부터 다시 봅니다. `--review-only`면 Phase 6만 실행하고 필요한
@@ -228,7 +231,8 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 - 관찰 가능한 성공 기준은 무엇인가
 
 요구사항 자체가 불명확하면 `zephermine`에 인계합니다. 아프로디테는 디자인에 필요한 경험 가정을
-확정합니다.
+확정합니다. strategy·scope로 판정했는데 루트 `PRODUCT.md`가 없으면 상류 정본에서 옮겨 만들고, 결정마다
+`사용자`·`AI 권장`·`미결` 중 하나로 출처를 답니다([product-md-guide.md](references/product-md-guide.md)).
 
 **여러 화면 모바일 앱**이면 [korean-mobile-app.md](references/korean-mobile-app.md)를 읽고 그 문서의
 단계표대로 적용합니다. 앱 시안이나 모바일 우선 웹앱에서 사용자가 무언가를 만들거나 신청·예약·주문하면
@@ -455,6 +459,7 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
   docs/design-refs/YYYY-MM-DD-experience-{slug}.md
 ```
 
+`PRODUCT.md`를 만들거나 고쳤으면 같은 스크립트에 `--product PRODUCT.md`로 함께 검증합니다.
 검증 실패 시 구현으로 넘어가지 않습니다. 이 스크립트는 완성도를 검사하며 아름다움과 사용성은
 Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT APPLICABLE`이 아니면
 `## Role Variants`도 함께 요구하며, 변형표가 `표시/숨김/비활성/읽기전용` 어휘를 쓰지 않으면 실패합니다.
@@ -601,7 +606,8 @@ P0·P1은 완료 전에 고칩니다.
 
 완료를 보고하려면 적용 가능한 항목이 모두 있어야 합니다.
 
-- brief와 Source Mode
+- brief 첫 줄의 계층 판정과 Source Mode
+- strategy·scope 판정이면 `PRODUCT.md` 검증 결과와 남은 `Open Decisions`
 - 벤치마크가 있으면 캡처 근거와 Adopt·Adapt·Avoid
 - Experience Contract 검증 통과
 - 새 화면·구조 변경이면 시각 탐색 전에 만든 데스크톱·모바일 와이어프레임 파일과 다섯 기준의 판단 근거

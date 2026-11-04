@@ -7,7 +7,31 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from validate_experience_contract import validate_contract
+from validate_experience_contract import validate_contract, validate_product
+
+
+VALID_PRODUCT = """# PRODUCT.md — 플로우보드
+
+## Strategy
+
+| Decision | Value | Source |
+|---|---|---|
+| 핵심 사람 | 가입 직후 프로젝트 0개인 팀 리더 | AI 권장 — docs/plan/projectflow/spec.md P1 |
+| 첫 과업 | 첫 프로젝트 생성 → 팀원 초대 | 사용자 — 2026-11-04 대화 |
+
+## Scope
+
+| Kind | Item | Reason | Reopen When | Source |
+|---|---|---|---|---|
+| include | 프로젝트 생성 마법사 | 첫 가치 도달 | - | AI 권장 — docs/athena/projectflow.md |
+| exclude | 팀 성과 KPI 대시보드 | 보여줄 데이터 없음 | 활성 팀 100개 이후 | AI 권장 — docs/athena/projectflow.md |
+
+## Open Decisions
+
+| Decision | Layer | Recommendation | Owner |
+|---|---|---|---|
+| member의 초대 권한 | scope | 숨김 | 제품 소유자 |
+"""
 
 
 VALID_BENCHMARK = """# Experience Contract: PDF Library
@@ -282,6 +306,46 @@ class ExperienceContractValidationTests(unittest.TestCase):
         result = self.validate_text(contract)
         self.assertTrue(result["valid"], result)
         self.assertTrue(any("Open Decisions" in w for w in result["warnings"]), result)
+
+    def validate_product_text(self, text: str) -> dict[str, object]:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "PRODUCT.md"
+            path.write_text(text, encoding="utf-8")
+            return validate_product(path)
+
+    def test_valid_product_passes_and_lists_open_decisions_without_blocking(self) -> None:
+        result = self.validate_product_text(VALID_PRODUCT)
+        self.assertTrue(result["valid"], result)
+        self.assertEqual(result["openDecisions"], ["member의 초대 권한"])
+
+    def test_product_rows_need_one_of_three_source_labels(self) -> None:
+        # "상류 문서"는 라벨이 아니다. 사람의 확인 기록이 없으면 AI 권장이다.
+        text = VALID_PRODUCT.replace("| AI 권장 — docs/plan/projectflow/spec.md P1 |", "| spec.md |")
+        result = self.validate_product_text(text)
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("'핵심 사람' needs a source label" in e for e in result["errors"]), result)
+
+    def test_product_exclusion_needs_reason_and_reopen_condition(self) -> None:
+        text = VALID_PRODUCT.replace("| 활성 팀 100개 이후 |", "| - |")
+        result = self.validate_product_text(text)
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("needs a reason and a reopen condition" in e for e in result["errors"]))
+
+    def test_product_scope_needs_an_exclusion_or_explicit_none(self) -> None:
+        without = "\n".join(
+            line for line in VALID_PRODUCT.splitlines() if not line.startswith("| exclude")
+        )
+        self.assertFalse(self.validate_product_text(without)["valid"])
+        start = VALID_PRODUCT.index("## Scope")
+        end = VALID_PRODUCT.index("## Open Decisions")
+        explicit = VALID_PRODUCT[:start] + "## Scope\n\n해당 없음 — 단일 기능 도구\n\n" + VALID_PRODUCT[end:]
+        self.assertTrue(self.validate_product_text(explicit)["valid"])
+
+    def test_product_stays_within_sixty_lines(self) -> None:
+        padded = VALID_PRODUCT + "\n".join(f"- 메모 {n}" for n in range(60))
+        result = self.validate_product_text(padded)
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("within 60" in e for e in result["errors"]))
 
     def test_object_flows_not_applicable_skips_flow_checks(self) -> None:
         flows = "## Object Flows\n- NOT APPLICABLE — single landing page\n"

@@ -104,6 +104,13 @@ BLOCKING_LAYERS = ("strategy", "scope")
 # 본문에 흩어진 미결 표시. 장부(Open Decisions)가 없으면 경고한다.
 UNDECIDED_MARKERS = ("미결", "[확인 필요", "[빈칸", "undecided")
 
+# 루트 PRODUCT.md(strategy·scope 요약) 검사용. 출처 라벨은 세 가지뿐이다(product-md-guide.md).
+PRODUCT_SECTIONS = ("strategy", "scope")
+STRATEGY_COLUMNS = ("decision", "value", "source")
+SCOPE_COLUMNS = ("kind", "item", "reason", "reopen when", "source")
+SOURCE_LABELS = ("사용자", "ai 권장", "미결", "user", "ai-recommended", "open")
+PRODUCT_MAX_LINES = 60
+
 CONTENT_CLASSIFICATIONS = (
     "verified",
     "prototype",
@@ -230,8 +237,13 @@ def validate_object_flows(content: str) -> list[str]:
     return errors
 
 
-def validate_open_decisions(content: str) -> tuple[list[str], list[str], list[str]]:
-    """Open Decisions 표를 검사해 (errors, warnings, 막는 결정 이름)을 돌려준다."""
+def validate_open_decisions(
+    content: str, block: bool = True
+) -> tuple[list[str], list[str], list[str]]:
+    """Open Decisions 표를 검사해 (errors, warnings, 막는 결정 이름)을 돌려준다.
+
+    block=False(PRODUCT.md)면 strategy·scope 미결을 실패로 올리지 않고 목록만 돌려준다.
+    """
     header, rows = parse_table(content)
     if not header or any(column not in header for column in DECISION_COLUMNS):
         return (
@@ -264,12 +276,92 @@ def validate_open_decisions(content: str) -> tuple[list[str], list[str], list[st
             blocking.append(name)
         else:
             warnings.append(f"Open decision '{name}' ({layer}) is still undecided.")
-    if blocking:
+    if blocking and block:
         errors.append(
             "Strategy/Scope decisions are still open; get them decided before implementation: "
             + ", ".join(blocking)
         )
     return errors, warnings, blocking
+
+
+def has_source_label(value: str) -> bool:
+    return any(value.startswith(label) for label in SOURCE_LABELS)
+
+
+def validate_product(path: Path) -> dict[str, object]:
+    """루트 PRODUCT.md를 검사한다. 미결이 남아도 통과하며, 구현 차단은 계약 검증이 맡는다."""
+    result: dict[str, object] = {
+        "path": str(path),
+        "valid": False,
+        "missingSections": [],
+        "openDecisions": [],
+        "errors": [],
+        "warnings": [],
+    }
+    if not path.is_file():
+        result["errors"] = ["PRODUCT.md does not exist."]
+        return result
+
+    text = path.read_text(encoding="utf-8-sig")
+    errors: list[str] = result["errors"]  # type: ignore[assignment]
+    lines = len(text.splitlines())
+    if lines > PRODUCT_MAX_LINES:
+        errors.append(f"PRODUCT.md has {lines} lines; keep it within {PRODUCT_MAX_LINES} and link details.")
+
+    sections = parse_sections(text)
+    result["missingSections"] = [name for name in PRODUCT_SECTIONS if name not in sections]
+    if result["missingSections"]:
+        errors.append("Required section headings are missing.")
+    for name in PRODUCT_SECTIONS:
+        if name in sections and has_placeholder(sections[name]):
+            errors.append(f"{name.capitalize()} still contains placeholders.")
+
+    strategy = sections.get("strategy", "")
+    if strategy:
+        header, rows = parse_table(strategy)
+        if not header or any(column not in header for column in STRATEGY_COLUMNS) or not rows:
+            errors.append("Strategy must be a table with Decision, Value, and Source rows.")
+        else:
+            index = {column: header.index(column) for column in STRATEGY_COLUMNS}
+            for row in rows:
+                cells = {c: row[i] if i < len(row) else "" for c, i in index.items()}
+                if not has_source_label(cells["source"]):
+                    errors.append(
+                        f"Strategy row '{cells['decision']}' needs a source label: 사용자, AI 권장, or 미결."
+                    )
+
+    scope = sections.get("scope", "")
+    if scope and not is_not_applicable(scope):
+        header, rows = parse_table(scope)
+        if not header or any(column not in header for column in SCOPE_COLUMNS):
+            errors.append("Scope must be a table with Kind, Item, Reason, Reopen When, and Source columns.")
+        else:
+            index = {column: header.index(column) for column in SCOPE_COLUMNS}
+            excludes = 0
+            for row in rows:
+                cells = {c: row[i] if i < len(row) else "" for c, i in index.items()}
+                item = cells["item"] or "(unnamed item)"
+                if cells["kind"] not in ("include", "exclude"):
+                    errors.append(f"Scope row '{item}' needs Kind include or exclude.")
+                if not has_source_label(cells["source"]):
+                    errors.append(f"Scope row '{item}' needs a source label: 사용자, AI 권장, or 미결.")
+                if cells["kind"] == "exclude":
+                    excludes += 1
+                    # 다시 볼 조건이 없는 제외는 반박할 수 없는 관습이 된다(mnemo reopen-when과 같은 이유).
+                    if is_empty_cell(cells["reason"]) or is_empty_cell(cells["reopen when"]):
+                        errors.append(f"Scope exclusion '{item}' needs a reason and a reopen condition.")
+            if not excludes:
+                errors.append("Scope needs at least one exclude row, or '해당 없음 — <reason>'.")
+
+    decisions = sections.get("open decisions")
+    if decisions and not is_not_applicable(decisions):
+        decision_errors, decision_warnings, open_names = validate_open_decisions(decisions, block=False)
+        errors.extend(decision_errors)
+        result["warnings"].extend(decision_warnings)  # type: ignore[union-attr]
+        result["openDecisions"] = open_names
+
+    result["valid"] = not errors
+    return result
 
 
 def detect_mode(source_mode: str) -> str:
@@ -438,9 +530,13 @@ def validate_contract(path: Path) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("contract", type=Path, help="Path to an Experience Contract markdown file")
+    parser.add_argument(
+        "--product", action="store_true", help="Validate a root PRODUCT.md instead of a contract"
+    )
     args = parser.parse_args()
 
-    result = validate_contract(args.contract.resolve())
+    validate = validate_product if args.product else validate_contract
+    result = validate(args.contract.resolve())
     print(json.dumps(result, ensure_ascii=False, indent=2))
     status = "passed" if result["valid"] else "failed"
     print(f"Experience Contract validation {status}: {args.contract}", file=sys.stderr)
