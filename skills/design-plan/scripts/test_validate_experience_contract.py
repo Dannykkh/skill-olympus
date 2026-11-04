@@ -7,7 +7,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from validate_experience_contract import validate_contract, validate_product
+from validate_experience_contract import (
+    BENCHMARK_SECTIONS,
+    COMMON_SECTIONS,
+    FLOW_SECTIONS,
+    ROLE_SECTIONS,
+    normalize,
+    validate_contract,
+    validate_product,
+)
 
 
 VALID_PRODUCT = """# PRODUCT.md — 플로우보드
@@ -346,6 +354,45 @@ class ExperienceContractValidationTests(unittest.TestCase):
         result = self.validate_product_text(padded)
         self.assertFalse(result["valid"])
         self.assertTrue(any("within 60" in e for e in result["errors"]))
+
+    def test_guide_template_lists_every_section_the_validator_can_require(self) -> None:
+        # 2026-11-04 재평가 N4: 검증기는 Role Variants를 요구하는데 템플릿에 절이 없어 작업자가 헤맸다.
+        guide = Path(__file__).resolve().parent.parent / "references" / "experience-contract-guide.md"
+        template = re.search(r"````markdown\r?\n(.*?)````", guide.read_text(encoding="utf-8"), re.DOTALL)
+        self.assertIsNotNone(template)
+        headings = {normalize(h) for h in re.findall(r"^## (.+?)\s*$", template.group(1), re.MULTILINE)}
+        expected = set(COMMON_SECTIONS) | set(BENCHMARK_SECTIONS) | set(ROLE_SECTIONS) | set(FLOW_SECTIONS)
+        expected |= {"system roles", "object flows", "open decisions"}
+        self.assertEqual(sorted(expected - headings), [])
+
+    def with_roles(self, variants: str | None) -> str:
+        roles = (
+            "## System Roles\n| Role ID | 표시명 | 화면 |\n|---|---|---|\n"
+            "| owner | 팀 소유자 | 공용 권한차등 |\n| member | 팀원 | 공용 권한차등 |\n\n"
+        )
+        if variants is not None:
+            roles += "## Role Variants\n| 요소 | owner | member |\n|---|---|---|\n" + variants + "\n\n"
+        return VALID_BENCHMARK.replace("## Performance Budget", roles + "## Performance Budget")
+
+    def test_system_roles_require_role_variants(self) -> None:
+        result = self.validate_text(self.with_roles(None))
+        self.assertFalse(result["valid"])
+        self.assertIn("role variants", result["missingSections"])
+        self.assertTrue(self.validate_text(self.with_roles("| 팀원 초대 | 표시 | 숨김 |"))["valid"])
+
+    def test_role_variants_must_use_visibility_words(self) -> None:
+        result = self.validate_text(self.with_roles("| 팀원 초대 | 있음 | 없음 |"))
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("per-role visibility" in e for e in result["errors"]), result)
+
+    def test_single_role_skips_role_variants(self) -> None:
+        contract = VALID_BENCHMARK.replace(
+            "## Performance Budget",
+            "## System Roles\n- NOT APPLICABLE: single role\n\n## Performance Budget",
+        )
+        result = self.validate_text(contract)
+        self.assertTrue(result["valid"], result)
+        self.assertNotIn("role variants", result["missingSections"])
 
     def test_object_flows_not_applicable_skips_flow_checks(self) -> None:
         flows = "## Object Flows\n- NOT APPLICABLE — single landing page\n"

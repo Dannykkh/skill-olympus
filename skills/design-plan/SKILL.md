@@ -427,7 +427,7 @@ Phase 2-5에서 검증한 Layout Blueprint를 선택된 시각 방향과 대조�
 - 역할을 지웠을 때 **화면이 텅 비거나 CTA가 사라지는 경우**를 확인합니다. 그 역할에는 다른 진입점이나 빈 상태 문안이 필요하다는 신호입니다.
 - 역할이 1개이거나 인증이 없으면 `NOT APPLICABLE: single role`로 기록하고 이 절을 생략합니다.
 
-Experience Contract에는 `## System Roles`와 `## Role Variants` 절로 옮겨 적어 Phase 4-4 검증이 잡을 수 있게 합니다.
+Experience Contract의 `## System Roles`와 `## Role Variants` 절은 Phase 2-5 초안부터 두고 여기서 확정해 Phase 4-4 검증이 잡을 수 있게 합니다.
 
 ### 4-2. Responsive Transformation
 

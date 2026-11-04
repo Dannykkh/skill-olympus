@@ -161,6 +161,18 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 |---|---|---|
 | {날짜·인원·남은 횟수·금액·상태 이름} | {모든 화면이 인용할 값} | {이 값이 나오는 화면} |
 
+## System Roles
+
+| Role ID | 표시명 | 화면 |
+|---|---|---|
+| {spec 시스템 역할 표의 역할 ID} | {표시명} | 공용 권한차등 / 별도 화면 |
+
+## Role Variants
+
+| 요소 | {role-a} | {role-b} |
+|---|---|---|
+| {역할마다 다르게 보이는 요소} | 표시/숨김/비활성/읽기전용 | 표시/숨김/비활성/읽기전용 |
+
 ## Performance Budget
 
 - 첫 화면 필수 자산:
@@ -242,6 +254,13 @@ SUCCESS —
 - 행마다 `Create`·`View`·`After`가 비어 있지 않음. `Edit`은 화면 또는 `n/a — 이유`
 - `After`가 그 행의 `View`나 `Create` 화면과 같지 않음. 끝은 목록·상세가 아니라 그 행동의 결과 화면입니다
 - `## Scenario Facts` 절이 함께 있고 비어 있지 않음
+
+`System Roles`와 `Role Variants`는 로그인 역할이 둘 이상일 때 씁니다. 역할 ID는 spec 시스템 역할 표를
+그대로 옮기고 새 이름을 만들지 않습니다. Phase 2-5 와이어프레임 때 초안을 두고 Phase 4-1-1에서 확정합니다.
+역할이 하나이거나 인증이 없으면 `## System Roles`에 `NOT APPLICABLE: single role`을 적고 `Role Variants`를
+지웁니다. `System Roles`가 있고 해당 없음이 아니면 검증기는 `## Role Variants`를 요구하고, 변형표 값이
+`표시`·`숨김`·`비활성`·`읽기전용`(또는 visible·hidden·disabled·read-only) 어휘를 쓰는지 봅니다. 작성 규칙은
+SKILL.md 4-1-1에 있습니다.
 
 `Scenario Facts`는 `Product Facts`와 다릅니다. `Product Facts`는 사용자에게 사실로 내보이는 검증 가능한 주장이고,
 `Scenario Facts`는 시안 화면들이 함께 쓰는 시나리오 데이터(날짜·인원·남은 횟수·상태 이름)입니다. 모든 화면이
