@@ -302,7 +302,7 @@ claude plugin install voltagent-qa-sec
 | `skills/biz-strategy/` | 헤르메스(Hermes) — 비즈니스 모델/수익/시장(TAM/SAM/SOM)/GTM/지표/코호트 6영역 분석 (/hermes) |
 | `skills/ceo/` | 아테나(Athena) — CEO 코칭. Go/No-Go 판정, 전략적 도전, 스코프 결정 (/athena) |
 | `skills/okr/` | OKR — 목표와 핵심결과 설정/점검/회고 (source-only, opt-in 시 `/okr`) |
-| `skills/design-plan/` | 아프로디테(Aphrodite) — 경험 주도 디자인 오케스트레이터. exact Codex Product Design selector가 marketplace에 확인된 경우만 요청당 1회 추천하고, 확인 불가면 UNKNOWN+로컬 구현. 동일 계약의 plugin 유무 대조, 사실·자산 provenance, 웹 전용 GSAP motion contract 포함 (/aphrodite) |
+| `skills/design-plan/` | 아프로디테(Aphrodite) — 경험 주도 디자인 오케스트레이터. exact Codex Product Design selector가 marketplace에 확인된 경우만 요청당 1회 추천하고, 확인 불가면 UNKNOWN+로컬 구현. 동일 계약의 plugin 유무 대조, 사실·자산 provenance, 웹 전용 GSAP motion contract, 요청 결정 계층 라우터와 루트 PRODUCT.md 포함 (/aphrodite) |
 | `skills/stitch/` | Stitch 실행 어댑터 — 아프로디테 산출물(DESIGN.md, design-refs)을 Stitch MCP 작업(생성/편집/변형/동기화/React 변환)으로 컴파일 + `.stitch/` 상태 관리 |
 | `skills/theme-factory/` | 테마 팩토리 — 슬라이드/문서/HTML에 입히는 색·폰트 테마 14종 (한글 테마 4종 포함, Anthropic 공식 벤더링) |
 | `skills/ko-en-translator/` | 한↔영 번역 — 텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지 양방향 번역 (/translate) |
