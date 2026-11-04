@@ -234,11 +234,10 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 확정합니다. strategy·scope로 판정했는데 루트 `PRODUCT.md`가 없으면 상류 정본에서 옮겨 만들고, 결정마다
 `사용자`·`AI 권장`·`미결` 중 하나로 출처를 답니다([product-md-guide.md](references/product-md-guide.md)).
 
-**여러 화면 모바일 앱**이면 [korean-mobile-app.md](references/korean-mobile-app.md)를 읽고 그 문서의
-단계표대로 적용합니다. 앱 시안이나 모바일 우선 웹앱에서 사용자가 무언가를 만들거나 신청·예약·주문하면
-여기에 해당합니다. 브리프에는 사람 카드 2~3명과 핵심 사람을 넣습니다(2절). 한국 사용자 대상이면 4~8절도
-적용합니다: 화면 유형, 국내 앱 규칙, 시장 관례, 여섯 질문, P0·P1 체크리스트. 단일 랜딩·데스크톱 업무 도구는
-해당하지 않습니다.
+strategy·scope로 판정했으면 기기와 관계없이 브리프에 사람 카드 2~3명과 핵심 사람을 넣습니다
+([korean-mobile-app.md](references/korean-mobile-app.md) 2절). 화면이 여러 장이고 사용자가 무언가를 만들거나
+신청·예약·주문하면 그 문서의 1~3절을, 한국 사용자 대상 모바일 앱이면 4~8절(화면 유형, 국내 앱 규칙, 시장
+관례, 여섯 질문, P0·P1 체크리스트)도 적용합니다. 단일 랜딩과 화면 2장 이하는 해당하지 않습니다.
 
 ### 1-2. 벤치마크와 레퍼런스
 
@@ -269,7 +268,7 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 - 전역 내비게이션, 2차 내비게이션, 페이지 내 앵커
 - primary action과 현재 위치 신호
 - 페이지가 3개 이상이면 `MODULE_SKILL[mermaid-diagrams]`를 직접 읽은 문법으로 사이트맵 생성
-- 여러 화면 모바일 앱이면 사용자가 만들거나 신청하는 대상마다 흐름 고리(Create·View·Edit·After)를 채우고,
+- 여러 화면 앱이면 사용자가 만들거나 신청하는 대상마다 흐름 고리(Create·View·Edit·After)를 채우고,
   빈 칸의 화면을 목록에 더합니다. After는 목록·상세가 아니라 그 행동의 결과 화면입니다
   ([korean-mobile-app.md](references/korean-mobile-app.md) 1절)
 
@@ -289,10 +288,10 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 
 [experience-contract-guide.md](references/experience-contract-guide.md)의 필수 템플릿으로
 `docs/design-refs/YYYY-MM-DD-experience-{slug}.md`를 작성합니다. 벤치마크 모드면 근거 파일과
-Adopt·Adapt·Avoid를 포함합니다. 여러 화면 모바일 앱이면 `## Object Flows`와 `## Scenario Facts`를 채우고,
+Adopt·Adapt·Avoid를 포함합니다. 여러 화면 앱이면 `## Object Flows`와 `## Scenario Facts`를 채우고,
 `Audience and Tasks`에 사람 카드와 여정표를 둡니다. 화면에 나올 날짜·인원·상태 이름은 `Scenario Facts`
-한 곳에서만 정합니다. 넣을 기능·장치는 [korean-mobile-app.md](references/korean-mobile-app.md) 7절의
-여섯 질문으로 판정하고, PRD 요구를 빼거나 가볍게 하는 판정은 사용자에게 확인합니다.
+한 곳에서만 정합니다. scope로 판정했으면 넣을 기능·장치를 [korean-mobile-app.md](references/korean-mobile-app.md)
+7절의 여섯 질문으로 판정하고, PRD 요구를 빼거나 가볍게 하는 판정은 사용자에게 확인합니다.
 
 ### 2-4. Interface Mode
 
@@ -310,6 +309,7 @@ Adopt·Adapt·Avoid를 포함합니다. 여러 화면 모바일 앱이면 `## Ob
 기능형 5종은
 `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`의 `1. 페이지 유형 게이트`,
 고른 Mode의 절, `7. 기능형 프롬프트 컴파일러`만 읽고 정보 구조와 효과 예산을 먼저 고정합니다.
+데이터가 0건인 첫 실행 화면은 가장 가까운 Mode를 고르되 첫 뷰포트의 주인공은 첫 행동입니다(anatomy `Dashboard`의 첫 실행 변형).
 
 ### 2-5. 저충실도 와이어프레임 판단 게이트
 
@@ -476,10 +476,10 @@ Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT 
 1. 루트 `DESIGN.md` 전체, `PRODUCT.md`, 최신 experience·layout·direction
 2. 판정한 계층이 strategy·scope면 brief, 벤치마크 모드면 benchmark, structure면 sitemap, 재렌더면 critique
 3. 선택된 style recipe와 Interface Mode playbook의 해당 절
-4. 여러 화면 모바일 앱이면 [korean-mobile-app.md](references/korean-mobile-app.md) 2~5절
+4. 여러 화면 앱이면 [korean-mobile-app.md](references/korean-mobile-app.md) 2~5절
 
 Experience Contract의 `Prompt Contract`를 구현 지시로 사용합니다. `예쁘게`, `모던하게` 같은
-소원으로 대체하지 않습니다. 여러 화면 모바일 앱을 작업자에게 나눠 맡기면 사람 카드, `Scenario Facts`,
+소원으로 대체하지 않습니다. 여러 화면 앱을 작업자에게 나눠 맡기면 사람 카드, `Scenario Facts`,
 맡은 화면의 화면 유형 행을 함께 넘기고 "사실 표에 없는 날짜·숫자·상태를 지어내지 말 것"을 지시합니다.
 
 ### 5-2. 구현 어댑터
@@ -618,7 +618,7 @@ P0·P1은 완료 전에 고칩니다.
 - 접근성·성능·가이드라인 결과
 - 한국어 화면이면 한글 줄바꿈 실측 전후 수(쪼개짐·넘침·버튼 글자 잘림·안 눌림)와 잰 폭·브라우저·폰트,
   또는 `NOT RUN` 이유. 한국어 텍스트가 없으면 `NOT APPLICABLE`
-- 여러 화면 모바일 앱이면 `Object Flows` 검증과 사실 대조 결과(어긋남 수와 고친 수). 한국 사용자 대상이면
+- 여러 화면 앱이면 `Object Flows` 검증과 사실 대조 결과(어긋남 수와 고친 수). 한국 사용자 대상이면
   P0·P1 체크리스트의 남은 항목과 시장 관례 판정 또는 `시장 관례 NOT RUN` 이유. 해당하지 않으면 `NOT APPLICABLE`
 - 잔여 이슈와 다음 진화 후보
 - `Product Design Gate`: `READY`/`ABSENT`/`RESTART_REQUIRED`/`UNKNOWN`/`UNSUPPORTED`, exact selector,

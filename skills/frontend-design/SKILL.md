@@ -136,7 +136,7 @@ VISUAL_DENSITY: 1~10    (1=갤러리/여유 ↔ 10=대시보드/빽빽)
 | **테크닉 레시피** | [references/technique-recipes.md](references/technique-recipes.md) | 10종 | 그림자/blur/보더 그라데이션/텍스트 리빌/마퀴/GSAP+Lenis/접근 가능한 로딩 상태 — 복붙 가능한 검증 값 |
 | **색상 팔레트** | [references/color-palettes.csv](references/color-palettes.csv) | 9개 | 산업별 색상 세트 (Primary~Border 18컬럼). 원 161행 중 과사용 스톡 accent 152행 삭제(2026-08-05) — 폴백은 플레이북 레인이 주력 |
 | **폰트 페어링** | [references/font-pairings.csv](references/font-pairings.csv) | 48개 | Heading+Body 조합, Google Fonts URL 포함. 비한글 과사용 37행 삭제(2026-08-05), 한글 페어링 #74~84 전부 보존. 붙어 있던 #85 Bauhaus Geometric 분리(2026-11-04), 형식은 `scripts/tests/design-db-csv-shape.test.js` |
-| **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트 |
+| **디자인 스타일** | [references/design-styles.csv](references/design-styles.csv) | 84개 | Glassmorphism, Brutalism 등 스타일별 색상/효과/호환성/체크리스트. **표현 어휘집이지 시작점이 아니다** — `Best For` 업종으로 고르지 않고, 대상·과업(`PRODUCT.md`)이 정해진 뒤 무드·체크리스트만 참조. BI 10행(No 28~37)은 현황 확인자 전제 |
 
 **사용법:**
 

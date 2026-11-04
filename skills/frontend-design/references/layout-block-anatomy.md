@@ -108,6 +108,8 @@
 - **구조**: 좌 사이드바(고정) + 메인: 페이지 타이틀 → KPI 카드 행 4개(라벨 → 값) → 메인 차트 카드(2/3) + 사이드 리스트 카드(1/3) → (선택) 하단 Data Table
 - **위계**: KPI 값 > 페이지 타이틀 > 카드 타이틀. 활성 내비 1개만 강조
 - **흔한 실수**: KPI 카드에 그림자·그라데이션(효과 예산 0) / 차트와 리스트가 50:50
+- **이 구조가 아닐 때**: 화면의 핵심 사람이 현황을 확인하는 사람이 아니면(첫 프로젝트를 만들어야 하는 신규 사용자 등) KPI 행을 기본으로 두지 않는다. `PRODUCT.md`·사람 카드로 먼저 판정한다
+- **첫 실행 변형(데이터 0건)**: 페이지 타이틀 → 다음 한 단계(primary 1개) + 남은 단계 진행 → 앞으로 채워질 구역의 빈 상태 칸. 0으로 채운 KPI·빈 차트 금지. 데이터가 생기면 같은 자리를 그 사람의 데이터로 채운다
 
 ### Sidebar
 - **구조**: 로고/워크스페이스 → 내비 아이템 5~7(아이콘 + 라벨), **활성 1개** 배경 강조 → 하단 유저/설정 고정. 접힘 상태(아이콘만) 고려
@@ -167,7 +169,7 @@
 | 이커머스 홈 | Navbar(+Banner) → Hero(프로모) → Product List → Reviews → CTA → Footer | 필터가 주 행동이면 Faceted Directory 모드 우선 |
 | 이커머스 상세 | Navbar → Product Detail → Reviews → Product Card 행(연관) → Footer | |
 | 이커머스 구매 | Navbar(축소) → Shopping Cart 또는 Checkout → Footer(축소) | 구매 플로우에서 마케팅 블록 금지 |
-| 앱 대시보드 | Sidebar + (타이틀 → Stats/KPI → Chart+리스트 → Data Table) | coder-interface playbook의 Data Instrument 계약 우선 |
+| 앱 대시보드 | Sidebar + (타이틀 → Stats/KPI → Chart+리스트 → Data Table) | coder-interface playbook의 Data Instrument 계약 우선. 데이터 0건·신규 사용자면 Dashboard 첫 실행 변형 |
 | 앱 설정 | Sidebar + Settings | |
 | 인증 | SignUp/Login 단독(중앙) | Navbar 최소화 또는 로고만 |
 
