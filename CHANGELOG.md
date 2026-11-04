@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.8.1] - 2026-11-04
+
+### Bug Fixes
+
+- **design-plan**: The Experience Contract template now carries `## System Roles` and `## Role Variants`. The validator already required Role Variants once System Roles was declared, but the template had neither heading, so two blind workers in the v7.8.0 re-evaluation could not tell whether a Phase 2 draft should include them. The guide says they start as a draft at 2-5 and are fixed at 4-1-1; single-role products write `NOT APPLICABLE: single role`. (6aafe06)
+
+### Refactoring
+
+- **frontend-design**: Delete `color-palettes.csv`. After the 2026-08-05 prune it held nine niche industries (NFT, quantum computing, drone fleet) with three neon accents, and a run without `--type` drew one or two of its three candidates from them. `select-diverse-palettes.js` now picks only from the eleven color lanes in the motion-first playbook, and lanes get the stock-accent flag the script used to compute and drop. Style recipes, the playbook diversity gate and the frontend-design DB table no longer point at the file. (bd4e32f)
+
+### Documentation
+
+- The four READMEs note this release. (bac4754)
+
+### Tests
+
+- Every section the contract validator can require must appear in the guide template (fails on the v7.8.0 guide); the previously untested role rules (variants required, visibility vocabulary, single-role skip) are covered. The CSV shape test drops the deleted file. (6aafe06, bd4e32f)
+
+### Validation and Scope
+
+- Full suite 375 passed (one fewer because the deleted CSV's shape case is gone); contract validator tests 27 passed; palette selector test passed.
+- The palette selector returns three candidates with distinct hues and modes by default and with `--type`. Its distinct-hue ceiling dropped from 6 to 5 candidates; documented use is the default 3.
+- The Windows integrated installer completed; the changed design-plan and frontend-design files match the source on Claude, Codex and Antigravity, and the deleted CSV is absent from all three installed copies.
+
 ## [7.8.0] - 2026-11-04
 
 ### Features
