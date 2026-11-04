@@ -53,9 +53,10 @@ description: >
    (`| <name> | ... | ... | <읽을 경로> |`) 하나를 찾아 `읽을 경로`의 절대 `SKILL.md`를
    그대로 사용합니다. 정확한 이름의 행이 0개이거나 2개 이상이면 해석 실패이며 다른 행이나
    레지스트리 경로를 추측하지 않습니다.
-4. 해석한 파일의 존재를 확인하고 `SKILL.md` 전체를 읽은 뒤에만 그 모듈의 기준을 적용합니다.
-   참조 파일은 `MODULE_ROOT[name]/references/...`, 스크립트는
-   `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
+4. 해석한 파일의 존재와 frontmatter `name`을 확인합니다. `MODULE_SKILL[name]`의 기준을 적용하는
+   단계(3-2 시각 시스템, 5-2 구현, 6-4 감사 등)는 `SKILL.md` 전체를 읽습니다.
+   `MODULE_ROOT[name]/references/...`의 참조 하나만 쓰는 단계(2-4, 2-5)는 본문에 적힌 절만 읽고
+   `SKILL.md` 본문은 열지 않습니다. 스크립트는 `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
 
 이 과정은 모듈 읽기이지 스킬 호출이 아닙니다. `/frontend-design`, `/mermaid-diagrams`,
 `/ui-ux-auditor`, `/web-design-guidelines`, `/design-system-starter`, `/stitch`, `/skill-evolve`,
@@ -165,34 +166,38 @@ browser를 사용할 수 있습니다. `--plan-only`, `--review-only`, 명시적
 Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비하는 실행 엔진이며
 시각 방향이나 UX 정책을 다시 결정하지 않습니다.
 
-### 0-1. 기존 자산 확인
+### 0-1. 요청 판정과 읽을 정본
 
-다음 순서로 확인합니다.
+요청이 어느 결정을 건드리는지 먼저 판정하고 brief(국소 변경이면 impl-log) 첫 줄에
+`계층: <strategy|scope|structure|skeleton|surface> — 근거: <요청 원문과 빠진 결정>`으로 적습니다.
 
-```text
-DESIGN.md
-docs/design-refs/*-experience-*.md
-docs/design-refs/*-benchmark-*.md
-docs/design-refs/*-direction-*.md
-docs/design-refs/*-layout-*.md
-design-system.md / design-tokens.json
-tailwind.config.* / theme.* / CSS variables
-docs/plan/*/spec.md                     (시스템 역할 표 = 역할 ID 정본)
-docs/plan/*/operation-scenarios.md      (RBAC 매트릭스 + 거부 동작)
-<레시피 라이브러리>/index.md             (/recipe — CODE_RECIPES_DIR 또는 ~/code-recipes, kind ui)
-```
+| 계층 | 이런 요청 | 상세로 읽을 정본 | 다시 실행 |
+|---|---|---|---|
+| strategy — 누구의 어떤 변화 | 새 제품·화면, 대상·목적 변경, 첫 사용 경험, "휑해·채워줘·대시보드답게"처럼 무엇을 채울지 정해지지 않은 요청 | 루트 `PRODUCT.md`. 없으면 `docs/plan/*/spec.md`의 `공유 전제`·`Problem Statement`, `docs/athena/*.md` 판정, `docs/hermes/*.md` 북극성 | Phase 1부터 |
+| scope — 넣을 것과 뺄 것 | 기능·탭·섹션·화면 추가나 삭제 | `PRODUCT.md` 제외 목록. 없으면 `docs/plan/*/interview.md` Soft Gate 3 `MVP 범위`, `docs/athena/*.md` 삭제 권고 표 | 1-1 → 2 |
+| structure — 연결 | 흐름·내비게이션·상태·권한 | 최신 `docs/design-refs/*-experience-*`·`*-sitemap-*`, spec 시스템 역할 표(역할 ID 정본), `docs/plan/*/operation-scenarios.md` | 2 |
+| skeleton — 화면 구성 | 블록 순서·배치·밀도·컴포넌트 | 최신 `*-layout-*`, 2-5의 anatomy 절 | 2-5 → 4 |
+| surface — 표현 | 색·타입·이미지·모션·톤 | `DESIGN.md`(없으면 `design-system.md`·`design-tokens.json`·tailwind·theme·CSS 변수), 최신 `*-direction-*`, 맞는 `ui` 레시피(`/recipe` — `CODE_RECIPES_DIR` 또는 `~/code-recipes`), 표현형이면 `MODULE_ROOT[frontend-design]/references/motion-first-prompt-playbook.md` | 3 → 5 |
 
-레시피 라이브러리에 맞는 `ui` 레시피가 있으면 후보로 기록하고, 쓰기로 하면 `recipe: <id>@<version>`을 Experience Contract에 남깁니다. 견본은 기준일 뿐 DESIGN.md 토큰으로 다시 구현합니다. 라이브러리가 없으면 건너뜁니다.
+1. **근본 쪽으로 판정합니다.** 표현 어휘("예쁘게", "채워줘")라도 대상·목적·범위가 정본에 없으면 그
+   계층 요청입니다. 여러 계층에 걸치면 가장 근본인 계층을 적습니다.
+2. **근본 계층은 요약으로, 판정한 계층은 상세로 읽습니다.** 판정한 계층보다 근본인 계층은 `PRODUCT.md`
+   한 장으로 읽고, 없으면 표의 해당 절만 찾아 읽습니다. `docs/` 전체를 훑지 않습니다.
+3. **정본에 없는 결정은 지어내지 않습니다.** 권장안과 함께 Experience Contract의 `## Open Decisions`에 올립니다.
+4. **상류의 제외 결정과 부딪히면 멈춥니다.** 요청이 `PRODUCT.md` 제외 목록, Soft Gate 3의 제외, 아테나
+   삭제 권고에 있으면 Phase 2로 가지 않습니다. 출처 원문과 `scope` 결정 행(권장안: 유지 또는 뒤집기와
+   이유, 정할 사람: 사용자)을 보고하고 결정을 받습니다. 명시적 요청이어도, `--plan-only`여도 같습니다.
+   사용자가 뒤집기로 정하면 그 답을 출처로 남기고 진행합니다.
+5. **정본끼리 부딪히면** 사용자 과업·접근성 > Experience Contract > `DESIGN.md` > Layout Blueprint >
+   anatomy·playbook 기본값 > 벤치마크 순으로 따릅니다.
 
-젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고 여기서 새 역할명을 만들지 않습니다.
-없으면 역할 구분 없는 단일 화면으로 진행하되, 화면에 관리 기능이 보이면 역할 존재 여부를 한 번 확인합니다.
+맞는 `ui` 레시피를 쓰기로 하면 `recipe: <id>@<version>`을 Experience Contract에 남기고, 견본은 기준일
+뿐 `DESIGN.md` 토큰으로 다시 구현합니다. 젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고
+새 역할명을 만들지 않습니다. 역할 표가 없는데 화면에 관리 기능이 보이면 역할 존재 여부를 `Open Decisions`에 올립니다.
 
-`DESIGN.md`가 있다는 이유만으로 Phase 1~5를 건너뛰지 않습니다. 다음을 분류합니다.
-
-- brief·과업·벤치마크·화면 구조가 같음: 변경 범위만 delta audit
-- 위 항목 중 하나가 바뀜: 관련 Phase부터 재실행
-- 기존 결과가 못생기거나 UX 문제가 있음: Phase 1의 가정과 Phase 3의 방향부터 재검토
-- `--review-only`: Phase 6만 실행하되 필요한 정본이 없으면 신뢰도 제한을 보고
+`DESIGN.md`가 있다는 이유만으로 Phase 1~5를 건너뛰지 않습니다. 기존 결과가 못생기거나 UX 문제가
+있으면 strategy 판정으로 Phase 1의 가정부터 다시 봅니다. `--review-only`면 Phase 6만 실행하고 필요한
+정본이 없으면 신뢰도 제한을 보고합니다.
 
 ### 0-2. 입력 경로 선택
 
@@ -299,16 +304,17 @@ Adopt·Adapt·Avoid를 포함합니다. 여러 화면 모바일 앱이면 `## Ob
 | Expressive Landing | 메시지·신뢰·전환·signature 장면 |
 
 기능형 5종은
-`MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`를
-읽고 정보 구조와 효과 예산을 먼저 고정합니다.
+`MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`의 `1. 페이지 유형 게이트`,
+고른 Mode의 절, `7. 기능형 프롬프트 컴파일러`만 읽고 정보 구조와 효과 예산을 먼저 고정합니다.
 
 ### 2-5. 저충실도 와이어프레임 판단 게이트
 
 새 화면을 설계하거나 주 과업·정보 구조를 바꿀 때, Phase 3의 색·이미지·그림자·재질·모션을 고르기 전에
-`MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md`를 읽고
+`MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md`의 `공통 문법`, 해당 화면의 블록 절,
+`페이지 유형 → 블록 시퀀스 템플릿`만 읽고
 `docs/design-refs/YYYY-MM-DD-layout-{slug}.md`에 블록 순서와 판단 근거를 남기고, 대표 화면의
 데스크톱·모바일 와이어프레임을 **실제 볼 수 있는 파일**로 만듭니다. 정적 화면은 SVG,
-상태·화면 전환을 확인할 때는 HTML/CSS로 그립니다. HTML이면 각 뷰포트의 스크린샷을 남기고,
+상태·화면 전환을 확인할 때는 HTML/CSS로 그립니다(상태별 정적 SVG 시트도 허용). HTML이면 각 뷰포트의 스크린샷을 남기고,
 캡처 도구가 없으면 직접 볼 수 있는 SVG를 산출합니다. ASCII는 빠른 초안으로 쓸 수 있지만
 최종 와이어프레임을 대신하지 않습니다. 산출물 경로를 Layout Blueprint에 연결합니다.
 브랜드 색·사진·그림자·장식으로 미완성 구조를 가리지 않습니다.
@@ -459,11 +465,12 @@ Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT 
 
 ### 5-1. 구현 전 소비 게이트
 
-코드를 쓰기 전에 존재하는 다음 파일을 모두 읽습니다.
+코드를 쓰기 전에 다음을 읽습니다. 1번은 생략하지 않는 소비 게이트이고, 나머지는 0-1에서 판정한 계층이
+요구할 때만 읽습니다.
 
-1. 루트 `DESIGN.md` 전체
-2. 최신 brief·benchmark·experience·sitemap·direction·critique·layout
-3. 선택된 style recipe와 Interface Mode playbook
+1. 루트 `DESIGN.md` 전체, `PRODUCT.md`, 최신 experience·layout·direction
+2. 판정한 계층이 strategy·scope면 brief, 벤치마크 모드면 benchmark, structure면 sitemap, 재렌더면 critique
+3. 선택된 style recipe와 Interface Mode playbook의 해당 절
 4. 여러 화면 모바일 앱이면 [korean-mobile-app.md](references/korean-mobile-app.md) 2~5절
 
 Experience Contract의 `Prompt Contract`를 구현 지시로 사용합니다. `예쁘게`, `모던하게` 같은
@@ -631,26 +638,3 @@ P0·P1은 완료 전에 고칩니다.
 | `--no-lint` | DESIGN.md 보조 lint만 생략 |
 | `--export` | DESIGN.md를 Tailwind/DTCG로 파생 |
 | `--skip-ia` | 단일 컴포넌트일 때 사이트맵만 생략. 과업·상태·계약은 유지 |
-
-## Direct References
-
-| 파일 | 읽는 시점 |
-|---|---|
-| [reference-capture-guide.md](references/reference-capture-guide.md) | URL·스크린샷·영상·HTML 증거 확보 |
-| [site-benchmark-guide.md](references/site-benchmark-guide.md) | 벤치마크 사이트가 있을 때 필수 |
-| [experience-contract-guide.md](references/experience-contract-guide.md) | 모든 신규·재설계 작업의 경험 계약 |
-| [render-critique-loop.md](references/render-critique-loop.md) | 방향 탐색과 첫 구현 비평 |
-| [web-motion-contract.md](references/web-motion-contract.md) | 브라우저 실시간 모션이 있을 때만 |
-| [web-motion-engineering.md](references/web-motion-engineering.md) | 모션 중심 창작·물리 반응·Canvas/WebGL·원본 모션 계측과 복제 |
-| [design-md-guide.md](references/design-md-guide.md) | DESIGN.md 생성·마이그레이션·export |
-| [korean-line-break.md](references/korean-line-break.md) | 한국어 화면의 줄바꿈 규칙(Phase 3-2)과 실측(Phase 6-4) |
-| [korean-mobile-app.md](references/korean-mobile-app.md) | 여러 화면 모바일 앱의 흐름 고리·사람 카드·사실 표, 한국 앱의 화면 유형·UI 규칙·시장 관례·P0·P1 |
-| `scripts/wrapcheck.mjs` | 한글 줄바꿈·글자 키운 상태 실측. 원본 hangul-wrap v0.2.2(MIT), 라이선스 `scripts/LICENSE-hangul-wrap.txt` |
-| `MODULE_SKILL[frontend-design]` | Phase 3·5 시각 방향과 구현 |
-| `MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md` | Phase 4 구조 계약 |
-| `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md` | 기능형 Interface Mode |
-| `MODULE_ROOT[frontend-design]/references/motion-first-prompt-playbook.md` | 표현형 방향과 모션 문법 |
-| `MODULE_SKILL[design-system-starter]` | 명시적으로 요청된 상세 디자인 시스템 scaffold |
-| `MODULE_SKILL[stitch]` | 명시적인 `--stitch` 실행의 MCP·상태·검증 계약 |
-| `MODULE_SKILL[skill-evolve]` | 사용자 승인 뒤 전역 규칙 승격 후보를 만드는 선택 단계 |
-| `MODULE_SKILL[autoresearch]` | 승인된 선택 단계의 단일 변수 대조 실험 |
