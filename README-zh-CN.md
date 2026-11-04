@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.8.1 — 契约模板补上角色小节，删除行业调色板 CSV
+
+这是 v7.8.0 的两项后续。第一，Experience Contract 模板加入了 `## System Roles` 和 `## Role Variants`。声明 System Roles 时验证器会要求 Role Variants，但模板里没有这两个小节，盲测时无法判断 Phase 2 草稿是否应包含它们。新增的测试会核对验证器可能要求的每个小节都在模板中。第二，删除了行业调色板 CSV。之前清理后只剩 9 行冷门行业（NFT、量子计算、无人机调度，其中 3 个霓虹色），不带 `--type` 运行时，3 个候选中有 1–2 个来自这里。`select-diverse-palettes.js` 现在只从 motion-first 手册的 11 条色彩通道中挑选，并对通道应用此前只计算却未使用的库存色检查。
+
 ## v7.8.0 — Aphrodite 先判定请求涉及的决策层，并读取 PRODUCT.md
 
 Aphrodite 在读取任何内容之前，先判定请求涉及哪一层决策（strategy、scope、structure、skeleton、surface），写在简报第一行；该层详细读取，更基础的层只读摘要。摘要是新增的根目录 `PRODUCT.md`（不超过 60 行），记录目标用户、首要任务和不做的内容，每项决策标注 `사용자`（由人决定）、`AI 권장`（AI 推荐，未确认）或 `미결`（未决）。上游规划文档只有记录了人的确认时才算由人决定。如果请求的是上游已排除的功能，Aphrodite 会在线框图之前停下，只提交一项范围决策。Experience Contract 新增可选的 `## Open Decisions` 表，目的或范围未决时不进入实现。没有数据的用户的仪表盘不再默认以 4 张 KPI 卡片开始，修复了设计数据库中损坏的两行，并可通过 `/aphrodite <planning_dir>` 接收 Zephermine 规划。所有 CLI 在 UI 工作前都会同时读取 `DESIGN.md` 和 `PRODUCT.md`。在同一示例上进行的改造前后盲测中，每次运行读取的工具文档从 2,277–2,569 行降至 813–1,730 行（[评估](docs/research/2026-11-04-aphrodite-eval/after.md)）。

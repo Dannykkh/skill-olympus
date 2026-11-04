@@ -329,6 +329,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.8.1 — 契約テンプレートに役割の節を追加、業種別パレットCSVを削除
+
+v7.8.0 の追補が2つあります。1つ目に、Experience Contract のテンプレートに `## System Roles` と `## Role Variants` を加えました。検証器は System Roles があれば Role Variants を求めていましたが、テンプレートに2つの節がなく、ブラインド実行で Phase 2 の下書きに入れるべきか判断できませんでした。検証器が求めうる節がすべてテンプレートにあるかを照合するテストも加えました。2つ目に、業種別パレットCSVを削除しました。以前の整理の後に残った9行は NFT・量子コンピューティング・ドローン管制のような特殊な業種(ネオン色3つ)で、`--type` なしで実行すると候補3つのうち1〜2つがここから選ばれていました。`select-diverse-palettes.js` は motion-first プレイブックの色レーン11本からのみ選び、計算だけして捨てていたストック色の判定をレーンにも適用します。
+
 ## v7.8.0 — Aphrodite が依頼の決定レイヤーを先に判定し、PRODUCT.md を読むように
 
 Aphrodite は何かを読む前に、依頼がどの決定(strategy・scope・structure・skeleton・surface)に関わるかを判定してブリーフの1行目に書き、その層は詳しく、より基本的な層は要約だけを読みます。要約は新しいルートの `PRODUCT.md`(60行以内)で、対象者・最初の作業・作らないものを、決定ごとに `사용자`(人が決定)・`AI 권장`(AI推奨、未確認)・`미결`(未決)のラベル付きで記録します。上流の企画文書は人の確認が記録されている場合だけ人の決定とみなします。上流で除外済みの機能を依頼されると、ワイヤーフレームの前に範囲の決定1件を示して止まります。Experience Contract に任意の `## Open Decisions` 表が加わり、目的・範囲が未決なら実装に進みません。データのないユーザーのダッシュボードが KPI カード4枚から始まらないようにし、壊れていたデザインDBの2行を修正し、`/aphrodite <planning_dir>` で Zephermine の計画を受け取ります。すべての CLI が UI 作業の前に `DESIGN.md` と一緒に `PRODUCT.md` を読みます。同じ例題での改修前後のブラインド実行では、1回に読むハーネス文書が 2,277〜2,569行から 813〜1,730行に減りました([評価](docs/research/2026-11-04-aphrodite-eval/after.md))。
