@@ -185,6 +185,8 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 2. **근본 계층은 요약으로, 판정한 계층은 상세로 읽습니다.** 판정한 계층보다 근본인 계층은 `PRODUCT.md`
    한 장으로 읽고, 없으면 표의 해당 절만 찾아 읽습니다. `docs/` 전체를 훑지 않습니다.
 3. **정본에 없는 결정은 지어내지 않습니다.** 권장안과 함께 Experience Contract의 `## Open Decisions`에 올립니다.
+   상류 문서끼리 어긋날 때도(예: spec 역할 표에는 있는데 MVP 범위 목록에는 없는 기능) 한쪽을 고르지 않고
+   두 원문을 인용해 같은 곳에 올립니다.
 4. **상류의 제외 결정과 부딪히면 멈춥니다.** 요청이 `PRODUCT.md` 제외 목록, Soft Gate 3의 제외, 아테나
    삭제 권고의 항목을 직접 지목하면 1-1 brief에 판정 줄·출처 원문·`scope` 결정 행(권장안: 유지 또는
    뒤집기와 이유, 정할 사람: 사용자)만 남기고 Phase 2로 가지 않습니다. 명시적 요청이어도, `--plan-only`여도
@@ -193,7 +195,9 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 5. **정본끼리 부딪히면** 사용자 과업·접근성 > Experience Contract > `DESIGN.md` > Layout Blueprint >
    anatomy·playbook 기본값 > 벤치마크 순으로 따릅니다.
 
-`/aphrodite <planning_dir>`로 받으면 표의 `docs/plan/*/`는 그 폴더 하나입니다. 맞는 `ui` 레시피를 쓰기로
+`/aphrodite <planning_dir>`로 받으면 표의 `docs/plan/*/`는 그 폴더 하나입니다. 폴더만 받고 화면이나 변경을
+지목하지 않은 요청은 strategy로 판정하고, 대표 화면은 spec `Problem Statement`의 최우선 문제(P1)를 푸는 첫
+화면으로 정해 그 근거를 판정 줄에 적습니다. 맞는 `ui` 레시피를 쓰기로
 하면 `recipe: <id>@<version>`을 Experience Contract에 남기고, 견본은 기준일 뿐 `DESIGN.md` 토큰으로 다시
 구현합니다. 젭마인 산출물이 있으면 역할 ID와 거부 동작을 그대로 물려받고 새 역할명을 만들지 않습니다.
 `operation-scenarios.md`가 없으면 spec 역할 표의 `금지 행동`을 4-1-1 어휘로 옮기고, 거기서도 정해지지
@@ -290,13 +294,16 @@ strategy·scope로 판정했으면 기기와 관계없이 브리프에 사람 �
 [experience-contract-guide.md](references/experience-contract-guide.md)의 필수 템플릿으로
 `docs/design-refs/YYYY-MM-DD-experience-{slug}.md`를 작성합니다. 벤치마크 모드면 근거 파일과
 Adopt·Adapt·Avoid를 포함합니다. 여러 화면 앱이면 `## Object Flows`와 `## Scenario Facts`를 채우고,
-`Audience and Tasks`에 사람 카드와 여정표를 둡니다. 화면에 나올 날짜·인원·상태 이름은 `Scenario Facts`
-한 곳에서만 정합니다. scope로 판정했으면 넣을 기능·장치를 [korean-mobile-app.md](references/korean-mobile-app.md)
-7절의 여섯 질문으로 판정하고, PRD 요구를 빼거나 가볍게 하는 판정은 사용자에게 확인합니다.
+1-1 브리프의 사람 카드를 `Audience and Tasks`로 옮기고 여정표를 더합니다. 옮긴 뒤에는 계약이 사람 카드의
+정본이고 브리프는 처음 정한 기록으로 남깁니다. 화면에 나올 날짜·인원·상태 이름은 `Scenario Facts`
+한 곳에서만 정합니다. strategy·scope로 판정했으면 넣을 기능·장치를 [korean-mobile-app.md](references/korean-mobile-app.md)
+7절의 여섯 질문으로 판정해 브리프에 표로 남기고, PRD 요구를 빼거나 가볍게 하는 판정은 사용자에게 확인합니다.
 
 ### 2-4. Interface Mode
 
-핵심 행동을 기준으로 다음 중 하나를 고릅니다.
+대표 화면(첫 화면)의 핵심 행동을 기준으로 다음 중 하나를 고르고 Layout Blueprint 첫머리에
+`Mode: <이름> — <근거>` 한 줄로 적습니다. Mode는 제품에 하나가 아니라 화면 성격마다 정하는 값입니다. 이 단계에서는
+대표 화면만 정하고, 나머지 화면은 그 화면의 Layout Blueprint를 쓸 때(4-1) 같은 방식으로 정합니다.
 
 | Mode | 우선 설계 |
 |---|---|
@@ -311,16 +318,23 @@ Adopt·Adapt·Avoid를 포함합니다. 여러 화면 앱이면 `## Object Flows
 `MODULE_ROOT[frontend-design]/references/coder-interface-pattern-playbook.md`의 `1. 페이지 유형 게이트`,
 고른 Mode의 절, `7. 기능형 프롬프트 컴파일러`만 읽고 정보 구조와 효과 예산을 먼저 고정합니다.
 데이터가 0건인 첫 실행 화면에 맞는 Mode가 없으면 `Mode: 없음 — 첫 실행`으로 적고, 첫 뷰포트의 주인공은 첫 행동입니다(anatomy `Dashboard`의 첫 실행 변형).
+데이터가 있어도 여섯 Mode 어디에도 맞지 않는 화면(칸반 보드·단순 목록·폼 등)은 억지로 끼워 맞추지 않고
+`Mode: 없음 — <화면 성격>`으로 적습니다. Mode가 없을 때는 playbook의 `1. 페이지 유형 게이트`와
+`7. 기능형 프롬프트 컴파일러`만 읽고, 컴파일러 블록을 `INTERFACE MODE: 없음`으로 채워 정보 구조·밀도·상태를
+고정합니다. 효과 예산은 장식 효과 0, 상태 모션만 허용으로 두고, 화면 구성은 2-5에서 고른 anatomy 블록 절을
+체크리스트로 씁니다.
 
 ### 2-5. 저충실도 와이어프레임 판단 게이트
 
 새 화면을 설계하거나 주 과업·정보 구조를 바꿀 때, Phase 3의 색·이미지·그림자·재질·모션을 고르기 전에
 `MODULE_ROOT[frontend-design]/references/layout-block-anatomy.md`의 `공통 문법`, 해당 화면의 블록 절,
-`페이지 유형 → 블록 시퀀스 템플릿`만 읽고
-`docs/design-refs/YYYY-MM-DD-layout-{slug}.md`에 블록 순서와 판단 근거를 남기고, 대표 화면의
+`페이지 유형 → 블록 시퀀스 템플릿`, `청사진(blueprint) 산출 절차`(Layout Blueprint 양식)만 읽고
+`docs/design-refs/YYYY-MM-DD-layout-{slug}.md`에 그 양식으로 블록 순서와 판단 근거를 남기고, 대표 화면의
 데스크톱·모바일 와이어프레임을 **실제 볼 수 있는 파일**로 만듭니다. 정적 화면은 SVG,
 상태·화면 전환을 확인할 때는 HTML/CSS로 그립니다(상태별 정적 SVG 시트도 허용). HTML이면 각 뷰포트의 스크린샷을 남기고,
-캡처 도구가 없으면 직접 볼 수 있는 SVG를 산출합니다. ASCII는 빠른 초안으로 쓸 수 있지만
+캡처 도구가 없으면 직접 볼 수 있는 SVG를 산출합니다. 이 단계에서 데스크톱·모바일 둘 다 그리는 것은 대표 화면뿐입니다.
+주요 상태와 `Object Flows`의 After 완료 모습은 한 뷰포트의 상태 시트 한 장에 그리면 되고, 나머지 화면과 상태의
+모바일은 Phase 4에서 다룹니다. ASCII는 빠른 초안으로 쓸 수 있지만
 최종 와이어프레임을 대신하지 않습니다. 산출물 경로를 Layout Blueprint에 연결합니다.
 브랜드 색·사진·그림자·장식으로 미완성 구조를 가리지 않습니다.
 이미지 자리만 빈 상자로 표시할 수 있으며, 핵심 메시지·탐색 라벨·CTA·가격처럼 사용자의 판단에
@@ -330,6 +344,18 @@ Adopt·Adapt·Avoid를 포함합니다. 여러 화면 앱이면 `## Object Flows
 근거와 출처를 확인해 적용합니다.
 이미 검증한 화면의 국소 변경은 영향받는 부분만 다시 판단하고 그 근거를 기존 Blueprint에 덧붙입니다.
 
+**덜어내기 (다섯 기준 판정 전에):** 와이어프레임의 블록과 설명 문구마다 Experience Contract `Page Goal`의
+성공 조건이나 주 과업의 어느 단계에 기여하는지 Layout Blueprint에 댑니다. 댈 수 없는 블록은 빼거나 접고,
+anatomy `공통 문법` #8 텍스트 예산(화면 머리는 제목 + 보조 한 가지 + 주 행동, 블록의 설명 문장은 기본 0)을
+적용합니다. 뺀 것과, 남긴 설명 문구의 이유를 Blueprint에 적습니다. 뺄 것이 없으면
+`덜어낼 것 없음 — <근거>`로 남깁니다. 빼지 않는 것: anatomy 해당 블록 절이 구조로 지정한 기능 요소와 상태 칸
+(예: `Dashboard` 첫 실행 변형의 "앞으로 채워질 구역" — 결과가 어디에 놓일지 알려 주는 것도 과업 기여입니다),
+오류·빈 상태의 회복 안내, 신뢰 근거, 라벨·접근성 텍스트,
+모바일 상황 머리글([korean-mobile-app.md](references/korean-mobile-app.md) 4절). 덜어내기의 대상은 근거 없이
+더해진 블록과 설명 문구이지 화면 유형의 골격이 아닙니다. 덜어낸 뒤 대표 뷰포트의 절반 가까이가 빈 채로 남으면
+과하게 뺀 것입니다. 이때 설명 문구나 장식 블록으로 다시 채우지 않고, 뺀 것 중 사용자가 다음에 볼 것(결과가
+놓일 자리·다음 단계)을 되돌리거나 주인공 콘텐츠를 키웁니다.
+
 와이어프레임은 보기 좋은 화면을 고르는 자료가 아니라 다음 결정을 내리는 자료입니다.
 
 | 기준 | 통과 질문 |
@@ -338,15 +364,18 @@ Adopt·Adapt·Avoid를 포함합니다. 여러 화면 앱이면 `## Object Flows
 | 구조 (Structure) | 묶음과 순서가 사용자의 과업·사고 순서와 맞는가? |
 | 흐름 (Flow) | 진입→행동→완료와 실패→복구를 화면 사이에서 따라갈 수 있는가? |
 | 일관성 (Consistency) | 같은 의미의 요소와 행동을 같은 방식으로 표현하는가? |
-| 명료성 (Clarity) | 설명을 듣지 않아도 라벨, 상태, 다음 행동을 이해하는가? |
+| 명료성 (Clarity) | 설명 문장을 지워도 라벨, 상태, 다음 행동을 이해하는가? (설명을 더해서 통과시키지 않음) |
 
 각 기준에 대해 화면에서 관찰한 근거와 수정할 결정을 Layout Blueprint에 남깁니다. 하나라도
 불명확하면 과업 흐름·정보 순서·문구·CTA를 고쳐 다시 확인합니다. 시각 시안에서 주 행동이
 처음 생겼다면 와이어프레임의 흐름이 아직 완성되지 않은 것입니다.
 역할이 둘 이상이면 `spec.md` 시스템 역할 표의 `화면` 열에 따라 공용 화면의 권한 차이 또는 별도
 역할 화면을 이 단계부터 그립니다. 주요 상태도 같은 구조 판단에 포함합니다.
-모바일 앱의 홈·상세·목록 화면은 [korean-mobile-app.md](references/korean-mobile-app.md) 4절의 화면 유형을
+모바일 앱·모바일 우선 웹앱(브리프나 `PRODUCT.md`가 주 기기를 폰으로 정한 제품)의 홈·상세·목록 화면은
+[korean-mobile-app.md](references/korean-mobile-app.md) 4절의 화면 유형을
 하나 고르고, 폰 폭 첫 화면에서 가장 큰 면적을 차지할 주인공과 고른 이유를 Layout Blueprint에 적습니다.
+데스크톱 우선 웹앱의 반응형 폰 화면은 4절 대상이 아니며 `화면 유형: NOT APPLICABLE — 데스크톱 우선`으로 적고
+Experience Contract `Mobile Transformations`로 다룹니다(덜어내기의 상황 머리글 예외도 4절 대상 화면에만 해당).
 Interface Mode와 별개로 정합니다. 사람 카드의 "알고 싶은 것"은 그 주인공 자리에 담을 내용을 정합니다.
 이 게이트를 통과한 뒤에만 Phase 3의 시각 방향을 탐색합니다.
 
@@ -423,6 +452,7 @@ Phase 2-5에서 검증한 Layout Blueprint를 선택된 시각 방향과 대조�
 
 - 값은 `표시` / `숨김` / `비활성` / `읽기전용` 중 하나입니다. `403`·`404 위장`은 화면이 아니라 라우팅 결과이므로 진입 차단 항목에만 씁니다.
 - **숨김과 비활성을 구분합니다.** 숨김은 권한이 있다는 사실 자체를 감추고, 비활성은 존재를 알리되 막습니다. 어느 쪽인지 정하지 않으면 구현자가 임의로 고릅니다.
+- 상류 문서로 정해지지 않는 칸은 비우지 않고 권장값 뒤에 `(미결)`을 붙여 적고(예: `숨김 (미결)`), 같은 요소 이름으로 `Open Decisions`(structure)에 올립니다. 답이 오면 `(미결)`을 지웁니다.
 - 전권 역할(superadmin)은 모든 요소가 `표시`인 기준 화면이며 별도 변형표를 만들지 않습니다.
 - 역할을 지웠을 때 **화면이 텅 비거나 CTA가 사라지는 경우**를 확인합니다. 그 역할에는 다른 진입점이나 빈 상태 문안이 필요하다는 신호입니다.
 - 역할이 1개이거나 인증이 없으면 `NOT APPLICABLE: single role`로 기록하고 이 절을 생략합니다.
@@ -461,7 +491,11 @@ python <DESIGN_PLAN_SKILL_DIR>/scripts/validate_experience_contract.py \
 ```
 
 `PRODUCT.md`를 만들거나 고쳤으면 같은 스크립트를 `--product PRODUCT.md`로 한 번 더 실행해 검증합니다.
-검증 실패 시 구현으로 넘어가지 않습니다. 이 스크립트는 완성도를 검사하며 아름다움과 사용성은
+검증 실패 시 구현으로 넘어가지 않습니다. 실패 사유가 `Open Decisions`의 strategy·scope 미결뿐이면
+(출력의 `blockingDecisions`에 이름이 있고, 그 한 줄 외에 `errors`·누락·빈 절이 없음) 계약은 더 고칠 것이 없고
+사람의 답만 남은 상태입니다. 이때 결과를 `결정 대기`로 보고합니다 — 막는 결정마다 권장안과 정할 사람을 적고,
+`--plan-only`나 질문할 수 없는 실행도 여기서 끝내되 "계획 완료"나 "검증 통과"로 쓰지 않습니다. 권장안을
+사용자 결정처럼 적어 검증을 통과시키지 않습니다. 그 밖의 실패는 고쳐서 다시 검증합니다. 이 스크립트는 완성도를 검사하며 아름다움과 사용성은
 Phase 5~6의 실제 렌더로 검증합니다. `## System Roles`가 있고 `NOT APPLICABLE`이 아니면
 `## Role Variants`도 함께 요구하며, 변형표가 `표시/숨김/비활성/읽기전용` 어휘를 쓰지 않으면 실패합니다.
 `## Object Flows`가 있고 `NOT APPLICABLE`이 아니면 대상마다 Create·View·Edit·After와 `## Scenario Facts`를
@@ -561,7 +595,9 @@ P0·P1은 완료 전에 고칩니다.
 ### 6-3. 과업·상태 검증
 
 주 과업을 시작→진행→완료와 실패→복구 두 경로로 실행합니다. 사이트맵, Experience Contract,
-실제 내비게이션과 상태가 일치해야 합니다. `Object Flows`가 있으면 대상마다 Create에서 After까지 따라가고,
+실제 내비게이션과 상태가 일치해야 합니다. Experience Contract `Page Goal`의 `관찰 가능한 성공 조건`을 항목별로
+`PASS`/`FAIL`/`NOT RUN`으로 판정하고 근거(실행 경로·스크린샷)를 남깁니다. 처음 정한 완성 상태를 끝에서 확인하는
+단계이며, 조건이 관찰할 수 없게 쓰였으면 `FAIL`이 아니라 계약을 고칩니다. `Object Flows`가 있으면 대상마다 Create에서 After까지 따라가고,
 읽기 전용 작업자 하나가 `Scenario Facts`와 모든 화면의 글자를 대조해 어긋난 사실과 누른 뒤 갈 곳이 없는
 조작만 돌려줍니다. 고치는 것은 메인입니다([korean-mobile-app.md](references/korean-mobile-app.md) 3절).
 
@@ -610,12 +646,13 @@ P0·P1은 완료 전에 고칩니다.
 - brief 첫 줄의 계층 판정과 Source Mode
 - strategy·scope 판정이면 `PRODUCT.md` 검증 결과와 남은 `Open Decisions`
 - 벤치마크가 있으면 캡처 근거와 Adopt·Adapt·Avoid
-- Experience Contract 검증 통과
-- 새 화면·구조 변경이면 시각 탐색 전에 만든 데스크톱·모바일 와이어프레임 파일과 다섯 기준의 판단 근거
+- Experience Contract 검증 통과. strategy·scope 미결만 남았으면 통과가 아니라 `결정 대기`와 막는 결정 목록
+- 새 화면·구조 변경이면 시각 탐색 전에 만든 데스크톱·모바일 와이어프레임 파일, 덜어내기 기록(뺀 것과 남긴
+  설명 문구의 이유), 다섯 기준의 판단 근거
 - 선택된 방향의 실제 렌더 또는 생략 근거
 - `DESIGN.md`와 Layout Blueprint
 - 데스크톱·모바일 구현 스크린샷
-- 미학 비평과 주 과업 검증
+- 미학 비평과 주 과업 검증, `Page Goal` 성공 조건별 판정
 - 접근성·성능·가이드라인 결과
 - 한국어 화면이면 한글 줄바꿈 실측 전후 수(쪼개짐·넘침·버튼 글자 잘림·안 눌림)와 잰 폭·브라우저·폰트,
   또는 `NOT RUN` 이유. 한국어 텍스트가 없으면 `NOT APPLICABLE`
@@ -636,7 +673,7 @@ P0·P1은 완료 전에 고칩니다.
 
 | 옵션 | 동작 |
 |---|---|
-| `--plan-only` | Phase 0~4 실행 |
+| `--plan-only` | Phase 0~4 실행. 4-4 검증이 strategy·scope 미결만으로 실패하면 `결정 대기`로 끝냄 |
 | `--review-only` | Phase 6 실행 |
 | `--benchmark <source>` | reference-driven 경로 강제 |
 | `--product-design` | Codex Product Design 가용성을 확인하고 준비됐으면 프로토타입 어댑터로 우선 사용. 설치 동의는 별도 |
