@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" role="img" aria-labelledby="t d" font-family="'Pretendard Variable', Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif">
+<title id="t">플로우보드 홈 — 첫 실행(owner, 프로젝트 0개) 데스크톱 1280x800 와이어프레임</title>
+<desc id="d">좌측 내비와 본문 1열. 본문은 제목 홈, 시작 단계 0/3, 1단계 프로젝트 만들기 버튼, 남은 단계 팀원 초대와 첫 할 일 배정, 프로젝트가 놓일 빈 칸 순서다.</desc>
+<rect x="0" y="0" width="1280" height="800" fill="#FFFFFF"/>
+<rect x="0" y="0" width="240" height="800" fill="#F2F2F2"/>
+<line x1="240" y1="0" x2="240" y2="800" stroke="#D9D9D9" stroke-width="1"/>
+<rect x="20" y="20" width="28" height="28" fill="#BDBDBD" rx="6"/>
+<text x="58" y="40" font-size="15" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<rect x="12" y="76" width="216" height="40" fill="#DCDCDC" rx="6"/>
+<rect x="24" y="88" width="16" height="16" fill="#1F1F1F" rx="3"/>
+<text x="52" y="101" font-size="15" fill="#1F1F1F" font-weight="700">홈</text>
+<rect x="24" y="128" width="16" height="16" fill="#BDBDBD" rx="3"/>
+<text x="52" y="141" font-size="15" fill="#6B6B6B" font-weight="400">팀원</text>
+<rect x="24" y="168" width="16" height="16" fill="#BDBDBD" rx="3"/>
+<text x="52" y="181" font-size="15" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<line x1="0" y1="744" x2="240" y2="744" stroke="#D9D9D9" stroke-width="1"/>
+<circle cx="34" cy="772" r="14" fill="#BDBDBD"/>
+<text x="58" y="777" font-size="14" fill="#1F1F1F" font-weight="400">한지원</text>
+<text x="304" y="100" font-size="32" fill="#1F1F1F" font-weight="700">홈</text>
+<rect x="304" y="124" width="64" height="6" fill="#D9D9D9" rx="3"/>
+<rect x="374" y="124" width="64" height="6" fill="#D9D9D9" rx="3"/>
+<rect x="444" y="124" width="64" height="6" fill="#D9D9D9" rx="3"/>
+<text x="520" y="131" font-size="13" fill="#6B6B6B" font-weight="400">시작 단계 0/3</text>
+<rect x="304" y="160" width="720" height="112" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="2" rx="8"/>
+<circle cx="344" cy="216" r="16" fill="#1F1F1F"/>
+<text x="344" y="221" font-size="15" fill="#FFFFFF" font-weight="700" text-anchor="middle">1</text>
+<rect x="380" y="188" width="240" height="56" fill="#1F1F1F" rx="8"/>
+<text x="500" y="222" font-size="17" fill="#FFFFFF" font-weight="700" text-anchor="middle">프로젝트 만들기</text>
+<rect x="304" y="280" width="720" height="56" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="8"/>
+<circle cx="344" cy="308" r="14" fill="#FFFFFF" stroke="#BDBDBD" stroke-width="1.5"/>
+<text x="344" y="313" font-size="14" fill="#6B6B6B" font-weight="400" text-anchor="middle">2</text>
+<text x="380" y="313" font-size="16" fill="#6B6B6B" font-weight="400">팀원 초대</text>
+<rect x="304" y="344" width="720" height="56" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="8"/>
+<circle cx="344" cy="372" r="14" fill="#FFFFFF" stroke="#BDBDBD" stroke-width="1.5"/>
+<text x="344" y="377" font-size="14" fill="#6B6B6B" font-weight="400" text-anchor="middle">3</text>
+<text x="380" y="377" font-size="16" fill="#6B6B6B" font-weight="400">첫 할 일 배정</text>
+<text x="304" y="452" font-size="16" fill="#1F1F1F" font-weight="700">프로젝트</text>
+<rect x="304" y="468" width="720" height="128" fill="none" stroke="#BDBDBD" stroke-width="1.5" rx="8" stroke-dasharray="6 6"/>
+<text x="664" y="537" font-size="14" fill="#6B6B6B" font-weight="400" text-anchor="middle">만든 프로젝트가 여기에 표시됩니다</text>
+</svg>

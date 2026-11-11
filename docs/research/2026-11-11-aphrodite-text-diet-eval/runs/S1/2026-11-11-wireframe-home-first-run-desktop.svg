@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" role="img" aria-labelledby="wf-title wf-desc" font-family="'Pretendard Variable', Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif">
+  <title id="wf-title">홈 저충실도 와이어프레임 — 데스크톱 1280×800, 팀 소유자, 프로젝트 0개</title>
+  <desc id="wf-desc">좌측 사이드바(팀 이름, 홈·프로젝트·팀원·설정, 사용자)와 본문. 본문은 제목 홈, 시작 단계 0/3, 시작 단계 블록(1 첫 프로젝트: 프로젝트 이름 입력란과 프로젝트 만들기 버튼, 2 팀원 초대, 3 첫 할 일 배정), 내 할 일 칸과 프로젝트 칸의 빈 상태 순서다. 색·그림자·이미지 없이 잉크 3단계만 쓴다.</desc>
+
+  <!-- 잉크 3단계: 핵심 #1F2328 / 보조 #5F666D / 배경 요소 #D5D8DB -->
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+
+  <!-- 사이드바 -->
+  <rect x="0" y="0" width="240" height="800" fill="#F4F5F6"/>
+  <line x1="240" y1="0" x2="240" y2="800" stroke="#D5D8DB"/>
+  <text x="24" y="46" font-size="16" font-weight="700" fill="#1F2328">모래시계 스튜디오</text>
+
+  <!-- 내비: 활성 1개만 강조 -->
+  <rect x="12" y="76" width="216" height="40" rx="6" fill="#DDE0E3"/>
+  <rect x="24" y="88" width="16" height="16" rx="3" fill="#1F2328"/>
+  <text x="52" y="101" font-size="15" font-weight="700" fill="#1F2328">홈</text>
+
+  <rect x="24" y="132" width="16" height="16" rx="3" fill="#C2C6CA"/>
+  <text x="52" y="145" font-size="15" fill="#5F666D">프로젝트</text>
+  <rect x="24" y="176" width="16" height="16" rx="3" fill="#C2C6CA"/>
+  <text x="52" y="189" font-size="15" fill="#5F666D">팀원</text>
+  <rect x="24" y="220" width="16" height="16" rx="3" fill="#C2C6CA"/>
+  <text x="52" y="233" font-size="15" fill="#5F666D">설정</text>
+
+  <!-- 사용자 -->
+  <line x1="0" y1="736" x2="240" y2="736" stroke="#D5D8DB"/>
+  <circle cx="38" cy="768" r="14" fill="#C2C6CA"/>
+  <text x="62" y="765" font-size="14" font-weight="600" fill="#1F2328">한지원</text>
+  <text x="62" y="783" font-size="12" fill="#5F666D">팀 소유자</text>
+
+  <!-- 화면 머리: 제목 + 보조 한 가지 -->
+  <text x="304" y="92" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+  <text x="304" y="124" font-size="15" fill="#5F666D">시작 단계 0/3</text>
+
+  <!-- 시작 단계 블록 -->
+  <rect x="304" y="152" width="880" height="320" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+
+  <!-- 1 첫 프로젝트 (지금) -->
+  <circle cx="344" cy="200" r="14" fill="#1F2328"/>
+  <text x="344" y="205" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="372" y="209" font-size="24" font-weight="700" fill="#1F2328">첫 프로젝트</text>
+
+  <text x="372" y="252" font-size="14" fill="#5F666D">프로젝트 이름</text>
+  <rect x="372" y="264" width="556" height="56" rx="8" fill="#FFFFFF" stroke="#1F2328" stroke-width="1.5"/>
+  <text x="390" y="298" font-size="17" fill="#9AA0A6">예: 가을 리브랜딩</text>
+
+  <rect x="944" y="264" width="208" height="56" rx="8" fill="#1F2328"/>
+  <text x="1048" y="298" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle">프로젝트 만들기</text>
+
+  <!-- 2 팀원 초대 (남음) -->
+  <line x1="304" y1="352" x2="1184" y2="352" stroke="#D5D8DB"/>
+  <circle cx="344" cy="382" r="13" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+  <text x="344" y="387" font-size="14" fill="#5F666D" text-anchor="middle">2</text>
+  <text x="372" y="388" font-size="17" fill="#5F666D">팀원 초대</text>
+
+  <!-- 3 첫 할 일 배정 (남음) -->
+  <line x1="304" y1="412" x2="1184" y2="412" stroke="#D5D8DB"/>
+  <circle cx="344" cy="442" r="13" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+  <text x="344" y="447" font-size="14" fill="#5F666D" text-anchor="middle">3</text>
+  <text x="372" y="448" font-size="17" fill="#5F666D">첫 할 일 배정</text>
+
+  <!-- 내 할 일 칸 (2/3) -->
+  <text x="304" y="524" font-size="17" font-weight="700" fill="#1F2328">내 할 일</text>
+  <rect x="304" y="540" width="576" height="96" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+  <text x="592" y="593" font-size="15" fill="#5F666D" text-anchor="middle">배정된 할 일이 없습니다</text>
+
+  <!-- 프로젝트 칸 (1/3) -->
+  <text x="896" y="524" font-size="17" font-weight="700" fill="#1F2328">프로젝트</text>
+  <rect x="896" y="540" width="288" height="96" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+  <text x="1040" y="593" font-size="15" fill="#5F666D" text-anchor="middle">아직 프로젝트가 없습니다</text>
+</svg>

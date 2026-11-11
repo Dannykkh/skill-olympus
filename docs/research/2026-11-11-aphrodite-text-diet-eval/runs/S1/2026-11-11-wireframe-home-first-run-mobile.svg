@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844" role="img" aria-labelledby="wf-title wf-desc" font-family="'Pretendard Variable', Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif">
+  <title id="wf-title">홈 저충실도 와이어프레임 — 모바일 390×844, 팀 소유자, 프로젝트 0개</title>
+  <desc id="wf-desc">상단 바(메뉴 버튼, 팀 이름) 아래에 제목 홈, 시작 단계 0/3, 시작 단계 블록(1 첫 프로젝트: 풀폭 입력란과 그 아래 풀폭 프로젝트 만들기 버튼, 2 팀원 초대, 3 첫 할 일 배정), 내 할 일 칸, 프로젝트 칸이 한 열로 놓인다. 사이드바는 메뉴 버튼으로 여는 드로어가 된다.</desc>
+
+  <rect width="390" height="844" fill="#FFFFFF"/>
+
+  <!-- 상단 바: 사이드바를 접은 자리 -->
+  <rect x="0" y="0" width="390" height="56" fill="#F4F5F6"/>
+  <line x1="0" y1="56" x2="390" y2="56" stroke="#D5D8DB"/>
+  <rect x="6" y="6" width="44" height="44" rx="8" fill="none" stroke="#C2C6CA"/>
+  <line x1="18" y1="21" x2="38" y2="21" stroke="#1F2328" stroke-width="2"/>
+  <line x1="18" y1="28" x2="38" y2="28" stroke="#1F2328" stroke-width="2"/>
+  <line x1="18" y1="35" x2="38" y2="35" stroke="#1F2328" stroke-width="2"/>
+  <text x="62" y="34" font-size="16" font-weight="700" fill="#1F2328">모래시계 스튜디오</text>
+
+  <!-- 화면 머리 -->
+  <text x="20" y="104" font-size="28" font-weight="700" fill="#1F2328">홈</text>
+  <text x="20" y="132" font-size="14" fill="#5F666D">시작 단계 0/3</text>
+
+  <!-- 시작 단계 블록 -->
+  <rect x="16" y="152" width="358" height="340" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+
+  <!-- 1 첫 프로젝트 (지금) -->
+  <circle cx="46" cy="188" r="13" fill="#1F2328"/>
+  <text x="46" y="193" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="70" y="195" font-size="20" font-weight="700" fill="#1F2328">첫 프로젝트</text>
+
+  <text x="36" y="232" font-size="14" fill="#5F666D">프로젝트 이름</text>
+  <rect x="36" y="244" width="318" height="52" rx="8" fill="#FFFFFF" stroke="#1F2328" stroke-width="1.5"/>
+  <text x="52" y="276" font-size="16" fill="#9AA0A6">예: 가을 리브랜딩</text>
+
+  <rect x="36" y="308" width="318" height="52" rx="8" fill="#1F2328"/>
+  <text x="195" y="340" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">프로젝트 만들기</text>
+
+  <!-- 2 팀원 초대 (남음) -->
+  <line x1="16" y1="380" x2="374" y2="380" stroke="#D5D8DB"/>
+  <circle cx="46" cy="408" r="12" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+  <text x="46" y="413" font-size="13" fill="#5F666D" text-anchor="middle">2</text>
+  <text x="70" y="414" font-size="16" fill="#5F666D">팀원 초대</text>
+
+  <!-- 3 첫 할 일 배정 (남음) -->
+  <line x1="16" y1="436" x2="374" y2="436" stroke="#D5D8DB"/>
+  <circle cx="46" cy="464" r="12" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+  <text x="46" y="469" font-size="13" fill="#5F666D" text-anchor="middle">3</text>
+  <text x="70" y="470" font-size="16" fill="#5F666D">첫 할 일 배정</text>
+
+  <!-- 내 할 일 칸 -->
+  <text x="20" y="536" font-size="16" font-weight="700" fill="#1F2328">내 할 일</text>
+  <rect x="16" y="548" width="358" height="72" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+  <text x="195" y="589" font-size="14" fill="#5F666D" text-anchor="middle">배정된 할 일이 없습니다</text>
+
+  <!-- 프로젝트 칸 -->
+  <text x="20" y="664" font-size="16" font-weight="700" fill="#1F2328">프로젝트</text>
+  <rect x="16" y="676" width="358" height="72" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+  <text x="195" y="717" font-size="14" fill="#5F666D" text-anchor="middle">아직 프로젝트가 없습니다</text>
+</svg>

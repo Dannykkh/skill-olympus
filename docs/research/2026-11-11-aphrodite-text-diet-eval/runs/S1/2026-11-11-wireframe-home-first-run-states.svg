@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2088 1004" width="2088" height="1004" role="img" aria-labelledby="st-title st-desc" font-family="'Pretendard Variable', Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif">
+  <title id="st-title">홈 상태 시트 — 본문 영역만, 데스크톱 기준 70% 축소</title>
+  <desc id="st-desc">여섯 상태의 본문 영역. 1 조회 중 뼈대, 2 입력 오류, 3 조회 실패, 4 팀 소유자 시작 단계 1/3, 5 팀원 빈 상태, 6 팀원에게 배정이 생긴 홈. 사이드바는 모든 상태에서 같아 생략했다.</desc>
+
+  <rect width="2088" height="1004" fill="#FFFFFF"/>
+  <text x="40" y="44" font-size="20" font-weight="700" fill="#1F2328">홈 상태 시트 — 본문 영역 (사이드바 생략, 70%)</text>
+
+  <!-- ───────── 1. loading ───────── -->
+  <text x="40" y="84" font-size="15" font-weight="700" fill="#1F2328">1. loading — 조회 중. 0이나 빈 상태 문구를 먼저 보이지 않음</text>
+  <rect x="40" y="96" width="656" height="404" fill="#FFFFFF" stroke="#D5D8DB"/>
+  <g transform="translate(60 116) scale(0.7)">
+    <text x="0" y="34" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+    <rect x="0" y="54" width="110" height="14" rx="4" fill="#E3E5E8"/>
+    <rect x="0" y="88" width="880" height="200" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+    <rect x="40" y="120" width="180" height="22" rx="4" fill="#E3E5E8"/>
+    <rect x="40" y="164" width="556" height="48" rx="8" fill="#E3E5E8"/>
+    <rect x="40" y="240" width="140" height="16" rx="4" fill="#E3E5E8"/>
+    <rect x="0" y="320" width="90" height="16" rx="4" fill="#E3E5E8"/>
+    <rect x="0" y="352" width="576" height="96" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+    <rect x="24" y="380" width="320" height="16" rx="4" fill="#E3E5E8"/>
+    <rect x="592" y="320" width="90" height="16" rx="4" fill="#E3E5E8"/>
+    <rect x="592" y="352" width="288" height="96" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+    <rect x="616" y="380" width="160" height="16" rx="4" fill="#E3E5E8"/>
+  </g>
+
+  <!-- ───────── 2. error (입력) ───────── -->
+  <text x="716" y="84" font-size="15" font-weight="700" fill="#1F2328">2. error (입력) — 이름 없이 누름. 포커스는 입력란</text>
+  <rect x="716" y="96" width="656" height="404" fill="#FFFFFF" stroke="#D5D8DB"/>
+  <g transform="translate(736 116) scale(0.7)">
+    <text x="0" y="34" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+    <text x="0" y="66" font-size="15" fill="#5F666D">시작 단계 0/3</text>
+    <rect x="0" y="88" width="880" height="340" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+    <circle cx="40" cy="136" r="14" fill="#1F2328"/>
+    <text x="40" y="141" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="68" y="145" font-size="24" font-weight="700" fill="#1F2328">첫 프로젝트</text>
+    <text x="68" y="188" font-size="14" fill="#5F666D">프로젝트 이름</text>
+    <rect x="68" y="200" width="556" height="56" rx="8" fill="#FFFFFF" stroke="#1F2328" stroke-width="3"/>
+    <line x1="86" y1="214" x2="86" y2="242" stroke="#1F2328" stroke-width="1.5"/>
+    <rect x="640" y="200" width="208" height="56" rx="8" fill="#1F2328"/>
+    <text x="744" y="234" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle">프로젝트 만들기</text>
+    <circle cx="77" cy="279" r="9" fill="none" stroke="#1F2328" stroke-width="1.5"/>
+    <text x="77" y="284" font-size="13" font-weight="700" fill="#1F2328" text-anchor="middle">!</text>
+    <text x="94" y="284" font-size="15" font-weight="600" fill="#1F2328">프로젝트 이름을 입력하세요</text>
+    <line x1="0" y1="308" x2="880" y2="308" stroke="#D5D8DB"/>
+    <circle cx="40" cy="338" r="13" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+    <text x="40" y="343" font-size="14" fill="#5F666D" text-anchor="middle">2</text>
+    <text x="68" y="344" font-size="17" fill="#5F666D">팀원 초대</text>
+    <line x1="0" y1="368" x2="880" y2="368" stroke="#D5D8DB"/>
+    <circle cx="40" cy="398" r="13" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+    <text x="40" y="403" font-size="14" fill="#5F666D" text-anchor="middle">3</text>
+    <text x="68" y="404" font-size="17" fill="#5F666D">첫 할 일 배정</text>
+  </g>
+
+  <!-- ───────── 3. error (조회) ───────── -->
+  <text x="1392" y="84" font-size="15" font-weight="700" fill="#1F2328">3. error (조회) — 홈 조회 실패</text>
+  <rect x="1392" y="96" width="656" height="404" fill="#FFFFFF" stroke="#D5D8DB"/>
+  <g transform="translate(1412 116) scale(0.7)">
+    <text x="0" y="34" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+    <text x="0" y="128" font-size="20" font-weight="700" fill="#1F2328">홈을 불러오지 못했습니다</text>
+    <rect x="0" y="152" width="128" height="52" rx="8" fill="#1F2328"/>
+    <text x="64" y="184" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">다시 시도</text>
+  </g>
+
+  <!-- ───────── 4. owner 1/3 ───────── -->
+  <text x="40" y="548" font-size="15" font-weight="700" fill="#1F2328">4. success 뒤의 홈 — owner, 시작 단계 1/3. primary가 2단계로 옮겨 감</text>
+  <rect x="40" y="560" width="656" height="404" fill="#FFFFFF" stroke="#D5D8DB"/>
+  <g transform="translate(60 580) scale(0.7)">
+    <text x="0" y="34" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+    <text x="0" y="66" font-size="15" fill="#5F666D">시작 단계 1/3</text>
+    <rect x="0" y="88" width="880" height="320" rx="8" fill="#FFFFFF" stroke="#D5D8DB"/>
+    <!-- 1 완료: 체크 + 흐린 글자 -->
+    <circle cx="40" cy="118" r="13" fill="#C2C6CA"/>
+    <path d="M34 118 l4 5 l8 -10" fill="none" stroke="#1F2328" stroke-width="2"/>
+    <text x="68" y="124" font-size="17" fill="#5F666D">첫 프로젝트</text>
+    <text x="848" y="124" font-size="15" fill="#5F666D" text-anchor="end">가을 리브랜딩</text>
+    <line x1="0" y1="148" x2="880" y2="148" stroke="#D5D8DB"/>
+    <!-- 2 지금 -->
+    <circle cx="40" cy="196" r="14" fill="#1F2328"/>
+    <text x="40" y="201" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="68" y="205" font-size="24" font-weight="700" fill="#1F2328">팀원 초대</text>
+    <text x="68" y="248" font-size="14" fill="#5F666D">이메일</text>
+    <rect x="68" y="260" width="556" height="56" rx="8" fill="#FFFFFF" stroke="#1F2328" stroke-width="1.5"/>
+    <text x="86" y="294" font-size="17" fill="#9AA0A6">예: minjae@moraesigye.example</text>
+    <rect x="640" y="260" width="208" height="56" rx="8" fill="#1F2328"/>
+    <text x="744" y="294" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle">초대 보내기</text>
+    <line x1="0" y1="348" x2="880" y2="348" stroke="#D5D8DB"/>
+    <circle cx="40" cy="378" r="13" fill="#FFFFFF" stroke="#9AA0A6" stroke-width="1.5"/>
+    <text x="40" y="383" font-size="14" fill="#5F666D" text-anchor="middle">3</text>
+    <text x="68" y="384" font-size="17" fill="#5F666D">첫 할 일 배정</text>
+    <!-- 칸 -->
+    <text x="0" y="446" font-size="17" font-weight="700" fill="#1F2328">내 할 일</text>
+    <rect x="0" y="458" width="576" height="56" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+    <text x="288" y="491" font-size="15" fill="#5F666D" text-anchor="middle">배정된 할 일이 없습니다</text>
+    <text x="592" y="446" font-size="17" font-weight="700" fill="#1F2328">프로젝트</text>
+    <rect x="592" y="458" width="288" height="56" rx="8" fill="#FFFFFF" stroke="#9AA0A6"/>
+    <text x="612" y="491" font-size="16" font-weight="600" fill="#1F2328">가을 리브랜딩</text>
+  </g>
+
+  <!-- ───────── 5. member empty ───────── -->
+  <text x="716" y="548" font-size="15" font-weight="700" fill="#1F2328">5. empty (member) — 시작 단계 숨김, 팀 소유자 이름 표시</text>
+  <rect x="716" y="560" width="656" height="404" fill="#FFFFFF" stroke="#D5D8DB"/>
+  <g transform="translate(736 580) scale(0.7)">
+    <text x="0" y="34" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+    <text x="0" y="104" font-size="17" font-weight="700" fill="#1F2328">내 할 일</text>
+    <rect x="0" y="120" width="576" height="96" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+    <text x="288" y="173" font-size="15" fill="#5F666D" text-anchor="middle">배정된 할 일이 없습니다</text>
+    <text x="592" y="104" font-size="17" font-weight="700" fill="#1F2328">프로젝트</text>
+    <rect x="592" y="120" width="288" height="96" rx="8" fill="#FFFFFF" stroke="#C2C6CA" stroke-dasharray="6 6"/>
+    <text x="736" y="162" font-size="15" fill="#5F666D" text-anchor="middle">아직 프로젝트가 없습니다</text>
+    <text x="736" y="186" font-size="15" fill="#1F2328" text-anchor="middle">팀 소유자 한지원</text>
+  </g>
+
+  <!-- ───────── 6. member populated ───────── -->
+  <text x="1392" y="548" font-size="15" font-weight="700" fill="#1F2328">6. 데이터가 생긴 홈 — member, 배정 1건 (owner 3/3 이후도 같은 구조)</text>
+  <rect x="1392" y="560" width="656" height="404" fill="#FFFFFF" stroke="#D5D8DB"/>
+  <g transform="translate(1412 580) scale(0.7)">
+    <text x="0" y="34" font-size="32" font-weight="700" fill="#1F2328">홈</text>
+    <text x="0" y="104" font-size="17" font-weight="700" fill="#1F2328">내 할 일</text>
+    <rect x="0" y="120" width="576" height="84" rx="8" fill="#FFFFFF" stroke="#9AA0A6"/>
+    <rect x="24" y="150" width="22" height="22" rx="4" fill="#FFFFFF" stroke="#1F2328" stroke-width="1.5"/>
+    <text x="62" y="158" font-size="18" font-weight="700" fill="#1F2328">로고 시안 3종 정리</text>
+    <text x="62" y="184" font-size="14" fill="#5F666D">가을 리브랜딩 · 11월 18일(수)</text>
+    <text x="592" y="104" font-size="17" font-weight="700" fill="#1F2328">프로젝트</text>
+    <rect x="592" y="120" width="288" height="56" rx="8" fill="#FFFFFF" stroke="#9AA0A6"/>
+    <text x="612" y="154" font-size="16" font-weight="600" fill="#1F2328">가을 리브랜딩</text>
+  </g>
+</svg>

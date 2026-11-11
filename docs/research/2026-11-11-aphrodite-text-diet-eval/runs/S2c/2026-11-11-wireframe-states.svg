@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1880 1100" width="1880" height="1100" role="img" aria-labelledby="t d" font-family="'Pretendard Variable', Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif">
+<title id="t">플로우보드 첫 실행 흐름·상태 시트</title>
+<desc id="d">홈 첫 실행에서 프로젝트 생성 마법사 3단계를 거쳐 보드 생성 완료까지의 정상 경로와, 건너뛴 뒤의 홈, 초대 전송 완료, 할 일 추가 완료, 로딩, 오류, 초대 전송 실패, 팀원 역할의 홈을 그린 12개 프레임.</desc>
+<rect x="0" y="0" width="1880" height="1100" fill="#FFFFFF"/>
+<text x="40" y="40" font-size="20" fill="#1F1F1F" font-weight="700">플로우보드 — 첫 실행 흐름·상태 시트 (저충실도 와이어프레임)</text>
+<text x="40" y="62" font-size="12" fill="#6B6B6B" font-weight="400">회색조 구조 확인용. 색·사진·그림자 없음. 문구와 데이터는 Experience Contract의 Scenario Facts를 인용.</text>
+<text x="40" y="100" font-size="13" fill="#1F1F1F" font-weight="700">① home · owner · 프로젝트 0개 (empty)</text>
+<rect x="40" y="110" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="40" y="110" width="84" height="270" fill="#F2F2F2"/>
+<line x1="124" y1="110" x2="124" y2="380" stroke="#D9D9D9" stroke-width="1"/>
+<text x="50" y="130" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<rect x="46" y="141" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="52" y="154" font-size="9" fill="#1F1F1F" font-weight="700">홈</text>
+<text x="52" y="174" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="52" y="194" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="140" y="144" font-size="16" fill="#1F1F1F" font-weight="700">홈</text>
+<rect x="140" y="154" width="24" height="4" fill="#D9D9D9" rx="2"/>
+<rect x="167" y="154" width="24" height="4" fill="#D9D9D9" rx="2"/>
+<rect x="194" y="154" width="24" height="4" fill="#D9D9D9" rx="2"/>
+<text x="226" y="159" font-size="9" fill="#6B6B6B" font-weight="400">시작 단계 0/3</text>
+<rect x="140" y="170" width="300" height="46" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="2" rx="5"/>
+<circle cx="158" cy="193" r="8" fill="#1F1F1F"/>
+<text x="158" y="196" font-size="8" fill="#FFFFFF" font-weight="700" text-anchor="middle">1</text>
+<rect x="176" y="179" width="124" height="28" fill="#1F1F1F" rx="5"/>
+<text x="238" y="197" font-size="10" fill="#FFFFFF" font-weight="700" text-anchor="middle">프로젝트 만들기</text>
+<rect x="140" y="222" width="300" height="26" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<circle cx="158" cy="235" r="7" fill="#FFFFFF" stroke="#BDBDBD" stroke-width="1.5"/>
+<text x="158" y="238" font-size="8" fill="#6B6B6B" font-weight="400" text-anchor="middle">2</text>
+<text x="176" y="239" font-size="10" fill="#6B6B6B" font-weight="400">팀원 초대</text>
+<rect x="140" y="254" width="300" height="26" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<circle cx="158" cy="267" r="7" fill="#FFFFFF" stroke="#BDBDBD" stroke-width="1.5"/>
+<text x="158" y="270" font-size="8" fill="#6B6B6B" font-weight="400" text-anchor="middle">3</text>
+<text x="176" y="271" font-size="10" fill="#6B6B6B" font-weight="400">첫 할 일 배정</text>
+<text x="140" y="302" font-size="10" fill="#1F1F1F" font-weight="700">프로젝트</text>
+<rect x="140" y="310" width="300" height="54" fill="none" stroke="#BDBDBD" stroke-width="1" rx="5" stroke-dasharray="4 4"/>
+<text x="290" y="340" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="middle">만든 프로젝트가 여기에 표시됩니다</text>
+<text x="500" y="100" font-size="13" fill="#1F1F1F" font-weight="700">② project-new 1/3</text>
+<rect x="500" y="110" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<text x="516" y="132" font-size="10" fill="#1F1F1F" font-weight="700">플로우보드</text>
+<text x="904" y="132" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="end">닫기</text>
+<rect x="590" y="144" width="240" height="226" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="6"/>
+<text x="610" y="170" font-size="13" fill="#1F1F1F" font-weight="700">프로젝트 이름</text>
+<circle cx="698" cy="352" r="3" fill="#1F1F1F"/>
+<circle cx="710" cy="352" r="3" fill="#BDBDBD"/>
+<circle cx="722" cy="352" r="3" fill="#BDBDBD"/>
+<rect x="610" y="184" width="200" height="28" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1" rx="4"/>
+<text x="620" y="202" font-size="10" fill="#1F1F1F" font-weight="400">가을 리브랜딩</text>
+<rect x="610" y="226" width="200" height="28" fill="#1F1F1F" rx="5"/>
+<text x="710" y="244" font-size="10" fill="#FFFFFF" font-weight="700" text-anchor="middle">프로젝트 만들기</text>
+<text x="960" y="100" font-size="13" fill="#1F1F1F" font-weight="700">③ project-new 2/3</text>
+<rect x="960" y="110" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<text x="976" y="132" font-size="10" fill="#1F1F1F" font-weight="700">플로우보드</text>
+<text x="1364" y="132" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="end">닫기</text>
+<rect x="1050" y="144" width="240" height="226" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="6"/>
+<text x="1070" y="170" font-size="13" fill="#1F1F1F" font-weight="700">팀원 초대</text>
+<circle cx="1158" cy="352" r="3" fill="#BDBDBD"/>
+<circle cx="1170" cy="352" r="3" fill="#1F1F1F"/>
+<circle cx="1182" cy="352" r="3" fill="#BDBDBD"/>
+<rect x="1070" y="184" width="200" height="48" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1" rx="4"/>
+<rect x="1076" y="189" width="132" height="16" fill="#F2F2F2" rx="8"/>
+<text x="1084" y="200" font-size="8" fill="#1F1F1F" font-weight="400">doyun@studio-on.example</text>
+<rect x="1076" y="209" width="132" height="16" fill="#F2F2F2" rx="8"/>
+<text x="1084" y="220" font-size="8" fill="#1F1F1F" font-weight="400">seoa@studio-on.example</text>
+<rect x="1070" y="246" width="200" height="28" fill="#1F1F1F" rx="5"/>
+<text x="1170" y="264" font-size="10" fill="#FFFFFF" font-weight="700" text-anchor="middle">2명에게 초대 보내기</text>
+<text x="1170" y="294" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="middle" text-decoration="underline">건너뛰기</text>
+<text x="1420" y="100" font-size="13" fill="#1F1F1F" font-weight="700">④ project-new 3/3</text>
+<rect x="1420" y="110" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<text x="1436" y="132" font-size="10" fill="#1F1F1F" font-weight="700">플로우보드</text>
+<text x="1824" y="132" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="end">닫기</text>
+<rect x="1510" y="144" width="240" height="226" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="6"/>
+<text x="1530" y="170" font-size="13" fill="#1F1F1F" font-weight="700">첫 할 일 배정</text>
+<circle cx="1618" cy="352" r="3" fill="#BDBDBD"/>
+<circle cx="1630" cy="352" r="3" fill="#BDBDBD"/>
+<circle cx="1642" cy="352" r="3" fill="#1F1F1F"/>
+<rect x="1530" y="184" width="200" height="26" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1" rx="4"/>
+<text x="1540" y="201" font-size="10" fill="#1F1F1F" font-weight="400">킥오프 회의 안건 정리</text>
+<text x="1530" y="226" font-size="8" fill="#6B6B6B" font-weight="400">담당자</text>
+<rect x="1530" y="231" width="200" height="26" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1" rx="4"/>
+<text x="1540" y="248" font-size="10" fill="#1F1F1F" font-weight="400">김도윤 · 초대 보냄</text>
+<text x="1720" y="248" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="end">▾</text>
+<rect x="1530" y="270" width="200" height="28" fill="#1F1F1F" rx="5"/>
+<text x="1630" y="288" font-size="10" fill="#FFFFFF" font-weight="700" text-anchor="middle">추가하고 보드 열기</text>
+<text x="1630" y="318" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="middle" text-decoration="underline">건너뛰기</text>
+<text x="40" y="430" font-size="13" fill="#1F1F1F" font-weight="700">⑤ board-created (success)</text>
+<rect x="40" y="440" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="40" y="440" width="84" height="270" fill="#F2F2F2"/>
+<line x1="124" y1="440" x2="124" y2="710" stroke="#D9D9D9" stroke-width="1"/>
+<text x="50" y="460" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<text x="52" y="484" font-size="9" fill="#6B6B6B" font-weight="400">홈</text>
+<text x="52" y="504" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="52" y="524" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="52" y="558" font-size="8" fill="#6B6B6B" font-weight="400">프로젝트</text>
+<rect x="46" y="565" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="52" y="578" font-size="9" fill="#1F1F1F" font-weight="700">가을 리브랜딩</text>
+<text x="140" y="472" font-size="14" fill="#1F1F1F" font-weight="700">가을 리브랜딩</text>
+<rect x="140" y="484" width="96" height="184" fill="#F2F2F2" rx="5"/>
+<text x="148" y="500" font-size="9" fill="#1F1F1F" font-weight="700">할 일</text>
+<rect x="242" y="484" width="96" height="184" fill="#F2F2F2" rx="5"/>
+<text x="250" y="500" font-size="9" fill="#1F1F1F" font-weight="700">진행 중</text>
+<rect x="344" y="484" width="96" height="184" fill="#F2F2F2" rx="5"/>
+<text x="352" y="500" font-size="9" fill="#1F1F1F" font-weight="700">완료</text>
+<rect x="146" y="508" width="84" height="46" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="4"/>
+<text x="152" y="522" font-size="8" fill="#1F1F1F" font-weight="400">킥오프 회의</text>
+<text x="152" y="533" font-size="8" fill="#1F1F1F" font-weight="400">안건 정리</text>
+<text x="152" y="547" font-size="7.5" fill="#6B6B6B" font-weight="400">김도윤</text>
+<text x="148" y="570" font-size="8.5" fill="#6B6B6B" font-weight="400">+ 할 일 추가</text>
+<rect x="160" y="678" width="280" height="22" fill="#1F1F1F" rx="4"/>
+<text x="300" y="693" font-size="9" fill="#FFFFFF" font-weight="400" text-anchor="middle">프로젝트를 만들었습니다 · 2명에게 초대 보냄</text>
+<text x="500" y="430" font-size="13" fill="#1F1F1F" font-weight="700">⑥ home-step-done · 초대·할 일을 건너뛴 뒤</text>
+<rect x="500" y="440" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="500" y="440" width="84" height="270" fill="#F2F2F2"/>
+<line x1="584" y1="440" x2="584" y2="710" stroke="#D9D9D9" stroke-width="1"/>
+<text x="510" y="460" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<rect x="506" y="471" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="512" y="484" font-size="9" fill="#1F1F1F" font-weight="700">홈</text>
+<text x="512" y="504" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="512" y="524" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="512" y="558" font-size="8" fill="#6B6B6B" font-weight="400">프로젝트</text>
+<text x="512" y="578" font-size="9" fill="#6B6B6B" font-weight="400">가을 리브랜딩</text>
+<text x="600" y="474" font-size="16" fill="#1F1F1F" font-weight="700">홈</text>
+<rect x="600" y="484" width="24" height="4" fill="#1F1F1F" rx="2"/>
+<rect x="627" y="484" width="24" height="4" fill="#D9D9D9" rx="2"/>
+<rect x="654" y="484" width="24" height="4" fill="#D9D9D9" rx="2"/>
+<text x="686" y="489" font-size="9" fill="#6B6B6B" font-weight="400">시작 단계 1/3</text>
+<rect x="600" y="500" width="300" height="26" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<circle cx="618" cy="513" r="7" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="1.5"/>
+<text x="618" y="516" font-size="8" fill="#1F1F1F" font-weight="700" text-anchor="middle">✓</text>
+<text x="636" y="517" font-size="10" fill="#6B6B6B" font-weight="400">프로젝트 만들기</text>
+<text x="890" y="517" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="end">완료</text>
+<rect x="600" y="532" width="300" height="46" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="2" rx="5"/>
+<circle cx="618" cy="555" r="8" fill="#1F1F1F"/>
+<text x="618" y="558" font-size="8" fill="#FFFFFF" font-weight="700" text-anchor="middle">2</text>
+<rect x="636" y="541" width="124" height="28" fill="#1F1F1F" rx="5"/>
+<text x="698" y="559" font-size="10" fill="#FFFFFF" font-weight="700" text-anchor="middle">팀원 초대</text>
+<rect x="600" y="584" width="300" height="26" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<circle cx="618" cy="597" r="7" fill="#FFFFFF" stroke="#BDBDBD" stroke-width="1.5"/>
+<text x="618" y="600" font-size="8" fill="#6B6B6B" font-weight="400" text-anchor="middle">3</text>
+<text x="636" y="601" font-size="10" fill="#6B6B6B" font-weight="400">첫 할 일 배정</text>
+<text x="600" y="632" font-size="10" fill="#1F1F1F" font-weight="700">프로젝트</text>
+<rect x="600" y="640" width="300" height="28" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<text x="612" y="658" font-size="10" fill="#1F1F1F" font-weight="700">가을 리브랜딩</text>
+<text x="960" y="430" font-size="13" fill="#1F1F1F" font-weight="700">⑦ members-invite-sent (success)</text>
+<rect x="960" y="440" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="960" y="440" width="84" height="270" fill="#F2F2F2"/>
+<line x1="1044" y1="440" x2="1044" y2="710" stroke="#D9D9D9" stroke-width="1"/>
+<text x="970" y="460" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<text x="972" y="484" font-size="9" fill="#6B6B6B" font-weight="400">홈</text>
+<rect x="966" y="491" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="972" y="504" font-size="9" fill="#1F1F1F" font-weight="700">팀원</text>
+<text x="972" y="524" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="972" y="558" font-size="8" fill="#6B6B6B" font-weight="400">프로젝트</text>
+<text x="972" y="578" font-size="9" fill="#6B6B6B" font-weight="400">가을 리브랜딩</text>
+<text x="1060" y="474" font-size="16" fill="#1F1F1F" font-weight="700">팀원</text>
+<rect x="1280" y="456" width="80" height="26" fill="#1F1F1F" rx="5"/>
+<text x="1320" y="473" font-size="9" fill="#FFFFFF" font-weight="700" text-anchor="middle">팀원 초대</text>
+<rect x="1060" y="498" width="300" height="28" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<text x="1072" y="516" font-size="10" fill="#1F1F1F" font-weight="400">한지원</text>
+<text x="1190" y="516" font-size="9" fill="#6B6B6B" font-weight="400">소유자</text>
+<rect x="1060" y="532" width="300" height="28" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<text x="1072" y="550" font-size="10" fill="#1F1F1F" font-weight="400">김도윤</text>
+<text x="1190" y="550" font-size="9" fill="#6B6B6B" font-weight="400">초대 보냄</text>
+<text x="1350" y="550" font-size="9" fill="#1F1F1F" font-weight="400" text-anchor="end" text-decoration="underline">다시 보내기</text>
+<rect x="1060" y="566" width="300" height="28" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="5"/>
+<text x="1072" y="584" font-size="10" fill="#1F1F1F" font-weight="400">박서아</text>
+<text x="1190" y="584" font-size="9" fill="#6B6B6B" font-weight="400">초대 보냄</text>
+<text x="1350" y="584" font-size="9" fill="#1F1F1F" font-weight="400" text-anchor="end" text-decoration="underline">다시 보내기</text>
+<rect x="1080" y="678" width="280" height="22" fill="#1F1F1F" rx="4"/>
+<text x="1220" y="693" font-size="9" fill="#FFFFFF" font-weight="400" text-anchor="middle">2명에게 초대를 보냈습니다</text>
+<text x="1420" y="430" font-size="13" fill="#1F1F1F" font-weight="700">⑧ board-task-added (success)</text>
+<rect x="1420" y="440" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="1420" y="440" width="84" height="270" fill="#F2F2F2"/>
+<line x1="1504" y1="440" x2="1504" y2="710" stroke="#D9D9D9" stroke-width="1"/>
+<text x="1430" y="460" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<text x="1432" y="484" font-size="9" fill="#6B6B6B" font-weight="400">홈</text>
+<text x="1432" y="504" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="1432" y="524" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="1432" y="558" font-size="8" fill="#6B6B6B" font-weight="400">프로젝트</text>
+<rect x="1426" y="565" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="1432" y="578" font-size="9" fill="#1F1F1F" font-weight="700">가을 리브랜딩</text>
+<text x="1520" y="472" font-size="14" fill="#1F1F1F" font-weight="700">가을 리브랜딩</text>
+<rect x="1520" y="484" width="96" height="184" fill="#F2F2F2" rx="5"/>
+<text x="1528" y="500" font-size="9" fill="#1F1F1F" font-weight="700">할 일</text>
+<rect x="1622" y="484" width="96" height="184" fill="#F2F2F2" rx="5"/>
+<text x="1630" y="500" font-size="9" fill="#1F1F1F" font-weight="700">진행 중</text>
+<rect x="1724" y="484" width="96" height="184" fill="#F2F2F2" rx="5"/>
+<text x="1732" y="500" font-size="9" fill="#1F1F1F" font-weight="700">완료</text>
+<rect x="1526" y="508" width="84" height="46" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="4"/>
+<text x="1532" y="522" font-size="8" fill="#1F1F1F" font-weight="400">킥오프 회의</text>
+<text x="1532" y="533" font-size="8" fill="#1F1F1F" font-weight="400">안건 정리</text>
+<text x="1532" y="547" font-size="7.5" fill="#6B6B6B" font-weight="400">김도윤</text>
+<rect x="1526" y="560" width="84" height="36" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="2" rx="4"/>
+<text x="1532" y="574" font-size="8" fill="#1F1F1F" font-weight="400">로고 시안 정리</text>
+<text x="1532" y="588" font-size="7.5" fill="#6B6B6B" font-weight="400">박서아</text>
+<text x="1528" y="612" font-size="8.5" fill="#6B6B6B" font-weight="400">+ 할 일 추가</text>
+<rect x="1540" y="678" width="280" height="22" fill="#1F1F1F" rx="4"/>
+<text x="1680" y="693" font-size="9" fill="#FFFFFF" font-weight="400" text-anchor="middle">할 일을 추가했습니다</text>
+<text x="40" y="760" font-size="13" fill="#1F1F1F" font-weight="700">⑨ home · loading</text>
+<rect x="40" y="770" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="40" y="770" width="84" height="270" fill="#F2F2F2"/>
+<line x1="124" y1="770" x2="124" y2="1040" stroke="#D9D9D9" stroke-width="1"/>
+<text x="50" y="790" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<rect x="46" y="801" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="52" y="814" font-size="9" fill="#1F1F1F" font-weight="700">홈</text>
+<text x="52" y="834" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="52" y="854" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="140" y="804" font-size="16" fill="#1F1F1F" font-weight="700">홈</text>
+<rect x="140" y="830" width="300" height="46" fill="#F2F2F2" rx="5"/>
+<rect x="140" y="882" width="300" height="26" fill="#F2F2F2" rx="5"/>
+<rect x="140" y="914" width="300" height="26" fill="#F2F2F2" rx="5"/>
+<rect x="140" y="954" width="70" height="10" fill="#F2F2F2" rx="3"/>
+<rect x="140" y="970" width="300" height="54" fill="#F2F2F2" rx="5"/>
+<text x="500" y="760" font-size="13" fill="#1F1F1F" font-weight="700">⑩ home · error</text>
+<rect x="500" y="770" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="500" y="770" width="84" height="270" fill="#F2F2F2"/>
+<line x1="584" y1="770" x2="584" y2="1040" stroke="#D9D9D9" stroke-width="1"/>
+<text x="510" y="790" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<rect x="506" y="801" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="512" y="814" font-size="9" fill="#1F1F1F" font-weight="700">홈</text>
+<text x="512" y="834" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="512" y="854" font-size="9" fill="#6B6B6B" font-weight="400">팀 설정</text>
+<text x="600" y="804" font-size="16" fill="#1F1F1F" font-weight="700">홈</text>
+<rect x="600" y="830" width="300" height="70" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="1" rx="5"/>
+<text x="614" y="854" font-size="10" fill="#1F1F1F" font-weight="700">프로젝트를 불러오지 못했습니다</text>
+<rect x="614" y="866" width="68" height="24" fill="#FFFFFF" stroke="#1F1F1F" stroke-width="1" rx="4"/>
+<text x="648" y="882" font-size="9" fill="#1F1F1F" font-weight="400" text-anchor="middle">다시 시도</text>
+<text x="960" y="760" font-size="13" fill="#1F1F1F" font-weight="700">⑪ project-new 2/3 · 초대 전송 실패 (error)</text>
+<rect x="960" y="770" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<text x="976" y="792" font-size="10" fill="#1F1F1F" font-weight="700">플로우보드</text>
+<text x="1364" y="792" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="end">닫기</text>
+<rect x="1050" y="804" width="240" height="226" fill="#FFFFFF" stroke="#D9D9D9" stroke-width="1" rx="6"/>
+<text x="1070" y="830" font-size="13" fill="#1F1F1F" font-weight="700">팀원 초대</text>
+<circle cx="1158" cy="1012" r="3" fill="#BDBDBD"/>
+<circle cx="1170" cy="1012" r="3" fill="#1F1F1F"/>
+<circle cx="1182" cy="1012" r="3" fill="#BDBDBD"/>
+<rect x="1070" y="844" width="200" height="48" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1" rx="4"/>
+<rect x="1076" y="849" width="132" height="16" fill="#F2F2F2" rx="8"/>
+<text x="1084" y="860" font-size="8" fill="#1F1F1F" font-weight="400">doyun@studio-on.example</text>
+<rect x="1076" y="869" width="132" height="16" fill="#F2F2F2" rx="8"/>
+<text x="1084" y="880" font-size="8" fill="#1F1F1F" font-weight="400">seoa@studio-on.example</text>
+<text x="1070" y="908" font-size="9" fill="#1F1F1F" font-weight="700">초대를 보내지 못했습니다</text>
+<rect x="1070" y="918" width="200" height="28" fill="#1F1F1F" rx="5"/>
+<text x="1170" y="936" font-size="10" fill="#FFFFFF" font-weight="700" text-anchor="middle">다시 보내기</text>
+<text x="1170" y="966" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="middle" text-decoration="underline">건너뛰기</text>
+<text x="1420" y="760" font-size="13" fill="#1F1F1F" font-weight="700">⑫ home · member · 프로젝트 0개 (permission)</text>
+<rect x="1420" y="770" width="420" height="270" fill="#FFFFFF" stroke="#6B6B6B" stroke-width="1"/>
+<rect x="1420" y="770" width="84" height="270" fill="#F2F2F2"/>
+<line x1="1504" y1="770" x2="1504" y2="1040" stroke="#D9D9D9" stroke-width="1"/>
+<text x="1430" y="790" font-size="9" fill="#1F1F1F" font-weight="700">스튜디오 온</text>
+<rect x="1426" y="801" width="72" height="18" fill="#DCDCDC" rx="4"/>
+<text x="1432" y="814" font-size="9" fill="#1F1F1F" font-weight="700">홈</text>
+<text x="1432" y="834" font-size="9" fill="#6B6B6B" font-weight="400">팀원</text>
+<text x="1520" y="804" font-size="16" fill="#1F1F1F" font-weight="700">홈</text>
+<text x="1520" y="838" font-size="10" fill="#1F1F1F" font-weight="700">프로젝트</text>
+<rect x="1520" y="846" width="300" height="72" fill="none" stroke="#BDBDBD" stroke-width="1" rx="5" stroke-dasharray="4 4"/>
+<text x="1670" y="876" font-size="10" fill="#1F1F1F" font-weight="400" text-anchor="middle">아직 프로젝트가 없습니다</text>
+<text x="1670" y="894" font-size="9" fill="#6B6B6B" font-weight="400" text-anchor="middle">한지원 님이 프로젝트를 만들면 여기에 표시됩니다</text>
+<text x="480" y="251.0" font-size="18" fill="#1F1F1F" font-weight="700" text-anchor="middle">→</text>
+<text x="940" y="251.0" font-size="18" fill="#1F1F1F" font-weight="700" text-anchor="middle">→</text>
+<text x="1400" y="251.0" font-size="18" fill="#1F1F1F" font-weight="700" text-anchor="middle">→</text>
+<text x="1630.0" y="402" font-size="12" fill="#1F1F1F" font-weight="700" text-anchor="middle">↓ ⑤로</text>
+</svg>
