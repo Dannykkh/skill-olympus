@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.9.0] - 2026-11-11
+
+### Features
+
+- **zephermine**: Trim the plan backward from the success criteria. Soft Gate 2 records the deadline and team constraints the interview already asked about, the spec Context Map carries them as `기한·제약`, and the strategy rubric's effort criterion checks the deadline when one is confirmed. An unconfirmed deadline is not a blocker and is never invented. Step 15 gains a backward check that runs without stopping: plan items that cannot name the success criterion or problem they serve are sorted as omit, substitute or defer and written back to "what we will not build", then the plan gets a one-paragraph adopt / conditional / reject verdict from the decision-maker's seat. Responses to Critical Findings, security, privacy and legal requirements, and tripwire instrumentation are never trimmed. Step 23 checks that trimmed items did not return as section work. No step, question or output file is added. (b1ee823)
+- **design-plan**, **frontend-design**: Budget on-screen text. The block anatomy gains common rule #8: a screen head carries a title, one supporting item and the primary action, and a block's explanatory sentences default to zero. Eyebrow, subtext and description lines in twelve blocks become optional, and the "do not drop elements" rule now covers functional elements only (CTA, price, value, state, navigation). The Feature block no longer prescribes the three-column icon-title-description grid that the anti-slop list forbids. (5693367)
+- **design-plan**: Subtract before the wireframe gate. Phase 2-5 has each block and line of copy name the Page Goal success condition or task step it serves before the five criteria are judged, and judges clarity by whether the screen still reads with explanatory sentences removed. The skeleton of the screen type stays: functional elements and state areas the anatomy names, error and empty-state recovery text, trust evidence, labels and accessibility text. If about half of the representative viewport is left empty the subtraction went too far, and the fix is to restore what the user sees next or enlarge the main content, not to add copy. Phase 6-3 judges each Page Goal success condition as PASS, FAIL or NOT RUN. The Experience Contract guide states that contract fields are design intent, not screen copy. (5693367)
+
+### Bug Fixes
+
+- **design-plan**: Settle ambiguities that blind workers reported repeatedly. A screen that fits none of the six Interface Modes is recorded as `Mode: 없음` with the playbook's sections 1 and 7 only and a zero decorative-effect budget; Phase 2-4 decides the representative screen only. When contract validation fails solely on open strategy or scope decisions, the run ends as `결정 대기` (decision pending), is not reported as passed, and may not turn a recommendation into a user decision to pass. Adding or removing an object or feature set that upstream documents do not cover is scope; edit, delete and cancel flows, permissions and state links of an in-scope object are structure. An After that is the completed state of the same screen is written as `<screen>-<result>` with a parenthetical; the validator is unchanged. The Korean mobile app rules in sections 4 to 8 apply to mobile apps and mobile-first web apps, not to the phone layout of a desktop-first web app. Also: Phase 2-5 reads the Layout Blueprint template section, the six questions apply to both strategy and scope requests, person cards move from the brief into the contract, a folder-only request is judged as strategy, conflicting upstream documents go to Open Decisions with both passages quoted, an undecided Role Variants cell carries the recommended value plus `(미결)`, and only the representative screen is drawn for both desktop and mobile at this phase. (5693367)
+
+### Documentation
+
+- **research**: Record four blind runs on the 2026-11-04 fixture and the ambiguities they surfaced. (ec51990)
+- The four READMEs note this release. (128b01d)
+
+### Tests
+
+- A static test pins the Zephermine deadline lines and Step 15 backward check, the anatomy text budget, the subtraction paragraph and its skeleton exception, the Page Goal verdicts, the decision-pending end and the `Mode: 없음` rule. (822bd5c)
+
+### Validation and Scope
+
+- Full suite 380 passed (375 plus the five new cases); contract validator tests 27 passed.
+- Blind runs used the same fixture and worker prompt as the 2026-11-04 evaluation. All four produced a first-run home screen with no explanatory sentences besides empty-state text. Under the first subtraction rule one run (S2) removed the "to be filled" area and left more than half of the viewport empty; after the skeleton exception was added, two runs (S2b, S2c) kept it. The earlier evaluation's checks held: upstream documents read, the KPI dashboard excluded with its source, the decision layer stated, no KPI-card first screen.
+- Limits: one fixture (a first-run dashboard), one or two runs per scenario, Phase 2 only. Landing pages and the implementation phases were not run, so the budget numbers and the "about half" threshold are assumptions. Four of the ambiguity fixes (folder-only requests, conflicting upstream documents, the undecided Role Variants cell, and the drawing scope) were made after the final run and were not re-run. The Zephermine backward check has contract tests only; no full Zephermine run was made.
+- The scope/structure boundary was decided in this release rather than derived from existing documents; it narrows what blocks implementation as an open scope decision.
+- The Windows integrated installer completed with 12 verification checks passed; the eight changed skill files match the source on Claude, Codex and Antigravity.
+
 ## [7.8.1] - 2026-11-04
 
 ### Bug Fixes
