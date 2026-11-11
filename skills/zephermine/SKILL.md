@@ -331,8 +331,9 @@ Combine into `<planning_dir>/spec.md`:
 ### 공유 전제
 - 목표: {궁극적 목표}
 - 산업: {산업} | 범위: {MVP/풀/리뉴얼}
-- 성공 기준: {성공의 정의}
-- 만들지 않을 것: {Soft Gate 3 `MVP 범위`의 제외 항목 — 이유 — 다시 볼 조건. 없으면 `없음 — <이유>`}
+- 성공 기준: {완성됐을 때 누가 무엇을 할 수 있게 되는가 — 구현 후 확인할 수 있는 상태로}
+- 기한·제약: {Soft Gate 2 `제약` — 기한(날짜·기간 | 없음 | 미확인) · 인력/역량. 미확인을 지어내지 않음}
+- 만들지 않을 것: {Soft Gate 3 `MVP 범위`의 제외 항목 — 이유 — 다시 볼 조건. 없으면 `없음 — <이유>`. Step 15 역산 점검이 덜어낸 항목도 여기에 되적음}
 
 ### 이해관계자
 | 역할 | 설명 | 관련 섹션 |
@@ -497,7 +498,7 @@ plan.md 하나를 바로 쓰면 외부 리뷰(Step 13)는 "그 하나"를 다듬
 | 도메인 적합성 | domain-process/technical 분석 및 사전 v3와 정합 |
 | 리스크/복잡도 | 실패 표면·미지수가 적을수록 고점 |
 | 점진성·되돌리기 | 작은 단위로 배포·검증·롤백 가능할수록 고점 |
-| 노력/비용 | 구현 규모가 작을수록 고점 |
+| 노력/비용 | 구현 규모가 작을수록 고점. Context Map에 확인된 기한이 있으면 그 안에 끝나는지를 함께 본다(기한이 `없음`/`미확인`이면 규모만) |
 
 **12c. 선택 + 작성** — 최고점 후보를 채택하되, 차점 후보의 더 나은 아이디어는 흡수(graft)한다. 동점이거나 트레이드오프가 첨예하면 그 사실을 명시.
 선택한 전략으로 상세 계획을 작성 → `<planning_dir>/plan.md`. Address all "Critical Findings", Step 11에서 채택된 항목만 반영. Write for an unfamiliar reader — fully self-contained document.
@@ -523,7 +524,15 @@ Analyze `<planning_dir>/reviews/`. You are the authority on what to integrate.
 
 ### 15. Integrated Plan Checkpoint
 
-Do not stop for plan approval by default. Write `<planning_dir>/integration-notes.md`, update `<planning_dir>/plan.md`, and continue to Step 16.
+Do not stop for plan approval by default. Write `<planning_dir>/integration-notes.md`, update `<planning_dir>/plan.md`, run the backward check below, and continue to Step 16.
+
+**역산 점검 (정지 없이 수행)** — Step 14 통합은 범위를 늘리는 쪽으로 기울고, 이 뒤로는 계획 한 줄이 DB·API·섹션 파일로 불어난다. 그래서 상세 설계 직전에 `spec.md` Context Map의 성공 기준·기한에서 거꾸로 `plan.md`를 한 번 훑는다. 새 질문이나 새 산출물 파일을 만들지 않고 결과는 `integration-notes.md`의 `## 역산 점검`에 적는다.
+
+1. **덜어내기** — 계획 항목마다 성공 기준 또는 Problem Statement의 어느 문제(P)에 기여하는지 댄다. 댈 수 없는 항목은 `생략`(만들지 않음) / `대체`(직접 구현 대신 기존 코드·라이브러리·외부 서비스, 또는 초기에는 수작업 운영) / `후순위`(이번 범위 밖) 중 하나로 분류해 `plan.md`에서 빼고, `spec.md` Context Map `만들지 않을 것`에 이유·다시 볼 조건과 함께 되적는다. 확인된 기한이 있고 남은 계획이 그 안에 들어가지 않으면 우선순위가 낮은 문제(🟡 → 🟠 순)의 항목부터 `후순위`로 옮긴다. 개수를 채우려고 항목을 지어내지 않는다 — 없으면 `덜어낼 항목 없음 — <근거>`.
+   - 덜어내지 않는 것: team-review Critical Findings 대응, 보안·개인정보·법적 요구, 트립와이어 `#### 계측 작업`. 문제(P)에 직접 묶이지 않아도 남긴다.
+2. **결정자 판정** — Context Map 이해관계자 표에서 채택을 결정하는 사람(돈을 내거나 승인하는 역할, 없으면 요청자 본인)의 자리에서 계획을 읽고 `채택` / `조건부 채택` / `반려`와 근거를 한 단락으로 적는다. 근거는 그 사람이 보는 것으로 한정한다 — 성공 기준이 충족되는가, 기한·비용이 맞는가, 남는 위험을 감수할 만한가. `조건부`·`반려` 사유가 계획 수정으로 풀리면 `plan.md`를 고치고 무엇을 고쳤는지 적는다. 사용자만 정할 수 있는 사유는 아래 정지 조건에 해당할 때만 묻고, 아니면 미결로 기록한 채 진행한다. 이 판정은 AI의 추정이며 실제 승인을 대신하지 않는다.
+
+사업 타당성 자체("만들어야 하나")는 여기서 다루지 않는다 — `/athena`가 맡는다.
 
 Stop here only when:
 - the user explicitly asked for a plan review gate before detailed design
@@ -686,6 +695,7 @@ Verify all files were created successfully:
 - **화면↔API 대응** — `api-spec.md`의 Screen Data Requirements 기준으로 모든 표시 데이터·액션이 엔드포인트에 대응하는지, 모든 엔드포인트에 Frontend Caller(또는 `external`/`webhook`/`batch`/`system`/`mcp`, 화면 재료가 빠지면 `TBD (화면 누락)` + 미결)가 있는지, 모든 목록 엔드포인트가 Pagination을 선언하고 필터·정렬 컬럼이 `db-schema.md` 인덱스 표에 있는지, 에러 응답이 공통 에러 형식인지. 빠진 것은 두 문서에 보완하고 `integration-notes.md`에 기록. 화면 표가 `NOT APPLICABLE: no UI`이면 Pagination·인덱스 검사만 수행
 - **에이전트 작업↔도구 대응** — `mcp-spec.md`가 있으면 가이드의 대응 검사를 다시 돌린다: 모든 에이전트 작업이 도구에 대응, 모든 도구의 구성 대상이 `api-spec.md` 엔드포인트나 `## Internal Commands`에 실재, `api-spec.md` Summary `MCP Tool` 열↔`## Tools` 1:1, Frontend Caller `mcp`인 엔드포인트마다 도구 존재, DB·파일 직접 접근 도구 없음, 도구 권한 ⊆ 구성 대상 권한, `annotations`·호출 한도·감사 기록·모델용 에러 문구. 빠진 것은 해당 문서에 보완하고 `integration-notes.md`에 기록. `NOT APPLICABLE: no MCP`면 사유가 적혀 있는지만 확인
 - **트립와이어** — `plan.md`의 `## 전략 선택` 아래 `### 트립와이어`가 [tripwire-guide.md](references/tripwire-guide.md)의 최소 구성(지표 2개 이상 중 `구현 중` 1개 이상, 계속 조건·중단 검토 조건 각 1개 이상)을 갖췄는지, `위험 가정:` 줄의 확인 섹션이 `sections/index.md`에서 의존성 없이 있는지, `구현 중` 지표의 계측 위치가 구현 하네스가 남기는 기록인지, 모든 지표에 계측 위치·판정 주기가 있는지, 같은 지표의 칸이 빈틈·겹침 없이 나뉘는지, 모든 수치에 `검증됨`/`가정 → 검증` 표시가 있는지, 조건 칸을 채운 지표마다 그 단계의 행동 행이 있고 수정 임계점 행에 범위 조정안이 있는지, AI 기능이 있으면 품질·비용·안전 지표가 각 1개 이상인지. `#### 계측 작업`의 W 항목이 해당 섹션 작업·AC로 옮겨졌는지. 빠진 것은 plan.md에 보완하고, 섹션에 AC를 더했으면 위 완료 기준 계약대로 `checklist.md`를 다시 만든 뒤 `integration-notes.md`에 기록
+- **역산 점검** — `integration-notes.md`에 `## 역산 점검`(덜어내기 결과와 결정자 판정)이 있는지, 덜어낸 항목이 `spec.md` `만들지 않을 것`에 이유·다시 볼 조건과 함께 있는지, 덜어낸 항목이 섹션 작업·AC로 되살아나지 않았는지. 되살아났으면 그 섹션에서 빼거나, 필요해진 근거가 있으면 `만들지 않을 것`에서 지우고 사유를 `integration-notes.md`에 기록. 섹션을 고쳤으면 위 완료 기준 계약대로 `checklist.md`를 다시 만든다
 - **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
 - `api-spec.md` (API가 있는 프로젝트)
 - `mcp-spec.md` (건너뛴 프로젝트는 `NOT APPLICABLE: no MCP — <사유>` 한 줄)
