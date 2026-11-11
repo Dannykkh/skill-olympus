@@ -320,6 +320,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.9.0 — 设计从目标倒推并做减法：Zephermine 的倒推检查与 Aphrodite 的文字预算
+
+Zephermine 会把访谈中问到的截止日期写进 spec 的 `기한·제약` 一行。在进入详细设计之前（Step 15），它把说不出对成功标准或问题有何贡献的计划项归为“省略、替代、延后”并移出计划，再站在决策者的位置用一段话给出“采纳、有条件采纳、退回”的判断。问题、步骤和产出文件都没有增加。Aphrodite 减少界面上的文字。区块目录新增文字预算（页面头部只放标题、一项辅助信息和主要操作；区块内的说明句默认为 0），eyebrow、副标题和说明行改为可选元素。线框图关卡在评判五项标准之前先删减区块和文案，并以“去掉说明句后是否仍能看懂”来判断清晰度。在同一示例上的盲测中，首屏的说明句降为 0。最初的规则连“待填充区域”也删掉，使屏幕下半部分空白，因此改为保留该页面类型的骨架。执行者反复指出的含糊之处也一并理清：没有合适的 Interface Mode 时记为 `Mode: 없음`；契约校验仅因目的或范围未决而失败时，以 `결정 대기`（等待决定）结束，而不是算作通过。验证范围是一个首次使用仪表盘示例，执行到线框图阶段；落地页尚未验证。
+
 ## v7.8.1 — 契约模板补上角色小节，删除行业调色板 CSV
 
 这是 v7.8.0 的两项后续。第一，Experience Contract 模板加入了 `## System Roles` 和 `## Role Variants`。声明 System Roles 时验证器会要求 Role Variants，但模板里没有这两个小节，盲测时无法判断 Phase 2 草稿是否应包含它们。新增的测试会核对验证器可能要求的每个小节都在模板中。第二，删除了行业调色板 CSV。之前清理后只剩 9 行冷门行业（NFT、量子计算、无人机调度，其中 3 个霓虹色），不带 `--type` 运行时，3 个候选中有 1–2 个来自这里。`select-diverse-palettes.js` 现在只从 motion-first 手册的 11 条色彩通道中挑选，并对通道应用此前只计算却未使用的库存色检查。
