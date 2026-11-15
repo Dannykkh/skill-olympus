@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.9.2] - 2026-11-15
+
+### Bug Fixes
+
+- **codex-mnemo**: Preserve JSON quotes, backslashes, Unicode and empty arguments when the known Windows notify wrappers launch another executable. PowerShell 5.1 and PowerShell 7 `Legacy` forwarding previously corrupted the payload. Repair the Mnemo and TermSnap wrapper calls without removing the existing notification chain, and keep an original wrapper backup. (36a7b6b)
+- **codex-mnemo**: Include the forwarding helper in installation, parity checks and removal. Installation checks now reject the known unsafe forwarding statements and explicitly distinguish source inspection from runtime delivery verification. (36a7b6b)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Simplified Chinese READMEs with the repair, verification scope and reinstall instructions. If TermSnap regenerates its wrapper, the updated installer must be run again; this release does not change the TermSnap generator. (36a7b6b)
+
+### Validation and Scope
+
+- Full repository suite: 385/385 passed with Git Bash and grep explicitly selected for Windows subprocesses. The Windows integrated installer completed with 12 verification checks passed.
+- Targeted regression and storage checks: 21 passed. Tests cover complete input and answer storage, notification payload preservation, replay deduplication, reinstall idempotence and rejection of regenerated unsafe wrappers.
+- Actual installed-wrapper execution passed on PowerShell 5.1, PowerShell 7 and PowerShell 7 `Legacy`, including the TermSnap session ID in completion signals. Other custom wrappers and batch-script argument preservation are outside this repair's verified scope.
+
 ## [7.9.1] - 2026-11-15
 
 ### Bug Fixes
