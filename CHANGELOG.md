@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.9.1] - 2026-11-15
+
+### Bug Fixes
+
+- **design-plan**, **frontend-design**: Allocate the main work surface before headers and controls. Common anatomy rule #9 starts functional page headers with one row, places controls beside the content they affect, and checks the combined navigation/header/tab/toolbar height against real content visible in the first viewport. Additional rows need a task reason. Narrow widths and enlarged text may wrap; fixed heights or hidden overflow must not conceal controls. (e5d251e)
+- **design-plan**: Apply the rule before drawing Phase 2 wireframes, carry the placement record into Layout Blueprint refinement, and repeat the check in render critique and completion evidence. Keep mobile context headings while judging the whole top stack. (e5d251e)
+
+### Documentation
+
+- **research**: Publish five independent wireframe runs, an interactive comparison, source snapshots and measured results. In the tested 390px order list with three selected rows and 16px text, the first row moved from 470 to 228px and fully visible items increased from two to three. Initial enlargement failures and subsequent prototype repairs are recorded separately. (3b8e68c)
+- Update the English, Korean, Japanese and Simplified Chinese READMEs with the change and verification scope. (199133d)
+
+### Validation and Scope
+
+- Full repository suite: 380/380 passed with Git Bash and grep explicitly selected for Windows subprocesses.
+- Testing covers Phase 2 order-list, editor and empty-document wireframes. Visual direction, production implementation, backend behavior and full accessibility certification remain unverified. Independent first generations did not all pass; enlarged-layout failures were preserved and rechecked after repair.
+
 ## [7.9.0] - 2026-11-11
 
 ### Features
