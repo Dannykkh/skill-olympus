@@ -1,0 +1,490 @@
+{
+  "target": "file:///C:/Users/ADMINI%7E1/AppData/Local/Temp/aphrodite-main-first-eval-38xrnoba/candidate-editor/docs/design-refs/wireframe-empty.html",
+  "widths": [
+    390
+  ],
+  "modes": [
+    {
+      "kind": "base",
+      "pct": 100
+    },
+    {
+      "kind": "text",
+      "pct": 200
+    },
+    {
+      "kind": "zoom",
+      "pct": 200
+    }
+  ],
+  "summary": {
+    "split": 9,
+    "orphan": 2,
+    "overflow": 18,
+    "clip": 0,
+    "blocked": 3
+  },
+  "report": [
+    {
+      "width": 390,
+      "mode": "base",
+      "pct": 100,
+      "cssWidth": 390,
+      "blocks": [
+        {
+          "el": "label",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "wrap",
+          "lines": [
+            "문단 스",
+            "타일"
+          ],
+          "found": [
+            {
+              "kind": "split",
+              "word": "스/타일"
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "표 삽입"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 6
+            }
+          ]
+        },
+        {
+          "el": "label",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "wrap",
+          "lines": [
+            "본",
+            "문",
+            "검",
+            "색"
+          ],
+          "found": [
+            {
+              "kind": "split",
+              "word": "본/문"
+            },
+            {
+              "kind": "split",
+              "word": "검/색"
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "검색"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 17
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "공유"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 2
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "버전 기록"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 40
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "댓글"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 2
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "내보내기"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 34
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "문서 설정"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 40
+            }
+          ]
+        },
+        {
+          "el": "a.skip",
+          "role": "tap",
+          "wordBreak": "",
+          "textWrap": "",
+          "lines": [
+            "본문으로 건너뛰기"
+          ],
+          "found": [
+            {
+              "kind": "blocked",
+              "by": "화면 밖"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "mode": "text",
+      "pct": 200,
+      "cssWidth": 390,
+      "blocks": [
+        {
+          "el": "label",
+          "role": "heading",
+          "wordBreak": "normal",
+          "textWrap": "wrap",
+          "lines": [
+            "문단 스",
+            "타일"
+          ],
+          "found": [
+            {
+              "kind": "split",
+              "word": "스/타일"
+            },
+            {
+              "kind": "orphan",
+              "word": "타일"
+            }
+          ]
+        },
+        {
+          "el": "label",
+          "role": "heading",
+          "wordBreak": "normal",
+          "textWrap": "wrap",
+          "lines": [
+            "본",
+            "문",
+            "검",
+            "색"
+          ],
+          "found": [
+            {
+              "kind": "split",
+              "word": "본/문"
+            },
+            {
+              "kind": "split",
+              "word": "검/색"
+            },
+            {
+              "kind": "orphan",
+              "word": "색"
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "heading",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "검색"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 19
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "heading",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "버전 기록"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 64
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "heading",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "내보내기"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 53
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "heading",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "문서 설정"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 64
+            }
+          ]
+        },
+        {
+          "el": "a.skip",
+          "role": "tap",
+          "wordBreak": "",
+          "textWrap": "",
+          "lines": [
+            "본문으로 건너뛰기"
+          ],
+          "found": [
+            {
+              "kind": "blocked",
+              "by": "화면 밖"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "mode": "zoom",
+      "pct": 200,
+      "cssWidth": 195,
+      "blocks": [
+        {
+          "el": "label",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "wrap",
+          "lines": [
+            "문단 스",
+            "타일"
+          ],
+          "found": [
+            {
+              "kind": "split",
+              "word": "스/타일"
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "표 삽입"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 6
+            }
+          ]
+        },
+        {
+          "el": "label",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "wrap",
+          "lines": [
+            "본",
+            "문",
+            "검",
+            "색"
+          ],
+          "found": [
+            {
+              "kind": "split",
+              "word": "본/문"
+            },
+            {
+              "kind": "split",
+              "word": "검/색"
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "검색"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 17
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "공유"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 2
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "버전 기록"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 40
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "댓글"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 2
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "내보내기"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 34
+            }
+          ]
+        },
+        {
+          "el": "button",
+          "role": "narrow",
+          "wordBreak": "normal",
+          "textWrap": "nowrap",
+          "lines": [
+            "문서 설정"
+          ],
+          "found": [
+            {
+              "kind": "overflow",
+              "px": 40
+            }
+          ]
+        },
+        {
+          "el": "a.skip",
+          "role": "tap",
+          "wordBreak": "",
+          "textWrap": "",
+          "lines": [
+            "본문으로 건너뛰기"
+          ],
+          "found": [
+            {
+              "kind": "blocked",
+              "by": "화면 밖"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

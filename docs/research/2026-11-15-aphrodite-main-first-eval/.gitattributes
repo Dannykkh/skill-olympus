@@ -1,0 +1,5 @@
+# Preserve the exact archived evidence: unified diffs need blank context lines,
+# and captured generated CSS retains its original trailing blank lines.
+*.patch whitespace=-blank-at-eol,-blank-at-eof
+runs/**/wireframe.css whitespace=-blank-at-eof
+runs/**/2026-11-15-wireframe.css whitespace=-blank-at-eof

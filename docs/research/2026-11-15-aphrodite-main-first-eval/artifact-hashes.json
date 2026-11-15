@@ -1,0 +1,114 @@
+[
+  {
+    "path": "runs/baseline-list/docs/design-refs/2026-11-15-wireframe-orders.html",
+    "sha256": "3665fd0997e38f695a383074ff86a29708d8cab0ccddd87c71a2da3e462d5974"
+  },
+  {
+    "path": "runs/baseline-list/docs/design-refs/2026-11-15-wireframe-states.html",
+    "sha256": "30a5c35c5ad7dcb256387a0eadd890f8e9ed866f09726784a393ce8c94a5fa7d"
+  },
+  {
+    "path": "runs/baseline-list/docs/design-refs/2026-11-15-wireframe.css",
+    "sha256": "226e26e6c2578433423ebcc4803caec1cf5a203474662a4be0ce00c8649074b2"
+  },
+  {
+    "path": "runs/baseline-list/docs/design-refs/2026-11-15-wireframe.js",
+    "sha256": "7b701620adfa1c175103858fafb2a68aabe3e5130bc8a1e75f0c9aa752213aaf"
+  },
+  {
+    "path": "runs/candidate-editor-initial/docs/design-refs/wireframe-editor.html",
+    "sha256": "f6d8dba0031507bf39aa7c223ce09e349eee834afa8783a2500849bad240476e"
+  },
+  {
+    "path": "runs/candidate-editor-initial/docs/design-refs/wireframe-empty.html",
+    "sha256": "88314d3a5a9f663874acb8e2ca8a7ed3ea75667c49634e6763f5d47d9781046a"
+  },
+  {
+    "path": "runs/candidate-editor-initial/docs/design-refs/wireframe-states.html",
+    "sha256": "83ea376694554a6301436081a72562f339ca20bd80ccef0640ed762ba9b3775a"
+  },
+  {
+    "path": "runs/candidate-editor-initial/docs/design-refs/wireframe.css",
+    "sha256": "8b5ea946cfa2e91d1331914b93b8dee37c96f41d87c03a1a80159cddcf8f48c9"
+  },
+  {
+    "path": "runs/candidate-editor-initial/wireframe-editor.html",
+    "sha256": "f6d8dba0031507bf39aa7c223ce09e349eee834afa8783a2500849bad240476e"
+  },
+  {
+    "path": "runs/candidate-editor-initial/wireframe-empty.html",
+    "sha256": "88314d3a5a9f663874acb8e2ca8a7ed3ea75667c49634e6763f5d47d9781046a"
+  },
+  {
+    "path": "runs/candidate-editor-initial/wireframe-states.html",
+    "sha256": "83ea376694554a6301436081a72562f339ca20bd80ccef0640ed762ba9b3775a"
+  },
+  {
+    "path": "runs/candidate-editor-initial/wireframe.css",
+    "sha256": "8b5ea946cfa2e91d1331914b93b8dee37c96f41d87c03a1a80159cddcf8f48c9"
+  },
+  {
+    "path": "runs/candidate-editor-r2/docs/design-refs/editor.html",
+    "sha256": "b7a842065dabc6508dc216831af25eaaf068cb0371536bb23ce5e00ba98eb6e2"
+  },
+  {
+    "path": "runs/candidate-editor-r2/docs/design-refs/empty.html",
+    "sha256": "16aa9c8fb8acb4d4d43c89881ed2cdf61634e2e2df97421ccb61bfe168a708eb"
+  },
+  {
+    "path": "runs/candidate-editor-r2/docs/design-refs/states.html",
+    "sha256": "9b10b0b166d38480646fafdab6d6cdc2edb9d766e14c9dd03ceb2f7ad0461247"
+  },
+  {
+    "path": "runs/candidate-editor-r2/docs/design-refs/wireframe.css",
+    "sha256": "e3c993c51db001982bd5911649d6861fc0e8bdb3677138bc0a071cd2566ce527"
+  },
+  {
+    "path": "runs/candidate-editor-r2/docs/design-refs/wireframe.js",
+    "sha256": "6c9664b89d2387627aa1d2bf3742d1fc95a7fb9ccce6dfee4749d54bfbc29af9"
+  },
+  {
+    "path": "runs/candidate-list/docs/design-refs/2026-11-15-wireframe-purchase-orders-states.html",
+    "sha256": "3f2e69d9af2c453f03981a584987ddb69c4ec6d8ed539aa12cc37ca76c75f8f2"
+  },
+  {
+    "path": "runs/candidate-list/docs/design-refs/2026-11-15-wireframe-purchase-orders.css",
+    "sha256": "b75ff2928f916025585e2dbba6b7b244b095bf1b04a827ca7a3b2cd6017505ff"
+  },
+  {
+    "path": "runs/candidate-list/docs/design-refs/2026-11-15-wireframe-purchase-orders.html",
+    "sha256": "ef6a71c75ca339c4f2b9c958d786d83d2b69122e0475ba61e7025593aecffeae"
+  },
+  {
+    "path": "runs/candidate-list-r2/docs/design-refs/2026-11-15-wireframe-orders.html",
+    "sha256": "d9300ac4fb025e157e1e2baaceaeb2a13b321a19e37d805eb457a94d2ba3be94"
+  },
+  {
+    "path": "runs/candidate-list-r2/docs/design-refs/2026-11-15-wireframe-states.html",
+    "sha256": "954329b289672b14e1ab211d0e80c747e5164a884c5e458c8af4168c913ed897"
+  },
+  {
+    "path": "runs/candidate-list-r2/docs/design-refs/wireframe.css",
+    "sha256": "4002e117980eabcc81da89b5f9ed258f6b8db207547f9a06d70c57bb3ca6cdd2"
+  },
+  {
+    "path": "runs/candidate-list-r2/docs/design-refs/wireframe.js",
+    "sha256": "d864a97b0f5d3783b6561c81060389bf6e068e585c38a019bae22c117e45c7ea"
+  },
+  {
+    "path": "runs/candidate-list-repaired/docs/design-refs/2026-11-15-wireframe-orders.html",
+    "sha256": "d9300ac4fb025e157e1e2baaceaeb2a13b321a19e37d805eb457a94d2ba3be94"
+  },
+  {
+    "path": "runs/candidate-list-repaired/docs/design-refs/2026-11-15-wireframe-states.html",
+    "sha256": "954329b289672b14e1ab211d0e80c747e5164a884c5e458c8af4168c913ed897"
+  },
+  {
+    "path": "runs/candidate-list-repaired/docs/design-refs/wireframe.css",
+    "sha256": "671a62fd6e8c79a00170be8eadcc15ff63bb4ea78fb1ef6e5067dfae500ccb7e"
+  },
+  {
+    "path": "runs/candidate-list-repaired/docs/design-refs/wireframe.js",
+    "sha256": "d864a97b0f5d3783b6561c81060389bf6e068e585c38a019bae22c117e45c7ea"
+  }
+]

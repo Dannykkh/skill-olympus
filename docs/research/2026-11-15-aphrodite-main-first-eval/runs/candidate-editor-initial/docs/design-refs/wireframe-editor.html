@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="사내 매뉴얼 편집 화면의 저충실도 와이어프레임. 문서와 저장 상태는 제공된 샘플입니다.">
+<title>매뉴얼 편집 — 저충실도 와이어프레임</title>
+<link rel="stylesheet" href="wireframe.css">
+</head>
+<body>
+<!-- Phase 2 wireframe. All document content and save state are prototype data.
+     Inputs and native details work; server saving, formatting, and navigation services are not implemented. -->
+<a class="skip" href="#document-body">본문으로 건너뛰기</a>
+<div class="app">
+  <aside class="sidebar" aria-label="앱 탐색">
+    <details class="workspace-switch">
+      <summary>워크스페이스</summary>
+      <button type="button" class="nav-entry">워크스페이스 전환</button>
+    </details>
+    <nav class="side-nav" aria-label="문서 탐색">
+      <button class="nav-entry" type="button">최근 문서</button>
+      <button class="nav-entry" type="button">팀 폴더</button>
+      <button class="nav-entry" type="button">템플릿</button>
+      <button class="nav-entry" type="button">즐겨찾기</button>
+    </nav>
+    <section aria-label="현재 문서">
+      <p class="side-caption">현재 문서</p>
+      <a class="nav-current" href="wireframe-editor.html" aria-current="page">입고 검사 매뉴얼</a>
+      <a class="nav-new" href="wireframe-empty.html">+ 새 문서</a>
+    </section>
+    <button class="nav-entry account" type="button">계정</button>
+  </aside>
+  <div class="workspace">
+    <header class="document-header">
+      <details class="popover mobile-nav" name="header-menu">
+        <summary>탐색</summary>
+        <nav class="menu" aria-label="모바일 앱 탐색">
+          <button type="button">워크스페이스 전환</button>
+          <button type="button">최근 문서</button>
+          <button type="button">팀 폴더</button>
+          <button type="button">템플릿</button>
+          <button type="button">즐겨찾기</button>
+          <a class="nav-current" href="wireframe-editor.html" aria-current="page">입고 검사 매뉴얼</a>
+          <a class="nav-new" href="wireframe-empty.html">+ 새 문서</a>
+          <button type="button">계정</button>
+        </nav>
+      </details>
+      <div class="document-heading">
+        <label class="sr-only" for="document-title">문서 제목</label>
+        <input class="title-input" id="document-title" name="title" value="입고 검사 매뉴얼" aria-describedby="save-status">
+        <p class="save-status" id="save-status" role="status">모든 변경사항 저장됨</p>
+      </div>
+      <button class="primary save-button" type="button">저장</button>
+    </header>
+    <div class="toolbar" role="toolbar" aria-label="본문 도구">
+      <div class="format-actions" aria-label="본문 서식">
+        <label class="sr-only" for="paragraph-style">문단 스타일</label>
+        <select id="paragraph-style" class="style-select"><option>본문</option><option>제목 1</option><option>제목 2</option></select>
+        <button class="tool" type="button" aria-pressed="false"><strong>굵게</strong></button>
+        <button class="tool" type="button" aria-pressed="false"><em>기울임</em></button>
+        <button class="tool" type="button">목록</button>
+        <button class="tool" type="button">링크</button>
+        <button class="tool" type="button">표 삽입</button>
+      </div>
+      <details class="popover mobile-format" name="toolbar-menu">
+        <summary>서식·삽입</summary>
+        <div class="menu">
+          <label for="mobile-paragraph-style">문단 스타일</label>
+          <select id="mobile-paragraph-style"><option>본문</option><option>제목 1</option><option>제목 2</option></select>
+          <button type="button" aria-pressed="false">굵게</button>
+          <button type="button" aria-pressed="false">기울임</button>
+          <button type="button">목록</button>
+          <button type="button">링크</button>
+          <button type="button">표 삽입</button>
+        </div>
+      </details>
+      <div class="document-actions">
+        <details class="popover search-menu" name="toolbar-menu">
+          <summary><span class="desktop-search-label">찾기</span></summary>
+          <div class="menu">
+            <label for="body-search">본문 검색</label>
+            <input id="body-search" type="search" placeholder="검색어 입력">
+            <button type="button">검색</button>
+          </div>
+        </details>
+        <button type="button" class="tool">미리보기</button>
+        <details class="popover document-menu" name="toolbar-menu">
+          <summary>더보기</summary>
+          <div class="menu">
+            <button type="button">공유</button>
+            <button type="button">버전 기록</button>
+            <button type="button">댓글</button>
+            <button type="button">내보내기</button>
+            <button type="button">문서 설정</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <main class="canvas" id="document-body" aria-label="문서 본문">
+      <article class="paper" contenteditable="true" role="textbox" aria-label="매뉴얼 본문 편집" aria-multiline="true" spellcheck="false" tabindex="0">
+        <h1>입고 검사 매뉴얼</h1>
+        <p>이 문서는 입고된 부품의 검사와 기록 절차를 정리합니다.</p>
+        <h2>1. 입고 확인</h2>
+        <p>거래명세서의 발주번호와 실제 수량을 대조합니다.<br>포장 손상이나 품목 차이가 있으면 사진과 함께 기록합니다.</p>
+        <h2>2. 외관 검사</h2>
+        <p>검사 표본을 추출하고 균열·오염·변형을 확인합니다.<br>이상 항목은 불량 유형과 수량을 입력합니다.</p>
+        <h2>3. 기록과 보관</h2>
+        <p>검사가 끝나면 검사 기록을 저장하고 담당자에게 공유합니다.<br>보류된 부품은 지정 구역으로 이동합니다.</p>
+      </article>
+    </main>
+    <footer class="document-footer">
+      <details class="popover">
+        <summary>문서 정보</summary>
+        <div class="menu">
+          <dl><dt>제목</dt><dd>입고 검사 매뉴얼</dd><dt>저장 상태</dt><dd>모든 변경사항 저장됨</dd></dl>
+        </div>
+      </details>
+      <div class="zoom"><label for="document-zoom">확대 비율</label><select id="document-zoom"><option>80%</option><option selected>100%</option><option>125%</option><option>150%</option></select></div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

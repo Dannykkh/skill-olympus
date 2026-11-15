@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>입고 검사 매뉴얼 — 편집 와이어프레임</title><link rel="stylesheet" href="wireframe.css"><script src="wireframe.js" defer></script></head>
+<body data-screen="editor">
+<a class="skip" href="#document-body">본문 편집으로 건너뛰기</a>
+<div class="app">
+  <aside class="sidebar" id="app-navigation" aria-label="워크스페이스 탐색">
+    <button class="nav-close" type="button">탐색 닫기</button>
+    <button class="workspace" type="button" data-action="workspace">운영팀 워크스페이스 ▾</button>
+    <a class="button new-document" href="empty.html">+ 새 문서</a>
+    <nav aria-label="문서 탐색">
+      <a href="#recent" data-action="recent">최근 문서</a>
+      <a href="#folders" aria-current="page" data-action="folders">팀 폴더</a>
+      <a href="#templates" data-action="templates">템플릿</a>
+      <a href="#favorites" data-action="favorites">즐겨찾기</a>
+      <span class="folder-label">열려 있는 문서</span>
+      <a class="document-link" href="editor.html">입고 검사 매뉴얼</a>
+    </nav>
+    <button class="account" type="button" data-action="account">내 계정 ▾</button>
+  </aside>
+  <div class="workbench">
+    <header class="document-header">
+      <button class="nav-toggle" type="button" aria-controls="app-navigation" aria-expanded="false" aria-label="앱 탐색 열기">☰</button>
+      <div class="identity">
+        <label class="hidden" for="document-title">문서 제목</label>
+        <input id="document-title" class="document-title" aria-label="문서 제목" value="입고 검사 매뉴얼">
+        <span class="save-status" role="status" aria-live="polite">모든 변경사항 저장됨</span>
+      </div>
+      <button class="desktop-preview" type="button" data-action="preview">미리보기</button>
+      <button class="save-button primary" type="button">저장</button>
+      <details class="document-menu">
+        <summary aria-label="문서 메뉴">문서 ▾</summary>
+        <div class="menu-panel">
+          <button class="mobile-preview" type="button" data-action="preview">미리보기</button>
+          <button type="button" data-action="share">공유</button>
+          <button type="button" data-action="comments">댓글</button>
+          <button type="button" data-action="history">버전 기록</button>
+          <span class="separator" aria-hidden="true"></span>
+          <button type="button" data-action="export">내보내기</button>
+          <button type="button" data-action="settings">문서 설정</button>
+          <button type="button" data-action="info">문서 정보</button>
+        </div>
+      </details>
+    </header>
+    <div class="editor-tools" aria-label="본문 편집 도구">
+      <select aria-label="문단 스타일" data-format="style"><option>본문</option><option>제목 1</option><option>제목 2</option></select>
+      <button type="button" aria-label="굵게" title="굵게" data-format="bold"><strong>가</strong></button>
+      <button type="button" aria-label="기울임" title="기울임" data-format="italic"><em>가</em></button>
+      <span class="tool-separator" aria-hidden="true"></span>
+      <button class="desktop-tool" type="button" data-action="list">목록</button>
+      <button class="desktop-tool" type="button" data-action="link">링크</button>
+      <button class="desktop-tool" type="button" data-action="table">표 삽입</button>
+      <details class="format-menu"><summary>서식 ▾</summary><div class="menu-panel"><button type="button" data-action="list">목록</button><button type="button" data-action="link">링크</button><button type="button" data-action="table">표 삽입</button></div></details>
+      <details class="search-menu"><summary>찾기</summary><div class="menu-panel"><label for="body-search">본문 검색</label><input id="body-search" type="search" placeholder="검색어 입력"><div class="search-controls"><button type="button" data-action="search">찾기</button><button type="button" data-action="close-search">닫기</button></div><span id="search-result" role="status"></span></div></details>
+    </div>
+    <div class="inline-notice" id="state-notice" hidden role="alert"><p id="state-message"></p><button type="button" id="recovery-button">다시 저장</button></div>
+    <main class="canvas" aria-label="매뉴얼 편집">
+      <article class="paper">
+        <div class="editor" id="document-body" contenteditable="true" role="textbox" aria-label="문서 본문" aria-multiline="true" tabindex="0">
+          <h1>입고 검사 매뉴얼</h1>
+          <p>이 문서는 입고된 부품의 검사와 기록 절차를 정리합니다.</p>
+          <h2>1. 입고 확인</h2>
+          <p>거래명세서의 발주번호와 실제 수량을 대조합니다.</p>
+          <p>포장 손상이나 품목 차이가 있으면 사진과 함께 기록합니다.</p>
+          <h2>2. 외관 검사</h2>
+          <p>검사 표본을 추출하고 균열·오염·변형을 확인합니다.</p>
+          <p>이상 항목은 불량 유형과 수량을 입력합니다.</p>
+          <h2>3. 기록과 보관</h2>
+          <p>검사가 끝나면 검사 기록을 저장하고 담당자에게 공유합니다.</p>
+          <p>보류된 부품은 지정 구역으로 이동합니다.</p>
+        </div>
+      </article>
+    </main>
+    <footer class="statusbar"><div class="status-left"><button type="button" data-action="info">문서 정보</button><span>샘플 문서</span></div><div class="zoom-control"><label for="zoom">확대 비율</label><select id="zoom" aria-label="확대 비율"><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select></div></footer>
+  </div>
+</div>
+<dialog id="action-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button type="button" id="dialog-close">닫기</button></div><div class="dialog-content" id="dialog-content"></div></dialog>
+</body></html>

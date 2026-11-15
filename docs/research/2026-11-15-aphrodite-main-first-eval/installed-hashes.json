@@ -1,0 +1,128 @@
+[
+  {
+    "runtime": "claude-grok",
+    "source": "skills/design-plan/SKILL.md",
+    "target": "C:\\Users\\Administrator\\.claude\\.olympus\\source-skills\\design-plan\\SKILL.md",
+    "sha256": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+  },
+  {
+    "runtime": "claude-grok",
+    "source": "skills/design-plan/SKILL.md",
+    "target": "C:\\Users\\Administrator\\.claude\\skills\\design-plan\\SKILL.md",
+    "sha256": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+  },
+  {
+    "runtime": "claude-grok",
+    "source": "skills/design-plan/references/korean-mobile-app.md",
+    "target": "C:\\Users\\Administrator\\.claude\\.olympus\\source-skills\\design-plan\\references\\korean-mobile-app.md",
+    "sha256": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+  },
+  {
+    "runtime": "claude-grok",
+    "source": "skills/design-plan/references/korean-mobile-app.md",
+    "target": "C:\\Users\\Administrator\\.claude\\skills\\design-plan\\references\\korean-mobile-app.md",
+    "sha256": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+  },
+  {
+    "runtime": "claude-grok",
+    "source": "skills/design-plan/references/render-critique-loop.md",
+    "target": "C:\\Users\\Administrator\\.claude\\.olympus\\source-skills\\design-plan\\references\\render-critique-loop.md",
+    "sha256": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+  },
+  {
+    "runtime": "claude-grok",
+    "source": "skills/design-plan/references/render-critique-loop.md",
+    "target": "C:\\Users\\Administrator\\.claude\\skills\\design-plan\\references\\render-critique-loop.md",
+    "sha256": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+  },
+  {
+    "runtime": "claude-grok",
+    "source": "skills/frontend-design/references/layout-block-anatomy.md",
+    "target": "C:\\Users\\Administrator\\.claude\\.olympus\\source-skills\\frontend-design\\references\\layout-block-anatomy.md",
+    "sha256": "e6331fd2761a1d8d32d2bc14b0ee23e22e66c872658e9789a60bf2c1da4c4671"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/design-plan/SKILL.md",
+    "target": "C:\\Users\\Administrator\\.codex\\.olympus\\source-skills\\design-plan\\SKILL.md",
+    "sha256": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/design-plan/SKILL.md",
+    "target": "C:\\Users\\Administrator\\.codex\\skills\\design-plan\\SKILL.md",
+    "sha256": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/design-plan/references/korean-mobile-app.md",
+    "target": "C:\\Users\\Administrator\\.codex\\.olympus\\source-skills\\design-plan\\references\\korean-mobile-app.md",
+    "sha256": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/design-plan/references/korean-mobile-app.md",
+    "target": "C:\\Users\\Administrator\\.codex\\skills\\design-plan\\references\\korean-mobile-app.md",
+    "sha256": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/design-plan/references/render-critique-loop.md",
+    "target": "C:\\Users\\Administrator\\.codex\\.olympus\\source-skills\\design-plan\\references\\render-critique-loop.md",
+    "sha256": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/design-plan/references/render-critique-loop.md",
+    "target": "C:\\Users\\Administrator\\.codex\\skills\\design-plan\\references\\render-critique-loop.md",
+    "sha256": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+  },
+  {
+    "runtime": "codex",
+    "source": "skills/frontend-design/references/layout-block-anatomy.md",
+    "target": "C:\\Users\\Administrator\\.codex\\.olympus\\source-skills\\frontend-design\\references\\layout-block-anatomy.md",
+    "sha256": "e6331fd2761a1d8d32d2bc14b0ee23e22e66c872658e9789a60bf2c1da4c4671"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/design-plan/SKILL.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\.olympus\\source-skills\\design-plan\\SKILL.md",
+    "sha256": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/design-plan/SKILL.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\skills\\design-plan\\SKILL.md",
+    "sha256": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/design-plan/references/korean-mobile-app.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\.olympus\\source-skills\\design-plan\\references\\korean-mobile-app.md",
+    "sha256": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/design-plan/references/korean-mobile-app.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\skills\\design-plan\\references\\korean-mobile-app.md",
+    "sha256": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/design-plan/references/render-critique-loop.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\.olympus\\source-skills\\design-plan\\references\\render-critique-loop.md",
+    "sha256": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/design-plan/references/render-critique-loop.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\skills\\design-plan\\references\\render-critique-loop.md",
+    "sha256": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+  },
+  {
+    "runtime": "antigravity",
+    "source": "skills/frontend-design/references/layout-block-anatomy.md",
+    "target": "C:\\Users\\Administrator\\.gemini\\antigravity-cli\\.olympus\\source-skills\\frontend-design\\references\\layout-block-anatomy.md",
+    "sha256": "e6331fd2761a1d8d32d2bc14b0ee23e22e66c872658e9789a60bf2c1da4c4671"
+  }
+]

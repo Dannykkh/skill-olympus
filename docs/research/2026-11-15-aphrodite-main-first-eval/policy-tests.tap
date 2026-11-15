@@ -1,0 +1,352 @@
+TAP version 13
+# Subtest: Phase 0-1 judges the decision layer before reading anything else
+ok 1 - Phase 0-1 judges the decision layer before reading anything else
+  ---
+  duration_ms: 1.1471
+  type: 'test'
+  ...
+# Subtest: Phase 5-1 keeps the consumption gate and reads the rest by layer
+ok 2 - Phase 5-1 keeps the consumption gate and reads the rest by layer
+  ---
+  duration_ms: 0.5635
+  type: 'test'
+  ...
+# Subtest: reference-only steps read named sections without the module body
+ok 3 - reference-only steps read named sections without the module body
+  ---
+  duration_ms: 1.0829
+  type: 'test'
+  ...
+# Subtest: PRODUCT.md is linked, validated, and uses exactly three source labels
+ok 4 - PRODUCT.md is linked, validated, and uses exactly three source labels
+  ---
+  duration_ms: 1.0169
+  type: 'test'
+  ...
+# Subtest: korean mobile app rules keep the upstream MIT notice and source pin
+ok 5 - korean mobile app rules keep the upstream MIT notice and source pin
+  ---
+  duration_ms: 1.9742
+  type: 'test'
+  ...
+# Subtest: design-plan reads the korean mobile app rules at fixed phases
+ok 6 - design-plan reads the korean mobile app rules at fixed phases
+  ---
+  duration_ms: 1.3854
+  type: 'test'
+  ...
+# Subtest: korean mobile app rules carry no upstream plugin paths or tool runs
+ok 7 - korean mobile app rules carry no upstream plugin paths or tool runs
+  ---
+  duration_ms: 1.2786
+  type: 'test'
+  ...
+# Subtest: zephermine carries the deadline from the interview into the spec and the strategy rubric
+ok 8 - zephermine carries the deadline from the interview into the spec and the strategy rubric
+  ---
+  duration_ms: 2.2689
+  type: 'test'
+  ...
+# Subtest: zephermine Step 15 trims the plan backward from the success criteria without stopping
+ok 9 - zephermine Step 15 trims the plan backward from the success criteria without stopping
+  ---
+  duration_ms: 1.1899
+  type: 'test'
+  ...
+# Subtest: block anatomy budgets text and keeps only functional elements mandatory
+ok 10 - block anatomy budgets text and keeps only functional elements mandatory
+  ---
+  duration_ms: 0.3909
+  type: 'test'
+  ...
+# Subtest: the wireframe gate subtracts before the five criteria and keeps the screen skeleton
+ok 11 - the wireframe gate subtracts before the five criteria and keeps the screen skeleton
+  ---
+  duration_ms: 0.4952
+  type: 'test'
+  ...
+# Subtest: design-plan validates the stated success conditions and names the decision-pending end
+ok 12 - design-plan validates the stated success conditions and names the decision-pending end
+  ---
+  duration_ms: 0.7704
+  type: 'test'
+  ...
+# Subtest: install.bat --help exits before changing runtime homes
+ok 13 - install.bat --help exits before changing runtime homes
+  ---
+  duration_ms: 84.7309
+  type: 'test'
+  ...
+# Subtest: codex-only install.bat succeeds without a preexisting .claude directory
+ok 14 - codex-only install.bat succeeds without a preexisting .claude directory
+  ---
+  duration_ms: 20713.1658
+  type: 'test'
+  ...
+# Subtest: Antigravity-only install.bat writes the current Google CLI layout
+ok 15 - Antigravity-only install.bat writes the current Google CLI layout
+  ---
+  duration_ms: 3152.4567
+  type: 'test'
+  ...
+# Subtest: Codex global sync does not apply project-manifest ownership to another home
+ok 16 - Codex global sync does not apply project-manifest ownership to another home
+  ---
+  duration_ms: 1926.0198
+  type: 'test'
+  ...
+# Subtest: Claude source-only policy preserves user-owned skill overrides without adding entries
+ok 17 - Claude source-only policy preserves user-owned skill overrides without adding entries
+  ---
+  duration_ms: 50.6905
+  type: 'test'
+  ...
+# Subtest: Antigravity hook config preserves unrelated groups and rejects the retired target
+ok 18 - Antigravity hook config preserves unrelated groups and rejects the retired target
+  ---
+  duration_ms: 145.8776
+  type: 'test'
+  ...
+# Subtest: Antigravity MCP adapter owns only the entries it installs
+ok 19 - Antigravity MCP adapter owns only the entries it installs
+  ---
+  duration_ms: 110.729
+  type: 'test'
+  ...
+# Subtest: Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates
+ok 20 - Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates
+  ---
+  duration_ms: 43.1623
+  type: 'test'
+  ...
+# Subtest: Antigravity core hook blocks protected files and drives Chronos through Stop
+ok 21 - Antigravity core hook blocks protected files and drives Chronos through Stop
+  ---
+  duration_ms: 140.1793
+  type: 'test'
+  ...
+# Subtest: shared runtime skill policy is fail-closed with narrow and full opt-ins
+ok 22 - shared runtime skill policy is fail-closed with narrow and full opt-ins
+  ---
+  duration_ms: 0.5089
+  type: 'test'
+  ...
+# Subtest: Claude skill sync installs only the allowlist and catalogs source-only paths
+ok 23 - Claude skill sync installs only the allowlist and catalogs source-only paths
+  ---
+  duration_ms: 6189.3596
+  type: 'test'
+  ...
+# Subtest: Antigravity sync installs skills and hooks without custom agents and ignores retired agent flags
+ok 24 - Antigravity sync installs skills and hooks without custom agents and ignores retired agent flags
+  ---
+  duration_ms: 3656.5549
+  type: 'test'
+  ...
+# Subtest: Antigravity sync migrates legacy Gemini layouts and preserves modified assets
+ok 25 - Antigravity sync migrates legacy Gemini layouts and preserves modified assets
+  ---
+  duration_ms: 1910.3791
+  type: 'test'
+  ...
+# Subtest: stale Olympus assets are moved to backup while local-only assets remain
+ok 26 - stale Olympus assets are moved to backup while local-only assets remain
+  ---
+  duration_ms: 31.9933
+  type: 'test'
+  ...
+# Subtest: prune cleans up what the removed custom-agent pipeline left behind
+ok 27 - prune cleans up what the removed custom-agent pipeline left behind
+  ---
+  duration_ms: 46.2893
+  type: 'test'
+  ...
+# Subtest: generate-catalogs creates global catalogs and honors excluded skills
+ok 28 - generate-catalogs creates global catalogs and honors excluded skills
+  ---
+  duration_ms: 1718.0925
+  type: 'test'
+  ...
+# Subtest: four CLI instruction surfaces keep the native-first boundary aligned
+ok 29 - four CLI instruction surfaces keep the native-first boundary aligned
+  ---
+  duration_ms: 1.3687
+  type: 'test'
+  ...
+# Subtest: Mnemo rule reinstall replaces managed content once and preserves user settings
+ok 30 - Mnemo rule reinstall replaces managed content once and preserves user settings
+  ---
+  duration_ms: 759.4814
+  type: 'test'
+  ...
+# Subtest: fake-home test environments pin the config dirs that outrank HOME
+ok 31 - fake-home test environments pin the config dirs that outrank HOME
+  ---
+  duration_ms: 14.3434
+  type: 'test'
+  ...
+# Subtest: project instruction files keep native role ownership aligned
+ok 32 - project instruction files keep native role ownership aligned
+  ---
+  duration_ms: 0.5056
+  type: 'test'
+  ...
+# Subtest: install surfaces disclose skill registry migration and recovery
+ok 33 - install surfaces disclose skill registry migration and recovery
+  ---
+  duration_ms: 2.4704
+  type: 'test'
+  ...
+# Subtest: localized README surfaces stay connected and disclose portable hosts
+ok 34 - localized README surfaces stay connected and disclose portable hosts
+  ---
+  duration_ms: 2.5258
+  type: 'test'
+  ...
+# Subtest: no custom agent prompts ship
+ok 35 - no custom agent prompts ship
+  ---
+  duration_ms: 2.0385
+  type: 'test'
+  ...
+# Subtest: Antigravity Mnemo migrates legacy Gemini entries without deleting user rules
+ok 36 - Antigravity Mnemo migrates legacy Gemini entries without deleting user rules
+  ---
+  duration_ms: 197.494
+  type: 'test'
+  ...
+# Subtest: dormant skill source replacement validates staging and preserves the previous library on failure
+ok 37 - dormant skill source replacement validates staging and preserves the previous library on failure
+  ---
+  duration_ms: 52.5088
+  type: 'test'
+  ...
+# Subtest: sync CLIs reject unknown options before changing runtime homes
+ok 38 - sync CLIs reject unknown options before changing runtime homes
+  ---
+  duration_ms: 179.9377
+  type: 'test'
+  ...
+# Subtest: managed asset hashes distinguish safe upgrades from user modifications
+ok 39 - managed asset hashes distinguish safe upgrades from user modifications
+  ---
+  duration_ms: 1221.7048
+  type: 'test'
+  ...
+# Subtest: syncs remove legacy agent copies an old manifest recorded and preserve modified ones
+ok 40 - syncs remove legacy agent copies an old manifest recorded and preserve modified ones
+  ---
+  duration_ms: 236.3154
+  type: 'test'
+  ...
+# Subtest: catalog generation publishes a portable dormant library and sync manifests follow catalog work
+ok 41 - catalog generation publishes a portable dormant library and sync manifests follow catalog work
+  ---
+  duration_ms: 1797.2416
+  type: 'test'
+  ...
+# Subtest: unlink removes exact untracked Olympus assets and preserves same-name user modifications
+ok 42 - unlink removes exact untracked Olympus assets and preserves same-name user modifications
+  ---
+  duration_ms: 413.3797
+  type: 'test'
+  ...
+# Subtest: installers stop when a required policy sync fails
+ok 43 - installers stop when a required policy sync fails
+  ---
+  duration_ms: 1.495
+  type: 'test'
+  ...
+# Subtest: installers and the Codex audit resolve orchestrator MCP from the non-discovery runtime mirror
+ok 44 - installers and the Codex audit resolve orchestrator MCP from the non-discovery runtime mirror
+  ---
+  duration_ms: 1.1892
+  type: 'test'
+  ...
+# Subtest: Antigravity installers manage MCP through the global config adapter
+ok 45 - Antigravity installers manage MCP through the global config adapter
+  ---
+  duration_ms: 0.5595
+  type: 'test'
+  ...
+# Subtest: orchestrator direct installer uses the runtime mirror and bounded hook fallbacks
+ok 46 - orchestrator direct installer uses the runtime mirror and bounded hook fallbacks
+  ---
+  duration_ms: 252.3561
+  type: 'test'
+  ...
+# Subtest: Codex compatibility audit reads the selected CODEX_HOME manifest
+ok 47 - Codex compatibility audit reads the selected CODEX_HOME manifest
+  ---
+  duration_ms: 369.9952
+  type: 'test'
+  ...
+# Subtest: entry-point default deny keeps 18 common entry points, six adapters, and 78 public source-only modules
+ok 48 - entry-point default deny keeps 18 common entry points, six adapters, and 78 public source-only modules
+  ---
+  duration_ms: 6.3474
+  type: 'test'
+  ...
+# Subtest: all canonical skills use portable Agent Skills frontmatter
+ok 49 - all canonical skills use portable Agent Skills frontmatter
+  ---
+  duration_ms: 37.8638
+  type: 'test'
+  ...
+# Subtest: cross-CLI authoring rules and Antigravity compatibility boundaries stay explicit
+ok 50 - cross-CLI authoring rules and Antigravity compatibility boundaries stay explicit
+  ---
+  duration_ms: 2.1243
+  type: 'test'
+  ...
+# Subtest: Antigravity native workflows own their basic jobs while Olympus skills document a unique delta
+ok 51 - Antigravity native workflows own their basic jobs while Olympus skills document a unique delta
+  ---
+  duration_ms: 3.1299
+  type: 'test'
+  ...
+# Subtest: hard consumers resolve source-only modules from an exact catalog path and module root
+ok 52 - hard consumers resolve source-only modules from an exact catalog path and module root
+  ---
+  duration_ms: 9.0493
+  type: 'test'
+  ...
+# Subtest: skill-evolve hands approved comparison work to autoresearch by exact source path
+ok 53 - skill-evolve hands approved comparison work to autoresearch by exact source path
+  ---
+  duration_ms: 0.3478
+  type: 'test'
+  ...
+# Subtest: Aphrodite verifies Product Design before a one-time install recommendation
+ok 54 - Aphrodite verifies Product Design before a one-time install recommendation
+  ---
+  duration_ms: 0.6603
+  type: 'test'
+  ...
+# Subtest: Aphrodite compares Product Design against the same local contract
+ok 55 - Aphrodite compares Product Design against the same local contract
+  ---
+  duration_ms: 0.993
+  type: 'test'
+  ...
+# Subtest: video-maker routes one project to Remotion or HyperFrames without global skill install
+ok 56 - video-maker routes one project to Remotion or HyperFrames without global skill install
+  ---
+  duration_ms: 2.2055
+  type: 'test'
+  ...
+# Subtest: mnemo templates and hooks route memory maintenance without active slash assumptions
+ok 57 - mnemo templates and hooks route memory maintenance without active slash assumptions
+  ---
+  duration_ms: 4.1166
+  type: 'test'
+  ...
+1..57
+# tests 57
+# suites 0
+# pass 57
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41009.2693

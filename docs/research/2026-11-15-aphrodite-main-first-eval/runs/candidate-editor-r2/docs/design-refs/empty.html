@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>새 문서 — 빈 상태 와이어프레임</title><link rel="stylesheet" href="wireframe.css"><script src="wireframe.js" defer></script></head>
+<body data-screen="empty">
+<a class="skip" href="#document-body">본문 작성으로 건너뛰기</a>
+<div class="app">
+  <aside class="sidebar" id="app-navigation" aria-label="워크스페이스 탐색">
+    <button class="nav-close" type="button">탐색 닫기</button>
+    <button class="workspace" type="button" data-action="workspace">운영팀 워크스페이스 ▾</button>
+    <a class="button new-document" href="empty.html" aria-current="page">+ 새 문서</a>
+    <nav aria-label="문서 탐색"><a href="#recent" data-action="recent">최근 문서</a><a href="#folders" data-action="folders">팀 폴더</a><a href="#templates" data-action="templates">템플릿</a><a href="#favorites" data-action="favorites">즐겨찾기</a><span class="folder-label">아직 문서가 없습니다</span></nav>
+    <button class="account" type="button" data-action="account">내 계정 ▾</button>
+  </aside>
+  <div class="workbench">
+    <header class="document-header">
+      <button class="nav-toggle" type="button" aria-controls="app-navigation" aria-expanded="false" aria-label="앱 탐색 열기">☰</button>
+      <div class="identity"><span class="document-title" id="empty-document-name">새 문서</span><span class="save-status" role="status" aria-live="polite">아직 저장하지 않음</span></div>
+      <button class="desktop-preview" type="button" data-action="preview">미리보기</button>
+      <button class="save-button" type="button" disabled>저장</button>
+      <details class="document-menu"><summary aria-label="문서 메뉴">문서 ▾</summary><div class="menu-panel"><button class="mobile-preview" type="button" data-action="preview">미리보기</button><button type="button" data-action="share">공유</button><button type="button" data-action="comments">댓글</button><button type="button" data-action="history">버전 기록</button><span class="separator" aria-hidden="true"></span><button type="button" data-action="export">내보내기</button><button type="button" data-action="settings">문서 설정</button><button type="button" data-action="info">문서 정보</button></div></details>
+    </header>
+    <div class="editor-tools" aria-label="본문 편집 도구">
+      <select aria-label="문단 스타일" data-format="style"><option>본문</option><option>제목 1</option><option>제목 2</option></select>
+      <button type="button" aria-label="굵게" title="굵게" data-format="bold"><strong>가</strong></button><button type="button" aria-label="기울임" title="기울임" data-format="italic"><em>가</em></button><span class="tool-separator" aria-hidden="true"></span><button class="desktop-tool" type="button" data-action="list">목록</button><button class="desktop-tool" type="button" data-action="link">링크</button><button class="desktop-tool" type="button" data-action="table">표 삽입</button>
+      <details class="format-menu"><summary>서식 ▾</summary><div class="menu-panel"><button type="button" data-action="list">목록</button><button type="button" data-action="link">링크</button><button type="button" data-action="table">표 삽입</button></div></details>
+      <details class="search-menu"><summary>찾기</summary><div class="menu-panel"><label for="body-search">본문 검색</label><input id="body-search" type="search" placeholder="검색어 입력"><div class="search-controls"><button type="button" data-action="search">찾기</button><button type="button" data-action="close-search">닫기</button></div><span id="search-result" role="status"></span></div></details>
+    </div>
+    <div class="inline-notice" id="state-notice" hidden role="alert"><p id="state-message"></p><button type="button" id="recovery-button">다시 저장</button></div>
+    <main class="canvas" aria-label="새 문서 작성">
+      <article class="paper empty-paper">
+        <label class="empty-label" for="document-title">문서 제목</label>
+        <input id="document-title" class="empty-title" placeholder="제목을 입력하세요" autocomplete="off">
+        <div class="empty-content"><label for="document-body">본문</label><p class="empty-guidance" id="empty-guidance">첫 문장을 쓰면 이 자리가 매뉴얼이 됩니다.</p><button class="empty-start primary" type="button">작성 시작</button><div class="empty-editor" id="document-body" contenteditable="true" role="textbox" aria-label="문서 본문" aria-describedby="empty-guidance" aria-multiline="true" tabindex="0" data-placeholder="여기에 첫 문장을 입력하세요."></div></div>
+      </article>
+    </main>
+    <footer class="statusbar"><div class="status-left"><button type="button" data-action="info">문서 정보</button><span>새 문서</span></div><div class="zoom-control"><label for="zoom">확대 비율</label><select id="zoom" aria-label="확대 비율"><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select></div></footer>
+  </div>
+</div>
+<dialog id="action-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button type="button" id="dialog-close">닫기</button></div><div class="dialog-content" id="dialog-content"></div></dialog>
+</body></html>

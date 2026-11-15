@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>발주 목록 — 저충실도 와이어프레임</title>
+  <link rel="stylesheet" href="wireframe.css">
+  <script src="wireframe.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#orders">발주 목록으로 건너뛰기</a>
+<aside class="sidebar" aria-label="앱 탐색">
+  <div class="brand">구매 관리</div>
+  <button class="workspace" data-open="workspace-dialog">구매 워크스페이스 <span aria-hidden="true">⌄</span></button>
+  <nav aria-label="주 메뉴">
+    <a href="#orders" aria-current="page">발주</a>
+    <button data-route="거래처">거래처</button>
+    <button data-route="입고">입고</button>
+    <button data-route="보고서">보고서</button>
+    <button data-route="설정">설정</button>
+  </nav>
+  <div class="sidebar-bottom">
+    <button data-open="help-dialog">화면 도움말</button>
+    <button data-open="account-dialog">구매 담당자 · 계정 <span aria-hidden="true">⌄</span></button>
+  </div>
+</aside>
+<main id="main">
+  <header class="page-head">
+    <button class="mobile-only app-menu" data-open="navigation-dialog" aria-label="앱 메뉴 열기">☰</button>
+    <div class="page-name"><h1 id="page-title">발주</h1><span id="prototype">샘플 데이터</span></div>
+    <button class="primary new-order" data-open="new-dialog">새 발주</button>
+  </header>
+  <section aria-labelledby="page-title" class="order-area">
+    <div class="filterbar" role="search" aria-label="발주 검색과 필터">
+      <label class="searchbox"><span class="sr-only">발주번호 또는 거래처 검색</span><input id="search" type="search" placeholder="발주번호 또는 거래처 검색" autocomplete="off"></label>
+      <label class="desktop-filter"><span class="sr-only">상태</span><select id="status"><option value="">상태 전체</option><option>지연</option><option>진행</option><option>입고완료</option></select></label>
+      <label class="desktop-filter"><span class="sr-only">거래처</span><select id="vendor"><option value="">거래처 전체</option><option>한빛정밀</option><option>새론소재</option><option>동진부품</option><option>유성산업</option></select></label>
+      <label class="desktop-filter"><span class="sr-only">기간</span><select id="period"><option value="">기간 전체</option><option value="12-14">납기 11/12~14</option><option value="17-20">납기 11/17~20</option></select></label>
+      <button class="mobile-only filter-trigger" data-open="filter-dialog">필터 <span id="filter-count"></span></button>
+    </div>
+    <div id="active-filters" class="active-filters" hidden aria-label="적용한 조건"></div>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <div class="resultsbar">
+      <p id="result-count" aria-live="polite">12건 · 지연 3건</p>
+      <div class="result-tools">
+        <label><span class="sr-only">발주 정렬</span><select id="sort"><option value="priority">지연 우선</option><option value="date">납기 빠른 순</option><option value="amount">금액 높은 순</option></select></label>
+        <button class="refresh desktop-only" id="refresh">새로고침</button>
+        <details class="more-menu"><summary aria-label="목록 더보기">···</summary><div class="menu-items"><button id="export">CSV 내보내기</button><button id="archive-view">보관함</button><button id="refresh-mobile" class="mobile-only">새로고침</button><button data-open="help-dialog">화면 도움말</button></div></details>
+      </div>
+    </div>
+    <div id="selection-bar" class="selection-bar" hidden><span id="selected-count">0건 선택</span><button class="primary" id="assign-selected">담당자 배정</button><button id="clear-selection">선택 해제</button></div>
+    <div id="orders" class="table-wrap" tabindex="-1">
+      <table aria-describedby="prototype">
+        <caption class="sr-only">발주 목록. 발주를 선택한 뒤 담당자를 배정할 수 있습니다.</caption>
+        <colgroup><col class="col-check"><col class="col-number"><col class="col-vendor"><col class="col-item"><col class="col-amount"><col class="col-due"><col class="col-status"><col class="col-owner"><col class="col-menu"></colgroup>
+        <thead><tr><th scope="col"><input id="select-all" type="checkbox" aria-label="현재 결과 모두 선택"></th><th scope="col">발주번호</th><th scope="col">거래처</th><th scope="col">품목</th><th scope="col" class="number">금액</th><th scope="col">납기</th><th scope="col">상태</th><th scope="col">담당자</th><th scope="col"><span class="sr-only">행 조작</span></th></tr></thead>
+        <tbody id="order-rows"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state" hidden><h2>검색 결과가 없습니다</h2><p>발주번호·거래처를 확인하거나 조건을 초기화해 주세요.</p><button id="reset-empty">검색·필터 초기화</button></div>
+      <div id="loading-state" class="empty-state" hidden role="status"><h2>발주를 불러오는 중</h2><p>기존 목록을 유지하고 있습니다.</p></div>
+    </div>
+    <footer class="list-footer"><span>샘플 발주 12건</span><a href="2026-11-15-wireframe-states.html">상태 시트 보기</a></footer>
+  </section>
+</main>
+<dialog id="assign-dialog" aria-labelledby="assign-title"><form id="assign-form"><h2 id="assign-title">담당자 배정</h2><p id="assign-target"></p><ul id="assign-orders" class="target-list"></ul><label class="field">담당자<select id="assignee" required><option value="">담당자 선택</option><option>김민수</option><option>이서연</option></select></label><div class="dialog-actions"><button type="button" data-close>취소</button><button class="primary" type="submit">배정하기</button></div></form></dialog>
+<dialog id="detail-dialog" aria-labelledby="detail-title"><h2 id="detail-title">발주 상세</h2><dl id="detail-fields" class="detail-fields"></dl><div class="dialog-actions"><button data-close>닫기</button><button class="primary" id="detail-assign">담당자 변경</button></div></dialog>
+<dialog id="filter-dialog" aria-labelledby="filter-title"><form id="filter-form"><h2 id="filter-title">필터</h2><label class="field">상태<select id="mobile-status"><option value="">상태 전체</option><option>지연</option><option>진행</option><option>입고완료</option></select></label><label class="field">거래처<select id="mobile-vendor"><option value="">거래처 전체</option><option>한빛정밀</option><option>새론소재</option><option>동진부품</option><option>유성산업</option></select></label><label class="field">기간<select id="mobile-period"><option value="">기간 전체</option><option value="12-14">납기 11/12~14</option><option value="17-20">납기 11/17~20</option></select></label><div class="dialog-actions"><button type="button" id="reset-filter">초기화</button><button class="primary" type="submit">결과 보기</button></div></form></dialog>
+<dialog id="navigation-dialog" aria-labelledby="navigation-title"><h2 id="navigation-title">구매 관리</h2><button class="workspace" data-open="workspace-dialog">구매 워크스페이스 ⌄</button><nav class="dialog-nav" aria-label="모바일 주 메뉴"><a href="#orders" aria-current="page" data-close>발주</a><button data-route="거래처">거래처</button><button data-route="입고">입고</button><button data-route="보고서">보고서</button><button data-route="설정">설정</button><button data-open="account-dialog">구매 담당자 · 계정</button></nav><button data-close>닫기</button></dialog>
+<dialog id="workspace-dialog"><h2>워크스페이스 전환</h2><p>현재 워크스페이스: 구매 워크스페이스</p><button data-close>닫기</button></dialog>
+<dialog id="account-dialog"><h2>계정</h2><p>구매 담당자</p><button data-close>닫기</button></dialog>
+<dialog id="help-dialog"><h2>발주 목록 도움말</h2><ol><li>상태에서 ‘지연’을 선택합니다.</li><li>금액·납기를 확인하고 발주를 선택합니다.</li><li>‘담당자 배정’에서 담당자를 정합니다.</li></ol><p>모든 데이터는 구조 검토용 샘플입니다.</p><button data-close>닫기</button></dialog>
+<dialog id="new-dialog"><h2>새 발주</h2><p>새 발주 작성 화면으로 이동합니다.</p><p class="muted">이 와이어프레임은 목록 화면의 진입점까지 다룹니다.</p><button data-close>목록으로 돌아가기</button></dialog>
+<dialog id="route-dialog"><h2 id="route-title"></h2><p>해당 업무 화면으로 이동하는 탐색 진입점입니다.</p><button data-close>발주 목록으로 돌아가기</button></dialog>
+<noscript><p>와이어프레임의 샘플 목록과 상태를 보려면 JavaScript를 켜 주세요.</p></noscript>
+</body>
+</html>

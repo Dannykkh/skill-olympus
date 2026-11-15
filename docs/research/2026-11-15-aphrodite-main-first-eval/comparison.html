@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>아프로디테 와이어프레임 검증</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,"Malgun Gothic",sans-serif;color:#181818;background:#f4f4f4}
+header{padding:16px 24px;border-bottom:1px solid #ccc;background:white;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+h1{font-size:20px;margin:0}button,select{font:inherit;padding:8px 12px;border:1px solid #999;background:white;color:inherit;min-height:44px}
+button[aria-pressed=true]{background:#222;color:white}main{max-width:1320px;margin:auto;padding:16px 24px}
+#description{margin:0 0 16px}.pair{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+figure{margin:0}figcaption{font-weight:700;margin:0 0 8px}figure a{display:block}img{display:block;max-width:100%;width:390px;height:auto;border:1px solid #bbb;background:white}
+small{display:block;color:#555;margin-top:12px}a{color:inherit}.source{margin:16px 0 0}
+@media(max-width:650px){.pair{grid-template-columns:1fr}header,main{padding:12px}}
+</style>
+<header><h1>와이어프레임 검증</h1><button id="list" aria-pressed="true" onclick="show('list')">발주 목록</button><button id="editor" aria-pressed="false" onclick="show('editor')">편집기 확대</button><label id="width-label">폭 <select id="width" onchange="render()"><option value="390">390px</option><option value="360">360px</option><option value="1280">1280px</option></select></label></header>
+<main><p id="description"></p><div class="pair"><figure><figcaption id="before-label"></figcaption><a id="before-link"><img id="before" alt=""></a></figure><figure><figcaption id="after-label"></figcaption><a id="after-link"><img id="after" alt=""></a></figure></div><small>독립 실행의 원본 HTML을 Chromium 156 / Windows에서 렌더링한 화면입니다. 그림을 누르면 원본 크기로 열립니다. 확대 검사는 글자 크기 2배이며, 브라우저 UI 줌의 실기기 인증은 아닙니다.</small><p class="source"><a href="result.md">실측·판정·한계 보고서</a></p></main>
+<script>
+let mode="list";
+function show(value){mode=value;document.querySelector("#list").setAttribute("aria-pressed",value==="list");document.querySelector("#editor").setAttribute("aria-pressed",value==="editor");document.querySelector("#width-label").hidden=value!=="list";render();}
+function render(){
+const width=document.querySelector("#width").value;
+const before=mode==="list"?"baseline-list-selected3-final-"+width+".png":"candidate-editor-text200.png";
+const after=mode==="list"?"list-repaired-"+width+".png":"editor-r2-text200.png";
+document.querySelector("#before-label").textContent=mode==="list"?"변경 전 지침":"첫 실행 · 확대에서 잘림";
+document.querySelector("#after-label").textContent=mode==="list"?"최종 지침 실행 + 렌더 후 수정":"보강 후 독립 재실행";
+document.querySelector("#description").textContent=mode==="list"?"같은 요구사항 · 같은 데이터 12건 · 지연 발주 3건 선택 · 본문 16px. "+(width==="1280"?"첫 행 333.2 → 284.5px, 완전 항목 8 → 9개":width==="390"?"첫 행 470 → 228px, 완전 항목 2 → 3개":"첫 행 470 → 228px, 완전 항목 1 → 3개"):"같은 편집기 요구사항 · 글자만 200% 확대 · 저장 버튼과 본문 배치 비교";
+for(const [id,file] of [["before",before],["after",after]]){const url="screenshots/"+file;document.querySelector("#"+id).src=url;document.querySelector("#"+id).alt=document.querySelector("#"+id+"-label").textContent;document.querySelector("#"+id+"-link").href=url;document.querySelector("#"+id).style.width=mode==="list"&&width==="1280"?"100%":"390px";}
+}
+render();
+</script></html>

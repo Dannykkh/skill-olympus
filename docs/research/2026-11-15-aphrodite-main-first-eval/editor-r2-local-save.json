@@ -1,0 +1,10 @@
+{
+  "visibleText": "본문 편집으로 건너뛰기\n☰\n저장 중…\n저장\n문서 ▾\n본문\n제목 1\n제목 2\n가\n가\n서식 ▾\n찾기\n검증용 수정 문장\n문서 정보\n샘플 문서\n100%\n125%\n150%",
+  "fieldText": "검증용 수정 문장",
+  "menuLabels": [
+    "문서 ▾",
+    "서식 ▾",
+    "찾기"
+  ],
+  "requests": "local prototype only"
+}

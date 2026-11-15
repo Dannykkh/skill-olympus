@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>매뉴얼 편집기 — 주요 상태 시트</title><link rel="stylesheet" href="wireframe.css"></head>
+<body class="sheet">
+<header class="sheet-header">
+  <h1>문서 편집기의 주요 상태</h1>
+  <p>Phase 2 설계 자료 · 같은 편집기 안의 상태 예시 · 서버 기능 미구현</p>
+  <nav class="sheet-links" aria-label="와이어프레임 자료"><a href="wireframe-editor.html">내용 있는 편집기</a><a href="wireframe-empty.html">새 문서 빈 상태</a></nav>
+</header>
+<main class="state-grid">
+  <section class="state-card"><p class="state-label">문서 열기 · loading</p><h2>문서를 여는 중…</h2><p role="status">잠시 기다려 주세요.</p><div class="state-placeholder">문서 본문</div></section>
+  <section class="state-card"><p class="state-label">입력 후 · editing</p><h2>입고 검사 매뉴얼</h2><p role="status">저장되지 않은 변경사항</p><button type="button" class="primary">저장</button></section>
+  <section class="state-card"><p class="state-label">저장 요청 · saving</p><h2>입고 검사 매뉴얼</h2><p role="status">저장 중…</p><button type="button" disabled>저장 중</button></section>
+  <section class="state-card"><p class="state-label">저장 실패 · error</p><div class="state-message" role="alert"><h2>저장하지 못했습니다.</h2><p>입력 내용은 이 화면에 남아 있습니다.</p></div><button type="button" class="primary">다시 저장</button></section>
+  <section class="state-card"><p class="state-label">저장 완료 · success</p><h2>입고 검사 매뉴얼</h2><p role="status">모든 변경사항 저장됨</p><button type="button">미리보기</button></section>
+  <section class="state-card"><p class="state-label">권한 변경 · permission</p><h2>읽기 전용</h2><p>편집 권한이 없습니다. 작성한 내용은 보관하세요.</p><button type="button">권한 요청</button><button type="button" disabled>저장</button></section>
+  <section class="state-card"><p class="state-label">버전 차이 · stale</p><h2>더 최신 버전이 있습니다.</h2><p>내 변경을 유지한 채 최신 문서를 확인하세요.</p><button type="button">최신 문서 확인</button></section>
+  <section class="state-card"><p class="state-label">본문 확인 · preview</p><h2>입고 검사 매뉴얼</h2><p>이 문서는 입고된 부품의 검사와 기록 절차를 정리합니다.</p><button type="button">편집으로 돌아가기</button></section>
+</main>
+</body>
+</html>

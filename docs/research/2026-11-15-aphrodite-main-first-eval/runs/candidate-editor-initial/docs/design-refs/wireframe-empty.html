@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="새 매뉴얼 문서의 빈 상태. 제목과 첫 문장을 바로 쓰는 저충실도 와이어프레임입니다.">
+<title>새 문서 — 저충실도 와이어프레임</title>
+<link rel="stylesheet" href="wireframe.css">
+</head>
+<body>
+<!-- Phase 2 wireframe, prototype state. No server, authentication or real save implementation. -->
+<a class="skip" href="#document-body">본문으로 건너뛰기</a>
+<div class="app">
+  <aside class="sidebar" aria-label="앱 탐색">
+    <details class="workspace-switch"><summary>워크스페이스</summary><button type="button" class="nav-entry">워크스페이스 전환</button></details>
+    <nav class="side-nav" aria-label="문서 탐색">
+      <button class="nav-entry" type="button">최근 문서</button>
+      <button class="nav-entry" type="button">팀 폴더</button>
+      <button class="nav-entry" type="button">템플릿</button>
+      <button class="nav-entry" type="button">즐겨찾기</button>
+    </nav>
+    <section aria-label="현재 문서">
+      <p class="side-caption">현재 문서</p>
+      <a class="nav-current" href="wireframe-empty.html" aria-current="page">새 문서</a>
+      <p class="side-caption" style="margin-top:12px">최근 문서 없음</p>
+    </section>
+    <button class="nav-entry account" type="button">계정</button>
+  </aside>
+  <div class="workspace">
+    <header class="document-header">
+      <details class="popover mobile-nav" name="header-menu">
+        <summary>탐색</summary>
+        <nav class="menu" aria-label="모바일 앱 탐색">
+          <button type="button">워크스페이스 전환</button>
+          <button type="button">최근 문서</button>
+          <button type="button">팀 폴더</button>
+          <button type="button">템플릿</button>
+          <button type="button">즐겨찾기</button>
+          <a class="nav-current" href="wireframe-empty.html" aria-current="page">새 문서</a>
+          <button type="button">계정</button>
+        </nav>
+      </details>
+      <div class="document-heading">
+        <h1>새 문서</h1>
+        <p class="save-status" id="save-status" role="status">아직 저장되지 않음</p>
+      </div>
+      <button class="primary save-button" type="button">저장</button>
+    </header>
+    <div class="toolbar" role="toolbar" aria-label="본문 도구">
+      <div class="format-actions" aria-label="본문 서식">
+        <label class="sr-only" for="paragraph-style">문단 스타일</label>
+        <select id="paragraph-style" class="style-select"><option>본문</option><option>제목 1</option><option>제목 2</option></select>
+        <button class="tool" type="button" aria-pressed="false"><strong>굵게</strong></button>
+        <button class="tool" type="button" aria-pressed="false"><em>기울임</em></button>
+        <button class="tool" type="button">목록</button>
+        <button class="tool" type="button">링크</button>
+        <button class="tool" type="button">표 삽입</button>
+      </div>
+      <details class="popover mobile-format" name="toolbar-menu">
+        <summary>서식·삽입</summary>
+        <div class="menu">
+          <label for="mobile-paragraph-style">문단 스타일</label>
+          <select id="mobile-paragraph-style"><option>본문</option><option>제목 1</option><option>제목 2</option></select>
+          <button type="button" aria-pressed="false">굵게</button>
+          <button type="button" aria-pressed="false">기울임</button>
+          <button type="button">목록</button>
+          <button type="button">링크</button>
+          <button type="button">표 삽입</button>
+        </div>
+      </details>
+      <div class="document-actions">
+        <details class="popover search-menu" name="toolbar-menu">
+          <summary>찾기</summary>
+          <div class="menu">
+            <label for="body-search">본문 검색</label>
+            <input id="body-search" type="search" placeholder="검색어 입력">
+            <button type="button">검색</button>
+          </div>
+        </details>
+        <button type="button" class="tool">미리보기</button>
+        <details class="popover document-menu" name="toolbar-menu">
+          <summary>더보기</summary>
+          <div class="menu">
+            <button type="button">공유</button>
+            <button type="button">버전 기록</button>
+            <button type="button">댓글</button>
+            <button type="button">내보내기</button>
+            <button type="button">문서 설정</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <main class="canvas" id="document-body" aria-label="새 문서 작성">
+      <form class="paper" aria-label="새 매뉴얼 문서">
+        <label class="editor-label" for="new-title">제목</label>
+        <input class="empty-title" id="new-title" name="title" placeholder="제목 입력" aria-describedby="save-status" autocomplete="off">
+        <label class="editor-label" for="new-body">본문</label>
+        <textarea class="empty-body" id="new-body" name="body" placeholder="첫 문장을 입력하세요." spellcheck="false"></textarea>
+      </form>
+    </main>
+    <footer class="document-footer">
+      <details class="popover"><summary>문서 정보</summary><div class="menu"><dl><dt>제목</dt><dd>새 문서</dd><dt>저장 상태</dt><dd>아직 저장되지 않음</dd></dl></div></details>
+      <div class="zoom"><label for="document-zoom">확대 비율</label><select id="document-zoom"><option>80%</option><option selected>100%</option><option>125%</option><option>150%</option></select></div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

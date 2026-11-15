@@ -1,0 +1,9 @@
+당신은 C:\Users\ADMINI~1\AppData\Local\Temp\aphrodite-main-first-eval-38xrnoba\candidate-list 프로젝트에서 일하는 디자인 에이전트입니다.
+사용자 요청: «아프로디테 --plan-only로 구매 담당자의 발주 목록 화면을 설계해줘. 데스크톱 1280×800과 모바일 390×844의 저충실도 와이어프레임까지 만들어줘.»
+
+C:\Users\ADMINI~1\AppData\Local\Temp\aphrodite-main-first-eval-38xrnoba\candidate-list\skills\design-plan\SKILL.md를 처음부터 읽고 그 절차를 따르세요. 내부 모듈은 이 프로젝트의 skills/<이름>/SKILL.md를 사용하세요.
+기존 PRODUCT.md와 DESIGN.md를 정본으로 사용합니다. Phase 2(저충실도 와이어프레임 판단 게이트 포함)까지 진행하고 멈춥니다. Phase 3 이후는 실행하지 않습니다.
+산출물은 이 프로젝트의 docs/design-refs/ 아래에만 씁니다. 사용자에게 질문할 수 없으므로 중요한 미결은 문서에 기록합니다. 다른 실행 폴더나 원본 저장소의 지침·평가 기록·대화·기억은 읽지 마세요. 외부 API·패키지 설치·전역 설정 변경은 하지 않습니다.
+와이어프레임은 브라우저에서 열 수 있는 회색조 HTML/CSS로 만듭니다. 실제 라벨·샘플 내용을 사용하고 의미에 맞는 HTML 요소를 씁니다. 데스크톱과 모바일은 같은 HTML의 반응형으로 그려도 됩니다. 화면·상태가 여러 개면 파일을 구분합니다. 스크린샷과 브라우저 검증은 메인 평가자가 하므로 브라우저 도구를 사용하지 않습니다.
+
+반환: 읽은 파일 목록, 산출물 절대경로, 화면이 무엇이 되었는지 3문장, 따르기 어렵거나 모호한 규칙(원문 인용 최대 5개).

@@ -1,0 +1,27 @@
+{
+  "root": "C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\aphrodite-main-first-eval-38xrnoba",
+  "source_revision": "b7c81f9d30add0afc387e4adb12e258919854852",
+  "requests": {
+    "baseline-list": "아프로디테 --plan-only로 구매 담당자의 발주 목록 화면을 설계해줘. 데스크톱 1280×800과 모바일 390×844의 저충실도 와이어프레임까지 만들어줘.",
+    "candidate-list": "아프로디테 --plan-only로 구매 담당자의 발주 목록 화면을 설계해줘. 데스크톱 1280×800과 모바일 390×844의 저충실도 와이어프레임까지 만들어줘.",
+    "candidate-editor": "아프로디테 --plan-only로 사내 매뉴얼 편집 화면과 새 문서의 빈 상태를 설계해줘. 데스크톱 1280×800과 모바일 390×844의 저충실도 와이어프레임까지 만들어줘."
+  },
+  "source_hashes": {
+    "skills/design-plan/SKILL.md": {
+      "before": "0b424a8873e811da8fae683e6e75ae678219466c16d481665287c46299b5af9b",
+      "after": "281f85e44ac9f9b8ec89fa51815af9d93e56fa4c41a1da379d58e512e29d39d6"
+    },
+    "skills/design-plan/references/korean-mobile-app.md": {
+      "before": "3cea4a66043cb052d6acc4d38066e34a7d56659f8d70a3a126d88750dbfe9c5e",
+      "after": "6f4e1d131b28d714409e5a952e4f50b7a7a22e5df8523e7624f9029dc11d48e0"
+    },
+    "skills/design-plan/references/render-critique-loop.md": {
+      "before": "b212fefd7734705aa8aac833cf6b35bd8a9fc0b19df6fb5da33f0d6acd380f84",
+      "after": "7414a6a733778686141ea8ad4150bec5b5cbd1963675120341affbfd7ed3af43"
+    },
+    "skills/frontend-design/references/layout-block-anatomy.md": {
+      "before": "8b9e7e67b3e9ac3f772d2575c636cd2b8a33613d010831d39898e744ed3f89f8",
+      "after": "81e6e4916127d6d7f57c5047b8889873c8e20c00874e8c00b53e79411ad88307"
+    }
+  }
+}
