@@ -17,6 +17,16 @@ node skills/codex-mnemo/install.js --check      # 설치/notify 진단
 node skills/codex-mnemo/install.js --uninstall  # 제거
 ```
 
+Windows 설치기는 Mnemo·TermSnap의 알려진 notify 중계 스크립트에서 native 인자 전달을
+보정한다. 원본은 같은 경로의 `.pre-mnemo-transport.bak`에 한 번 보존하고 기존 명령·알림
+체인은 유지한다. `invoke-notify.ps1`이 명시적으로 Windows argv를 인코딩해 PowerShell 5.1과
+PowerShell 7 `Legacy` 모드에서도 JSON 따옴표·역슬래시·빈 인자를 보존한다.
+
+`--check`는 설치 파일과 알려진 위험 중계 구문을 정적으로 검사한다. 실제 대화 전송·저장의
+성공을 뜻하지 않는다. 소스 checkout의 실행 회귀 검사는 `node --test scripts/tests/codex-notify-forwarding.test.js`
+이며, 격리한 프로젝트에서 입력·답변·기존 알림 전달과 재전달 중복 방지를 확인한다.
+TermSnap이 중계 스크립트를 다시 생성했다면 설치기를 재실행해 보정하고 다시 검사한다.
+
 ---
 
 ## Claude Code Mnemo와의 차이
@@ -65,6 +75,7 @@ codex-mnemo/
 ├── hooks/
 │   ├── save-turn.ps1            # Windows notify 오케스트레이터 (+ Chronos optional chain)
 │   ├── save-turn.sh             # Linux/Mac notify 오케스트레이터 (+ Chronos optional chain)
+│   ├── invoke-notify.ps1         # Windows native notify 인자 전달
 │   └── store-turn.js            # 전체 입력·답변·표식의 동시 저장, 대기 턴 재시도
 ├── scripts/
 │   └── reconcile_codex_conversations.py  # rollout JSONL → conversations/ 복구

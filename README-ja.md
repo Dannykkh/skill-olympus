@@ -325,9 +325,13 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 ---
 
-**最終更新:** 2026-11-01
+**最終更新:** 2026-11-15
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.9.2 — Windowsのnotify中継でJSONを保持
+
+Codex-Mnemoのnotify中継でJSONの引用符が失われる問題を修正しました。PowerShell 5.1とPowerShell 7の`Legacy`モードでは、別プロセスへの引数転送でJSONが壊れる場合がありました。インストーラーは既知のMnemo・TermSnapラッパーをバックアップして修正し、既存の通知処理を維持します。`--check`は危険な転送コードを検出しますが、実際の保存成功を確認する検査ではありません。インストール済みのラッパーをPowerShell 5.1・7・7 `Legacy`で実行し、入力と回答の保存、TermSnap通知のセッションIDを確認しました。対象のPCで更新版の`install.bat`を再実行してください。TermSnapがラッパーを再生成した場合も再実行が必要です。[Codex-Mnemo](skills/codex-mnemo/SKILL.md)。
 
 ## v7.9.1 — 作業領域を先に確保するレイアウト
 
