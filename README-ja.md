@@ -329,6 +329,14 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.10.0 — CI監査と公開サイトの引き継ぎ
+
+Minosに `/minos --ci-audit --limit 30` を追加しました。CIの実行履歴・所要時間・失敗を分析し、レポートを返します。QAの生成・修正とは別に動き、再実行のattempt、並列処理の経過時間、未計測の値を区別します。ワークフローの変更やCIの再実行は行いません。[CI監査の契約](skills/minos/references/ci-audit.md)を参照してください。
+
+公開する事業・サービスサイトでは、提供内容・対象者・根拠のあるコピー・CTAの結果・公開条件を設計から実装・検証まで引き継ぎます。Aphroditeは画面コードと見た目の検証、PoseidonまたはDaedalusは機能の接続と統合を担当します。Minosの動作検証、SEO・Themisの専門監査、Clioの公開準備判定は別々の根拠として扱います。管理画面や内部ツールに宣伝用セクションや本番公開の検査を強制しません。[公開サイトガイド](skills/design-plan/references/public-site-guide.md)にまとめています。
+
+状態遷移や既存実装の再利用方針も実装者に渡し、観測した根拠でバグの優先順位を決めます。既存の完了条件と再試行上限は維持します。検証範囲は合成CIデータ、ローカルブラウザーQA、Codexのインストール済みスキルです。本番CI・法的審査・実際の公開全体を認証するものではありません。更新後に `install.bat` または `bash install.sh` を再実行してください。[検証範囲](CHANGELOG.md#7100---2026-11-17)も確認できます。
+
 ## v7.9.2 — Windowsのnotify中継でJSONを保持
 
 Codex-Mnemoのnotify中継でJSONの引用符が失われる問題を修正しました。PowerShell 5.1とPowerShell 7の`Legacy`モードでは、別プロセスへの引数転送でJSONが壊れる場合がありました。インストーラーは既知のMnemo・TermSnapラッパーをバックアップして修正し、既存の通知処理を維持します。`--check`は危険な転送コードを検出しますが、実際の保存成功を確認する検査ではありません。インストール済みのラッパーをPowerShell 5.1・7・7 `Legacy`で実行し、入力と回答の保存、TermSnap通知のセッションIDを確認しました。対象のPCで更新版の`install.bat`を再実行してください。TermSnapがラッパーを再生成した場合も再実行が必要です。[Codex-Mnemo](skills/codex-mnemo/SKILL.md)。

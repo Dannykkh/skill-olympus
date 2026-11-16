@@ -320,6 +320,14 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.10.0 — CI审计与公开网站交接
+
+Minos新增 `/minos --ci-audit --limit 30`，用于分析CI执行历史、耗时和失败原因。该模式只分析并报告，与QA生成和修复流程分开；区分重试attempt、并行任务的实际经过时间和未测量数据，不修改工作流或重新运行CI。请参阅[CI审计契约](skills/minos/references/ci-audit.md)。
+
+公开的商业与服务网站现在会将服务内容、目标访客、有依据的文案、CTA结果和上线条件从规划传递到设计、实现和验收。Aphrodite负责页面代码与视觉检查，Poseidon或Daedalus负责功能连接与集成。Minos的实际行为测试、SEO与Themis的专项审计、Clio的上线准备判定分别保留各自证据，不会混为全面通过。管理界面和内部工具不强制添加营销区块或生产上线检查。详见[公开网站指南](skills/design-plan/references/public-site-guide.md)。
+
+状态转换和复用方案也会交给实现者，缺陷按观测证据排序，并保留现有验收标准和重试上限。验证覆盖合成CI导出数据、本地浏览器QA和已安装的Codex技能，不代表生产CI、法律审查或真实上线的全面认证。更新后请重新运行 `install.bat` 或 `bash install.sh`。另见[验证范围](CHANGELOG.md#7100---2026-11-17)。
+
 ## v7.9.2 — 修复Windows notify中转时的JSON损坏
 
 修复了Codex-Mnemo notify中转时JSON引号丢失的问题。PowerShell 5.1和PowerShell 7的`Legacy`模式在向另一个进程传递参数时可能破坏JSON。安装程序会备份并修复已知的Mnemo、TermSnap中转脚本，同时保留原有通知流程。`--check`现在会报告已知的不安全转发代码，但它仍是静态安装检查，不能证明实际保存成功。已通过PowerShell 5.1、7和7 `Legacy`运行实际安装的脚本，确认输入、回答及TermSnap通知中的会话ID得到保留。请在受影响的电脑上更新并重新运行`install.bat`。TermSnap重新生成中转脚本后也需要再次安装。[Codex-Mnemo用法](skills/codex-mnemo/SKILL.md)。
