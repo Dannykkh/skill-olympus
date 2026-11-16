@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.10.0] - 2026-11-17
+
+### Features
+
+- **minos**: Add a report-only CI audit mode with `/minos --ci-audit [--limit N]`. Collect workflow history and attempt-specific jobs, distinguish setup/work/other time and parallel elapsed time, preserve missing measurements, and report failure evidence without entering QA generation, Healer or remote reruns. (c5c9b65)
+- **design-plan**, **frontend-design**: Add a conditional public-site delivery guide covering the offer, audience, verified copy, brand evidence, CTA outcomes, screen implementation, visual critique, search/privacy inputs and launch handoffs. Reuse the Experience Contract and existing project stack; internal UI does not inherit mandatory marketing sections or production checks. (c5c9b65)
+- **workflows**: Pass state-transition, reuse and public-site contracts from Zephermine through Poseidon/Daedalus to implementation and inspection. Preserve existing acceptance criteria, file ownership, severity rules and retry limits; use observed bug evidence without dropping rare security or data-integrity failures. (c5c9b65)
+- **argos**, **minos**, **clio**, **seo-audit**, **themis**, **shipping-and-launch**: Connect specialist evidence and actual CTA/form outcomes to requested launch conditions. QA PASS, CI audit completion, static SEO scores, privacy drafts and old preview results do not prove production readiness. Required launch failures or missing evidence remain NO-GO, while unrelated internal tools keep their existing checks. (c5c9b65)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Simplified Chinese READMEs and workflow guide with CI audit usage, public-site responsibilities, installation instructions and verification limits. (5808380)
+
+### Validation and Scope
+
+- Full repository suite: 385/385 passed with no skipped tests. Git Bash and grep were explicitly selected for Windows subprocesses; Node test concurrency was limited to four.
+- The Windows integrated installer completed for Claude, Codex, Antigravity and Grok, with 12/12 verification checks passed, including installed hook execution. Modified skill frontmatter passed ten format checks; individual workflow behavior is verified only for the cases below.
+- Isolated behavioral checks cover synthetic CI exports, grounded public-site planning, local browser/HTTP QA, launch evidence and installed-Codex behavior. The intentionally incomplete QA fixture was correctly reported as FAIL for false acceptance, failure feedback, a broken privacy link and unsupported claims.
+- Live production CI history, production website delivery, legal review and model-driven execution on every supported CLI remain outside the verified scope. Grok uses the Claude compatibility surface; source availability and installed-file equality do not certify every runtime branch.
+
 ## [7.9.2] - 2026-11-15
 
 ### Bug Fixes
