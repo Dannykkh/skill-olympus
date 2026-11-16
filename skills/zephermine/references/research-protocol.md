@@ -90,6 +90,15 @@ Run GitHub reference research only when it can materially reduce unknowns:
 
 Otherwise skip and record: "Skipped GitHub research: local patterns/spec sufficient."
 
+Before searching externally, check existing code, pinned dependencies, and any applicable local recipe.
+For unfamiliar features or a consequential implementation uncertainty, compare relevant reference
+approaches against the project's contracts, integration effort, and maintenance constraints. Prefer
+official documentation for version-specific behavior. Record the source/version, what to adopt,
+what does not fit, and the selection reason in the existing `research.md`; check license requirements
+when adopting code or a dependency. Do not fill a quota of projects when one reference resolves the
+uncertainty. Pass the selected approach into the owning section's `Reference Libraries` or
+`Implementation Strategy`, so implementation does not repeat completed research.
+
 Auto-generate search queries from spec:
 - `"{core_feature} {tech_stack}"` (예: "real-time chat nextjs")
 - `"{domain} {architecture_pattern}"` (예: "e-commerce microservices")

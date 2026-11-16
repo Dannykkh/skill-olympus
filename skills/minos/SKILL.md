@@ -1,6 +1,6 @@
 ---
 name: minos
-description: QA 시나리오 수집·현장 생성 → Playwright 코드 생성 → 실행·수정 반복을 수행한다. /minos, 미노스, /qpassenger, 큐패신저, QA 통과할 때까지, 테스트 통과까지, playwright test until pass 요청에 사용한다.
+description: QA 시나리오 수집·현장 생성 → Playwright 코드 생성 → 실행·수정 반복을 수행한다. CI 감사 요청은 실행 이력·소요시간·실패를 분석해 보고한다. /minos, 미노스, /qpassenger, 큐패신저, QA 통과할 때까지, 테스트 통과까지, playwright test until pass, CI 감사 요청에 사용한다.
 ---
 
 # Minos (미노스)
@@ -17,12 +17,27 @@ QA 시나리오를 Playwright 테스트 코드로 변환하고, 모든 테스트
 /minos @qa-scenarios.md          # 특정 QA 문서 지정
 /minos --api-only                # API 테스트만
 /minos --ui-only                 # UI 테스트만
+/minos --ci-audit                # CI 이력·시간·실패 분석, 수정 없이 보고
+/minos --ci-audit --limit 150     # 최대 150개 실행을 표본으로 분석
 ```
 
 **공식 호출명:** `/minos` (별칭: `미노스`, 레거시: `/qpassenger`, `큐패신저`)
 
 검사만·읽기 전용 요청은 기존 검사와 응답 보고로 제한하며 소스·테스트·보고서 파일을
 생성하거나 수정하지 않습니다. 수정이 허용된 실행만 아래 코드 생성·Healer 단계를 수행합니다.
+
+## 진입 모드 선택
+
+`--ci-audit` 또는 CI 실행 이력·병목·대기/준비/실행 시간 감사 요청이면
+[references/ci-audit.md](references/ci-audit.md)를 읽고 **CI 감사 모드로만** 진행합니다.
+이 분기는 QA 입력 탐색·시나리오 생성·서버 준비·Playwright 실행·Healer보다 먼저 선택합니다.
+일반 QA에서는 CI 참조를 읽거나 CI 이력을 수집하지 않습니다.
+
+CI 감사는 분석·보고로 종료하며 기존 `--fix-code` 기본값을 상속하지 않습니다. QA/Healer 옵션과
+함께 받으면 CI 감사 범위만 수행하고 적용하지 않은 옵션을 알립니다. 구현·CI 설정·테스트·QA
+시나리오 문서를 수정하거나 원격 실행을 재시작하지 않습니다. 개선 구현은 포세이돈, 변경 전후
+측정은 미노스, 필수 검사·계약 보존 감리는 아르고스로 연결합니다. 호출만으로 후속 실행이
+승인되지는 않으며 이미 요청된 범위만 이어갑니다.
 
 ## 워크플로우 (7단계)
 
@@ -52,6 +67,9 @@ QA 시나리오를 수집합니다. 우선순위 순으로 탐색:
 2. `qa-scenarios.md` (zephermine 산출물)
 3. `docs/qa/*.md` (기존 QA 문서)
 4. 위 모두 없으면 → Minos Step 1 계약으로 현장 생성
+
+공개 사이트의 방문 행동·CTA·폼·페이지를 검사하면 [public-site-qa.md](references/public-site-qa.md)를
+읽고 해당 사례·완료 의미를 기존 QA에 연결합니다. 일반 업무 UI나 CI 감사에는 이 확장을 강제하지 않습니다.
 
 ### API 직접 호출·서버 검증 시나리오
 
@@ -83,6 +101,12 @@ QA 문서에서 테스트 케이스 테이블을 추출합니다:
 
 1. `operation-scenarios.md` (운영 시나리오) — qa-scenarios의 근거 문서. 메뉴별/업무별 흐름에서 누락된 테스트 케이스를 보충
 2. `api-spec.md` — API 엔드포인트 중 qa-scenarios에 없는 것을 추가
+
+담당 기능에 상태·전이 계약이나 재설계 보존 조건이 있으면 정상 전이와 해당 실패·취소·재시도·
+중복 요청·금지된 상태의 거부 사례를 기존 QA에 보충합니다. 응답뿐 아니라 저장 상태와 부수
+효과도 확인하며, 관련 없는 엣지 케이스나 별도 상태 모델을 만들지 않습니다. 리팩토링의 버그
+유입 위험 감소는 원래 재현과 관련 회귀 결과로 보고합니다. 측정 대상·표본·방법이 없는
+"버그 발생 확률 x% 달성"을 추정하거나 테스트 통과율로 대신하지 않습니다.
 
 ### 시나리오 없을 때 현장 생성
 
@@ -341,7 +365,7 @@ IF retry >= max_retries:
 
 | Grade | 조건 | 판정 |
 |-------|------|------|
-| **PASS** | 자동 테스트 + 탐색 QA 전체 통과 | 배포 가능 |
+| **PASS** | 자동 테스트 + 탐색 QA 전체 통과 | 실행한 QA 범위 통과 |
 | **CONDITIONAL** | P0/P1 통과, P2/P3에 exhausted·blocked·unverified·기존 fixme 또는 탐색 QA 경고만 남음 | 조건부 진행; 남은 상태·범위 명시 |
 | **FAIL** | P0/P1 실패 또는 필수 검증 미완료 (자동 테스트 또는 탐색 QA) | 구현 결함과 NOT RUN을 구분해 보고 |
 
@@ -374,6 +398,8 @@ IF retry >= max_retries:
 | `--no-explore-active` | 액티브 인터랙션 탐색(Phase 4) 스킵, 패시브 수집만 | false |
 | `--fix-code` | 구현 코드 수정도 허용 | true |
 | `--fix-test-only` | 테스트 코드만 수정 (구현 코드 수정 금지) | false |
+| `--ci-audit` | QA와 독립된 CI 실행 이력·시간·실패 감사; 분석·보고 전용 | false |
+| `--limit N` | CI 감사에서 수집할 최대 workflow run 수(양의 정수); 기간·workflow·branch 조건은 요청에서 전달 | 30 (CI 감사 전용) |
 
 ---
 

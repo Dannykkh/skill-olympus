@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_fill_form, mcp__playwright__browser_hover, mcp__playwright__browser_press_key, mcp__playwright__browser_wait_for, mcp__playwright__browser_navigate_back, mcp__playwright__browser_close, mcp__playwright__browser_tabs, mcp__playwright__browser_select_option, mcp__playwright__browser_handle_dialog, mcp__playwright__browser_evaluate, mcp__playwright__browser_resize, mcp__playwright__browser_install
-description: QA 시나리오 기반 Playwright 테스트 자동 생성 + 브라우저 탐색 QA + fix-until-pass 루프 (미노스)
+description: QA 시나리오 기반 Playwright 테스트·브라우저 탐색·수리 반복, CI 이력·시간 감사 (미노스)
 ---
 
 # /minos
@@ -10,7 +10,8 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
 ## 실행 절차
 
 1. `skills/minos/SKILL.md`를 읽어 전체 워크플로우를 파악합니다.
-2. 7단계 워크플로우를 순서대로 실행합니다:
+2. 먼저 SKILL.md의 `진입 모드 선택`을 적용합니다. CI 감사 모드는 그 문서가 지정한 참조로
+   분석·보고 후 종료합니다. 일반 QA는 아래 7단계 워크플로우를 순서대로 실행합니다:
    - Step 1: 시나리오 수집 ($ARGUMENTS가 있으면 해당 파일, 없으면 자동 탐색)
    - Step 2: Playwright 코드 생성 (references/playwright-codegen.md 참조)
    - Step 3: 서버 준비
@@ -34,6 +35,8 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
 /minos --no-explore              # 브라우저 탐색 QA 스킵
 /minos --no-explore-active       # 탐색 QA 패시브 수집만 (인터랙션 스킵)
 /minos --explore-mcp             # 탐색 QA를 Playwright MCP 방식으로 (fallback)
+/minos --ci-audit                # CI 이력·시간·실패 감사, 분석·보고 전용
+/minos --ci-audit --limit 150    # 최대 150개 workflow run 분석
 ```
 
 > 탐색 QA(Step 5)는 기본적으로 탐색 스크립트(`tests/explore/*.spec.ts`)를 생성·실행하고

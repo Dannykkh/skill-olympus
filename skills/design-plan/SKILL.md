@@ -106,6 +106,11 @@ fallback도 실행할 수 없는 검사는 `NOT RUN`,
 아프로디테는 비즈니스 로직을 직접 소유하지 않지만, 사용자가 보는 loading·empty·error·success,
 행동 피드백, 오류 회복의 설계 책임은 가집니다. 구현 담당자는 이 계약을 실제 기능에 연결합니다.
 
+공개 사업·서비스·브랜드 사이트의 신규 설계나 관련 내용·전환·출시 요청은
+[public-site-guide.md](references/public-site-guide.md)를 Phase 1~2에서 읽습니다. 오퍼·타깃·
+사실 기반 카피·소개·검색·개인정보·출시 인계를 기존 계약에 연결하고 Phase 5~6에서 해당 범위만
+소비·검증합니다. 업무 UI·국소 표현 수정에는 이 확장을 강제하지 않습니다.
+
 ## Phase Map
 
 ```text
@@ -671,6 +676,8 @@ P0·P1은 완료 전에 고칩니다.
 - Product Design 유무 대조가 요청됐거나 첫 도입이면 adapter comparison 결과 또는 `NOT RUN` 이유
 - Web Motion Contract 적용 여부와 선택한 엔진. 대표 모션·물리 반응·복제면 실제 입력 trace,
   장면별 검사 결과와 시각 근거. 영상 요청이면 `video-maker` 인계 근거
+- 공개 사이트 확장 적용 시 `Public Site Delivery`의 인계·검증 상태와 후속 담당. 디자인 범위의
+  완료, 기능 연결·QA, 요청된 출시 점검의 완료를 구분하고 미실행을 준비 완료로 보고하지 않음
 - `Module Coverage`: 각 내부 모듈의 절대 해석 경로, module/native-fallback/NOT RUN 상태,
   미실행 범위. 조건부 모듈은 NOT REQUESTED/requested를 구분하고, 요청된 경로의
   `NOT RUN`/`UNVERIFIED`/`BLOCKED` 항목은 완료 증거로 계산하지 않음

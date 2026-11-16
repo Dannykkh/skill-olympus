@@ -109,6 +109,9 @@ AC 증거는 기존 `checklist-status.md`에 두고, 실패별 소진한 재시�
    - `mcp-spec.md` → MCP 서버·도구 관련 worker에게 전달
    - `db-schema.md` → DB 관련 worker에게 전달
    - `design-system.md` → 프론트엔드 worker에게 전달
+   - 루트 `PRODUCT.md`·`DESIGN.md`, 최신 Experience Contract·Layout Blueprint → UI/프론트엔드
+     worker에게 전체 원본 경로와 담당 페이지 전달. `Public Site Delivery`가 있으면 관련 AC/QA와
+     카피·CTA 결과·검색/개인정보·출시 인계도 포함하며 별도 화면 사본이나 중첩 PM을 만들지 않음
 5. 완료 기준 계약 — `checklist.md` 확인(없으면 섹션 AC에서 기계적으로 생성), `checklist-status.md` 장부 생성 또는 재개. 형식·상태·증거 규칙은 젭마인 `references/acceptance-checklist-guide.md`
 6. 트립와이어 — `plan.md` `### 트립와이어`의 `구간`이 `구현 중`인 지표와 `위험 가정:` 확인 섹션을 Step 4 Wave 경계 판정 대상으로 등록. 없으면 `Tripwire: NOT APPLICABLE — plan.md에 없음`을 activity log에 남김
 

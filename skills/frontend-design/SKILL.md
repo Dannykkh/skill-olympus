@@ -49,6 +49,11 @@ Model, State Contracts, Motion, Component Anatomy, Copy Rules 등)이 구도·�
 Experience Contract > DESIGN.md 시각 토큰 > Layout Blueprint > benchmark 증거입니다.
 **후속 수정 세션에도 동일 적용** — "버튼 하나 고치는" 세션이 산문 계약을
 안 읽으면 수정이 누적될수록 원래 디자인 의도에서 드리프트합니다. 토큰은 그대로, 산문 계약 위반 금지.
+
+공개 사이트의 Experience Contract에 `Public Site Delivery`가 있으면 담당 카피·증거·가격/조건·
+CTA 결과·검색/방침 UI 요구를 함께 소비합니다. 아프로디테의 화면 구현과 앱 파이프라인의 기능
+연결은 기존 파일 소유권 안에서 이어 수행하고, 임의 샘플 콘텐츠·가짜 제출 성공·별도 HTML 사본으로
+계약을 대체하지 않습니다. 국소 UI 수정은 기존 계약을 보존하며 사이트 전체 기획을 다시 시작하지 않습니다.
 **없으면**: 아래 Design Thinking으로 자유롭게 방향을 결정.
 
 ## Interface-Type Gate

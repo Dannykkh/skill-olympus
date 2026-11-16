@@ -32,10 +32,15 @@ SECTION_MANIFEST + 의존성 그래프 확인.
 | `mcp-spec.md` | MCP 서버·도구 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
 | `db-schema.md` | 데이터베이스 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
 | `design-system.md` | 프론트엔드 담당 teammate | description에 경로 + "Read로 읽어서 참조해" |
+| 루트 `PRODUCT.md`·`DESIGN.md`, 최신 Experience Contract·Layout Blueprint | UI/프론트엔드 담당 teammate | 정확한 경로 + 담당 페이지·행동·보존 조건 전달; 토큰만 발췌하지 않음 |
 | `operation-scenarios.md` | 통합/E2E 담당 teammate | description에 경로 전달 |
 | `qa-scenarios.md` | 테스트 작성 담당 teammate | description에 경로 전달 |
 
 > **전체 내용 임베딩 X** — teammate가 필요할 때 Read로 직접 읽도록 경로만 전달 (컨텍스트 절약)
+
+공개 사이트의 `Public Site Delivery`가 있으면 콘텐츠 정본·CTA 결과·기능 연결 책임·관련 AC/QA와
+요청된 검색/개인정보/출시 인계를 같은 작업 입력에 포함합니다. 화면 코드와 라우팅·상태·API 연결을
+기존 파일 소유권으로 조율하고, 별도 디자인 팀이나 같은 화면 사본을 추가하지 않습니다.
 
 ### 5. 완료 기준 계약 확인 + 이행 장부 준비
 

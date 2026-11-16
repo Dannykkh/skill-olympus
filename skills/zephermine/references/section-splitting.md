@@ -105,6 +105,18 @@ Include all necessary background, requirements, and implementation details withi
 
 **레시피**: 사용자의 레시피 라이브러리(`/recipe` — `CODE_RECIPES_DIR` 또는 `~/code-recipes`의 `index.md`)에 이 섹션 기능과 맞는 레시피가 있으면 섹션에 `recipe: <id>@<version>`과 `recipe.md` 경로를 적습니다. 내용을 복사하지 않습니다 — 구현자가 원본을 읽고 프로젝트 규약으로 다시 구현합니다. 라이브러리가 없으면 생략합니다.
 
+상태 기능은 [flow-diagrams-guide.md](flow-diagrams-guide.md)의 상태·전이 계약 중 담당 부분과
+보존 조건을 `Module Contract`에 반영하고, 관련 도면·실패/취소/재시도 검증을 `Test Scenarios`와
+AC에 연결합니다. 채택한 오픈소스 접근의 출처·적용 부분·선택 근거는 `Reference Libraries` 또는
+`Implementation Strategy`에 필요한 만큼 담습니다. 원본 조사 링크도 남겨 추가 조사가 필요한
+불확실성과 이미 결정한 내용을 구분합니다. 해당 기능·조사가 없으면 이 입력은 생략합니다.
+
+**공개 사이트 인계가 있는 섹션**: 아프로디테의 Experience Contract·Layout Blueprint·루트
+DESIGN.md 경로와 `Public Site Delivery`의 담당 부분을 연결합니다. 자립형 섹션의 Module Contract에는
+페이지 임무·카피/사실 보존·CTA 목적지와 완료 조건·기능 연결 책임을 필요한 만큼 담고, 전문 감사나
+출시 점검이 필수이면 요구 출처·대상 환경·검증 담당을 기존 AC/QA에 연결합니다. 디자인 산출물이
+있다는 사실이나 미노스 QA PASS만으로 실제 접수·운영 공개·법률 검토가 완료됐다고 쓰지 않습니다.
+
 **API가 있는 프로젝트**: `api-spec.md`의 해당 엔드포인트를 섹션에 포함.
 구현 중 새 API를 추가하면 반드시 `api-spec.md`에도 등록 (규칙을 섹션 파일에 명시).
 섹션은 자립형이므로 `api-spec.md` Conventions 중 이 섹션에 해당하는 규약(목록 페이지네이션 방식·크기 상한·정렬 허용 컬럼, 공통 에러 형식)과 목록 엔드포인트의 Index 줄도 함께 옮깁니다. 구현자가 이 규약을 모르면 페이지네이션 없는 목록과 N+1 쿼리가 나옵니다.

@@ -176,7 +176,7 @@ docs/
 | 항목 | 수집 방법 | 없으면 |
 |------|----------|--------|
 | argos 감리 보고서 | `docs/plan/*/verify-report.md` 파싱 | "미실행" 기록 |
-| minos QA 결과 | Playwright 테스트 결과 파싱 | "미실행" 기록 |
+| minos QA 결과 | 실제 Playwright/탐색 QA 결과 파싱; `mode: ci-audit`는 제외 | "미실행" 기록 |
 | 설계 spec | `docs/plan/*/spec.md` | "없음" 기록 |
 | 완료 기준 | `docs/plan/*/checklist.md` + `checklist-status.md` 장부 (형식: 젭마인 `references/acceptance-checklist-guide.md`). `checklist.md`가 없으면 `sections/section-*.md`에서 Acceptance Criteria 추출 | 건너뜀 |
 
@@ -221,6 +221,12 @@ spec이 있으면, **설계 대비 구현 누락**을 읽기 전용 탐색·검�
 | **NO-GO** | 테스트 실패, 또는 누락 기능 있음, 또는 완료 기준 AC 중 `missing`·`contradicted` 있음, 또는 argos FAIL, 또는 minos FAIL |
 
 > **공허한 통과 방지**: "테스트 전체 통과"는 테스트가 1개 이상 존재할 때만 성립합니다.
+
+공개 사이트의 출시 점검을 요청했거나 명세·AC가 출시 조건을 요구하면
+[public-site-release.md](references/public-site-release.md)를 읽고 Phase 1에 결과를 합칩니다.
+아프로디테·구현·미노스·SEO·테미스·운영 점검의 대상과 근거를 확인하며, 필수 출시 조건의
+실패/미실행/미확인은 NO-GO입니다. 이는 위 일반 규칙의 "argos/minos 미실행 → CONDITIONAL"
+예외보다 우선합니다. 출시 점검이 요청되지 않은 실행에는 기존 판정을 유지합니다.
 > **우회 표기**: `--force` 또는 `--docs-only`로 게이트를 건너뛴 경우, 모든 산출물(FINAL-REPORT 포함) 상단에 "점검 게이트 미통과/미수행 상태로 생성됨"을 표기합니다.
 
 ```
@@ -716,7 +722,7 @@ npm start
 
 다음은 **문제가 아닙니다**:
 
-1. **argos/minos 미실행** — CHECKLIST에 "미실행"으로 기록, CONDITIONAL GO로 판정
+1. **argos/minos 미실행** — CHECKLIST에 "미실행"으로 기록, CONDITIONAL GO로 판정. 단 공개 사이트의 필수 출시 검증이면 Phase 1-4의 출시 조건을 적용
 2. **기존 설계 산출물 없음** — 누락 탐지 건너뜀, 코드 기준으로 문서 생성
 3. **UI 없음** — Phase 3에서 API 레퍼런스 매뉴얼로 대체
 4. **기존 흐름도 없음** — Phase 2에서 새로 생성 (비교 단계만 건너뜀)
