@@ -53,6 +53,14 @@ rebuild 증거로 간주하지 않습니다.
 
 `--rebuild`는 `--apply`를 암시합니다.
 
+기록 전에 현재 프로젝트의 실제 `skills/mnemo/SKILL.md`를 먼저 확인합니다. 없으면 현재 CLI의
+Mnemo 어댑터를 활성 스킬 루트 → `SKILLS-CATALOG.md`의 정확한 `읽을 경로` 순서로 찾습니다
+(Claude `mnemo`, Codex `codex-mnemo`, Antigravity `antigravity-mnemo`, Grok `grok-mnemo`).
+찾은 `SKILL.md`를 읽고 그 디렉터리의 `references/project-storage.md`로 프로젝트 루트와 출력
+절대경로를 확정합니다. 참조가 없는 어댑터 소스라면 같은 조회 순서로 공통 `mnemo` 모듈을
+해석합니다. 그 Mnemo 스킬이 지정한 전역 규칙 정본의 `기억 관리` 절도 읽어 항목 형식을 적용합니다.
+필수 참조나 루트를 확인하지 못하면 쓰기는 `NOT RUN`으로 남기고 경로를 추측하지 않습니다.
+
 ## 워크플로우
 
 ### Phase 1: 입력 수집
@@ -138,7 +146,7 @@ memory/learned/
 `tags: keyword1, keyword2, keyword3`        ← 최소 3개
 `type: CLI 오답 | 환경 함정 | 워크플로우 패턴 | 검증된 성공`
 `date: YYYY-MM-DD`
-`source: memory-distill`
+`source: codex`                            ← 예시; 실제 작성 CLI 한 값
 `observations: 5`                           ← 클러스터 크기
 `confidence: 0.7`                           ← 0.0~1.0
 `first_seen: YYYY-MM-DD`
@@ -152,6 +160,13 @@ memory/learned/
 - {timestamp1} {tool} — 1줄 요약
 - {timestamp2} {tool} — 1줄 요약
 ```
+
+`source`는 정제 항목을 실제 작성한 CLI(`claude`, `codex`, `antigravity`, `grok`)입니다.
+`memory-distill`이라는 도구명이나 입력 관찰의 작성 CLI로 대신하지 않습니다. 원시 관찰의 출처는
+관련 관찰·근거에 보존합니다. 기존 항목을 그대로 유지하는 경우 작성자를 바꾸지 않고, 내용을
+새로 통합·작성한 항목에는 현재 CLI를 기록하되 기존 항목의 출처와 연결을 남깁니다.
+위 예시는 정제 본문 형식이며, 결정의 근거·대안·재검토 조건 등은 적용 중인 Mnemo 기억 관리
+계약을 함께 따릅니다.
 
 `confidence`는 통계적 확률이 아니라 관찰량 기반 정제 우선순위입니다.
 

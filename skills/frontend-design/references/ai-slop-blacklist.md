@@ -79,4 +79,4 @@ Inter, Roboto, Arial, Helvetica, Open Sans, Lato, Montserrat, Poppins
 
 ### design-plan (Aphrodite)에서
 
-Phase 4 리뷰 시 이 블랙리스트를 평가 기준에 포함.
+`Validate the Experience` 검증 단계(Phase 6)에서 이 블랙리스트를 평가 기준에 포함.

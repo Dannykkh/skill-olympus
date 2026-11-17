@@ -203,13 +203,22 @@ If the user wants to test:
 2. Be ready to iterate based on feedback
 3. Update the file with improvements as needed
 
-### Step 7: Score and Hill-Climb the Command (Optional, Recommended)
+### Step 7: Evaluate Observed Failures or Costs (Optional)
 
-For non-trivial commands, prefer a scored loop over one-shot manual iteration:
+Use actual task results when a workflow fails or has a measured cost problem. Formatting checks in
+**references/best-practices.md** support review; they do not establish a behavioral improvement.
 
-1. Derive a quality checklist (3-6 yes/no criteria) from **references/best-practices.md** — e.g. clear trigger, single responsibility, correct tool usage, concrete file paths, no placeholders.
-2. Run `/autoresearch <command-file>` with that checklist. It hill-climbs the prompt one change at a time, keeping improvements and reverting regressions until the criteria hold.
-3. Skip this for trivial commands where Step 6 is sufficient.
+1. For a command file or prompt recipe, continue Step 6 with a representative task and relevant regression
+   checks within the authorized scope. Compare the original and changed workflow's results. Do not pass
+   a standalone command file to `autoresearch`, whose target contract is a skill.
+2. If the chosen output is a reusable `SKILL.md`, resolve `autoresearch` from the project, the current
+   runtime's active skill root, then the exact `SKILLS-CATALOG.md` row. Read that exact `SKILL.md` in full;
+   resolve its resources from its parent directory. This is an internal module read, not a slash invocation.
+   If resolution fails or is ambiguous, report `autoresearch: NOT RUN` and retain the existing artifact.
+3. Pass the exact target skill, observed failure or measured cost, authorized change scope, task inputs,
+   observable outcome criteria, required regressions, and execution limits. The module owns baseline/candidate
+   execution, held-out evaluation, and adoption. Apply only an `accepted` result; a format score alone is insufficient.
+4. Skip this optional evaluation when Step 6 provides sufficient evidence and no failure or cost problem remains.
 
 ## Quick Tips
 
