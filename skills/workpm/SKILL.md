@@ -53,7 +53,7 @@ description: >
 
 ## Source-only internal module resolution (mandatory)
 
-`orchestrator`와 조건부 `domain-dictionary`는 다이달로스가 내부 계약으로 읽는 source-only
+`orchestrator`와 조건부 `domain-dictionary`·`code-reviewer`는 다이달로스가 내부 계약으로 읽는 source-only
 모듈입니다. 등록된 스킬이나 slash command로 호출하지 않습니다.
 
 각 모듈을 다음 순서로 해석하고 처음 확인된 exact `SKILL.md` 파일 하나를 읽습니다.
@@ -86,6 +86,11 @@ MCP 파일을 읽지 못하면 안전하게 직렬화 가능한 작업만 메인
 `${domain_dictionary_root}/references/*` 계약을 따릅니다. 모듈이 없으면 아래 5~10개 용어
 추출만 bounded native fallback으로 수행하고 `dictionary-module: NOT RUN (native fallback)`을
 기록합니다. fallback이나 미실행을 모듈 PASS로 표시하지 않습니다.
+
+쓰기 재시도·경합, 여러 시스템의 부분 성공, 메시지 처리·데이터 불일치가 작업에 관련되면 같은
+resolver로 `code-reviewer`의 `references/reliability-contract.md`를 읽습니다. 네이티브·순차·MCP
+모두 적용 결정과 검증을 기존 제안서·AC·작업자 입력에 연결하며, 설계가 없으면 담당 범위만
+보충합니다. 이 참조로 전체 리뷰나 분산 구조 도입을 시작하지 않습니다. 누락은 `NOT RUN`입니다.
 
 **CLI별 네이티브 역할** (agent-team [wave-executor.md](../agent-team/references/wave-executor.md)와 동일 — CLI별 설치본에 agent-team이 없을 수 있어 여기 내장, 수정 시 양쪽 함께):
 

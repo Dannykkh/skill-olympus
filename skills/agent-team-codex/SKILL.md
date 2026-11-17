@@ -41,7 +41,10 @@ max_concurrent_threads_per_session = 6
    추측하지 않습니다.
 4. `module_root`는 읽은 `SKILL.md`의 부모입니다. 모듈의 `references/`, `scripts/`,
    `commands/`는 모두 이 루트에서 해석합니다.
-5. Step 6 코드 리뷰에 도달했을 때만 `code_reviewer_root`를 만듭니다. 실행 방식 변경 가설이 있으면
+5. `code_reviewer_root`는 기본적으로 Step 6 코드 리뷰 분기에서 해석합니다. 신뢰성 계약이 필요한
+   작업 배정 시에는 먼저 해석하여 `references/reliability-contract.md`만 선행 로드합니다.
+   선행 참조 누락은 `NOT RUN`으로 기록하며, 전체 코드 리뷰와 그 폴백은 기존 Step 6에서 수행합니다.
+   실행 방식 변경 가설이 있으면
    `orchestrator_root`를 해석해 `${orchestrator_root}/references/execution-adjustment.md`만 읽습니다.
    hard file lock, 외부 ledger, 크로스-CLI 혼합이 실제로 필요해 MCP 분기를 선택한 뒤에만
    `${orchestrator_root}/commands/workpm-mcp.md`를 읽고 MCP 도구를 사용합니다.

@@ -17,6 +17,12 @@ spawn explorer to analyze {target_scope}, map dependency risks, and propose a wa
 동일 근거를 사용합니다. 작업자는 해당 원본을 우선 적용하고 새 불확실성만 조사하며, 담당 상태
 전이의 실패·취소·재시도 검증과 연결 결과를 기존 AC 증거·반환 형식에 남깁니다.
 
+쓰기 재시도·동시성·부분 성공·메시지 처리와 관련되면 하네스의 source-only resolver로
+`code-reviewer`의 `references/reliability-contract.md`를 읽고 적용된 설계·AC의 경로를
+`input_absolute_paths`에, 구현할 보장과 검증을 기존 제약·검증 명령에 연결합니다. 자유 모드에서
+필요한 계약이 빠졌으면 기존 계약 변경 규칙에 따라 담당 범위만 보충합니다. 작업자는 데이터·부수 효과의
+실행 증거를 반환하며, 비해당 분산 구조·큐를 추가하지 않습니다. 참조 누락은 `NOT RUN`입니다.
+
 UI 작업의 `input_absolute_paths`에는 최신 Experience Contract·Layout Blueprint·루트 DESIGN.md를
 포함합니다. 공개 사이트 인계의 카피/사실·CTA 목적지/완료 조건·검색/방침 요구는 담당 제약으로,
 화면 렌더와 접수/저장 등 실제 기능 결과는 서로 구분한 검증 증거로 반환하게 합니다.

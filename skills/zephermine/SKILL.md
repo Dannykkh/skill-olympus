@@ -208,7 +208,7 @@ Use semantic roles instead of hardcoded tool calls, agent files, or models:
 
 ## Source-only internal module resolution (mandatory)
 
-`domain-dictionary`, `flow-verifier`, `mermaid-diagrams`, 조건부 `frontend-design`은 젭마인
+`domain-dictionary`, `flow-verifier`, `mermaid-diagrams`, 조건부 `frontend-design`·`code-reviewer`는 젭마인
 내부 단계가 읽는 source-only 모듈입니다. 사용자 호출용 스킬이나 등록된 slash command로
 실행하지 않습니다.
 
@@ -229,6 +229,8 @@ Use semantic roles instead of hardcoded tool calls, agent files, or models:
 5. 모듈은 소비 단계에 도달했을 때만 지연 로드합니다. Step 8/10/11은
    `domain_dictionary_root`, Step 18은 `flow_verifier_root`와 `mermaid_diagrams_root`를
    사용합니다. UI design-system 분기에서만 `frontend_design_root`를 사용합니다.
+   아래 신뢰성 설계 조건에 해당할 때만 `code_reviewer_root`의
+   `references/reliability-contract.md`를 읽습니다. 이 참조를 읽는 것으로 코드 리뷰 전체를 시작하지 않습니다.
 
 위 exact 파일 읽기는 내부 모듈 로드입니다. 런타임 Skill 목록/레지스트리 가용성을 근거로
 호출하거나 모듈 이름을 slash command로 실행하지 않습니다.
@@ -328,6 +330,13 @@ Combine into `<planning_dir>/spec.md`:
 목적지·완료/실패 조건을 정의합니다. 검색·개인정보·운영 도메인·출시 검증은 요청되거나 확인된
 요구만 AC·QA로 연결합니다. 아프로디테가 경험·카피·화면을, 구현 파이프라인이 기능 연결을
 담당하도록 경계를 섹션에 남깁니다. 소개·후기·블로그·단일 HTML·고정 CTA를 공통 필수로 만들지 않습니다.
+
+쓰기의 재시도·경합, 외부 처리와 저장의 부분 성공, 메시지 재전달 또는 데이터 불일치가 관련되면
+위 resolver로 `code-reviewer`의 `references/reliability-contract.md`를 읽습니다. `spec.md`의 기존
+업무 규칙에 동일 작업의 기준·보존할 데이터 조건·완료/결과 미확정의 의미를 정하고, 해당하는
+실패·복구 경로만 후속 설계와 AC·QA에 연결합니다. 단일 DB로 해결되는 작업에 분산 구조를,
+큐가 없는 기능에 메시지 소비를 추가하지 않습니다. 비해당 사유는 기존 계획에 짧게 남기며,
+필요한 참조가 누락되면 해당 검토를 `NOT RUN`으로 남기고 신뢰성 설계 완료를 주장하지 않습니다.
 
 **필수 포함: Context Map 섹션** — interview.md의 Soft Gate 1 결과 또는 inferred summary에서 가져옴:
 
@@ -568,6 +577,11 @@ See [schema-design-guide.md](references/schema-design-guide.md)
 
 DB가 없는 프로젝트(CLI, 라이브러리, 정적사이트)는 자동 건너뜀.
 
+신뢰성 계약이 적용된 기능은 `spec.md`의 업무 규칙을 `db-schema.md`의 제약·원자성 경계와
+다음 단계 `api-spec.md`의 요청 식별·재시도/결과 조회 계약에 연결합니다. 여러 시스템이 관여하면
+부분 성공의 복구 책임과 관측 가능한 완료 조건을 기존 설계에 적고, 해당 섹션의 `Module Contract`가
+그 정본을 참조하게 합니다. 처리 방식과 저장소 선택은 실제 요구와 기존 구조에 근거합니다.
+
 ### 17. Generate API Specification
 
 See [api-spec-guide.md](references/api-spec-guide.md)
@@ -708,6 +722,7 @@ Verify all files were created successfully:
 - **트립와이어** — `plan.md`의 `## 전략 선택` 아래 `### 트립와이어`가 [tripwire-guide.md](references/tripwire-guide.md)의 최소 구성(지표 2개 이상 중 `구현 중` 1개 이상, 계속 조건·중단 검토 조건 각 1개 이상)을 갖췄는지, `위험 가정:` 줄의 확인 섹션이 `sections/index.md`에서 의존성 없이 있는지, `구현 중` 지표의 계측 위치가 구현 하네스가 남기는 기록인지, 모든 지표에 계측 위치·판정 주기가 있는지, 같은 지표의 칸이 빈틈·겹침 없이 나뉘는지, 모든 수치에 `검증됨`/`가정 → 검증` 표시가 있는지, 조건 칸을 채운 지표마다 그 단계의 행동 행이 있고 수정 임계점 행에 범위 조정안이 있는지, AI 기능이 있으면 품질·비용·안전 지표가 각 1개 이상인지. `#### 계측 작업`의 W 항목이 해당 섹션 작업·AC로 옮겨졌는지. 빠진 것은 plan.md에 보완하고, 섹션에 AC를 더했으면 위 완료 기준 계약대로 `checklist.md`를 다시 만든 뒤 `integration-notes.md`에 기록
 - **역산 점검** — `integration-notes.md`에 `## 역산 점검`(덜어내기 결과와 결정자 판정)이 있는지, 덜어낸 항목이 `spec.md` `만들지 않을 것`에 이유·다시 볼 조건과 함께 있는지, 덜어낸 항목이 섹션 작업·AC로 되살아나지 않았는지. 되살아났으면 그 섹션에서 빼거나, 필요해진 근거가 있으면 `만들지 않을 것`에서 지우고 사유를 `integration-notes.md`에 기록. 섹션을 고쳤으면 위 완료 기준 계약대로 `checklist.md`를 다시 만든다
 - **모듈 경계와 하네스** — `sections/index.md`에 `## Harness`가 있고(또는 `NOT APPLICABLE: single composition point`), 모든 기능 섹션이 `Module Contract`의 Provides/Consumes/Owns/Composition Point를 채웠는지. Owns가 겹치는 섹션 쌍이 있으면 병렬 구현 충돌 신호이므로 공유 기반으로 올리고 기록. 레이어 분할을 썼으면 `Shared Foundation Rationale`에 사유가 있는지
+- **신뢰성 계약** — 적용한 기능의 업무 규칙·원자성/복구 경계가 DB/API·섹션 계약과 AC·QA로 이어지는지 확인합니다. 미정인 완료 조건·관측 방법은 기존 `integration-notes.md`에 남기고, 적용하지 않은 분산 처리·메시지 요구를 검증 항목으로 되살리지 않습니다.
 - `api-spec.md` (API가 있는 프로젝트)
 - `mcp-spec.md` (건너뛴 프로젝트는 `NOT APPLICABLE: no MCP — <사유>` 한 줄)
 - `db-schema.md` (DB가 있는 프로젝트)
@@ -720,6 +735,8 @@ Verify all files were created successfully:
 - 내부 모듈 상태: `domain-dictionary`, `flow-verifier`, `mermaid-diagrams`, 조건부
   `frontend-design` 각각
   `LOADED`/`NOT APPLICABLE`/`BLOCKED` 중 하나 (`BLOCKED`가 있으면 Planning Complete 금지)
+- 조건부 신뢰성 참조(`code-reviewer`): `LOADED`/`NOT APPLICABLE`/`NOT RUN`과 적용 범위·미정 사항.
+  `NOT RUN`은 해당 계약 검토의 완료 근거로 쓰지 않습니다.
 
 ### 24. Output Summary
 

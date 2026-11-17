@@ -36,7 +36,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
 
 ## 내부 소스 모듈 해석 계약 (필수)
 
-`flow-verifier`, `humanizer`, `mermaid-diagrams`, `pdf`와 선택 모듈 `diagram-design`은 Clio가 호출하는 등록 스킬이 아니라
+`flow-verifier`, `humanizer`, `mermaid-diagrams`, `pdf`와 선택 모듈 `diagram-design`, `code-reviewer`는 Clio가 호출하는 등록 스킬이 아니라
 절차·문법·스크립트를 직접 소비하는 source-only 내부 모듈입니다. 각 이름에 대해 해석된
 `SKILL.md` 절대경로를 `MODULE_SKILL[name]`, 그 부모 디렉터리를 `MODULE_ROOT[name]`으로
 기록합니다.
@@ -62,7 +62,7 @@ GS 입력이 없는 일반 실행은 기존 절차를 따른다. 필수 참조 �
    `MODULE_ROOT[name]/scripts/...`로부터 절대경로를 만듭니다.
 
 이 과정은 모듈 읽기이지 스킬 호출이 아닙니다. `/flow-verifier`, `/humanizer`,
-`/mermaid-diagrams`, `/pdf`, `/diagram-design`을 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
+`/mermaid-diagrams`, `/pdf`, `/diagram-design`, `/code-reviewer`를 호출하거나 스킬 레지스트리에 등록됐다고 가정하지 않습니다.
 프로젝트·활성 루트 파일도 없고 카탈로그의 정확한 행·`읽을 경로`·필수 참조나 스크립트 중 하나라도 없으면
 `CHECKLIST.md`와 `FINAL-REPORT.md`의 `Module Coverage`에 경로와 이유를 기록하고 다음 한정된
 native fallback을 사용합니다. fallback도 실행할 수 없는 작업은 `NOT RUN` 또는 `UNVERIFIED`로
@@ -75,6 +75,7 @@ native fallback을 사용합니다. fallback도 실행할 수 없는 작업은 `
 | `humanizer` | 아래 S1 금지 패턴과 변경률 가드만 적용하고 전체 한국어 패턴 커버리지는 `UNVERIFIED` |
 | `pdf` | 대체 변환기를 임의로 설치하거나 호출하지 않고 PDF 산출을 `NOT RUN`으로 기록한 뒤 Markdown 문서는 유지 |
 | `diagram-design` (선택) | 에디토리얼 렌더링을 생략하고 문서의 Mermaid 코드 블록을 유지. `Rendered Diagrams`는 `NOT RUN`으로 기록 |
+| `code-reviewer` (선택) | 신뢰성 참조 적용은 `NOT RUN`으로 기록. 기존 AC와 실행 증거 수집은 유지하되 누락된 검증을 추정하지 않음 |
 
 ## 파이프라인 위치
 
@@ -176,9 +177,15 @@ docs/
 | 항목 | 수집 방법 | 없으면 |
 |------|----------|--------|
 | argos 감리 보고서 | `docs/plan/*/verify-report.md` 파싱 | "미실행" 기록 |
-| minos QA 결과 | 실제 Playwright/탐색 QA 결과 파싱; `mode: ci-audit`는 제외 | "미실행" 기록 |
+| minos QA 결과 | 실제 Playwright/탐색 QA 및 해당 API·워커 통합 테스트 결과 파싱; `mode: ci-audit`는 제외 | "미실행" 기록 |
 | 설계 spec | `docs/plan/*/spec.md` | "없음" 기록 |
 | 완료 기준 | `docs/plan/*/checklist.md` + `checklist-status.md` 장부 (형식: 젭마인 `references/acceptance-checklist-guide.md`). `checklist.md`가 없으면 `sections/section-*.md`에서 Acceptance Criteria 추출 | 건너뜀 |
+
+담당 기능의 멱등성·분산 처리·메시지 소비·데이터 일관성이 완료 기준이나 검증 범위에 포함되면
+내부 모듈 해석 계약으로 `code-reviewer`를 찾고 `MODULE_ROOT[code-reviewer]/references/reliability-contract.md`를
+직접 읽습니다. 관련 AC·감리·QA에서 대상 버전·환경·실제 데이터/부수 효과의 증거와 미검증 범위를
+수집해 아래 기존 누락·GO/NO-GO 판정에 반영합니다. 별도 구현·장애 시험이나 전면 신뢰성 게이트를
+새로 만들지 않으며, HTTP 성공·CI 감사 완료를 해당 검증의 통과 증거로 대신하지 않습니다.
 
 ### 1-2. 코드 품질 최종 실행
 

@@ -33,7 +33,7 @@ Phase 3: Verification (argos) ─ 설계 대비 준공검사
 Phase 4: Docker Setup (docker-deploy) ─ Docker 환경 구성 + 포트 충돌 해결
     │
     ▼
-Phase 5: Testing (minos) ─ E2E 테스트 + Healer 루프
+Phase 5: Testing (minos) ─ 범위에 맞는 QA + Healer 루프
     │
     ▼
 Phase 6: Final Report ─────────── docs/zeus/zeus-report.md 생성
@@ -363,22 +363,25 @@ Zero-interaction 규칙 때문에 모듈의 질문 단계는 Phase 0 파싱 결�
 
 ## Phase 5: Testing (minos)
 
-구현 완료 후 자동 E2E 테스트.
+구현 완료 후 시나리오별 QA와 Healer를 수행합니다.
 
 1. `qa-scenarios.md` 존재 확인 (Phase 1에서 생성됨)
-2. Playwright 미설치 시 `npx playwright install` 자동 실행
+2. 프로젝트 실제 파일 → 현재 CLI 활성 루트 → 카탈로그의 정확한 경로에서 `minos/SKILL.md`를 읽고
+   Step 2의 하네스 선택 기준을 적용한다. 관련 API·워커 하네스만 사용하는 범위에는 Playwright를
+   강제하지 않으며, 브라우저를 사용하는 검사에 필요한 브라우저가 미설치된 경우에만 `npx playwright install`로 준비한다.
+   정본을 읽지 못하면 Phase 5를 `NOT RUN`으로 보고하고 필수 검증 완료를 주장하지 않는다.
 3. minos Step 1~7 실행:
-   - Step 3: Phase 4에서 서버 이미 실행 중이면 헬스체크만
-   - Step 5: 브라우저 탐색 QA와 발견 이슈 회수
+   - Step 3: 선택한 하네스에 필요한 서버·환경만 준비. Phase 4에서 필요한 서버가 이미 실행 중이면 헬스체크만
+   - Step 5: UI가 검증 범위에 있으면 브라우저 탐색 QA와 발견 이슈 회수. UI 없음은 해당 없음으로 남기며, 혼합 UI·API/워커 범위의 UI 검증은 유지
    - Step 6: 기존 Healer 이슈 ID·이력·할당 예산·사용 횟수를 이어서 수리. 새 실행의 기본값은 minos 정본을 따르고 더 작은 사용자 상한을 유지한다.
    - Step 7: 최종 등급과 미해결·미실행 범위 보고, minos가 시작한 서버만 정리
 4. `zeus-log.md`에 minos **최종 등급(PASS/CONDITIONAL/FAIL)**, 자동 테스트 통과/전체 수치, 탐색 QA 결과, 미해결 이슈·AC ID와 심각도, `exhausted`/`blocked`/`NOT RUN`/`UNVERIFIED` 범위, 결과·Healer 이력 경로를 함께 기록한다. 기존 결과 파일을 참조하며 별도 수리 장부를 만들지 않는다.
 5. 통과율 100%여도 탐색 QA 실패나 필수 미검증이 남으면 SUCCESS가 아니다. 최종 등급을 그대로 유지하고 Phase 증거는 [결과 판정 기준](references/final-report-format.md)에 따라 채점한다.
 
 **폴백 조건 (Phase 5는 skip 금지):**
-- 서버 시작 불가 → `--api-only` 모드로 minos 실행
+- 서버 시작 불가 → 실행 가능한 API 경로가 있을 때 `--api-only` 모드로 minos 실행. 서버가 필요한 미실행 검사와 필수 UI는 `NOT RUN`으로 남기며 대체 검사 통과로 전체 성공을 주장하지 않는다.
 - QA 시나리오 미존재 → 프로젝트 구조에서 기본 시나리오 현장 생성 후 실행
-- Playwright 설치 실패 → 실패 원인·미실행 범위·재실행 명령을 minos Step 7에서 보고. 실행하지 못한 테스트의 통과율을 0%나 100%로 만들어내지 않는다.
+- 필요한 Playwright 브라우저 설치 실패 → 실패 원인·미실행 범위·재실행 명령을 minos Step 7에서 보고. 독립 실행 가능한 API·워커 검사는 계속하되 실행하지 못한 테스트의 통과율을 0%나 100%로 만들어내지 않는다.
 
 ---
 

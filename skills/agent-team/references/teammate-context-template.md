@@ -45,6 +45,12 @@ See [expert-matching.md](expert-matching.md)
 생긴 부분만 추가 조사합니다. 상태 기능은 담당 실패·취소·재시도 경로의 검증 증거를 반환하며,
 기존 예산 안에서 구현·연결·관련 검증까지 진행합니다. 별도 조사·완료 장부는 만들지 않습니다.
 
+쓰기 재시도·동시성·부분 성공·메시지 처리와 관련된 작업은 하네스의 source-only resolver로
+`code-reviewer`의 `references/reliability-contract.md`를 읽고 적용된 설계·AC의 경로를 전달합니다.
+자유 모드에서 필요한 계약이 빠졌으면 기존 계약 변경 규칙에 따라 담당 범위의 결정을 보충합니다.
+작업자는 적용된 중복 방지·원자성/복구 경계를 구현하고 데이터·부수 효과의 실행 증거를 반환합니다.
+단일 DB·큐 없는 기능의 비해당 항목을 새 구조로 만들지 않으며, 참조 누락은 `NOT RUN`입니다.
+
 UI 작업에는 최신 Experience Contract·Layout Blueprint와 루트 DESIGN.md를 함께 전달합니다.
 `Public Site Delivery`가 있으면 담당 페이지의 카피/사실·CTA 목적지·실제 완료 조건·검색/방침
 요구를 그대로 소비하고 화면 구현부터 기능 연결까지 담당 결과를 반환합니다. 시각 계약을 바꿨다면

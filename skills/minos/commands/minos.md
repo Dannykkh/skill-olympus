@@ -11,12 +11,14 @@ QA 시나리오를 Playwright 테스트로 변환하고, 모든 테스트가 통
 
 1. `skills/minos/SKILL.md`를 읽어 전체 워크플로우를 파악합니다.
 2. 먼저 SKILL.md의 `진입 모드 선택`을 적용합니다. CI 감사 모드는 그 문서가 지정한 참조로
-   분석·보고 후 종료합니다. 일반 QA는 아래 7단계 워크플로우를 순서대로 실행합니다:
+   분석·보고 후 종료합니다. 일반 QA는 아래 7단계를 따르되, 사례별 실행 경로는 정본 Step 2의
+   하네스 선택 기준을 적용합니다. 관련 API·워커 하네스만 사용하는 범위에 Playwright·앱 서버를
+   일괄 준비하지 않으며, UI와 함께 검증하면 UI 경로도 유지합니다:
    - Step 1: 시나리오 수집 ($ARGUMENTS가 있으면 해당 파일, 없으면 자동 탐색)
-   - Step 2: Playwright 코드 생성 (references/playwright-codegen.md 참조)
-   - Step 3: 서버 준비
-   - Step 4: 테스트 실행
-   - Step 5: 브라우저 탐색 QA (references/browser-explorer.md 참조, 탐색 스크립트 생성·실행 → 이슈 회수. `--explore-mcp` 시 Playwright MCP fallback)
+   - Step 2: Playwright 코드 생성 또는 관련 API·워커 하네스 재사용 (Playwright 경로는 references/playwright-codegen.md 참조)
+   - Step 3: 선택한 테스트에 필요한 서버·환경 준비
+   - Step 4: 선택한 하네스로 테스트 실행, TC-ID·AC별 증거 연결
+   - Step 5: UI가 검증 범위에 있으면 브라우저 탐색 QA (references/browser-explorer.md 참조, 탐색 스크립트 생성·실행 → 이슈 회수. `--explore-mcp` 시 Playwright MCP fallback). UI 없음은 해당 없음, 필요한 UI 미실행은 `NOT RUN`
    - Step 6: Healer Loop (references/healer-loop.md 참조)
    - Step 7: 결과 보고
 3. 승인된 수정 범위의 실패는 Step 6의 디버깅·Healer 절차로 이어갑니다. 검사만 요청,

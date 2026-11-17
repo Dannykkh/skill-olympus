@@ -143,12 +143,13 @@ Zeus 파이프라인의 7단계(Phase 0~6) 전환 규칙과 상태 관리.
 
 **전환 액션:**
 1. `qa-scenarios.md` 존재 확인
-2. 서버 상태 확인 (헬스체크)
-3. Playwright 설치 확인 (미설치 시 `npx playwright install`)
-4. minos Step 1~7 실행. Step 5 탐색 QA → Step 6 Healer → Step 7 보고·정리이며, 수리 재개는 기존 이슈 ID·이력·남은 예산을 그대로 전달한다.
+2. [Phase 5의 Minos 로드·하네스 선택](../SKILL.md#phase-5-testing-minos)을 적용한다. 선택한 검사에 서버가 필요할 때만 상태를 확인하며, 하네스가 환경을 준비하면 그 절차를 따른다.
+3. 브라우저를 사용하는 검사에서 필요한 브라우저가 미설치된 경우에만 `npx playwright install`로 준비한다. 관련 API·워커 하네스만 사용하는 범위에 Playwright를 강제하지 않는다.
+4. minos Step 1~7 실행. Step 5는 UI가 검증 범위에 있을 때 탐색 QA를 수행하고, UI 없음은 근거와 함께 해당 없음으로 기록한다. 혼합 범위의 UI 검증은 유지한다. Step 6 Healer → Step 7 보고·정리이며, 수리 재개는 기존 이슈 ID·이력·남은 예산을 그대로 전달한다.
 
 **실패 시:**
-- 서버 시작 불가 → `--api-only` 모드로 minos 실행
+- 서버 시작 불가 → 실행 가능한 API 경로가 있을 때 `--api-only` 모드로 minos 실행. 서버가 필요한 미실행 검사와 필수 UI는 `NOT RUN`으로 남기며 대체 검사 통과로 전체 성공을 주장하지 않는다.
+- Minos 정본 로드 실패 → Phase 5 `NOT RUN`; 필요한 브라우저 설치 실패 → 해당 UI `NOT RUN`. 독립 실행 가능한 API·워커 검사는 계속하고 기존 최종 등급·증거 규칙으로 보고한다.
 - QA 시나리오 미존재 → 현장 생성 후 실행
 
 ---

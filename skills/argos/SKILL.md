@@ -208,6 +208,13 @@ See [verify-protocol.md](references/verify-protocol.md) — Phase 1
 메인 컨텍스트만 두 축(기능 검증 + 품질 검증/네이티브 병합)의 결과를 정규화·중복 제거하고
 정적 검증 보고서에 반영합니다. 위임된 작업은 보고서나 공유 상태를 직접 쓰지 않습니다.
 
+담당 기능에 재시도·동시 변경·외부 연동·메시지 처리가 있으면 내부 모듈 해석 계약에 따라
+`MODULE_ROOT[code-reviewer]/references/reliability-contract.md`를 직접 읽습니다. 적용된 멱등성·
+원자성 경계·부분 실패 복구·데이터 일관성 계약을 구현과 대조하고, 관련 AC와 Phase 2~4의 실제
+실행 증거를 연결합니다. 도면 유무와 관계없이 해당 범위만 확인하며 단일 DB에 분산 구조를 요구하지 않습니다.
+미정인 계약은 설계 보완, 관측된 위반은 구현 결함, 참조 누락·미실행·관찰 불가는 `NOT RUN`/`UNVERIFIED`로
+구분합니다. 정적 일치·응답 성공만으로 데이터와 외부 효과의 검증을 완료 처리하지 않습니다.
+
 ### Phase 2: 런타임 검증
 
 See [verify-protocol.md](references/verify-protocol.md) — Phase 2

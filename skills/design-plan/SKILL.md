@@ -37,6 +37,8 @@ description: >
 - `stitch`: `--stitch` 또는 명시적인 Stitch 실행 요청이 있을 때, Phase 5 진입 직전
 - `skill-evolve`: Phase 7에서 전역 규칙 변경을 사용자가 명시적으로 승인한 뒤
 - `autoresearch`: 승인된 `skill-evolve` 절차가 대조 실험을 요구할 때
+- `code-reviewer`: 상태 변경·외부 처리가 있는 화면의 재시도/결과 미확정 행동을 설계·구현할 때.
+  해석된 모듈의 `references/reliability-contract.md` 중 UI·인계에 해당하는 기준을 읽습니다.
 
 각 모듈을 처음 쓰기 전에 다음 순서로 해석합니다.
 
@@ -610,6 +612,11 @@ P0·P1은 완료 전에 고칩니다.
 단계이며, 조건이 관찰할 수 없게 쓰였으면 `FAIL`이 아니라 계약을 고칩니다. `Object Flows`가 있으면 대상마다 Create에서 After까지 따라가고,
 읽기 전용 작업자 하나가 `Scenario Facts`와 모든 화면의 글자를 대조해 어긋난 사실과 누른 뒤 갈 곳이 없는
 조작만 돌려줍니다. 고치는 것은 메인입니다([korean-mobile-app.md](references/korean-mobile-app.md) 3절).
+
+상태 변경·외부 처리 화면은 Experience Contract의 `States`·`CTA Strategy`에 따라 처리 중,
+결과 미확정, 확정 실패, 완료와 복구를 확인합니다. 타임아웃을 즉시 실패로 표시해 새 작업을 만들거나
+새로고침 후 이미 완료된 작업을 다시 제출하지 않도록 결과 조회/재시도 계약을 구현 담당과 연결합니다.
+버튼 비활성화는 UX 증거이며 서버 멱등성·실제 부수 효과 검증은 해당 백엔드/QA 증거로 구분합니다.
 
 ### 6-4. 품질 검증
 

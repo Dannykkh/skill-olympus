@@ -57,6 +57,9 @@ Step 6: Healer Loop (실패 → 수정 → 재실행, max 5회)
 Step 7: 결과 보고 + 서버 정리
 ```
 
+위는 Playwright 기본 경로입니다. Step 2에서 관련 API·워커 통합 테스트 하네스를 선택한 사례는
+그 하네스의 준비·실행 경로를 따르며, 적용 여부와 실행 증거는 같은 QA 결과에 남깁니다.
+
 ---
 
 ## Step 1: 시나리오 수집
@@ -82,6 +85,17 @@ UI 입력만으로 끝내지 않고 독립 계정의 직접 HTTP 요청(기존 A
 기존 증거는 대상 버전·환경·조건이 같을 때 재사용한다. 서버·계정·관찰 수단 부족은 `NOT RUN`이며,
 필수 사례 미실행을 전체 PASS로 표시하지 않는다. 명시적 UI-only 범위에서는 API 시험을 확장하지 않고
 API 보안 검증 제외를 보고한다. 테스트를 통과시키려고 검증을 제거하거나 거부 기대값을 완화하지 않는다.
+
+### 멱등성·분산 처리·데이터 일관성 시나리오
+
+담당 기능에 재시도·동시 변경·외부 연동·메시지 처리가 있으면 위와 같은 모듈 경로 해석으로
+`code-reviewer`의 `references/reliability-contract.md`를 직접 읽고, 적용되는 검사만 기존 QA·AC에
+연결합니다. 단일 DB 작업에 분산 처리를, 큐가 없는 기능에 메시지 검사를 강제하지 않습니다.
+정상 처리 후 응답 유실·중복 실행·처리 중 장애의 저장 결과와 부수 효과는 해당 계약에 맞는
+API·워커 통합 테스트 하네스로 확인합니다. 브라우저 성공 표시나 HTTP 200만으로 큐 처리·데이터
+일관성을 PASS로 판단하지 않으며, 참조·실행 환경·관찰 수단이 없으면 해당 검증은 `NOT RUN`입니다.
+명시적 UI-only/API-only 범위를 넘는 검사는 제외 범위와 후속 담당을 남기고 자동 확장하지 않습니다.
+이 확장은 일반 QA에만 적용하며 CI 감사 모드의 분석·보고 범위를 바꾸지 않습니다.
 
 ### 시나리오 파싱 규칙
 
@@ -172,7 +186,12 @@ Step 1 끝에 `docs/domain-dictionary.md` 존재 여부를 확인하고, 있으�
 
 시나리오 → Playwright TypeScript 테스트 코드로 변환합니다.
 
-> 상세 변환 규칙: [references/playwright-codegen.md](references/playwright-codegen.md)
+신뢰성 사례에 기존 API·워커 통합 테스트 하네스가 있으면 그 실행 경로를 재사용합니다.
+해당 사례는 Step 2~5의 Playwright·브라우저 준비 대신 그 하네스에 필요한 준비·실행을 수행하고,
+같은 TC-ID·AC에 실행 증거를 연결합니다. 검증 범위에 UI가 없으면 브라우저 탐색은 해당 없음으로 남깁니다.
+UI와 API·워커 검사가 함께 있으면 사례별 실행 경로를 나누고, UI 검증과 필요한 Playwright 준비는 유지합니다.
+
+> 아래 코드 생성·프로젝트 감지는 Playwright 경로에 적용합니다. 상세 변환 규칙: [references/playwright-codegen.md](references/playwright-codegen.md)
 
 ### 프로젝트 감지
 
@@ -195,7 +214,8 @@ package.json "playwright" → 버전 확인
 
 ## Step 3: 서버 준비 (자동 감지 + 실행)
 
-테스트 전에 앱 서버를 자동으로 준비합니다. 사용자 개입 없이 진행합니다.
+선택한 테스트 경로가 앱 서버를 요구하면 실행 전에 자동으로 준비합니다. 사용자 개입 없이 진행합니다.
+API·워커 하네스가 자체 환경을 준비하거나 앱 서버가 필요 없으면 해당 준비 절차만 수행합니다.
 
 감지 순서: docker-compose.yml → Dev Server → Django → 사용자 안내
 
@@ -207,6 +227,9 @@ package.json "playwright" → 버전 확인
 ---
 
 ## Step 4: 테스트 실행
+
+아래 명령과 worker 설정은 Playwright 경로에 적용합니다. API·워커 하네스는 기존 실행 명령과
+동시성 설정을 사용하고, 같은 TC-ID·AC에 assertion 결과와 필요한 서비스의 준비 상태를 연결합니다.
 
 ### Worker 수 제한 (CPU 보호)
 
@@ -235,14 +258,16 @@ npx playwright test tests/e2e/auth.spec.ts --workers=50%
 
 CPU 감지 명령어 및 출력 형식: See [server-setup.md](references/server-setup.md)
 
-추가 사전 조건: 서버 실행(Step 3 완료), DB 시드, `.env.test`, Playwright 브라우저 설치
+추가 사전 조건은 선택한 테스트에 필요한 서버 실행(Step 3), DB 시드, `.env.test`를 확인합니다.
+Playwright 브라우저 설치는 브라우저를 사용하는 UI 테스트·탐색 QA에 필요합니다.
 
 ---
 
 ## Step 5: 브라우저 탐색 QA (코드화 방식)
 
-자동화 테스트(Step 4) 이후, **탐색용 Playwright 스크립트를 생성·실행**하여 실제 브라우저에서
+UI가 검증 범위에 있으면 자동화 테스트(Step 4) 이후 **탐색용 Playwright 스크립트를 생성·실행**하여 실제 브라우저에서
 탐색적 QA를 수행합니다. 자동화 테스트가 잡지 못하는 콘솔 에러, 네트워크 실패, 레이아웃 깨짐을 발견합니다.
+UI가 없는 범위는 해당 없음으로 보고하고, 필요한 UI를 실행하지 못한 경우는 `NOT RUN`으로 구분합니다.
 
 Antigravity에서 사용자가 `/browser`를 명시적으로 열었거나 현재 세션에 browser capability가 노출돼
 있으면 초기 탐색과 재현 후보 수집에 사용할 수 있습니다. 이 스킬이 slash command를 프로그램적으로
@@ -264,7 +289,7 @@ Step 2에서 이미 Playwright 코드를 생성하므로, 탐색 QA도 동일하
 
 ### 실행 조건
 
-- **Playwright만 설치되어 있으면 기본 실행** (MCP 불필요)
+- **UI가 검증 범위에 있고 Playwright가 준비되면 기본 실행** (MCP 불필요)
 - `--no-explore` 옵션으로 스킵 가능
 - `--explore-only` 옵션으로 Step 2~4를 건너뛰고 이 단계만 실행 가능
 - `--explore-mcp` 옵션으로 기존 Playwright MCP 방식 fallback (페이지마다 도구 직접 호출)
@@ -304,6 +329,9 @@ Step 2에서 이미 Playwright 코드를 생성하므로, 탐색 QA도 동일하
 테스트 실패(Step 4) + 브라우저 탐색 QA 발견 이슈(Step 5)를 자동으로 분석하고 수정을 반복합니다.
 
 > 상세 프로토콜: [references/healer-loop.md](references/healer-loop.md)
+
+API·워커 하네스에서 실패한 사례는 같은 하네스의 원래 검사와 영향받는 회귀를 재실행합니다.
+참조의 Playwright 명령 예시는 Playwright 경로에만 적용하며, 재시도로 하네스나 기존 예산을 초기화하지 않습니다.
 
 실제 실패나 수리 가능한 탐색 이슈가 있을 때만 `healer-loop.md`의 `디버깅 모듈 연결`로
 `systematic-debugging` 정본을 읽고 기존 루프 안에서 적용합니다. 검사만·읽기 전용 요청에서는
@@ -365,11 +393,11 @@ IF retry >= max_retries:
 
 | Grade | 조건 | 판정 |
 |-------|------|------|
-| **PASS** | 자동 테스트 + 탐색 QA 전체 통과 | 실행한 QA 범위 통과 |
+| **PASS** | 적용 대상 자동 테스트 + 탐색 QA 전체 통과 | 실행한 QA 범위 통과; 해당 없음은 근거와 함께 별도 표시 |
 | **CONDITIONAL** | P0/P1 통과, P2/P3에 exhausted·blocked·unverified·기존 fixme 또는 탐색 QA 경고만 남음 | 조건부 진행; 남은 상태·범위 명시 |
 | **FAIL** | P0/P1 실패 또는 필수 검증 미완료 (자동 테스트 또는 탐색 QA) | 구현 결함과 NOT RUN을 구분해 보고 |
 
-> **완료 계약 (028 — 거짓 완료 방지):** 각 시나리오의 "통과"는 그 시나리오의 Playwright assertion이 실제 green인 것을 증거로 한다.
+> **완료 계약 (028 — 거짓 완료 방지):** 각 시나리오의 "통과"는 그 시나리오의 Playwright 또는 해당 API·워커 통합 테스트 하네스의 assertion이 실제 green인 것을 증거로 한다.
 > Healer 소진은 `exhausted`(미해결)로 집계하고 테스트를 자동 `skip`/`fixme`로 바꾸지 않는다.
 > 기존 또는 별도 승인된 `fixme`도 통과에 합산하지 않는다.
 > 필수 또는 P0/P1 검증이 불가하면 `FAIL — 검증 미완료`와 해당 `NOT RUN`/`UNVERIFIED`를 보고한다.
@@ -424,7 +452,7 @@ IF retry >= max_retries:
 
 ## 주의사항
 
-- Playwright 미설치 시 `npx playwright install` 필요
+- Playwright 브라우저를 사용하는 검사에서 브라우저 미설치 시 `npx playwright install` 필요. API·워커 하네스만 사용하는 범위에는 강제하지 않음
 - 브라우저 탐색 QA(Step 5)는 탐색 스크립트를 생성·실행하므로 Playwright만 있으면 동작 (MCP 불필요). `--explore-mcp`로 MCP 방식 fallback 가능
 - 탐색 결과(`report.json`)는 전체를 컨텍스트에 올리지 말고 jq/grep으로 이슈 항목만 추출 (토큰 절약)
 - Healer가 구현 코드를 수정하므로, 커밋되지 않은 변경사항이 있으면 주의
