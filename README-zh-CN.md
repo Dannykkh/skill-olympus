@@ -316,9 +316,17 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-11-15
+**最后更新：** 2026-11-17
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.11.0 — 状态变更可靠性与技能间的一致性
+
+涉及状态变更的功能现在会将适用的幂等性、原子性、部分成功后的恢复、消息重复消费和数据一致性要求纳入现有验收标准与QA。[可靠性契约](skills/code-reviewer/references/reliability-contract.md)连接规划、实现、界面状态、审查和验证的职责。单一数据库内的功能优先使用现有事务与约束，不会一律要求分布式架构。
+
+Minos和Zeus在没有UI的任务中使用现有API与worker测试。必需的UI检查未执行时，仍记为未完成。技能审查保留了独立调用所需的重复指令。`command-creator` 和 `manage-skills` 仅针对符合条件的技能，将可选的 `autoresearch` 作为source-only模块直接读取，并经实际行为评估后采用。记忆记录实际编写内容的CLI，默认保存在项目根目录；明确获准提升到共享存储时，也会保留原始来源。
+
+已使用安装后的Codex技能通过3个隔离worker案例（顺序重复、并发投递、输入冲突），并实际执行记忆整理、手动记录和共享提升。这些结果不代表生产数据库或消息队列的保证，也不是性能提升的测量结果。更新后请重新运行 `install.bat` 或 `bash install.sh`。另见[验证范围](CHANGELOG.md#7110---2026-11-17)。
 
 ## v7.10.0 — CI审计与公开网站交接
 

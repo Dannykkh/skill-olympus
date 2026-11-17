@@ -408,6 +408,12 @@ and her remembering crosses every session, every CLI, every dawn.
 
 ## Recent changes
 
+**v7.11.0:** State-changing features now carry applicable idempotency, atomicity, partial-success recovery, duplicate-message handling and consistency requirements through existing acceptance criteria and QA. The [reliability contract](skills/code-reviewer/references/reliability-contract.md) connects planning, implementation, UI states, review and verification responsibilities. A single-database feature starts with existing transactions and constraints; it does not automatically require distributed infrastructure.
+
+Minos and Zeus reuse existing API/worker test harnesses when no UI is involved. Required UI checks still remain incomplete when unrun. The skill audit preserves repeated safeguards needed for independent invocation. `command-creator` and `manage-skills` now resolve optional `autoresearch` as a source-only module for eligible skills and require behavioral evaluation before adoption. Memory records use the actual writing CLI, default to the project root, and preserve provenance during explicitly authorized promotion to shared storage.
+
+Installed-Codex validation passed three isolated worker cases (sequential duplicates, concurrent delivery and conflicting input) and exercised memory distillation, manual recording and shared promotion. These fixtures do not establish production database/queue guarantees or a measured performance gain. Update the checkout and rerun `install.bat` or `bash install.sh`. See [validation and scope](CHANGELOG.md#7110---2026-11-17).
+
 **v7.10.0:** Minos adds `/minos --ci-audit --limit 30` for CI history, timing and failure analysis. This report-only mode runs separately from QA generation and repair. It keeps run attempts, parallel elapsed time and missing measurements distinct; it does not change workflows or rerun CI. See the [CI audit contract](skills/minos/references/ci-audit.md).
 
 Public business and service sites now carry their offer, audience, verified copy, CTA outcomes and launch conditions through planning, design, implementation and inspection. Aphrodite owns the screen code and visual critique; Poseidon or Daedalus coordinates functional integration. Minos checks actual outcomes, SEO and Themis provide specialist evidence, and Clio distinguishes QA success from launch readiness. The extension is conditional, so internal tools do not inherit marketing sections or production-launch gates. See the [public-site guide](skills/design-plan/references/public-site-guide.md).

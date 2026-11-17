@@ -325,9 +325,17 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 ---
 
-**最終更新:** 2026-11-15
+**最終更新:** 2026-11-17
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.11.0 — 状態変更の信頼性とスキル間の整合性
+
+状態を変更する機能では、必要な冪等性・原子性・一部成功後の復旧・メッセージの重複処理・データ整合性を既存の完了条件とQAに結び付けます。[信頼性の契約](skills/code-reviewer/references/reliability-contract.md)が、設計・実装・画面の状態・レビュー・検証の責任をつなぎます。単一DBで完結する機能は既存のトランザクションと制約を優先し、分散構成を一律に要求しません。
+
+MinosとZeusは、UIのない処理で既存のAPI・workerテストを使います。必須のUI検査が未実行なら未完了として扱います。スキルの点検では、単独呼び出しに必要な繰り返しの指示を残しました。`command-creator` と `manage-skills` は、対象条件を満たすスキルに限り任意の `autoresearch` をsource-onlyモジュールとして直接読み、実際の動作を評価してから採用します。記憶には実際に書いたCLIを記録し、保存先はプロジェクトルートを基本とします。明示的に許可された共有先への昇格でも元の出典を保ちます。
+
+Codexのインストール済みスキルで、隔離したworkerの3ケース（順次の重複・同時配信・入力の衝突）が通過し、記憶の整理・手動記録・共有先への昇格も実行しました。本番DB・キューの保証や性能向上の測定を示す結果ではありません。更新後に `install.bat` または `bash install.sh` を再実行してください。[検証範囲](CHANGELOG.md#7110---2026-11-17)も確認できます。
 
 ## v7.10.0 — CI監査と公開サイトの引き継ぎ
 
