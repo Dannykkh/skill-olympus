@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.11.0] - 2026-11-17
+
+### Features
+
+- **workflows**: Add a shared state-change reliability contract for applicable idempotency, atomicity, partial-success recovery, duplicate-message handling and data consistency. Connect it to existing acceptance criteria, design, implementation, UI states, review and QA. Prefer existing database transactions and constraints; distributed services, queues, Saga and Outbox are not automatic requirements. (f0f0d2a)
+- **minos**, **zeus**, **api-tester**: Reuse existing API, integration and worker test harnesses for relevant state and side-effect assertions. Prepare only the required environment, retain UI checks for mixed features, and distinguish N/A from mandatory checks left NOT RUN. Preserve existing repair budgets and completion criteria. (f0f0d2a)
+
+### Bug Fixes
+
+- **command-creator**, **manage-skills**: Resolve optional autoresearch through its exact source-only module and skill-target contract. Use observed failures or measured cost, baseline/candidate execution and held-out checks before accepting a change; a format score alone does not prove improvement. (3b0f9d1)
+- **memory-distill**, **project-gotchas**: Resolve the Mnemo storage contract before writing, default ordinary records to the project root, and record the actual writing CLI. Preserve input provenance and original records; promote to an explicitly authorized shared destination only after a successful destination write. (3b0f9d1)
+- **frontend-design**: Correct the design-plan blacklist review reference to Phase 6, Validate the Experience. Preserve safeguards needed by independent skill invocation paths. (3b0f9d1)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Simplified Chinese READMEs and workflow guide with conditional reliability responsibilities, harness selection, installation instructions and validation limits. (c1551e5, f0f0d2a)
+
+### Validation and Scope
+
+- Full repository suite: 385/385 passed with no skipped tests. Git Bash and grep were explicitly selected for Windows subprocesses; Node test concurrency was limited to four. The earlier targeted routing, acceptance, installer, policy and memory-storage run passed 55 unique tests.
+- The Windows integrated installer completed for Claude, Codex, Antigravity and Grok with 12/12 verification checks passed, including installed hook execution. All 17 changed skill definitions passed frontmatter validation. Their release ZIPs contain 173 canonical files, with archive integrity and source-byte equality verified.
+- Installed catalog paths matched 504 canonical files across 48 applicable skill trees in Claude, Codex and Antigravity. Runtime-specific exclusions were respected; active counts remain 22/21/21 with no source-only promotion. Grok uses the Claude compatibility surface.
+- Installed-Codex execution passed three isolated worker cases covering sequential duplicates, concurrent delivery and conflicting input. It also exercised memory distillation, manual recording and explicitly authorized shared promotion while preserving raw observations and original records.
+- The worker fixture uses an in-memory ledger. Production database/broker durability, external-service effects, restart recovery, every CLI's model-driven workflow and measured performance gains remain outside this validation scope. Installation and source equality establish availability, not execution of every runtime branch.
+
 ## [7.10.0] - 2026-11-17
 
 ### Features
