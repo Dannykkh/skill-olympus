@@ -91,7 +91,7 @@ test("OpenClaw and Hermes expose only the 19 portable entry points by default", 
     assert.deepEqual(selection.skillNames, DEFAULT_COMMON_RUNTIME_SKILLS);
     assert.equal(selection.skillNames.length, 19);
     assert.equal(selection.runtimeExcludedNames.length, 6);
-    assert.equal(selection.defaultDisabledNames.length, 78);
+    assert.equal(selection.defaultDisabledNames.length, 79);
   }
 });
 
@@ -131,12 +131,12 @@ for (const runtime of ["openclaw", "hermes"]) {
 
       const catalog = fs.readFileSync(path.join(home, "SKILLS-CATALOG.md"), "utf8");
       assert.match(catalog, /기본 활성 스킬: 19개/);
-      // 로컬 전용 deploymonitor는 git에 추적되지 않으므로 clean clone에서는 source-only가 78개다.
+      // 로컬 전용 deploymonitor는 git에 추적되지 않으므로 clean clone에서는 source-only가 79개다.
       const sourceOnlyCount = fs.existsSync(
         path.join(__dirname, "..", "..", "skills", "deploymonitor", "SKILL.md"),
       )
-        ? 79
-        : 78;
+        ? 80
+        : 79;
       assert.match(catalog, new RegExp(`source-only 스킬: ${sourceOnlyCount}개`));
 
       const managedSkill = path.join(home, "skills", "api-tester", "SKILL.md");

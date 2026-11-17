@@ -67,23 +67,23 @@ Claude Code 스킬을 그대로 복사했다고 모두 동작하는 것은 아�
 `scripts/`, `references/`, `assets/`는 실제로 로드한 `SKILL.md`의 부모인 `module_root`에서
 해석해야 합니다.
 
-공개 추적 스킬 102개의 기본 Antigravity 분류는 다음과 같습니다.
+공개 스킬 104개의 기본 Antigravity 분류는 다음과 같습니다.
 
 | 분류 | 개수 | 의미 |
 |------|-----:|------|
-| 기본 활성 | 20 | 글로벌 slash/자동 탐색 표면에 설치하며 Antigravity 역할·훅 분기를 정적으로 확인 |
-| source-only | 78 | 카탈로그에서 정확한 경로로 읽을 수 있지만 기본 slash 명령이나 개별 실행 인증은 아님 |
+| 기본 활성 | 21 | 글로벌 slash/자동 탐색 표면에 설치하며 Antigravity 역할·훅 분기를 정적으로 확인 |
+| source-only | 79 | 카탈로그에서 정확한 경로로 읽을 수 있지만 기본 slash 명령이나 개별 실행 인증은 아님 |
 | 런타임 제외 | 4 | 다른 CLI 전용 어댑터라 Antigravity 홈에 설치하지 않음 |
 
-기본 활성 20개는 `agent-team`, `antigravity-mnemo`, `api-tester`, `argos`,
+기본 활성 21개는 `agent-team`, `antigravity-mnemo`, `api-tester`, `argos`,
 `auto-continue-loop`, `biz-strategy`, `ceo`, `clio`, `design-plan`, `explain`, `hestia`,
-`ko-en-translator`, `minos`, `release-notes`, `seo-audit`, `themis`, `video-maker`, `workpm`,
+`ko-en-translator`, `minos`, `recipe`, `release-notes`, `seo-audit`, `themis`, `video-maker`, `workpm`,
 `zephermine`, `zeus`입니다.
 
 직접 제외하는 네 스킬은 `agent-team-codex`, `codex-mnemo`, `grok-mnemo`, `mnemo`입니다.
 Antigravity에서는 각각 공통 `agent-team`과 `antigravity-mnemo`가 대응합니다.
 
-공개 102개와 로컬 전용 `deploymonitor`를 합친 canonical `SKILL.md` 103개는 현재 공통 Agent
+공개 104개와 로컬 전용 `deploymonitor`를 합친 canonical `SKILL.md` 105개는 현재 공통 Agent
 Skills frontmatter 검증을 통과합니다. 이 저장소의 보수적 교집합은 필수 `name`·`description`과
 선택 `license`·flat-string `metadata`입니다. 상위 표준의 `compatibility`와 실험적 `allowed-tools`는
 현재 네 런타임 검증기가 같은 형식으로 받아들이지 않으므로 공통 원본에서 사용하지 않습니다. 마이그레이션 전에는 22개가 Claude 확장 필드, 구형

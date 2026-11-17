@@ -48,9 +48,9 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 | **Proof that code matches intent** | `/argos` compares the specification, code, APIs, scenarios, diagrams, and security boundaries |
 | **Browser tests that actually run** | `/minos` writes Playwright scenarios, executes them, and repairs failures within a bounded loop |
 | **Memory across sessions** | `mnemo` recalls conversational context from tags and evidence, keeps existing memories current, and supports resumable handoffs |
-| **Less prompt noise** | A small active registry routes into 78 source-only modules only when the work needs them |
+| **Less prompt noise** | A small active registry routes into 79 source-only modules only when the work needs them |
 
-**103 public skill sources (default allowlist union: 25 = 19 user entry points + 6 runtime adapters; 21 or 22 active per integrated surface, 19 on skills-only hosts, 78 source-only internal/optional modules) · no custom agents (native subagents + skills) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
+**104 public skill sources (default allowlist union: 25 = 19 user entry points + 6 runtime adapters; 21 or 22 active per integrated surface, 19 on skills-only hosts, 79 source-only internal/optional modules) · no custom agents (native subagents + skills) · 9 hooks · 4 integrated CLIs + Devin Mnemo compatibility + 2 skills-only hosts · 1 mythology**
 
 ---
 
@@ -172,9 +172,24 @@ See the [MCP setup guide](mcp-configs/README.md). A normal reinstall preserves e
 Skills can also activate from a matching natural-language request; slash names make the intended
 workflow explicit.
 
+### Configure LLM providers in an application
+
+Ask **"Use the llm-provider-setup skill to configure LLM providers."** The
+[provider setup skill](skills/llm-provider-setup/SKILL.md) defaults to OpenAI, Anthropic,
+Google Gemini and xAI. It guides API-key handling, model selection and manual IDs,
+model-specific reasoning controls, and connection tests using the project's existing stack.
+Every setup or change starts by searching each provider's current official model documentation.
+The resulting settings screen refreshes the account's model list when opened or when the provider
+or API key changes, and offers manual refresh.
+
+Run `install.bat` or `bash install.sh` after updating the checkout. The default install puts this
+skill in each CLI's **source-only catalog**; Grok shares Claude's copy. Request it in natural language,
+since `/llm-provider-setup` is not registered by default. Installed copies have been checked against
+the source; live provider calls and model-driven execution in all four CLIs remain unverified.
+
 ### OpenClaw and Hermes Agent: skills-only install
 
-These entry points install the 19 portable user-facing skills plus the 78 source-only modules. They
+These entry points install the 19 portable user-facing skills plus the 79 source-only modules. They
 do not install plugins, hooks, Mnemo, MCP, custom agents, or the existing four-CLI runtime adapters.
 
 ```powershell
@@ -407,6 +422,8 @@ and her remembering crosses every session, every CLI, every dawn.
 ---
 
 ## Recent changes
+
+**v7.12.0:** Add [llm-provider-setup](skills/llm-provider-setup/SKILL.md) for reusable provider settings: current model discovery, manual model IDs, model-specific reasoning controls, API keys and connection tests. It remains source-only under the existing install policy, so active skill counts stay unchanged. Update the checkout and rerun `install.bat` or `bash install.sh`; use a natural-language request to select the skill. See [validation and scope](CHANGELOG.md#7120---2026-11-18).
 
 **v7.11.0:** State-changing features now carry applicable idempotency, atomicity, partial-success recovery, duplicate-message handling and consistency requirements through existing acceptance criteria and QA. The [reliability contract](skills/code-reviewer/references/reliability-contract.md) connects planning, implementation, UI states, review and verification responsibilities. A single-database feature starts with existing transactions and constraints; it does not automatically require distributed infrastructure.
 
@@ -766,7 +783,7 @@ Codex skills install globally only by default, avoiding duplicate discovery from
 isolated project-mirror test. All runtimes use a fail-closed skill allowlist. Its cross-runtime union
 contains 25 skills: 19 user entry points and 6 `agent-team`/`mnemo` adapters. Each runtime excludes
 3 or 4 incompatible adapters, leaving Claude with 22 active skills and Codex/Antigravity/standalone Grok
-with 21; the installed Grok surface reads Claude's shared 22. The same 78 public non-allowlisted sources are
+with 21; the installed Grok surface reads Claude's shared 22. The same 79 public non-allowlisted sources are
 copied to the non-scanned `.olympus/source-skills` library and listed as source-only with an exact path in
 `SKILLS-CATALOG.md`. The source-only `orchestrator` also has a non-discoverable executable mirror under
 `.olympus/runtime-modules/orchestrator`; MCP registration points there and dependency caches survive source refreshes. Activate every compatible source-only skill with `--include-source-only-skills`,
@@ -814,13 +831,13 @@ Includes deterministic gotcha/learned capture:
 
 ## What's Inside
 
-### Skill sources (103; default union 25, 21 or 22 active per installed surface)
+### Skill sources (104; default union 25, 21 or 22 active per installed surface)
 
 The table is the source inventory, not the startup registry. Low-frequency format tools, provider integrations, framework cookbooks, and generators remain source-only until explicitly invoked through the catalog or installed with the opt-in flag.
 
 | Category | Skills | Highlights |
 |----------|--------|------------|
-| **AI Tools** | codex, antigravity, orchestrator, workpm, agent-team + 5 more | Multi-AI orchestration, PM-Worker pattern |
+| **AI Tools** | codex, antigravity, orchestrator, workpm, agent-team, llm-provider-setup + 5 more | Multi-AI orchestration, PM-Worker pattern, provider settings with model and reasoning controls |
 | **Pipeline** | zephermine, zeus, argos, minos, closer, shipping-and-launch | Zero-interaction full dev pipeline, launch checklist |
 | **Frontend** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5 more | 9 palettes, 47 font pairings, 84 styles, 14 themes (4 Hangul), SEO+AEO+GEO dual-score audit (search / AI visibility), chart selection guide |
 | **Development** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7 more | Docker, DB design, ADR, migration, social login, code quality |

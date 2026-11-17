@@ -48,9 +48,9 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 | **의도대로 구현됐다는 증거** | `/argos`가 명세, 코드, API, 시나리오, 다이어그램, 보안 경계를 대조 |
 | **실제로 실행되는 브라우저 테스트** | `/minos`가 Playwright 시나리오를 만들고 실행하며 제한된 반복 안에서 실패를 수정 |
 | **세션을 넘어가는 기억** | `mnemo`가 태그와 근거로 대화 맥락을 찾고, 기존 기억을 정비하며, 핸드오프로 작업을 이어감 |
-| **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 78개로 라우팅 |
+| **작은 시작 컨텍스트** | 소수의 활성 진입점이 필요할 때만 source-only 모듈 79개로 라우팅 |
 
-**공개 추적 스킬 소스 103개(기본 allowlist 합집합 25개 = 사용자 진입점 19개 + 런타임 어댑터 6개, 통합 표면별 활성 21개 또는 22개, skills-only 호스트 활성 19개, source-only 내부·선택 모듈 78개) · 사용자 정의 에이전트 없음(네이티브 서브에이전트 + 스킬) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
+**공개 추적 스킬 소스 104개(기본 allowlist 합집합 25개 = 사용자 진입점 19개 + 런타임 어댑터 6개, 통합 표면별 활성 21개 또는 22개, skills-only 호스트 활성 19개, source-only 내부·선택 모듈 79개) · 사용자 정의 에이전트 없음(네이티브 서브에이전트 + 스킬) · 훅 9개 · 통합 CLI 4개 + Devin Mnemo 호환 + skills-only 호스트 2개 · 신화 1개**
 
 ---
 
@@ -171,9 +171,23 @@ Claude·Codex·Antigravity의 기본 MCP는 `playwright`입니다. Context7 MCP�
 자연어 요청이 설명과 일치하면 스킬이 자동 선택될 수도 있습니다. Slash 이름을 사용하면
 원하는 워크플로우를 명확하게 지정할 수 있습니다.
 
+### 애플리케이션에 LLM 프로바이더 연결 설정
+
+**“프로바이더 스킬로 진행해”**, 또는 **“llm-provider-setup 스킬로 LLM 연결 설정해줘”**라고
+요청하세요. [프로바이더 설정 스킬](skills/llm-provider-setup/SKILL.md)은 OpenAI·Anthropic·Google
+Gemini·xAI를 기본 대상으로 삼습니다. 기존 프로젝트 구조에서 API 키 관리, 모델 선택과 직접 입력,
+모델별 추론 옵션, 연결 테스트를 구현합니다. 설정을 구현하거나 변경할 때마다 각 공급자의 공식 모델
+자료를 다시 검색합니다. 완성할 설정 화면은 열기·프로바이더 전환·API 키 변경 때 해당 계정의 모델
+목록을 재조회하고, 수동 새로고침도 제공합니다.
+
+저장소를 업데이트한 뒤 `install.bat` 또는 `bash install.sh`를 실행하세요. 기본 설치는 각 CLI의
+**source-only 카탈로그**에 등록하며 Grok은 Claude 사본을 공유합니다. `/llm-provider-setup`은
+기본 슬래시 명령이 아니므로 자연어로 요청합니다. 설치본과 정본의 파일 일치는 확인했으며,
+실제 프로바이더 호출과 네 CLI 모두에서의 모델 기반 실행은 아직 검증하지 않았습니다.
+
 ### OpenClaw·Hermes Agent skills-only 설치
 
-아래 진입점은 사용자용 공통 스킬 19개와 source-only 모듈 78개를 설치합니다. 플러그인,
+아래 진입점은 사용자용 공통 스킬 19개와 source-only 모듈 79개를 설치합니다. 플러그인,
 훅, Mnemo, MCP, 사용자 정의 에이전트, 기존 네 CLI용 런타임 어댑터는 설치하지 않습니다.
 
 ```powershell
@@ -406,6 +420,8 @@ Owner Decision Brief를 남기고, 단계·재개가 바뀌어도 원래 재시�
 ---
 
 ## 최근 변경
+
+**v7.12.0:** [llm-provider-setup](skills/llm-provider-setup/SKILL.md)을 추가했습니다. 최신 모델 조회, 모델 ID 직접 입력, 모델별 추론 옵션, API 키, 연결 테스트를 프로젝트마다 재사용할 수 있는 설정 절차로 묶었습니다. 기존 설치 정책에 따라 source-only로 제공하므로 기본 활성 스킬 수는 유지합니다. 저장소를 업데이트하고 `install.bat` 또는 `bash install.sh`를 다시 실행한 뒤 자연어로 스킬을 지정하세요. [검증 범위](CHANGELOG.md#7120---2026-11-18)도 확인할 수 있습니다.
 
 **v7.11.0:** 상태를 변경하는 기능에 필요한 멱등성·원자성·부분 성공 후 복구·메시지 중복 소비·데이터 일관성을 기존 완료 기준과 QA에 연결했습니다. [신뢰성 계약](skills/code-reviewer/references/reliability-contract.md)에서 설계·구현·화면 상태·리뷰·검증의 책임을 잇습니다. 단일 DB 기능은 기존 트랜잭션과 제약을 우선하며 분산 구조를 자동으로 요구하지 않습니다.
 
@@ -758,7 +774,7 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 기본 거부 allowlist를 사용합니다. 런타임 전체 합집합은 사용자 진입점 19개와
 `agent-team`·`mnemo` 어댑터 6개를 합친 25개입니다. 각 런타임은 호환되지 않는 어댑터
 3개 또는 4개를 제외해 Claude 22개, Codex/Antigravity/독립 Grok 21개를 활성화하며,
-실제 Grok 설치 표면은 Claude의 공유 22개를 읽습니다. allowlist 밖의 같은 78개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
+실제 Grok 설치 표면은 Claude의 공유 22개를 읽습니다. allowlist 밖의 같은 79개 공개 소스는 스캔되지 않는 `.olympus/source-skills`에 복사하고
 `SKILLS-CATALOG.md`에 source-only와 정확한 경로로 기록합니다. source-only `orchestrator`는 MCP 실행용 비탐색 미러를 `.olympus/runtime-modules/orchestrator`에도 두며, 등록 경로와 의존성 캐시는 그곳에서 유지합니다. source-only 전체 활성화는
 `--include-source-only-skills`, 기존 코딩 가이드 8개만 추가 활성화는 `--include-broad-coding-skills`를 사용합니다. source-only는 자연어 요청으로 카탈로그에서 읽을 수 있고, 일부 CLI가 미등록 slash를 모델 전달 전에 거부하므로 네이티브 `/스킬명` 메뉴가 필요할 때는 전체 opt-in을 사용합니다.
 이 저장소의 스킬 소스와 이름이 같은 설치 디렉터리는 설치기가 관리하므로 동기화 때 교체·제거될 수 있고, 이름이 다른 로컬 스킬은 보존됩니다. 설치 사본을 직접 수정하지 말고 저장소 원본을 수정하거나 별도 이름을 사용하세요.
@@ -800,13 +816,13 @@ Codex 스킬은 기본적으로 전역에만 설치해 이 저장소의 `.agents
 
 ## 구성 요소
 
-### 스킬 소스 (103개, 기본 합집합 25개, 설치 표면별 활성 21개 또는 22개)
+### 스킬 소스 (104개, 기본 합집합 25개, 설치 표면별 활성 21개 또는 22개)
 
 아래 표는 시작 시 레지스트리가 아니라 소스 목록입니다. 저빈도 문서 형식 도구, 서비스 통합, 프레임워크 레시피, 생성기는 명시 호출하거나 opt-in 설치하기 전까지 source-only로 남습니다.
 
 | 카테고리 | 스킬 | 핵심 |
 |----------|------|------|
-| **AI 도구** | codex, antigravity, orchestrator, workpm, agent-team + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴 |
+| **AI 도구** | codex, antigravity, orchestrator, workpm, agent-team, llm-provider-setup + 5개 | 멀티 AI 오케스트레이션, PM-Worker 패턴, 프로바이더·모델·추론 설정 |
 | **파이프라인** | zephermine, zeus, argos, minos, closer, shipping-and-launch | 제로 인터랙션 풀 파이프라인, 출시 체크리스트 |
 | **프론트엔드** | react-dev, frontend-design, theme-factory, stitch, seo-audit, ui-ux-auditor, data-visualization + 5개 | 9 팔레트, 47 폰트 페어링, 84 스타일, 테마 14종(한글 4종), SEO+AEO+GEO 2축 점수 감사(검색/AI 가시성), 차트 선택 가이드 |
 | **개발** | docker-deploy, database-schema-designer, deprecation-and-migration, documentation-and-adrs, social-login, code-reviewer + 7개 | Docker, DB 설계, ADR, 마이그레이션, 소셜 로그인, 코드 품질 |

@@ -33,7 +33,7 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 
 [快速开始](#快速开始) · [选择工作流](#选择工作流) · [CLI 支持](#cli-支持) · [English 详细版](README.md)
 
-> Olympus 不是把大量提示词全部塞进上下文。默认只公开 18 个清晰入口，底层 78 个
+> Olympus 不是把大量提示词全部塞进上下文。默认只公开 19 个清晰入口，底层 79 个
 > source-only 模块会在真正需要时通过目录读取。
 
 ---
@@ -49,8 +49,8 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 | **跨会话保留记忆** | `mnemo` 通过标签和证据查找对话上下文，整理现有记忆，并通过交接延续工作 |
 | **保持较小的启动上下文** | 少量入口只在需要时加载 source-only 模块 |
 
-仓库公开跟踪 102 个技能源。默认 allowlist 的并集为 24 个；集成 CLI 会启用 20 或 21 个，
-skills-only 主机会启用 18 个，其余 78 个保持 source-only。
+仓库公开跟踪 104 个技能源。默认 allowlist 包含 19 个通用入口和 6 个运行时适配器，共 25 个；
+集成 CLI 会启用 21 或 22 个，skills-only 主机会启用 19 个，其余 79 个保持 source-only。
 
 ---
 
@@ -147,9 +147,22 @@ Context7 MCP 为可选项，可分别运行 `node install-mcp.js context7`（Cla
 
 与技能描述相符的自然语言请求也可以触发工作流。使用 slash 名称可以更明确地指定意图。
 
+### 为应用实现 LLM 提供商设置
+
+可以直接说：**“使用 llm-provider-setup 技能配置 LLM 连接。”**
+[提供商设置技能](skills/llm-provider-setup/SKILL.md)默认面向 OpenAI、Anthropic、Google Gemini
+和 xAI。它沿用项目现有结构，实现 API 密钥管理、模型选择与 ID 手动输入、按模型配置推理选项，
+以及连接测试。每次实现或修改设置时，都要重新搜索各提供商的官方模型资料。生成的设置界面在
+打开、切换提供商或更换 API 密钥时，重新获取该账户的模型列表，并提供手动刷新。
+
+更新仓库后运行 `install.bat` 或 `bash install.sh`。默认安装会将该技能放入各 CLI 的
+**source-only 目录与索引**，Grok 共享 Claude 的副本。`/llm-provider-setup` 默认不会注册为
+slash 命令，请用自然语言指定。已确认安装文件与源文件一致；真实提供商 API 调用和四个 CLI
+各自的模型执行流程尚未验证。
+
 ### OpenClaw 和 Hermes Agent：skills-only 安装
 
-专用安装器会安装 18 个通用用户入口和 78 个 source-only 模块，不会安装插件、hooks、
+专用安装器会安装 19 个通用用户入口和 79 个 source-only 模块，不会安装插件、hooks、
 Mnemo、MCP、自定义智能体，也不会安装四个集成 CLI 的专用适配器。
 
 ```powershell
@@ -316,9 +329,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-11-17
+**最后更新：** 2026-11-18
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.12.0 — 复用 LLM 提供商连接设置
+
+新增 [llm-provider-setup](skills/llm-provider-setup/SKILL.md)，将最新模型获取、模型 ID 手动输入、按模型配置推理选项、API 密钥和连接测试整理为可复用流程。技能遵循现有安装策略，以 source-only 方式提供，默认启用的技能数量不变。更新后请重新运行 `install.bat` 或 `bash install.sh`，再用自然语言指定该技能。另见[验证范围](CHANGELOG.md#7120---2026-11-18)。
 
 ## v7.11.0 — 状态变更可靠性与技能间的一致性
 
