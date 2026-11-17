@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.12.0] - 2026-11-18
+
+### Features
+
+- **llm-provider-setup**: Add a portable skill for application provider settings, defaulting to OpenAI, Anthropic, Google Gemini and xAI. Recheck each provider's official model and reasoning documentation for every setup task; implement authenticated model-list refresh on settings open, provider/key changes and manual refresh, alongside direct model-ID entry, model-specific reasoning controls, API-key management and connection testing. (04d0c5d)
+- **installation**: Keep the new skill source-only across compatible hosts. Claude Code, Codex and Antigravity receive the same canonical skill; Grok uses the Claude shared catalog. Natural-language requests include "프로바이더 스킬로 진행해" and "llm-provider-setup 스킬로 LLM 연결 설정해줘". (04d0c5d)
+
+### Documentation
+
+- Update the English, Korean, Japanese and Simplified Chinese READMEs with invocation, installation and verification boundaries. Synchronize the public inventory at 104 skills, with 79 source-only modules and the existing 25-skill allowlist unchanged. (04d0c5d)
+
+### Validation and Scope
+
+- Full repository suite: 385/385 passed, no skipped tests. Git Bash and grep were explicitly selected for Windows subprocesses; Node test concurrency was limited to four.
+- The Windows integrated installer completed for Claude, Codex, Antigravity and Grok with 12/12 verification checks passed, including installed Mnemo hook execution. The new skill passed frontmatter validation; its ZIP passed integrity and canonical-byte comparison.
+- The three installed skill files match the canonical source byte-for-byte and their catalogs register source-only paths. Grok's installed rules point at the same Claude catalog. Active skill counts remain 22/21/21; no source-only promotion was made.
+- Live provider API calls, an implemented application's UI behavior and model-driven execution of this workflow in all four CLIs remain NOT RUN. Installation, hook checks and source equality establish availability, not execution of the provider setup workflow.
+
 ## [7.11.0] - 2026-11-17
 
 ### Features
