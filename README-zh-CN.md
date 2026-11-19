@@ -33,7 +33,7 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 
 [快速开始](#快速开始) · [选择工作流](#选择工作流) · [CLI 支持](#cli-支持) · [English 详细版](README.md)
 
-> Olympus 不是把大量提示词全部塞进上下文。默认只公开 19 个清晰入口，底层 79 个
+> Olympus 不是把大量提示词全部塞进上下文。默认只公开 20 个清晰入口，底层 79 个
 > source-only 模块会在真正需要时通过目录读取。
 
 ---
@@ -49,8 +49,8 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 | **跨会话保留记忆** | `mnemo` 通过标签和证据查找对话上下文，整理现有记忆，并通过交接延续工作 |
 | **保持较小的启动上下文** | 少量入口只在需要时加载 source-only 模块 |
 
-仓库公开跟踪 104 个技能源。默认 allowlist 包含 19 个通用入口和 6 个运行时适配器，共 25 个；
-集成 CLI 会启用 21 或 22 个，skills-only 主机会启用 19 个，其余 79 个保持 source-only。
+仓库公开跟踪 105 个技能源。默认 allowlist 包含 20 个通用入口和 6 个运行时适配器，共 26 个；
+集成 CLI 会启用 22 或 23 个，skills-only 主机会启用 20 个，其余 79 个保持 source-only。
 
 ---
 
@@ -162,7 +162,7 @@ slash 命令，请用自然语言指定。已确认安装文件与源文件一�
 
 ### OpenClaw 和 Hermes Agent：skills-only 安装
 
-专用安装器会安装 19 个通用用户入口和 79 个 source-only 模块，不会安装插件、hooks、
+专用安装器会安装 20 个通用用户入口和 79 个 source-only 模块，不会安装插件、hooks、
 Mnemo、MCP、自定义智能体，也不会安装四个集成 CLI 的专用适配器。
 
 ```powershell
@@ -247,6 +247,7 @@ Chronos 的 `Complete` 要求所有需求均有证据且验证通过；`Blocked`
 | 没有预先设计就直接推进 | `workpm` / `/daedalus` | 调研、任务拆分、实现、验证 |
 | 重新设计 UI | `/aphrodite` | 先渲染并检验线框图，再完成 Experience Contract、视觉方向与实现 |
 | 对照设计验收实现 | `/argos` | 基于证据的符合或不符合判定 |
+| 核对同一功能在不同入口的业务规则 | `/consistency-audit 恢复会话` | 列出相同条件下结果不同的入口及重复实现的规则，附上输入和代码位置 |
 | 修复直到 QA 通过 | `/minos` | Playwright 测试和修复日志 |
 | 持续逐项修复 | `/chronos` | 审计日志、验证结果、可恢复状态 |
 | 查找过去的决定 | `/mnemo` | 对话搜索、语义记忆、会话交接 |
@@ -332,6 +333,10 @@ node --test scripts/tests/*.test.js
 **最后更新：** 2026-11-18
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.13.0 — 核对同一功能在不同入口的行为
+
+在 Claude Code、Codex、Antigravity 或 Grok 中输入 `/consistency-audit 恢复会话` 即可检查现有功能。即使没有代码改动，也能对照各入口在相同输入下的结果，并标明行为冲突、重复实现的业务规则及设计上允许的差异。[用法](skills/consistency-audit/SKILL.md)
 
 ## v7.12.0 — 复用 LLM 提供商连接设置
 

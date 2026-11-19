@@ -2,7 +2,7 @@
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
 >
-> Olympus 공개 추적 스킬 소스 103개는 기본 allowlist 합집합 25개(사용자 진입점 19개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 22개, Codex/Antigravity는 활성 21개이며 Grok 설치 표면은 Claude의 22개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
+> Olympus 공개 추적 스킬 소스 105개는 기본 allowlist 합집합 26개(사용자 진입점 20개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 23개, Codex/Antigravity는 활성 22개이며 Grok 설치 표면은 Claude의 23개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
 >
 > **호출 규칙:** 아래 `고정 호출명` 표만 기본 slash 진입점입니다. source-only 항목은 자연어로 기능을 요청하면 LLM이나 활성 하네스가 카탈로그의 현재 `SKILL.md`를 직접 읽어 적용합니다. source-only 이름을 `/name`으로 입력하는 방식은 `--include-source-only-skills`로 활성 등록한 환경에서만 보장됩니다. 표의 “opt-in 시 `/name`” 표기도 모두 이 조건을 뜻합니다.
 
@@ -23,6 +23,7 @@
 | 아테나 | `/athena` |
 | 아프로디테 | `/aphrodite` |
 | 헤스티아 | `/hestia` |
+| 비정합성 점검 | `/consistency-audit` |
 | SEO+AEO+GEO 감사 | `/seo-audit` |
 | 코드 설명 | `/explain` |
 | 한↔영 번역 | `/translate` (ko-en-translator) |
@@ -278,6 +279,7 @@ claude plugin install voltagent-qa-sec
 | `skills/video-maker/` | 영상 요청 진입점 — Remotion(React/TSX)·HyperFrames(HTML/CSS/GSAP) 중 엔진 하나로 (캡처→)스크립트→음성(TTS)→컴포지션→자막→렌더, brief 유형(나레이션·모션 단편·앱 홍보), TTS 공급자 선택, 공통 asset·render QA |
 | `skills/flow-verifier/` | 프로세스 다이어그램 생성 → 구현 후 코드 흐름 검증 (mermaid-diagrams 연동, Chronos 통합) |
 | `skills/code-reviewer/` | 자동 코드 리뷰 |
+| `skills/consistency-audit/` | 기능별로 실제 진입점의 업무 규칙을 대조하는 읽기 전용 점검 |
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
 | `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |

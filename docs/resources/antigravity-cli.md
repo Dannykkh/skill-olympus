@@ -43,6 +43,7 @@ Antigravity는 Agent Skills만 읽는 런타임이 아니라 다음 workflow를 
 | `/btw` | 현재 작업을 바꾸지 않는 옆 질문 | 별도 Olympus 하네스 불필요 |
 
 `/skills`, `/agents`, `/tasks`, `/hooks`, `/mcp`는 해당 런타임 자산과 상태를 관리하는 네이티브 진입점입니다.
+비대화형 `/consistency-audit`에서 공유 기준 파일 읽기가 자동 거절되면, 카탈로그의 `code-reviewer` 행이 가리키는 `SKILL.md`의 디렉터리를 해당 실행에 추가합니다. 예를 들어 `agy --mode plan --add-dir "<code-reviewer 디렉터리>" -p "/consistency-audit 세션 재개"`로 호출합니다.
 slash command는 사용자/TUI 진입점이므로 `SKILL.md`가 프로그램적으로 호출할 수 있다고 가정하지 않습니다.
 현재 세션에 이미 활성화된 goal·team·browser 문맥이 있으면 실행 엔진으로 재사용하고 중첩 하네스를 만들지
 않습니다. `/teamwork-preview`는 플랜과 배포 상태에 따라 가용성이 달라질 수 있으며 Olympus가 이를 우회하지 않습니다.
@@ -67,23 +68,23 @@ Claude Code 스킬을 그대로 복사했다고 모두 동작하는 것은 아�
 `scripts/`, `references/`, `assets/`는 실제로 로드한 `SKILL.md`의 부모인 `module_root`에서
 해석해야 합니다.
 
-공개 스킬 104개의 기본 Antigravity 분류는 다음과 같습니다.
+공개 스킬 105개의 기본 Antigravity 분류는 다음과 같습니다.
 
 | 분류 | 개수 | 의미 |
 |------|-----:|------|
-| 기본 활성 | 21 | 글로벌 slash/자동 탐색 표면에 설치하며 Antigravity 역할·훅 분기를 정적으로 확인 |
+| 기본 활성 | 22 | 글로벌 slash/자동 탐색 표면에 설치하며 Antigravity 역할·훅 분기를 정적으로 확인 |
 | source-only | 79 | 카탈로그에서 정확한 경로로 읽을 수 있지만 기본 slash 명령이나 개별 실행 인증은 아님 |
 | 런타임 제외 | 4 | 다른 CLI 전용 어댑터라 Antigravity 홈에 설치하지 않음 |
 
-기본 활성 21개는 `agent-team`, `antigravity-mnemo`, `api-tester`, `argos`,
-`auto-continue-loop`, `biz-strategy`, `ceo`, `clio`, `design-plan`, `explain`, `hestia`,
+기본 활성 22개는 `agent-team`, `antigravity-mnemo`, `api-tester`, `argos`,
+`auto-continue-loop`, `biz-strategy`, `ceo`, `clio`, `consistency-audit`, `design-plan`, `explain`, `hestia`,
 `ko-en-translator`, `minos`, `recipe`, `release-notes`, `seo-audit`, `themis`, `video-maker`, `workpm`,
 `zephermine`, `zeus`입니다.
 
 직접 제외하는 네 스킬은 `agent-team-codex`, `codex-mnemo`, `grok-mnemo`, `mnemo`입니다.
 Antigravity에서는 각각 공통 `agent-team`과 `antigravity-mnemo`가 대응합니다.
 
-공개 104개와 로컬 전용 `deploymonitor`를 합친 canonical `SKILL.md` 105개는 현재 공통 Agent
+공개 105개와 로컬 전용 `deploymonitor`를 합친 canonical `SKILL.md` 106개는 현재 공통 Agent
 Skills frontmatter 검증을 통과합니다. 이 저장소의 보수적 교집합은 필수 `name`·`description`과
 선택 `license`·flat-string `metadata`입니다. 상위 표준의 `compatibility`와 실험적 `allowed-tools`는
 현재 네 런타임 검증기가 같은 형식으로 받아들이지 않으므로 공통 원본에서 사용하지 않습니다. 마이그레이션 전에는 22개가 Claude 확장 필드, 구형

@@ -80,7 +80,7 @@ function runSync(runtime, home, ...args) {
   );
 }
 
-test("OpenClaw and Hermes expose only the 19 portable entry points by default", () => {
+test("OpenClaw and Hermes expose only the 20 portable entry points by default", () => {
   const allSkills = allPublicSkillNames();
   for (const runtime of ["openclaw", "hermes"]) {
     const selection = selectRuntimeSkills(
@@ -89,7 +89,7 @@ test("OpenClaw and Hermes expose only the 19 portable entry points by default", 
     );
     assert.deepEqual(RUNTIME_SKILL_ADDITIONS[runtime], []);
     assert.deepEqual(selection.skillNames, DEFAULT_COMMON_RUNTIME_SKILLS);
-    assert.equal(selection.skillNames.length, 19);
+    assert.equal(selection.skillNames.length, 20);
     assert.equal(selection.runtimeExcludedNames.length, 6);
     assert.equal(selection.defaultDisabledNames.length, 79);
   }
@@ -115,7 +115,7 @@ for (const runtime of ["openclaw", "hermes"]) {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
       assert.equal(manifest.tier, "skills-only");
       assert.equal(manifest.runtime, runtime);
-      assert.equal(manifest.managedSkills.length, 19);
+      assert.equal(manifest.managedSkills.length, 20);
       assert.equal(
         fs.existsSync(path.join(home, "skills", "zephermine", "SKILL.md")),
         true,
@@ -130,7 +130,7 @@ for (const runtime of ["openclaw", "hermes"]) {
       );
 
       const catalog = fs.readFileSync(path.join(home, "SKILLS-CATALOG.md"), "utf8");
-      assert.match(catalog, /기본 활성 스킬: 19개/);
+      assert.match(catalog, /기본 활성 스킬: 20개/);
       // 로컬 전용 deploymonitor는 git에 추적되지 않으므로 clean clone에서는 source-only가 79개다.
       const sourceOnlyCount = fs.existsSync(
         path.join(__dirname, "..", "..", "skills", "deploymonitor", "SKILL.md"),
@@ -246,7 +246,7 @@ test(
         const manifestPath = path.join(home, ".olympus-skills-sync-manifest.json");
         const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
         assert.equal(manifest.runtime, runtime);
-        assert.equal(manifest.managedSkills.length, 19);
+        assert.equal(manifest.managedSkills.length, 20);
 
         const uninstallCommand = `call "${wrapper}" --home "${home}" --uninstall`;
         const removed = spawnSync("cmd.exe", ["/d", "/c", uninstallCommand], {
@@ -292,7 +292,7 @@ test(
         const manifestPath = path.join(home, ".olympus-skills-sync-manifest.json");
         const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
         assert.equal(manifest.runtime, runtime);
-        assert.equal(manifest.managedSkills.length, 19);
+        assert.equal(manifest.managedSkills.length, 20);
 
         const removed = spawnSync(
           bash,
@@ -356,7 +356,7 @@ test(
             "utf8",
           ),
         ).managedSkills.length,
-        19,
+        20,
       );
       assert.equal(
         JSON.parse(
@@ -365,7 +365,7 @@ test(
             "utf8",
           ),
         ).managedSkills.length,
-        19,
+        20,
       );
       assert.equal(fs.existsSync(path.join(tempRoot, ".claude")), false);
       assert.equal(fs.existsSync(path.join(tempRoot, ".codex")), false);
@@ -414,7 +414,7 @@ test(
         const manifest = JSON.parse(
           fs.readFileSync(path.join(home, ".olympus-skills-sync-manifest.json"), "utf8"),
         );
-        assert.equal(manifest.managedSkills.length, 19);
+        assert.equal(manifest.managedSkills.length, 20);
       }
       assert.equal(fs.existsSync(path.join(tempRoot, ".claude")), false);
       assert.equal(fs.existsSync(path.join(tempRoot, ".codex")), false);

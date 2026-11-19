@@ -164,6 +164,10 @@ Delivered: <1줄 요약>
 - **허용 목록/필터 배열 확인.** 형제 값을 포함하는 배열에 새 값 포함 여부.
 - **case/if-elsif 체인.** 새 값이 잘못된 기본값으로 fall-through 되는지.
 
+#### 업무 규칙의 중복과 불일치
+
+변경이 자격 판정, 상태 전이, 금액 계산 같은 업무 규칙을 추가하거나 바꾸면 코드맵과 도메인 용어로 관련 진입점을 찾습니다. [경로별 업무 규칙 판정 기준](references/business-rule-consistency.md)을 적용해 변경의 영향을 보고합니다.
+
 #### 비동기/동기 혼합 (Python)
 - async def 안 동기 subprocess.run, open, requests.get → asyncio.to_thread 사용
 - async에서 time.sleep → asyncio.sleep
@@ -306,6 +310,7 @@ backend/frontend/API/migration/auth 신호를 판단합니다. 여기서 origin 
 
 `review_scope`의 patch와 새 파일 본문에 아래 카테고리를 적용합니다. staged와 unstaged에 같은
 파일이 있으면 각각의 버전을 구분합니다. 범위 밖 코드는 구체적인 의존·호출 위험을 확인할 때만 읽습니다.
+업무 규칙 변경에는 [P2의 업무 규칙 대조](#업무-규칙의-중복과-불일치)를 여기서 적용합니다.
 
 #### Pass 1 — CRITICAL (최고 심각도)
 
@@ -456,7 +461,7 @@ origin/base를 추측하거나 다른 diff를 만들지 마세요. 필요한 증
 ### High (강력 권장)
 - [ ] 타입 힌트/인터페이스 완벽
 - [ ] 단일 책임 원칙 (SRP)
-- [ ] 중복 코드 제거 (DRY)
+- [ ] 중복 코드 제거(DRY) 및 [변경된 업무 규칙의 경로별 일치](#업무-규칙의-중복과-불일치)
 
 ### Medium (권장)
 - [ ] 복잡한 로직에 "왜" 주석

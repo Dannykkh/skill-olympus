@@ -62,7 +62,7 @@ AC/QA에 연결하고, 포세이돈/다이달로스가 구현합니다. 미노�
 | **설계** | zephermine | 현재 CLI의 네이티브 계획·탐색 및 artifact-writer | Tavily/Exa (선택 리서치), 설치된 Codex/Antigravity 외부 리뷰 프로세스 (선택) |
 | **아키텍처** | documentation-and-adrs, mermaid-diagrams (source-only 직접 로드) | 네이티브 계획·검토 | 공식 기술 문서 (필요 시) |
 | **구현** | agent-team/workpm (활성), orchestrator (공통 PM·실행 방식 비교를 source-only 직접 로드, MCP는 조건부) | 네이티브 작업자 + 프로젝트 설정·인접 코드·테스트 계약 | Playwright (E2E), Context7 (선택 문서 조회) |
-| **검증** | minos (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
+| **검증** | minos·consistency-audit (활성), code-reviewer (source-only 직접 로드) | 네이티브 테스트·리뷰 작업자 | Playwright (테스트 실행) |
 | **배포** | docker-deploy (source-only 직접 로드) | — | — |
 | **공통** | mnemo·hestia (활성), commit-work·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
 
@@ -438,6 +438,7 @@ Docker 배포 환경 만들어줘
 | 자연어 요청 | 처리 방식 | 용도 | 끼워 넣는 시점 |
 |------|------|------|--------------|
 | `코드 리뷰해줘` | CLI 네이티브 리뷰 + 필요 시 source-only `code-reviewer` 직접 로드 | 코드 리뷰 (품질/보안/성능) | 구현 후, QA 전 |
+| `세션 재개 기능 비정합성 점검해줘` | `/consistency-audit 세션 재개` | 기존 진입점의 결과 불일치·규칙 중복과 코드 위치. 대화에서 기능이 정해졌다면 `비정합성점검 해줘`로 호출 | 기존 기능 점검 시, 변경분 없이 실행 |
 | `보안 감사해줘` | source-only `code-reviewer` 보안 감사 계약 직접 로드 | 시크릿·공급망·CI/CD·코드·STRIDE 감사 | 구현 후, 배포 전 |
 | `dead code 정리해줘` | `/hestia` | 코드 정리, dead code 탐지 | 구현 후, 리뷰 전 |
 | `레거시 폐기 계획 세워줘` | source-only `deprecation-and-migration` 직접 로드 | 레거시 폐기/마이그레이션 계획 | 구현 후, 리뷰 전 |

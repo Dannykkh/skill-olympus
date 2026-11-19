@@ -117,6 +117,31 @@ function assertDormantOrchestratorModule(home, runtimeName) {
   );
 }
 
+function assertConsistencyAuditInstallation(home, catalog) {
+  const sharedRule = "references/business-rule-consistency.md";
+  for (const [name, status, root] of [
+    ["consistency-audit", "active", path.join(home, "skills")],
+    ["code-reviewer", "source-only", path.join(home, ".olympus", "source-skills")],
+  ]) {
+    const row = catalog.split("\n").find(
+      (line) => line.startsWith(`| ${name} | ${status} |`),
+    );
+    assert.ok(row, `Missing ${status} catalog entry for ${name}`);
+    const installedEntry = path.normalize(row.split("|").at(-2).trim());
+    assert.equal(installedEntry, path.join(root, name, "SKILL.md"));
+    assert.ok(
+      fs.readFileSync(installedEntry, "utf8").includes(sharedRule),
+      `${name} must use the shared rule`,
+    );
+    if (name === "code-reviewer") {
+      assert.deepEqual(
+        fs.readFileSync(path.join(path.dirname(installedEntry), sharedRule)),
+        fs.readFileSync(path.join(repoRoot, "skills", name, sharedRule)),
+      );
+    }
+  }
+}
+
 test("install.bat --help exits before changing runtime homes", () => {
   if (process.platform !== "win32") {
     test.skip("Windows-only installer test");
@@ -265,12 +290,12 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     RUNTIME_SKILL_EXCLUSIONS.codex,
   ).skillNames;
   assert.deepEqual(codexManifest.managedSkills, expectedCodexSkills);
-  assert.equal(codexManifest.managedSkills.length, 21);
+  assert.equal(codexManifest.managedSkills.length, 22);
   const codexSkillsCatalog = fs.readFileSync(
     path.join(tempHome, ".codex", "SKILLS-CATALOG.md"),
     "utf8",
   );
-  assert.match(codexSkillsCatalog, /기본 활성 스킬: 21개/);
+  assert.match(codexSkillsCatalog, /기본 활성 스킬: 22개/);
   assert.match(codexSkillsCatalog, expectedSourceOnlySkillPattern);
   assert.match(codexSkillsCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
   assertDormantOrchestratorModule(path.join(tempHome, ".codex"), "Codex");
@@ -284,9 +309,10 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
     path.join(tempHome, ".claude", "SKILLS-CATALOG.md"),
     "utf8",
   );
-  assert.match(grokCompatCatalog, /기본 활성 스킬: 22개/);
+  assert.match(grokCompatCatalog, /기본 활성 스킬: 23개/);
   assert.match(grokCompatCatalog, expectedSourceOnlySkillPattern);
   assert.match(grokCompatCatalog, /\.olympus\/source-skills\/docx\/SKILL\.md/);
+  assertConsistencyAuditInstallation(path.join(tempHome, ".claude"), grokCompatCatalog);
   assertDormantOrchestratorModule(path.join(tempHome, ".claude"), "Claude/Grok");
   assert.equal(fs.existsSync(path.join(tempHome, ".claude", "agents")), false);
   assert.equal(
@@ -594,6 +620,8 @@ test("Codex global sync does not apply project-manifest ownership to another hom
     );
     assert.equal(globalManifest.scope, "codex-home");
     assert.equal(globalManifest.scopeRoot, codexHome);
+    const catalog = fs.readFileSync(path.join(codexHome, "SKILLS-CATALOG.md"), "utf8");
+    assertConsistencyAuditInstallation(codexHome, catalog);
   } finally {
     if (projectManifestBefore === null) {
       fs.rmSync(projectManifestPath, { force: true });
@@ -844,6 +872,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
     "biz-strategy",
     "ceo",
     "clio",
+    "consistency-audit",
     "design-plan",
     "explain",
     "hestia",
@@ -858,7 +887,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
     "zephermine",
     "zeus",
   ]);
-  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 25);
+  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 26);
   assert.deepEqual(RUNTIME_SKILL_ADDITIONS.codex, [
     "agent-team-codex",
     "codex-mnemo",
@@ -902,7 +931,7 @@ test("shared runtime skill policy is fail-closed with narrow and full opt-ins", 
       DEFAULT_RUNTIME_SKILL_ALLOWLIST,
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
-    assert.equal(selection.skillNames.length, runtime === "claude" ? 22 : 21);
+    assert.equal(selection.skillNames.length, runtime === "claude" ? 23 : 22);
     for (const required of [
       ...DEFAULT_COMMON_RUNTIME_SKILLS,
       ...RUNTIME_SKILL_ADDITIONS[runtime],
@@ -939,7 +968,7 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   const managed = JSON.parse(
     fs.readFileSync(path.join(tempHome, ".claude-skills-sync-manifest.json"), "utf8"),
   ).managedSkills;
-  assert.equal(managed.length, 22);
+  assert.equal(managed.length, 23);
   assert.equal(fs.existsSync(path.join(tempHome, "skills", "zephermine", "SKILL.md")), true);
   assert.equal(fs.existsSync(path.join(tempHome, "skills", "docx", "SKILL.md")), false);
   assert.equal(fs.existsSync(localSkill), true);
@@ -952,10 +981,11 @@ test("Claude skill sync installs only the allowlist and catalogs source-only pat
   );
 
   const catalog = fs.readFileSync(path.join(tempHome, "SKILLS-CATALOG.md"), "utf8");
-  assert.match(catalog, /기본 활성 스킬: 22개/);
+  assert.match(catalog, /기본 활성 스킬: 23개/);
   assert.match(catalog, expectedSourceOnlySkillPattern);
   assert.match(catalog, /\| zephermine \| active \|/);
   assert.match(catalog, /\| docx \| source-only \|/);
+  assertConsistencyAuditInstallation(tempHome, catalog);
   assert.match(
     catalog,
     new RegExp(
@@ -1011,11 +1041,12 @@ test("Antigravity sync installs skills and hooks without custom agents and ignor
   const manifest = JSON.parse(
     fs.readFileSync(path.join(cliHome, ".olympus-sync-manifest.json"), "utf8"),
   );
-  assert.equal(manifest.managedSkills.length, 21);
+  assert.equal(manifest.managedSkills.length, 22);
   assert.equal("managedAgents" in manifest, false);
   const skillsCatalog = fs.readFileSync(path.join(cliHome, "SKILLS-CATALOG.md"), "utf8");
-  assert.match(skillsCatalog, /기본 활성 스킬: 21개/);
+  assert.match(skillsCatalog, /기본 활성 스킬: 22개/);
   assert.match(skillsCatalog, expectedSourceOnlySkillPattern);
+  assertConsistencyAuditInstallation(cliHome, skillsCatalog);
   assertDormantOrchestratorModule(cliHome, "Antigravity");
   assert.equal(
     fs.existsSync(path.join(googleHome, "config", "hooks", "antigravity-hook.js")),

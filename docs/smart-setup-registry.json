@@ -184,6 +184,7 @@
     { "id": "database-schema-designer", "tags": ["postgresql", "mysql", "prisma"], "priority": "recommended" },
     { "id": "supabase-postgres-best-practices", "tags": ["postgresql", "supabase"], "priority": "essential" },
     { "id": "code-reviewer", "tags": ["*"], "priority": "recommended" },
+    { "id": "consistency-audit", "tags": ["*"], "priority": "optional" },
     { "id": "mnemo", "tags": ["*"], "priority": "recommended" },
     { "id": "memory-compact", "tags": ["*"], "priority": "optional" },
     { "id": "commit-work", "tags": ["*"], "priority": "optional" },

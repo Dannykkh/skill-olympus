@@ -38,7 +38,7 @@ bash ./install-hermes.sh
 ./install.sh --llm openclaw,hermes
 ```
 
-skills-only 설치는 공통 활성 스킬 18개와 공개 source-only 모듈 78개를 배치합니다. 기존 네
+skills-only 설치는 공통 활성 스킬 20개와 공개 source-only 모듈 79개를 배치합니다. 기존 네
 CLI용 `agent-team`·Mnemo 어댑터, 플러그인, 훅, MCP, 사용자 정의 에이전트는 설치하지 않습니다.
 호스트별 제거는 `install-openclaw.* --uninstall` 또는 `install-hermes.* --uninstall`을 사용합니다.
 
@@ -775,7 +775,7 @@ claude plugin install pg-aiguide
 
 ### 글로벌 스킬 소스 (직접 제작, 주요 항목)
 
-공개 추적 스킬 소스 103개는 기본 allowlist 합집합 25개(사용자 진입점 19개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 78개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 100개(활성 22 + source-only 78), Codex와 Antigravity 각각 99개(활성 21 + source-only 78), OpenClaw과 Hermes Agent 각각 97개(활성 19 + source-only 78)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 22개를 공유합니다. Devin CLI는 Claude 스킬을 읽고 `devin-mnemo`가 자체 훅으로 대화를 저장하며, 네 통합 CLI의 전체 지원 수치에는 포함하지 않습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
+공개 추적 스킬 소스 105개는 기본 allowlist 합집합 26개(사용자 진입점 20개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나뉩니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 102개(활성 23 + source-only 79), Codex와 Antigravity 각각 101개(활성 22 + source-only 79), OpenClaw과 Hermes Agent 각각 99개(활성 20 + source-only 79)입니다. 이는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 설치 표면은 Claude의 활성 23개를 공유합니다. Devin CLI는 Claude 스킬을 읽고 `devin-mnemo`가 자체 훅으로 대화를 저장하며, 네 통합 CLI의 전체 지원 수치에는 포함하지 않습니다. 내부 전용 `deploymonitor`는 로컬에만 있고 공개 배포에서 제외됩니다. 활성 하네스는 필요한 하위 모듈을 카탈로그에서 직접 읽고, 나머지 저빈도 가이드·변환기도 같은 source-only 경로에서 명시 요청할 수 있습니다.
 
 | 이름 | 기본 상태 | 용도 |
 |------|-----------|------|
@@ -803,6 +803,7 @@ claude plugin install pg-aiguide
 | `/agent-team` | active adapter | CLI 네이티브 병렬 구현 |
 | `workpm` (`/daedalus`) | active | 설계 없이 시작하는 PM 흐름 |
 | `/mnemo` | active adapter | 대화 기록과 과거 검색 |
+| `/consistency-audit` | active | 기존 기능의 여러 진입점에서 업무 규칙을 읽기 전용으로 대조 |
 | 카탈로그의 나머지 워크플로우 | source-only | 자연어로 명시 요청하거나 `--include-source-only-skills` opt-in 후 slash 호출 |
 
 ---
