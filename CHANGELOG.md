@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.13.0] - 2026-11-19
+
+### Features
+
+- Use `/consistency-audit <feature>` to compare an existing feature across entry points, even with a clean working tree. The audit reports the input, outcome and source location on each side. In Korean, ask “세션 재개 기능 비정합성 점검해줘” or, once the feature is clear, “비정합성점검 해줘”. (546996c)
+- The audit and the code reviewer now share criteria for conflicting behavior, duplicated rules, intentional differences and cases where the expected behavior needs clarification. Both use the same reference file. (546996c)
+
+### Installation and verification
+
+- Update the checkout and run `install.bat --all` on Windows or `bash install.sh --all` on macOS or Linux. The audit is active by default for Claude Code, Codex, Antigravity and Grok. The release includes `consistency-audit.zip` and `code-reviewer.zip`; manual installations need both for the shared criteria.
+- All four CLIs identified the same expiry-boundary discrepancy in a sample and distinguished an intentional preview exception. Antigravity's non-interactive run required adding the installed `code-reviewer` directory to the session with `--mode plan --add-dir`.
+- The Windows installer passed all 12 checks across the four CLIs. Both release archives passed integrity checks and were compared with the committed skill files.
+- The full repository run passed 384 of 385 tests. The Korean line-wrap browser check failed during browser startup. On this Windows host, part of its random debugging-port range was reserved. All three tests in that file passed with headless Chromium and distinct available ports selected via test-only random seeds.
+
 ## [7.12.0] - 2026-11-18
 
 ### Features
