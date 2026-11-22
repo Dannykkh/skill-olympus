@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.15.0] - 2026-11-22
+
+### Features
+
+- **installer**: `install.bat` and `install.sh` no longer register MCP servers by default. A registered stdio MCP server is started by the CLI at every session start, so one server costs a process per open session. Pass `--register-mcp` to register Playwright and the Orchestrator MCP for Claude Code, Codex and Antigravity as before. `--all` selects the target CLIs and does not turn registration on. (42c2a94)
+- **installer**: Without `--register-mcp` the installers make no `claude mcp`, `codex mcp` or `install-mcp*.js` call, so existing registrations are left as they are, including an entry the user removed or disabled. The Orchestrator runtime is still installed and built so it can be registered later. `--uninstall` still removes previously registered servers. (42c2a94)
+
+### Documentation
+
+- The READMEs, `SETUP.md`, the workflow guide, `mcp-configs/README.md` and the `workpm-mcp` command describe the opt-in registration. (42c2a94)
+- Add the v7.15.0 entry to the English, Korean, Japanese and Simplified Chinese READMEs. (1b31d9f)
+
+### Validation and Scope
+
+- Full repository suite: 389 tests, 387 passed, 2 skipped, 0 failed.
+- `install.bat --all` ran on Windows against the real CLI homes with exit code 0 and no warnings. The MCP registrations were identical before and after: Claude Code's user-scope servers did not regain Playwright or the Orchestrator, and the Codex `orchestrator` entry kept its `enabled = false`.
+- `--register-mcp` was checked by the test suite against isolated temporary homes. It was not run against the real CLI homes.
+- The installers do not remove servers that an earlier install registered. Remove them with the CLI (`claude mcp remove <name>`, `codex mcp remove <name>`) if they should stop starting with each session.
+- `install.sh` has tests for `--all` with and without `--register-mcp`. For `install.bat`, the tests cover the default install and `--register-mcp`; the real run above is the check for `--all`.
+- macOS and Linux native installer runs: not run. `/minos` and the PM skills were not run end to end without the MCP servers registered.
+
 ## [7.14.0] - 2026-11-22
 
 ### Features
