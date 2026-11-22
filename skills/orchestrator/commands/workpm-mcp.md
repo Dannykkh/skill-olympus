@@ -33,6 +33,11 @@ allowed-tools:
 > ② 대규모(섹션 10+)/장시간/크로스-CLI 혼합, ③ hard file lock 필요 시에만 사용합니다.
 > 일반 프로젝트는 `/workpm` 네이티브 경로 우선 (4-CLI 전부 네이티브 멀티에이전트 보유).
 
+> **전제 (MCP 등록)**: 통합 설치기는 Orchestrator MCP를 기본으로 등록하지 않습니다. 등록된 stdio MCP 서버는
+> CLI가 세션을 시작할 때마다 함께 띄우기 때문입니다. 런타임 빌드는 설치 때 해 두므로, `orchestrator_*` 도구가
+> 보이지 않으면 `install.bat --register-mcp`(`./install.sh --register-mcp`)로 등록하고 CLI를 다시 시작합니다.
+> 등록하지 않을 프로젝트는 `/workpm` 네이티브 경로를 씁니다.
+
 > **Phase 차이**: 이 문서는 **4단계** (영향도 분석 없음). 네이티브 모드(`/workpm`)는 **5단계** (Phase 3에 영향도 분석 추가).
 
 ---

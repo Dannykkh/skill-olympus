@@ -56,7 +56,7 @@ Skill Olympus는 **Claude Code**, **Codex CLI**, **Antigravity CLI**, **Grok Bui
 
 ## 설치 전에: 무엇이 바뀌나요?
 
-통합 설치기는 **CLI 전역 환경**을 갱신합니다. 따라서 설치된 규칙은 이 저장소뿐 아니라 다른 프로젝트에도 적용됩니다. 아래 규칙과 함께 스킬·카탈로그·훅·MCP 설정을 설치합니다. OpenClaw·Hermes Agent는 skills-only 대상입니다.
+통합 설치기는 **CLI 전역 환경**을 갱신합니다. 따라서 설치된 규칙은 이 저장소뿐 아니라 다른 프로젝트에도 적용됩니다. 아래 규칙과 함께 스킬·카탈로그·훅을 설치합니다. MCP 서버는 `--register-mcp`를 줄 때만 등록합니다. OpenClaw·Hermes Agent는 skills-only 대상입니다.
 
 | CLI | 갱신되는 전역 규칙 | 저장·설정 위치 |
 |---|---|---|
@@ -141,7 +141,7 @@ chmod +x install.sh && ./install.sh
 인수 없이 실행하는 것이 기본 전체 설치입니다. 이 기본값은 Claude, Codex, Antigravity, Grok
 전체를 대상으로 합니다. `--all`은
 같은 동작을 명시적으로 적는 선택 옵션입니다. 선택된 CLI 실행 파일이 `PATH`에 없어도
-해당 홈의 스킬·카탈로그·source-only 라이브러리·훅·설정 파일은 준비하고, MCP 등록처럼
+해당 홈의 스킬·카탈로그·source-only 라이브러리·훅·설정 파일은 준비하고,
 실행 파일이 필요한 명령만 건너뜁니다. 나중에 CLI를 설치한 뒤 같은 설치기를 다시 실행하면 됩니다.
 
 Devin CLI가 감지되면 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)도 설치합니다. Devin은
@@ -151,12 +151,18 @@ Claude 스킬을 읽고, 자체 `UserPromptSubmit`·`Stop`·`SessionEnd` 훅으�
 응답 저장에는 Python 3와 Devin 로컬 세션 DB 접근이 필요합니다. Windows 실제 턴에서 검증했고,
 macOS·Linux 런타임 저장은 아직 검증하지 않았습니다.
 
-Claude·Codex·Antigravity의 기본 MCP는 `playwright`입니다. Context7 MCP는
-선택 설치입니다. 필요할 때 Claude는 `node install-mcp.js context7`, Codex는
-`node install-mcp-codex.js context7`, Antigravity는
-`node install-mcp-antigravity.js context7`을 실행하세요.
+설치기는 기본으로 MCP 서버를 등록하지 않습니다. 등록된 stdio MCP 서버는 CLI가 세션을
+시작할 때마다 함께 띄우므로, 서버 하나가 열린 세션 수만큼 프로세스를 만듭니다.
+`--register-mcp`(`install.bat --register-mcp`, `./install.sh --register-mcp`)를 주면
+Claude·Codex·Antigravity에 `playwright`와 Orchestrator MCP를 등록합니다. Orchestrator
+런타임 빌드는 옵션과 무관하게 해 두므로 나중에 등록할 수 있습니다. 일반 재설치는 이미
+등록된 항목을 그대로 둡니다.
+하나만 등록하려면 Claude는 `node install-mcp.js <이름>`, Codex는
+`node install-mcp-codex.js <이름>`, Antigravity는
+`node install-mcp-antigravity.js <이름>`을 실행하세요. `playwright`와 선택 항목인
+`context7`을 쓸 수 있습니다.
 문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선하고 Context7은 선택적으로 사용합니다.
-자세한 내용은 [MCP 설정 안내](mcp-configs/README.md)를 참고하세요. 일반 재설치는 기존 선택 MCP 등록을 보존합니다.
+자세한 내용은 [MCP 설정 안내](mcp-configs/README.md)를 참고하세요.
 
 ### 먼저 써볼 워크플로우
 

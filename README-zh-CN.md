@@ -56,7 +56,7 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 
 ## 安装前：哪些内容会改变
 
-集成安装器会更新全局 CLI 环境，因此规则也会影响其他项目。安装范围包括技能、目录、hooks、MCP 配置和下列规则；OpenClaw 与 Hermes Agent 仍然仅安装技能。
+集成安装器会更新全局 CLI 环境，因此规则也会影响其他项目。安装范围包括技能、目录、hooks 和下列规则；只有传入 `--register-mcp` 时才会注册 MCP 服务器；OpenClaw 与 Hermes Agent 仍然仅安装技能。
 
 | CLI | 更新的全局规则 |
 |---|---|
@@ -118,7 +118,7 @@ chmod +x install.sh && ./install.sh
 ```
 
 不带参数运行就是默认完整安装，目标为 Claude、Codex、Antigravity 和 Grok。即使 CLI
-可执行文件不在 `PATH` 中，安装器也会准备相关文件；只有 MCP 注册等必须调用 CLI 的步骤
+可执行文件不在 `PATH` 中，安装器也会准备相关文件；只有必须调用 CLI 的步骤
 会被跳过。
 
 检测到 Devin CLI 时，安装器还会安装 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)。Devin
@@ -128,12 +128,17 @@ chmod +x install.sh && ./install.sh
 读取助手回复需要 Python 3 和本地会话数据库。已通过 Windows 上的真实 Devin 回合验证；
 macOS 和 Linux 的运行时保存尚未验证。
 
-Claude、Codex 和 Antigravity 默认注册的 MCP 只有 `playwright`。
-Context7 MCP 为可选项，可分别运行 `node install-mcp.js context7`（Claude）、
-`node install-mcp-codex.js context7`（Codex）或
-`node install-mcp-antigravity.js context7`（Antigravity）进行安装。
+安装器默认不注册 MCP 服务器。已注册的 stdio MCP 服务器会在 CLI 每次启动会话时一同启动，
+因此每个服务器都会按打开的会话数量产生进程。传入 `--register-mcp`
+（`install.bat --register-mcp`、`./install.sh --register-mcp`）后，才会为 Claude、Codex 和
+Antigravity 注册 `playwright` 与 Orchestrator MCP。无论是否传入该选项，都会构建
+Orchestrator 运行时，因此之后仍可注册。正常重新安装不会改动已有的注册。
+只注册单个服务器时，可分别运行 `node install-mcp.js <名称>`（Claude）、
+`node install-mcp-codex.js <名称>`（Codex）或
+`node install-mcp-antigravity.js <名称>`（Antigravity）；可用 `playwright` 和可选的
+`context7`。
 优先核对项目依赖版本并查阅官方文档，按需使用 Context7。
-详见 [MCP 设置指南](mcp-configs/README.md)。正常重新安装会保留已有的可选 MCP 注册。
+详见 [MCP 设置指南](mcp-configs/README.md)。
 
 ### 先试试这些工作流
 

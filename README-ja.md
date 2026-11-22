@@ -57,7 +57,7 @@ Mnemoフックで会話を保存できます。必要な専門機能やZeusの�
 
 ## インストール前に変わるものを確認する
 
-統合インストーラーはグローバル環境を更新するため、ルールは他のプロジェクトにも適用されます。スキルだけでなく、カタログ、フック、MCP設定も対象です。OpenClawとHermes Agentはskills-onlyです。
+統合インストーラーはグローバル環境を更新するため、ルールは他のプロジェクトにも適用されます。スキルだけでなく、カタログ、フックも対象です。MCPサーバーは`--register-mcp`を指定したときだけ登録されます。OpenClawとHermes Agentはskills-onlyです。
 
 | CLI | 更新するグローバルルール |
 |---|---|
@@ -119,7 +119,7 @@ chmod +x install.sh && ./install.sh
 ```
 
 引数なしが標準のフルインストールです。Claude、Codex、Antigravity、Grokの四つを対象に
-します。CLIの実行ファイルが`PATH`になくてもファイルは配置され、MCP登録など実行
+します。CLIの実行ファイルが`PATH`になくてもファイルは配置され、実行
 ファイルを必要とする処理だけがスキップされます。
 
 Devin CLIが検出されると、[Devin-Mnemo](skills/devin-mnemo/SKILL.md)もインストールされます。
@@ -129,12 +129,18 @@ DevinはClaudeのスキル（`/mnemo`を含む）を読み、専用の`UserPromp
 応答本文の取得にはPython 3とローカルセッションDBが必要です。Windowsの実際のDevinターンで
 動作を確認済みで、macOS・Linuxでの実行検証は未実施です。
 
-Claude、Codex、Antigravityで標準登録されるMCPは`playwright`です。
-Context7 MCPは任意で追加できます。Claudeでは`node install-mcp.js context7`、
-Codexでは`node install-mcp-codex.js context7`、Antigravityでは
-`node install-mcp-antigravity.js context7`を実行してください。
+インストーラーは標準ではMCPサーバーを登録しません。登録されたstdio MCPサーバーはCLIが
+セッションを開始するたびに起動されるため、サーバー1つにつき開いているセッションの数だけ
+プロセスが増えます。`--register-mcp`（`install.bat --register-mcp`、
+`./install.sh --register-mcp`）を指定すると、Claude、Codex、Antigravityに`playwright`と
+Orchestrator MCPを登録します。Orchestratorのランタイムはオプションに関係なくビルドされる
+ため、後から登録できます。通常の再インストールでは既存の登録はそのまま残ります。
+1つだけ登録するには、Claudeでは`node install-mcp.js <名前>`、
+Codexでは`node install-mcp-codex.js <名前>`、Antigravityでは
+`node install-mcp-antigravity.js <名前>`を実行してください。`playwright`と任意の
+`context7`を指定できます。
 まずプロジェクトの依存バージョンと公式ドキュメントを確認し、Context7は必要に応じて使います。
-[MCP設定ガイド](mcp-configs/README.md)も参照してください。通常の再インストールでは既存の任意MCP登録は保持されます。
+[MCP設定ガイド](mcp-configs/README.md)も参照してください。
 
 ### 最初に試すワークフロー
 

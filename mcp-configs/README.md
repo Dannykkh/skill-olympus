@@ -12,7 +12,7 @@ Pre-configured MCP server settings for Claude Code, Codex, and Antigravity.
 
 ## Installation
 
-The main installers (`install.bat` and `install.sh`) install only `playwright` by default. Install `context7` explicitly when needed. Rerunning a main installer preserves existing optional registrations. The standalone MCP scripts' explicit `--all` option also installs `context7`.
+The main installers (`install.bat` and `install.sh`) do not register MCP servers by default. A registered stdio MCP server is started by the CLI at every session start, so each one costs a process per open session. Pass `--register-mcp` to a main installer to register `playwright` and the Orchestrator MCP for Claude, Codex, and Antigravity; the Orchestrator runtime is built either way. Rerunning a main installer leaves existing registrations as they are. Use the standalone scripts below to register or remove one server. Their explicit `--all` option also installs `context7`.
 
 Check the project's dependency versions, existing code, and official documentation first. Context7 is an optional documentation lookup tool, not a prerequisite for implementation.
 

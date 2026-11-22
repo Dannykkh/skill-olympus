@@ -1,8 +1,8 @@
 #!/bin/bash
 # ============================================
 #   Claude Code Customizations Installer
-#   Skills, Hooks + MCP 자동 설치
-#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills]
+#   Skills, Hooks 설치 (MCP 등록은 --register-mcp 로 선택)
+#   사용법: install.sh [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills] [--register-mcp]
 # ============================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -16,6 +16,9 @@ show_help() {
     echo "  --uninstall                        Remove managed assets"
     echo "  --include-source-only-skills       Register optional source-only skills"
     echo "  --include-broad-coding-skills      Register legacy broad coding skills"
+    echo "  --register-mcp                     Also register Playwright and Orchestrator MCP servers"
+    echo "                                     Default: not registered. A registered stdio MCP server"
+    echo "                                     starts with every CLI session."
     echo "  --help, -h                         Show this help without changing files"
 }
 
@@ -55,6 +58,11 @@ CLAUDE_ORCH_RESULT="미실행"
 INCLUDE_SOURCE_ONLY_SKILLS=0
 INCLUDE_BROAD_CODING_SKILLS=0
 SOURCE_ONLY_SKILL_FLAG=""
+# MCP 등록은 선택(--register-mcp)이다. 등록된 stdio MCP 서버는 CLI가 세션을 시작할 때마다
+# 띄우므로, 서버 하나가 열린 세션 수만큼 프로세스를 만든다. Orchestrator 런타임 빌드는
+# 그대로 해 둔다 - 나중에 등록하거나 세션별로 넘겨 쓸 수 있도록.
+REGISTER_MCP=0
+MCP_NOT_REQUESTED="등록 안 함(--register-mcp 로 등록)"
 
 # ============================================
 #   사전 조건 확인
@@ -106,6 +114,7 @@ for arg in "$@"; do
         --uninstall) MODE="uninstall" ;;
         --include-source-only-skills) INCLUDE_SOURCE_ONLY_SKILLS=1 ;;
         --include-broad-coding-skills) INCLUDE_BROAD_CODING_SKILLS=1 ;;
+        --register-mcp) REGISTER_MCP=1 ;;
     esac
 done
 if [ "$INCLUDE_SOURCE_ONLY_SKILLS" = "1" ]; then
@@ -127,7 +136,8 @@ echo ""
 
 if [ "$MODE" != "uninstall" ]; then
     echo "  Global rules and memory notice for integrated CLI targets:"
-    echo "  - Installs rules, hooks, catalogs, and MCP config in selected CLI homes."
+    echo "  - Installs rules, hooks, and catalogs in selected CLI homes."
+    echo "  - MCP servers are registered only with --register-mcp; existing registrations are kept."
     echo "  - Reinstall replaces managed rule blocks; keep personal rules outside markers."
     echo "  - Grok shares Claude rules; its grok-mnemo.md file is replaced in full."
     echo "  - Saving hooks write project conversations; MNEMO_DISABLE=1 disables saving hooks only."
@@ -541,10 +551,14 @@ echo ""
 echo "[5/7] CLAUDE.md 장기기억 규칙 설치 중... (Claude) [필수]"
 node "$SCRIPT_DIR/install-claude-md.js" "$CLAUDE_DIR/CLAUDE.md" "$SCRIPT_DIR/skills/mnemo/templates/claude-md-rules.md"
 
-# MCP 서버 자동 설치 (코어)
+# 기본 MCP 서버 등록 (선택: --register-mcp)
 echo ""
-echo "[6/7] 기본 MCP 서버 설치 중... (Claude: playwright) [코어]"
-if [ "$HAS_CLAUDE_CLI" = "1" ]; then
+echo "[6/7] 기본 MCP 서버... (Claude: playwright) [선택: --register-mcp]"
+if [ "$REGISTER_MCP" = "0" ]; then
+    CLAUDE_MCP_RESULT="$MCP_NOT_REQUESTED"
+    echo "      $CLAUDE_MCP_RESULT"
+    echo "      나중에 하나만 등록: node \"$SCRIPT_DIR/install-mcp.js\" playwright"
+elif [ "$HAS_CLAUDE_CLI" = "1" ]; then
     echo ""
     echo "      사용 가능한 MCP 서버:"
     node "$SCRIPT_DIR/install-mcp.js" --list
@@ -560,9 +574,9 @@ else
     echo "      $CLAUDE_MCP_RESULT"
 fi
 
-# Orchestrator MCP 서버 등록 (필수 설치)
+# Orchestrator MCP 런타임 빌드(필수), 등록은 --register-mcp 일 때만
 echo ""
-echo "[7/7] Orchestrator MCP 서버 등록 중... (Claude) [필수]"
+echo "[7/7] Orchestrator MCP 런타임 준비 중... (Claude) [빌드 필수, 등록 선택]"
 if true; then
     # source-only 모듈 라이브러리는 스킬 discovery 밖에 있지만 MCP 런타임은 여기서 직접 사용한다.
     ORCH_MODULE_DIR="$CLAUDE_DIR/.olympus/runtime-modules/orchestrator"
@@ -576,7 +590,10 @@ if true; then
     # 빌드는 CLI 유무와 무관하게 해둔다 - Claude Code를 나중에 깔고 재실행하면
     # 등록만 하면 되도록. 등록 자체는 claude CLI가 있어야 한다.
     if [ -f "$ORCH_DIST" ] && [ -f "$ORCH_SDK" ] && [ -f "$ORCH_SQLITE" ]; then
-        if [ "$HAS_CLAUDE_CLI" = "1" ]; then
+        if [ "$REGISTER_MCP" = "0" ]; then
+            # 기존 등록은 건드리지 않는다 - remove 후 add 는 사용자가 그 항목에 한 수정도 지운다.
+            CLAUDE_ORCH_RESULT="빌드 완료, $MCP_NOT_REQUESTED"
+        elif [ "$HAS_CLAUDE_CLI" = "1" ]; then
             claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
             claude mcp add orchestrator --scope user -- node "$ORCH_DIST" >/dev/null 2>&1
             CLAUDE_ORCH_RESULT="등록 완료"
@@ -653,12 +670,14 @@ if true; then
     echo "      $CODEX_SYNC_RESULT"
 fi
 
-# Codex MCP (코어)
+# Codex MCP (선택: --register-mcp)
 echo ""
-echo "  Codex MCP 설치 중... [코어]"
+echo "  Codex MCP... [선택: --register-mcp]"
 if true; then
     if command -v codex >/dev/null 2>&1; then
-        if [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
+        if [ "$REGISTER_MCP" = "0" ]; then
+            CODEX_MCP_RESULT="$MCP_NOT_REQUESTED"
+        elif [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
             node "$SCRIPT_DIR/install-mcp-codex.js" playwright && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
         else
             CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
@@ -673,9 +692,9 @@ if true; then
     echo "      MCP: $CODEX_MCP_RESULT, multi_agent: $CODEX_MULTI_AGENT_RESULT"
 fi
 
-# Codex Orchestrator MCP (필수 설치)
+# Codex Orchestrator MCP 런타임 빌드(필수), 등록은 --register-mcp 일 때만
 echo ""
-echo "  Codex Orchestrator MCP 등록 중... [필수]"
+echo "  Codex Orchestrator MCP 런타임 준비 중... [빌드 필수, 등록 선택]"
 if true; then
     CODEX_ORCH_MODULE_DIR="$CODEX_DIR/.olympus/runtime-modules/orchestrator"
     CODEX_ORCH_DIST="$CODEX_ORCH_MODULE_DIR/mcp-server/dist/index.js"
@@ -686,15 +705,19 @@ if true; then
         (cd "$CODEX_ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
     fi
     if command -v codex >/dev/null 2>&1; then
-        if [ -f "$CODEX_ORCH_DIST" ] && [ -f "$CODEX_ORCH_SDK" ] && [ -f "$CODEX_ORCH_SQLITE" ]; then
+        if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ] || [ ! -f "$CODEX_ORCH_SQLITE" ]; then
+            CODEX_ORCH_RESULT="스킵(빌드 실패)"
+        elif [ "$REGISTER_MCP" = "0" ]; then
+            # `codex mcp remove` 후 `add` 는 표를 새로 써서 사용자의 `enabled = false` 도 지운다.
+            # 등록을 요청하지 않았으면 기존 항목을 그대로 둔다.
+            CODEX_ORCH_RESULT="빌드 완료, $MCP_NOT_REQUESTED"
+        else
             codex mcp remove orchestrator >/dev/null 2>&1 || true
             if codex mcp add --env "ORCHESTRATOR_WORKER_ID=pm" orchestrator -- node "$CODEX_ORCH_DIST" >/dev/null 2>&1; then
                 CODEX_ORCH_RESULT="등록 완료"
             else
                 CODEX_ORCH_RESULT="등록 실패"
             fi
-        else
-            CODEX_ORCH_RESULT="스킵(빌드 실패)"
         fi
     else
         CODEX_ORCH_RESULT="스킵(codex CLI 없음)"
@@ -760,8 +783,10 @@ else
 fi
 
 echo ""
-echo "  Antigravity MCP 설치 중..."
-if [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
+echo "  Antigravity MCP... [선택: --register-mcp]"
+if [ "$REGISTER_MCP" = "0" ]; then
+    ANTIGRAVITY_MCP_RESULT="$MCP_NOT_REQUESTED"
+elif [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
     if node "$SCRIPT_DIR/install-mcp-antigravity.js" playwright; then
         ANTIGRAVITY_MCP_RESULT="설치 완료"
     else
@@ -772,7 +797,7 @@ else
 fi
 
 echo ""
-echo "  Antigravity Orchestrator MCP 등록 중... [필수]"
+echo "  Antigravity Orchestrator MCP 런타임 준비 중... [빌드 필수, 등록 선택]"
 ANTIGRAVITY_ORCH_MODULE_DIR="$ANTIGRAVITY_ROOT/antigravity-cli/.olympus/runtime-modules/orchestrator"
 ANTIGRAVITY_ORCH_DIST="$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server/dist/index.js"
 ANTIGRAVITY_ORCH_SDK="$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server/node_modules/@modelcontextprotocol/sdk/package.json"
@@ -781,14 +806,14 @@ if [ ! -f "$ANTIGRAVITY_ORCH_DIST" ] || [ ! -f "$ANTIGRAVITY_ORCH_SDK" ] || [ ! 
     echo "      MCP 서버 빌드 중..."
     (cd "$ANTIGRAVITY_ORCH_MODULE_DIR/mcp-server" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1)
 fi
-if [ -f "$ANTIGRAVITY_ORCH_DIST" ] && [ -f "$ANTIGRAVITY_ORCH_SDK" ] && [ -f "$ANTIGRAVITY_ORCH_SQLITE" ]; then
-    if node "$SCRIPT_DIR/install-mcp-antigravity.js" --orchestrator "$ANTIGRAVITY_ORCH_DIST"; then
-        ANTIGRAVITY_ORCH_RESULT="등록 완료"
-    else
-        ANTIGRAVITY_ORCH_RESULT="등록 실패"
-    fi
-else
+if [ ! -f "$ANTIGRAVITY_ORCH_DIST" ] || [ ! -f "$ANTIGRAVITY_ORCH_SDK" ] || [ ! -f "$ANTIGRAVITY_ORCH_SQLITE" ]; then
     ANTIGRAVITY_ORCH_RESULT="스킵(빌드 실패)"
+elif [ "$REGISTER_MCP" = "0" ]; then
+    ANTIGRAVITY_ORCH_RESULT="빌드 완료, $MCP_NOT_REQUESTED"
+elif node "$SCRIPT_DIR/install-mcp-antigravity.js" --orchestrator "$ANTIGRAVITY_ORCH_DIST"; then
+    ANTIGRAVITY_ORCH_RESULT="등록 완료"
+else
+    ANTIGRAVITY_ORCH_RESULT="등록 실패"
 fi
 echo "      $ANTIGRAVITY_ORCH_RESULT"
 
@@ -953,10 +978,17 @@ if [ "$CREATED_CLAUDE_DIR" = "1" ]; then
     echo "  [안내] $CLAUDE_DIR 폴더가 없어 이 설치 스크립트가 새로 만들었습니다."
     echo "         자산은 준비됐고, Claude Code는 첫 실행 시 그대로 사용합니다."
 fi
-if [ "$HAS_CLAUDE" = "1" ] && [ "$HAS_CLAUDE_CLI" = "0" ]; then
+if [ "$REGISTER_MCP" = "1" ] && [ "$HAS_CLAUDE" = "1" ] && [ "$HAS_CLAUDE_CLI" = "0" ]; then
     echo ""
     echo "  [건너뜀] Claude MCP 등록 - PATH에서 claude CLI를 찾지 못했습니다."
-    echo "           Claude Code 설치 후 이 스크립트를 다시 실행하면 등록됩니다."
+    echo "           Claude Code 설치 후 --register-mcp 로 다시 실행하면 등록됩니다."
+fi
+if [ "$REGISTER_MCP" = "0" ]; then
+    echo ""
+    echo "  [안내] MCP 서버는 등록하지 않았습니다(기본값). 이미 등록된 항목은 그대로 둡니다."
+    echo "         등록된 stdio MCP 서버는 CLI 세션을 시작할 때마다 함께 뜹니다."
+    echo "         기본 서버 전부 등록: ./install.sh --register-mcp"
+    echo "         하나만 등록: node install-mcp.js <이름> (Codex: install-mcp-codex.js, Antigravity: install-mcp-antigravity.js)"
 fi
 if [ "$JQ_MISSING" = "1" ]; then
     echo ""

@@ -56,7 +56,7 @@ evidence report. Olympus treats running out of turns as incomplete, not success.
 
 ## Before installing: what changes
 
-The integrated installer updates your **global CLI environment**, so its rules also apply in your other projects. It installs workflow skills, catalogs, hooks, and MCP configuration as well as the rules below. OpenClaw and Hermes Agent remain skills-only hosts.
+The integrated installer updates your **global CLI environment**, so its rules also apply in your other projects. It installs workflow skills, catalogs, and hooks as well as the rules below. MCP servers are registered only when you pass `--register-mcp`. OpenClaw and Hermes Agent remain skills-only hosts.
 
 | Runtime | Global rules updated | Saving/configuration surface |
 |---|---|---|
@@ -142,8 +142,8 @@ chmod +x install.sh && ./install.sh
 
 Running without arguments is the default full installation for Claude, Codex, Antigravity, and Grok.
 `--all` is an optional explicit spelling of the same selection. The installer prepares each selected
-CLI's files even when that CLI executable is not on `PATH`; only CLI-dependent commands such as MCP
-registration are skipped. Install the missing CLI and rerun the same installer to finish those commands.
+CLI's files even when that CLI executable is not on `PATH`; only commands that need the executable
+are skipped. Install the missing CLI and rerun the same installer to finish those commands.
 
 When Devin CLI is detected, the installer also adds [Devin-Mnemo](skills/devin-mnemo/SKILL.md):
 Devin reads the shared Claude skills, while native `UserPromptSubmit`, `Stop`, and `SessionEnd` hooks
@@ -152,12 +152,17 @@ save its turns to `conversations/*-devin.md`. To install or inspect only this ad
 Assistant capture requires Python 3 and access to Devin's local session database; a live Windows
 Devin turn has been verified. macOS and Linux runtime capture still needs verification.
 
-The default MCP for Claude, Codex, and Antigravity is `playwright`.
-Context7 MCP is optional; install it with `node install-mcp.js context7`
-(Claude), `node install-mcp-codex.js context7` (Codex), or
-`node install-mcp-antigravity.js context7` (Antigravity).
+The installer does not register MCP servers by default. A registered stdio MCP server is started
+by the CLI at every session start, so each one costs a process per open session. Pass
+`--register-mcp` (`install.bat --register-mcp`, `./install.sh --register-mcp`) to register
+`playwright` and the Orchestrator MCP for Claude, Codex, and Antigravity. The Orchestrator runtime
+is built either way, so it can be registered later. A normal reinstall leaves existing
+registrations as they are.
+To register one server, run `node install-mcp.js <name>` (Claude),
+`node install-mcp-codex.js <name>` (Codex), or `node install-mcp-antigravity.js <name>`
+(Antigravity); `playwright` and the optional `context7` are available.
 Check project dependency versions and official documentation first; Context7 is an optional lookup tool.
-See the [MCP setup guide](mcp-configs/README.md). A normal reinstall preserves existing optional MCP registrations.
+See the [MCP setup guide](mcp-configs/README.md).
 
 ### Try a workflow
 

@@ -77,6 +77,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-sh-test-"));
   const shimDir = path.join(tempHome, "bin");
   const mcpCallsFile = path.join(tempHome, "mcp-calls.log");
+  const cliCallsFile = path.join(tempHome, "cli-calls.log");
   const codexHome = useCodexHomeOverride
     ? path.join(tempHome, "custom-codex-home")
     : path.join(tempHome, ".codex");
@@ -88,8 +89,16 @@ function runIsolatedInstaller(bash, args, options = {}) {
       path.join(shimDir, "node"),
       `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */install-state.js) [ "\${2:-}" = "begin" ] && echo '-' ;;\n  */install-mcp*.js) printf '%s\\n' "$*" >> "$MCP_CALLS_FILE" ;;\n  */verify-install.js) [ "\${FAIL_VERIFY:-0}" = "1" ] && exit 87 ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
     );
-    for (const command of ["claude", "codex", "agy", "jq"]) {
+    for (const command of ["agy", "jq"]) {
       writeExecutable(path.join(shimDir, command), "#!/usr/bin/env bash\nexit 0\n");
+    }
+    // The installer registers the orchestrator by calling the CLIs directly (`claude mcp add`,
+    // `codex mcp add`), not through the install-mcp*.js adapters, so record those calls too.
+    for (const command of ["claude", "codex"]) {
+      writeExecutable(
+        path.join(shimDir, command),
+        `#!/usr/bin/env bash\nprintf '%s %s\\n' '${command}' "$*" >> "$CLI_CALLS_FILE"\nexit 0\n`,
+      );
     }
     writeExecutable(
       path.join(shimDir, "npm"),
@@ -108,6 +117,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
       FAIL_PRUNE: failPrune ? "1" : "0",
       FAIL_VERIFY: failVerify ? "1" : "0",
       MCP_CALLS_FILE: shellPath(mcpCallsFile),
+      CLI_CALLS_FILE: shellPath(cliCallsFile),
       OLYMPUS_UPDATE_CHECK_DISABLE: "1",
       PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
     });
@@ -124,6 +134,9 @@ function runIsolatedInstaller(bash, args, options = {}) {
       ...result,
       mcpCalls: fs.existsSync(mcpCallsFile)
         ? fs.readFileSync(mcpCallsFile, "utf8").trim().split(/\r?\n/)
+        : [],
+      cliCalls: fs.existsSync(cliCallsFile)
+        ? fs.readFileSync(cliCallsFile, "utf8").trim().split(/\r?\n/)
         : [],
     };
   } finally {
@@ -179,9 +192,29 @@ test(
   },
 );
 
+// A registered stdio MCP server is started by the CLI at every session start, so the
+// installers register nothing unless --register-mcp is passed. A plain reinstall must also
+// leave existing registrations alone: `mcp remove` + `mcp add` would drop the user's own
+// changes to the entry (for example Codex `enabled = false`).
 for (const scenario of [
-  { name: "default selection and CODEX_HOME fallback", args: [], override: false },
-  { name: "--all selection and CODEX_HOME override", args: ["--all"], override: true },
+  {
+    name: "default selection and CODEX_HOME fallback",
+    args: [],
+    override: false,
+    registersMcp: false,
+  },
+  {
+    name: "--all selection and CODEX_HOME override",
+    args: ["--all"],
+    override: true,
+    registersMcp: false,
+  },
+  {
+    name: "--all --register-mcp selection",
+    args: ["--all", "--register-mcp"],
+    override: true,
+    registersMcp: true,
+  },
 ]) {
   test(
     `install.sh isolates ${scenario.name}`,
@@ -198,19 +231,50 @@ for (const scenario of [
       assert.doesNotMatch(output, /unbound variable/);
       assert.doesNotMatch(output, /unexpected npm invocation/);
 
+      const codexSummary = output.match(
+        /\n  \[Codex\]\n([\s\S]*?)(?:\n  \[(?:Antigravity|Grok)\]|\n  If a same-name asset)/,
+      );
+      assert.ok(codexSummary, output);
+      const cliMcpCalls = result.cliCalls.filter((call) => /\bmcp (?:add|remove)\b/.test(call));
+
+      if (!scenario.registersMcp) {
+        assert.deepEqual(
+          result.mcpCalls,
+          [],
+          `The default install changed MCP registration:\n${result.mcpCalls.join("\n")}`,
+        );
+        assert.deepEqual(
+          cliMcpCalls,
+          [],
+          `The default install called a CLI to change MCP registration:\n${cliMcpCalls.join("\n")}`,
+        );
+        assert.match(codexSummary[1], /- MCP: 등록 안 함\(--register-mcp 로 등록\)/);
+        assert.match(codexSummary[1], /- Orchestrator: 빌드 완료, 등록 안 함/);
+        assert.match(output, /\[안내\] MCP 서버는 등록하지 않았습니다/);
+        return;
+      }
+
       for (const adapter of ["install-mcp.js", "install-mcp-codex.js", "install-mcp-antigravity.js"]) {
         assert.ok(
           result.mcpCalls.some((call) => call.endsWith(`/${adapter} playwright`)),
           `Missing default Playwright registration: ${adapter}\n${result.mcpCalls.join("\n")}`,
         );
       }
-      assert.doesNotMatch(result.mcpCalls.join("\n"), /context7|chrome-devtools/);
-
-      const codexSummary = output.match(
-        /\n  \[Codex\]\n([\s\S]*?)(?:\n  \[(?:Antigravity|Grok)\]|\n  If a same-name asset)/,
+      assert.ok(
+        result.mcpCalls.some((call) => /\/install-mcp-antigravity\.js --orchestrator /.test(call)),
+        `Missing Antigravity orchestrator registration:\n${result.mcpCalls.join("\n")}`,
       );
-      assert.ok(codexSummary, output);
+      assert.doesNotMatch(result.mcpCalls.join("\n"), /context7|chrome-devtools/);
+      assert.ok(
+        cliMcpCalls.some((call) => /^claude mcp add orchestrator --scope user /.test(call)),
+        `Missing Claude orchestrator registration:\n${result.cliCalls.join("\n")}`,
+      );
+      assert.ok(
+        cliMcpCalls.some((call) => /^codex mcp add .*\borchestrator\b/.test(call)),
+        `Missing Codex orchestrator registration:\n${result.cliCalls.join("\n")}`,
+      );
       assert.match(codexSummary[1], /- Orchestrator: 등록 완료/);
+      assert.doesNotMatch(output, /\[안내\] MCP 서버는 등록하지 않았습니다/);
     },
   );
 }

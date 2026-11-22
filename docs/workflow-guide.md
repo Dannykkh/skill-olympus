@@ -66,6 +66,8 @@ AC/QA에 연결하고, 포세이돈/다이달로스가 구현합니다. 미노�
 | **배포** | docker-deploy (source-only 직접 로드) | — | — |
 | **공통** | mnemo·hestia (활성), commit-work·deprecation-and-migration (source-only 직접 로드) | 네이티브 범용 작업자; 보안 감사 시 source-only code-reviewer 계약 | GitHub (PR/이슈) |
 
+MCP 열의 서버는 통합 설치기가 기본으로 등록하지 않습니다. 등록된 stdio MCP 서버는 CLI가 세션을 시작할 때마다 함께 띄우기 때문입니다. 쓰려면 `install.bat --register-mcp`(`./install.sh --register-mcp`) 또는 [MCP 설정 안내](../mcp-configs/README.md)의 `install-mcp*.js`로 등록합니다.
+
 ---
 
 ## 규모별 워크플로우 선택

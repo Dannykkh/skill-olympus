@@ -5,7 +5,7 @@ setlocal enabledelayedexpansion
 REM ============================================
 REM   Claude Code Customizations Installer
 REM   Auto-install Skills, Hooks + MCP
-REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills]
+REM   Usage: install.bat [--uninstall] [--all] [--llm ...] [--only ...] [--skip ...] [--include-source-only-skills] [--register-mcp]
 REM ============================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -24,6 +24,9 @@ if "!SHOW_HELP!"=="1" (
     echo   --uninstall                        Remove managed assets
     echo   --include-source-only-skills       Register optional source-only skills
     echo   --include-broad-coding-skills      Register legacy broad coding skills
+    echo   --register-mcp                     Also register Playwright and Orchestrator MCP servers
+    echo                                      Default: not registered. A registered stdio MCP server
+    echo                                      starts with every CLI session.
     echo   --help, -h                         Show this help without changing files
     exit /b 0
 )
@@ -65,6 +68,11 @@ set "LEGACY_MCP_SERVERS=context7 chrome-devtools sequential-thinking"
 set "INCLUDE_SOURCE_ONLY_SKILLS=0"
 set "INCLUDE_BROAD_CODING_SKILLS=0"
 set "SOURCE_ONLY_SKILL_FLAG="
+REM MCP registration is opt-in (--register-mcp). A registered stdio MCP server is started
+REM by the CLI at every session start, so one server costs a process per open session.
+REM The orchestrator runtime is still built so it can be registered or passed per session later.
+set "REGISTER_MCP=0"
+set "MCP_NOT_REQUESTED=Not registered - pass --register-mcp to register"
 
 REM ============================================
 REM   Prerequisites check
@@ -143,6 +151,7 @@ for %%A in (%*) do (
     if /i "%%A"=="--uninstall" set "MODE=uninstall"
     if /i "%%A"=="--include-source-only-skills" set "INCLUDE_SOURCE_ONLY_SKILLS=1"
     if /i "%%A"=="--include-broad-coding-skills" set "INCLUDE_BROAD_CODING_SKILLS=1"
+    if /i "%%A"=="--register-mcp" set "REGISTER_MCP=1"
 )
 if "!INCLUDE_SOURCE_ONLY_SKILLS!"=="1" set "SOURCE_ONLY_SKILL_FLAG=--include-source-only-skills"
 if "!INCLUDE_BROAD_CODING_SKILLS!"=="1" set "SOURCE_ONLY_SKILL_FLAG=!SOURCE_ONLY_SKILL_FLAG! --include-broad-coding-skills"
@@ -159,7 +168,8 @@ echo.
 
 if "%MODE%" NEQ "uninstall" (
     echo   Global rules and memory notice for integrated CLI targets:
-    echo   - Installs rules, hooks, catalogs, and MCP config in selected CLI homes.
+    echo   - Installs rules, hooks, and catalogs in selected CLI homes.
+    echo   - MCP servers are registered only with --register-mcp; existing registrations are kept.
     echo   - Reinstall replaces managed rule blocks; keep personal rules outside markers.
     echo   - Grok shares Claude rules; its grok-mnemo.md file is replaced in full.
     echo   - Saving hooks write project conversations; MNEMO_DISABLE=1 disables saving hooks only.
@@ -606,10 +616,14 @@ echo.
 echo [5/7] Installing CLAUDE.md memory rules... - Claude [required]
 node "%SCRIPT_DIR%install-claude-md.js" "%CLAUDE_DIR%\CLAUDE.md" "%SCRIPT_DIR%skills\mnemo\templates\claude-md-rules.md"
 
-REM Auto-install MCP servers (core)
+REM Register the default MCP servers (opt-in: --register-mcp)
 echo.
-echo [6/7] Installing MCP servers... - Claude default stable set [core]
-if "!HAS_CLAUDE_CLI!"=="1" (
+echo [6/7] MCP servers... - Claude default stable set [opt-in: --register-mcp]
+if "!REGISTER_MCP!"=="0" (
+    set "CLAUDE_MCP_RESULT=!MCP_NOT_REQUESTED!"
+    echo       !CLAUDE_MCP_RESULT!
+    echo       Register one later: node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
+) else if "!HAS_CLAUDE_CLI!"=="1" (
     echo.
     echo       Available MCP servers:
     node "%SCRIPT_DIR%install-mcp.js" --list
@@ -625,9 +639,9 @@ if "!HAS_CLAUDE_CLI!"=="1" (
     echo       !CLAUDE_MCP_RESULT!
 )
 
-REM Register Orchestrator MCP server (required)
+REM Build the Orchestrator MCP runtime (required); register it only with --register-mcp
 echo.
-echo [7/7] Registering Orchestrator MCP... - Claude [required]
+echo [7/7] Preparing Orchestrator MCP runtime... - Claude [build required, registration opt-in]
 if 1==1 (
     REM The source-only module library sits outside discovery, but the MCP runtime uses it directly.
     set "ORCH_DIR=%CLAUDE_DIR%\.olympus\runtime-modules\orchestrator\mcp-server"
@@ -650,7 +664,11 @@ if 1==1 (
     if "!ORCH_READY!"=="1" (
         REM Build regardless of CLI presence - installing Claude Code later and re-running
         REM then only needs the registration step. Registration itself requires the claude CLI.
-        if "!HAS_CLAUDE_CLI!"=="1" (
+        if "!REGISTER_MCP!"=="0" (
+            REM Leave any existing registration alone: remove + add would also drop the
+            REM user's own changes to that entry.
+            set "CLAUDE_ORCH_RESULT=Built. !MCP_NOT_REQUESTED!"
+        ) else if "!HAS_CLAUDE_CLI!"=="1" (
             REM "call" is required - if claude on PATH is the npm shim (claude.cmd),
             REM calling it without call never returns and install.bat ends here
             REM (the Codex/Antigravity phases would never run).
@@ -733,13 +751,15 @@ if exist "%SCRIPT_DIR%scripts\sync-codex-assets.js" (
 )
 echo       !CODEX_SYNC_RESULT!
 
-REM Codex MCP (core)
+REM Codex MCP (opt-in: --register-mcp)
 echo.
-echo   Installing Codex MCP... [core]
+echo   Codex MCP... [opt-in: --register-mcp]
 if 1==1 (
     where codex >nul 2>nul
     if !errorlevel! equ 0 (
-        if exist "%SCRIPT_DIR%install-mcp-codex.js" (
+        if "!REGISTER_MCP!"=="0" (
+            set "CODEX_MCP_RESULT=!MCP_NOT_REQUESTED!"
+        ) else if exist "%SCRIPT_DIR%install-mcp-codex.js" (
             node "%SCRIPT_DIR%install-mcp-codex.js" !DEFAULT_MCP_SERVERS!
             if !errorlevel! equ 0 (
                 set "CODEX_MCP_RESULT=Installed"
@@ -759,9 +779,9 @@ if 1==1 (
     echo       MCP: !CODEX_MCP_RESULT!, multi_agent: !CODEX_MULTI_AGENT_RESULT!
 )
 
-REM Codex Orchestrator MCP (required)
+REM Codex Orchestrator MCP runtime (build required, registration opt-in)
 echo.
-echo   Registering Codex Orchestrator MCP... [required]
+echo   Preparing Codex Orchestrator MCP runtime... [build required, registration opt-in]
 if 1==1 (
     set "CODEX_ORCH_DIR=!CODEX_DIR!\.olympus\runtime-modules\orchestrator\mcp-server"
     set "CODEX_ORCH_DIST=!CODEX_ORCH_DIR!\dist\index.js"
@@ -781,22 +801,24 @@ if 1==1 (
     if not exist "!CODEX_ORCH_SDK!" set "CODEX_ORCH_READY=0"
     if not exist "!CODEX_ORCH_SQLITE!" set "CODEX_ORCH_READY=0"
     where codex >nul 2>nul
-    if !errorlevel! equ 0 (
-        if "!CODEX_ORCH_READY!"=="1" (
-            set "CODEX_ORCH_DIST_NORM=!CODEX_ORCH_DIST:\=/!"
-            call codex mcp remove orchestrator >nul 2>nul
-            call codex mcp add --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
-            if !errorlevel! equ 0 (
-                set "CODEX_ORCH_RESULT=Registered"
-            ) else (
-                set "CODEX_ORCH_RESULT=Register failed"
-            )
-        ) else (
-            set "CODEX_ORCH_RESULT=Skip: dependencies/build failed"
-            echo       [WARN] Run manually: cd /d "!CODEX_ORCH_DIR!" ^&^& npm install ^&^& npm run build
-        )
-    ) else (
+    if !errorlevel! neq 0 (
         set "CODEX_ORCH_RESULT=Skip: codex CLI not found"
+    ) else if "!CODEX_ORCH_READY!"=="0" (
+        set "CODEX_ORCH_RESULT=Skip: dependencies/build failed"
+        echo       [WARN] Run manually: cd /d "!CODEX_ORCH_DIR!" ^&^& npm install ^&^& npm run build
+    ) else if "!REGISTER_MCP!"=="0" (
+        REM "codex mcp remove" + "add" rewrites the table, which also drops a user's
+        REM "enabled = false". Leave an existing entry alone unless registration was requested.
+        set "CODEX_ORCH_RESULT=Built. !MCP_NOT_REQUESTED!"
+    ) else (
+        set "CODEX_ORCH_DIST_NORM=!CODEX_ORCH_DIST:\=/!"
+        call codex mcp remove orchestrator >nul 2>nul
+        call codex mcp add --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
+        if !errorlevel! equ 0 (
+            set "CODEX_ORCH_RESULT=Registered"
+        ) else (
+            set "CODEX_ORCH_RESULT=Register failed"
+        )
     )
     echo       !CODEX_ORCH_RESULT!
 )
@@ -861,8 +883,10 @@ if !errorlevel! equ 0 (
 )
 
 echo.
-echo   Installing Antigravity MCP servers...
-if exist "%SCRIPT_DIR%install-mcp-antigravity.js" (
+echo   Antigravity MCP servers... [opt-in: --register-mcp]
+if "!REGISTER_MCP!"=="0" (
+    set "ANTIGRAVITY_MCP_RESULT=!MCP_NOT_REQUESTED!"
+) else if exist "%SCRIPT_DIR%install-mcp-antigravity.js" (
     node "%SCRIPT_DIR%install-mcp-antigravity.js" !DEFAULT_MCP_SERVERS!
     if !errorlevel! equ 0 (
         set "ANTIGRAVITY_MCP_RESULT=Installed"
@@ -874,7 +898,7 @@ if exist "%SCRIPT_DIR%install-mcp-antigravity.js" (
 )
 
 echo.
-echo   Registering Antigravity Orchestrator MCP... [required]
+echo   Preparing Antigravity Orchestrator MCP runtime... [build required, registration opt-in]
 set "ANTIGRAVITY_ORCH_DIR=!ANTIGRAVITY_ROOT!\antigravity-cli\.olympus\runtime-modules\orchestrator\mcp-server"
 set "ANTIGRAVITY_ORCH_DIST=!ANTIGRAVITY_ORCH_DIR!\dist\index.js"
 set "ANTIGRAVITY_ORCH_SDK=!ANTIGRAVITY_ORCH_DIR!\node_modules\@modelcontextprotocol\sdk\package.json"
@@ -888,16 +912,22 @@ if "!NEED_ANTIGRAVITY_ORCH_BUILD!"=="1" (
     cd /d "!ANTIGRAVITY_ORCH_DIR!" && call npm install >nul 2>nul && call npm run build >nul 2>nul
     cd /d "%SCRIPT_DIR%"
 )
-if exist "!ANTIGRAVITY_ORCH_DIST!" if exist "!ANTIGRAVITY_ORCH_SDK!" if exist "!ANTIGRAVITY_ORCH_SQLITE!" (
+set "ANTIGRAVITY_ORCH_READY=1"
+if not exist "!ANTIGRAVITY_ORCH_DIST!" set "ANTIGRAVITY_ORCH_READY=0"
+if not exist "!ANTIGRAVITY_ORCH_SDK!" set "ANTIGRAVITY_ORCH_READY=0"
+if not exist "!ANTIGRAVITY_ORCH_SQLITE!" set "ANTIGRAVITY_ORCH_READY=0"
+if "!ANTIGRAVITY_ORCH_READY!"=="0" (
+    set "ANTIGRAVITY_ORCH_RESULT=Skip: dependencies/build failed"
+    echo       [WARN] Run manually: cd /d "!ANTIGRAVITY_ORCH_DIR!" ^&^& npm install ^&^& npm run build
+) else if "!REGISTER_MCP!"=="0" (
+    set "ANTIGRAVITY_ORCH_RESULT=Built. !MCP_NOT_REQUESTED!"
+) else (
     node "%SCRIPT_DIR%install-mcp-antigravity.js" --orchestrator "!ANTIGRAVITY_ORCH_DIST!"
     if !errorlevel! equ 0 (
         set "ANTIGRAVITY_ORCH_RESULT=Registered"
     ) else (
         set "ANTIGRAVITY_ORCH_RESULT=Register failed"
     )
-) else (
-    set "ANTIGRAVITY_ORCH_RESULT=Skip: dependencies/build failed"
-    echo       [WARN] Run manually: cd /d "!ANTIGRAVITY_ORCH_DIR!" ^&^& npm install ^&^& npm run build
 )
 echo       !ANTIGRAVITY_ORCH_RESULT!
 
@@ -1064,10 +1094,17 @@ if "!CREATED_CLAUDE_DIR!"=="1" (
     echo   [NOTE] %CLAUDE_DIR% did not exist and was created by this installer.
     echo          Assets are in place; Claude Code picks them up on its first run.
 )
-if "!HAS_CLAUDE!"=="1" if "!HAS_CLAUDE_CLI!"=="0" (
+if "!REGISTER_MCP!"=="1" if "!HAS_CLAUDE!"=="1" if "!HAS_CLAUDE_CLI!"=="0" (
     echo.
     echo   [SKIPPED] Claude MCP registration - claude CLI not found in PATH.
-    echo             Install Claude Code, then re-run this installer to register MCP.
+    echo             Install Claude Code, then re-run this installer with --register-mcp.
+)
+if "!REGISTER_MCP!"=="0" (
+    echo.
+    echo   [NOTE] MCP servers were not registered ^(default^). Existing registrations were left as they are.
+    echo          A registered stdio MCP server starts with every CLI session.
+    echo          Register all defaults: install.bat --register-mcp
+    echo          Register one: node install-mcp.js ^<name^>  ^(Codex: install-mcp-codex.js, Antigravity: install-mcp-antigravity.js^)
 )
 if "!JQ_MISSING!"=="1" (
     echo.

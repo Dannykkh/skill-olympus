@@ -233,6 +233,11 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   assert.match(result.stdout, /Global rules and memory notice/);
   assert.match(result.stdout, /MNEMO_DISABLE=1 disables saving hooks only/);
   assert.match(result.stdout, /\[codex-dedup\] disabled=1/);
+  assert.doesNotMatch(
+    dedupConfig,
+    /\[mcp_servers\./,
+    "the default install registered a Codex MCP server (registration is opt-in: --register-mcp)",
+  );
   assert.ok(dedupConfig.includes(JSON.stringify(externalSkillPaths[1].replace(/\\/g, "/"))));
   assert.ok(externalSkillPaths.every((skillPath) => fs.existsSync(skillPath)));
 
@@ -462,7 +467,16 @@ test("codex-only install.bat succeeds without a preexisting .claude directory", 
   }
 });
 
-test("Antigravity-only install.bat writes the current Google CLI layout", () => {
+// MCP registration is opt-in: a registered stdio MCP server starts with every CLI session.
+for (const scenario of [
+  { name: "writes the current Google CLI layout", extraArgs: "", registersMcp: false },
+  {
+    name: "registers the default MCP server with --register-mcp",
+    extraArgs: " --register-mcp",
+    registersMcp: true,
+  },
+]) {
+test(`Antigravity-only install.bat ${scenario.name}`, () => {
   if (process.platform !== "win32") {
     test.skip("Windows-only installer test");
     return;
@@ -484,7 +498,7 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
   });
 
   try {
-    const command = `echo.| call "${installBat}" --llm antigravity`;
+    const command = `echo.| call "${installBat}" --llm antigravity${scenario.extraArgs}`;
     const result = spawnSync("cmd.exe", ["/d", "/c", command], {
       cwd: repoRoot,
       env,
@@ -560,17 +574,123 @@ test("Antigravity-only install.bat writes the current Google CLI layout", () => 
     ]) {
       assert.ok(rules.includes(command), `installed Antigravity rules omit ${command}`);
     }
-    const mcp = JSON.parse(
-      fs.readFileSync(path.join(googleHome, "config", "mcp_config.json"), "utf8"),
-    );
-    assert.ok(mcp.mcpServers.playwright);
-    assert.equal(Object.prototype.hasOwnProperty.call(mcp.mcpServers, "context7"), false);
+    const mcpConfigPath = path.join(googleHome, "config", "mcp_config.json");
+    const mcpServers = fs.existsSync(mcpConfigPath)
+      ? JSON.parse(fs.readFileSync(mcpConfigPath, "utf8")).mcpServers || {}
+      : {};
+    if (scenario.registersMcp) {
+      assert.ok(mcpServers.playwright, output);
+      assert.equal(Object.prototype.hasOwnProperty.call(mcpServers, "context7"), false);
+      assert.match(output, /- MCP: Installed/);
+      assert.doesNotMatch(output, /\[NOTE\] MCP servers were not registered/);
+    } else {
+      assert.deepEqual(Object.keys(mcpServers), [], "the default install registered MCP servers");
+      assert.match(output, /- MCP: Not registered - pass --register-mcp to register/);
+      assert.match(output, /\[NOTE\] MCP servers were not registered \(default\)/);
+    }
     assert.match(output, /\[Antigravity\]/);
     assert.doesNotMatch(output, /not recognized as an internal or external command/i);
   } finally {
     fs.rmSync(tempHome, { recursive: true, force: true });
   }
 });
+}
+
+// Claude and Codex register the orchestrator by calling the CLI directly, and
+// `mcp remove` + `mcp add` rewrites the entry - on Codex that drops a user's
+// `enabled = false`. A plain reinstall must therefore not call either command.
+for (const scenario of [
+  { name: "leaves MCP registration alone by default", extraArgs: "", registersMcp: false },
+  {
+    name: "registers the orchestrator with --register-mcp",
+    extraArgs: " --register-mcp",
+    registersMcp: true,
+  },
+]) {
+test(`Claude and Codex install.bat ${scenario.name}`, () => {
+  if (process.platform !== "win32") {
+    test.skip("Windows-only installer test");
+    return;
+  }
+
+  const tempHome = makeTempHome("ccc-bat-mcp-optin-test-");
+  const shimDir = path.join(tempHome, "bin");
+  const callsFile = path.join(tempHome, "cli-calls.log");
+  const codexHome = path.join(tempHome, ".codex");
+  fs.mkdirSync(shimDir, { recursive: true });
+  for (const cli of ["claude", "codex"]) {
+    fs.writeFileSync(
+      path.join(shimDir, `${cli}.cmd`),
+      `@echo ${cli} %*>>"%CLI_CALLS_FILE%"\r\n@exit /b 0\r\n`,
+      "utf8",
+    );
+  }
+  // The runtime is seeded as already built, so a dependency install would be a bug here.
+  fs.writeFileSync(path.join(shimDir, "npm.cmd"), "@exit /b 97\r\n", "utf8");
+  for (const home of [path.join(tempHome, ".claude"), codexHome]) {
+    const serverRoot = path.join(home, ".olympus", "runtime-modules", "orchestrator", "mcp-server");
+    for (const [relativePath, content] of [
+      [path.join("dist", "index.js"), "// fixture\n"],
+      [path.join("node_modules", "@modelcontextprotocol", "sdk", "package.json"), "{}\n"],
+      [path.join("node_modules", "better-sqlite3", "package.json"), "{}\n"],
+    ]) {
+      fs.mkdirSync(path.dirname(path.join(serverRoot, relativePath)), { recursive: true });
+      fs.writeFileSync(path.join(serverRoot, relativePath), content, "utf8");
+    }
+  }
+  const env = isolatedHomeEnv(tempHome, {
+    ANTIGRAVITY_HOME: path.join(tempHome, ".gemini"),
+    CODEX_HOME: codexHome,
+    CLI_CALLS_FILE: callsFile,
+    OLYMPUS_UPDATE_CHECK_DISABLE: "1",
+    PATH: `${shimDir}${path.delimiter}${process.env.PATH || ""}`,
+  });
+
+  try {
+    const command = `echo.| call "${installBat}" --llm claude,codex${scenario.extraArgs}`;
+    const result = spawnSync("cmd.exe", ["/d", "/c", command], {
+      cwd: repoRoot,
+      env,
+      encoding: "utf8",
+      timeout: 120000,
+      windowsVerbatimArguments: true,
+    });
+    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+    assert.equal(result.error, undefined, output);
+    assert.equal(result.status, 0, output);
+    assert.doesNotMatch(output, /was unexpected at this time|not recognized as an internal/i);
+
+    const cliCalls = fs.existsSync(callsFile)
+      ? fs.readFileSync(callsFile, "utf8").trim().split(/\r?\n/)
+      : [];
+    const mcpChanges = cliCalls.filter((call) => /\bmcp (?:add|remove)\b/.test(call));
+
+    if (scenario.registersMcp) {
+      assert.ok(
+        mcpChanges.some((call) => /^claude mcp add orchestrator --scope user /.test(call)),
+        `Missing Claude orchestrator registration:\n${cliCalls.join("\n")}`,
+      );
+      assert.ok(
+        mcpChanges.some((call) => /^codex mcp add .*\borchestrator\b/.test(call)),
+        `Missing Codex orchestrator registration:\n${cliCalls.join("\n")}`,
+      );
+      assert.match(output, /- Orchestrator: Registered/);
+      assert.doesNotMatch(output, /\[NOTE\] MCP servers were not registered/);
+    } else {
+      assert.deepEqual(
+        mcpChanges,
+        [],
+        `The default install changed MCP registration:\n${mcpChanges.join("\n")}`,
+      );
+      assert.match(output, /- MCP: Not registered - pass --register-mcp to register/);
+      assert.match(output, /- Orchestrator: Built\. Not registered - pass --register-mcp to register/);
+      assert.match(output, /\[NOTE\] MCP servers were not registered \(default\)/);
+    }
+  } finally {
+    fs.rmSync(tempHome, { recursive: true, force: true });
+  }
+});
+}
 
 test("Codex global sync does not apply project-manifest ownership to another home", () => {
   const tempHome = makeTempHome("ccc-codex-home-scope-test-");

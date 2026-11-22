@@ -8,11 +8,11 @@
 
 통합 설치는 전역 규칙과 자동 대화 저장 훅도 설치합니다. 실행 전에 [전역 규칙 변경·개인 수정·저장 중지·제거 안내](docs/global-agent-rules.md)를 확인하세요. 재설치하면 관리 블록 안의 수정은 교체되고, 마커 밖 개인 규칙은 보존됩니다. Grok의 전용 관리 규칙 파일은 전체 교체됩니다.
 
-설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 TermSnap 기본 대상인 Claude, Codex, Antigravity, Grok용 자산을 함께 준비합니다. OpenClaw과 Hermes Agent는 명시 선택 또는 호스트별 설치기로 스킬만 설치합니다. 선택한 통합 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비하며, MCP 설정처럼 해당 런타임에 필요한 구성도 직접 병합합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 실행 상태를 확인합니다.
+설치기는 프로젝트 기술 스택을 자동 감지하지 않습니다. 대상 CLI만 선택하고, 핵심 번들은 모두 설치합니다. 인수가 없거나 `--all`을 지정하면 TermSnap 기본 대상인 Claude, Codex, Antigravity, Grok용 자산을 함께 준비합니다. OpenClaw과 Hermes Agent는 명시 선택 또는 호스트별 설치기로 스킬만 설치합니다. 선택한 통합 CLI 실행 파일이 없어도 홈 디렉터리의 스킬·카탈로그·source-only 라이브러리·훅·설정은 준비합니다. CLI를 나중에 설치했다면 같은 설치기를 다시 실행해 실행 상태를 확인합니다.
 
 Devin CLI가 감지되면 Claude 스킬을 공유하는 상태에서 [Devin-Mnemo](skills/devin-mnemo/SKILL.md)의 전용 대화 저장 훅도 설치합니다. 이 어댑터만 별도로 설치·점검하려면 `node skills/devin-mnemo/install.js`와 `node skills/devin-mnemo/install.js --check`를 사용하세요. 응답 저장에는 Python 3가 필요하며, Windows 실제 Devin 턴만 검증했습니다. Devin은 `--llm devin` 선택 대상이나 네 통합 CLI와 같은 전체 동기화 대상이 아닙니다.
 
-기본 MCP 등록은 Claude·Codex·Antigravity에 `playwright`만 적용합니다. Context7 MCP는 [MCP 설정 안내](mcp-configs/README.md)에 따라 필요할 때 수동 설치합니다. 문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선합니다. 기존 등록은 일반 재설치로 제거되지 않습니다.
+설치기는 기본으로 MCP 서버를 등록하지 않습니다. 등록된 stdio MCP 서버는 CLI가 세션을 시작할 때마다 함께 띄우므로, 서버 하나가 열린 세션 수만큼 프로세스를 만듭니다. `install.bat --register-mcp`(`./install.sh --register-mcp`)를 실행하면 Claude·Codex·Antigravity에 `playwright`와 Orchestrator MCP를 등록합니다. 하나만 등록하려면 [MCP 설정 안내](mcp-configs/README.md)의 `install-mcp*.js` 명령을 씁니다. Context7 MCP도 같은 방법으로 필요할 때 등록합니다. 문서 확인은 프로젝트 의존성 버전과 공식 문서를 우선합니다. 일반 재설치는 이미 등록된 항목을 그대로 두며, 등록을 없애려면 `node install-mcp.js --uninstall <이름>`을 실행합니다.
 
 ```bash
 # 모든 CLI
@@ -644,8 +644,8 @@ node install-hooks-config.js <hooks-dir> <settings-path> --uninstall
 
 > 일반적인 `workpm` 병렬 실행은 각 CLI의 네이티브 작업자를 사용하므로 별도 MCP 설치가 필요하지 않습니다.
 > hard file lock, 외부 태스크 보드, Claude/Codex/Antigravity 혼합 Worker가 필요한 프로젝트만 Orchestrator MCP를 설치합니다.
-> 최상위 `install.bat`/`install.sh`는 source-only Orchestrator 런타임을 각 CLI 홈에 준비하고,
-> CLI 실행 파일이 있으면 글로벌 MCP 등록도 시도합니다. 아래 `skills/orchestrator/install.js <project>` 절차는
+> 최상위 `install.bat`/`install.sh`는 source-only Orchestrator 런타임을 각 CLI 홈에 준비(빌드)합니다.
+> 글로벌 MCP 등록은 `--register-mcp`를 줄 때만 하며, 이때 CLI 실행 파일이 있어야 합니다. 아래 `skills/orchestrator/install.js <project>` 절차는
 > 프로젝트별 명령·훅·`settings.local.json`이 실제로 필요할 때만 추가로 수행합니다.
 
 ### 자동 설치 (권장)
