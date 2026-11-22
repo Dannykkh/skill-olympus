@@ -458,12 +458,21 @@ COMPONENT_OWNERS = "codemap/components/owners.json"
 OWNERS_FORMAT = "termsnap-component-owners/"
 # mnemo 기록과 TermSnap 산출물 — 핸드오프 세션이 늘 고치는 자리라 소스 판정에서 뺀다.
 NOT_SOURCE_PREFIXES = ("memory/", "conversations/", "docs/handoffs/", "codemap/")
+# 루트의 기억 인덱스도 같은 기록이다. 폴더가 아니라 접두로는 걸리지 않는다.
+NOT_SOURCE_FILES = ("memory.md",)
+# MCP가 없는 세션도 다음 행동을 알도록 두 경로를 함께 적는다(실전 첫 핸드오프에서 MCP만 안내해 막혔다).
+REGENERATE = "MCP codemap_component_map 호출(없으면 TermSnap에서 프로젝트를 다시 열기)"
 # generatedAt은 초 단위, mtime은 소수 초다. 지도 저장 직후 재생성하면 같은 초 안에서 역전된다.
 CLOCK_SLACK = timedelta(seconds=2)
 
 
 def _shown(paths: list[str], limit: int = 5) -> str:
     return ", ".join(paths[:limit]) + (f" 외 {len(paths) - limit}건" if len(paths) > limit else "")
+
+
+def _is_record(key: str) -> bool:
+    """casefold한 경로가 mnemo 기록·TermSnap 산출물인가."""
+    return key in NOT_SOURCE_FILES or key.startswith(NOT_SOURCE_PREFIXES)
 
 
 def session_files(root: Path, observed: list[str], git_info: dict) -> list[str]:
@@ -477,7 +486,7 @@ def session_files(root: Path, observed: list[str], git_info: dict) -> list[str]:
     for item in raw:
         path = item.replace("\\", "/")
         key = path.casefold()
-        if key in seen or key.startswith(NOT_SOURCE_PREFIXES) or not (root / path).is_file():
+        if key in seen or _is_record(key) or not (root / path).is_file():
             continue
         seen.add(key)
         files.append(path)
@@ -521,7 +530,7 @@ def component_map_check(root: Path, observed: list[str], git_info: dict) -> str 
     owners_file = root / COMPONENT_OWNERS
     if not source_map.is_file():
         return missing_map_notice(owners_file, session_files(root, observed, git_info), bool(observed))
-    rerun = "MCP codemap_component_map 호출 후 다시 확인"
+    rerun = f"{REGENERATE} 후 다시 확인"
     if not owners_file.is_file():
         return f"NOT RUN — owners.json 없음(TermSnap 구버전 또는 생성 전); {rerun}"
     try:
@@ -565,7 +574,7 @@ def component_map_check(root: Path, observed: list[str], git_info: dict) -> str 
     for raw in candidates:
         path = raw.replace("\\", "/")
         key = path.casefold()
-        if key in seen or key.startswith(NOT_SOURCE_PREFIXES) or not (root / path).is_file():
+        if key in seen or _is_record(key) or not (root / path).is_file():
             continue
         seen.add(key)
         if key in owners:

@@ -69,7 +69,10 @@ class ComponentMapCheckTests(unittest.TestCase):
         """최초 작성에는 방아쇠가 없었다 — TermSnap이 "지도 없음"이라고 낸 프로젝트에서만 알린다."""
         self.stub()
         self.touch("src/a.cs")
-        line = self.check(["src/a.cs", "memory/x.md", "src/gone.cs"])
+        self.touch("MEMORY.md")
+        self.touch("memory/x.md")
+        # 기억 인덱스(루트 MEMORY.md)와 기억 폴더는 핸드오프가 늘 고치는 기록이지 이번 세션의 소스가 아니다.
+        line = self.check(["src/a.cs", "memory/x.md", "MEMORY.md", "src/gone.cs"])
         self.assertTrue(line.startswith("NONE — 지도 없음(소스 258개"), line)
         # 통째 작성을 기다리지 않는다 — 이번 세션이 다룬 부분으로 시작하게 그 파일을 내민다.
         self.assertIn("이번 세션이 고친 파일 1 (src/a.cs)", line)
@@ -113,6 +116,8 @@ class ComponentMapCheckTests(unittest.TestCase):
         line = self.check(["src/a.cs"])
         self.assertIn("지도 없이 만든 스텁", line)
         self.assertNotIn("미배정", line)
+        # MCP가 없는 세션도 재생성 방법을 알아야 한다.
+        self.assertIn("TermSnap에서 프로젝트를 다시 열기", line)
 
     def test_session_file_in_uncovered_is_unassigned_with_path(self):
         self.contract(owners=["src/a.cs"], uncovered=["src/new.cs"])
@@ -184,6 +189,10 @@ class ComponentMapCheckTests(unittest.TestCase):
         line = self.check(["memory/architecture/060-x.md", "docs/handoffs/2026-09-27-000000-x.md",
                            creator.COMPONENT_MAP, "docs/guide.md", "src/notes.log", "src/new.cs"])
         self.assertIn("재생성 필요 1 (src/new.cs)", line)
+        # 루트 MEMORY.md가 TermSnap 소스 목록에 있어도 미배정으로 조르지 않는다.
+        self.contract(owners=["src/a.cs"], uncovered=["MEMORY.md"])
+        self.touch("MEMORY.md")
+        self.assertNotIn("MEMORY.md", self.check(["MEMORY.md"]).split("전체 미분류")[0])
 
     def test_paths_ignore_case_and_backslashes(self):
         self.contract(owners=["src/app.cs"], uncovered=["src/new.cs"])
