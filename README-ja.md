@@ -342,9 +342,13 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 ---
 
-**最終更新:** 2026-11-18
+**最終更新:** 2026-11-22
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.14.0 — コードを変更したセッションがコンポーネントマップを書く
+
+Mnemo の引き継ぎが、TermSnap のコンポーネントマップ（`codemap/component-map.json`）の作成を、そのコードを変更したばかりのセッションに求めるようになりました。コードマップの他の部分は TermSnap がファイルとコードから生成しますが、どのファイルが一つの機能を成し、そのコンポーネントが何を担当するかは書く必要があります。マップがまだないプロジェクトでは、`Component map:` 行が今回のセッションで変更したファイルを示し、その部分だけでマップを書き始めるよう求めます。マップがある場合は、今回変更したコンポーネントを示し、説明が変更内容と合っているかを確認させます。`validate_handoff.py` は、行が求めた作業に印（`→ 시작함:` 開始、`→ 설명:` 説明を確認、`→ 배정함:` 割り当て済み、`→ 보류:` 保留）がない場合に警告しますが、引き継ぎは止めません。TermSnap のコードマップを使わないプロジェクトには行が付きません。[コンポーネントマップの書き方](skills/mnemo/references/component-map.md)（韓国語）と[検証範囲](CHANGELOG.md#7140---2026-11-22)も確認できます。更新後に `install.bat` または `bash install.sh` を再実行してください。
 
 ## v7.13.0 — 同じ機能を入口ごとに照合する
 

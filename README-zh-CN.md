@@ -330,9 +330,13 @@ node --test scripts/tests/*.test.js
 
 ---
 
-**最后更新：** 2026-11-18
+**最后更新：** 2026-11-22
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
+
+## v7.14.0 — 由刚修改代码的会话编写组件地图
+
+Mnemo 交接现在会让刚修改过代码的会话来编写 TermSnap 组件地图（`codemap/component-map.json`）。代码地图的其余部分由 TermSnap 根据文件和代码生成，但哪些文件构成一个功能、该组件负责什么，需要有人写下来。项目还没有地图时，`Component map:` 一行会列出本次会话修改的文件，并要求只用这一部分开始编写地图。已有地图时，该行会指出本次会话改动的组件，以便核对其说明是否与这次修改相符。如果该行提出的事项后面没有标记（`→ 시작함:` 已开始、`→ 설명:` 已核对说明、`→ 배정함:` 已分配、`→ 보류:` 暂缓），`validate_handoff.py` 会发出警告，但不会阻止交接。不使用 TermSnap 代码地图的项目不会出现该行。另见[组件地图编写方法](skills/mnemo/references/component-map.md)（韩文）和[验证范围](CHANGELOG.md#7140---2026-11-22)。更新后请重新运行 `install.bat` 或 `bash install.sh`。
 
 ## v7.13.0 — 核对同一功能在不同入口的行为
 
