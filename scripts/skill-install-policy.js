@@ -36,6 +36,7 @@ const DEFAULT_DISABLED_BROAD_CODING_SKILLS = Object.freeze([
 const DEFAULT_COMMON_RUNTIME_SKILLS = Object.freeze([
   "api-tester",
   "argos",
+  "atlas",
   "auto-continue-loop",
   "biz-strategy",
   "ceo",

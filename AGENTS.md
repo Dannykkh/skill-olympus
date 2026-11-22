@@ -18,6 +18,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |React/Next.js|프로젝트 manifest·lockfile·tsconfig·기존 구조·테스트 우선; 버전 API는 공식 문서 확인|
 |Code Review|skills/code-reviewer/SKILL.md|
 |기존 기능 비정합성 점검|skills/consistency-audit/SKILL.md|
+|TermSnap 부품 지도 전체 정리|skills/atlas/SKILL.md|
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
 |Docker DB Backup|skills/docker-db-backup/SKILL.md|
 |API Testing|skills/api-tester/SKILL.md|
@@ -103,7 +104,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
   `~/.openclaw/skills`, `~/.hermes/skills`에 공통 진입점과 source-only 카탈로그만 설치하며,
   기존 네 CLI용 어댑터·훅·Mnemo·MCP·사용자 정의 에이전트 parity를 주장하지 않습니다.
 - Codex 스킬은 기본적으로 `~/.codex/skills/`에만 설치합니다. 이 저장소의 `.agents/skills` 미러는 격리 테스트용 `--include-project-skills` 옵션에서만 생성합니다.
-- 공개 추적 스킬 소스 105개는 기본 allowlist 합집합 26개(공통 진입점 20개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 102개(활성 23 + source-only 79), Codex와 Antigravity 각각 101개(활성 22 + source-only 79), OpenClaw과 Hermes Agent 각각 99개(활성 20 + source-only 79)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 101개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 23개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
+- 공개 추적 스킬 소스 106개는 기본 allowlist 합집합 27개(공통 진입점 21개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 103개(활성 24 + source-only 79), Codex와 Antigravity 각각 102개(활성 23 + source-only 79), OpenClaw과 Hermes Agent 각각 100개(활성 21 + source-only 79)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 102개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 24개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
 - 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
 - 사용자 정의 에이전트는 배포하지 않습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트, 절차는 스킬이 맡고, 스킬 안 규칙 본문은 `references/`에 둡니다. 설치기는 예전에 복사된 Olympus 에이전트와 생성된 `AGENTS-CATALOG.md`를 정리하고(`scripts/prune-stale-assets.js`), 옛 `--include-source-only-agents`·`--include-project-agents` 옵션은 받아들이되 아무것도 설치하지 않습니다.
 - 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모), `/video-maker`(비디오메이커, 영상 요청 진입점)
@@ -130,7 +131,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skill sources (공개 추적 105개; 기본 allowlist 합집합 26개, 런타임별 활성 22개 또는 23개)
+### Skill sources (공개 추적 106개; 기본 allowlist 합집합 27개, 런타임별 활성 23개 또는 24개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -150,7 +151,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 🌐 Translation | ko-en-translator | 한국어↔영어 양방향 번역 (텍스트, 기술 문서, 코드 주석, i18n 파일, 커밋 메시지) |
 | 🔧 Utilities | datadog-cli, domain-name-brainstormer, humanizer, jira, meme-factory, ppt-generator, web-design-guidelines, web-to-markdown, youtube-transcript | 유틸리티 + YouTube 자막 추출/요약 |
 | 📊 Research | reddit-researcher | Reddit 시장 조사 + 리드 스코어링 + Pain Point 분류 |
-| 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact, recipe | 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프 + 파일→결정 앵커 조회) + CLI별 어댑터 (Codex notify / Antigravity PreToolUse+PostInvocation / Grok camelCase envelope·post_tool_use) + 메모리 크기 점검 및 압축 |
+| 🧠 Memory/Session | mnemo, codex-mnemo, antigravity-mnemo, grok-mnemo, memory-compact, recipe, atlas (아틀라스) | TermSnap 부품 지도 전체 정리(읽기 작업자 + 근거 줄 대조, 아틀라스) + 기억 시스템 (대화 저장 + 태깅 + 검색 + MEMORY.md + 세션 핸드오프 + 파일→결정 앵커 조회) + CLI별 어댑터 (Codex notify / Antigravity PreToolUse+PostInvocation / Grok camelCase envelope·post_tool_use) + 메모리 크기 점검 및 압축 |
 
 ### Agents (배포하지 않음)
 
@@ -408,7 +409,7 @@ Layer 3: Skills (On-demand Analysis)
 1. **`codemap/index.md`** — 카테고리 + 파일 수 요약. 필요하면 `codemap/info.md`의 작업별 라우터로 읽는 순서를 확인.
 2. **해당 카테고리 `.md` grep** — 통째 read 금지. 항목 옆 `(L123)` 라인 번호는 그대로 `Read(file, offset=L, limit=N)` 사용.
 3. **검색 결과가 많으면 로컬 압축 우선** — `rg --json`/`rg --vimgrep`/`file:line:text` 결과를 파일별로 묶고 routes/api/ui 신호와 source/test/document 가중치로 상위 파일만 읽음. MCP `codemap_compress_search`는 외부 agent용 선택 경로이며 필수 단계가 아님.
-4. **못 찾으면 일반 grep/Glob** — codemap이 stale일 수 있음. 의심되면 사용자에게 "코드맵 갱신"을 권장.
+4. **못 찾으면 일반 grep/Glob** — 코드맵에 아직 반영되지 않은 변경일 수 있음.
 
 코드 위치 답변 시 `file:line` 형식 사용 (예: `RAGService.cs:53`).
 
