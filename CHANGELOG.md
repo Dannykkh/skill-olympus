@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.14.0] - 2026-11-22
+
+### Features
+
+- **mnemo**: Handoffs now ask the session that just changed the code to write the TermSnap component map (`codemap/component-map.json`). When TermSnap reports that the project has no map yet, the `Component map:` line lists the files this session changed and asks to start the map with that part only (marker `→ 시작함:`). When a map exists, the line names the components this session touched so their descriptions can be checked against the change (marker `→ 설명:`). Unassigned files keep `→ 배정함:`, and `→ 보류:` closes any of the three. Projects that do not use the TermSnap codemap still get no line. (886b91f)
+- **mnemo**: `validate_handoff.py` warns when the line asks for an action and no marker follows. It never blocks the handoff. (886b91f)
+- **mnemo**: Add `references/component-map.md`: when to write, how to start small, what a description should say, how to verify and where authoring usually gets stuck. The Codex, Antigravity and Grok adapters receive the same file. (886b91f)
+
+### Bug Fixes
+
+- **mnemo**: The root `MEMORY.md` no longer counts as a file the session changed and is no longer reported as unassigned. (7b24250)
+- **mnemo**: The stale-output hint now also tells sessions without the TermSnap MCP to reopen the project in TermSnap. (7b24250)
+
+### Documentation
+
+- Add the v7.14.0 entry to the English, Korean, Japanese and Simplified Chinese READMEs. (0680604)
+
+### Validation and Scope
+
+- Full repository suite: 385/385 passed. Mnemo Python suite: 267 passed, including 24 component-map tests.
+- The Windows installer ran with `install.bat --all` for Claude Code, Codex, Antigravity and Grok. The installed `create_handoff.py` matched the committed file in all four locations.
+- A real handoff on the installed copy produced the stale-output line, because the repository's map had been written but TermSnap had not regenerated its output. The touched-components line was confirmed by running the installed check read-only against another project's real map and `owners.json`. The no-map line is covered by tests and by a read-only run on real session data; no project has started a map from it yet.
+- `references/component-map.md` has not been tested with an agent that reads only that document. The validator checks that a marker is present, not that the description was actually reviewed.
+- Without Edit/Write observations (for example Codex), the session's files come from git changes. Untracked generated folders inside the map's coverage can inflate the touched-component counts; the line states that other sessions' work may be mixed in.
+
 ## [7.13.0] - 2026-11-19
 
 ### Features
