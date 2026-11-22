@@ -427,6 +427,8 @@ Owner Decision Brief를 남기고, 단계·재개가 바뀌어도 원래 재시�
 
 ## 최근 변경
 
+**v7.15.0:** 통합 설치기가 MCP 서버를 기본으로 등록하지 않습니다. 등록된 stdio MCP 서버는 CLI가 세션을 시작할 때마다 함께 띄우므로, 탭마다 CLI를 여는 도구에서는 서버 하나가 탭 수만큼 실행됩니다. `install.bat`과 `install.sh`는 `--register-mcp`를 줄 때만 Playwright와 Orchestrator MCP를 등록합니다. `--all`은 대상 CLI를 고르는 옵션이며 등록을 켜지 않습니다. Orchestrator 런타임은 예전처럼 설치하고 빌드하므로 나중에 등록할 수 있습니다. 이미 등록된 항목은 그대로 둡니다. 재설치가 기존 등록을 지우지 않고, 직접 지우거나 꺼 둔 항목을 되살리지도 않습니다. 이전 설치가 등록한 서버를 멈추려면 CLI에서 직접 지우세요(`claude mcp remove <이름>`, `codex mcp remove <이름>`). [MCP 설정 안내](mcp-configs/README.md)와 [검증 범위](CHANGELOG.md#7150---2026-11-22)를 참고하세요. 저장소를 갱신하고 `install.bat` 또는 `bash install.sh`를 다시 실행하세요.
+
 **v7.14.0:** Mnemo 핸드오프가 TermSnap 부품 지도(`codemap/component-map.json`)를 그 코드를 방금 고친 세션에게 쓰게 합니다. 코드맵의 나머지는 TermSnap이 파일과 코드로 만들지만, 어떤 파일들이 한 기능이고 그 부품이 무엇을 책임지는지는 써야 하는 내용입니다. 지도가 아직 없는 프로젝트에서는 `Component map:` 줄이 이번 세션이 고친 파일을 보여 주고, 그 부분만으로 지도를 시작하게 합니다. 지도가 있으면 이번 세션이 고친 부품을 알려 주어 설명이 변경과 맞는지 확인하게 합니다. `validate_handoff.py`는 줄이 요청한 일에 표식(`→ 시작함:`, `→ 설명:`, `→ 배정함:`, `→ 보류:`)이 없으면 경고하며, 핸드오프를 막지는 않습니다. TermSnap 코드맵을 쓰지 않는 프로젝트에는 줄이 없습니다. [부품 지도 작성](skills/mnemo/references/component-map.md)과 [검증 범위](CHANGELOG.md#7140---2026-11-22)를 참고하세요. 저장소를 갱신하고 `install.bat` 또는 `bash install.sh`를 다시 실행하세요.
 
 **v7.13.0**부터 Claude Code·Codex·Antigravity·Grok에서 **“세션 재개 기능 비정합성 점검해줘”**라고 요청할 수 있습니다. 기능이 이미 정해졌다면 **“비정합성점검 해줘”**만 입력하세요. 변경분이 없어도 같은 입력에서 경로별 결과가 갈리는 경우와 여러 곳에 중복된 규칙을 코드 위치와 함께 보여 줍니다. [사용법](skills/consistency-audit/SKILL.md)

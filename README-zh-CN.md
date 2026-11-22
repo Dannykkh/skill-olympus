@@ -339,6 +339,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.15.0 — 只有加上 `--register-mcp` 才会注册 MCP 服务器
+
+统一安装程序默认不再注册 MCP 服务器。已注册的 stdio MCP 服务器会在 CLI 每次启动会话时一并启动，因此在每个标签页各开一个 CLI 的工具中，一个服务器会按标签页数量运行多份。`install.bat` 和 `install.sh` 只有在加上 `--register-mcp` 时才会注册 Playwright 和 Orchestrator MCP。`--all` 用于选择目标 CLI，不会开启注册。Orchestrator 运行时仍会照常安装并构建，之后可以再注册。已有的注册保持不变：重新安装不会删除它们，也不会恢复你自己删除或停用的项目。要停止之前安装时注册的服务器，请在 CLI 中直接删除（`claude mcp remove <名称>`、`codex mcp remove <名称>`）。请参阅 [MCP 配置指南](mcp-configs/README.md)和[验证范围](CHANGELOG.md#7150---2026-11-22)。更新仓库后重新运行 `install.bat` 或 `bash install.sh`。
+
 ## v7.14.0 — 由刚修改代码的会话编写组件地图
 
 Mnemo 交接现在会让刚修改过代码的会话来编写 TermSnap 组件地图（`codemap/component-map.json`）。代码地图的其余部分由 TermSnap 根据文件和代码生成，但哪些文件构成一个功能、该组件负责什么，需要有人写下来。项目还没有地图时，`Component map:` 一行会列出本次会话修改的文件，并要求只用这一部分开始编写地图。已有地图时，该行会指出本次会话改动的组件，以便核对其说明是否与这次修改相符。如果该行提出的事项后面没有标记（`→ 시작함:` 已开始、`→ 설명:` 已核对说明、`→ 배정함:` 已分配、`→ 보류:` 暂缓），`validate_handoff.py` 会发出警告，但不会阻止交接。不使用 TermSnap 代码地图的项目不会出现该行。另见[组件地图编写方法](skills/mnemo/references/component-map.md)（韩文）和[验证范围](CHANGELOG.md#7140---2026-11-22)。更新后请重新运行 `install.bat` 或 `bash install.sh`。

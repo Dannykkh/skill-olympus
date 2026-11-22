@@ -352,6 +352,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.15.0 — MCP サーバーの登録は `--register-mcp` を付けたときだけ
+
+統合インストーラーは、既定では MCP サーバーを登録しなくなりました。登録された stdio MCP サーバーは CLI がセッションを開始するたびに起動されるため、タブごとに CLI を開くツールでは、サーバー 1 つがタブの数だけ実行されます。`install.bat` と `install.sh` は、`--register-mcp` を付けたときだけ Playwright と Orchestrator MCP を登録します。`--all` は対象 CLI を選ぶオプションで、登録は有効になりません。Orchestrator のランタイムはこれまでどおりインストールしてビルドするので、後から登録できます。すでに登録されている項目はそのまま残します。再インストールしても既存の登録は削除されず、自分で削除または無効にした項目が元に戻ることもありません。以前のインストールで登録されたサーバーを止めるには、CLI で直接削除してください（`claude mcp remove <名前>`、`codex mcp remove <名前>`）。[MCP 設定ガイド](mcp-configs/README.md)と[検証範囲](CHANGELOG.md#7150---2026-11-22)を参照してください。リポジトリを更新し、`install.bat` または `bash install.sh` を再実行してください。
+
 ## v7.14.0 — コードを変更したセッションがコンポーネントマップを書く
 
 Mnemo の引き継ぎが、TermSnap のコンポーネントマップ（`codemap/component-map.json`）の作成を、そのコードを変更したばかりのセッションに求めるようになりました。コードマップの他の部分は TermSnap がファイルとコードから生成しますが、どのファイルが一つの機能を成し、そのコンポーネントが何を担当するかは書く必要があります。マップがまだないプロジェクトでは、`Component map:` 行が今回のセッションで変更したファイルを示し、その部分だけでマップを書き始めるよう求めます。マップがある場合は、今回変更したコンポーネントを示し、説明が変更内容と合っているかを確認させます。`validate_handoff.py` は、行が求めた作業に印（`→ 시작함:` 開始、`→ 설명:` 説明を確認、`→ 배정함:` 割り当て済み、`→ 보류:` 保留）がない場合に警告しますが、引き継ぎは止めません。TermSnap のコードマップを使わないプロジェクトには行が付きません。[コンポーネントマップの書き方](skills/mnemo/references/component-map.md)（韓国語）と[検証範囲](CHANGELOG.md#7140---2026-11-22)も確認できます。更新後に `install.bat` または `bash install.sh` を再実行してください。
