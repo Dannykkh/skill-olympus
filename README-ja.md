@@ -352,6 +352,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.16.0 — `/atlas`: 既存プロジェクトのコンポーネントマップを一度に埋める
+
+Claude Code、Codex、Antigravity、Grok で `/atlas` が使えるようになりました。既存プロジェクトの TermSnap コンポーネントマップ（`codemap/component-map.json`）を一度に埋めます。どのファイルが一つの機能を成すか、そのコンポーネントが何を担当するか、変更するときに何を一緒に直す必要があるかを書きます。サブエージェントがファイルをバッチごとにバックグラウンドで読み、それぞれ結果ファイルを一つ書きます。メインセッションは引用された `パス:行` を実際のファイルと照合してから、説明をマップに統合します。バッチは TermSnap の出力だけから作り、`codemap/atlas/` の台帳で中断したところから再開でき、ファイルが変わる前に読んだ結果は受け付けません。TermSnap のコードマップがないプロジェクトでは何もしません。その後の維持はこれまでどおり Mnemo の引き継ぎが担当します。実際のプロジェクトで最初から最後まで実行したことはまだありません。[検証範囲](CHANGELOG.md#7160---2026-11-22)を参照してください。リポジトリを更新し、`install.bat` または `bash install.sh` を再実行してください。
+
 ## v7.15.0 — MCP サーバーの登録は `--register-mcp` を付けたときだけ
 
 統合インストーラーは、既定では MCP サーバーを登録しなくなりました。登録された stdio MCP サーバーは CLI がセッションを開始するたびに起動されるため、タブごとに CLI を開くツールでは、サーバー 1 つがタブの数だけ実行されます。`install.bat` と `install.sh` は、`--register-mcp` を付けたときだけ Playwright と Orchestrator MCP を登録します。`--all` は対象 CLI を選ぶオプションで、登録は有効になりません。Orchestrator のランタイムはこれまでどおりインストールしてビルドするので、後から登録できます。すでに登録されている項目はそのまま残します。再インストールしても既存の登録は削除されず、自分で削除または無効にした項目が元に戻ることもありません。以前のインストールで登録されたサーバーを止めるには、CLI で直接削除してください（`claude mcp remove <名前>`、`codex mcp remove <名前>`）。[MCP 設定ガイド](mcp-configs/README.md)と[検証範囲](CHANGELOG.md#7150---2026-11-22)を参照してください。リポジトリを更新し、`install.bat` または `bash install.sh` を再実行してください。

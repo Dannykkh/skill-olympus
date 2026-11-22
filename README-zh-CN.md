@@ -339,6 +339,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.16.0 — `/atlas`：一次填好现有项目的组件地图
+
+Claude Code、Codex、Antigravity 和 Grok 现在可以使用 `/atlas`。它一次填好现有项目的 TermSnap 组件地图（`codemap/component-map.json`）：哪些文件构成一个功能、该组件负责什么、修改时哪些地方必须一起改。子代理在后台按批次读取文件，每个批次写一个结果文件；主会话把引用的 `路径:行号` 与实际文件逐一核对，再把说明合并进地图。批次只根据 TermSnap 的输出生成，`codemap/atlas/` 中的台账让运行可以中断后继续，文件改动之前读出的结果不会被接受。在没有 TermSnap 代码地图的项目中它什么也不做。之后的维护仍由 Mnemo 交接负责。目前还没有在真实项目上从头到尾运行过。请参阅[验证范围](CHANGELOG.md#7160---2026-11-22)。更新仓库后重新运行 `install.bat` 或 `bash install.sh`。
+
 ## v7.15.0 — 只有加上 `--register-mcp` 才会注册 MCP 服务器
 
 统一安装程序默认不再注册 MCP 服务器。已注册的 stdio MCP 服务器会在 CLI 每次启动会话时一并启动，因此在每个标签页各开一个 CLI 的工具中，一个服务器会按标签页数量运行多份。`install.bat` 和 `install.sh` 只有在加上 `--register-mcp` 时才会注册 Playwright 和 Orchestrator MCP。`--all` 用于选择目标 CLI，不会开启注册。Orchestrator 运行时仍会照常安装并构建，之后可以再注册。已有的注册保持不变：重新安装不会删除它们，也不会恢复你自己删除或停用的项目。要停止之前安装时注册的服务器，请在 CLI 中直接删除（`claude mcp remove <名称>`、`codex mcp remove <名称>`）。请参阅 [MCP 配置指南](mcp-configs/README.md)和[验证范围](CHANGELOG.md#7150---2026-11-22)。更新仓库后重新运行 `install.bat` 或 `bash install.sh`。
