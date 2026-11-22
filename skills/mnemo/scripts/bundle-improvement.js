@@ -24,6 +24,8 @@ function improvementFiles(sourceDir) {
       "reclassify_observations.py", "split_memory_file.py"]
       .map(name => [path.join(common, "scripts", name), `scripts/${name}`]),
     [path.join(common, "references/handoff-template.md"), "references/handoff-template.md"],
+    // 핸드오프의 "지도 없음" 알림 줄과 handoff-memory.md가 이 문서를 가리킨다 — 어댑터에도 같이 가야 한다.
+    [path.join(common, "references/component-map.md"), "references/component-map.md"],
     [path.join(common, "docs/memory-hygiene.md"), "docs/memory-hygiene.md"],
     [fs.existsSync(path.join(common, "hooks/mnemo-project-root.js"))
       ? path.join(common, "hooks/mnemo-project-root.js")

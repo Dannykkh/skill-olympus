@@ -466,17 +466,61 @@ def _shown(paths: list[str], limit: int = 5) -> str:
     return ", ".join(paths[:limit]) + (f" 외 {len(paths) - limit}건" if len(paths) > limit else "")
 
 
+def session_files(root: Path, observed: list[str], git_info: dict) -> list[str]:
+    """이번 세션이 고친 파일(기억·인계·코드맵 산출물 제외, 지금 있는 것만).
+
+    관찰(Edit/Write)이 없는 CLI는 git의 수정·스테이징·새 파일로 대신한다 — 다른 세션 작업이 섞일 수 있다.
+    """
+    raw = observed or (git_info.get("modified_files", []) + git_info.get("staged_files", [])
+                       + git_info.get("untracked_files", []))
+    files, seen = [], set()
+    for item in raw:
+        path = item.replace("\\", "/")
+        key = path.casefold()
+        if key in seen or key.startswith(NOT_SOURCE_PREFIXES) or not (root / path).is_file():
+            continue
+        seen.add(key)
+        files.append(path)
+    return files
+
+
+def missing_map_notice(owners_file: Path, touched: list[str], observed: bool = True) -> str | None:
+    """지도가 없을 때, TermSnap이 "지도 없음" 스텁을 낸 프로젝트에만 작성을 알린다.
+
+    스텁(owners.json의 mapExists=false)은 TermSnap이 부품 지도를 지원하고 이 프로젝트에 지도가 없다는
+    계약상 신호다. 코드맵은 계산으로 만들지만 "어떤 파일들이 한 기능인가"는 LLM이 써야 하고, 그것을 가장
+    잘 아는 것은 그 부분을 방금 고친 세션이다 — 그래서 통째 작성을 기다리지 않고 이번 세션이 다룬
+    부분만으로 지도를 시작하게 한다(TermSnap은 일부만 채운 지도를 받는다. 미분류는 오류가 아니라 지표다).
+    스텁이 없거나(코드맵 없음·구버전) 읽지 못하면 종전대로 줄을 생략한다 — 알림은 오류가 아니다.
+    """
+    try:
+        contract = json.loads(owners_file.read_text(encoding="utf-8-sig"))
+        if (not str(contract.get("format", "")).startswith(OWNERS_FORMAT)
+                or contract.get("mapExists") is not False):
+            return None
+        sources = int((contract.get("status") or {}).get("sourceFiles", 0))
+    except (OSError, UnicodeError, ValueError, AttributeError, TypeError):
+        return None
+    count = f"소스 {sources}개" if sources > 0 else "소스 수 미상"
+    head = f"NONE — 지도 없음({count}, TermSnap 코드맵은 있음)"
+    if not touched:
+        return f"{head} · 이번 세션 파일 변경 없음"
+    note = "" if observed else " [관찰 없음 — git 변경으로 판정, 다른 세션 것이 섞일 수 있음]"
+    return (f"{head} · 이번 세션이 고친 파일 {len(touched)} ({_shown(touched)}) — "
+            f"이 부분만 부품으로 적어 지도를 시작(references/component-map.md){note}")
+
+
 def component_map_check(root: Path, observed: list[str], git_info: dict) -> str | None:
-    """이번 세션 파일을 owners.json으로 판정한다. 지도가 없는 프로젝트는 None(줄 생략).
+    """이번 세션 파일을 owners.json으로 판정한다. 지도도 TermSnap 스텁도 없는 프로젝트는 None(줄 생략).
 
     owners.json의 약속: TermSnap이 소스로 본 파일은 전부 owners나 uncovered 한쪽에 있다.
     둘 다에 없는 파일은 생성 뒤에 생겼거나 소스가 아니다. 다만 "생성 뒤 수정"과 "생성 뒤 생성"은
     mtime으로 구분되지 않으므로, 계약 데이터에 나온 최상위 폴더·확장자일 때만 재생성 필요로 본다.
     """
     source_map = root / COMPONENT_MAP
-    if not source_map.is_file():
-        return None
     owners_file = root / COMPONENT_OWNERS
+    if not source_map.is_file():
+        return missing_map_notice(owners_file, session_files(root, observed, git_info), bool(observed))
     rerun = "MCP codemap_component_map 호출 후 다시 확인"
     if not owners_file.is_file():
         return f"NOT RUN — owners.json 없음(TermSnap 구버전 또는 생성 전); {rerun}"
@@ -491,7 +535,8 @@ def component_map_check(root: Path, observed: list[str], git_info: dict) -> str 
         if generated.tzinfo is None:
             generated = generated.astimezone()  # 오프셋 없는 옛 표기는 로컬 시각으로 본다
         generated += CLOCK_SLACK
-        owners = {str(k).replace("\\", "/").casefold() for k in contract.get("owners", {})}
+        owner_of = {str(k).replace("\\", "/").casefold(): str(v) for k, v in contract.get("owners", {}).items()}
+        owners = set(owner_of)
         uncovered = {str(p).replace("\\", "/").casefold() for p in contract.get("uncovered", [])}
         errors = int((contract.get("status") or {}).get("errors", 0))
     except (AttributeError, KeyError, TypeError, ValueError):
@@ -533,16 +578,28 @@ def component_map_check(root: Path, observed: list[str], git_info: dict) -> str 
               and Path(key).suffix in known_suffixes and newer(root / path)):
             regenerate.append(path)
 
+    # 배정만으로는 지도가 얕아진다 — 설명은 그 부품을 방금 고친 세션이 가장 잘 쓴다.
+    # 이번 세션이 고친 파일의 주인 부품을 내밀어, 인계할 때 설명을 확인·보강하게 한다.
+    touched = {}
+    for path in session_files(root, observed, git_info):
+        component = owner_of.get(path.casefold())
+        if component:
+            touched[component] = touched.get(component, 0) + 1
+    ranked = [f"{name}({count})" for name, count in sorted(touched.items(), key=lambda kv: (-kv[1], kv[0]))]
+    review = f" — 고친 부품: {_shown(ranked)} — 설명이 이번 변경과 맞는지 확인" if ranked else ""
+
     note = " [관찰 없음 — git 새 파일로 판정, 다른 세션 것이 섞일 수 있음]" if fallback else ""
     if not (unassigned or regenerate or stale or errors):
-        scope = f"이번 세션 소스 {assigned}개 모두 배정" if assigned else "이번 세션 소스 변경 없음"
-        return f"RAN — OK({scope} · 지도 오류 0 · 전체 미분류 {len(uncovered)}){note}"
+        # 관찰이 없으면 배정 판정은 새 파일만 보지만 고친 부품은 git 수정분도 본다 — 큰 쪽이 실제 변경 수다.
+        changed = max(assigned, sum(touched.values()))
+        scope = f"이번 세션 소스 {changed}개 모두 배정" if changed else "이번 세션 소스 변경 없음"
+        return f"RAN — OK({scope} · 지도 오류 0 · 전체 미분류 {len(uncovered)}){review}{note}"
     parts = [f"이번 세션 미배정 {len(unassigned)}" + (f" ({_shown(unassigned)})" if unassigned else ""),
              f"재생성 필요 {len(regenerate)}" + (f" ({_shown(regenerate)})" if regenerate else "")]
     if stale:
         parts.append("산출물이 지도보다 오래됨")
     parts += [f"전체 미분류 {len(uncovered)}", f"지도 오류 {errors}"]
-    return f"RAN — {' · '.join(parts)} — 배정 후 MCP codemap_component_map으로 검증{note}"
+    return f"RAN — {' · '.join(parts)} — 배정 후 MCP codemap_component_map으로 검증{review}{note}"
 
 
 def generate_handoff(
@@ -610,7 +667,8 @@ def generate_handoff(
     observed = observed_files(project_root, session=session)
     all_modified = sorted(set(git_info["modified_files"] + git_info["staged_files"]) | set(observed))
 
-    # 부품 지도가 있는 프로젝트만 줄을 둔다 — 선택 기능이라 모든 핸드오프를 늘리지 않는다.
+    # 부품 지도가 있거나 TermSnap이 "지도 없음" 스텁을 낸 프로젝트만 줄을 둔다 —
+    # 코드맵을 쓰지 않는 프로젝트의 핸드오프는 늘리지 않는다.
     try:
         component_check = component_map_check(project_root, observed, git_info)
     except (OSError, UnicodeError, ValueError) as error:

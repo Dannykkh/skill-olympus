@@ -163,6 +163,8 @@ test(`all ${installedMode ? 'installed' : 'packaged'} Mnemo adapters can create 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /Mnemo Doctor/, `${name}: missing architecture must invoke real Doctor`);
     assert.ok(fs.existsSync(path.join(installed, 'references/handoff-memory.md')));
+    // handoff-memory.md와 생성기의 "지도 없음" 줄이 가리키는 문서 — 빠지면 어댑터에서 죽은 참조가 된다.
+    assert.ok(fs.existsSync(path.join(installed, 'references/component-map.md')), `${name}: references/component-map.md`);
     assert.ok(fs.readdirSync(path.join(project, 'docs/handoffs')).some(file => file.endsWith(`-${name}.md`)));
     fs.mkdirSync(path.join(project, 'memory/architecture'), { recursive: true });
     fs.writeFileSync(path.join(project, 'memory/architecture/index.md'), '# Architecture\n[Decision](001-storage.md)\n');

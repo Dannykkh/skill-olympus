@@ -56,6 +56,42 @@ class ComponentMapCheckTests(unittest.TestCase):
         self.touch("src/a.cs")
         self.assertIsNone(self.check(["src/a.cs"]))
 
+    def stub(self, **fields):
+        """TermSnap이 지도 없이 낸 owners.json — 지도 원본은 만들지 않는다."""
+        data = {"format": "termsnap-component-owners/1", "generatedAt": self.generated.isoformat(),
+                "mapPath": creator.COMPONENT_MAP, "mapExists": False,
+                "status": {"errors": 0, "warnings": 0, "elements": 0, "sourceFiles": 258},
+                "owners": {}, "uncovered": []}
+        data.update(fields)
+        self.touch(creator.COMPONENT_OWNERS, text=json.dumps(data))
+
+    def test_termsnap_stub_without_map_asks_for_authoring(self):
+        """최초 작성에는 방아쇠가 없었다 — TermSnap이 "지도 없음"이라고 낸 프로젝트에서만 알린다."""
+        self.stub()
+        self.touch("src/a.cs")
+        line = self.check(["src/a.cs", "memory/x.md", "src/gone.cs"])
+        self.assertTrue(line.startswith("NONE — 지도 없음(소스 258개"), line)
+        # 통째 작성을 기다리지 않는다 — 이번 세션이 다룬 부분으로 시작하게 그 파일을 내민다.
+        self.assertIn("이번 세션이 고친 파일 1 (src/a.cs)", line)
+        self.assertIn("references/component-map.md", line)
+        # 파일별 판정은 하지 않는다 — 지도가 없으면 전부 미배정으로 틀리게 나온다.
+        self.assertNotIn("미배정", line)
+        self.stub(status={})
+        line = self.check([])
+        self.assertIn("소스 수 미상", line)
+        self.assertIn("이번 세션 파일 변경 없음", line)
+
+    def test_notice_needs_the_termsnap_contract_signal(self):
+        """스텁이 다른 형식이거나, 지도가 있다고 말하거나, 깨져 있으면 추측하지 않고 줄을 생략한다."""
+        self.stub(format="something-else/2")
+        self.assertIsNone(self.check([]))
+        self.stub(mapExists=True)
+        self.assertIsNone(self.check([]))
+        self.stub(mapExists=None)
+        self.assertIsNone(self.check([]))
+        self.touch(creator.COMPONENT_OWNERS, text="{not json")
+        self.assertIsNone(self.check([]))
+
     def test_map_without_owners_or_with_other_format_is_not_run(self):
         self.touch(creator.COMPONENT_MAP)
         self.assertTrue(self.check([]).startswith("NOT RUN — owners.json 없음"))
@@ -91,8 +127,40 @@ class ComponentMapCheckTests(unittest.TestCase):
         self.touch("src/a.cs")
         self.touch("src/b.cs")
         self.assertEqual(self.check(["src/a.cs", "src/b.cs"]),
-                         "RAN — OK(이번 세션 소스 2개 모두 배정 · 지도 오류 0 · 전체 미분류 1)")
-        self.assertIn("이번 세션 소스 변경 없음", self.check([]))
+                         "RAN — OK(이번 세션 소스 2개 모두 배정 · 지도 오류 0 · 전체 미분류 1)"
+                         " — 고친 부품: app.core(2) — 설명이 이번 변경과 맞는지 확인")
+        quiet = self.check([])
+        self.assertIn("이번 세션 소스 변경 없음", quiet)
+        self.assertNotIn("고친 부품", quiet)
+
+    def test_touched_components_are_offered_for_description_review(self):
+        """배정만 하면 지도가 얕아진다 — 그 부품을 방금 고친 세션이 설명을 보게 주인 부품을 내민다."""
+        self.contract(uncovered=["src/new.cs"])
+        owners = {"src/a.cs": "app.core", "src/b.cs": "app.core", "ui/view.cs": "app.ui"}
+        target = self.root / creator.COMPONENT_OWNERS
+        data = json.loads(target.read_text(encoding="utf-8"))
+        data["owners"] = owners
+        target.write_text(json.dumps(data), encoding="utf-8")
+        for path in (*owners, "src/new.cs"):
+            self.touch(path, self.generated - timedelta(minutes=30))
+        line = self.check(["src/a.cs", "SRC\\b.cs" if os.name == "nt" else "src/b.cs", "ui/view.cs"])
+        self.assertIn("고친 부품: app.core(2), app.ui(1)", line)
+        # 미배정이 있어도 고친 부품은 함께 나온다.
+        line = self.check(["src/new.cs", "ui/view.cs"])
+        self.assertIn("이번 세션 미배정 1 (src/new.cs)", line)
+        self.assertIn("고친 부품: app.ui(1)", line)
+
+    def test_without_observations_modified_files_still_name_their_components(self):
+        """관찰이 없는 CLI도 고친 부품은 본다 — git 수정분으로."""
+        self.git("init", "-q")
+        self.touch("src/a.cs", self.generated - timedelta(minutes=30))
+        self.git("add", "src/a.cs")
+        self.git("commit", "-q", "-m", "init")
+        self.contract(owners=["src/a.cs"])
+        self.touch("src/a.cs", self.generated - timedelta(minutes=10), "changed")
+        line = self.check([], creator.get_git_info(str(self.root)))
+        self.assertIn("이번 세션 소스 1개 모두 배정", line)
+        self.assertIn("고친 부품: app.core(1)", line)
 
     def test_map_errors_are_reported_even_without_session_files(self):
         self.contract(owners=["src/a.cs"], errors=2)
@@ -178,7 +246,16 @@ class ScaffoldComponentLineTests(unittest.TestCase):
             _, text = self.scaffold(root)
             self.assertNotIn("Component map", text)
 
+            # TermSnap 코드맵은 있는데 지도가 없는 프로젝트 — 작성 알림 한 줄.
             (root / "codemap" / "components").mkdir(parents=True)
+            (root / creator.COMPONENT_OWNERS).write_text(json.dumps({
+                "format": "termsnap-component-owners/1", "mapExists": False,
+                "status": {"sourceFiles": 12}, "owners": {}, "uncovered": []}), encoding="utf-8")
+            stdout, text = self.scaffold(root)
+            self.assertIn("- Component map: NONE — 지도 없음(소스 12개", text)
+            self.assertIn("[Mnemo] 부품 지도: NONE", stdout)
+            (root / creator.COMPONENT_OWNERS).unlink()
+
             (root / creator.COMPONENT_MAP).write_text("{}", encoding="utf-8")
             stdout, text = self.scaffold(root)
             self.assertIn("- Component map: NOT RUN — owners.json 없음", text)
@@ -214,6 +291,35 @@ class ComponentLineValidatorTests(unittest.TestCase):
         self.assertEqual(validator.check_component_map_line(
             "- Component map: RAN — OK(이번 세션 소스 2개 모두 배정 · 지도 오류 0 · 전체 미분류 5)"), [])
         self.assertEqual(validator.check_component_map_line("## Session Memory Review\n- Anchor index: RAN\n"), [])
+
+    def test_missing_map_asks_to_start_only_when_the_session_changed_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            owners = Path(temp) / "owners.json"
+            owners.write_text(json.dumps({"format": "termsnap-component-owners/1", "mapExists": False,
+                                          "status": {"sourceFiles": 3}}), encoding="utf-8")
+            idle = creator.missing_map_notice(owners, [])
+            worked = creator.missing_map_notice(owners, ["src/a.cs", "src/b.cs"])
+        # 고친 파일이 없는 세션에는 내밀 일이 없다.
+        self.assertEqual(validator.check_component_map_line(f"- Component map: {idle}\n"), [])
+        notes = validator.check_component_map_line(f"- Component map: {worked}\n")
+        self.assertEqual(len(notes), 1)
+        self.assertIn("고친 파일 2", notes[0])
+        for tail in (" → 시작함: app.core", " → 보류: 폴더 구조가 곧 기능 구조"):
+            self.assertEqual(validator.check_component_map_line(f"- Component map: {worked}{tail}\n"), [])
+
+    def test_touched_components_need_a_description_marker(self):
+        ok = ("- Component map: RAN — OK(이번 세션 소스 2개 모두 배정 · 지도 오류 0 · 전체 미분류 5)"
+              " — 고친 부품: app.core(2) — 설명이 이번 변경과 맞는지 확인")
+        notes = validator.check_component_map_line(ok)
+        self.assertEqual(len(notes), 1)
+        self.assertIn("설명", notes[0])
+        for tail in (" → 설명: app.core 보강", " → 설명: 변경 없음", " → 보류: 지도 재작성 중"):
+            self.assertEqual(validator.check_component_map_line(ok + tail), [])
+        # 배정과 설명은 따로 닫는다 — 배정만 적으면 설명 확인이 남는다.
+        both = self.OPEN + " — 고친 부품: app.ui(1) — 설명이 이번 변경과 맞는지 확인"
+        self.assertEqual(len(validator.check_component_map_line(both)), 2)
+        self.assertEqual(len(validator.check_component_map_line(both + " → 배정함: app.core")), 1)
+        self.assertEqual(validator.check_component_map_line(both + " → 배정함: app.core → 설명: app.ui 보강"), [])
 
     def test_next_bullet_is_not_a_continuation(self):
         text = self.OPEN + "\n- Memory/index updates: 배정함 없음\n"

@@ -478,31 +478,50 @@ def check_tag_reserved_fields(content: str, root: Path) -> list[str]:
 # 생성기가 쓰는 `- Component map:` 줄과, 에이전트가 같은 줄(또는 들여쓴 이어지는 줄)에 붙이는 해소 표식.
 COMPONENT_LINE = re.compile(r'^[ \t]*[-*][ \t]*Component map:(.*(?:\n[ \t]{2,}\S.*)*)', re.M)
 COMPONENT_RESOLVED = re.compile(r'배정함|보류:|NOT RUN')
+# 생성기 문구에는 아래 표식이 나오지 않는다 — 에이전트가 붙였을 때만 맞는다.
+COMPONENT_DEFERRED = re.compile(r'보류:')
+COMPONENT_STARTED = re.compile(r'시작함')
+COMPONENT_DESCRIBED = re.compile(r'설명:')
 
 
 def check_component_map_line(content: str) -> list[str]:
-    """부품 지도 점검이 보고한 미배정·재생성·오류가 해소됐는가 — 경고만, 게이트 아님.
+    """부품 지도 점검이 내민 일이 처리됐는가 — 경고만, 게이트 아님.
 
-    지도는 LLM이 쓰고 TermSnap이 검증한다. 생성기는 상기만 하고 고치지 않으므로, 줄이 문제를
-    보고했는데 에이전트가 배정하지도 보류 사유를 적지도 않았으면 그 상기가 지나간 것이다.
-    줄이 없으면(지도 없는 프로젝트) 조용히 통과한다 — 생성기가 생략하는 조건과 짝이다.
+    지도는 LLM이 쓰고 TermSnap이 검증한다. 생성기는 상기만 하고 고치지 않으므로, 줄이 일을 내밀었는데
+    에이전트가 하지도 보류 사유를 적지도 않았으면 그 상기가 지나간 것이다. 내미는 일은 셋이다 —
+    미배정·재생성·오류의 해소(`→ 배정함:`), 이번 세션이 고친 부품의 설명 확인(`→ 설명:`),
+    지도가 없을 때 이번 세션이 다룬 부분으로 지도 시작(`→ 시작함:`). `→ 보류: <이유>`는 셋 모두를 닫는다.
+    줄이 없으면(코드맵을 쓰지 않는 프로젝트) 조용히 통과한다 — 생성기가 생략하는 조건과 짝이다.
     """
     match = COMPONENT_LINE.search(content)
-    if not match or COMPONENT_RESOLVED.search(match.group(1)):
+    if not match:
         return []
     text = match.group(1)
-    open_items = []
-    for label in ("미배정", "재생성 필요", "지도 오류"):
-        count = re.search(rf'{label}\s+(\d+)', text)
-        if count and int(count.group(1)) > 0:
-            open_items.append(f"{label} {count.group(1)}")
-    if "오래됨" in text:
-        open_items.append("산출물이 지도보다 오래됨")
-    if not open_items:
+    if COMPONENT_DEFERRED.search(text):
         return []
-    return [f"{' · '.join(open_items)} — codemap/component-map.json에 배정하고 MCP "
-            "codemap_component_map으로 검증한 뒤 같은 줄에 `→ 배정함: <부품>` 또는 "
-            "`→ 보류: <이유>`를 적으세요"]
+    notes = []
+    started = re.search(r'고친 파일\s+(\d+)', text)
+    if started and int(started.group(1)) > 0 and not COMPONENT_STARTED.search(text):
+        notes.append(f"지도 없음 · 이번 세션이 고친 파일 {started.group(1)} — 이 부분만 부품으로 적어 "
+                     "codemap/component-map.json을 시작하고 같은 줄에 `→ 시작함: <부품>`을, 쓰지 않을 "
+                     "이유가 있으면 `→ 보류: <이유>`를 적으세요")
+    if not COMPONENT_RESOLVED.search(text):
+        open_items = []
+        for label in ("미배정", "재생성 필요", "지도 오류"):
+            count = re.search(rf'{label}\s+(\d+)', text)
+            if count and int(count.group(1)) > 0:
+                open_items.append(f"{label} {count.group(1)}")
+        if "오래됨" in text:
+            open_items.append("산출물이 지도보다 오래됨")
+        if open_items:
+            notes.append(f"{' · '.join(open_items)} — codemap/component-map.json에 배정하고 MCP "
+                         "codemap_component_map으로 검증한 뒤 같은 줄에 `→ 배정함: <부품>` 또는 "
+                         "`→ 보류: <이유>`를 적으세요")
+    if "고친 부품:" in text and not COMPONENT_DESCRIBED.search(text):
+        notes.append("이번 세션이 고친 부품의 설명을 확인하지 않았습니다 — 이번 변경으로 책임·경계·함께 고칠 "
+                     "것이 달라졌으면 지도의 description을 고치고 같은 줄에 `→ 설명: <보강한 부품>` 또는 "
+                     "`→ 설명: 변경 없음`을 적으세요")
+    return notes
 
 
 def validate_handoff(filepath: str) -> dict:

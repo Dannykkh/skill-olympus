@@ -92,7 +92,8 @@ for (const name of ['mnemo', 'codex-mnemo', 'antigravity-mnemo', 'grok-mnemo']) 
       'scripts/recall.py', 'scripts/mnemo_markdown.py', 'scripts/mnemo_project_root.py',
       'scripts/mnemo_doctor.py', 'scripts/check_memory_anchors.py', 'scripts/harvest_lineage.py',
       'scripts/reclassify_observations.py', 'docs/memory-hygiene.md',
-      'hooks/mnemo-project-root.js', 'hooks/mnemo-record-store.js', 'references/record-storage.md', 'install.js']) {
+      'hooks/mnemo-project-root.js', 'hooks/mnemo-record-store.js', 'references/record-storage.md',
+      'references/handoff-memory.md', 'references/component-map.md', 'install.js']) {
       assert.ok(fs.existsSync(path.join(dest, relative)), `${name}: ${relative}`);
     }
     assert.equal(fs.readFileSync(path.join(dest,'install.js'),'utf8'),
