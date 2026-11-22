@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.16.0] - 2026-11-22
+
+### Features
+
+- **atlas**: Add `/atlas`, a skill that fills in the TermSnap component map (`codemap/component-map.json`) of an existing project in one pass. Subagents read the files one batch at a time in the background and each writes one result file; the main session checks the cited lines and merges the descriptions. Keeping a map current afterwards stays with the Mnemo handoff. (53c8665)
+- **atlas**: `atlas_work.py plan` splits each component's files into reading batches from TermSnap's `owners.json` and never re-expands the map's globs. `brief` prints the worker instructions for a batch, `check` resolves every cited `path:line` against the real file, and `status` and `mark` keep a ledger in `codemap/atlas/`. (53c8665)
+- **atlas**: A result must return the batch digest it was given, so a result written before the files changed is rejected. A checked batch goes back for another check when a file it cited outside the batch changes. The chosen scope and limits stay in the ledger, so `plan` without arguments resumes the same scope. (53c8665)
+- **atlas**: The skill stops and names the next action when the project has no codemap, no component output, no map yet, or output older than the map. (53c8665)
+- **installer**: `atlas` is a common entry point. The default allowlist now has 27 skills (21 entry points and 6 runtime adapters) out of 106 public skills: 24 active for Claude Code, 23 for Codex and Antigravity, 21 on skills-only hosts. (53c8665)
+
+### Documentation
+
+- Update the skill counts and skill tables in the READMEs, `AGENTS.md`, `GEMINI.md`, `QUICK-REFERENCE.md`, `SETUP.md`, the workflow guide, the Antigravity notes and the setup registry. `docs/quickstart.md` still carried the counts from two releases ago. (53c8665)
+- Add the v7.16.0 entry to the English, Korean, Japanese and Simplified Chinese READMEs. (ef8ed03)
+
+### Validation and Scope
+
+- Full repository suite: 389 tests, 387 passed, 2 skipped, 0 failed. It includes a check that `atlas` is installed as an active skill together with its script and worker brief on four install paths. Atlas script suite: 25 passed.
+- `install.bat --all` ran on Windows against the real CLI homes with exit code 0 and no warnings. `SKILL.md`, the worker brief and the script matched the source in the Claude Code, Codex and Antigravity homes, the three catalogs list `atlas` as active, and a running Claude Code session listed the skill after the install.
+- The skill has not been run end to end on a real project. In this repository TermSnap's component output was still the stub written before the map existed, so the installed script stopped with that message, as designed.
+- The batch limits (200,000 bytes or 30 files), three concurrent workers and five claims per batch come from a three-component pilot in which the workers returned JSON in the conversation. Workers writing their own result files has not been run on any CLI.
+- An agent given only the two procedure documents read them twice. The first read found 24 points it had to decide for itself and the second found 15; both sets were fixed, including three script defects in the resume path. The documents were not read again after the last fixes.
+- macOS and Linux installer runs: not run.
+- `AGENTS.md` and `GEMINI.md` also carry the one-line wording change TermSnap made to its managed codemap block on 2026-11-19.
+
 ## [7.15.0] - 2026-11-22
 
 ### Features
