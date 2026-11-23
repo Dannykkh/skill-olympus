@@ -339,9 +339,13 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.16.1 — 修复 Atlas 的源码核对和 Mnemo 的记录恢复
+
+本次更新修复了在此仓库首次运行 Atlas 时发现的问题。`/atlas` 在验证每批结果时会重新检查源文件，要求每个缺陷候选项注明对应的源码行，并排除禁止读取的路径。TermSnap 生成地图，Python 工具负责文件分批和引文核对。Mnemo 现在会保留同一秒内的不同调用，中断后也能继续移动观察记录，避免重复。MCP 安装程序会报告注册失败，并保留指定范围以外的配置。[发行说明](CHANGELOG.md#7161---2026-11-23)
+
 ## v7.16.0 — `/atlas`：一次填好现有项目的组件地图
 
-Claude Code、Codex、Antigravity 和 Grok 现在可以使用 `/atlas`。它一次填好现有项目的 TermSnap 组件地图（`codemap/component-map.json`）：哪些文件构成一个功能、该组件负责什么、修改时哪些地方必须一起改。子代理在后台按批次读取文件，每个批次写一个结果文件；主会话把引用的 `路径:行号` 与实际文件逐一核对，再把说明合并进地图。批次只根据 TermSnap 的输出生成，`codemap/atlas/` 中的台账让运行可以中断后继续，文件改动之前读出的结果不会被接受。在没有 TermSnap 代码地图的项目中它什么也不做。之后的维护仍由 Mnemo 交接负责。目前还没有在真实项目上从头到尾运行过。请参阅[验证范围](CHANGELOG.md#7160---2026-11-22)。更新仓库后重新运行 `install.bat` 或 `bash install.sh`。
+Claude Code、Codex、Antigravity 和 Grok 现在可以使用 `/atlas`。它一次填好现有项目的 TermSnap 组件地图（`codemap/component-map.json`）：哪些文件构成一个功能、该组件负责什么、修改时哪些地方必须一起改。子代理在后台按批次读取文件，每个批次写一个结果文件；主会话把引用的 `路径:行号` 与实际文件逐一核对，再把说明合并进地图。批次只根据 TermSnap 的输出生成，`codemap/atlas/` 中的台账让运行可以中断后继续，文件改动之前读出的结果不会被接受。在没有 TermSnap 代码地图的项目中它什么也不做。之后的维护仍由 Mnemo 交接负责。发布 v7.16.0 时，尚未在实际项目中完成端到端运行。请参阅[验证范围](CHANGELOG.md#7160---2026-11-22)。更新仓库后重新运行 `install.bat` 或 `bash install.sh`。
 
 ## v7.15.0 — 只有加上 `--register-mcp` 才会注册 MCP 服务器
 
