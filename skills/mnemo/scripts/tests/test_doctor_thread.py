@@ -66,6 +66,10 @@ class DoctorThreadTests(unittest.TestCase):
             entry = self.entry(root, "012-anchor.md", "- 결정: 훅은 hooks/save-turn.sh 에서 저장한다")
             out = self.run_doctor(root)
             self.assertIn("앵커가 산문에만 1", out)
+            self.assertRegex(out, r"--promote-structure[^\n]*`files:`")
+            before = entry.read_bytes()
+            self.run_doctor(root, "--fix")
+            self.assertEqual(entry.read_bytes(), before)
 
             self.run_doctor(root, "--promote-structure")
             text = entry.read_text(encoding="utf-8")

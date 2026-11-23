@@ -49,18 +49,6 @@ function Exit-MnemoError {
     exit 0
 }
 
-# Resolve all storage through the shared project boundary contract.
-function Get-ClaudeProjectRoot {
-    param([string]$TranscriptPath, $Payload)
-    $helper = Join-Path $PSScriptRoot 'mnemo-project-root.js'
-    if (-not (Test-Path -LiteralPath $helper)) { return $null }
-    try {
-        $result = ($Payload | ConvertTo-Json -Compress -Depth 30) | & node $helper --claude 2>$null
-        if ($LASTEXITCODE -eq 0 -and $result) { return "$result".Trim() }
-    } catch {}
-    return $null
-}
-
 # MNEMO_RELPATH_START
 # 기록에 남기는 경로는 프로젝트 루트 기준 상대경로(슬래시 구분)로 쓴다. 루트 밖 경로는 그대로 둔다.
 # 절대경로를 그대로 남기면 프로젝트를 옮기거나 다른 컴퓨터에서 열었을 때 기록이 옛 위치를 가리킨다.
@@ -228,80 +216,6 @@ $toolInput = $json.tool_input
 $skipTools = @("Glob", "Grep", "Read", "LS", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList", "TaskOutput", "TeamCreate", "TeamDelete", "SendMessage")
 if ($skipTools -contains $toolName) { exit 0 }
 
-# 프로젝트 루트 결정: 명시 workspace → payload cwd → transcript metadata
-$transcriptPath = $json.transcript_path
-$ProjectRoot = Get-ClaudeProjectRoot -TranscriptPath $transcriptPath -Payload $json
-
-# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
-if (-not $ProjectRoot) { exit 0 }
-
-# 기록용 도구 입력: 경로 필드를 루트 기준 상대경로로 바꾼다 (toollog·관찰 로그 공용)
-$toolInput = ConvertTo-MnemoRelativeInput -ToolInput $toolInput -Root $ProjectRoot
-
-$sessionForAnchor = if ($json.session_id) { "$($json.session_id)" } else { "unknown" }
-Invoke-MnemoAnchorNotify -Root $ProjectRoot -Tool $toolName -ToolInput $toolInput -Session $sessionForAnchor
-
-
-# 대화 로그 경로
-if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot '.mnemo-root'))) { [System.IO.File]::WriteAllText((Join-Path $ProjectRoot '.mnemo-root'), '', (New-Object System.Text.UTF8Encoding $false)) }
-$ConvDir = Join-Path $ProjectRoot "conversations"
-$Today = Get-Date -Format "yyyy-MM-dd"
-$LogFile = Join-Path $ConvDir "$Today-toollog.md"
-
-# conversations 폴더 자동 생성
-if (-not (Test-Path $ConvDir)) {
-    New-Item -ItemType Directory -Path $ConvDir -Force | Out-Null
-}
-
-# 파일 없으면 헤더
-if (-not (Test-Path $LogFile)) {
-    $Header = @"
----
-date: $Today
-type: tool-log
----
-
-# Tool Usage Log - $Today
-
-"@
-    [System.IO.File]::WriteAllText($LogFile, $Header, $Utf8NoBom)
-}
-
-# 도구별 핵심 정보 추출
-$detail = ""
-switch ($toolName) {
-    "Edit"    { $detail = $toolInput.file_path }
-    "Write"   { $detail = $toolInput.file_path }
-    "Bash"    {
-        $cmd = "$($toolInput.command)"
-        # 명령어 첫 80자만
-        if ($cmd.Length -gt 80) { $cmd = $cmd.Substring(0, 80) + "..." }
-        $detail = $cmd
-    }
-    "Agent"   { $detail = "$($toolInput.subagent_type): $($toolInput.description)" }
-    "Skill"   { $detail = $toolInput.skill }
-    "WebFetch"   { $detail = $toolInput.url }
-    "WebSearch"  { $detail = $toolInput.query }
-    default   { $detail = "" }
-}
-
-$ts = Get-Date -Format 'HH:mm:ss'
-$entry = "- ``[$ts]`` **$toolName** $detail`n"
-
-# 중복 방지: 같은 초에 같은 도구+내용이 있으면 스킵
-if (Test-Path $LogFile) {
-    $existing = Get-Content $LogFile -Raw -Encoding UTF8
-    $fingerprint = "[$ts]`` **$toolName**"
-    if ($existing.Contains($fingerprint)) { exit 0 }
-}
-
-[System.IO.File]::AppendAllText($LogFile, $entry, $Utf8NoBom)
-
-# ─────────────────────────────────────────────
-# 학습 관찰 기록 (memory/gotchas/ + memory/learned/)
-# 에러 → gotchas, 성공 → learned 에 각각 기록
-# ─────────────────────────────────────────────
-
 try {
     $toolOutput = $json.tool_response
     if (-not $toolOutput) { $toolOutput = $json.tool_output }
@@ -320,48 +234,21 @@ try {
                   'ENOENT|ERR_[A-Z_]+|npm ERR!|error TS\d+|error CS\d+)'
     $hasError = (-not $echoesContent) -and ($outputStr -match $errorShape)
 
-    $secretPattern = '(?i)(api[_-]?key|token|secret|password|authorization)["\s:=]+[A-Za-z0-9_\-/.+=]{8,}'
-    $inputStr = ""
-    if ($toolInput) { $inputStr = ($toolInput | ConvertTo-Json -Compress -Depth 3) }
-    if ($inputStr.Length -gt 3000) { $inputStr = $inputStr.Substring(0, 3000) + "...[truncated]" }
-    if ($outputStr.Length -gt 3000) { $outputStr = $outputStr.Substring(0, 3000) + "...[truncated]" }
-    $inputStr = $inputStr -replace $secretPattern, '$1: [REDACTED]'
-    $outputStr = $outputStr -replace $secretPattern, '$1: [REDACTED]'
+    $category = ""
+    if ($hasError) { $category = "gotchas" }
+    elseif ($toolName -in @("Edit", "Write", "NotebookEdit", "Bash", "Agent", "Skill")) { $category = "learned" }
 
-    $sessionId = "unknown"
-    if ($json.session_id) { $sessionId = $json.session_id }
+    $helper = Join-Path $PSScriptRoot 'claude-event-store.js'
+    $ProjectRoot = $rawInput | & node $helper --capture-tool "$category"
+    if ($LASTEXITCODE -ne 0) { Exit-MnemoError -Context 'capture' -Message '도구 기록 저장 실패' }
+    if (-not $ProjectRoot) { exit 0 }
 
-    $targetDir = $null
-    $eventType = $null
-
-    # PS 5.1 호환: Join-Path는 3개 인수 미지원. 중첩 호출로 처리.
-    $memoryDir = Join-Path $ProjectRoot "memory"
-    if ($hasError) {
-        $targetDir = Join-Path $memoryDir "gotchas"
-        $eventType = "tool_error"
-    } elseif ($toolName -in @("Edit", "Write", "Bash", "Agent", "Skill")) {
-        $targetDir = Join-Path $memoryDir "learned"
-        $eventType = "tool_success"
-    }
-
-    if ($targetDir) {
-        if (-not (Test-Path $targetDir)) {
-            New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-        }
-
+    $toolInput = ConvertTo-MnemoRelativeInput -ToolInput $toolInput -Root $ProjectRoot
+    $session = if ($json.session_id) { "$($json.session_id)" } else { "unknown" }
+    Invoke-MnemoAnchorNotify -Root $ProjectRoot -Tool $toolName -ToolInput $toolInput -Session $session
+    if ($category) {
+        $targetDir = Join-Path (Join-Path $ProjectRoot "memory") $category
         $obsFile = Join-Path $targetDir "observations.jsonl"
-
-        $obs = @{
-            timestamp = (Get-Date -Format "o")
-            event = $eventType
-            tool = $toolName
-            input = $inputStr
-            output = $outputStr
-            session = $sessionId
-        } | ConvertTo-Json -Compress
-
-        [System.IO.File]::AppendAllText($obsFile, "$obs`n", $Utf8NoBom)
-
         # MNEMO_ROTATION_START
         # 기준값이 없거나 잘못됐으면 상태 알림의 초기화 이후에 회전한다.
         if ((Test-Path -LiteralPath $obsFile) -and (Get-Item -LiteralPath $obsFile).Length -ge 10MB) {

@@ -216,17 +216,132 @@ async function backfillInputs(root, options = {}) {
   });
 }
 
-module.exports = { saveClaudeEvent, backfillInputs, transcriptAnswer, readTranscript, humanInput };
-if (require.main === module) {
+function recentErrors(file, now = Date.now()) {
+  let count = 0;
+  for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
+    const stamp = /^\uFEFF?\[(\d{4}-\d\d-\d\d(?: \d\d:\d\d:\d\d|T\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)))\]/.exec(line);
+    if (!stamp) continue;
+    const time = Date.parse(stamp[1].replace(" ", "T"));
+    if (time >= now - 86400000 && time <= now) count++;
+  }
+  return count;
+}
+
+function captureInput(root, payload) {
+  const original = payload.tool_input ?? {};
+  if (typeof original !== "object" || Array.isArray(original)) return original;
+  const input = { ...original }, base = root.replaceAll("\\", "/");
+  const compare = value => /^[A-Z]:\//i.test(base) ? value.toLowerCase() : value;
+  for (const key of ["file_path", "notebook_path", "path"]) {
+    if (typeof input[key] !== "string") continue;
+    const p = input[key].replaceAll("\\", "/");
+    if (compare(p) === compare(base)) input[key] = ".";
+    else if (compare(p).startsWith(compare(base) + "/")) input[key] = p.slice(base.length + 1);
+  }
+  return input;
+}
+
+function toolDetail(tool, input) {
+  switch (tool) {
+    case "Edit": case "Write": return input.file_path || "";
+    case "NotebookEdit": return input.notebook_path || input.file_path || "";
+    case "Bash": {
+      const cmd = String(input.command || "");
+      return cmd.length > 80 ? cmd.slice(0, 80) + "..." : cmd;
+    }
+    case "Agent": return `${input.subagent_type || ""}: ${input.description || ""}`;
+    case "Skill": return input.skill || "";
+    case "WebFetch": return input.url || "";
+    case "WebSearch": return input.query || "";
+    default: return "";
+  }
+}
+
+// PostToolUse supplies tool_use_id for one invocation even on redelivery. With no ID,
+// two legitimate calls can have identical text and time, so preserve both.
+async function captureTool(root, payload, category, now = new Date()) {
+  const session = String(payload.session_id || "unknown"), tool = payload.tool_name;
+  if (!tool || disabled()) return;
+  const id = payload.tool_use_id ? hash(JSON.stringify([session, payload.tool_use_id])) : "";
+  const conversations = path.join(root, "conversations");
+  await journal(root).locked(async () => {
+    fs.closeSync(fs.openSync(path.join(root, ".mnemo-root"), "a"));
+    let firstSeen = now, replay = false;
+    if (id) {
+      // A session can cross midnight. Keep the first delivery's day so a retry locates
+      // its original log without scanning every earlier day in the project.
+      const dir = path.join(conversations, ".mnemo-tool-events");
+      fs.mkdirSync(dir, { recursive: true });
+      const index = path.join(dir, hash(session) + ".json");
+      const times = fs.existsSync(index) ? JSON.parse(fs.readFileSync(index, "utf8")) : {};
+      if (Object.hasOwn(times, id)) {
+        firstSeen = new Date(times[id]);
+        if (!Number.isFinite(firstSeen.getTime())) throw new Error("Invalid tool event time");
+        replay = true;
+      } else {
+        times[id] = now.toISOString();
+        atomicJson(index, times);
+      }
+    }
+    const day = localDate(firstSeen);
+    const log = path.join(conversations, day + "-toollog.md");
+    const marker = "<!-- mnemo-tool:" + id + " -->";
+    if (replay && fs.existsSync(log) && fs.readFileSync(log, "utf8").split(/\r?\n/).includes(marker)) return;
+
+    const input = captureInput(root, payload);
+    if (category === "learned" || category === "gotchas") {
+      const dir = path.join(root, "memory", category);
+      fs.mkdirSync(dir, { recursive: true });
+      const file = path.join(dir, "observations.jsonl");
+      // The observation precedes the final Markdown marker. If an earlier delivery
+      // stopped in between, retain its observation even after log rotation.
+      let observed = false;
+      if (replay) {
+        const archive = path.join(dir, "archive");
+        const archived = fs.existsSync(archive) ? fs.readdirSync(archive).filter(n => n.endsWith(".jsonl")).map(n => path.join(archive, n)) : [];
+        observed = [file, ...archived].some(f => fs.existsSync(f) && fs.readFileSync(f, "utf8").includes('"mnemo_tool_event":"' + id + '"'));
+      }
+      if (!observed) {
+        const scrub = value => value.slice(0, 3000).replace(/(api[_-]?key|token|secret|password|authorization)(["'\s:=]+)[a-z0-9_\-/.+=]{8,}/gi, "$1$2[REDACTED]");
+        const output = payload.tool_response ?? payload.tool_output ?? payload.output ?? "";
+        const obs = { timestamp: firstSeen.toISOString(), event: category === "gotchas" ? "tool_error" : "tool_success",
+          tool, input: scrub(JSON.stringify(input)), output: scrub(typeof output === "string" ? output : JSON.stringify(output)), session };
+        if (id) obs.mnemo_tool_event = id;
+        fs.appendFileSync(file, JSON.stringify(obs) + "\n");
+      }
+    }
+    const header = fs.existsSync(log) ? "" : `---\ndate: ${day}\ntype: tool-log\n---\n\n# Tool Usage Log - ${day}\n\n`;
+    const time = firstSeen.toTimeString().slice(0, 8);
+    const row = "- `[" + time + "]` **" + tool + "** " + toolDetail(tool, input) + "\n";
+    fs.appendFileSync(log, header + row + (id ? marker + "\n" : ""));
+  });
+}
+
+module.exports = { saveClaudeEvent, backfillInputs, transcriptAnswer, readTranscript, humanInput, recentErrors, captureTool };
+if (require.main === module && process.argv[2] === "--recent-errors") {
+  console.log(recentErrors(process.argv[3]));
+} else if (require.main === module) {
   let input = ""; process.stdin.setEncoding("utf8");
   process.stdin.on("data", chunk => { input += chunk; });
   process.stdin.on("end", async () => {
     try {
       const payload = JSON.parse(input.replace(/^﻿+/, ""));
+      if (process.argv[2] === "--capture-tool") {
+        const root = require("./mnemo-project-root.js").resolveClaude(payload);
+        if (!root) return;
+        try { await captureTool(root, payload, process.argv[3]); }
+        catch (error) { warn(root, error.message); throw error; }
+        process.stdout.write(root);
+        return;
+      }
       const result = process.argv[3] === "backfill" ? await backfillInputs(process.argv[2], payload)
         : await saveClaudeEvent(process.argv[2], process.argv[3], payload);
       console.log(JSON.stringify(result));
       if (result.status === "pending" && process.env.MNEMO_STRICT === "1") process.exitCode = 1;
-    } catch (error) { warn(process.argv[2], error.message); console.error(error.message); process.exitCode = process.env.MNEMO_STRICT === "1" ? 1 : 0; }
+    } catch (error) {
+      if (process.argv[2] !== "--capture-tool") warn(process.argv[2], error.message);
+      console.error(error.message);
+      process.exitCode = process.env.MNEMO_STRICT === "1" ? 1 : 0;
+    }
   });
 }

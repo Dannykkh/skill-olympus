@@ -302,6 +302,40 @@ test('SessionStart reconcile reads CLAUDE_CONFIG_DIR and backfills missed user i
   for(const text of ['already saved prompt','lost mid-turn','lost queued prompt']) assert.equal(count(saved,`\n${text}\n`),1,text);
   if (hasPs) assert.equal(count(saved,'answer two'),1);
 });
+test('SessionStart recovery redacts private text per message in previews and saved history', t => {
+  const root = fixture(t);
+  const config = path.join(root, 'config');
+  const transcriptDir = path.join(config, 'projects', root.replace(/[\\/:]/g, '-').replace(/-{3,}/g, '--'));
+  fs.mkdirSync(transcriptDir, { recursive: true });
+  const transcript = path.join(transcriptDir, `${sid}.jsonl`);
+  writeLines(transcript, [
+    promptLine('u1', 'p1', 'question <PRIVATE>fixture-hidden-input\nstill private'),
+    answerLine('r1', 'answer <PrIvAtE>fixture-hidden-answer\nline</PRIVATE> after <private>fixture-hidden-tail'),
+    promptLine('u2', 'p2', 'next public question'),
+    answerLine('r2', 'next public answer'),
+    { type: 'system', subtype: 'stop_hook_summary' },
+  ]);
+  const original = fs.readFileSync(transcript);
+  const preview = reconcile(root, config, ['--all', '--dry-run', '--verbose']);
+  assert.equal(preview.status, 0, preview.stderr);
+  assert.match(preview.stdout, /answer \[PRIVATE\] after \[PRIVATE\]/);
+  assert.doesNotMatch(preview.stdout + preview.stderr, /fixture-hidden/);
+  assert.equal(history(root, 'claude'), '');
+
+  const recovered = reconcile(root, config, ['--all']);
+  assert.equal(recovered.status, 0, recovered.stderr);
+  const saved = history(root, 'claude');
+  assert.doesNotMatch(saved, /fixture-hidden|still private/);
+  const lines = saved.split(/\r?\n/);
+  for (const text of ['question [PRIVATE]', 'answer [PRIVATE] after [PRIVATE]', 'next public question', 'next public answer']) {
+    assert.ok(lines.includes(text), text);
+  }
+  const retry = reconcile(root, config, ['--all']);
+  assert.equal(retry.status, 0, retry.stderr);
+  assert.equal(history(root, 'claude'), saved);
+  assert.deepEqual(fs.readFileSync(transcript), original);
+});
+
 test('SessionStart reconcile treats a legacy User record with extra blank lines as saved, but not a prompt that only matches its start',t=>{
   const root=fixture(t),config=path.join(root,'config');
   let encoded=root.replace(/[\\/:]/g,'-'); while(encoded.includes('---')) encoded=encoded.replace('---','--');

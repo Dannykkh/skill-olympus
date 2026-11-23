@@ -516,6 +516,28 @@ class RootAndSanitizationTests(unittest.TestCase):
 
 
 class ConversationMergeTests(unittest.TestCase):
+    def test_invalid_base_preserves_live_history_and_previous_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp) / "conversations"
+            stage = Path(temp) / "stage"
+            base.mkdir()
+            stage.mkdir()
+            damaged = b'{"codex":false}'
+            (base / reconciler.INDEX_FILENAME).write_bytes(damaged)
+            name = "2026-11-23-codex.md"
+            (base / name).write_bytes(b"existing notes")
+            previous = {name: b"staged notes", "manifest.json": b"previous manifest",
+                        reconciler.INDEX_FILENAME: b'{}'}
+            for filename, body in previous.items():
+                (stage / filename).write_bytes(body)
+            with self.assertRaises(reconciler.IndexErrorDuringRecovery):
+                reconciler.reconcile_to_directory(reconciler.ScanResult(), base, "example")
+            with self.assertRaises(reconciler.IndexErrorDuringRecovery):
+                reconciler.copy_stage_base(base, stage)
+            self.assertEqual({p.name: p.read_bytes() for p in base.iterdir()},
+                             {name: b"existing notes", reconciler.INDEX_FILENAME: damaged})
+            self.assertEqual({p.name: p.read_bytes() for p in stage.iterdir()}, previous)
+
     def test_aborted_users_are_stored_without_assistant_and_indexed_separately_idempotently(self) -> None:
         aborted = reconciler.AbortedTurn(
             session_id="root-session",
@@ -523,7 +545,7 @@ class ConversationMergeTests(unittest.TestCase):
             started_at="2026-07-06T01:00:00Z",
             aborted_at="2026-07-06T01:00:03Z",
             user_messages=[
-                reconciler.Message("2026-07-06T01:00:00Z", "first aborted request <private>hide</private>"),
+                reconciler.Message("2026-07-06T01:00:00Z", "first aborted request <PrIvAtE>hide\nprivate tail"),
                 reconciler.Message("2026-07-06T01:00:02Z", "aborted follow-up"),
             ],
         )
@@ -539,6 +561,7 @@ class ConversationMergeTests(unittest.TestCase):
 
         self.assertEqual(first_bytes, staged.encode("utf-8"))
         self.assertIn("first aborted request [PRIVATE]", staged)
+        self.assertNotIn("private tail", staged)
         self.assertIn("> Follow-up at ", staged)
         self.assertIn("aborted follow-up", staged)
         self.assertIn("<!-- aborted-turn:turn-aborted-user-only -->", staged)

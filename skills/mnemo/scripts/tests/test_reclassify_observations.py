@@ -150,6 +150,48 @@ class ReclassifyTests(unittest.TestCase):
             self.assertEqual(lines[0], existing, "기존 learned 내용이 바뀌었습니다")
             self.assertEqual(len(lines), 2)
 
+    def test_interrupted_apply_resumes_once_and_keeps_later_appends(self):
+        # Stop a subprocess between file publications, including after both logs
+        # are finished. The next invocation must also repair the offset exactly once.
+        driver = """
+import os, runpy, sys
+from pathlib import Path
+script, root, stop = sys.argv[1:]
+sys.path.insert(0, str(Path(script).parent))
+sys.argv = [script, '--project-root', root, '--apply']
+replace, unlink = os.replace, Path.unlink
+def interrupt_replace(src, dst):
+    if stop != '.mnemo-reclassify.pending' and Path(dst) == Path(root) / 'memory' / stop:
+        os._exit(79)
+    return replace(src, dst)
+def interrupt_unlink(path, *args, **kwargs):
+    if path == Path(root) / 'memory' / stop:
+        os._exit(79)
+    return unlink(path, *args, **kwargs)
+os.replace, Path.unlink = interrupt_replace, interrupt_unlink
+runpy.run_path(script, run_name='__main__')
+"""
+        for stop in ("gotchas/observations.jsonl", ".mnemo-distill-offset", ".mnemo-reclassify.pending"):
+            with self.subTest(stop=stop), tempfile.TemporaryDirectory() as temp:
+                move = obs("Edit", "edited", is_error=False)
+                keep = obs("Bash", "fatal: keep")
+                project = self.make_project(temp, [move, keep, move], offset="2 1 42").resolve()
+                interrupted = subprocess.run([sys.executable, "-B", "-c", driver, str(SCRIPT), str(project), stop],
+                                             capture_output=True, timeout=30)
+                self.assertEqual(interrupted.returncode, 79, interrupted.stderr)
+                g = project / "memory/gotchas/observations.jsonl"
+                l = project / "memory/learned/observations.jsonl"
+                for dest, line in ((g, keep), (l, obs("Read", "later", event="tool_success"))):
+                    with dest.open("ab") as handle:
+                        handle.write((line + "\n").encode())
+                for _ in range(2):
+                    result = self.run_tool(project, "--apply")
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.lines(g), [keep, keep])
+                self.assertEqual([json.loads(row)["output"] for row in self.lines(l)], ["edited", "edited", "later"])
+                self.assertEqual((project / "memory/.mnemo-distill-offset").read_text(), "0 3 42")
+                self.assertFalse((project / "memory/.mnemo-reclassify.pending").exists())
+
     def test_distillation_delta_is_unchanged_by_the_move(self):
         """이동은 두 파일 사이의 재배치다. 새 관찰이 쏟아진 것처럼 보이면 안 된다."""
         with tempfile.TemporaryDirectory() as temp:

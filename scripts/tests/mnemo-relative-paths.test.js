@@ -78,15 +78,7 @@ test("pwsh: 경로 필드만 루트 기준 상대경로로 바꾼다", () => {
   }
 });
 
-test("훅은 상대화한 사본으로 toollog와 관찰 로그를 쓴다", () => {
-  const sh = fs.readFileSync(path.join(repo, "hooks/save-tool-use.sh"), "utf8");
-  assert.match(sh, /TOOL_INPUT_JSON=\$\(echo "\$INPUT" \| jq -c --arg root "\$PROJECT_ROOT"/,
-    "save-tool-use.sh가 루트 확정 직후 tool_input을 상대화하지 않습니다");
-  assert.ok(!sh.includes("jq -r '.tool_input."), "toollog 상세가 원본 tool_input(절대경로)을 읽습니다");
-  assert.match(sh, /TOOL_INPUT_STR=\$\(printf '%s' "\$TOOL_INPUT_JSON"/, "관찰 로그 input이 상대화 사본을 쓰지 않습니다");
-  const ps = fs.readFileSync(path.join(repo, "hooks/save-tool-use.ps1"), "utf8");
-  assert.match(ps, /\$toolInput = ConvertTo-MnemoRelativeInput -ToolInput \$toolInput -Root \$ProjectRoot/,
-    "save-tool-use.ps1가 루트 확정 직후 tool_input을 상대화하지 않습니다");
+test("핸드오프 프로젝트 헤더에 프로젝트 이름을 기록한다", () => {
   const handoff = fs.readFileSync(path.join(repo, "skills/mnemo/scripts/create_handoff.py"), "utf8");
   assert.ok(handoff.includes("- Project: {project_root.name}") && !handoff.includes("- Project: {project_path}"),
     "핸드오프 Project: 헤더가 절대경로로 되돌아갔습니다");

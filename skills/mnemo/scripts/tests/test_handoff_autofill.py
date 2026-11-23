@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1]
@@ -100,6 +100,8 @@ class HandoffAutofillTests(unittest.TestCase):
                 # 절대경로로 남은 옛 기록도 루트 기준으로 정규화되어야 한다.
                 {"tool": "Write", "timestamp": f"{TODAY}T09:25:00", "session": "s1",
                  "input": {"file_path": str(root / "hooks" / "save-turn.sh")}},
+                {"tool": "NotebookEdit", "timestamp": f"{TODAY}T09:27:00", "session": "s1",
+                 "input": {"notebook_path": "notebooks/분석.ipynb"}},
                 # 어제 것은 이번 세션이 아니다.
                 {"tool": "Edit", "timestamp": "2020-01-01T09:00:00", "session": "old",
                  "input": json.dumps({"file_path": "skills/old/thing.py"})},
@@ -112,8 +114,42 @@ class HandoffAutofillTests(unittest.TestCase):
             text = self.scaffold(root, "observed")
             self.assertIn("skills/mnemo/scripts/create_handoff.py", text)
             self.assertIn("hooks/save-turn.sh", text)
+            self.assertIn("| notebooks/분석.ipynb |", text)
             self.assertNotIn("skills/old/thing.py", text)
             self.assertNotIn("skills/mnemo/SKILL.md", text)
+
+    def test_observed_edits_use_local_calendar_day_across_source_time_zones(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from create_handoff import observed_files
+        start = datetime(2026, 11, 23).astimezone()
+        end = datetime(2026, 11, 24).astimezone()
+        west = timezone(-timedelta(hours=12))
+        east = timezone(timedelta(hours=14))
+        def utc_stamp(value):
+            return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+        cases = {
+            "before": utc_stamp(start - timedelta(seconds=1)),
+            "start-utc": utc_stamp(start),
+            "start-west": start.astimezone(west).isoformat(),
+            "end-east": (end - timedelta(seconds=1)).astimezone(east).isoformat(),
+            "next-day": end.astimezone(west).isoformat(),
+            "local-time": "2026-11-23T00:03:04.123",
+            "date-only": "2026-11-23",
+            "bad-time": "2026-11-23garbage",
+            "bad-type": None,
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.project(temp)
+            log = root / "memory/learned/observations.jsonl"
+            log.parent.mkdir(parents=True)
+            records = [json.dumps({"tool": "NotebookEdit", "timestamp": timestamp, "session": "same",
+                                   "input": {"notebook_path": f"{name}.ipynb"}})
+                       for name, timestamp in cases.items()]
+            log.write_text("\n".join(["{invalid", "[]", *records]), encoding="utf-8")
+            self.assertCountEqual(["start-utc.ipynb", "start-west.ipynb", "end-east.ipynb",
+                                   "local-time.ipynb", "date-only.ipynb"],
+                                  observed_files(root, "2026-11-23", "same"))
 
     def test_entries_anchored_on_touched_files_are_offered_as_supersede_candidates(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -135,7 +171,15 @@ class HandoffAutofillTests(unittest.TestCase):
             # 후보는 대체를 주장하지 않는다.
             self.assertIn("무관하면 그대로 둡니다", text)
             # 결정 표에 대체 대상 칸이 있어야 후보를 적을 자리가 생긴다.
-            self.assertIn("대체 대상", text)
+            header = "| Decision | Options Considered | Rationale | 대체 대상 |"
+            self.assertIn(header, text)
+            template = (SCRIPTS.parent / "references/handoff-template.md").read_text(encoding="utf-8")
+            self.assertIn(header, template)
+            sys.path.insert(0, str(SCRIPTS))
+            from validate_handoff import decision_rows
+            self.assertEqual(["none"], [row["supersedes"] for row in decision_rows(template)])
+            legacy = "### Decisions Made\n| Decision | Options Considered | Rationale |\n| Keep X | X, Y | Reason |"
+            self.assertEqual([{"decision": "Keep X", "supersedes": ""}], decision_rows(legacy))
 
     def test_memory_and_handoff_files_are_not_supersede_candidates(self):
         """기억·핸드오프 자신을 고친 것은 결정의 근거가 아니다 — 계보 수확기와 같은 기준."""

@@ -46,7 +46,8 @@ function makeInstall() {
   fs.mkdirSync(hooks, { recursive: true });
   fs.mkdirSync(project);
   fs.writeFileSync(path.join(project, ".mnemo-root"), "");
-  for (const name of ["reconcile-conversations.ps1", "reconcile-conversations.sh", "mnemo-project-root.js"]) {
+  for (const name of ["reconcile-conversations.ps1", "reconcile-conversations.sh", "mnemo-project-root.js",
+    "mnemo-record-store.js", "claude-event-store.js"]) {
     fs.copyFileSync(path.join(repoRoot, "hooks", name), path.join(hooks, name));
   }
   // 설치기가 하는 일: 저장소 위치를 상태 폴더에 남긴다

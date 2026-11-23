@@ -97,6 +97,26 @@ class HandoffOriginTests(unittest.TestCase):
             result = self.validate(doc)
             self.assertNotIn("Origin", result.stdout)
 
+    def test_empty_required_section_stops_at_its_sibling(self):
+        with tempfile.TemporaryDirectory() as temp:
+            doc = self.write_handoff(temp, origin=ORIGIN, feature=True)
+            text = doc.read_text(encoding="utf-8")
+            start = text.index("### Implemented Features")
+            end = text.index("### Composition Diagram", start)
+            doc.write_text(text[:start] + "### Implemented Features\n\n" + text[end:], encoding="utf-8")
+            result = self.validate(doc)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn("Implemented Features (incomplete)", result.stdout)
+
+    def test_required_parent_counts_nested_content_and_ignores_fenced_headings(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from validate_handoff import check_required_sections
+        doc = ("#### Origin\n##### Details\n" + "x" * 55
+               + "\n```md\n#### Important Context\n```\n#### Next\n[TODO: unrelated]")
+        self.assertEqual((True, []), check_required_sections(doc, ["Origin"]))
+        self.assertEqual((False, ["Important Context (missing)"]),
+                         check_required_sections(doc, ["Important Context"]))
+
     def test_unfilled_origin_placeholder_does_not_count_as_filled(self):
         with tempfile.TemporaryDirectory() as temp:
             placeholder = ("## Origin\n\n| 항목 | 내용 |\n|---|---|\n"

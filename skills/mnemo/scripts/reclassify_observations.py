@@ -23,11 +23,14 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import sys
 from collections import Counter
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from tempfile import mkstemp
 
 from mnemo_project_root import detect_project_root
 
@@ -102,12 +105,10 @@ def is_real_failure(record: dict) -> bool:
     return True
 
 
-def split_observations(path: Path) -> tuple:
+def split_observations(contents: bytes) -> tuple:
     """옮길 줄과 남길 줄을 가른다. 파싱 못 한 줄은 손대지 않고 남긴다."""
     keep, move, unparsed = [], [], 0
-    if not path.is_file():
-        return keep, move, unparsed
-    for line in path.read_bytes().splitlines(keepends=True):
+    for line in contents.splitlines(keepends=True):
         if not line.strip():
             keep.append(line)
             continue
@@ -131,13 +132,52 @@ def split_observations(path: Path) -> tuple:
     return keep, move, unparsed
 
 
-def read_offset(path: Path) -> list:
-    """'<gotchas줄수> <learned줄수> <기준시각>' 형식. delta 임계 판정의 기준값이다."""
+def file_contents(path: Path) -> bytes:
     try:
-        parts = path.read_text(encoding="utf-8", errors="replace").split()
-        return [int(parts[0]), int(parts[1]), int(parts[2])] if len(parts) >= 3 else None
-    except (OSError, ValueError):
-        return None
+        return path.read_bytes()
+    except FileNotFoundError:
+        return b""
+
+
+def publish(path: Path, contents: bytes, expected: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = mkstemp(dir=path.parent, prefix=".reclassify-")
+    temporary = Path(name)
+    try:
+        with os.fdopen(fd, "wb") as temp:
+            temp.write(contents)
+            temp.flush()
+            os.fsync(temp.fileno())
+        if file_contents(path) != expected:
+            raise ValueError(f"기록이 변경됐습니다. --apply로 다시 실행하세요: {path}")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+@contextmanager
+def apply_lock(memory: Path):
+    # 프로세스가 중단돼도 OS가 잠금을 해제한다. 같은 파일을 잠그도록 잠금 파일은 유지한다.
+    with (memory / ".mnemo-reclassify.lock").open("a+b") as handle:
+        handle.seek(0)
+        if os.name == "nt":
+            import msvcrt
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
+def publish_log(path: Path, before: bytes, after: bytes) -> None:
+    # 중단 전 이미 반영한 파일은 그대로 둔다. 그 이후 훅이 추가한 줄도 살린다.
+    current = file_contents(path)
+    for prefix in sorted((before, after), key=len, reverse=True):
+        if current.startswith(prefix):
+            if prefix != after:
+                publish(path, after + current[len(before):], current)
+            return
+    raise ValueError(f"관찰 로그가 백업과 다르게 변경됐습니다: {path}")
 
 
 def main():
@@ -154,15 +194,40 @@ def main():
         print(f"[ERROR] 프로젝트 루트를 확인하지 못했습니다: {error}")
         sys.exit(2)
 
-    gotchas = root / "memory" / "gotchas" / "observations.jsonl"
-    learned = root / "memory" / "learned" / "observations.jsonl"
+    memory = root / "memory"
+    try:
+        if args.apply and ((memory / "gotchas" / "observations.jsonl").is_file()
+                           or (memory / ".mnemo-reclassify.pending").is_file()):
+            with apply_lock(memory):
+                reclassify(root, apply=True)
+        else:
+            reclassify(root, apply=False)
+    except (OSError, ValueError) as error:
+        print(f"[ERROR] {error}", file=sys.stderr)
+        sys.exit(1)
 
-    if not gotchas.is_file():
+
+def reclassify(root: Path, *, apply: bool) -> None:
+    memory = root / "memory"
+    gotchas = memory / "gotchas" / "observations.jsonl"
+    learned = memory / "learned" / "observations.jsonl"
+    offset_path = memory / ".mnemo-distill-offset"
+    pending = memory / ".mnemo-reclassify.pending"
+    resuming = pending.is_file()
+    stamp = pending.read_text(encoding="ascii") if resuming else datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    if not re.fullmatch(r"[0-9]{8}-[0-9]{6}-[0-9]{6}", stamp):
+        raise ValueError(f"재분류 진행 기록의 형식이 잘못됐습니다: {pending}")
+
+    def backup(path: Path) -> Path:
+        return path.with_name(f"{path.name}.bak-{stamp}")
+
+    if not gotchas.is_file() and not resuming:
         print(f"[INFO] 관찰 로그가 없습니다: {gotchas}")
         print("       이 프로젝트에는 옮길 것이 없습니다.")
-        sys.exit(0)
+        return
 
-    keep, move, unparsed = split_observations(gotchas)
+    original = (backup(gotchas) if resuming else gotchas).read_bytes()
+    keep, move, unparsed = split_observations(original)
     tools = Counter(json.loads(line).get("tool") or "?" for line in move)
 
     print(f"[INFO] 프로젝트: {root}")
@@ -176,48 +241,45 @@ def main():
 
     if not move:
         print("\n[PASS] 성공 근거가 확인된 이동 대상이 없습니다. 남은 관찰의 정확성을 보증하지 않습니다.")
-        sys.exit(0)
+        return
 
-    if not args.apply:
+    if not apply:
         print("\n[DRY-RUN] 아무것도 바꾸지 않았습니다. 실제로 옮기려면 --apply 를 붙이세요.")
-        print("          --apply 는 옮기기 전에 두 파일의 백업을 만듭니다.")
-        sys.exit(0)
+        print("          --apply 는 두 관찰 로그와 정제 기준값을 먼저 백업합니다.")
+        return
 
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-    # 백업은 *.jsonl 이 아닌 이름으로 둔다. 수확·정제가 다시 읽으면 안 된다.
-    backups = []
-    for source in (gotchas, learned):
-        if source.is_file():
-            backup = source.with_name(f"{source.name}.bak-{stamp}")
-            backup.write_bytes(source.read_bytes())
-            backups.append(backup)
+    paths = (gotchas, learned, offset_path)
+    if not resuming:
+        for source in paths:
+            snapshot = backup(source)
+            snapshot.parent.mkdir(parents=True, exist_ok=True)
+            with snapshot.open("xb") as handle:
+                handle.write(original if source == gotchas else file_contents(source))
+                handle.flush()
+                os.fsync(handle.fileno())
+        publish(pending, stamp.encode("ascii"), b"")
 
-    # learned 에는 append 한다. 기존 내용은 바이트 그대로 보존된다.
-    learned.parent.mkdir(parents=True, exist_ok=True)
-    existing = learned.read_bytes() if learned.is_file() else b""
-    with learned.open("ab") as handle:
-        if existing and not existing.endswith((b"\n", b"\r")):
-            handle.write(b"\n")
-        for line in move:
-            handle.write((line + "\n").encode("utf-8"))
+    existing = backup(learned).read_bytes()
+    separator = b"\n" if existing and not existing.endswith((b"\n", b"\r")) else b""
+    publish_log(learned, existing, existing + separator + ("\n".join(move) + "\n").encode("utf-8"))
+    publish_log(gotchas, original, b"".join(keep))
 
-    gotchas.write_bytes(b"".join(keep))
-
-    # 정제 임계는 두 파일 증가분의 '합'으로 계산되므로 이동은 본래 합을 바꾸지 않는다.
-    # 그래도 파일별 기준값을 같이 옮겨 각 숫자가 실제 줄 수와 맞게 유지한다.
-    offset_path = root / "memory" / ".mnemo-distill-offset"
-    offset = read_offset(offset_path)
-    if offset:
-        offset[0] -= len(move)
-        offset[1] = offset[1] + len(move)
-        offset_path.write_text(" ".join(str(v) for v in offset), encoding="utf-8")
+    old_offset = backup(offset_path).read_bytes()
+    try:
+        g, l, timestamp = map(int, old_offset.split()[:3])
+    except ValueError:
+        pass  # 이전 버전과 같이 기준값이 없거나 읽을 수 없으면 보존한다.
+    else:
+        updated = f"{g - len(move)} {l + len(move)} {timestamp}".encode("ascii")
+        if file_contents(offset_path) != updated:
+            publish(offset_path, updated, old_offset)
         print(f"\n[INFO] distill 기준값 보정: gotchas -{len(move)} / learned +{len(move)} (합 불변)")
 
+    pending.unlink()
     print(f"\n[DONE] {len(move)}줄을 learned로 옮겼습니다.")
-    for backup in backups:
-        print(f"       백업: {backup.relative_to(root).as_posix()}")
+    for source in paths:
+        print(f"       백업: {backup(source).relative_to(root).as_posix()}")
     print("       되돌리려면 백업을 원래 이름으로 복사하면 됩니다.")
-    sys.exit(0)
 
 
 if __name__ == "__main__":

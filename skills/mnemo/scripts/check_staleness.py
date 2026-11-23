@@ -20,6 +20,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from mnemo_markdown import without_fences
 from mnemo_project_root import detect_project_root
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
@@ -83,13 +84,37 @@ def parse_handoff_metadata(filepath: str) -> dict:
     if match:
         metadata["project_path"] = match.group(1).strip()
 
-    # Parse modified files from table
-    table_matches = re.findall(r'\|\s*([a-zA-Z0-9_\-./]+\.[a-zA-Z]+)\s*\|', content)
-    for f in table_matches:
-        if '/' in f and not f.startswith('['):
-            metadata["modified_files"].append(f)
+    metadata["modified_files"] = referenced_table_files(content)
 
     return metadata
+
+
+def referenced_table_files(content: str) -> list[str]:
+    """Read file columns, retaining nested paths from older unnamed tables."""
+    files: dict[str, None] = {}
+    file_column = None
+    for line in without_fences(content).splitlines():
+        if not line.lstrip().startswith('|'):
+            file_column = None
+            continue
+        cells = [cell.strip() for cell in line.strip().strip('|').split('|')]
+        header = next((i for i, c in enumerate(cells) if c.casefold() in {'file', 'path', '파일', '경로'}), None)
+        if header is not None:
+            file_column = header
+            continue
+        for i, cell in enumerate(cells):
+            if file_column is not None and i != file_column:
+                continue
+            # Older tables group several files or annotate a quoted file with prose.
+            paths = re.findall(r'`([^`]+)`', cell) or re.split(r',\s+|\s+/\s+', cell)
+            for raw in paths:
+                path = raw.strip().replace('\\', '/')
+                if i != file_column and '/' not in path:
+                    continue
+                if '..' in path.split('/') or not re.fullmatch(r'(?:[\w.@+() -]+/)*[\w.@+() -]*\.[\w-]+', path):
+                    continue
+                files[path] = None
+    return list(files)
 
 
 def resolve_project_path(handoff: Path, declared: str | None) -> str:
@@ -138,21 +163,18 @@ def get_changed_files_since(timestamp: datetime, project_path: str) -> list[str]
 
     iso_time = timestamp.strftime("%Y-%m-%dT%H:%M:%S")
     success, output = run_cmd(
-        ["git", "diff", "--name-only", f"--since={iso_time}", "HEAD"],
+        ["git", "diff", "--name-only", "-z", "HEAD"],
         cwd=project_path
     )
-
-    # Fallback: get files changed in commits since timestamp
-    if not output:
-        success, output = run_cmd(
-            ["git", "log", f"--since={iso_time}", "--name-only", "--pretty=format:"],
-            cwd=project_path
-        )
-
-    if success and output:
-        files = [f.strip() for f in output.split("\n") if f.strip()]
-        return list(set(files))  # Deduplicate
-    return []
+    files = set(output.split('\0')) if success else set()
+    success, output = run_cmd(
+        ["git", "log", f"--since={iso_time}", "--name-only", "-z", "--format="],
+        cwd=project_path
+    )
+    if success:
+        files.update(output.split('\0'))
+    files.discard('')
+    return sorted(files)
 
 
 def check_files_exist(files: list[str], project_path: str) -> tuple[list[str], list[str]]:

@@ -6,10 +6,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 from mnemo_project_root import detect_project_root
+from check_staleness import check_staleness, get_changed_files_since
+from validate_handoff import check_file_references
 
 
 class HandoffRootTests(unittest.TestCase):
@@ -59,6 +62,44 @@ class HandoffRootTests(unittest.TestCase):
                 self.assertEqual("", checked.stderr)
                 self.assertIn(f"Project: {project.resolve()}", checked.stdout)
                 self.assertNotIn(f"Project: {declared}\n", checked.stdout.replace(str(project.resolve()), ""))
+
+    def test_git_handoff_retains_root_and_unicode_filenames_through_staleness_check(self):
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp)
+            def git(*args):
+                subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@localhost", *args],
+                               cwd=project, check=True, capture_output=True)
+
+            git("init", "-q")
+            files = ["README.md", "src/한글 파일.py", "src/단계.py"]
+            (project / "src").mkdir()
+            for name in files:
+                (project / name).write_text("original\n", encoding="utf-8")
+            git("add", ".")
+            git("commit", "-qm", "initial")
+            for name in files:
+                (project / name).write_text("changed\n", encoding="utf-8")
+            git("add", "--", files[2])
+            result = self.invoke("create_handoff.py", project, "localized-files")
+            self.assertEqual(0, result.returncode, result.stderr)
+            doc, = (project / "docs/handoffs").glob("*.md")
+            content = doc.read_text(encoding="utf-8")
+            for name in files:
+                self.assertIn(f"| {name} |", content)
+
+            # Backtick-quoted paths from older handoffs and a sample table in a code fence.
+            content = content.replace(f"| {files[2]} |", f"| `{files[2]}` |")
+            doc.write_text(content + "\n```md\n| File | Changes |\n| absent/example.py | demo |\n```\n",
+                           encoding="utf-8")
+            for name in files[:2]:
+                (project / name).unlink()
+            state = check_staleness(str(doc))
+            self.assertCountEqual(files[:2], state["referenced_files_missing"])
+            self.assertEqual(1, state["referenced_files_exist"])
+            _, missing = check_file_references(doc.read_text(encoding="utf-8"), str(project))
+            self.assertCountEqual(files[:2], missing)
+            git("commit", "-qm", "staged file")
+            self.assertCountEqual(files, get_changed_files_since(datetime.now() - timedelta(minutes=2), str(project)))
 
     def test_unknown_cwd_requires_explicit_project_and_marker_survives_move(self):
         with tempfile.TemporaryDirectory() as temp:

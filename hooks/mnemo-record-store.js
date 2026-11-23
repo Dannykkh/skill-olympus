@@ -8,7 +8,7 @@ const crypto = require("node:crypto");
 const { setTimeout: pause } = require("node:timers/promises");
 const { storageSafe } = require("./mnemo-project-root.js");
 const hash = value => crypto.createHash("sha256").update(value).digest("hex");
-const redact = value => String(value || "").replace(/<private>[\s\S]*?<\/private>/gi, "[PRIVATE]").trim();
+const redact = value => String(value || "").replace(/<private>[\s\S]*?(?:<\/private>|$)/gi, "[PRIVATE]").trim();
 const runtimes = new Set(["claude", "codex", "grok", "antigravity", "devin"]);
 
 // Windows는 다른 프로세스가 대상 파일을 열어 둔 동안 덮어쓰는 rename을 EPERM 등으로 거부한다.
@@ -26,13 +26,19 @@ function replaceFile(from, to) {
   }
 }
 
-function atomicJson(file, value) {
+function atomicWrite(file, contents) {
   const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
   const fd = fs.openSync(temporary, "wx", 0o600);
-  try { fs.writeFileSync(fd, JSON.stringify(value, null, 2) + "\n"); fs.fsyncSync(fd); }
-  finally { fs.closeSync(fd); }
-  try { replaceFile(temporary, file); }
+  try {
+    try { fs.writeFileSync(fd, contents); fs.fsyncSync(fd); }
+    finally { fs.closeSync(fd); }
+    replaceFile(temporary, file);
+  }
   finally { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); }
+}
+
+function atomicJson(file, value) {
+  atomicWrite(file, JSON.stringify(value, null, 2) + "\n");
 }
 
 function record(root, runtime, identity, parts, options = {}) {
@@ -157,6 +163,12 @@ function acquire(dir) {
   catch (error) { fs.rmdirSync(dir); throw error; }
 }
 
+async function withWriteLock(dir, action) {
+  const lock = path.join(dir, ".mnemo-write.lock");
+  await retry(() => acquire(lock), Date.now() + 8000, true);
+  try { return await action(); } finally { clearLock(lock); }
+}
+
 function journal(root) {
   if (!path.isAbsolute(root)) throw new Error("Unsafe Mnemo storage");
   root = fs.realpathSync.native(root);
@@ -192,9 +204,7 @@ function journal(root) {
       return { results, error: errors.join("; ") };
     },
     async locked(action) {
-      const lock = path.join(dir, ".mnemo-write.lock");
-      await retry(() => acquire(lock), Date.now() + 8000, true);
-      try { return await action(this); } finally { clearLock(lock); }
+      return withWriteLock(dir, () => action(this));
     },
     confirmed(entry) {
       const names = entry.globalIdentity ? fs.readdirSync(dir).filter(name => name.endsWith(`-${entry.runtime}.md`))
@@ -227,3 +237,38 @@ async function storeRecords(root, entries) {
 }
 
 module.exports = { record, journal, storeRecords, atomicJson, redact, hash };
+
+// Recovery supplies the exact UTF-8 bytes it validated and the digest of its input.
+// Compare under the live journal lock so a newer index survives a concurrent recovery.
+async function commitRecoveryIndex(dir, expected) {
+  const contents = fs.readFileSync(0);
+  let index;
+  try { index = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(contents)); }
+  catch { throw new Error("invalid recovery index"); }
+  const isMap = value => value !== null && typeof value === "object" && !Array.isArray(value);
+  if (!isMap(index) || index.version !== 1 || !isMap(index.claude)) throw new Error("invalid recovery index");
+  for (const key of ["claude", "codex", "codex_aborted"]) {
+    if (!(key in index)) continue;
+    if (!isMap(index[key]) || !Object.values(index[key]).every(ids => Array.isArray(ids) && ids.every(id => typeof id === "string"))) {
+      throw new Error("invalid recovery index entries");
+    }
+  }
+  await withWriteLock(dir, () => {
+    const file = path.join(dir, ".mnemo-index.json");
+    const info = fs.lstatSync(file, { throwIfNoEntry: false });
+    if (info && !info.isFile()) throw new Error("index is not a regular file");
+    if ((info ? hash(fs.readFileSync(file)) : "missing") !== expected) {
+      throw new Error("index changed during recovery; retry");
+    }
+    atomicWrite(file, contents);
+  });
+}
+
+if (require.main === module) {
+  const [command, dir, expected] = process.argv.slice(2);
+  if (command !== "commit-index" || !dir || !path.isAbsolute(dir) || !/^(missing|[a-f0-9]{64})$/.test(expected ?? "")) {
+    process.exitCode = 2;
+  } else {
+    commitRecoveryIndex(dir, expected).catch(error => { console.error(error.message); process.exitCode = 1; });
+  }
+}

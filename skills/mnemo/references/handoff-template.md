@@ -155,9 +155,12 @@ flowchart LR
 
 ### Decisions Made
 
-| Decision | Options Considered | Rationale |
-|----------|-------------------|-----------|
-| Chose X over Y | X, Y, Z | Why X was chosen |
+`대체 대상`에는 이 결정이 뒤집은 기억 항목을 `[[NNN-slug]]`로 적는다. 대상이 없으면
+`none`을 적는다. 대체한 기억 항목에는 `SUPERSEDED`, `superseded-by`와 변경 이유를 남긴다.
+
+| Decision | Options Considered | Rationale | 대체 대상 |
+|----------|-------------------|-----------|-----------|
+| Chose X over Y | X, Y, Z | Why X was chosen | none |
 
 ## Pending Work
 

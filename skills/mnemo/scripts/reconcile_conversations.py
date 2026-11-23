@@ -67,7 +67,6 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ---------- config ----------
 
-INDEX_FILENAME = ".mnemo-index.json"
 CONV_FILENAME_TEMPLATE = "{date}-claude.md"
 FINGERPRINT_LEN = 80  # matches save-response.ps1/.sh fingerprint length
 # 이 시간 안에 바뀐 원본의 마지막 열린 턴은 아직 진행 중일 수 있어 복구하지 않는다.
@@ -123,6 +122,8 @@ _mnemo_module_dir = Path(__file__).resolve().parent
 if not (_mnemo_module_dir / "mnemo_project_root.py").is_file():
     _mnemo_module_dir = Path(__file__).resolve().parents[2] / "mnemo" / "scripts"
 sys.path.insert(0, str(_mnemo_module_dir))
+from mnemo_index import INDEX_FILENAME, load_index, save_index
+from mnemo_markdown import PRIVATE
 from mnemo_project_root import detect_project_root, validate_project_root
 
 
@@ -415,51 +416,11 @@ def append_turn(conv_path: Path, turn: AssistantTurn) -> None:
 
 
 def redact_private(text: str) -> str:
-    """Replace <private>...</private> blocks with [PRIVATE]."""
-    import re
-    return re.sub(r"<private>.*?</private>", "[PRIVATE]", text, flags=re.DOTALL)
+    """Hide each private span, including an unfinished span at the end of a message."""
+    return PRIVATE.sub("[PRIVATE]", text)
 
 
 # ---------- sidecar index ----------
-
-def load_index(conv_dir: Path) -> dict:
-    """
-    Load conversations/.mnemo-index.json.
-    Schema:
-      {
-        "version": 1,
-        "claude": { "YYYY-MM-DD": [uuid, uuid, ...] }
-      }
-    """
-    path = conv_dir / INDEX_FILENAME
-    if not path.exists():
-        return {"version": 1, "claude": {}}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return {"version": 1, "claude": {}}
-        data.setdefault("version", 1)
-        data.setdefault("claude", {})
-        return data
-    except (json.JSONDecodeError, OSError):
-        return {"version": 1, "claude": {}}
-
-
-def save_index(conv_dir: Path, index: dict) -> None:
-    path = conv_dir / INDEX_FILENAME
-    conv_dir.mkdir(parents=True, exist_ok=True)
-    # 내용이 같으면 쓰지 않는다. Codex 복구 스크립트·저장 훅이 같은 파일을 다른 형식으로 쓰므로
-    # 글자가 아니라 JSON 값으로 비교한다 — 세션 시작마다 수정 시각만 바뀌는 일을 막는다.
-    try:
-        if json.loads(path.read_text(encoding="utf-8")) == index:
-            return
-    except (OSError, ValueError):
-        pass
-    path.write_text(
-        json.dumps(index, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
 
 def is_indexed(index: dict, date: str, uuid: str) -> bool:
     return uuid in set(index.get("claude", {}).get(date, []))
@@ -499,6 +460,7 @@ def reconcile(
     stats = ReconcileStats()
     conv_dir = project_root / "conversations"
 
+    index = load_index(conv_dir)
     transcript_dirs = find_transcript_dirs(project_root)
     if not transcript_dirs:
         if verbose:
@@ -511,8 +473,6 @@ def reconcile(
             dirs = ", ".join(str(d) for d in transcript_dirs)
             print(f"[mnemo] no JSONL files in the window under {dirs}", file=sys.stderr)
         return stats
-
-    index = load_index(conv_dir)
 
     # Collect all turns from all transcripts, filter by date, dedup by uuid.
     all_turns: list[AssistantTurn] = []
@@ -560,7 +520,7 @@ def reconcile(
             stats.newly_written += 1
             stats.dates_touched.add(turn.local_date)
             if verbose:
-                preview = turn.text[:60].replace("\n", " ")
+                preview = redact_private(turn.text)[:60].replace("\n", " ")
                 print(f"[dry-run] would append {turn.local_date} {turn.local_time} {preview}")
             continue
 

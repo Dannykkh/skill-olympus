@@ -23,7 +23,9 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from check_staleness import referenced_table_files
 from create_handoff import SESSION_ID, observed_files
+from mnemo_markdown import headings
 
 # Windows에서 print()가 한글을 cp949로 출력하다 깨지는 것을 방지.
 if hasattr(sys.stdout, "reconfigure"):
@@ -129,22 +131,19 @@ def is_feature_session(content: str) -> bool:
 def check_required_sections(content: str, required_sections: list) -> tuple[bool, list[str]]:
     """Check that required sections exist and have content."""
     missing = []
+    outline = headings(content)
     for section in required_sections:
-        # Look for section header
-        pattern = rf'(?:^|\n)#{{1,6}}\s*{re.escape(section)}'
-        match = re.search(pattern, content, re.IGNORECASE)
-        if not match:
-            missing.append(f"{section} (missing)")
-        else:
-            # Check if section has meaningful content (not just placeholder)
-            section_start = match.end()
-            next_section = re.search(r'\n##?\s+', content[section_start:])
-            section_end = section_start + next_section.start() if next_section else len(content)
-            section_content = content[section_start:section_end].strip()
-
+        for i, (start, level, title) in enumerate(outline):
+            if not re.match(rf'{re.escape(section)}\b', title, re.I):
+                continue
+            end = next((offset for offset, depth, _ in outline[i + 1:] if depth <= level), len(content))
+            section_content = content[start:end].partition('\n')[2].strip()
             # 50 chars minimum: roughly 1-2 sentences, enough to convey meaningful context
             if len(section_content) < 50 or '[TODO' in section_content:
                 missing.append(f"{section} (incomplete)")
+            break
+        else:
+            missing.append(f"{section} (missing)")
 
     return len(missing) == 0, missing
 
@@ -171,18 +170,13 @@ def scan_for_secrets(content: str) -> list[tuple[str, str]]:
 
 def check_file_references(content: str, base_path: str) -> tuple[list[str], list[str]]:
     """Check if referenced files exist."""
-    # Extract file paths from content (look for common patterns)
-    # Pattern 1: | path/to/file | in tables
-    # Pattern 2: `path/to/file` in code
-    # Pattern 3: path/to/file:123 with line numbers
-
+    found_files = set(referenced_table_files(content))
+    # Inline code and line references also occur outside file tables.
     patterns = [
-        r'\|\s*([a-zA-Z0-9_\-./]+\.[a-zA-Z]+)\s*\|',  # Table cells
         r'`([a-zA-Z0-9_\-./]+\.[a-zA-Z]+(?::\d+)?)`',  # Inline code
         r'(?:^|\s)([a-zA-Z0-9_\-./]+\.[a-zA-Z]+:\d+)',  # With line numbers
     ]
 
-    found_files = set()
     for pattern in patterns:
         matches = re.findall(pattern, content)
         for match in matches:

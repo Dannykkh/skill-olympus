@@ -157,12 +157,7 @@ fi
 # 세션 시작 시 누적된 에러 수를 안내 (최근 24시간)
 ERR_LOG="$PROJECT_ROOT/.claude/mnemo-errors.log"
 if [ -f "$ERR_LOG" ]; then
-    RECENT_COUNT=$(awk -v cutoff="$(date -d '24 hours ago' '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date -v-24H '+%Y-%m-%d %H:%M:%S' 2>/dev/null)" '
-        match($0, /^\[([0-9-]+ [0-9:]+)\]/, m) {
-            if (cutoff == "" || m[1] >= cutoff) count++
-        }
-        END { print count+0 }
-    ' "$ERR_LOG" 2>/dev/null)
+    RECENT_COUNT=$(node "$HOOK_DIR/claude-event-store.js" --recent-errors "$ERR_LOG" 2>/dev/null)
     if [ -n "$RECENT_COUNT" ] && [ "$RECENT_COUNT" -gt 0 ]; then
         add_notice "[mnemo] 최근 24시간 내 mnemo 에러 ${RECENT_COUNT}건 (.claude/mnemo-errors.log 확인)"
     fi

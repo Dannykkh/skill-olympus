@@ -154,6 +154,10 @@ These should always work regardless of model:
    cd /tmp/handoff-eval-project
    ```
 
+   Setup and `--clean` only replace or remove an evaluation directory created at that
+   path by this version of the script. If a directory already exists without its
+   ownership marker (including an older fixture), choose a fresh `--path`.
+
 2. **Test each scenario in new conversation**
    - Start fresh conversation for each scenario
    - Use exact trigger phrases from test-scenarios.md

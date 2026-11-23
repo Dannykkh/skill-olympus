@@ -3,7 +3,9 @@
 Memory rot is invisible in a diff because memory/ sits outside version control, so the
 value is in surfacing it. But most of what rots needs a person: whether a moved anchor
 means "fix the path" or "this decision is SUPERSEDED" is a judgement, not arithmetic.
-Only the distillation baseline is purely mechanical, so only it is touched by --fix.
+These tests exercise the mechanical repairs available through --fix: adjusting a stale
+distillation baseline, resolving unambiguous lifecycle links, and relativizing path
+fields in project records. Link and path repairs preserve backups.
 """
 
 import json
@@ -350,7 +352,7 @@ class MnemoDoctorTests(unittest.TestCase):
             self.assertIn("- `superseded-by: [[041-new]]`", text)
             self.assertIn("```md\nsuperseded-by: #new\n```", text, "펜스 안 예시는 그대로여야 한다")
 
-    def test_fix_repairs_only_the_baseline(self):
+    def test_fix_repairs_stale_baseline_and_preserves_unrelated_memory(self):
         with tempfile.TemporaryDirectory() as temp:
             project = self.make_project(
                 temp,

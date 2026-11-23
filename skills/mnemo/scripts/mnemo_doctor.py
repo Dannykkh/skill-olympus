@@ -383,8 +383,8 @@ def check_lifecycle_links(root: Path, report: Report, fix: bool = False) -> None
 def check_distill_offset(root: Path, report: Report, fix: bool) -> None:
     """관찰 로그가 아카이브로 회전하면 기준값만 옛 줄 수로 남아 delta가 음수가 된다.
 
-    훅이 음수를 0으로 클램프하므로 정제 알림이 조용히 억눌린다. 순수하게 산술적인
-    불일치라서 --fix로 고칠 수 있는 유일한 항목이다.
+    훅이 음수를 0으로 클램프하므로 정제 알림이 조용히 억눌린다.
+    --fix는 실제 줄 수에 맞춰 기준값을 보정한다.
     """
     offset_path = root / "memory" / ".mnemo-distill-offset"
     gotchas = root / "memory" / "gotchas" / "observations.jsonl"
@@ -1045,7 +1045,7 @@ def check_entry_evidence(root: Path, report: Report) -> dict:
 
     항목만 읽고 "그렇게 정했구나"까지는 가도, 의심이 들 때 내려갈 곳이 없으면 같은 논쟁을
     처음부터 다시 한다. 링크가 열리는지, 코드 앵커가 산문에만 있는지를 본다.
-    산문 앵커는 사람은 읽지만 역색인은 못 읽는다 — 파일에서 결정으로 되짚는 문이 닫힌다.
+    본문의 경로만 있는 항목은 구조 줄로 승격할 후보로 센다.
     """
     entries = list(iter_entry_blocks(root))
     metrics = {"entries": len(entries), "evidence": 0, "dead_links": 0, "prose_only": 0}
@@ -1079,8 +1079,8 @@ def check_entry_evidence(root: Path, report: Report) -> dict:
         hint = ("링크 대상이 옮겨졌거나 사라졌습니다. 항목은 지우지 말고 경로를 고치거나 "
                 "`소실`로 표시하세요 — 판정은 사람이 합니다.")
     elif metrics["prose_only"]:
-        hint = (f"`files:` 줄이 없으면 파일에서 결정으로 되짚을 수 없습니다 "
-                f"(예: {', '.join(prose_examples)}). --fix 가 산문 앵커를 구조 줄로 올립니다.")
+        hint = (f"--promote-structure로 분할 항목 본문에 있는 실제 파일 경로를 `files:` 줄에 기록할 수 있습니다 "
+                f"(예: {', '.join(prose_examples)}).")
     report.add("FAIL" if metrics["dead_links"] else ("WARN" if metrics["prose_only"] else "OK"),
                "항목 증거", detail, hint)
     return metrics
@@ -1385,7 +1385,7 @@ PROMOTE_META = meta_line('tags|date|source|status')
 
 
 def promote_structure(root: Path, report: Report) -> list:
-    """산문에만 있던 앵커와 암묵적 수명을 구조 줄로 올린다 (--fix).
+    """산문에만 있던 앵커와 암묵적 수명을 구조 줄로 올린다 (--promote-structure).
 
     텍스트에 이미 있는 것을 기계가 읽을 수 있는 자리로 옮길 뿐, 없는 것을 지어내지 않는다.
     두 가지만 건드린다:

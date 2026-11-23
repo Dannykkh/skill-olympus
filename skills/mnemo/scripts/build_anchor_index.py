@@ -22,6 +22,7 @@ import argparse
 import os
 import re
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -131,13 +132,33 @@ def render(root: Path, index: dict) -> str:
     return "\n".join(lines)
 
 
+def write_index(root: Path, index: dict, output: Path) -> Path:
+    """Publish a complete replacement inside the project, including an empty index."""
+    root = root.resolve()
+    target = root / output
+    parent = target.parent.resolve()
+    if not parent.is_relative_to(root) or not target.resolve().is_relative_to(root):
+        raise ValueError(f"프로젝트 밖으로 이어지는 역색인 출력 경로: {target}")
+    target = parent / target.name
+    parent.mkdir(parents=True, exist_ok=True)
+    temporary = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", dir=parent,
+                                            prefix=f".{target.name}.", delete=False)
+    try:
+        with temporary:
+            temporary.write(render(root, index))
+        os.replace(temporary.name, target)
+    finally:
+        Path(temporary.name).unlink(missing_ok=True)
+    return target
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="코드 파일 → 그 파일에 기대는 기억 항목 (파생 색인, 읽기 전용 생성)")
     parser.add_argument("--project-root", default=".", help="프로젝트 경로 (기본: 현재 디렉터리)")
     parser.add_argument("--file", help="이 파일에 기대는 결정만 조회한다")
     parser.add_argument("--out", nargs="?", const="memory/.mnemo-anchor-index.md",
-                        help="전체 색인을 파일로 쓴다 (기본: stdout, 값 없이 주면 memory/.mnemo-anchor-index.md). "
+                        help="전체 색인을 프로젝트 안의 파일로 쓴다 (기본: stdout, 값 없이 주면 memory/.mnemo-anchor-index.md). "
                              "파생 파일이므로 점 접두 이름을 쓴다 — 기억 항목으로 오인되면 진단 수치가 오염된다")
     args = parser.parse_args()
 
@@ -153,23 +174,18 @@ def main():
         lookup(root, index, args.file)
         sys.exit(0)
 
-    if not index:
+    if args.out is not None:
+        try:
+            target = write_index(root, index, Path(args.out))
+        except (OSError, ValueError, RuntimeError) as error:
+            print(f"[ERROR] 역색인을 저장하지 못했습니다: {error}", file=sys.stderr)
+            sys.exit(2)
+        print(f"{target} 에 파일 {len(index)}개의 역색인을 썼습니다.")
+    elif not index:
         print("앵커를 가진 기억 항목이 없습니다. 없는 것도 결과입니다 — "
               "항목에 `files:` 줄을 넣으면 파일에서 결정으로 되짚을 수 있습니다.")
-        sys.exit(0)
-
-    text = render(root, index)
-    if args.out:
-        target = (root / args.out) if not Path(args.out).is_absolute() else Path(args.out)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        # 훅이 기억 항목 편집을 보고 이 재생성을 떼어내 돌릴 수 있으므로 동시 실행을 가정한다.
-        # 임시 파일에 쓰고 바꿔치워, 읽는 쪽이 반쯤 쓰인 색인을 보지 않게 한다.
-        temporary = target.with_name(f"{target.name}.tmp-{os.getpid()}")
-        temporary.write_text(text, encoding="utf-8", newline="\n")
-        os.replace(temporary, target)
-        print(f"{target} 에 파일 {len(index)}개의 역색인을 썼습니다.")
     else:
-        print(text)
+        print(render(root, index))
 
 
 if __name__ == "__main__":

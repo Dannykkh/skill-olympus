@@ -19,7 +19,6 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
@@ -92,19 +91,19 @@ def get_git_info(project_path: str) -> dict:
 
     # Get modified files (unstaged)
     success, modified = run_cmd(
-        ["git", "diff", "--name-only"],
+        ["git", "diff", "--name-only", "-z"],
         cwd=project_path
     )
     if success and modified:
-        info["modified_files"] = modified.split("\n")
+        info["modified_files"] = modified.rstrip("\0").split("\0")
 
     # Get staged files
     success, staged = run_cmd(
-        ["git", "diff", "--name-only", "--cached"],
+        ["git", "diff", "--name-only", "-z", "--cached"],
         cwd=project_path
     )
     if success and staged:
-        info["staged_files"] = staged.split("\n")
+        info["staged_files"] = staged.rstrip("\0").split("\0")
 
     # 새 파일과 이름 변경 — 부품 지도 점검용이며 Files Modified에는 넣지 않는다.
     # -z: 한글 경로가 8진 이스케이프로 따옴표에 싸이지 않고 원문 그대로 나온다.
@@ -313,18 +312,27 @@ def observed_files(root: Path, day: str | None = None, session: str | None = Non
     found: list[str] = []
     for log in sorted((root / "memory").glob("*/observations.jsonl")):
         for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
-            line = line.strip()
-            if not line or '"Edit"' not in line and '"Write"' not in line:
-                continue
             try:
                 record = json.loads(line)
             except ValueError:
                 continue
-            if record.get("tool") not in ("Edit", "Write", "NotebookEdit"):
-                continue
-            if not str(record.get("timestamp", "")).startswith(today):
+            if not isinstance(record, dict) or record.get("tool") not in ("Edit", "Write", "NotebookEdit"):
                 continue
             if session and record.get("session") != session:
+                continue
+            timestamp = record.get("timestamp")
+            if not isinstance(timestamp, str):
+                continue
+            try:
+                # Bash records UTC, while older observations use local dates or naive times.
+                if timestamp.endswith("Z"):
+                    timestamp = timestamp[:-1] + "+00:00"
+                observed = datetime.fromisoformat(timestamp)
+                if observed.tzinfo is not None:
+                    observed = observed.astimezone()
+            except (ValueError, OSError, OverflowError):
+                continue
+            if observed.date().isoformat() != today:
                 continue
             payload = record.get("input")
             if isinstance(payload, str):
@@ -403,13 +411,10 @@ def refresh_anchor_index(root: Path) -> str:
         return "SKIPPED — build_anchor_index 없음"
     try:
         index = anchors.build(root)
-        if not index:
-            return "SKIPPED — 앵커를 가진 항목 없음"
         target = root / "memory" / ".mnemo-anchor-index.md"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_name(f"{target.name}.tmp-{os.getpid()}")
-        temporary.write_text(anchors.render(root, index), encoding="utf-8", newline="\n")
-        os.replace(temporary, target)
+        if not index and not target.exists():
+            return "SKIPPED — 앵커를 가진 항목 없음"
+        anchors.write_index(root, index, target)
         return f"RAN — 파일 {len(index)}개"
     except (OSError, UnicodeError, ValueError) as error:
         return f"ERROR — {error}"
@@ -692,7 +697,7 @@ def generate_handoff(
             modified_section += f"\n| ... and {len(all_modified) - 10} more files | | |"
         if observed:
             scope = f"세션 {session[:8]}" if session else "오늘 전체 세션"
-            modified_section += f"\n\n<!-- 관찰 로그에서 {len(observed)}개 자동 수집 ({scope} Edit/Write) -->"
+            modified_section += f"\n\n<!-- 관찰 로그에서 {len(observed)}개 자동 수집 ({scope} Edit/Write/NotebookEdit) -->"
     else:
         modified_section = "| [no modified files detected] | | |"
 

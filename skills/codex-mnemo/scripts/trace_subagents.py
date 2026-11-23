@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterator
@@ -15,8 +14,7 @@ import reconcile_codex_conversations as rollout
 
 
 def safe_text(value: Any) -> str:
-    text = rollout.sanitize_text(rollout.extract_text(value))
-    return re.sub(r"<private>.*\Z", "[PRIVATE]", text, flags=re.IGNORECASE | re.DOTALL)
+    return rollout.sanitize_text(rollout.extract_text(value))
 
 
 def parent_id(meta: rollout.SessionMeta) -> str:

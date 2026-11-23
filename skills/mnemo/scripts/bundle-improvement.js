@@ -17,6 +17,7 @@ function improvementFiles(sourceDir) {
     [path.join(common, "references/project-skill-evaluation.md"), "references/project-skill-evaluation.md"],
     [path.join(common, "references/recall.md"), "references/recall.md"],
     [path.join(common, "scripts/recall.py"), "scripts/recall.py"],
+    [path.join(common, "scripts/mnemo_index.py"), "scripts/mnemo_index.py"],
     [path.join(common, "scripts/mnemo_markdown.py"), "scripts/mnemo_markdown.py"],
     [path.join(common, "scripts/mnemo_project_root.py"), "scripts/mnemo_project_root.py"],
     ...["create_handoff.py", "list_handoffs.py", "check_staleness.py", "validate_handoff.py",

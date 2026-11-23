@@ -39,14 +39,6 @@ exit_mnemo_error() {
     exit 0
 }
 
-# Shared resolver rejects runtime storage directories and untrusted fallback cwd.
-get_claude_project_root() {
-    local helper
-    helper="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/mnemo-project-root.js"
-    [ -f "$helper" ] || return 0
-    printf '%s' "$INPUT" | node "$helper" --claude 2>/dev/null || true
-}
-
 # MNEMO_RELPATH_START
 # 기록에 남기는 경로는 프로젝트 루트 기준 상대경로(슬래시 구분)로 쓴다. 루트 밖 경로는 그대로 둔다.
 # 절대경로를 그대로 남기면 프로젝트를 옮기거나 다른 컴퓨터에서 열었을 때 기록이 옛 위치를 가리킨다.
@@ -204,90 +196,7 @@ case "$TOOL_NAME" in
     Glob|Grep|Read|LS|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput|TeamCreate|TeamDelete|SendMessage) exit 0 ;;
 esac
 
-# 프로젝트 루트 결정: 명시 workspace → payload cwd → transcript metadata
-TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty' 2>/dev/null)
-PROJECT_ROOT=$(get_claude_project_root "$TRANSCRIPT_PATH")
-
-# Temp/무효 루트면 저장 skip (fail-open) — gotcha 065
-if [ -z "$PROJECT_ROOT" ]; then exit 0; fi
-
-# 기록용 도구 입력: 경로 필드를 루트 기준 상대경로로 바꾼 사본 (toollog·관찰 로그 공용)
-TOOL_INPUT_JSON=$(echo "$INPUT" | jq -c --arg root "$PROJECT_ROOT" "$(mnemo_relpath_defs)"' (.tool_input // {}) | mnemo_relativize($root)' 2>/dev/null)
-[ -n "$TOOL_INPUT_JSON" ] || TOOL_INPUT_JSON='{}'
-
-mnemo_anchor_notify
-
-
-# 대화 로그 경로
-[ -f "$PROJECT_ROOT/.mnemo-root" ] || : > "$PROJECT_ROOT/.mnemo-root"
-CONV_DIR="$PROJECT_ROOT/conversations"
-TODAY=$(date +%Y-%m-%d)
-LOG_FILE="$CONV_DIR/$TODAY-toollog.md"
-
-# conversations 폴더 자동 생성
-mkdir -p "$CONV_DIR"
-
-# 파일 없으면 헤더
-if [ ! -f "$LOG_FILE" ]; then
-    cat > "$LOG_FILE" << EOF
----
-date: $TODAY
-type: tool-log
----
-
-# Tool Usage Log - $TODAY
-
-EOF
-fi
-
-# 도구별 핵심 정보 추출
-DETAIL=""
-case "$TOOL_NAME" in
-    Edit|Write)
-        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.file_path // empty' 2>/dev/null)
-        ;;
-    Bash)
-        CMD=$(echo "$TOOL_INPUT_JSON" | jq -r '.command // empty' 2>/dev/null)
-        DETAIL="${CMD:0:80}"
-        [ ${#CMD} -gt 80 ] && DETAIL="${DETAIL}..."
-        ;;
-    Agent)
-        SUBTYPE=$(echo "$TOOL_INPUT_JSON" | jq -r '.subagent_type // empty' 2>/dev/null)
-        DESC=$(echo "$TOOL_INPUT_JSON" | jq -r '.description // empty' 2>/dev/null)
-        DETAIL="$SUBTYPE: $DESC"
-        ;;
-    Skill)
-        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.skill // empty' 2>/dev/null)
-        ;;
-    WebFetch)
-        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.url // empty' 2>/dev/null)
-        ;;
-    WebSearch)
-        DETAIL=$(echo "$TOOL_INPUT_JSON" | jq -r '.query // empty' 2>/dev/null)
-        ;;
-esac
-
-TIMESTAMP=$(date +%H:%M:%S)
-
-# 중복 방지: 같은 초에 같은 도구가 있으면 스킵
-if [ -f "$LOG_FILE" ] && grep -qF "[\`$TIMESTAMP\`] **$TOOL_NAME**" "$LOG_FILE" 2>/dev/null; then
-    exit 0
-fi
-
-echo "- \`[$TIMESTAMP]\` **$TOOL_NAME** $DETAIL" >> "$LOG_FILE"
-
-# ─────────────────────────────────────────────
-# 학습 관찰 기록 (memory/gotchas/ + memory/learned/)
-# 에러 → gotchas, 성공 → learned 에 각각 기록
-# ─────────────────────────────────────────────
-
 TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_response // .tool_output // .output // empty' 2>/dev/null)
-TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT" | head -c 3000)
-
-# 기록 대상 판단
-TARGET_DIR=""
-EVENT_TYPE=""
-
 # 실패 판정은 '출력 어딘가에 error라는 단어가 있는가'가 아니라 '출력이 에러 형태인가'로 본다.
 # 예전 규칙은 편집한 소스에 Failed( 나 Error enum이 있다는 이유로 성공을 gotchas에 넣었다.
 # Edit/Write/Read는 응답이 파일 내용을 그대로 되돌려주므로 본문 매칭 자체를 하지 않는다.
@@ -301,42 +210,22 @@ case "$TOOL_NAME" in
         ;;
 esac
 
+CATEGORY=""
 if [ "$HAS_ERROR" -eq 1 ]; then
-    # 실패 → memory/gotchas/
-    TARGET_DIR="$PROJECT_ROOT/memory/gotchas"
-    EVENT_TYPE="tool_error"
+    CATEGORY="gotchas"
 else
-    # 수정/실행 도구가 에러 없이 성공 → memory/learned/
-    case "$TOOL_NAME" in
-        Edit|Write|Bash|Agent|Skill)
-            TARGET_DIR="$PROJECT_ROOT/memory/learned"
-            EVENT_TYPE="tool_success"
-            ;;
-        *) exit 0 ;;
-    esac
+    case "$TOOL_NAME" in Edit|Write|NotebookEdit|Bash|Agent|Skill) CATEGORY="learned" ;; esac
 fi
 
-mkdir -p "$TARGET_DIR"
+# 루트 판정과 두 파일 저장은 같은 프로세스·잠금에서 실행한다.
+helper="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/claude-event-store.js"
+PROJECT_ROOT=$(printf '%s' "$INPUT" | node "$helper" --capture-tool "$CATEGORY") || exit_mnemo_error 'capture' '도구 기록 저장 실패'
+[ -n "$PROJECT_ROOT" ] || exit 0
+TOOL_INPUT_JSON=$(echo "$INPUT" | jq -c --arg root "$PROJECT_ROOT" "$(mnemo_relpath_defs)"' (.tool_input // {}) | mnemo_relativize($root)' 2>/dev/null)
+mnemo_anchor_notify
+[ -n "$CATEGORY" ] || exit 0
+TARGET_DIR="$PROJECT_ROOT/memory/$CATEGORY"
 OBS_FILE="$TARGET_DIR/observations.jsonl"
-
-# 입력/출력 truncate + 시크릿 스크러빙
-TOOL_INPUT_STR=$(printf '%s' "$TOOL_INPUT_JSON" | head -c 3000)
-TOOL_INPUT_STR=$(echo "$TOOL_INPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_INPUT_STR")
-TOOL_OUTPUT_STR=$(echo "$TOOL_OUTPUT_STR" | sed -E "s/(api[_-]?key|token|secret|password|authorization)([\"' :=]+)[A-Za-z0-9_\\/\\.+=]{8,}/\1\2[REDACTED]/gi" 2>/dev/null || echo "$TOOL_OUTPUT_STR")
-
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null)
-OBS_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-# jq로 안전하게 JSON 생성
-jq -n -c \
-    --arg ts "$OBS_TS" \
-    --arg ev "$EVENT_TYPE" \
-    --arg tl "$TOOL_NAME" \
-    --arg inp "$TOOL_INPUT_STR" \
-    --arg out "$TOOL_OUTPUT_STR" \
-    --arg sess "$SESSION_ID" \
-    '{timestamp:$ts, event:$ev, tool:$tl, input:$inp, output:$out, session:$sess}' \
-    >> "$OBS_FILE" 2>/dev/null
 
 # MNEMO_ROTATION_START
 # 기준값이 없거나 잘못됐으면 상태 알림의 초기화 이후에 회전한다.

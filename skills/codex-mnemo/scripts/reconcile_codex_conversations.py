@@ -39,7 +39,6 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 
-INDEX_FILENAME = ".mnemo-index.json"
 CONV_FILENAME_TEMPLATE = "{date}-codex.md"
 MAX_JSONL_LINE_BYTES = 16 * 1024 * 1024
 MAX_MESSAGE_CHARS = 2 * 1024 * 1024
@@ -50,7 +49,6 @@ STRUCTURAL_HEADING_RE = re.compile(
 MARKER_RE = re.compile(
     r"(?m)^<!--\s*(?P<kind>turn|turnhash|aborted-turn):(?P<value>[A-Za-z0-9-]+)\s*-->\s*$"
 )
-PRIVATE_RE = re.compile(r"<private>.*?</private>", re.IGNORECASE | re.DOTALL)
 ANSI_RE = re.compile(
     r"(?:\x1b\][^\x07]*(?:\x07|\x1b\\))|(?:\x1b\[[0-?]*[ -/]*[@-~])"
 )
@@ -221,6 +219,8 @@ _mnemo_module_dir = Path(__file__).resolve().parent
 if not (_mnemo_module_dir / "mnemo_project_root.py").is_file():
     _mnemo_module_dir = Path(__file__).resolve().parents[2] / "mnemo" / "scripts"
 sys.path.insert(0, str(_mnemo_module_dir))
+from mnemo_index import INDEX_FILENAME, IndexErrorDuringRecovery, load_index, save_index
+from mnemo_markdown import PRIVATE
 from mnemo_project_root import detect_project_root, validate_project_root
 
 
@@ -277,7 +277,7 @@ def sanitize_text(text: str) -> str:
     value = value.replace("\r\n", "\n").replace("\r", "\n")
     value = ANSI_RE.sub("", value)
     value = CONTROL_RE.sub("", value)
-    value = PRIVATE_RE.sub("[PRIVATE]", value)
+    value = PRIVATE.sub("[PRIVATE]", value)
     for pattern, replacement in SECRET_REPLACEMENTS:
         value = pattern.sub(replacement, value)
     value = value.replace("<!--", "&lt;!--")
@@ -722,43 +722,10 @@ def compose_conversation(prefix: str, records: list[ConversationRecord], trailin
     return output
 
 
-def load_index(conv_dir: Path) -> dict[str, Any]:
-    path = conv_dir / INDEX_FILENAME
-    if not path.exists():
-        return {"version": 1, "claude": {}, "codex": {}, "codex_aborted": {}}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"version": 1, "claude": {}, "codex": {}, "codex_aborted": {}}
-    if not isinstance(data, dict):
-        data = {}
-    data["version"] = 1
-    if not isinstance(data.get("claude"), dict):
-        data["claude"] = {}
-    if not isinstance(data.get("codex"), dict):
-        data["codex"] = {}
-    if not isinstance(data.get("codex_aborted"), dict):
-        data["codex_aborted"] = {}
-    return data
-
-
-def save_index(conv_dir: Path, index: dict[str, Any]) -> None:
-    conv_dir.mkdir(parents=True, exist_ok=True)
-    path = conv_dir / INDEX_FILENAME
-    # 내용이 같으면 쓰지 않는다. 글자가 아니라 JSON 값으로 비교한다 — Claude 복구 스크립트와
-    # 저장 훅도 같은 파일을 다른 형식(키 정렬·끝 줄바꿈)으로 쓰므로, 글자 비교는 늘 "다름"이 된다.
-    try:
-        if json.loads(path.read_text(encoding="utf-8")) == index:
-            return
-    except (OSError, ValueError):
-        pass
-    path.write_text(
-        json.dumps(index, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-
-
 def copy_stage_base(base_dir: Path, stage_dir: Path) -> None:
+    if base_dir.resolve() == stage_dir.resolve():
+        raise IndexErrorDuringRecovery("staging and base conversations directories must be different")
+    load_index(base_dir)
     stage_dir.mkdir(parents=True, exist_ok=True)
     for old in stage_dir.glob("*-codex.md"):
         old.unlink()
@@ -871,6 +838,7 @@ def reconcile_to_directory(
 ) -> dict[str, Any]:
     explicit_remove_turn_ids = explicit_remove_turn_ids or set()
     # 신규 프로젝트의 첫 reconcile은 conversations/가 없는 상태에서 시작한다.
+    index = load_index(output_dir, codex=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     proven_subagent_ids = set(result.subagent_turn_ids) | explicit_remove_turn_ids
     file_state: dict[str, tuple[str, list[ConversationRecord], str]] = {}
@@ -1152,7 +1120,6 @@ def reconcile_to_directory(
             previous_id = record.marker_value
             previous_time = current_time
 
-    index = load_index(output_dir)
     codex_index: dict[str, list[str]] = {}
     codex_aborted_index: dict[str, list[str]] = {}
     for path in sorted(output_dir.glob("*-codex.md")):
@@ -1376,4 +1343,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except IndexErrorDuringRecovery as error:
+        print(f"[mnemo-codex] {error}", file=sys.stderr)
+        raise SystemExit(1)

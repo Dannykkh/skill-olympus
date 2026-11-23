@@ -45,6 +45,22 @@ function fixture(t, initialSettings) {
   return { claude, statePath, invoke, check: () => run('--check'), readSettings: () => JSON.parse(fs.readFileSync(settingsPath, 'utf8')) };
 }
 
+test('Mnemo --check detects a missing SessionStart recovery hook and reinstall restores it', t => {
+  const personal = { matcher: '', hooks: [{ type: 'command', command: 'echo startup' }] };
+  const { claude, invoke, check, readSettings } = fixture(t, { hooks: { SessionStart: [personal] } });
+  invoke();
+  assert.equal(check().status, 0);
+  const settings = readSettings();
+  settings.hooks.SessionStart = [personal];
+  fs.writeFileSync(path.join(claude, 'settings.json'), JSON.stringify(settings));
+  const missing = check();
+  assert.equal(missing.status, 1, missing.stdout);
+  assert.match(missing.stdout, /SessionStart.*reconcile-conversations/);
+  invoke();
+  assert.equal(check().status, 0);
+  assert.deepEqual(readSettings().hooks.SessionStart[0], personal);
+});
+
 test('Mnemo --check fails on a stale or duplicated CLAUDE.md rules block so install.bat repairs it', t => {
   // install.bat·install.sh는 CLAUDE_CONFIG_DIR 쪽 CLAUDE.md를 이 검사가 실패할 때만 다시 쓴다.
   // 블록이 있는지만 보면 템플릿만 바뀐 릴리즈가 그 폴더에 닿지 않는다(gotcha 120).
@@ -86,6 +102,8 @@ for (const initialPreference of [true, undefined]) {
       [`hooks/reconcile-conversations.${extension}`, `hooks/reconcile-conversations.${extension}`],
       ['skills/mnemo/scripts/reconcile_conversations.py', 'scripts/reconcile_conversations.py'],
       ['skills/mnemo/scripts/mnemo_project_root.py', 'scripts/mnemo_project_root.py'],
+      ['skills/mnemo/scripts/mnemo_index.py', 'scripts/mnemo_index.py'],
+      ['skills/mnemo/scripts/mnemo_markdown.py', 'scripts/mnemo_markdown.py'],
     ]) {
       assert.deepEqual(fs.readFileSync(path.join(claude, destination)), fs.readFileSync(path.join(repo, source)), `installed ${destination} must match canonical source`);
     }
@@ -100,6 +118,8 @@ for (const initialPreference of [true, undefined]) {
     assert.deepEqual(readSettings(), initial, 'uninstall must restore preference and preserve unrelated settings and hooks');
     assert.ok(!fs.existsSync(statePath));
     assert.ok(!fs.existsSync(path.join(claude, 'hooks/mnemo-project-root.js')));
+    assert.ok(!fs.existsSync(path.join(claude, 'scripts/mnemo_markdown.py')));
+    assert.ok(!fs.existsSync(path.join(claude, 'scripts/mnemo_index.py')));
     assert.ok(!fs.existsSync(path.join(claude, `hooks/reconcile-conversations.${extension}`)));
   });
 }

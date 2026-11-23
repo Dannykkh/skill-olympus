@@ -37,10 +37,10 @@ const codexDir = process.env.CODEX_HOME
   };
 const scriptSource = (file) => {
   const local = path.join(sourceDir, "scripts", file);
-  return file === "mnemo_project_root.py" && !fs.existsSync(local)
+  return ["mnemo_project_root.py", "mnemo_markdown.py", "mnemo_index.py"].includes(file) && !fs.existsSync(local)
     ? path.join(sourceDir, "../mnemo/scripts", file) : local;
 };
-const runtimeScripts = ["reconcile_codex_conversations.py", "mnemo_project_root.py", "trace_subagents.py"];
+const runtimeScripts = ["reconcile_codex_conversations.py", "mnemo_project_root.py", "mnemo_markdown.py", "mnemo_index.py", "trace_subagents.py"];
 
 // ── Utility functions ──
 function normalizePath(p) {

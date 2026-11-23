@@ -177,18 +177,9 @@ try {
 try {
     $errLog = Join-Path $ProjectRoot '.claude\mnemo-errors.log'
     if (Test-Path $errLog) {
-        $cutoff = (Get-Date).AddHours(-24)
-        $recent = Get-Content $errLog -Encoding UTF8 -ErrorAction SilentlyContinue | Where-Object {
-            if ($_ -match '^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]') {
-                try {
-                    $ts = [DateTime]::ParseExact($Matches[1], 'yyyy-MM-dd HH:mm:ss', $null)
-                    return $ts -ge $cutoff
-                } catch { return $false }
-            }
-            return $false
-        }
-        if ($recent -and $recent.Count -gt 0) {
-            $userNotices.Add("[mnemo] 최근 24시간 내 mnemo 에러 $(@($recent).Count)건 (.claude/mnemo-errors.log 확인)")
+        $count = & node (Join-Path $PSScriptRoot 'claude-event-store.js') --recent-errors $errLog 2>$null
+        if ($LASTEXITCODE -eq 0 -and [int]$count -gt 0) {
+            $userNotices.Add("[mnemo] 최근 24시간 내 mnemo 에러 ${count}건 (.claude/mnemo-errors.log 확인)")
         }
     }
 } catch {}

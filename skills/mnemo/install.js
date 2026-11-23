@@ -23,6 +23,7 @@ const isWindows = process.platform === "win32";
 
 // Source directory (location of this script)
 const sourceDir = path.resolve(__dirname);
+const runtimeScripts = ["reconcile_conversations.py", "mnemo_project_root.py", "mnemo_markdown.py", "mnemo_index.py"];
 const claudeMdTemplate = path.join(sourceDir, "templates", "claude-md-rules.md");
 
 // Claude global directory
@@ -171,33 +172,23 @@ function uninstallClaudeMdRules(claudeMdPath) {
 // 훅 타임아웃(초). Claude Code 기본 30초는 일시적 시스템 부하/stdin EOF 지연 시 초과되어
 // "hook timed out after 30s — output discarded" 경고로 출력이 버려진다 → 60초로 상향.
 const HOOK_TIMEOUT_SECONDS = 60;
+const managedHookEvents = {
+  UserPromptSubmit: { script: "save-conversation", matcher: ".*" },
+  PostToolUse: { script: "save-tool-use", matcher: ".*" },
+  Stop: { script: "save-response", matcher: "" },
+  SessionStart: { script: "reconcile-conversations", matcher: "" },
+};
 
 function buildHooksConfig(hooksDir) {
   const d = normalizePath(hooksDir);
-  // matcher + timeout 포함 훅 엔트리 빌더 (Windows/bash 공통)
-  const entry = (matcher, command) => ({
-    matcher,
-    hooks: [{ type: "command", command, timeout: HOOK_TIMEOUT_SECONDS }],
-  });
-
-  if (isWindows) {
-    const cmd = (script) =>
-      `powershell -NoProfile -ExecutionPolicy Bypass -File "${d}/${script}"`;
-    return {
-      UserPromptSubmit: [entry(".*", cmd("save-conversation.ps1"))],
-      PostToolUse: [entry(".*", cmd("save-tool-use.ps1"))],
-      Stop: [entry("", cmd("save-response.ps1"))],
-      SessionStart: [entry("", cmd("reconcile-conversations.ps1"))],
-    };
-  } else {
-    const cmd = (script) => `bash "${d}/${script}"`;
-    return {
-      UserPromptSubmit: [entry(".*", cmd("save-conversation.sh"))],
-      PostToolUse: [entry(".*", cmd("save-tool-use.sh"))],
-      Stop: [entry("", cmd("save-response.sh"))],
-      SessionStart: [entry("", cmd("reconcile-conversations.sh"))],
-    };
+  const config = {};
+  for (const [event, { script, matcher }] of Object.entries(managedHookEvents)) {
+    const command = isWindows
+      ? `powershell -NoProfile -ExecutionPolicy Bypass -File "${d}/${script}.ps1"`
+      : `bash "${d}/${script}.sh"`;
+    config[event] = [{ matcher, hooks: [{ type: "command", command, timeout: HOOK_TIMEOUT_SECONDS }] }];
   }
+  return config;
 }
 
 function mergeHooksConfig(settingsPath, hooksConfig) {
@@ -219,11 +210,7 @@ function mergeHooksConfig(settingsPath, hooksConfig) {
     // Check for duplicates before adding (verify each hook individually)
     for (const hook of hooks) {
       // Extract unique identifier from the hook command to add
-      const newCmd = hook.hooks?.[0]?.command || hook.command || "";
-      const hookId = newCmd.includes("save-conversation") ? "save-conversation"
-                   : newCmd.includes("save-tool-use") ? "save-tool-use"
-                   : newCmd.includes("save-response") ? "save-response"
-                   : newCmd.includes("reconcile-conversations") ? "reconcile-conversations" : newCmd;
+      const hookId = managedHookEvents[event].script;
 
       // Replace existing Mnemo hooks with the current platform command.
       // This repairs older Windows installs that still point at bash/*.sh.
@@ -320,8 +307,9 @@ function install() {
   }
   console.log("      Done!");
 
-  copyFile(path.join(sourceDir, "scripts", "reconcile_conversations.py"), path.join(claudeDir, "scripts", "reconcile_conversations.py"));
-  copyFile(path.join(sourceDir, "scripts", "mnemo_project_root.py"), path.join(claudeDir, "scripts", "mnemo_project_root.py"));
+  for (const file of runtimeScripts) {
+    copyFile(path.join(sourceDir, "scripts", file), path.join(claudeDir, "scripts", file));
+  }
 
   // [2/3] Configure settings.json hooks
   console.log("\n[2/3] Configuring settings.json hooks...");
@@ -468,7 +456,7 @@ function check() {
   }
 
   // 2. settings.json hook registration
-  for (const file of ["reconcile_conversations.py", "mnemo_project_root.py"]) {
+  for (const file of runtimeScripts) {
     const source = path.join(sourceDir, "scripts", file);
     const installed = path.join(claudeDir, "scripts", file);
     if (!fs.existsSync(installed) || !fs.readFileSync(source).equals(fs.readFileSync(installed))) {
@@ -521,9 +509,9 @@ function check() {
     }
   }
 
-  validateRegisteredHook("Stop", settings.hooks?.Stop || [], "save-response");
-  validateRegisteredHook("PostToolUse", settings.hooks?.PostToolUse || [], "save-tool-use");
-  validateRegisteredHook("UserPromptSubmit", settings.hooks?.UserPromptSubmit || [], "save-conversation");
+  for (const [event, { script }] of Object.entries(managedHookEvents)) {
+    validateRegisteredHook(event, settings.hooks?.[event] || [], script);
+  }
 
   // 3. CLAUDE.md rules
   console.log("\n[3/4] Checking CLAUDE.md long-term memory rules...");
@@ -592,7 +580,7 @@ function uninstall() {
   console.log("      Done!");
 
   // [2/3] Remove settings.json hook config
-  for (const file of ["reconcile_conversations.py", "mnemo_project_root.py"]) {
+  for (const file of runtimeScripts) {
     removeFile(path.join(claudeDir, "scripts", file));
   }
   console.log("\n[2/3] Removing settings.json hook config...");

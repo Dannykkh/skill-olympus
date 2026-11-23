@@ -9,18 +9,22 @@ Creates a mock project with:
 
 Usage:
     python setup_test_env.py [--path /tmp/handoff-test]
-    python setup_test_env.py --clean  # Remove test environment
+    python setup_test_env.py --clean  # Remove a test environment made by this script
 """
 
 import argparse
 import os
 import shutil
+import stat
 import subprocess
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import TracebackType
 
 
 DEFAULT_TEST_PATH = "/tmp/handoff-eval-project"
+EVAL_MARKER = ".mnemo-handoff-eval"
 
 
 def run_cmd(cmd: list[str], cwd: str = None) -> bool:
@@ -32,16 +36,59 @@ def run_cmd(cmd: list[str], cwd: str = None) -> bool:
         return False
 
 
-def create_test_project(base_path: str):
+def retry_readonly_unlink(
+    operation: Callable[[str], None], filename: str,
+    error: tuple[type[BaseException], BaseException, TracebackType],
+) -> None:
+    """Windows Git objects can require clearing the read-only attribute before unlink."""
+    cause = error[1]
+    if operation is os.unlink and getattr(cause, "winerror", None) == 5:
+        info = os.lstat(filename)
+        if stat.S_ISREG(info.st_mode) and info.st_file_attributes & stat.FILE_ATTRIBUTE_READONLY:
+            os.chmod(filename, info.st_mode | stat.S_IWRITE)
+            operation(filename)
+            return
+    raise cause
+
+
+def remove_test_project(path: Path) -> bool:
+    """Remove only a fixture created at this exact location."""
+    if not os.path.lexists(path):
+        return False
+    marker = path / EVAL_MARKER
+    resolved = path.resolve()
+    identity = os.fsencode(resolved)
+    if (
+        path.is_symlink() or resolved != path.parent.resolve() / path.name
+        or marker.is_symlink() or not marker.is_file()
+        or marker.read_bytes() != identity
+    ):
+        raise ValueError(f"Not a managed evaluation directory: {path}. Use a new --path.")
+    original = resolved.stat()
+    try:
+        shutil.rmtree(resolved, onerror=retry_readonly_unlink)
+    except OSError:
+        # A locked file can interrupt cleanup after rmtree has removed the marker.
+        if resolved.is_dir() and os.path.samestat(original, resolved.stat()):
+            try:
+                with marker.open("xb") as restored:
+                    restored.write(identity)
+            except FileExistsError:
+                pass
+        raise
+    return True
+
+
+def create_test_project(base_path: str) -> Path:
     """Create a mock project structure."""
     path = Path(base_path)
 
-    # Clean if exists
-    if path.exists():
-        shutil.rmtree(path)
+    remove_test_project(path)
+    path.mkdir(parents=True, exist_ok=False)
+    (path / EVAL_MARKER).write_bytes(os.fsencode(path.resolve()))
 
     # Create directories
-    (path / "src").mkdir(parents=True)
+    (path / "src").mkdir()
     (path / "tests").mkdir()
     (path / "config").mkdir()
 
@@ -132,7 +179,7 @@ def init_git_repo(path: Path):
     run_cmd(["git", "config", "user.name", "Test User"], cwd=str(path))
 
     # Initial commit
-    run_cmd(["git", "add", "."], cwd=str(path))
+    run_cmd(["git", "add", ".", f":(exclude){EVAL_MARKER}"], cwd=str(path))
     run_cmd(["git", "commit", "-m", "Initial commit: project setup"], cwd=str(path))
 
     # Add more commits to simulate history
@@ -373,10 +420,9 @@ Using MongoDB Atlas for hosting. Connection string in DATABASE_URL.
     print(f"  - {incomplete_name} (incomplete, has TODOs)")
 
 
-def clean_test_env(path: str):
+def clean_test_env(path: str) -> None:
     """Remove test environment."""
-    if Path(path).exists():
-        shutil.rmtree(path)
+    if remove_test_project(Path(path)):
         print(f"Cleaned up test environment at {path}")
     else:
         print(f"No test environment found at {path}")
@@ -399,16 +445,19 @@ def main():
 
     args = parser.parse_args()
 
-    if args.clean:
-        clean_test_env(args.path)
-    else:
+    try:
+        if args.clean:
+            clean_test_env(args.path)
+            return
         path = create_test_project(args.path)
-        init_git_repo(path)
-        create_sample_handoffs(path)
-        print(f"\nTest environment ready at: {args.path}")
-        print(f"\nTo test, run:")
-        print(f"  cd {args.path}")
-        print(f"  # Then use Claude Code with the session-handoff skill")
+    except (ValueError, OSError) as error:
+        parser.exit(1, f"{parser.prog}: {error}\n")
+    init_git_repo(path)
+    create_sample_handoffs(path)
+    print(f"\nTest environment ready at: {args.path}")
+    print(f"\nTo test, run:")
+    print(f"  cd {args.path}")
+    print(f"  # Then use Claude Code with the session-handoff skill")
 
 
 if __name__ == "__main__":
