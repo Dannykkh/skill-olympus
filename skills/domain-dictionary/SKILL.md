@@ -158,7 +158,7 @@ options:
 
 마스터 사전 형식:
 
-```markdown
+````markdown
 # Domain Dictionary
 
 > 생성일: YYYY-MM-DD
@@ -172,12 +172,12 @@ options:
 
 ## 관계도 (Optional — 5개 이상의 핵심 용어가 있을 때)
 
-​```mermaid
+```mermaid
 graph TD
   Customer -->|places| Order
   Order -->|contains| OrderItem
   OrderItem -->|references| Product
-​```
+```
 
 ## 외부 표준 매핑 (해당 시)
 
@@ -198,7 +198,7 @@ graph TD
 | 날짜 | 변경 | 이유 |
 |------|------|------|
 | YYYY-MM-DD | 초안 | 첫 작성 |
-```
+````
 
 델타 파일 형식 (`<planning_dir>/domain-dictionary-delta.md`):
 
