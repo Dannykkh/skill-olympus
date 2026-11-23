@@ -110,6 +110,28 @@ class AtlasWorkTests(unittest.TestCase):
         self.assertEqual(states, {"app.core#1": "merged", "app.ui#1": "pending"})
         self.assertEqual(again["notes"]["changed"], ["app.ui#1"])
 
+    def test_no_open_excludes_files_and_directory_contents_from_plan_and_brief(self):
+        self.source({name: "app.core" for name in (
+            "src/private/log.py", "src/private-copy/log.py", "src/key.py", "src/ok.py",
+            "memory/entry.md", "MEMORY.md", "docs/handoffs/last.md")})
+        atlas.plan(self.root, no_open=["./src/private/", r"src\key.py"])
+        again = atlas.plan(self.root)
+        self.assertEqual(again["batches"][0]["files"], ["src/ok.py", "src/private-copy/log.py"])
+        brief = atlas.brief(self.root, "app.core#1")
+        self.assertNotIn("src/private/log.py", brief)
+
+    def test_brief_rejects_conflicts_with_a_batch_override_or_old_ledger(self):
+        self.planned()
+        with self.assertRaisesRegex(atlas.AtlasError, "plan"):
+            atlas.brief(self.root, "app.core#1", ["src/a.py"])
+        ledger = atlas.read_ledger(self.root)
+        ledger["selection"]["noOpen"] = ["src/"]
+        atlas.write_ledger(self.root, ledger)
+        with self.assertRaisesRegex(atlas.AtlasError, "plan"):
+            atlas.brief(self.root, "app.core#1")
+        self.result()
+        self.assertFalse(atlas.check(self.root, "app.core#1")["ok"])
+
     def test_missing_and_binary_files_are_left_out_and_reported(self):
         self.source({"src/a.py": "app.core"})
         (self.root / "src/blob.bin").write_bytes(b"\x00\x01\x02")
@@ -245,6 +267,8 @@ class AtlasWorkTests(unittest.TestCase):
         atlas.check(self.root, "app.core#1")
         self.assertEqual(atlas.plan(self.root)["notes"]["recheck"], [])
         self.write("tests/test_a.py", "assert price == 4\n")
+        with self.assertRaisesRegex(atlas.AtlasError, "check"):
+            atlas.mark(self.root, "app.core#1", "merged")
         again = atlas.plan(self.root)
         self.assertEqual(again["notes"]["recheck"], ["app.core#1"])
         self.assertEqual(again["batches"][0]["status"], "read")
@@ -252,6 +276,63 @@ class AtlasWorkTests(unittest.TestCase):
         atlas.check(self.root, "app.core#1")
         atlas.mark(self.root, "app.core#1", "merged")
         self.write("tests/test_a.py", "assert price == 5\n")
+        self.assertEqual(atlas.plan(self.root)["batches"][0]["status"], "merged")
+
+    def test_check_detects_live_changes_and_recovers_after_replan(self):
+        self.planned()
+        self.result()
+        self.write("src/a.py", "changed\nline two\nline three\n")
+        self.assertEqual(atlas.main(["--project-root", str(self.root), "check"]), 1)
+        self.assertEqual(atlas.read_ledger(self.root)["batches"][0]["status"], "needs-review")
+        atlas.plan(self.root)
+        self.result()
+        self.assertTrue(atlas.check(self.root, "app.core#1")["ok"])
+        (self.root / "src/a.py").unlink()
+        with self.assertRaisesRegex(atlas.AtlasError, "plan"):
+            atlas.mark(self.root, "app.core#1", "merged")
+        self.result(co_changes=[])
+        self.assertFalse(atlas.check(self.root, "app.core#1")["ok"])
+
+    def test_check_rejects_citations_from_a_closed_directory(self):
+        self.planned()
+        self.write("docs/private/notes.txt", "must stay private")
+        atlas.plan(self.root, no_open=["docs/private"])
+        self.result(defect_candidates=[{"note": "후보", "evidence": ["docs/private/notes.txt:1"]}])
+        report = atlas.check(self.root, "app.core#1")
+        self.assertFalse(report["ok"])
+        self.assertNotIn("must stay private", str(report))
+        self.assertNotIn("docs/private/notes.txt", report["citedFiles"])
+
+    def test_each_defect_needs_its_own_cited_line(self):
+        self.planned()
+        supported = {"note": "근거 있는 후보", "evidence": ["src/b.py:2"]}
+        for evidence in (None, [], "src/a.py:1", ["src/a.py"], [""]):
+            with self.subTest(evidence=evidence):
+                candidate = {"note": "다른 후보"}
+                if evidence is not None:
+                    candidate["evidence"] = evidence
+                self.result(defect_candidates=[supported, candidate])
+                self.assertFalse(atlas.check(self.root, "app.core#1")["ok"])
+        for malformed in ({"note": "후보"}, ["후보"]):
+            with self.subTest(malformed=malformed):
+                self.result(defect_candidates=malformed)
+                self.assertFalse(atlas.check(self.root, "app.core#1")["ok"])
+        self.result(defect_candidates=[supported])
+        self.assertTrue(atlas.check(self.root, "app.core#1")["ok"])
+
+    def test_previous_validator_results_are_rechecked_before_merge(self):
+        self.planned()
+        self.result(defect_candidates=[{"note": "근거 누락", "evidence": []}])
+        ledger = atlas.read_ledger(self.root)
+        batch = ledger["batches"][0]
+        batch.update(status="checked", checked={"bad": 0, "problems": 0})
+        atlas.write_ledger(self.root, ledger)
+        self.assertEqual(atlas.read_ledger(self.root)["batches"][0]["status"], "read")
+        with self.assertRaisesRegex(atlas.AtlasError, "check"):
+            atlas.mark(self.root, "app.core#1", "merged")
+        self.assertEqual(atlas.main(["--project-root", str(self.root), "check"]), 1)
+        batch["status"] = "merged"
+        atlas.write_ledger(self.root, ledger)
         self.assertEqual(atlas.plan(self.root)["batches"][0]["status"], "merged")
 
     def test_check_verifies_defect_candidates_the_same_way(self):

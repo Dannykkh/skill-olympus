@@ -26,8 +26,11 @@ OWNERS_FORMAT = "termsnap-component-owners/"
 # 장부와 결과는 지도와 같은 폴더에 둔다 — 지도와 함께 생기고 함께 사라져야 어긋나지 않는다.
 # TermSnap의 codemap/reviews/ledger.json과 같은 자리 잡기다.
 WORK_DIR = "codemap/atlas"
+DEFAULT_NO_OPEN = (COMPONENT_MAP, "codemap/components/", WORK_DIR + "/", "memory/", "MEMORY.md",
+                   "docs/handoffs/", "conversations/")
 LEDGER = f"{WORK_DIR}/ledger.json"
 LEDGER_FORMAT = "atlas-ledger/1"
+CHECK_VERSION = 2  # 이전 check를 통과했지만 아직 병합하지 않은 결과는 새 규칙으로 대조한다.
 
 # minimal: 바이트 수로 묶음 크기를 어림한다 — 묶음이 작업자 모델의 프롬프트 한도를 넘었다는
 # 보고가 나오면 토큰 계산으로 바꾼다. 20만 바이트는 한글·코드가 섞인 글에서 대략 10만 토큰 아래다.
@@ -94,6 +97,18 @@ def _selected(component: str, names: list[str]) -> bool:
     return any(component == name or component.startswith(name + ".") for name in names)
 
 
+def _closed_paths(root: Path, extra: list[str]) -> set[Path]:
+    paths = {Path(os.path.abspath(root / name.replace("\\", "/"))) for name in (*DEFAULT_NO_OPEN, *extra)}
+    return paths | {path.resolve() for path in paths}
+
+
+def _is_closed(path: Path, closed: set[Path]) -> bool:
+    for candidate in (path, path.resolve()):
+        if candidate in closed or any(parent in closed for parent in candidate.parents):
+            return True
+    return False
+
+
 def _is_binary(path: Path) -> bool:
     with path.open("rb") as handle:
         return b"\0" in handle.read(4096)
@@ -121,6 +136,11 @@ def read_ledger(root: Path) -> dict:
             raise ValueError(ledger.get("format"))
     except (OSError, UnicodeError, ValueError, AttributeError) as error:
         raise AtlasError(f"{LEDGER}를 읽지 못함({error}) — 파일을 옮겨 두고 plan을 다시 실행한다.")
+    for batch in ledger["batches"]:
+        prior_check = batch.get("checked")
+        if (batch.get("status") == "checked" and isinstance(prior_check, dict)
+                and prior_check.get("version") != CHECK_VERSION):
+            batch["status"] = "read"
     return ledger
 
 
@@ -134,6 +154,11 @@ def write_ledger(root: Path, ledger: dict) -> None:
 
 def _file_hash(path: Path) -> str | None:
     return hashlib.sha1(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def _citations_changed(root: Path, batch: dict, closed: set[Path]) -> bool:
+    return any(_is_closed(root / name, closed) or _file_hash(root / name) != seen
+               for name, seen in (batch.get("cited") or {}).items())
 
 
 def plan(root: Path, only: list[str] | None = None, skip: list[str] | None = None,
@@ -157,6 +182,7 @@ def plan(root: Path, only: list[str] | None = None, skip: list[str] | None = Non
     only = only if only else list(stored.get("only") or [])
     skip = skip if skip else list(stored.get("skip") or [])
     no_open = no_open if no_open else list(stored.get("noOpen") or [])
+    closed = _closed_paths(root, no_open)
     max_bytes = max_bytes or int(limits.get("maxBytes") or DEFAULT_MAX_BYTES)
     max_files = max_files or int(limits.get("maxFiles") or DEFAULT_MAX_FILES)
 
@@ -171,6 +197,8 @@ def plan(root: Path, only: list[str] | None = None, skip: list[str] | None = Non
         groups, current, size = [], [], 0
         for name in sorted(by_component[component]):
             path = root / name
+            if _is_closed(path, closed):
+                continue
             if not path.is_file():
                 notes["missing"].append(name)
                 continue
@@ -200,8 +228,7 @@ def plan(root: Path, only: list[str] | None = None, skip: list[str] | None = Non
                         batch[key] = old[key]
                 # 묶음 밖의 파일을 근거로 인용했는데 그 파일이 바뀌었으면, 줄 번호는 맞아도 내용이 다르다.
                 # 아직 지도에 넣지 않은 묶음은 다시 대조하게 한다.
-                if batch["status"] in ("checked", "needs-review") and any(
-                        _file_hash(root / name) != seen for name, seen in (batch.get("cited") or {}).items()):
+                if batch["status"] in ("checked", "needs-review") and _citations_changed(root, batch, closed):
                     batch["status"] = "read"
                     notes["recheck"].append(batch_id)
             elif old and old.get("status") not in (None, "pending"):
@@ -226,11 +253,28 @@ def _batch(ledger: dict, batch_id: str) -> dict:
     raise AtlasError(f"장부에 '{batch_id}' 묶음이 없다 — status로 묶음 이름을 확인한다.")
 
 
+def _verify_batch(root: Path, batch: dict, closed: set[Path]) -> None:
+    for name in batch["files"]:
+        if _is_closed(root / name, closed):
+            raise AtlasError(f"열람 금지 경로가 묶음에 있다({name}) — plan --no-open으로 범위를 다시 정한다.")
+    try:
+        digest = _digest(root, batch["files"])
+    except OSError as error:
+        raise AtlasError(f"묶음 파일을 읽을 수 없다({error}) — 파일을 확인하고 plan을 다시 실행한다.") from error
+    if digest != batch["digest"]:
+        raise AtlasError("묶음 파일이 계획 이후 바뀌었다 — plan을 다시 실행한 뒤 새 brief로 읽는다.")
+
+
 def mark(root: Path, batch_id: str, status: str) -> dict:
     if status not in STATUSES:
         raise AtlasError(f"상태는 {', '.join(STATUSES)} 중 하나다.")
     ledger = read_ledger(root)
     batch = _batch(ledger, batch_id)
+    if status == "merged" and batch["status"] != "merged":
+        closed = _closed_paths(root, (ledger.get("selection") or {}).get("noOpen") or [])
+        _verify_batch(root, batch, closed)
+        if batch["status"] == "read" or _citations_changed(root, batch, closed):
+            raise AtlasError(f"{batch_id}의 근거를 다시 확인해야 한다 — check에 묶음 이름을 주어 대조한다.")
     batch["status"] = status
     write_ledger(root, ledger)
     return batch
@@ -261,8 +305,9 @@ def brief(root: Path, batch_id: str, no_open: list[str] | None = None) -> str:
                      "책임 문장은 이 묶음의 파일이 맡는 몫을 씁니다.")
     if batch.get("oversize"):
         notes.append("- 상한보다 큰 파일이 있습니다. 여러 번에 나눠 끝까지 읽습니다.")
-    closed = list((ledger.get("selection") or {}).get("noOpen") or [])
-    closed += [path for path in (no_open or []) if path not in closed]
+    saved = (ledger.get("selection") or {}).get("noOpen") or []
+    extra = [*saved, *(no_open or [])]
+    _verify_batch(root, batch, _closed_paths(root, extra))
     values = {
         "<<ROOT>>": str(root),
         "<<RESULT>>": str(root / batch["result"]),
@@ -271,7 +316,7 @@ def brief(root: Path, batch_id: str, no_open: list[str] | None = None) -> str:
         "<<DIGEST>>": batch["digest"],
         "<<FILES>>": "\n".join(f"  - `{name}`" for name in batch["files"]),
         "<<NOTES>>": "\n".join(notes),
-        "<<NO_OPEN>>": "".join(f", `{path}`" for path in closed),
+        "<<NO_OPEN>>": ", ".join(f"`{path}`" for path in dict.fromkeys((*DEFAULT_NO_OPEN, *extra))),
     }
     text = block.group(1)
     for token, value in values.items():
@@ -280,7 +325,7 @@ def brief(root: Path, batch_id: str, no_open: list[str] | None = None) -> str:
     return re.sub(r"\n{3,}", "\n\n", text).strip() + "\n"
 
 
-def _cite(root: Path, raw, cache: dict) -> tuple[str, str]:
+def _cite(root: Path, raw, cache: dict, closed: set[Path]) -> tuple[str, str]:
     """근거 하나를 실제 파일에서 꺼낸다. (보여 줄 줄, 판정) — 판정은 ok·weak·bad."""
     match = EVIDENCE.match(str(raw).strip().replace("\\", "/"))
     if not match:
@@ -291,6 +336,8 @@ def _cite(root: Path, raw, cache: dict) -> tuple[str, str]:
     target = (root / name).resolve()
     if resolved_root != target and resolved_root not in target.parents:
         return f"{raw} | !! 프로젝트 밖 경로", "bad"
+    if _is_closed(root / name, closed):
+        return f"{raw} | !! 열람 금지 경로", "bad"
     if name not in cache:
         cache[name] = (target.read_text(encoding="utf-8-sig", errors="replace").splitlines()
                        if target.is_file() else None)
@@ -312,13 +359,20 @@ def _listed(entries) -> set[str]:
     return found
 
 
-def check_result(root: Path, batch: dict, result: dict) -> dict:
+def check_result(root: Path, batch: dict, result: dict, no_open: list[str] | None = None) -> dict:
     """작업자 결과의 형식과 근거 줄을 실제 파일과 대조한다.
 
     주장이 옳은지는 판정하지 않는다. 인용한 줄을 꺼내 주장 옆에 보여 주고, 없는 파일·범위 밖 줄처럼
     읽지 않고도 틀렸다고 말할 수 있는 것만 가려낸다. 나머지 판단은 메인 세션이 한다.
     """
     problems, warnings, shown = [], [], []
+    closed = _closed_paths(root, no_open or [])
+    try:
+        _verify_batch(root, batch, closed)
+    except AtlasError as error:
+        return {"ok": False, "summary": {"claims": 0, "citations": 0, "bad": 0, "problems": 1,
+                                         "readFully": 0, "files": len(batch["files"]), "defects": 0},
+                "problems": [str(error)], "warnings": [], "claims": [], "defects": [], "citedFiles": []}
     # 지시문에 실어 보낸 지문이 그대로 돌아와야 한다. 다르면 파일이 바뀌기 전에 읽은 옛 결과다 —
     # 다시 읽을 묶음에 옛 결과 파일이 남아 있을 때 그것이 통과하는 일을 막는다.
     if str(result.get("digest", "")).strip() != batch["digest"]:
@@ -349,7 +403,7 @@ def check_result(root: Path, batch: dict, result: dict) -> dict:
         lines = []
         for raw in evidence:
             cited += 1
-            line, verdict = _cite(root, raw, cache)
+            line, verdict = _cite(root, raw, cache, closed)
             lines.append(line)
             if verdict == "bad":
                 bad += 1
@@ -359,15 +413,27 @@ def check_result(root: Path, batch: dict, result: dict) -> dict:
 
     # 결함 후보는 지도에 들어가지 않고 보고에만 쓰인다. 그래도 근거 줄은 같은 방식으로 대조한다.
     defects = []
-    candidates = result.get("defect_candidates")
-    for candidate in candidates if isinstance(candidates, list) else []:
-        if not isinstance(candidate, dict) or not str(candidate.get("note", "")).strip():
+    candidates = result.get("defect_candidates", [])
+    if not isinstance(candidates, list):
+        problems.append("defect_candidates가 목록이 아니다")
+        candidates = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            problems.append("결함 후보에 note와 evidence를 담은 객체가 필요하다")
+            continue
+        if not str(candidate.get("note", "")).strip():
             continue
         lines = []
-        for raw in candidate.get("evidence") if isinstance(candidate.get("evidence"), list) else []:
+        evidence = candidate.get("evidence")
+        if not isinstance(evidence, list) or not evidence:
+            problems.append(f"결함 후보 '{candidate['note']}'에 근거 줄이 없다")
+            evidence = []
+        for raw in evidence:
             cited += 1
-            line, verdict = _cite(root, raw, cache)
+            line, verdict = _cite(root, raw, cache, closed)
             lines.append(line)
+            if verdict == "weak":
+                problems.append(f"결함 후보 '{candidate['note']}'의 근거 '{raw}'에 줄 번호가 없다")
             bad += verdict == "bad"
         defects.append({"note": str(candidate["note"]).strip(), "evidence": lines})
 
@@ -400,9 +466,9 @@ def check(root: Path, batch_id: str) -> dict:
         report = {"ok": False, "summary": {"problems": 1}, "problems": [f"결과 JSON을 읽지 못함({error})"],
                   "warnings": [], "claims": [], "defects": []}
     else:
-        report = check_result(root, batch, result)
+        report = check_result(root, batch, result, (ledger.get("selection") or {}).get("noOpen"))
     batch["status"] = "checked" if report["ok"] else "needs-review"
-    batch["checked"] = report["summary"]
+    batch["checked"] = {**report["summary"], "version": CHECK_VERSION}
     # 인용한 파일의 지문을 남겨, 병합 전에 그 파일이 바뀌면 plan이 다시 대조하게 한다.
     batch["cited"] = {name: _file_hash(root / name) for name in report.get("citedFiles", [])}
     write_ledger(root, ledger)
