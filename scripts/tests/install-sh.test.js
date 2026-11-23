@@ -72,6 +72,8 @@ function runIsolatedInstaller(bash, args, options = {}) {
     createGrokHome = false,
     failPrune = false,
     failVerify = false,
+    failCodexMcp = false,
+    failClaudeOrchestrator = false,
     useCodexHomeOverride = false,
   } = options;
   const tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "ccc-install-sh-test-"));
@@ -87,7 +89,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
     const realNode = shellPath(process.execPath).replaceAll("'", "'\\''");
     writeExecutable(
       path.join(shimDir, "node"),
-      `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */install-state.js) [ "\${2:-}" = "begin" ] && echo '-' ;;\n  */install-mcp*.js) printf '%s\\n' "$*" >> "$MCP_CALLS_FILE" ;;\n  */verify-install.js) [ "\${FAIL_VERIFY:-0}" = "1" ] && exit 87 ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
+      `#!/usr/bin/env bash\ncase "\${1:-}" in\n  */install-select.js) exec '${realNode}' "$@" ;;\n  */install-state.js) [ "\${2:-}" = "begin" ] && echo '-' ;;\n  */install-mcp*.js) printf '%s\\n' "$*" >> "$MCP_CALLS_FILE"\n    if [[ "$1" == */install-mcp-codex.js && "$FAIL_CODEX_MCP" == 1 ]]; then exit 42; fi ;;\n  */verify-install.js) [ "\${FAIL_VERIFY:-0}" = "1" ] && exit 87 ;;\n  */prune-stale-assets.js) [ "\${FAIL_PRUNE:-0}" = "1" ] && exit 86 ;;\nesac\nexit 0\n`,
     );
     for (const command of ["agy", "jq"]) {
       writeExecutable(path.join(shimDir, command), "#!/usr/bin/env bash\nexit 0\n");
@@ -97,7 +99,12 @@ function runIsolatedInstaller(bash, args, options = {}) {
     for (const command of ["claude", "codex"]) {
       writeExecutable(
         path.join(shimDir, command),
-        `#!/usr/bin/env bash\nprintf '%s %s\\n' '${command}' "$*" >> "$CLI_CALLS_FILE"\nexit 0\n`,
+        [
+          "#!/usr/bin/env bash",
+          `printf '%s %s\\n' '${command}' "$*" >> "$CLI_CALLS_FILE"`,
+          ...(command === "claude" && failClaudeOrchestrator ? ['if [[ "$*" == "mcp add orchestrator "* ]]; then exit 42; fi'] : []),
+          "exit 0\n",
+        ].join("\n"),
       );
     }
     writeExecutable(
@@ -116,6 +123,7 @@ function runIsolatedInstaller(bash, args, options = {}) {
       GROK_HOME: shellPath(path.join(tempHome, ".grok")),
       FAIL_PRUNE: failPrune ? "1" : "0",
       FAIL_VERIFY: failVerify ? "1" : "0",
+      FAIL_CODEX_MCP: failCodexMcp ? "1" : "0",
       MCP_CALLS_FILE: shellPath(mcpCallsFile),
       CLI_CALLS_FILE: shellPath(cliCallsFile),
       OLYMPUS_UPDATE_CHECK_DISABLE: "1",
@@ -145,6 +153,32 @@ function runIsolatedInstaller(bash, args, options = {}) {
 }
 
 const bash = findBash();
+
+test("install.sh reports a failed Claude Orchestrator registration", { skip: !bash }, () => {
+  const result = runIsolatedInstaller(bash, ["--llm", "claude", "--register-mcp"], { failClaudeOrchestrator: true });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.status, 1, output);
+  assert.match(output, /Claude MCP 등록을 완료하지 못했습니다.*Orchestrator: 등록 실패/);
+  assert.doesNotMatch(output, /설치 완료!/);
+});
+
+test("install.sh reports a failed Codex MCP registration", { skip: !bash }, () => {
+  const result = runIsolatedInstaller(bash, ["--llm", "codex", "--register-mcp"], { failCodexMcp: true });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.error, undefined, output);
+  assert.equal(result.status, 1, output);
+  assert.match(output, /MCP: 설치 실패/);
+  assert.doesNotMatch(output, /설치 완료!/);
+});
+
+test("install.sh returns failure after an unsuccessful Codex MCP removal", { skip: !bash }, () => {
+  const result = runIsolatedInstaller(bash, ["--uninstall"], { failCodexMcp: true });
+  const output = `${result.stdout}\n${result.stderr}`;
+  assert.equal(result.error, undefined, output);
+  assert.equal(result.status, 1, output);
+  assert.match(output, /Codex MCP 제거를 완료하지 못했습니다/);
+  assert.doesNotMatch(output, /^  제거 완료!/m);
+});
 
 test("install.sh does not announce completion when final verification fails", { skip: !bash }, () => {
   const result = runIsolatedInstaller(bash, ["--llm", "codex"], { failVerify: true });

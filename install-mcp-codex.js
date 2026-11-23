@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Codex MCP server auto install/uninstall script
-// Registers global MCP servers via `codex mcp add/remove/get` CLI.
+// Registers global MCP servers via the Codex MCP CLI.
 //
 // Usage:
 //   List servers:     node install-mcp-codex.js --list
@@ -58,13 +58,15 @@ function runCodex(cmdArgs) {
   }
 }
 
-// Cache installation status to avoid redundant checks for the same MCP
-const _mcpInstalledCache = new Map();
-function isMcpInstalled(name) {
-  if (_mcpInstalledCache.has(name)) return _mcpInstalledCache.get(name);
-  const result = runCodex(`mcp get ${shellQuote(name)}`) !== null;
-  _mcpInstalledCache.set(name, result);
-  return result;
+function loadInstalledNames() {
+  try {
+    const servers = JSON.parse(runCodex("mcp list --json"));
+    if (Array.isArray(servers) && servers.every(server => typeof server?.name === "string")) {
+      return new Set(servers.map(server => server.name));
+    }
+  } catch { /* The CLI output may contain configuration values. */ }
+  console.error("[Error] Cannot read Codex MCP registrations. Check 'codex mcp list --json'.");
+  return null;
 }
 
 function resolveEnvValue(rawValue) {
@@ -190,12 +192,13 @@ function ensureServerStartupTimeout(configPath, serverName, timeoutSec) {
 
 if (isListMode) {
   const configs = loadAvailableConfigs();
+  const installedNames = loadInstalledNames();
   console.log("\nAvailable MCP servers (Codex):");
   console.log("━".repeat(70));
 
   for (const cfg of configs) {
-    const installed = isMcpInstalled(cfg.name);
-    const status = installed ? "✅ installed" : "  not installed";
+    let status = "  status unknown";
+    if (installedNames) status = installedNames.has(cfg.name) ? "✅ installed" : "  not installed";
     const apiKey = cfg.requiresApiKey ? "🔑 API key required" : "🆓 free";
     console.log(
       `  ${status}  ${cfg.name.padEnd(22)} ${apiKey}  ${cfg.description}`
@@ -205,7 +208,7 @@ if (isListMode) {
   console.log("\nInstall: node install-mcp-codex.js <name1> <name2> ...");
   console.log("All:     node install-mcp-codex.js --all");
   console.log("Remove:  node install-mcp-codex.js --uninstall <name>\n");
-  process.exit(0);
+  process.exit(installedNames ? 0 : 1);
 }
 
 if (isUninstall) {
@@ -215,9 +218,12 @@ if (isUninstall) {
     process.exit(1);
   }
 
+  const installedNames = loadInstalledNames();
+  if (!installedNames) process.exit(1);
   let removed = 0;
+  let failed = 0;
   for (const name of mcpNames) {
-    if (!isMcpInstalled(name)) {
+    if (!installedNames.has(name)) {
       console.log(`  ⚠️  ${name} is not installed.`);
       continue;
     }
@@ -225,21 +231,24 @@ if (isUninstall) {
     const result = runCodex(`mcp remove ${shellQuote(name)}`);
     if (result !== null) {
       console.log(`  ✅ ${name} removed`);
+      installedNames.delete(name);
       removed++;
     } else {
-      console.log(`  ❌ ${name} removal failed`);
+      console.error(`  ❌ ${name} removal failed`);
+      failed++;
     }
   }
 
   if (removed > 0) {
     console.log(`\n${removed} MCP server(s) removed.`);
   }
-  process.exit(0);
+  process.exit(failed ? 1 : 0);
 }
 
 const configs = loadAvailableConfigs();
 
 let toInstall = [];
+let failed = 0;
 if (isAllMode) {
   toInstall = configs.filter(
     (c) => !c.requiresApiKey && !AUTO_INSTALL_EXCLUDES.has(c.name)
@@ -254,6 +263,7 @@ if (isAllMode) {
       console.error(
         `  ⚠️  '${name}' config not found. Use --list to see available servers.`
       );
+      failed++;
     }
   }
 } else {
@@ -270,18 +280,13 @@ if (isAllMode) {
 
 if (toInstall.length === 0) {
   console.log("No MCP servers to install.");
-  process.exit(0);
+  process.exit(failed ? 1 : 0);
 }
 
 let installed = 0;
 let skipped = 0;
-const serverTimeoutTargets = [];
-if (toInstall.some((cfg) => cfg.name === "fetch")) {
-  serverTimeoutTargets.push({
-    name: "fetch",
-    timeoutSec: FETCH_STARTUP_TIMEOUT_SEC,
-  });
-}
+const installedNames = loadInstalledNames();
+if (!installedNames) process.exit(1);
 for (const cfg of toInstall) {
   if (cfg.requiresApiKey) {
     const envVar = cfg.apiKeyEnvVar || "API_KEY";
@@ -291,7 +296,7 @@ for (const cfg of toInstall) {
     }
   }
 
-  if (isMcpInstalled(cfg.name)) {
+  if (installedNames.has(cfg.name)) {
     console.log(`  ⏭️  ${cfg.name} (already installed, skipped)`);
     skipped++;
     continue;
@@ -299,41 +304,44 @@ for (const cfg of toInstall) {
 
   const addCmd = buildAddCommand(cfg);
   if (!addCmd) {
-    console.log(`  ❌ ${cfg.name} install failed (missing config.command)`);
+    console.error(`  ❌ ${cfg.name} install failed (missing config.command)`);
+    failed++;
     continue;
   }
 
   const result = runCodex(addCmd);
   if (result !== null) {
     console.log(`  ✅ ${cfg.name} installed`);
+    installedNames.add(cfg.name);
     installed++;
   } else {
-    console.log(`  ❌ ${cfg.name} install failed`);
+    console.error(`  ❌ ${cfg.name} install failed`);
+    failed++;
   }
 }
 
-for (const target of serverTimeoutTargets) {
+if (installedNames.has("fetch") && toInstall.some(cfg => cfg.name === "fetch")) {
   const timeoutResult = ensureServerStartupTimeout(
     codexConfigPath,
-    target.name,
-    target.timeoutSec
+    "fetch",
+    FETCH_STARTUP_TIMEOUT_SEC
   );
   if (timeoutResult.ok && timeoutResult.changed) {
     console.log(
-      `  ✅ ${target.name} startup_timeout_sec=${target.timeoutSec} configured`
+      `  ✅ fetch startup_timeout_sec=${FETCH_STARTUP_TIMEOUT_SEC} configured`
     );
   } else if (timeoutResult.ok) {
     console.log(
-      `  ⏭️  ${target.name} startup_timeout_sec=${target.timeoutSec} already configured`
+      `  ⏭️  fetch startup_timeout_sec=${FETCH_STARTUP_TIMEOUT_SEC} already configured`
     );
   } else {
-    console.log(
-      `  ⚠️  ${target.name} timeout config skipped (${timeoutResult.reason})`
-    );
+    console.error(`  ❌ fetch timeout config failed (${timeoutResult.reason})`);
+    failed++;
   }
 }
 
-console.log(`\nDone: ${installed} installed, ${skipped} skipped`);
+console.log(`\nDone: ${installed} installed, ${skipped} skipped, ${failed} failed`);
+process.exitCode = failed ? 1 : 0;
 if (installed > 0) {
   console.log("Restart Codex CLI for changes to take effect.\n");
 }

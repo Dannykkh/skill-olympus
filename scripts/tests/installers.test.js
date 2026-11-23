@@ -623,6 +623,24 @@ for (const scenario of [
     extraArgs: " --register-mcp",
     registersMcp: true,
   },
+  {
+    name: "reports a failed Codex registration with --register-mcp",
+    extraArgs: " --register-mcp",
+    registersMcp: true,
+    failPlaywright: true,
+  },
+  {
+    name: "reports a failed Claude Playwright registration",
+    extraArgs: " --register-mcp",
+    registersMcp: true,
+    failClaude: true,
+  },
+  {
+    name: "keeps the existing orchestrator when its registration fails",
+    extraArgs: " --register-mcp",
+    registersMcp: true,
+    failOrchestrator: true,
+  },
 ]) {
 test(`Claude and Codex install.bat ${scenario.name}`, () => {
   if (process.platform !== "win32") {
@@ -638,7 +656,17 @@ test(`Claude and Codex install.bat ${scenario.name}`, () => {
   for (const cli of ["claude", "codex"]) {
     fs.writeFileSync(
       path.join(shimDir, `${cli}.cmd`),
-      `@echo ${cli} %*>>"%CLI_CALLS_FILE%"\r\n@exit /b 0\r\n`,
+      [
+        `@echo ${cli} %*>>"%CLI_CALLS_FILE%"`,
+        ...(cli === "claude" && scenario.failClaude ? ['@if "%1 %2 %3"=="mcp add --scope" exit /b 42'] : []),
+        ...(cli === "codex" ? [
+          '@if "%1 %2"=="mcp list" echo []',
+          '@if "%1 %2"=="mcp get" exit /b 1',
+          ...(scenario.failPlaywright ? ['@if "%1 %2 %3"=="mcp add playwright" exit /b 42'] : []),
+          ...(scenario.failOrchestrator ? ['@if "%1 %2 %3"=="mcp add --env" exit /b 42'] : []),
+        ] : []),
+        '@exit /b 0',
+      ].join("\r\n"),
       "utf8",
     );
   }
@@ -674,7 +702,7 @@ test(`Claude and Codex install.bat ${scenario.name}`, () => {
     });
     const output = `${result.stdout || ""}\n${result.stderr || ""}`;
     assert.equal(result.error, undefined, output);
-    assert.equal(result.status, 0, output);
+    assert.equal(result.status, scenario.failClaude || scenario.failPlaywright || scenario.failOrchestrator ? 1 : 0, output);
     assert.doesNotMatch(output, /was unexpected at this time|not recognized as an internal/i);
 
     const cliCalls = fs.existsSync(callsFile)
@@ -683,6 +711,18 @@ test(`Claude and Codex install.bat ${scenario.name}`, () => {
     const mcpChanges = cliCalls.filter((call) => /\bmcp (?:add|remove)\b/.test(call));
 
     if (scenario.registersMcp) {
+      assert.ok(mcpChanges.some((call) => /^codex mcp add playwright /.test(call)), output);
+      assert.ok(!mcpChanges.some((call) => /^codex mcp remove orchestrator\b/.test(call)), output);
+      if (scenario.failClaude) {
+        assert.match(output, /Requested Claude MCP registration did not complete\. Playwright: Install failed/);
+        assert.doesNotMatch(output, /Installation complete!/);
+        return;
+      }
+      if (scenario.failPlaywright || scenario.failOrchestrator) {
+        assert.match(output, scenario.failPlaywright ? /MCP: Install failed/ : /Orchestrator: Register failed/);
+        assert.doesNotMatch(output, /Installation complete!/);
+        return;
+      }
       assert.ok(
         mcpChanges.some((call) => /^claude mcp add orchestrator --scope user /.test(call)),
         `Missing Claude orchestrator registration:\n${cliCalls.join("\n")}`,
@@ -867,6 +907,115 @@ test("Antigravity hook config preserves unrelated groups and rejects the retired
   assert.deepEqual(Object.keys(remaining), ["thirdParty"]);
 });
 
+function writeMcpCliFixture(home, name, script) {
+  const bin = path.join(home, "bin");
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, "fixture.js"), script);
+  if (process.platform === "win32") {
+    fs.writeFileSync(path.join(bin, name + ".cmd"), '@node "%~dp0fixture.js" %*\r\n@exit /b %errorlevel%\r\n');
+  } else {
+    fs.writeFileSync(path.join(bin, name), '#!/bin/sh\nexec node "$(dirname "$0")/fixture.js" "$@"\n', { mode: 0o755 });
+  }
+  return bin;
+}
+
+test("Claude MCP only changes the requested scope when another scope shadows it", () => {
+  const home = makeTempHome("ccc-claude-mcp-scope-");
+  const bin = writeMcpCliFixture(home, "claude", `
+    const fs = require("node:fs");
+    const [, action, ...args] = process.argv.slice(2);
+    const entries = JSON.parse(fs.readFileSync(process.env.REGISTRY, "utf8"));
+    if (action === "get") {
+      const effective = ["local", "project", "user"].find(key => key in entries);
+      if (!effective) process.exit(1);
+      console.log("Scope: " + effective + " config\\nCommand: node\\nArgs: --version");
+    } else if (action === "remove") {
+      const scope = args[args.indexOf("-s") + 1];
+      if (scope === process.env.FAIL_REMOVE) process.exit(1);
+      delete entries[scope];
+      fs.writeFileSync(process.env.REGISTRY, JSON.stringify(entries));
+    } else if (action === "add") {
+      const scope = args[args.indexOf("--scope") + 1];
+      if (scope in entries) {
+        console.error("MCP server playwright already exists in " + (scope === "project" ? ".mcp.json" : scope + " config"));
+        process.exit(1);
+      }
+      entries[scope] = "packaged";
+      fs.writeFileSync(process.env.REGISTRY, JSON.stringify(entries));
+    }
+  `);
+  const registry = path.join(home, "scopes.json");
+  const env = isolatedHomeEnv(home, { PATH: bin + path.delimiter + process.env.PATH, REGISTRY: registry });
+  const run = (...args) => spawnSync(process.execPath, [path.join(repoRoot, "install-mcp.js"), ...args, "playwright"],
+    { cwd: home, env, encoding: "utf8" });
+  const read = () => JSON.parse(fs.readFileSync(registry, "utf8"));
+  const personal = { local: "personal-local", project: "personal-project" };
+  fs.writeFileSync(registry, JSON.stringify(personal));
+  assert.equal(run().status, 0);
+  assert.deepEqual(read(), { ...personal, user: "packaged" });
+
+  fs.writeFileSync(registry, JSON.stringify({ ...personal, user: "personal-user" }));
+  for (const scope of ["user", "project"]) {
+    const before = read();
+    assert.equal(run("--scope", scope).status, 0);
+    assert.deepEqual(read(), before);
+    env.FAIL_REMOVE = scope;
+    assert.equal(run("--scope", scope, "--force").status, 1);
+    assert.deepEqual(read(), before);
+    delete env.FAIL_REMOVE;
+    assert.equal(run("--scope", scope, "--force").status, 0);
+    assert.deepEqual(read(), { ...before, [scope]: "packaged" });
+  }
+});
+
+test("Codex MCP reports partial registration, removal and unreadable registry failures", () => {
+  const home = makeTempHome("ccc-codex-mcp-status-");
+  const bin = writeMcpCliFixture(home, "codex", `
+    const fs = require("node:fs");
+    const [, , , action, name] = process.argv;
+    const state = JSON.parse(fs.readFileSync(process.env.REGISTRY, "utf8"));
+    if (action === "list") console.log(JSON.stringify(state.map(name => ({ name }))));
+    if (action === "get" && !state.includes(name)) process.exit(1);
+    if (action === "add" || action === "remove") {
+      if (name === process.env.FAIL_SERVER) process.exit(42);
+      const next = action === "add" ? [...state, name] : state.filter(item => item !== name);
+      fs.writeFileSync(process.env.REGISTRY, JSON.stringify(next));
+    }
+  `);
+  const registry = path.join(home, "registry.json");
+  fs.writeFileSync(registry, "[]");
+  const env = isolatedHomeEnv(home, {
+    CODEX_HOME: path.join(home, ".codex"), PATH: bin + path.delimiter + process.env.PATH,
+    REGISTRY: registry, FAIL_SERVER: "context7",
+  });
+  const run = (...args) => spawnSync(process.execPath, [path.join(repoRoot, "install-mcp-codex.js"), ...args],
+    { cwd: home, env, encoding: "utf8" });
+
+  const partial = run("--all");
+  assert.equal(partial.status, 1);
+  assert.match(partial.stderr, /context7 install failed/);
+  assert.deepEqual(JSON.parse(fs.readFileSync(registry, "utf8")), ["playwright"]);
+  env.FAIL_SERVER = "";
+  assert.equal(run("--all").status, 0);
+  assert.deepEqual(JSON.parse(fs.readFileSync(registry, "utf8")).sort(), ["context7", "playwright"]);
+  assert.equal(run("playwright", "unknown-server").status, 1);
+
+  env.FAIL_SERVER = "context7";
+  assert.equal(run("--uninstall", "context7", "playwright").status, 1);
+  assert.deepEqual(JSON.parse(fs.readFileSync(registry, "utf8")), ["context7"]);
+  assert.equal(run("--uninstall", "playwright").status, 0);
+
+  fs.writeFileSync(registry, "unreadable fixture");
+  for (const args of [["playwright"], ["--uninstall", "playwright"], ["--list"]]) {
+    const result = run(...args);
+    assert.equal(result.status, 1);
+    assert.doesNotMatch(result.stdout, /not installed/);
+    assert.doesNotMatch(result.stderr, /unreadable fixture/);
+    if (args[0] === "--list") assert.match(result.stdout, /status unknown\s+playwright/);
+    assert.equal(fs.readFileSync(registry, "utf8"), "unreadable fixture");
+  }
+});
+
 test("Antigravity MCP adapter owns only the entries it installs", () => {
   const googleHome = makeTempHome("ccc-antigravity-mcp-test-");
   const env = { ...process.env, ANTIGRAVITY_HOME: googleHome };
@@ -902,6 +1051,65 @@ test("Antigravity MCP adapter owns only the entries it installs", () => {
   assert.ok(config.mcpServers.context7, "modified managed entry should be preserved");
   assert.equal(Object.prototype.hasOwnProperty.call(config.mcpServers, "playwright"), false);
   assert.deepEqual(config.mcpServers.personal, { command: "personal-mcp" });
+});
+
+for (const [filename, field] of [
+  ["config/mcp_config.json", "mcpServers"],
+  ["antigravity-cli/.olympus-mcp-manifest.json", "managedServers"],
+]) {
+  test(`Antigravity MCP preserves both files when ${filename} is unreadable or invalid`, () => {
+    const home = makeTempHome("ccc-antigravity-mcp-invalid-");
+    const config = path.join(home, "config", "mcp_config.json");
+    const manifest = path.join(home, "antigravity-cli", ".olympus-mcp-manifest.json");
+    const broken = path.join(home, filename);
+    const other = broken === config ? manifest : config;
+    const env = { ...process.env, ANTIGRAVITY_HOME: home };
+    fs.mkdirSync(path.dirname(config));
+    fs.mkdirSync(path.dirname(manifest));
+    const valid = Buffer.from(JSON.stringify({
+      [broken === config ? "managedServers" : "mcpServers"]: { context7: { command: "existing" } },
+    }));
+    fs.writeFileSync(other, valid);
+    const invalidInputs = [
+      '{"fixture-private-value":', "[]", "null", JSON.stringify({ [field]: [] }),
+      JSON.stringify({ [field]: null }),
+      Buffer.concat([Buffer.from('{"label":"'), Buffer.from([0xff]), Buffer.from('"}')]),
+    ];
+    if (broken === manifest) invalidInputs.push('{"updatedAt":"legacy"}');
+    for (const input of invalidInputs) {
+      const original = Buffer.from(input);
+      for (const args of [["playwright"], ["--uninstall", "context7"]]) {
+        fs.writeFileSync(broken, original);
+        const result = spawnSync(process.execPath, [installAntigravityMcp, ...args], { env, encoding: "utf8" });
+        assert.equal(result.status, 1);
+        assert.ok(result.stderr.includes(broken), result.stderr);
+        assert.doesNotMatch(result.stderr, /fixture-private-value/);
+        assert.deepEqual(fs.readFileSync(broken), original);
+        assert.deepEqual(fs.readFileSync(other), valid);
+      }
+    }
+    fs.unlinkSync(broken);
+    fs.mkdirSync(broken);
+    const unreadable = spawnSync(process.execPath, [installAntigravityMcp, "playwright"], { env, encoding: "utf8" });
+    assert.equal(unreadable.status, 1);
+    assert.ok(unreadable.stderr.includes(broken), unreadable.stderr);
+    assert.ok(fs.statSync(broken).isDirectory());
+    assert.deepEqual(fs.readFileSync(other), valid);
+  });
+}
+
+test("Antigravity MCP initializes missing state and retains existing UTF-8 settings", () => {
+  const home = makeTempHome("ccc-antigravity-mcp-init-");
+  const env = { ...process.env, ANTIGRAVITY_HOME: home };
+  const config = path.join(home, "config", "mcp_config.json");
+  const manifest = path.join(home, "antigravity-cli", ".olympus-mcp-manifest.json");
+  fs.mkdirSync(path.dirname(config));
+  fs.writeFileSync(config, '\uFEFF{"label":"기존 설정"}', "utf8");
+  const install = spawnSync(process.execPath, [installAntigravityMcp, "playwright"], { env, encoding: "utf8" });
+  assert.equal(install.status, 0, install.stderr);
+  const state = JSON.parse(fs.readFileSync(config, "utf8"));
+  assert.equal(state.label, "기존 설정");
+  assert.deepEqual(JSON.parse(fs.readFileSync(manifest, "utf8")).managedServers.playwright, state.mcpServers.playwright);
 });
 
 test("Antigravity Mnemo parses camelCase transcripts, redacts private blocks, and deduplicates", async () => {

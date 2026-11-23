@@ -30,8 +30,8 @@ const configPath = path.join(googleHome, "config", "mcp_config.json");
 const manifestPath = path.join(googleHome, "antigravity-cli", ".olympus-mcp-manifest.json");
 const autoInstallExcludes = new Set(["fetch"]);
 
-function readJson(filePath, fallback = {}) {
-  try { return JSON.parse(fs.readFileSync(filePath, "utf8")); } catch { return fallback; }
+function readDefinition(name) {
+  try { return JSON.parse(fs.readFileSync(path.join(configsDir, name), "utf8")); } catch { return null; }
 }
 
 function writeJson(filePath, value) {
@@ -74,20 +74,45 @@ function loadDefinitions() {
   if (!fs.existsSync(configsDir)) throw new Error(`MCP config directory not found: ${configsDir}`);
   return fs.readdirSync(configsDir)
     .filter((name) => name.endsWith(".json"))
-    .map((name) => readJson(path.join(configsDir, name), null))
+    .map(readDefinition)
     .filter((value) => value?.name && value?.config)
     .map((value) => ({ ...value, config: normalizeServer(value.config) }))
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-function loadState() {
-  const config = readJson(configPath, {});
-  if (!config.mcpServers || typeof config.mcpServers !== "object" || Array.isArray(config.mcpServers)) {
-    config.mcpServers = {};
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function readServerState(filePath, field) {
+  let bytes;
+  try {
+    bytes = fs.readFileSync(filePath);
+  } catch (error) {
+    if (error.code === "ENOENT" && !fs.lstatSync(filePath, { throwIfNoEntry: false })) {
+      return { [field]: {} };
+    }
+    throw new Error(`Cannot read ${filePath} (${error.code})`);
   }
-  const manifest = readJson(manifestPath, { managedServers: {} });
-  if (!manifest.managedServers || typeof manifest.managedServers !== "object") manifest.managedServers = {};
-  return { config, manifest };
+
+  let state;
+  try {
+    state = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    // JSON.parse diagnostics may quote configuration values.
+    throw new Error(`Invalid UTF-8 JSON in ${filePath}`);
+  }
+  if (!isObject(state)) throw new Error(`Expected a JSON object in ${filePath}`);
+  if (field === "mcpServers" && !Object.hasOwn(state, field)) state[field] = {};
+  if (!isObject(state[field])) throw new Error(`Expected an object for ${field} in ${filePath}`);
+  return state;
+}
+
+function loadState() {
+  return {
+    config: readServerState(configPath, "mcpServers"),
+    manifest: readServerState(manifestPath, "managedServers"),
+  };
 }
 
 function saveState(config, manifest) {

@@ -48,10 +48,12 @@ set "CREATED_CLAUDE_DIR=0"
 set "HAS_CLAUDE_CLI=0"
 set "JQ_MISSING=0"
 set "CLAUDE_MCP_RESULT=not-run"
+set "CLAUDE_MCP_FAILED=0"
 set "CLAUDE_ORCH_RESULT=not-run"
 set "CODEX_MNEMO_RESULT=not-run"
 set "CODEX_SYNC_RESULT=not-run"
 set "CODEX_MCP_RESULT=not-run"
+set "CODEX_MCP_FAILED=0"
 set "CODEX_MULTI_AGENT_RESULT=not-run"
 set "CODEX_ORCH_RESULT=not-run"
 set "ANTIGRAVITY_MNEMO_RESULT=not-run"
@@ -169,7 +171,7 @@ echo.
 if "%MODE%" NEQ "uninstall" (
     echo   Global rules and memory notice for integrated CLI targets:
     echo   - Installs rules, hooks, and catalogs in selected CLI homes.
-    echo   - MCP servers are registered only with --register-mcp; existing registrations are kept.
+    echo   - A plain install keeps existing MCP registrations. --register-mcp can replace settings for the selected servers.
     echo   - Reinstall replaces managed rule blocks; keep personal rules outside markers.
     echo   - Grok shares Claude rules; its grok-mnemo.md file is replaced in full.
     echo   - Saving hooks write project conversations; MNEMO_DISABLE=1 disables saving hooks only.
@@ -307,6 +309,7 @@ if "%MODE%"=="uninstall" (
                 echo       Done!
             ) else (
                 set "CODEX_MCP_RESULT=Partial remove failure"
+                set "CODEX_MCP_FAILED=1"
                 echo       [WARN] Partial remove failed exit: !errorlevel!
             )
         ) else (
@@ -327,8 +330,9 @@ if "%MODE%"=="uninstall" (
             set "CODEX_ORCH_RESULT=Removed"
             echo       Done!
         ) else (
-            set "CODEX_ORCH_RESULT=Skip/failed"
-            echo       [WARN] Remove failed or not registered
+            set "CODEX_ORCH_RESULT=Remove failed"
+            set "CODEX_MCP_FAILED=1"
+            echo       [ERROR] Codex Orchestrator removal failed. 1>&2
         )
     ) else (
         set "CODEX_ORCH_RESULT=Skip: codex CLI not found"
@@ -399,7 +403,12 @@ if "%MODE%"=="uninstall" (
     echo [12/14] Removing Antigravity MCP/Orchestrator...
     if exist "%SCRIPT_DIR%install-mcp-antigravity.js" (
         node "%SCRIPT_DIR%install-mcp-antigravity.js" --uninstall !DEFAULT_MCP_SERVERS! !LEGACY_MCP_SERVERS! orchestrator
-        echo       Done!
+        if errorlevel 1 (
+            set "ANTIGRAVITY_MCP_RESULT=Remove failed"
+            echo       [ERROR] Antigravity MCP removal failed. 1>&2
+        ) else (
+            echo       Done!
+        )
     ) else (
         echo       [WARN] install-mcp-antigravity.js not found, skipping
     )
@@ -422,6 +431,11 @@ if "%MODE%"=="uninstall" (
 
     echo.
     echo ============================================
+    if "!ANTIGRAVITY_MCP_RESULT!"=="Remove failed" goto :antigravity_mcp_remove_failed
+    if "!CODEX_MCP_FAILED!"=="1" (
+        echo   Codex MCP removal did not complete. 1>&2
+        exit /b 1
+    )
     echo   Removed!
     echo ============================================
     echo.
@@ -631,9 +645,13 @@ if "!REGISTER_MCP!"=="0" (
     echo       Starting default MCP auto-install: !DEFAULT_MCP_SERVERS!
     echo.
     node "%SCRIPT_DIR%install-mcp.js" !DEFAULT_MCP_SERVERS!
-    echo.
-    echo       Done. Additional install: node "%SCRIPT_DIR%install-mcp.js" --list
-    set "CLAUDE_MCP_RESULT=Installed"
+    if errorlevel 1 (
+        set "CLAUDE_MCP_RESULT=Install failed"
+        set "CLAUDE_MCP_FAILED=1"
+    ) else (
+        set "CLAUDE_MCP_RESULT=Installed"
+    )
+    echo       Playwright: !CLAUDE_MCP_RESULT!
 ) else (
     set "CLAUDE_MCP_RESULT=Skip: claude CLI not found"
     echo       !CLAUDE_MCP_RESULT!
@@ -674,12 +692,18 @@ if 1==1 (
             REM (the Codex/Antigravity phases would never run).
             call claude mcp remove orchestrator -s user >nul 2>nul
             call claude mcp add orchestrator --scope user -- node "!ORCH_DIST:\=/!" >nul 2>nul
-            set "CLAUDE_ORCH_RESULT=Registered"
+            if errorlevel 1 (
+                set "CLAUDE_ORCH_RESULT=Register failed"
+                set "CLAUDE_MCP_FAILED=1"
+            ) else (
+                set "CLAUDE_ORCH_RESULT=Registered"
+            )
         ) else (
             set "CLAUDE_ORCH_RESULT=Skip: claude CLI not found"
         )
     ) else (
         set "CLAUDE_ORCH_RESULT=Skip: dependencies/build failed"
+        if "!REGISTER_MCP!"=="1" if "!HAS_CLAUDE_CLI!"=="1" set "CLAUDE_MCP_FAILED=1"
         echo       [WARN] Run manually: cd /d "!ORCH_DIR!" ^&^& npm install ^&^& npm run build
     )
     echo       !CLAUDE_ORCH_RESULT!
@@ -765,9 +789,11 @@ if 1==1 (
                 set "CODEX_MCP_RESULT=Installed"
             ) else (
                 set "CODEX_MCP_RESULT=Install failed"
+                set "CODEX_MCP_FAILED=1"
             )
         ) else (
             set "CODEX_MCP_RESULT=Skip: no install-mcp-codex.js"
+            set "CODEX_MCP_FAILED=1"
         )
         REM Current Codex releases ship stable multi-agent enabled by default.
         REM Preserve the user's feature configuration instead of mutating it.
@@ -805,19 +831,19 @@ if 1==1 (
         set "CODEX_ORCH_RESULT=Skip: codex CLI not found"
     ) else if "!CODEX_ORCH_READY!"=="0" (
         set "CODEX_ORCH_RESULT=Skip: dependencies/build failed"
+        if "!REGISTER_MCP!"=="1" set "CODEX_MCP_FAILED=1"
         echo       [WARN] Run manually: cd /d "!CODEX_ORCH_DIR!" ^&^& npm install ^&^& npm run build
     ) else if "!REGISTER_MCP!"=="0" (
-        REM "codex mcp remove" + "add" rewrites the table, which also drops a user's
-        REM "enabled = false". Leave an existing entry alone unless registration was requested.
+        REM Leave the user's existing entry alone unless registration was requested.
         set "CODEX_ORCH_RESULT=Built. !MCP_NOT_REQUESTED!"
     ) else (
         set "CODEX_ORCH_DIST_NORM=!CODEX_ORCH_DIST:\=/!"
-        call codex mcp remove orchestrator >nul 2>nul
         call codex mcp add --env ORCHESTRATOR_WORKER_ID=pm orchestrator -- node "!CODEX_ORCH_DIST_NORM!" >nul 2>nul
         if !errorlevel! equ 0 (
             set "CODEX_ORCH_RESULT=Registered"
         ) else (
             set "CODEX_ORCH_RESULT=Register failed"
+            set "CODEX_MCP_FAILED=1"
         )
     )
     echo       !CODEX_ORCH_RESULT!
@@ -1034,6 +1060,15 @@ if errorlevel 1 (
 REM Restore CLAUDECODE env var
 set "CLAUDECODE=!SAVE_CLAUDECODE!"
 
+if "!CLAUDE_MCP_FAILED!"=="1" (
+    echo [ERROR] Requested Claude MCP registration did not complete. Playwright: !CLAUDE_MCP_RESULT!, Orchestrator: !CLAUDE_ORCH_RESULT! 1>&2
+    exit /b 1
+)
+if "!CODEX_MCP_FAILED!"=="1" (
+    echo [ERROR] Requested Codex MCP registration did not complete. MCP: !CODEX_MCP_RESULT!, Orchestrator: !CODEX_ORCH_RESULT! 1>&2
+    exit /b 1
+)
+
 echo.
 echo ============================================
 echo   Installation complete!
@@ -1121,3 +1156,8 @@ echo.
 
 endlocal
 pause
+exit /b
+
+:antigravity_mcp_remove_failed
+echo   Antigravity MCP removal did not complete. 1>&2
+exit /b 1

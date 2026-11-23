@@ -39,6 +39,7 @@ HERMES_DIR="${HERMES_HOME:-$HOME/.hermes}"
 CODEX_MNEMO_RESULT="미실행"
 CODEX_SYNC_RESULT="미실행"
 CODEX_MCP_RESULT="미실행"
+CODEX_MCP_FAILED=0
 CODEX_MULTI_AGENT_RESULT="미실행"
 CODEX_ORCH_RESULT="미실행"
 ANTIGRAVITY_MNEMO_RESULT="미실행"
@@ -54,6 +55,7 @@ CREATED_CLAUDE_DIR=0
 HAS_CLAUDE_CLI=0
 JQ_MISSING=0
 CLAUDE_MCP_RESULT="미실행"
+CLAUDE_MCP_FAILED=0
 CLAUDE_ORCH_RESULT="미실행"
 INCLUDE_SOURCE_ONLY_SKILLS=0
 INCLUDE_BROAD_CODING_SKILLS=0
@@ -137,7 +139,7 @@ echo ""
 if [ "$MODE" != "uninstall" ]; then
     echo "  Global rules and memory notice for integrated CLI targets:"
     echo "  - Installs rules, hooks, and catalogs in selected CLI homes."
-    echo "  - MCP servers are registered only with --register-mcp; existing registrations are kept."
+    echo "  - A plain install keeps existing MCP registrations. --register-mcp can replace settings for the selected servers."
     echo "  - Reinstall replaces managed rule blocks; keep personal rules outside markers."
     echo "  - Grok shares Claude rules; its grok-mnemo.md file is replaced in full."
     echo "  - Saving hooks write project conversations; MNEMO_DISABLE=1 disables saving hooks only."
@@ -268,6 +270,7 @@ if [ "$MODE" = "uninstall" ]; then
                 echo "      완료!"
             else
                 CODEX_MCP_RESULT="제거 부분 실패"
+                CODEX_MCP_FAILED=1
                 echo "      [경고] 일부 제거 실패"
             fi
         else
@@ -286,8 +289,9 @@ if [ "$MODE" = "uninstall" ]; then
             CODEX_ORCH_RESULT="제거 완료"
             echo "      완료!"
         else
-            CODEX_ORCH_RESULT="스킵/실패"
-            echo "      [경고] 제거 실패 또는 미등록"
+            CODEX_ORCH_RESULT="제거 실패"
+            CODEX_MCP_FAILED=1
+            echo "      [오류] Codex Orchestrator 제거 실패" >&2
         fi
     else
         CODEX_ORCH_RESULT="스킵(codex CLI 없음)"
@@ -357,8 +361,12 @@ if [ "$MODE" = "uninstall" ]; then
     echo ""
     echo "[12/14] Antigravity MCP/Orchestrator 제거 중..."
     if [ -f "$SCRIPT_DIR/install-mcp-antigravity.js" ]; then
-        node "$SCRIPT_DIR/install-mcp-antigravity.js" --uninstall context7 playwright chrome-devtools sequential-thinking orchestrator
-        echo "      완료!"
+        if node "$SCRIPT_DIR/install-mcp-antigravity.js" --uninstall context7 playwright chrome-devtools sequential-thinking orchestrator; then
+            echo "      완료!"
+        else
+            ANTIGRAVITY_MCP_RESULT="제거 실패"
+            echo "      [오류] Antigravity MCP 제거 실패" >&2
+        fi
     else
         echo "      [경고] install-mcp-antigravity.js 없음, 건너뜀"
     fi
@@ -379,6 +387,14 @@ if [ "$MODE" = "uninstall" ]; then
 
     echo ""
     echo "============================================"
+    if [ "$ANTIGRAVITY_MCP_RESULT" = "제거 실패" ]; then
+        echo "  Antigravity MCP 제거를 완료하지 못했습니다." >&2
+        exit 1
+    fi
+    if [ "$CODEX_MCP_FAILED" = "1" ]; then
+        echo "  Codex MCP 제거를 완료하지 못했습니다." >&2
+        exit 1
+    fi
     echo "  제거 완료!"
     echo "============================================"
     echo ""
@@ -565,10 +581,13 @@ elif [ "$HAS_CLAUDE_CLI" = "1" ]; then
     echo ""
     echo "      기본 MCP 자동 설치를 시작합니다: playwright"
     echo ""
-    node "$SCRIPT_DIR/install-mcp.js" playwright
-    echo ""
-    echo "      완료! (추가: node \"$SCRIPT_DIR/install-mcp.js\" --list)"
-    CLAUDE_MCP_RESULT="설치 완료"
+    if node "$SCRIPT_DIR/install-mcp.js" playwright; then
+        CLAUDE_MCP_RESULT="설치 완료"
+    else
+        CLAUDE_MCP_RESULT="설치 실패"
+        CLAUDE_MCP_FAILED=1
+    fi
+    echo "      Playwright: $CLAUDE_MCP_RESULT"
 else
     CLAUDE_MCP_RESULT="스킵(claude CLI 없음)"
     echo "      $CLAUDE_MCP_RESULT"
@@ -595,13 +614,18 @@ if true; then
             CLAUDE_ORCH_RESULT="빌드 완료, $MCP_NOT_REQUESTED"
         elif [ "$HAS_CLAUDE_CLI" = "1" ]; then
             claude mcp remove orchestrator -s user >/dev/null 2>&1 || true
-            claude mcp add orchestrator --scope user -- node "$ORCH_DIST" >/dev/null 2>&1
-            CLAUDE_ORCH_RESULT="등록 완료"
+            if claude mcp add orchestrator --scope user -- node "$ORCH_DIST" >/dev/null 2>&1; then
+                CLAUDE_ORCH_RESULT="등록 완료"
+            else
+                CLAUDE_ORCH_RESULT="등록 실패"
+                CLAUDE_MCP_FAILED=1
+            fi
         else
             CLAUDE_ORCH_RESULT="스킵(claude CLI 없음)"
         fi
     else
         CLAUDE_ORCH_RESULT="스킵(빌드 실패)"
+        if [ "$REGISTER_MCP" = "1" ] && [ "$HAS_CLAUDE_CLI" = "1" ]; then CLAUDE_MCP_FAILED=1; fi
     fi
     echo "      $CLAUDE_ORCH_RESULT"
 fi
@@ -678,9 +702,15 @@ if true; then
         if [ "$REGISTER_MCP" = "0" ]; then
             CODEX_MCP_RESULT="$MCP_NOT_REQUESTED"
         elif [ -f "$SCRIPT_DIR/install-mcp-codex.js" ]; then
-            node "$SCRIPT_DIR/install-mcp-codex.js" playwright && CODEX_MCP_RESULT="설치 완료" || CODEX_MCP_RESULT="설치 실패"
+            if node "$SCRIPT_DIR/install-mcp-codex.js" playwright; then
+                CODEX_MCP_RESULT="설치 완료"
+            else
+                CODEX_MCP_RESULT="설치 실패"
+                CODEX_MCP_FAILED=1
+            fi
         else
             CODEX_MCP_RESULT="스킵(install-mcp-codex.js 없음)"
+            CODEX_MCP_FAILED=1
         fi
         # Current Codex releases ship stable multi-agent enabled by default.
         # Preserve the user's feature configuration instead of mutating it.
@@ -707,16 +737,16 @@ if true; then
     if command -v codex >/dev/null 2>&1; then
         if [ ! -f "$CODEX_ORCH_DIST" ] || [ ! -f "$CODEX_ORCH_SDK" ] || [ ! -f "$CODEX_ORCH_SQLITE" ]; then
             CODEX_ORCH_RESULT="스킵(빌드 실패)"
+            if [ "$REGISTER_MCP" = "1" ]; then CODEX_MCP_FAILED=1; fi
         elif [ "$REGISTER_MCP" = "0" ]; then
-            # `codex mcp remove` 후 `add` 는 표를 새로 써서 사용자의 `enabled = false` 도 지운다.
-            # 등록을 요청하지 않았으면 기존 항목을 그대로 둔다.
+            # 등록을 요청하지 않았으면 사용자의 기존 항목을 그대로 둔다.
             CODEX_ORCH_RESULT="빌드 완료, $MCP_NOT_REQUESTED"
         else
-            codex mcp remove orchestrator >/dev/null 2>&1 || true
             if codex mcp add --env "ORCHESTRATOR_WORKER_ID=pm" orchestrator -- node "$CODEX_ORCH_DIST" >/dev/null 2>&1; then
                 CODEX_ORCH_RESULT="등록 완료"
             else
                 CODEX_ORCH_RESULT="등록 실패"
+                CODEX_MCP_FAILED=1
             fi
         fi
     else
@@ -916,6 +946,15 @@ fi
 # CLAUDECODE 환경변수 복원
 if [ -n "$SAVE_CLAUDECODE" ]; then
     export CLAUDECODE="$SAVE_CLAUDECODE"
+fi
+
+if [ "$CLAUDE_MCP_FAILED" = "1" ]; then
+    echo "[오류] 요청한 Claude MCP 등록을 완료하지 못했습니다. Playwright: $CLAUDE_MCP_RESULT, Orchestrator: $CLAUDE_ORCH_RESULT" >&2
+    exit 1
+fi
+if [ "$CODEX_MCP_FAILED" = "1" ]; then
+    echo "[오류] 요청한 Codex MCP 등록을 완료하지 못했습니다. MCP: $CODEX_MCP_RESULT, Orchestrator: $CODEX_ORCH_RESULT" >&2
+    exit 1
 fi
 
 echo ""

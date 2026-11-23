@@ -24,13 +24,21 @@ const AUTO_INSTALL_EXCLUDES = new Set(["fetch"]);
 
 // --scope option parsing (default: user)
 const scopeIdx = args.indexOf("--scope");
-const scope = scopeIdx !== -1 && args[scopeIdx + 1] ? args[scopeIdx + 1] : "user";
+const scope = scopeIdx === -1 ? "user" : args[scopeIdx + 1];
+if (!["user", "local", "project"].includes(scope)) {
+  console.error("[Error] --scope requires user, local, or project.");
+  process.exit(1);
+}
 
 // Extract non-option arguments (MCP names)
 const mcpNames = args.filter(
   (a, i) =>
     !a.startsWith("--") && (scopeIdx === -1 || i !== scopeIdx + 1)
 );
+if (mcpNames.some(name => !/^[A-Za-z0-9_-]+$/.test(name))) {
+  console.error("[Error] MCP names may contain letters, numbers, hyphens, and underscores.");
+  process.exit(1);
+}
 
 // ── Path settings ──
 const scriptDir = path.resolve(__dirname);
@@ -50,14 +58,15 @@ function runClaude(cmdArgs) {
   try {
     const env = { ...process.env };
     delete env.CLAUDECODE;
-    return execSync(`claude ${cmdArgs}`, {
+    const output = execSync(`claude ${cmdArgs}`, {
       encoding: "utf-8",
       timeout: 30000,
       stdio: ["pipe", "pipe", "pipe"],
       env,
     }).trim();
-  } catch (e) {
-    return null;
+    return { ok: true, output };
+  } catch (error) {
+    return { ok: false, output: [error.stderr, error.stdout].filter(Boolean).join("\n").trim() };
   }
 }
 
@@ -83,8 +92,8 @@ function parseScope(scopeLine) {
 }
 
 function getMcpState(name) {
-  const output = runClaude(`mcp get "${name}"`);
-  if (output === null) {
+  const { ok, output } = runClaude(`mcp get "${name}"`);
+  if (!ok) {
     return { installed: false };
   }
 
@@ -97,6 +106,14 @@ function getMcpState(name) {
     command: normalizeSpace(commandLine),
     args: normalizeSpace(argsLine),
   };
+}
+
+function removeFromScope(name) {
+  const result = runClaude(`mcp remove "${name}" -s ${scope}`);
+  if (result.ok) return "removed";
+  const location = scope === "project" ? ".mcp.json" : `${scope} scope`;
+  const missing = `No MCP server named "${name}" in ${location}`;
+  return result.output.split(/\r?\n/).includes(missing) ? "absent" : "failed";
 }
 
 // Load available MCP configs
@@ -149,25 +166,24 @@ if (isUninstall) {
   }
 
   let removed = 0;
+  let failed = 0;
   for (const name of mcpNames) {
-    const state = getMcpState(name);
-    if (!state.installed) {
-      console.log(`  ⚠️  ${name} is not installed.`);
-      continue;
-    }
-    const result = runClaude(`mcp remove "${name}" -s ${scope}`);
-    if (result !== null) {
+    const status = removeFromScope(name);
+    if (status === "removed") {
       console.log(`  ✅ ${name} removed`);
       removed++;
+    } else if (status === "absent") {
+      console.log(`  ⏭️  ${name} is not installed in ${scope} scope.`);
     } else {
-      console.log(`  ❌ ${name} removal failed`);
+      console.error(`  ❌ ${name} removal failed in ${scope} scope`);
+      failed++;
     }
   }
 
   if (removed > 0) {
     console.log(`\n${removed} MCP server(s) removed.`);
   }
-  process.exit(0);
+  process.exit(failed ? 1 : 0);
 }
 
 // ── Install mode ──
@@ -175,6 +191,7 @@ const configs = loadAvailableConfigs();
 
 // Determine install targets
 let toInstall = [];
+let failed = 0;
 if (isAllMode) {
   // --all: auto-install only those that don't require an API key
   toInstall = configs.filter(
@@ -191,6 +208,7 @@ if (isAllMode) {
       console.error(
         `  ⚠️  '${name}' config not found. Use --list to check available servers.`
       );
+      failed++;
     }
   }
 } else {
@@ -210,7 +228,7 @@ if (isAllMode) {
 
 if (toInstall.length === 0) {
   console.log("No MCP servers to install.");
-  process.exit(0);
+  process.exit(failed ? 1 : 0);
 }
 
 console.log(`\nScope: ${scope}\n`);
@@ -237,53 +255,19 @@ for (const cfg of toInstall) {
   const desiredCommand = normalizeSpace(resolvedRuntime.command);
   const desiredArgs = normalizeSpace((resolvedRuntime.args || []).join(" "));
   const state = getMcpState(cfg.name);
-  let needsInstall = !state.installed;
-  let repairedThisServer = false;
-
-  if (state.installed) {
-    // Check if command/args match (verify config is correct)
-    const configMismatch = [];
-    if (desiredCommand && state.command && state.command !== desiredCommand) {
-      configMismatch.push(`command mismatch(${state.command} -> ${desiredCommand})`);
-    }
-    if (desiredArgs && state.args && state.args !== desiredArgs) {
-      configMismatch.push(`args mismatch(${state.args} -> ${desiredArgs})`);
-    }
-
-    if (configMismatch.length === 0 && !isForce) {
-      // Config is correct, skip (unless --force for forced reinstall)
-      console.log(`  ⏭️  ${cfg.name} (already configured, skipped)`);
-      skipped++;
-      continue;
-    }
-
-    // Config mismatch or --force: remove then reinstall
-    const removeScope = state.scope || scope;
-    const reason = configMismatch.length > 0
-      ? `config update: ${configMismatch.join(", ")}`
-      : "force reinstall";
-    console.log(`  🔧 ${cfg.name} ${reason}`);
-    // 1st attempt: remove with detected scope
-    let removed = runClaude(`mcp remove "${cfg.name}" -s ${removeScope}`) !== null;
-    // 2nd attempt: no scope specified (auto-detect)
-    if (!removed) {
-      removed = runClaude(`mcp remove "${cfg.name}"`) !== null;
-    }
-    // 3rd attempt: try all scopes
-    if (!removed) {
-      for (const fallbackScope of ["user", "local", "project"]) {
-        if (fallbackScope === removeScope) continue;
-        if (runClaude(`mcp remove "${cfg.name}" -s ${fallbackScope}`) !== null) {
-          removed = true;
-          break;
-        }
-      }
-    }
-    if (!removed) {
-      console.log(`  ⚠️  ${cfg.name} failed to remove existing config, attempting overwrite`);
-    }
-    repairedThisServer = true;
-    needsInstall = true;
+  // get reports the effective entry, which can belong to a different scope.
+  const inTarget = state.installed && state.scope === scope;
+  const changed = (desiredCommand && state.command && state.command !== desiredCommand)
+    || (desiredArgs && state.args && state.args !== desiredArgs);
+  if (inTarget && !isForce && !changed) {
+    console.log(`  ⏭️  ${cfg.name} (already configured, skipped)`);
+    skipped++;
+    continue;
+  }
+  if (!desiredCommand) {
+    console.error(`  ❌ ${cfg.name} install failed (missing config.command)`);
+    failed++;
+    continue;
   }
 
   // Build claude mcp add command
@@ -308,24 +292,45 @@ for (const cfg of toInstall) {
   }
 
   const fullCmd = cmdParts.join(" ");
-  const result = runClaude(fullCmd);
-
-  if (result !== null) {
-    if (repairedThisServer) {
-      repaired++;
-      console.log(`  ✅ ${cfg.name} repaired`);
-    } else if (needsInstall) {
+  if (!inTarget) {
+    const added = runClaude(fullCmd);
+    if (added.ok) {
+      installed++;
       console.log(`  ✅ ${cfg.name} installed`);
-    } else {
-      console.log(`  ✅ ${cfg.name} applied`);
+      continue;
     }
-    installed++;
-  } else {
-    console.log(`  ❌ ${cfg.name} installation failed`);
+    // A higher-priority entry may hide an existing registration in the selected scope.
+    const config = scope === "project" ? ".mcp.json" : `${scope} config`;
+    const duplicate = `MCP server ${cfg.name} already exists in ${config}`;
+    if (!added.output.split(/\r?\n/).includes(duplicate)) {
+      console.error(`  ❌ ${cfg.name} installation failed in ${scope} scope`);
+      failed++;
+      continue;
+    }
+    if (!isForce) {
+      console.log(`  ⏭️  ${cfg.name} already exists in ${scope} scope, skipped`);
+      skipped++;
+      continue;
+    }
   }
+
+  if (removeFromScope(cfg.name) === "failed") {
+    console.error(`  ❌ ${cfg.name} removal failed in ${scope} scope`);
+    failed++;
+    continue;
+  }
+  if (!runClaude(fullCmd).ok) {
+    console.error(`  ❌ ${cfg.name} reinstallation failed in ${scope} scope`);
+    failed++;
+    continue;
+  }
+  installed++;
+  repaired++;
+  console.log(`  ✅ ${cfg.name} repaired in ${scope} scope`);
 }
 
-console.log(`\nDone: ${installed} installed/repaired (${repaired} repaired), ${skipped} skipped`);
+console.log(`\nDone: ${installed} installed/repaired (${repaired} repaired), ${skipped} skipped, ${failed} failed`);
+process.exitCode = failed ? 1 : 0;
 
 if (installed > 0) {
   console.log("Restart Claude Code to apply changes.\n");
