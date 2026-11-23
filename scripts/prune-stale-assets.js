@@ -79,6 +79,9 @@ const LEGACY_CATALOG_MARKER = "설치 과정에서 자동 생성됩니다";
 const STALE_SKILL_DIRS = [
   "deploy-server",
   "multi-ai-orchestration",
+  // v4.3.4(2026-05-07)에서 저장소에서 지웠지만 sync는 지운 스킬의 사본을 치우지 않아
+  // ~/.claude/skills에 남았다. Gemini CLI를 --yolo로 돌리라고 지시하는 낡은 안내다.
+  "nano-banana",
   "pmworker",
   "qa-test-planner",
   "reducing-entropy",
