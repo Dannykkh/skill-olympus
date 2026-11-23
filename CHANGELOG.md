@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.16.1] - 2026-11-23
+
+### Bug fixes
+
+- **Atlas** rechecks the files in a batch before issuing a reader brief or accepting results. Every defect candidate must cite a source line. Paths excluded by the reading plan are omitted from batches and rejected as citations. (59fd81e)
+- **Mnemo recording and recovery** preserves separate calls in the same second and recognizes redelivery by session and tool-call ID. Session-start notices count both local and ISO timestamps. Claude and Codex recovery preserve damaged indexes and redact private spans, including an unclosed span at the end of a message. Interrupted observation moves can resume without duplicating records or adjusting the distillation baseline twice. (0a8dc81)
+- **Mnemo handoffs and installation** include notebook edits for the correct local day, track root-level and non-ASCII paths in staleness checks, and flag empty required sections. Removing the last file reference clears the derived index. The index writer enforces the project boundary, the Claude installation check detects a missing recovery hook, and the evaluation setup preserves existing directories. (0a8dc81)
+- **MCP installers** propagate registration failures to the Windows and shell installers. Claude re-registration respects the requested scope. Antigravity preserves unreadable configuration and ownership records. MCP registration remains opt-in with `--register-mcp`. (c59d335)
+
+### Documentation
+
+- Updated the English, Korean, Japanese and Simplified Chinese READMEs. The Mnemo handoff template now includes the decision it supersedes, and the doctor points to the command that promotes prose paths into structured file references. (70f587e, 0a8dc81)
+
+### Verification
+
+- The first Atlas audit read 78 files across five components in eight batches. All 21 reported candidates were reviewed and fixed, including discrepancies in the guidance and templates.
+- The targeted suites passed all 494 tests on Windows, including Git Bash and Windows PowerShell. They covered Atlas, Mnemo, Codex Mnemo, hooks and installers.
+- The full repository Node suite passed all 409 tests (0 skipped). The Windows installer completed all 12 checks for the real Claude, Codex, Antigravity and Grok installations. MCP registrations matched their pre-install values. All four installed Mnemo adapters generated handoffs in an isolated project.
+- Release assets include `atlas.zip`, `mnemo.zip` (Claude Code) and `codex-mnemo.zip`. The extracted Atlas suite passed all 31 tests. Both extracted Mnemo installers completed installation and `--check` in an isolated home.
+
 ## [7.16.0] - 2026-11-22
 
 ### Features
