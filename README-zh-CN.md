@@ -339,6 +339,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.17.0 — Aphrodite 把设计反馈学进 DESIGN.md
+
+Aphrodite 现在会记住收到的设计反馈，同样的话不必说两遍。在完整运行结束时，或用 `/aphrodite --learn-only` 单独调用时，它会收集你提过的意见（重复的优先）、你手动改过的地方和撤回的修改，排除功能缺陷和只对某个页面有意义的文案修改，然后以你的原话为理由，给出带编号的规则候选。只有你选中的编号会写入项目 `DESIGN.md` 的 `## Learned Rules`；实现前会读取这些规则，验证阶段会逐条对照页面和代码。domain-dictionary 模板中隐藏的、会破坏 mermaid 代码块的不可见字符已删除。安装程序会把 v4.3.4 已从仓库删除、但仍留在安装目录中的 `nano-banana` 技能移到备份位置。修改前后的盲测比较在三个案例上用 Claude 各运行一次。[发行说明](CHANGELOG.md#7170---2026-11-23)
+
 ## v7.16.1 — 修复 Atlas 的源码核对和 Mnemo 的记录恢复
 
 本次更新修复了在此仓库首次运行 Atlas 时发现的问题。`/atlas` 在验证每批结果时会重新检查源文件，要求每个缺陷候选项注明对应的源码行，并排除禁止读取的路径。TermSnap 生成地图，Python 工具负责文件分批和引文核对。Mnemo 现在会保留同一秒内的不同调用，中断后也能继续移动观察记录，避免重复。MCP 安装程序会报告注册失败，并保留指定范围以外的配置。[发行说明](CHANGELOG.md#7161---2026-11-23)
