@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.17.0] - 2026-11-23
+
+### Features
+
+- **aphrodite**: Phase 7 is split into 7-1 project taste learning and 7-2 global evolution. 7-1 collects the user's design feedback: remarks (repeated ones first), fixes made by hand in `git diff`, reverted changes and confirmed choices. It leaves out bugs and copy edits that only matter on one screen, and proposes numbered rule candidates with the user's words as `Why:` and the evidence location. It then stops and asks which numbers to keep, and writes only those to the root `DESIGN.md` under `## Learned Rules` with a date and source comment. Coding and tool mistakes go to the project's gotchas, and principles repeated across projects go to 7-2.
+- **aphrodite**: `--learn-only` runs 7-1 by itself, because feedback usually arrives in a later session. A new session searches `conversations/*.md` and the git history and reports the range it read. Without a `DESIGN.md`, it asks before creating a file that holds only the section and does not invent tokens.
+- **aphrodite**: The 1-1 brief asks for repeated remarks unless they are already rules. Phase 6-4 checks each learned rule against the render and the code (`PASS`/`FAIL`/`NOT RUN`) and fixes recurrences first. `design-md-guide.md` defines the rule format and keeps the section when Phase 3 rewrites `DESIGN.md`; a rule that conflicts with the new direction goes back to the user.
+
+### Bug fixes
+
+- **domain-dictionary**: The master dictionary template no longer hides two zero-width spaces in front of its inner mermaid fence. An agent copying the template carried them into the user's document, where the mermaid block stopped rendering. The outer fence now uses four backticks.
+
+### Miscellaneous
+
+- **installer**: The stale-asset pass moves `~/.claude/skills/nano-banana` to `_pruned-stale-olympus/<timestamp>/skills/`. The skill was removed from the repository in v4.3.4, but the sync never removes copies of deleted skills, so it stayed in the skill list. Its guide required running the Gemini CLI with `--yolo`.
+
+### Documentation
+
+- Updated the English, Korean, Japanese and Simplified Chinese READMEs.
+
+### Verification
+
+- Six workers in separate contexts ran the previous and the new Aphrodite guide on the same inputs, once each and with Claude only: a development case, a separate evaluation case in another domain, and a `DESIGN.md` rewrite. In the evaluation case the previous guide wrote rules without approval and, lacking a numbered list, later turned a bug and a one-screen copy edit into rules. The new guide passed every required check, and both guides kept the learned rules on rewrite. Not run: the `--learn-only` path, the 6-4 rule check, the 1-1 question, and Codex or Antigravity workers. See `docs/research/2026-11-23-aphrodite-learned-rules-eval/result.md`.
+- The new contract test passed 3/3 and the full repository Node suite passed all 412 tests (0 skipped). `install.bat --all` finished with exit code 0 for Claude Code, Codex, Antigravity and Grok, and the installed `design-plan` and `domain-dictionary` files match the repository byte for byte.
+- Release assets are `design-plan.zip` and `domain-dictionary.zip`. In the extracted `design-plan/scripts`, 31 tests passed; the 8 browser tests were not run because this machine lacks the Chromium build that the installed Python Playwright expects.
+
 ## [7.16.1] - 2026-11-23
 
 ### Bug fixes
