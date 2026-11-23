@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-23",
+  "author": "claude",
+  "base_commit": "55259be",
+  "skills": {
+    "a": {"role": "baseline (HEAD)", "SKILL.md": "41ed42a22d98e4cadbbc16a66d679c0c63fed8fb0e1864a377a3ab8bf00d8f10", "design-md-guide.md": "eaf1bbcbf643a165a475925418c8b847ccb45a7b2fece1772f8ab6043c3723a5"},
+    "b": {"role": "candidate (working tree)", "SKILL.md": "159da8ff242ad7c5e07d6c502027b35f29256f7bad35f4bc1fe4bda8ff68668e", "design-md-guide.md": "56d297e378d29580536461a6eb244ed161649b644399298d7f39ca45a638ab58"}
+  },
+  "workers": {
+    "w1": {"case": "bookshop", "skill": "a"}, "w2": {"case": "bookshop", "skill": "b"},
+    "w3": {"case": "pilates", "skill": "a"}, "w4": {"case": "pilates", "skill": "b"},
+    "w5": {"case": "rebrand", "skill": "a"}, "w6": {"case": "rebrand", "skill": "b"}
+  },
+  "runner": "Claude Code general-purpose subagents, separate contexts, Skill tool forbidden, 1 run each"
+}

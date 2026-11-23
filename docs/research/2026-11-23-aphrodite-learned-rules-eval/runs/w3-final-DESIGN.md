@@ -1,0 +1,65 @@
+---
+name: 숨 필라테스
+colors:
+  primary: "#B4532A"
+  on-primary: "#FFFFFF"
+  surface: "#FFFAF5"
+  text: "#2B2118"
+  muted: "#7A6A5C"
+typography:
+  display:
+    fontFamily: "\"Pretendard Variable\", Pretendard, sans-serif"
+    fontSize: 2.5rem
+    fontWeight: 700
+  body-md:
+    fontFamily: "\"Pretendard Variable\", Pretendard, sans-serif"
+    fontSize: 1rem
+rounded:
+  md: 12px
+  pill: 999px
+spacing:
+  sm: 8px
+  md: 16px
+  lg: 32px
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.pill}"
+    padding: 14px
+---
+
+## Overview
+동네 필라테스 스튜디오의 체험 신청 랜딩. 따뜻한 테라코타 톤, 사진 한 장과 짧은 말로 신뢰를 준다.
+
+## Colors
+- **Primary (#B4532A):** 체험 신청 CTA와 가격 강조에만.
+
+## Typography
+Pretendard. 제목은 크게, 본문은 편하게 읽히게.
+
+## Layout
+모바일 우선 단일 열. 히어로 → 수업 소개 → 가격 → 위치.
+
+## Components
+- CTA는 알약 모양 버튼 하나만 강조한다.
+
+## Learned Rules
+- **본문은 `{typography.body-md}`(16px) 아래로 줄이지 않는다.** 히어로 설명처럼 `{colors.muted}`로 낮춘 보조 문단도 본문이다. 위계는 색으로 낮추고 글자 크기로 낮추지 않는다.
+  Why: "글씨가 너무 작아서 못 읽겠어" → 재발: "본문 글자 또 작아졌네. 전에 말했잖아." (`.hero p`가 14px)
+  <!-- 2026-11-02 · 대화 2026-11-02 15:20 · 재발 2026-11-23 15:40 -->
+- **CTA 버튼(`{components.button-primary}`)에는 고정 폭을 주지 않는다.** 글자 길이만큼 늘어나게 두고(폰에서는 줄 전체 폭 허용), 버튼에는 `word-break: keep-all`을 걸지 않는다. 360·390px 폭에서 모든 CTA 글자가 한 줄인지 확인한다.
+  Why: "폰에서 '무료 체험 신청하기' 버튼 글자가 두 줄로 꺾여." → 재발: "버튼 글자 또 꺾였어. 아래 결제 버튼도 그래." (원인: `.cta { width:140px }`)
+  <!-- 2026-11-23 · 대화 2026-11-23 14:20 · 재발 2026-11-23 15:20 -->
+- **히어로 설명은 폰 폭(360px)·`{typography.body-md}` 기준 세 줄 이내로 쓴다.** 체험을 결정하는 데 필요한 사실만 남긴다.
+  Why: "히어로 설명이 너무 길어. 세 줄이면 충분해. 내가 줄여 놨어." (사용자가 남긴 것: 정원 6명·강사 국제 자격·처음부터 천천히 / 뺀 것: 2019년 운영 연혁·운동 후 차와 상담)
+  <!-- 2026-11-23 · 대화 2026-11-23 14:50 -->
+- **색은 `colors.*` 토큰만 쓴다(CSS에서는 `var(--primary)` 등).** 새 hex나 기본 팔레트 색을 넣지 않는다. `styles.css`의 `:root` 밖에 hex가 있으면 위반이다.
+  Why: "가격 색이 파란색이던데 내가 고쳤어. 색은 브랜드 색만 써." (`.amount`의 `#3B82F6`을 사용자가 `var(--primary)`로 수정)
+  <!-- 2026-11-23 · 대화 2026-11-23 15:50 -->
+- **CTA는 실제로 열리는 목적지에만 건다.** 경로가 아직 없으면 버튼을 두지 않거나, 비활성 상태에 "준비 중"을 표시하고 그 사실을 알린다.
+  Why: "결제 링크 누르면 404 나와." (`/pay` 미구현, 백엔드 담당에게 전달한 상태)
+  <!-- 2026-11-23 · 대화 2026-11-23 14:35 -->
+- **가격은 시작가이므로 `월 89,000원부터`로 표기한다.** 화면을 다시 만들거나 카피를 고칠 때도 '부터'를 빼지 않는다.
+  Why: "가격 '월 89,000원'을 '월 89,000원부터'로 바꿔 줘."
+  <!-- 2026-11-23 · 대화 2026-11-23 15:05 -->

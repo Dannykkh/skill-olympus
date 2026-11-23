@@ -1,0 +1,16 @@
+diff --git a/styles.css b/styles.css
+index bf7d8be..c274ef9 100644
+--- a/styles.css
++++ b/styles.css
+@@ -2,9 +2,9 @@
+ body { margin:0; font-family:"Pretendard Variable", Pretendard, sans-serif; color:var(--text); background:var(--surface-2); }
+ .top { display:flex; justify-content:space-between; align-items:center; padding:16px 24px; background:var(--surface); }
+ main { padding:24px; display:grid; gap:24px; }
+-.card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; }
++.card { background:var(--surface); border-radius:8px; padding:16px; }
+ .stock { width:100%; border-collapse:collapse; }
+ .num { text-align:right; font-variant-numeric:tabular-nums; }
+-.row-actions { display:flex; gap:2px; justify-content:flex-end; }
++.row-actions { display:flex; gap:8px; justify-content:flex-end; }
+ button { padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface); }
+ button.primary { background:var(--primary); color:var(--on-primary); border:0; }

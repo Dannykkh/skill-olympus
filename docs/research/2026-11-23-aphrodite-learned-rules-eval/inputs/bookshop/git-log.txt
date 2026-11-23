@@ -1,0 +1,4 @@
+bbf47d8 ai-agent fix: 행 조작 아이콘에서 이모지 제거
+ee106fa owner Revert "style: 헤더에 그라데이션 적용"
+70c3cca ai-agent style: 헤더에 그라데이션 적용
+8fb882f ai-agent feat: 재고 목록 화면 초안

@@ -19,6 +19,7 @@ description: >
 /aphrodite <planning_dir>        # 젭마인 산출 폴더를 상류 정본으로 받음
 /aphrodite --plan-only
 /aphrodite --review-only
+/aphrodite --learn-only           # 받은 디자인 지적을 DESIGN.md 규칙 후보로 정리
 /aphrodite --benchmark <URL-or-file>
 /aphrodite --product-design
 /aphrodite --stitch
@@ -147,8 +148,8 @@ codex plugin list --available --json
 뿐, 공식·내장 plugin 이름이라고 단정하지 않습니다. 캐시 디렉터리나 검색 결과만으로 설치·활성을
 판정하지 않습니다. 공식 OpenAI 문서상 IDE extension은 plugin을 지원하지 않으므로 그 표면은
 `UNSUPPORTED`입니다. 지원되는 ChatGPT desktop 또는 Codex CLI에서는 Plugins tab이나 `/plugins`
-browser를 사용할 수 있습니다. `--plan-only`, `--review-only`, 명시적인 `--stitch` 경로에서는 이
-추천을 생략합니다.
+browser를 사용할 수 있습니다. `--plan-only`, `--review-only`, `--learn-only`, 명시적인 `--stitch`
+경로에서는 이 추천을 생략합니다.
 
 상태는 다음 다섯 가지 중 하나로 기록합니다.
 
@@ -212,7 +213,8 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 
 `DESIGN.md`가 있다는 이유만으로 Phase 1~5를 건너뛰지 않습니다. 기존 결과가 못생기거나 UX 문제가
 있으면 strategy 판정으로 Phase 1의 가정부터 다시 봅니다. `--review-only`면 Phase 6만 실행하고 필요한
-정본이 없으면 신뢰도 제한을 보고합니다.
+정본이 없으면 신뢰도 제한을 보고합니다. `--learn-only`나 "오늘 디자인 지적 정리해줘"처럼 받은 지적을
+남기는 요청이면 계층 판정 없이 Phase 7-1만 실행합니다.
 
 ### 0-2. 입력 경로 선택
 
@@ -241,6 +243,8 @@ Product Design은 `DESIGN.md`, Experience Contract, Layout Blueprint를 소비�
 - 사용자가 망설이거나 불신하는 지점은 어디인가
 - 기술·콘텐츠·브랜드·접근성 제약은 무엇인가
 - 관찰 가능한 성공 기준은 무엇인가
+- AI가 만든 화면에 그동안 반복해서 한 지적은 무엇인가. 루트 `DESIGN.md`의 `## Learned Rules`에 이미
+  있으면 묻지 않습니다. 새 답은 brief에 적고 7-1의 규칙 후보로 넘깁니다(저장은 7-1의 승인을 거칩니다)
 
 요구사항 자체가 불명확하면 `zephermine`에 인계합니다. 아프로디테는 디자인에 필요한 경험 가정을
 확정합니다. strategy·scope로 판정했는데 루트 `PRODUCT.md`가 없으면 상류 정본에서 옮겨 만들고, 결정마다
@@ -631,6 +635,8 @@ P0·P1은 완료 전에 고칩니다.
    (`360,390,768,1280`을 넘긴다. 검사기 자체 기본값은 390·768·1280), 폰 폭 하나는 `--text 200 --zoom 200`까지. 웹폰트 로드를 확인한 상태에서
    재고, 고친 뒤 같은 조건으로 다시 잰다. 처방·보고·`NOT RUN` 조건은
    [korean-line-break.md](references/korean-line-break.md)
+8. 루트 `DESIGN.md`에 `## Learned Rules`가 있으면 규칙마다 실제 렌더·코드와 대조해 `PASS`/`FAIL`/`NOT RUN`으로
+   판정합니다. `FAIL`은 사용자가 이미 지적한 실수의 재발이므로 다른 다듬기보다 먼저 고칩니다
 
 대표 모션·물리 반응·복제 작업은 Web Motion Contract의 장면별 입력·중간 상태·수렴 검사를
 실행합니다. `scripts/measure_web_motion.py` 또는 기존 프로젝트 테스트로 근거를 수집하고,
@@ -641,7 +647,44 @@ P0·P1은 완료 전에 고칩니다.
 
 ## Phase 7: Evolve
 
-프로젝트 결과는 다음 실행의 근거가 되지만 한 번의 성공으로 전역 규칙을 바꾸지 않습니다.
+프로젝트 결과는 다음 실행의 근거가 되지만 한 번의 성공으로 전역 규칙을 바꾸지 않습니다. 배운 것은 두 곳에
+남깁니다. 이 프로젝트의 취향은 7-1로 루트 `DESIGN.md`에, 여러 프로젝트에 통하는 원리는 7-2로 전역 진화
+후보에 둡니다.
+
+### 7-1. 프로젝트 취향 학습
+
+같은 디자인 지적을 두 번 받지 않도록, 사용자의 지적을 이 프로젝트의 `DESIGN.md` 규칙으로 남깁니다.
+전체 실행의 끝, 또는 `--learn-only`로 실행합니다. 이 단계는 화면과 코드를 고치지 않습니다.
+
+1. **모으기.** 이번 작업에서 다음을 찾습니다. 현재 대화에 지적이 없으면(새 세션) 사용자가 말한 기간의
+   대화 기록(`conversations/*.md`)과 git 이력에서 찾고, 찾아본 범위를 함께 보고합니다.
+   - 사용자가 말로 한 디자인 지적. 두 번 이상 한 지적이 가장 중요합니다
+   - 사용자가 직접 고친 화면·스타일(git이 있으면 작업 트리 `git diff`와 최근 커밋)
+   - 사용자가 되돌린 변경
+   - 사용자가 "이게 맞다"고 확인한 의외의 선택
+
+   기능 버그와 그 화면에서만 의미 있는 문구·내용 수정은 후보가 아닙니다. 버그는 구현 담당에게 넘깁니다.
+2. **거르기.** 다른 화면을 만드는 새 작업자도 같은 실수를 할 지적만 규칙 후보입니다. 그 실수를 막는 가장
+   좁은 범위로, 토큰 이름이나 값으로 씁니다. "깔끔하게"처럼 값이 없는 말은 규칙이 아닙니다.
+3. **나누기.**
+
+   | 지적 | 기록할 곳 |
+   |---|---|
+   | 이 프로젝트의 디자인 취향 | 루트 `DESIGN.md`의 `## Learned Rules` |
+   | 코드·도구 사용 실수 | 프로젝트 `memory/gotchas/` |
+   | 다른 프로젝트에서도 같은 지적이 나온 원리 | 7-2 전역 진화 후보 |
+
+4. **제안하고 멈추기.** 후보마다 번호, 규칙 한 줄, `Why:`(사용자 원문. 이유를 말하지 않았으면 `(추정)`을
+   붙인 추정 이유), 근거(대화 시각·파일 줄)를 보여 줍니다. 기존 규칙·토큰과 부딪히면 두 문구를 나란히
+   보여 줍니다. 그리고 저장할 번호를 묻고 멈춥니다.
+5. **승인한 것만 쓰기.** 사용자가 고른 번호만 [design-md-guide.md](references/design-md-guide.md) 3절
+   형식으로 추가합니다. 부딪힌 기존 규칙은 사용자가 고른 쪽만 남기고, 규칙이 토큰 값을 바꾸면 YAML 토큰도
+   같이 고칩니다. 고르지 않은 후보는 쓰지 않습니다. 저장한 뒤 다음 검증(6-4)부터 대조한다고 알립니다.
+
+루트 `DESIGN.md`가 없으면 토큰을 지어내지 않습니다. `## Learned Rules` 절만 있는 파일을 만들지 묻고,
+토큰은 나중에 3-2가 채우면서 이 절을 보존합니다.
+
+### 7-2. 전역 진화
 
 1. `critique`와 구현 로그에 성공·실패·사용자 피드백·측정 결과 기록
 2. 재사용 가능한 후보를 Adopt·Adapt·Avoid와 함께 분리
@@ -677,6 +720,7 @@ P0·P1은 완료 전에 고칩니다.
 - 여러 화면 앱이면 `Object Flows` 검증과 사실 대조 결과(어긋남 수와 고친 수). 한국 사용자 대상이면
   P0·P1 체크리스트의 남은 항목과 시장 관례 판정 또는 `시장 관례 NOT RUN` 이유. 해당하지 않으면 `NOT APPLICABLE`
 - 잔여 이슈와 다음 진화 후보
+- `## Learned Rules`가 있으면 6-4의 규칙별 판정. 7-1을 실행했으면 후보 수, 승인·보류한 번호, 추가한 규칙
 - `Product Design Gate`: `READY`/`ABSENT`/`RESTART_REQUIRED`/`UNKNOWN`/`UNSUPPORTED`, exact selector,
   marketplace·설치·세션 노출 근거, 추천·동의 결과,
   실제 선택한 Product Design/local/Stitch 어댑터. 적용 대상이 아니면 `NOT APPLICABLE`
@@ -695,6 +739,7 @@ P0·P1은 완료 전에 고칩니다.
 |---|---|
 | `--plan-only` | Phase 0~4 실행. 4-4 검증이 strategy·scope 미결만으로 실패하면 `결정 대기`로 끝냄 |
 | `--review-only` | Phase 6 실행 |
+| `--learn-only` | Phase 7-1만 실행. 규칙 후보를 제안하고 사용자가 고른 것만 `DESIGN.md`에 저장 |
 | `--benchmark <source>` | reference-driven 경로 강제 |
 | `--product-design` | Codex Product Design 가용성을 확인하고 준비됐으면 프로토타입 어댑터로 우선 사용. 설치 동의는 별도 |
 | `--stitch` | 승인된 계약을 Stitch adapter로 실행 |
