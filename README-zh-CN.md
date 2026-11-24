@@ -339,6 +339,10 @@ node --test scripts/tests/*.test.js
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.18.0 — `/iris`：单独设计、实现和检查 REST API 与 MCP 服务器
+
+新增 `/iris`，不必运行完整的 Zephermine 设计，就能单独处理 REST API 或 MCP 服务器。它会新写 `api-spec.md`、`mcp-spec.md`，或从现有代码反推出来，按规格实现并附带测试，然后对照规格与代码；服务器能启动时还会实际调用确认。规约直接读取 Zephermine 的 API 与 MCP 指南，不做复制。MCP 指南新增了何时选择 Code Mode 的标准。Code Mode 指 MCP 服务器只提供 `search` 和 `execute` 两个工具，由模型编写调用 API 的代码。由于按工具的开放开关、风险标注和调用上限都会消失，默认仍是按工具定义；选择 Code Mode 的规格必须写明防护手段，Argos 会检查这些内容。`/iris` 尚未进行盲测。[发行说明](CHANGELOG.md#7180---2026-11-24)
+
 ## v7.17.0 — Aphrodite 把设计反馈学进 DESIGN.md
 
 Aphrodite 现在会记住收到的设计反馈，同样的话不必说两遍。在完整运行结束时，或用 `/aphrodite --learn-only` 单独调用时，它会收集你提过的意见（重复的优先）、你手动改过的地方和撤回的修改，排除功能缺陷和只对某个页面有意义的文案修改，然后以你的原话为理由，给出带编号的规则候选。只有你选中的编号会写入项目 `DESIGN.md` 的 `## Learned Rules`；实现前会读取这些规则，验证阶段会逐条对照页面和代码。domain-dictionary 模板中隐藏的、会破坏 mermaid 代码块的不可见字符已删除。安装程序会把 v4.3.4 已从仓库删除、但仍留在安装目录中的 `nano-banana` 技能移到备份位置。修改前后的盲测比较在三个案例上用 Claude 各运行一次。[发行说明](CHANGELOG.md#7170---2026-11-23)

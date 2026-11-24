@@ -352,6 +352,10 @@ GitHubでStarを付けてもらえると、ほかの個人開発者にも見つ�
 
 [한국 GS 인증 / Korean GS certification — installation, ISO basis, grades, and validation limits](README.md#korean-gs-certification-preflight)
 
+## v7.18.0 — `/iris`：REST API と MCP サーバーを単独で設計・実装・点検する
+
+Zephermine の設計全体を回さずに、REST API や MCP サーバーだけを扱う `/iris` を追加しました。`api-spec.md`・`mcp-spec.md` を新しく書くか既存のコードから逆に起こし、その仕様どおりにテスト付きで実装してから、仕様とコードを照合します。サーバーを起動できれば実際に呼び出して確かめます。規約は Zephermine の API・MCP ガイドをコピーせず直接読みます。MCP ガイドには Code Mode を選ぶ基準を加えました。Code Mode は、MCP サーバーが `search` と `execute` の二つのツールだけを公開し、モデルが API を呼ぶコードを書く方式です。ツールごとの公開スイッチ・危険表示・上限がなくなるため、既定はこれまでどおりツールごとの定義です。Code Mode を選んだ仕様には防ぐ手段を書く必要があり、Argos がそれを確認します。`/iris` のブラインド試行はまだ行っていません。[リリースノート](CHANGELOG.md#7180---2026-11-24)
+
 ## v7.17.0 — Aphrodite がデザインの指摘を DESIGN.md に学習する
 
 Aphrodite が受けたデザインの指摘を覚え、同じことを二度言わずに済むようにしました。実行の最後、または `/aphrodite --learn-only` で単独に呼ぶと、これまでの指摘（繰り返したものを優先）、手で直した箇所、取り消した変更を集めます。機能のバグとその画面だけで意味のある文言修正は除き、ユーザーの言葉を理由に添えた規則候補を番号付きで提案します。選んだ番号だけがプロジェクトの `DESIGN.md` の `## Learned Rules` に保存され、実装前に読まれ、検証では規則ごとに画面とコードと照合されます。domain-dictionary のテンプレートに隠れて mermaid ブロックを壊していた不可視文字を削除しました。インストーラーは、v4.3.4 でリポジトリから削除された後もインストール先に残っていた `nano-banana` スキルをバックアップへ移します。変更前後のブラインド比較は 3 ケースを Claude で各 1 回実行しました。[リリースノート](CHANGELOG.md#7170---2026-11-23)
