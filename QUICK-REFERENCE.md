@@ -2,7 +2,7 @@
 
 > 이 문서 하나만 읽으면 필요한 스킬/에이전트/MCP를 찾아 설치할 수 있습니다.
 >
-> Olympus 공개 추적 스킬 소스 106개는 기본 allowlist 합집합 27개(사용자 진입점 21개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 24개, Codex/Antigravity는 활성 23개이며 Grok 설치 표면은 Claude의 24개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
+> Olympus 공개 추적 스킬 소스 107개는 기본 allowlist 합집합 28개(사용자 진입점 22개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나뉩니다. 호환 어댑터를 고르면 Claude는 활성 25개, Codex/Antigravity는 활성 24개이며 Grok 설치 표면은 Claude의 25개를 공유합니다. 내부 전용 `deploymonitor`는 로컬에만 있습니다. 활성 하네스는 필요한 내부 모듈을 카탈로그에서 직접 읽고, 표의 나머지 로컬 스킬도 `SKILLS-CATALOG.md`의 source-only 경로에서 명시 요청합니다. 사용자 정의 에이전트는 기본 등록하지 않습니다.
 >
 > **호출 규칙:** 아래 `고정 호출명` 표만 기본 slash 진입점입니다. source-only 항목은 자연어로 기능을 요청하면 LLM이나 활성 하네스가 카탈로그의 현재 `SKILL.md`를 직접 읽어 적용합니다. source-only 이름을 `/name`으로 입력하는 방식은 `--include-source-only-skills`로 활성 등록한 환경에서만 보장됩니다. 표의 “opt-in 시 `/name`” 표기도 모두 이 조건을 뜻합니다.
 
@@ -25,6 +25,7 @@
 | 헤스티아 | `/hestia` |
 | 비정합성 점검 | `/consistency-audit` |
 | 아틀라스 (부품 지도 전체 정리) | `/atlas` |
+| 이리스 (REST API·MCP 명세·구현·점검) | `/iris` |
 | SEO+AEO+GEO 감사 | `/seo-audit` |
 | 코드 설명 | `/explain` |
 | 한↔영 번역 | `/translate` (ko-en-translator) |
@@ -284,6 +285,7 @@ claude plugin install voltagent-qa-sec
 | `skills/atlas/` | TermSnap 부품 지도 전체 정리 — 묶음별 읽기 작업자(백그라운드), 근거 줄 대조, 장부로 재개 |
 | `skills/vercel-react-best-practices/` | Vercel 45개 규칙 |
 | `skills/api-tester/` | 프론트-백엔드 통합 테스트 |
+| `skills/iris/` | REST API·MCP 명세 작성(새로·코드에서 거꾸로) → 구현 → 명세 대조·실제 호출 점검. 규약은 젭마인 `api-spec-guide.md`·`mcp-spec-guide.md`를 읽음 |
 | `skills/fullstack-coding-standards/` | 풀스택 코딩 표준 (Java/Python/NestJS + DB 연동) |
 | `skills/agent-team/` | 공통 네이티브 역할 + Wave·파일 소유권·검증 계약. Antigravity 일반 장기 팀 작업은 가용한 `/teamwork-preview`를 우선하고, Poseidon은 추가 장부가 필요할 때만 사용 |
 | `skills/agent-team-codex/` | Codex의 `/agent-team` 호출이 라우팅되는 전용 adapter. stable multi-agent + Main 소유 Activity Log |

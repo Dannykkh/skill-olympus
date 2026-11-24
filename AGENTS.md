@@ -22,6 +22,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 |Docker Deploy|skills/docker-deploy/SKILL.md,skills/docker-deploy/templates/|
 |Docker DB Backup|skills/docker-db-backup/SKILL.md|
 |API Testing|skills/api-tester/SKILL.md|
+|REST API·MCP 명세·구현·점검|skills/iris/SKILL.md (규약 정본은 skills/zephermine/references/api-spec-guide.md, mcp-spec-guide.md)|
 |명시적 GS 인증 사전점검|skills/gs-certification/SKILL.md (source-only, 1·2등급 분리; 일반 개발에 자동 적용하지 않음)|
 |Documentation|네이티브 작성 + 목적별 skills/api-handoff, documentation-and-adrs, release-notes, crafting-effective-readmes|
 |FastAPI|프로젝트·공식 문서 우선; 명시 요청 시 skills/python-backend-fastapi/SKILL.md|
@@ -104,7 +105,7 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
   `~/.openclaw/skills`, `~/.hermes/skills`에 공통 진입점과 source-only 카탈로그만 설치하며,
   기존 네 CLI용 어댑터·훅·Mnemo·MCP·사용자 정의 에이전트 parity를 주장하지 않습니다.
 - Codex 스킬은 기본적으로 `~/.codex/skills/`에만 설치합니다. 이 저장소의 `.agents/skills` 미러는 격리 테스트용 `--include-project-skills` 옵션에서만 생성합니다.
-- 공개 추적 스킬 소스 106개는 기본 allowlist 합집합 27개(공통 진입점 21개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 103개(활성 24 + source-only 79), Codex와 Antigravity 각각 102개(활성 23 + source-only 79), OpenClaw과 Hermes Agent 각각 100개(활성 21 + source-only 79)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 102개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 24개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
+- 공개 추적 스킬 소스 107개는 기본 allowlist 합집합 28개(공통 진입점 22개 + 런타임 어댑터 6개)와 source-only 내부·선택 모듈 79개로 나눕니다. 런타임 전용 어댑터를 제외한 카탈로그 가용량은 Claude 104개(활성 25 + source-only 79), Codex와 Antigravity 각각 103개(활성 24 + source-only 79), OpenClaw과 Hermes Agent 각각 101개(활성 22 + source-only 79)입니다. 이 숫자는 파일·카탈로그 가용량이지 모든 선택 의존성과 런타임 분기의 실행 인증 수가 아닙니다. Grok 논리 정책도 103개지만 실제 설치 표면은 Claude 공유 디렉터리를 읽어 활성 25개를 봅니다. 내부 전용 `deploymonitor`는 로컬에만 있어 공개 배포 수에 포함하지 않습니다. 새 스킬은 allowlist 승인 전까지 자동 활성화하지 않습니다. 전체 복원은 `--include-source-only-skills`, 구 코딩 가이드 8개만 복원은 `--include-broad-coding-skills`를 사용합니다.
 - 스킬 문서의 `skills/{name}/...` 경로는 현재 프로젝트에 실제 파일이 없으면 현재 CLI의 활성 스킬 루트, 이어서 `SKILLS-CATALOG.md`의 source-only `읽을 경로`를 기준으로 절대경로를 해석합니다. 활성 하네스가 source-only 모듈에 의존할 때는 `/name` 호출 대신 정확한 원본을 직접 읽고, 참조·스크립트는 해석된 모듈 루트를 기준으로 실행합니다.
 - 사용자 정의 에이전트는 배포하지 않습니다. 일반 분업은 각 CLI의 네이티브 서브에이전트, 절차는 스킬이 맡고, 스킬 안 규칙 본문은 `references/`에 둡니다. 설치기는 예전에 복사된 Olympus 에이전트와 생성된 `AGENTS-CATALOG.md`를 정리하고(`scripts/prune-stale-assets.js`), 옛 `--include-source-only-agents`·`--include-project-agents` 옵션은 받아들이되 아무것도 설치하지 않습니다.
 - 우선 고정 호출명: `/zephermine`(젭마인), `/zeus`(제우스), `/aphrodite`(아프로디테), `workpm`/`/daedalus`(다이달로스), `/chronos`(크로노스), `/minos`(미노스), `/agent-team`(`/poseidon`, 포세이돈), `/argos`(아르고스), `/clio`(클리오), `/themis`(테미스), `/hermes`(헤르메스), `/athena`(아테나), `/mnemo`(므네모), `/video-maker`(비디오메이커, 영상 요청 진입점)
@@ -131,7 +132,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 
 ## Available Resources
 
-### Skill sources (공개 추적 106개; 기본 allowlist 합집합 27개, 런타임별 활성 23개 또는 24개)
+### Skill sources (공개 추적 107개; 기본 allowlist 합집합 28개, 런타임별 활성 24개 또는 25개)
 
 | 카테고리 | 스킬 | 설명 |
 |----------|------|------|
@@ -140,7 +141,7 @@ A comprehensive collection of skills and agents for Claude Code and other AI cod
 | 📝 Documentation | api-handoff, crafting-effective-readmes, diagram-design, domain-dictionary, draw-io, excalidraw, marp-slide, mermaid-diagrams, writing-clearly-and-concisely, docx, pdf, excel2md | 문서/다이어그램 + 에디토리얼 다이어그램 렌더링(.mmd → 브랜드 HTML+SVG 표현 계층) + 도메인 용어사전 (DDD Ubiquitous Language) + Office 문서 읽기/생성/편집 (Word/PDF/Excel) |
 | 📖 Learning | explain | 코드 설명 (비유 + Mermaid) + 줌아웃 모드 (호출자/형제/상위 맵) |
 | 🎨 Frontend | design-plan (아프로디테), frontend-design, design-system-starter, theme-factory, mui, openapi-to-typescript, react-dev, vercel-react-best-practices, stitch, seo-audit, ui-ux-auditor, data-visualization | 사이트 벤치마크·Experience Contract·실제 렌더 3안·UX/접근성/성능 게이트를 지휘하는 디자인 오케스트레이터 + React/TypeScript/디자인/Stitch UI 생성 + 테마·SEO·UI/UX 감사 + 차트 선택 가이드 |
-| 🛠️ Development | database-schema-designer, supabase-postgres-best-practices, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, deploymonitor, wrangler, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login, health-data | 개발 도구 + Postgres 최적화 + Cloudflare Workers 배포 + 헬스 데이터(Health Connect/HealthKit) 연동 |
+| 🛠️ Development | iris (이리스), database-schema-designer, supabase-postgres-best-practices, dependency-updater, deprecation-and-migration, docker-deploy, docker-db-backup, deploymonitor, wrangler, documentation-and-adrs, fullstack-coding-standards, dotnet-coding-standards, wpf-coding-standards, hestia (헤스티아), naming-analyzer, python-backend-fastapi, social-login, health-data | REST API·MCP 명세→구현→점검(도구별 정의·Code Mode 선택, 이리스) + 개발 도구 + Postgres 최적화 + Cloudflare Workers 배포 + 헬스 데이터(Health Connect/HealthKit) 연동 |
 | 🎯 Planning | game-changing-features, shipping-and-launch, zeus (제우스), zephermine (젭마인), ship-learn-next | 계획/요구사항 |
 | 👔 Professional | daily-meeting-update, workplace-conversations, professional-communication | 비즈니스 커뮤니케이션 |
 | 🧪 Testing | code-reviewer, consistency-audit (기능별 비정합성 점검), minos, auto-continue-loop, flow-verifier, argos (아르고스), clio (클리오), themis (테미스), api-tester, test-driven-development, systematic-debugging, semgrep-rule-creator | 테스트/리뷰/자동 수정 루프/플로우 검증/감리(준공검사)/최종 점검+산출물 + 개인정보 전수 감사→국가별 처리방침 생성(ko/us/eu) + API 연동 테스트 + TDD 사이클 + 근본원인 디버깅 + Semgrep 커스텀 규칙 |

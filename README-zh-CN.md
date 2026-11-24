@@ -49,8 +49,8 @@ Skill Olympus 面向使用 **Claude Code**、**Codex CLI**、**Antigravity CLI**
 | **跨会话保留记忆** | `mnemo` 通过标签和证据查找对话上下文，整理现有记忆，并通过交接延续工作 |
 | **保持较小的启动上下文** | 少量入口只在需要时加载 source-only 模块 |
 
-仓库公开跟踪 106 个技能源。默认 allowlist 包含 21 个通用入口和 6 个运行时适配器，共 27 个；
-集成 CLI 会启用 23 或 24 个，skills-only 主机会启用 21 个，其余 79 个保持 source-only。
+仓库公开跟踪 107 个技能源。默认 allowlist 包含 22 个通用入口和 6 个运行时适配器，共 28 个；
+集成 CLI 会启用 24 或 25 个，skills-only 主机会启用 22 个，其余 79 个保持 source-only。
 
 ---
 

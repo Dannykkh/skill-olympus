@@ -70,3 +70,30 @@ test("argos audits implemented MCP tools against mcp-spec.md", () => {
   assert.match(protocol, /#### 3A-3\. 도구별 계약 검사/);
   assert.match(protocol, /❌ 미승인 노출/);
 });
+
+// Code Mode(search+execute)는 큰 OpenAPI를 감쌀 때의 선택지일 뿐이다. 도구 단위 장치가
+// 사라지므로 기본값은 도구별 정의이고, 고르면 막는 수단을 명세에 남겨야 아르고스가 대조할 수 있다.
+test("mcp-spec-guide keeps per-tool definitions as default and records Code Mode safeguards", () => {
+  const guide = read("skills/zephermine/references/mcp-spec-guide.md");
+  assert.match(guide, /\| 도구 방식 \| 도구별 정의 \(기본\) \/ Code Mode/);
+  assert.match(guide, /\*\*도구 수와 방식\*\*/);
+  assert.match(guide, /기본은 도구별 정의이고, Code Mode를 고르면 `## Server`의 `도구 방식`에 고른 이유와 막는 수단/);
+  assert.match(guide, /덮어쓰기·삭제·외부 발송·결제는 `execute`가 부를 수 없게/);
+  assert.match(guide, /Code Mode를 골랐다면 `## Server`의 `도구 방식`에 고른 이유와 막는 수단이 있고/);
+  const verify = read("skills/argos/references/verify-protocol.md");
+  assert.match(verify, /\| Code Mode \(`execute`\) \|/);
+});
+
+// 이리스는 API·MCP만 따로 다루는 진입점이다. 규약을 복사하면 젭마인 가이드와 어긋나므로
+// 두 가이드를 정본으로 읽고, 전체 감리·폭넓은 구현은 아르고스·다이달로스로 넘긴다.
+test("iris reads the zephermine guides as the single source and hands off broader work", () => {
+  const skill = read("skills/iris/SKILL.md");
+  assert.match(skill, /^name: iris$/m);
+  assert.match(skill, /skills\/zephermine\/references\/api-spec-guide\.md/);
+  assert.match(skill, /skills\/zephermine\/references\/mcp-spec-guide\.md/);
+  assert.match(skill, /`NOT RUN`/);
+  assert.match(skill, /`\/argos`/);
+  assert.match(skill, /`\/daedalus`/);
+  assert.match(skill, /`api-tester`/);
+  assert.doesNotMatch(skill, /\*\*노출은 기본으로 꺼짐\.\*\*/);
+});

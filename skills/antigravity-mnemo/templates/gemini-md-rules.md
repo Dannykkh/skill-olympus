@@ -60,6 +60,7 @@ Antigravity CLI의 전역 스킬 루트는 `~/.gemini/antigravity-cli`이다. �
 | `/agent-team`, `/poseidon`, 포세이돈, poseidon | `agent-team` |
 | `/daedalus`, 다이달로스, workpm, workpm-mcp, pmworker | `workpm` |
 | `/argos`, 아르고스 | `argos` |
+| `/iris`, 이리스 | `iris` |
 | `/hermes`, 헤르메스 | `biz-strategy` |
 | `/athena`, 아테나 | `ceo` |
 | `/mnemo`, 므네모, mnemo | `antigravity-mnemo` |

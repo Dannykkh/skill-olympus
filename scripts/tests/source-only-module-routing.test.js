@@ -25,6 +25,7 @@ const EXPECTED_COMMON_RUNTIME_SKILLS = Object.freeze([
   "design-plan",
   "explain",
   "hestia",
+  "iris",
   "ko-en-translator",
   "minos",
   "recipe",
@@ -249,7 +250,7 @@ function stripNonOperationalContracts(source) {
     .replace(/^## (?:Related Files|관련 파일)[\s\S]*?(?=^## |\s*$)/gm, "");
 }
 
-test("entry-point default deny keeps 21 common entry points, six adapters, and 79 public source-only modules", () => {
+test("entry-point default deny keeps 22 common entry points, six adapters, and 79 public source-only modules", () => {
   assert.deepEqual(DEFAULT_COMMON_RUNTIME_SKILLS, EXPECTED_COMMON_RUNTIME_SKILLS);
   assert.deepEqual(
     DEFAULT_RUNTIME_SKILL_ALLOWLIST.filter(
@@ -257,10 +258,10 @@ test("entry-point default deny keeps 21 common entry points, six adapters, and 7
     ),
     EXPECTED_RUNTIME_ADAPTERS,
   );
-  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 27);
+  assert.equal(DEFAULT_RUNTIME_SKILL_ALLOWLIST.length, 28);
 
   const allSkills = allRepoSkillNames();
-  assert.equal(allSkills.length, 106, "public repository skill inventory changed; revisit policy counts");
+  assert.equal(allSkills.length, 107, "public repository skill inventory changed; revisit policy counts");
 
   for (const runtime of ["claude", "codex", "antigravity", "grok", "openclaw", "hermes"]) {
     const selection = selectRuntimeSkills(
@@ -268,8 +269,8 @@ test("entry-point default deny keeps 21 common entry points, six adapters, and 7
       RUNTIME_SKILL_EXCLUSIONS[runtime],
     );
     const skillsOnly = runtime === "openclaw" || runtime === "hermes";
-    const expectedActiveCount = skillsOnly ? 21 : runtime === "claude" ? 24 : 23;
-    const expectedAvailableCount = skillsOnly ? 100 : runtime === "claude" ? 103 : 102;
+    const expectedActiveCount = skillsOnly ? 22 : runtime === "claude" ? 25 : 24;
+    const expectedAvailableCount = skillsOnly ? 101 : runtime === "claude" ? 104 : 103;
 
     assert.equal(selection.skillNames.length, expectedActiveCount, `${runtime} active count`);
     assert.equal(selection.defaultDisabledNames.length, 79, `${runtime} source-only count`);
@@ -302,12 +303,12 @@ test("all canonical skills use portable Agent Skills frontmatter", () => {
     "metadata",
   ]);
   const entries = allRepoSkillEntries();
-  // 공개 스킬 105개에 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
+  // 공개 스킬 107개에 로컬 전용 deploymonitor가 있을 때만 1개를 더한다.
   const expectedEntries = fs.existsSync(
     path.join(repoRoot, "skills", "deploymonitor", "SKILL.md"),
   )
-    ? 107
-    : 106;
+    ? 108
+    : 107;
   assert.equal(
     entries.length,
     expectedEntries,
@@ -380,7 +381,7 @@ test("cross-CLI authoring rules and Antigravity compatibility boundaries stay ex
   assert.doesNotMatch(agents, /\/mnt\/skills\/user/);
 
   const antigravityDocs = readRepoFile("docs/resources/antigravity-cli.md");
-  assert.match(antigravityDocs, /기본 활성 \| 23/);
+  assert.match(antigravityDocs, /기본 활성 \| 24/);
   assert.match(antigravityDocs, /source-only \| 79/);
   assert.match(antigravityDocs, /런타임 제외 \| 4/);
   assert.match(antigravityDocs, /실제 `agy` 세션 검증/);

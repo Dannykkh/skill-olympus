@@ -192,6 +192,7 @@
     { "id": "dependency-updater", "tags": ["*"], "priority": "optional" },
     { "id": "naming-analyzer", "tags": ["*"], "priority": "optional" },
     { "id": "api-tester", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "recommended" },
+    { "id": "iris", "tags": ["*"], "priority": "optional" },
     { "id": "api-handoff", "tags": ["nestjs", "aspnet", "spring", "fastapi", "express", "fastify", "nodejs"], "priority": "optional" },
     { "id": "minos", "tags": ["*"], "priority": "optional" },
     { "id": "auto-continue-loop", "tags": ["*"], "priority": "optional" },
