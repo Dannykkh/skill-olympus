@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [7.18.0] - 2026-11-24
+
+### Features
+
+- **iris**: New active skill `/iris` (이리스) for a REST API or MCP server on its own, without the full Zephermine design. It writes `api-spec.md` and `mcp-spec.md`, either new or reverse-engineered from existing code with `file:line` evidence, and asks before opening new MCP tools. It then implements them with the project's existing router, auth and error handling and adds tests for the list size cap, a rejected sort, denied calls, `tools/list` against the spec and `isError` messages. Finally it checks the code against the spec with the guides' checklists, plus real calls when the server can run. It reads Zephermine's `api-spec-guide.md` and `mcp-spec-guide.md` instead of copying them and reports `NOT RUN` when they are missing. Whole-product design stays with Zephermine, wider implementation with Daedalus, full audits with Argos and frontend integration tests with api-tester. (4c35992)
+- **zephermine**: The tool-count convention in `mcp-spec-guide.md` now also covers how tools are exposed. Per-tool definitions stay the default. For a large API with an OpenAPI document and mostly read-and-chain agent work, the guide adds Code Mode, where the server exposes only `search` and `execute` and the model's code runs in an isolated sandbox. Code Mode drops the per-tool exposure switch, annotations and per-tool limits. A spec that picks it therefore records the reason and the safeguards in a new `## Server` row: a scoped token, no sandbox network, run-time and call limits, and an audit of executed code and calls. Overwrite, delete, outbound messages and payments stay outside `execute`. The writing order and the matching checks cover the new row. (4c35992)
+- **argos**: Phase 3A-3 checks those Code Mode safeguards and fails a token that exceeds the caller's rights. (4c35992)
+
+### Miscellaneous
+
+- **inventory**: There are now 107 public skills. The default allowlist union is 28 (22 entry points + 6 adapters): Claude has 25 active skills, Codex and Antigravity 24, OpenClaw and Hermes 22, and 79 stay source-only. The Claude, Codex and Antigravity rule templates map `/iris` and 이리스. (4c35992)
+
+### Documentation
+
+- Updated the English, Korean, Japanese and Simplified Chinese READMEs. (223277d)
+
+### Verification
+
+- The full repository Node suite passed all 414 tests and the Mnemo Python suite passed all 282. Two new contract tests check the Code Mode rules in the MCP guide and in Argos. They also check that `/iris` reads both guides and hands off to Argos, Daedalus and api-tester.
+- `install.bat --all` finished with exit code 0 for Claude Code, Codex, Antigravity, Grok and Devin. In all three skill homes, the installed `iris/SKILL.md`, `mcp-spec-guide.md` and Argos `verify-protocol.md` match the repository byte for byte. The catalogs report 25, 24 and 24 active skills, and the installed `CLAUDE.md`, `AGENTS.md` and `GEMINI.md` map `/iris`.
+- Not run: a blind trial of `/iris` on a sample API or MCP server, and a Code Mode build. The Code Mode text follows Cloudflare's documentation as of 2026-11-24, which marks parts of Code Mode as experimental.
+- Release assets are `iris.zip`, `zephermine.zip`, `argos.zip`, `mnemo.zip`, `codex-mnemo.zip` and `antigravity-mnemo.zip`.
+
 ## [7.17.0] - 2026-11-23
 
 ### Features
